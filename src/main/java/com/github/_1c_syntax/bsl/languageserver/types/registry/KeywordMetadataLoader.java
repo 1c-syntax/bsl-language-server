@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 
@@ -67,16 +66,15 @@ final class KeywordMetadataLoader {
    * {@link KeywordMetadata}. При отсутствии/ошибке ресурса — {@link KeywordMetadata#EMPTY}.
    *
    * @param resourcePath          путь к JSON-ресурсу на classpath
-   * @param scope                 язык, в чей scope попадают зарегистрированные имена
    * @param includeInCompletion   фильтр категорий, которые попадают в плоский список
    *                              (для no-dot completion)
    */
-  static KeywordMetadata load(String resourcePath, LanguageScope scope,
+  static KeywordMetadata load(String resourcePath,
                               Predicate<String> includeInCompletion) {
     var mapper = JsonMapper.builder().build();
     try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       var root = mapper.readValue(stream, ROOT_TYPE);
-      var builder = new KeywordMetadataBuilder(scope, includeInCompletion);
+      var builder = new KeywordMetadataBuilder(includeInCompletion);
       for (var entry : keywordEntries(root)) {
         builder.add(entry);
       }

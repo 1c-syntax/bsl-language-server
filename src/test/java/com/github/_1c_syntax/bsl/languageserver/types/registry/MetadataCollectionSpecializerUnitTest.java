@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextName;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
@@ -30,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.mdo.children.ObjectAttribute;
@@ -90,11 +90,11 @@ class MetadataCollectionSpecializerUnitTest {
       .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
     var getMethod = MemberDescriptor.property("Получить", elementTypeRef, "");
     registry.registerMemberSource(baseCollectionRef,
-      () -> List.of(generic, getMethod), LanguageScope.BSL);
+      () -> List.of(generic, getMethod), FileType.BSL);
 
     // owner: property "Документы" пока возвращает базовый тип КоллекцияОбъектовМетаданных.
     var docsMember = MemberDescriptor.property("Документы", baseCollectionRef, "");
-    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), LanguageScope.BSL);
+    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), FileType.BSL);
 
     var provider = mockProvider("ОбъектМетаданныхКонфигурация",
       mockProperty("Документы", "Documents",
@@ -198,14 +198,14 @@ class MetadataCollectionSpecializerUnitTest {
         documentTypeRef, "")
       .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
     registry.registerMemberSource(baseCollectionRef,
-      () -> List.of(generic), LanguageScope.BSL);
+      () -> List.of(generic), FileType.BSL);
 
     // Документ-тип содержит nested-collection "Реквизиты".
     var docAttrs = MemberDescriptor.property("Реквизиты", baseCollectionRef, "");
-    registry.registerMemberSource(documentTypeRef, () -> List.of(docAttrs), LanguageScope.BSL);
+    registry.registerMemberSource(documentTypeRef, () -> List.of(docAttrs), FileType.BSL);
 
     var docsMember = MemberDescriptor.property("Документы", baseCollectionRef, "");
-    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), LanguageScope.BSL);
+    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), FileType.BSL);
 
     var provider = mockProvider(List.of(
       mockType("ОбъектМетаданныхКонфигурация",
@@ -296,10 +296,10 @@ class MetadataCollectionSpecializerUnitTest {
         baseCollectionRef, "")
       .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
     registry.registerMemberSource(baseCollectionRef,
-      () -> List.of(generic), LanguageScope.BSL);
+      () -> List.of(generic), FileType.BSL);
 
     var tabSection = MemberDescriptor.property("ТабличныеЧасти", baseCollectionRef, "");
-    registry.registerMemberSource(docTypeRef, () -> List.of(tabSection), LanguageScope.BSL);
+    registry.registerMemberSource(docTypeRef, () -> List.of(tabSection), FileType.BSL);
 
     // На nested-уровне (ОбъектМетаданных: Документ) HBK-маркера у ТабличныеЧасти НЕТ.
     // Fallback: COLLECTION_BY_NAME["табличныечасти"] → CollectionSpec с element
@@ -342,7 +342,7 @@ class MetadataCollectionSpecializerUnitTest {
 
     var unrelated = MemberDescriptor.property("Версия",
       registry.registerConfigurationType("Строка"), "");
-    registry.registerMemberSource(ownerRef, () -> List.of(unrelated), LanguageScope.BSL);
+    registry.registerMemberSource(ownerRef, () -> List.of(unrelated), FileType.BSL);
 
     var provider = mockProvider("ОбъектМетаданныхКонфигурация",
       // property типа Строка — НЕ коллекция → должна быть пропущена в specialize.

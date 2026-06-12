@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
@@ -63,6 +62,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -132,8 +132,8 @@ public class TypeRegistry {
 
   private record CachedMembers(long epoch, List<MemberDescriptor> members) {
   }
-  /** Тип ↔ языковой скоуп (BSL/OS/BOTH). Отсутствие записи трактуется как BOTH. */
-  private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
+  /** Тип → языки файлов, в которых он видим. Отсутствие записи — видим везде. */
+  private final Map<TypeRef, Set<FileType>> typeFileTypes = new ConcurrentHashMap<>();
   /** Тип ↔ список описаний с их скоупом. В одном типе разные описания для BSL/OS допускаются. */
   private final Map<TypeRef, List<ScopedDescription>> descriptions = new ConcurrentHashMap<>();
   /** Тип ↔ список наборов конструкторов с их скоупом. */
@@ -181,29 +181,29 @@ public class TypeRegistry {
    */
   private final Map<TypeRef, List<ScopedBilingualDescription>> typeDescriptionsBilingual = new ConcurrentHashMap<>();
 
-  /** Источник членов вместе с его языковым скоупом. */
-  private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
+  /** Источник членов вместе с языком файлов, в которых он видим. */
+  private record ScopedMemberSource(MemberSource source, FileType fileType) {
   }
 
-  /** Описание типа вместе с его языковым скоупом. */
-  private record ScopedDescription(String text, LanguageScope scope) {
+  /** Описание типа вместе с языком файлов, в которых оно видимо. */
+  private record ScopedDescription(String text, FileType fileType) {
   }
 
-  /** Двуязычное описание типа вместе с его языковым скоупом. */
-  private record ScopedBilingualDescription(BilingualString text, LanguageScope scope) {
+  /** Двуязычное описание типа вместе с языком файлов, в которых оно видимо. */
+  private record ScopedBilingualDescription(BilingualString text, FileType fileType) {
   }
 
-  /** Набор конструкторов вместе с его языковым скоупом. */
+  /** Набор конструкторов вместе с языком файлов, в которых они видимы. */
   private record ScopedConstructors(
     List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> list,
-    LanguageScope scope
+    FileType fileType
   ) {
   }
 
-  /** Динамический источник конструкторов вместе с его языковым скоупом. */
+  /** Динамический источник конструкторов вместе с языком файлов, в которых он видим. */
   private record ScopedConstructorSource(
     java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> supplier,
-    LanguageScope scope
+    FileType fileType
   ) {
   }
 
@@ -213,9 +213,9 @@ public class TypeRegistry {
       return;
     }
     for (var provider : platformProviders) {
-      var scope = provider.getLanguageScope();
+      var fileType = provider.getFileType();
       for (var decl : provider.getTypes()) {
-        registerPack(decl, scope);
+        registerPack(decl, fileType);
       }
     }
   }
@@ -298,27 +298,37 @@ public class TypeRegistry {
   }
 
   /**
-   * Найти тип по имени с фильтрацией по типу файла. Тип будет возвращён только
-   * если его {@link LanguageScope} совместим с {@code fileType}.
+   * Найти тип по имени с фильтрацией по типу файла. Тип будет возвращён,
+   * только если он видим в {@code fileType} (см. {@link #isVisibleIn}).
    * Если {@code fileType == null} — фильтрация не применяется.
    */
   public Optional<TypeRef> resolve(String name, FileType fileType) {
-    return resolve(name).filter(ref -> getLanguageScope(ref).matches(fileType));
+    return resolve(name).filter(ref -> fileType == null || isVisibleIn(ref, fileType));
   }
 
   /**
-   * Языковой скоуп типа. По умолчанию (неизвестный тип / без записи) — {@link LanguageScope#BOTH}.
+   * Видимость типа в данном типе файла. Тип без зарегистрированной языковой
+   * принадлежности (ad-hoc TypeRef, неизвестное имя) считается видимым везде —
+   * отсутствие знания не повод фильтровать.
+   *
+   * @param ref      ссылка на тип.
+   * @param fileType тип файла-потребителя.
+   * @return {@code true}, если тип видим в файлах данного типа.
    */
-  public LanguageScope getLanguageScope(TypeRef ref) {
-    return typeScopes.getOrDefault(ref, LanguageScope.BOTH);
+  public boolean isVisibleIn(TypeRef ref, FileType fileType) {
+    var fileTypes = typeFileTypes.get(ref);
+    return fileTypes == null || fileTypes.contains(fileType);
   }
 
   /**
-   * Установить/повысить языковой скоуп типа. При наличии существующей записи
-   * новый скоуп мержится: при различии повышается до {@link LanguageScope#BOTH}.
+   * Зарегистрировать видимость типа в типе файла. Повторные регистрации
+   * аддитивны: тип, зарегистрированный и BSL-, и OS-источником, видим в обоих.
+   *
+   * @param ref      ссылка на тип.
+   * @param fileType тип файла, в котором тип становится видимым.
    */
-  public void setLanguageScope(TypeRef ref, LanguageScope scope) {
-    typeScopes.merge(ref, scope, LanguageScope::merge);
+  public void registerFileType(TypeRef ref, FileType fileType) {
+    typeFileTypes.computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet()).add(fileType);
   }
 
   /**
@@ -383,7 +393,7 @@ public class TypeRegistry {
     List<ScopedMemberSource> snapshot = List.copyOf(sources);
     var byName = new LinkedHashMap<String, MemberDescriptor>();
     for (var scoped : snapshot) {
-      if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
+      if (fileType != null && scoped.fileType() != fileType) {
         continue;
       }
       for (var member : scoped.source().getMembers()) {
@@ -424,23 +434,17 @@ public class TypeRegistry {
   }
 
   /**
-   * Добавить дополнительный источник членов к существующему типу.
-   * Позволяет, например, {@code ManagerModule.bsl} расширять платформенный
-   * {@code СправочникМенеджер.X}.
+   * Добавить дополнительный источник членов к существующему типу с привязкой
+   * к языку файла. Позволяет, например, {@code ManagerModule.bsl} расширять
+   * платформенный {@code СправочникМенеджер.X}.
+   *
+   * @param ref      тип, к которому добавляется источник членов.
+   * @param source   источник членов.
+   * @param fileType язык файла, в котором члены источника видимы.
    */
-  public void registerMemberSource(TypeRef ref, MemberSource source) {
-    registerMemberSource(ref, source, LanguageScope.BOTH);
-  }
-
-  /**
-   * То же, что {@link #registerMemberSource(TypeRef, MemberSource)}, но дополнительно
-   * привязывает источник к языковому скоупу. {@code null} трактуется как
-   * {@link LanguageScope#BOTH}.
-   */
-  public void registerMemberSource(TypeRef ref, MemberSource source, LanguageScope scope) {
-    var effective = scope;
+  public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
-      .add(new ScopedMemberSource(source, effective));
+      .add(new ScopedMemberSource(source, fileType));
     membersEpoch.incrementAndGet();
   }
 
@@ -454,9 +458,9 @@ public class TypeRegistry {
    * {@code КоллекцияОбъектовМетаданных.Документы}). Базовый источник остаётся
    * в реестре — другие members (Справочники, Перечисления, …) приходят оттуда.
    */
-  public void registerMemberOverride(TypeRef ref, MemberSource source, LanguageScope scope) {
+  public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
     var list = memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>());
-    list.addFirst(new ScopedMemberSource(source, scope));
+    list.addFirst(new ScopedMemberSource(source, fileType));
   }
 
   /**
@@ -465,17 +469,17 @@ public class TypeRegistry {
    * у generic'а (чтобы инференсер и регистрация работали с одной и той же
    * парой {@code (kind, name)}). Если есть — используется существующий.
    * После этого делегирует в
-   * {@link #registerSpecialization(TypeRef, TypeRef, Map, LanguageScope)}.
+   * {@link #registerSpecialization(TypeRef, TypeRef, Map, FileType)}.
    *
    * @param specializedName qualifiedName целевого типа (например,
    *                        {@code "СправочникВыборка.МойСправочник"})
    * @param genericRef      generic-тип-источник
    * @param bindings        подстановки placeholder → имя заменителя
-   * @param scope           языковой скоуп источника; {@code null} — {@link LanguageScope#BSL}
+   * @param fileType        язык файла, в котором специализация видима
    * @return интернированный {@link TypeRef} специализированного типа
    */
   public TypeRef registerSpecialization(String specializedName, TypeRef genericRef,
-                                        Map<String, String> bindings, LanguageScope scope) {
+                                        Map<String, String> bindings, FileType fileType) {
     if (specializedName == null || specializedName.isBlank() || genericRef == null) {
       return TypeRef.UNKNOWN;
     }
@@ -490,9 +494,9 @@ public class TypeRegistry {
       // до getMembers.
       types.put(specializedRef, hydrate(specializedRef));
       addAlias(specializedName, specializedRef);
-      setLanguageScope(specializedRef, scope);
+      registerFileType(specializedRef, fileType);
     }
-    registerSpecialization(specializedRef, genericRef, bindings, scope);
+    registerSpecialization(specializedRef, genericRef, bindings, fileType);
     return specializedRef;
   }
 
@@ -526,16 +530,15 @@ public class TypeRegistry {
    *                        содержит placeholder'ы {@code <X>})
    * @param bindings        placeholder → имя заменителя (например,
    *                        {@code "Имя справочника"} → {@code "МойСправочник"})
-   * @param scope           языковой скоуп источника; {@code null} — {@link LanguageScope#BSL}
+   * @param fileType        язык файла, в котором специализация видима
    */
   public void registerSpecialization(TypeRef specializedRef, TypeRef genericRef,
-                                     Map<String, String> bindings, LanguageScope scope) {
+                                     Map<String, String> bindings, FileType fileType) {
     if (specializedRef == null || genericRef == null) {
       return;
     }
     var safeBindings = Map.copyOf(bindings);
     registerSpecializedDisplayName(specializedRef, genericRef, safeBindings);
-    var effectiveScope = scope;
     MemberSource source = () -> {
       var raw = getMembers(genericRef);
       if (raw.isEmpty()) {
@@ -552,7 +555,7 @@ public class TypeRegistry {
       }
       return result;
     };
-    registerMemberSource(specializedRef, source, effectiveScope);
+    registerMemberSource(specializedRef, source, fileType);
   }
 
   /**
@@ -581,12 +584,12 @@ public class TypeRegistry {
    * @param genericRef       generic-источник (member-template'ы)
    * @param typeBindings     type-level подстановки от родительской специализации
    * @param memberExpansions placeholder → список конкретных имён (из mdclasses)
-   * @param scope            языковой скоуп
+   * @param fileType         язык файла, в котором члены видимы
    */
   public void registerMemberExpansion(TypeRef specializedRef, TypeRef genericRef,
                                       Map<String, String> typeBindings,
                                       Map<String, List<String>> memberExpansions,
-                                      LanguageScope scope) {
+                                      FileType fileType) {
     if (memberExpansions.isEmpty()) {
       return;
     }
@@ -601,7 +604,7 @@ public class TypeRegistry {
       }
       return materialized;
     };
-    registerMemberSource(specializedRef, source, scope);
+    registerMemberSource(specializedRef, source, fileType);
   }
 
   /**
@@ -754,20 +757,19 @@ public class TypeRegistry {
   }
 
   /**
-   * Зарегистрировать пользовательский тип (OneScript-класс, общий модуль и т.п.).
+   * Зарегистрировать пользовательский тип (OneScript-класс, общий модуль и т.п.)
+   * с указанием языка файла, в котором он видим.
+   *
+   * @param qualifiedName каноническое имя типа.
+   * @param declaration   символ-объявление типа.
+   * @param fileType      язык файла, в котором тип видим.
+   * @return интернированный {@link TypeRef} зарегистрированного типа.
    */
-  public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration) {
-    return registerUserType(qualifiedName, declaration, LanguageScope.BOTH);
-  }
-
-  /**
-   * Зарегистрировать пользовательский тип с указанием языкового скоупа.
-   */
-  public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration, LanguageScope scope) {
+  public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration, FileType fileType) {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.put(ref, new UserType(ref, declaration));
     addAlias(qualifiedName, ref);
-    setLanguageScope(ref, scope);
+    registerFileType(ref, fileType);
     return ref;
   }
 
@@ -779,7 +781,7 @@ public class TypeRegistry {
     var ref = intern(TypeKind.CONFIGURATION, qualifiedName);
     types.put(ref, new ConfigurationType(ref));
     addAlias(qualifiedName, ref);
-    setLanguageScope(ref, LanguageScope.BSL);
+    registerFileType(ref, FileType.BSL);
     return ref;
   }
 
@@ -811,16 +813,8 @@ public class TypeRegistry {
    * Регистрация идёт в {@link GlobalScopeProvider} — единая точка входа
    * для глобальных имён.
    */
-  public void registerAsGlobalProperty(TypeRef ref) {
-    registerAsGlobalProperty(ref, LanguageScope.BOTH, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
-  }
-
-  /**
-   * То же, что {@link #registerAsGlobalProperty(TypeRef)}, но дополнительно
-   * пробрасывает скоуп в {@link GlobalScopeProvider}.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope) {
-    registerAsGlobalProperty(ref, scope, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
+  public void registerAsGlobalProperty(TypeRef ref, FileType fileType) {
+    registerAsGlobalProperty(ref, fileType, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
   }
 
   /**
@@ -828,15 +822,15 @@ public class TypeRegistry {
    * при публикации системных перечислений ({@link SyntheticKind#PLATFORM_GLOBAL_ENUM}),
    * чтобы отличать их от обычных глобальных свойств.
    */
-  public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind) {
-    registerAsGlobalProperty(ref, scope, syntheticKind, () -> null);
+  public void registerAsGlobalProperty(TypeRef ref, FileType fileType, SyntheticKind syntheticKind) {
+    registerAsGlobalProperty(ref, fileType, syntheticKind, () -> null);
   }
 
   /**
    * То же + lazy-провайдер source-defined-символа (для общих модулей).
-   * См. {@link GlobalScopeProvider#registerGlobalProperty(TypeRef, Collection, LanguageScope, String, SyntheticKind, Supplier)}.
+   * См. {@link GlobalScopeProvider#registerGlobalProperty(TypeRef, Collection, FileType, String, SyntheticKind, Supplier)}.
    */
-  public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind,
+  public void registerAsGlobalProperty(TypeRef ref, FileType fileType, SyntheticKind syntheticKind,
                                        Supplier<Symbol> sourceSymbol) {
     var names = new LinkedHashSet<String>();
     names.add(ref.qualifiedName());
@@ -845,7 +839,7 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerGlobalProperty(ref, names, scope, getDescription(ref, fileTypeOf(scope)),
+    globalScopeProvider.registerGlobalProperty(ref, names, fileType, getDescription(ref, fileType),
       syntheticKind, sourceSymbol);
   }
 
@@ -868,7 +862,7 @@ public class TypeRegistry {
       return "";
     }
     for (var sd : list) {
-      if (fileType == null || sd.scope() == null || sd.scope().matches(fileType)) {
+      if (fileType == null || sd.fileType() == fileType) {
         return sd.text();
       }
     }
@@ -879,13 +873,12 @@ public class TypeRegistry {
    * Зарегистрировать описание типа со скоупом. Допускается несколько описаний
    * на один TypeRef с разными скоупами (BSL/OS) — фильтрация при чтении.
    */
-  public void registerDescription(TypeRef ref, String text, LanguageScope scope) {
+  public void registerDescription(TypeRef ref, String text, FileType fileType) {
     if (ref == null || text == null || text.isBlank()) {
       return;
     }
-    var effective = scope;
     descriptions.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-      .add(new ScopedDescription(text, effective));
+      .add(new ScopedDescription(text, fileType));
   }
 
   /**
@@ -908,7 +901,7 @@ public class TypeRegistry {
     var fromPack = constructors.get(ref);
     if (fromPack != null) {
       for (var scoped : fromPack) {
-        if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
+        if (fileType != null && scoped.fileType() != fileType) {
           continue;
         }
         result.addAll(scoped.list());
@@ -917,7 +910,7 @@ public class TypeRegistry {
     var sources = constructorSources.get(ref);
     if (sources != null) {
       for (var scoped : sources) {
-        if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
+        if (fileType != null && scoped.fileType() != fileType) {
           continue;
         }
         var sigs = scoped.supplier().get();
@@ -930,20 +923,23 @@ public class TypeRegistry {
   }
 
   /**
-   * Зарегистрировать конструкторы типа со скоупом. Поддерживается несколько
-   * вызовов на один TypeRef с разными скоупами (BSL/OS).
+   * Зарегистрировать конструкторы типа с привязкой к языку файла.
+   * Поддерживается несколько вызовов на один TypeRef с разными языками (BSL/OS).
+   *
+   * @param ref      тип, которому регистрируются конструкторы.
+   * @param ctors    сигнатуры конструкторов.
+   * @param fileType язык файла, в котором конструкторы видимы.
    */
   public void registerConstructors(
     TypeRef ref,
     List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> ctors,
-    LanguageScope scope
+    FileType fileType
   ) {
     if (ref == null || ctors == null || ctors.isEmpty()) {
       return;
     }
-    var effective = scope;
     constructors.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-      .add(new ScopedConstructors(List.copyOf(ctors), effective));
+      .add(new ScopedConstructors(List.copyOf(ctors), fileType));
   }
 
   /**
@@ -954,26 +950,14 @@ public class TypeRegistry {
    */
   public void registerConstructorSource(
     TypeRef ref,
-    java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> source
-  ) {
-    registerConstructorSource(ref, source, LanguageScope.BOTH);
-  }
-
-  /**
-   * То же, что {@link #registerConstructorSource(TypeRef, java.util.function.Supplier)},
-   * но привязывает источник к языковому скоупу. {@code null} ⇒ {@link LanguageScope#BOTH}.
-   */
-  public void registerConstructorSource(
-    TypeRef ref,
     java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> source,
-    LanguageScope scope
+    FileType fileType
   ) {
     if (ref == null || source == null) {
       return;
     }
-    var effective = scope;
     constructorSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-      .add(new ScopedConstructorSource(source, effective));
+      .add(new ScopedConstructorSource(source, fileType));
   }
 
   /**
@@ -983,7 +967,7 @@ public class TypeRegistry {
    * с ролью {@code TYPE_NAME} для hover/findGlobal. Вызывается автоматически
    * из {@link #registerPack} при непустых {@code constructors}.
    */
-  private void registerAsPlatformClass(TypeRef ref, LanguageScope scope) {
+  private void registerAsPlatformClass(TypeRef ref, FileType fileType) {
     var names = new LinkedHashSet<String>();
     names.add(ref.qualifiedName());
     aliasIndex.forEach((alias, target) -> {
@@ -991,16 +975,8 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerPlatformClass(ref, names, scope,
-      getDescription(ref, fileTypeOf(scope)));
-  }
-
-  @Nullable
-  private static FileType fileTypeOf(LanguageScope scope) {
-    if (scope == LanguageScope.BOTH) {
-      return null;
-    }
-    return scope == LanguageScope.BSL ? FileType.BSL : FileType.OS;
+    globalScopeProvider.registerPlatformClass(ref, names, fileType,
+      getDescription(ref, fileType));
   }
 
   /**
@@ -1012,15 +988,11 @@ public class TypeRegistry {
     types.remove(ref);
     memberSources.remove(ref);
     membersEpoch.incrementAndGet();
-    typeScopes.remove(ref);
+    typeFileTypes.remove(ref);
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
   }
 
-  private void registerPack(TypePackProvider.TypeDecl decl) {
-    registerPack(decl, LanguageScope.BOTH);
-  }
-
-  private void registerPack(TypePackProvider.TypeDecl decl, LanguageScope scope) {
+  private void registerPack(TypePackProvider.TypeDecl decl, FileType fileType) {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
     // BilingualString name покрывает ru+en — обе стороны должны находиться
@@ -1040,25 +1012,25 @@ public class TypeRegistry {
       // TypeRegistry хранит description как scoped-String (ConfigurationTypesProvider
       // и пр. передают одноязычные). Bilingual TypeDecl.description раскрываем
       // через primary для legacy-индекса; en-сторону отдаёт displayDescription(ref, lang).
-      registerDescription(ref, decl.description().primary(), scope);
+      registerDescription(ref, decl.description().primary(), fileType);
       if (!decl.description().isEmpty()) {
         typeDescriptionsBilingual.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-          .add(new ScopedBilingualDescription(decl.description(), scope));
+          .add(new ScopedBilingualDescription(decl.description(), fileType));
       }
     }
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
-      registerConstructors(ref, decl.constructors(), scope);
-      registerAsPlatformClass(ref, scope);
+      registerConstructors(ref, decl.constructors(), fileType);
+      registerAsPlatformClass(ref, fileType);
     }
     if (!decl.members().isEmpty()) {
-      registerMemberSource(ref, decl::members, scope);
+      registerMemberSource(ref, decl::members, fileType);
       indexMemberMetadata(ref, decl.members());
     }
     if (decl.exposedAsGlobal()) {
       var syntheticKind = decl.isEnum()
         ? SyntheticKind.PLATFORM_GLOBAL_ENUM
         : SyntheticKind.PLATFORM_GLOBAL_PROPERTY;
-      registerAsGlobalProperty(ref, scope, syntheticKind);
+      registerAsGlobalProperty(ref, fileType, syntheticKind);
     }
     if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
@@ -1081,7 +1053,7 @@ public class TypeRegistry {
     if (!decl.name().isEmpty()) {
       displayNames.putIfAbsent(ref, decl.name());
     }
-    setLanguageScope(ref, scope);
+    registerFileType(ref, fileType);
   }
 
   /**
@@ -1189,7 +1161,7 @@ public class TypeRegistry {
     var list = typeDescriptionsBilingual.get(ref);
     if (list != null) {
       for (var sd : List.copyOf(list)) {
-        if (sd.scope().matches(fileType) && !sd.text().isEmpty()) {
+        if (sd.fileType() == fileType && !sd.text().isEmpty()) {
           return sd.text().forLanguage(language);
         }
       }

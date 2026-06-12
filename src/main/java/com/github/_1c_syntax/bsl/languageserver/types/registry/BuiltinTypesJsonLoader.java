@@ -56,7 +56,7 @@ import java.util.Set;
  * же, поэтому и BSL-, и OScript-провайдеры
  * ({@link BuiltinPlatformTypesProvider}, {@link BuiltinOScriptPlatformTypesProvider})
  * используют один и тот же парсер — различаются лишь путём ресурса и
- * языковым скоупом, который проставляет сам провайдер.
+ * языком файлов, который проставляет сам провайдер.
  * <p>
  * Двуязычие членов выражается явными полями {@code nameRu}/{@code nameEn}
  * (как в BSL-модели и в bsl-context). Никакой склейки по порядку нет.

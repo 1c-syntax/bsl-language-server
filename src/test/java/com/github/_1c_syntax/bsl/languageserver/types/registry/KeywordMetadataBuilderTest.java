@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -42,19 +42,18 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void emptyBuilderProducesEmptyMetadata() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     var result = builder.build();
 
     assertThat(result.keywords()).isEmpty();
-    assertThat(result.scopes()).isEmpty();
     assertThat(result.snippets()).isEmpty();
     assertThat(result.descriptions()).isEmpty();
   }
 
   @Test
   void blankNameSkipped() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of("name", ""));
     builder.add(Map.of("alias", "OnlyEn"));
@@ -68,7 +67,7 @@ class KeywordMetadataBuilderTest {
     // given — фильтр пропускает только LITERAL, наша запись STATEMENT,
     // плюс есть description: имя не попадает в completion, описание — в индекс.
     Predicate<String> onlyLiteral = "LITERAL"::equals;
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, onlyLiteral);
+    var builder = new KeywordMetadataBuilder(onlyLiteral);
 
     builder.add(Map.of(
       "name", "Пока",
@@ -83,7 +82,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void entryWithoutAliasIndexedByRuOnly() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of(
       "name", "ТолькоРу",
@@ -97,7 +96,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void emptySnippetIsNotIndexed() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of(
       "name", "Если",
@@ -109,7 +108,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void emptyDescriptionIsNotIndexed() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of("name", "Безописания", "category", "STATEMENT"));
 
@@ -118,7 +117,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void descriptionByParentIndexedBilingually() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, DENY_ALL);
+    var builder = new KeywordMetadataBuilder(DENY_ALL);
 
     var byParent = new LinkedHashMap<String, Map<String, String>>();
     byParent.put("Процедура", Map.of("ru", "в процедуре", "en", "in procedure"));
@@ -140,7 +139,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void descriptionByParentSkipsBlankAndMalformedEntries() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     var byParent = new LinkedHashMap<String, Object>();
     byParent.put("Процедура", Map.of("ru", "в процедуре"));
@@ -159,7 +158,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void duplicateNameDeduplicates() {
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of("name", "Если", "alias", "If", "category", "STATEMENT"));
     builder.add(Map.of("name", "Если", "alias", "If", "category", "PREPROCESSOR_INSTRUCTION"));
@@ -171,7 +170,7 @@ class KeywordMetadataBuilderTest {
   void snippetAsNonMapTreatedAsAbsent() {
 
     // given — поле "snippet" не Map, а строка → snippet не индексируется.
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of(
       "name", "Если",
@@ -186,7 +185,7 @@ class KeywordMetadataBuilderTest {
 
     // given — внутри "snippet" значения — числа, а не строки. asStringMap
     // отфильтрует их, итог — пустая мапа, snippet считается отсутствующим.
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     Map<String, Object> snippet = new LinkedHashMap<>();
     snippet.put("ru", 42);
@@ -200,7 +199,7 @@ class KeywordMetadataBuilderTest {
   void descriptionByParentNotAMapIgnored() {
 
     // given — поле "descriptionByParent" — строка, не Map → пропускается.
-    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
 
     builder.add(Map.of(
       "name", "Возврат",

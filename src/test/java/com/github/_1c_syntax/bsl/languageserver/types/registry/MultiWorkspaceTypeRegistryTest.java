@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -72,15 +73,15 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_A, "mw-a");
     var refA = typeRegistry.registerConfigurationType("Справочники.Контрагенты");
     var nsA = typeRegistry.registerConfigurationType("Справочники");
-    typeRegistry.registerMemberSource(nsA, () -> List.of(MemberDescriptor.property("Контрагенты", refA)));
-    typeRegistry.registerAsGlobalProperty(nsA);
+    typeRegistry.registerMemberSource(nsA, () -> List.of(MemberDescriptor.property("Контрагенты", refA)), FileType.BSL);
+    typeRegistry.registerAsGlobalProperty(nsA, FileType.BSL);
 
     // workspace B: регистрируем только Справочники.Номенклатура + свой namespace
     WorkspaceContextHolder.set(WS_B, "mw-b");
     var refB = typeRegistry.registerConfigurationType("Справочники.Номенклатура");
     var nsB = typeRegistry.registerConfigurationType("Справочники");
-    typeRegistry.registerMemberSource(nsB, () -> List.of(MemberDescriptor.property("Номенклатура", refB)));
-    typeRegistry.registerAsGlobalProperty(nsB);
+    typeRegistry.registerMemberSource(nsB, () -> List.of(MemberDescriptor.property("Номенклатура", refB)), FileType.BSL);
+    typeRegistry.registerAsGlobalProperty(nsB, FileType.BSL);
 
     // A видит только свои типы
     WorkspaceContextHolder.set(WS_A, "mw-a");
@@ -105,11 +106,11 @@ class MultiWorkspaceTypeRegistryTest {
   void typeServiceFollowsWorkspaceContext() {
     WorkspaceContextHolder.set(WS_A, "mw-a");
     typeRegistry.registerConfigurationType("ОбщийМодульA");
-    typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульA").orElseThrow());
+    typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульA").orElseThrow(), FileType.BSL);
 
     WorkspaceContextHolder.set(WS_B, "mw-b");
     typeRegistry.registerConfigurationType("ОбщийМодульB");
-    typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульB").orElseThrow());
+    typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульB").orElseThrow(), FileType.BSL);
 
     WorkspaceContextHolder.set(WS_A, "mw-a");
     assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA")).isPresent();

@@ -37,7 +37,7 @@ import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.context.api.ContextSignatureParameter;
 import com.github._1c_syntax.bsl.context.api.ContextType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -107,8 +107,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   @Override
-  public LanguageScope getLanguageScope() {
-    return LanguageScope.BSL;
+  public FileType getFileType() {
+    return FileType.BSL;
   }
 
   private static List<TypeDecl> build(@Nullable ContextProvider provider) {

@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -52,10 +51,10 @@ class TypeRegistryScopedSourcesTest {
     var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйДвуязычный");
     typeRegistry.registerMemberSource(ref,
       () -> List.of(MemberDescriptor.property("ТолькоBsl", TypeRef.UNKNOWN, "bsl")),
-      LanguageScope.BSL);
+      FileType.BSL);
     typeRegistry.registerMemberSource(ref,
       () -> List.of(MemberDescriptor.property("ТолькоOs", TypeRef.UNKNOWN, "os")),
-      LanguageScope.OS);
+      FileType.OS);
 
     assertThat(typeRegistry.getMembers(ref, FileType.BSL))
       .extracting(MemberDescriptor::name)
@@ -71,8 +70,8 @@ class TypeRegistryScopedSourcesTest {
     var bslCtor = new SignatureDescriptor(List.of(), ref, "bsl-ctor");
     var osCtor = new SignatureDescriptor(List.of(), ref, "os-ctor");
 
-    typeRegistry.registerConstructors(ref, List.of(bslCtor), LanguageScope.BSL);
-    typeRegistry.registerConstructors(ref, List.of(osCtor), LanguageScope.OS);
+    typeRegistry.registerConstructors(ref, List.of(bslCtor), FileType.BSL);
+    typeRegistry.registerConstructors(ref, List.of(osCtor), FileType.OS);
 
     assertThat(typeRegistry.getConstructors(ref, FileType.BSL))
       .extracting(SignatureDescriptor::description)
@@ -85,23 +84,27 @@ class TypeRegistryScopedSourcesTest {
   @Test
   void descriptionIsScopedByFileType() {
     var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйДвуязычноеОписание");
-    typeRegistry.registerDescription(ref, "описание для BSL", LanguageScope.BSL);
-    typeRegistry.registerDescription(ref, "описание для OS", LanguageScope.OS);
+    typeRegistry.registerDescription(ref, "описание для BSL", FileType.BSL);
+    typeRegistry.registerDescription(ref, "описание для OS", FileType.OS);
 
     assertThat(typeRegistry.getDescription(ref, FileType.BSL)).isEqualTo("описание для BSL");
     assertThat(typeRegistry.getDescription(ref, FileType.OS)).isEqualTo("описание для OS");
   }
 
   @Test
-  void scopedSourcesFallBackToBothWhenSpecificMissing() {
+  void sourceSharedByBothLanguagesIsRegisteredPerFileType() {
+    // given — сущность, видимая в обоих языках, регистрируется по разу на язык
     var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйОбщийИсточник");
-    typeRegistry.registerMemberSource(ref,
-      () -> List.of(MemberDescriptor.property("Общий", TypeRef.UNKNOWN, "")),
-      LanguageScope.BOTH);
-    typeRegistry.registerDescription(ref, "общее описание", LanguageScope.BOTH);
-    typeRegistry.registerConstructors(ref,
-      List.of(new SignatureDescriptor(List.of(), ref, "общий")), LanguageScope.BOTH);
+    for (var fileType : FileType.values()) {
+      typeRegistry.registerMemberSource(ref,
+        () -> List.of(MemberDescriptor.property("Общий", TypeRef.UNKNOWN, "")),
+        fileType);
+      typeRegistry.registerDescription(ref, "общее описание", fileType);
+      typeRegistry.registerConstructors(ref,
+        List.of(new SignatureDescriptor(List.of(), ref, "общий")), fileType);
+    }
 
+    // then
     assertThat(typeRegistry.getMembers(ref, FileType.BSL))
       .extracting(MemberDescriptor::name).containsExactly("Общий");
     assertThat(typeRegistry.getMembers(ref, FileType.OS))

@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -64,7 +64,7 @@ class RegisterCommonLibraryExpansionTest {
         "<" + placeholderName + ">", valueRef, "")
       .withBilingualName(BilingualString.of(
         "<" + placeholderName + ">", "<" + enPlaceholder + ">"));
-    registry.registerMemberSource(ref, () -> List.of(template), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
   }
 
   @Test
@@ -164,7 +164,7 @@ class RegisterCommonLibraryExpansionTest {
     var libRef = registry.intern(TypeKind.PLATFORM, "БиблиотекаБезPlaceholder");
     var generic = MemberDescriptor.genericProperty("ПростоеИмя",
         registry.intern(TypeKind.PLATFORM, "Строка"), "");
-    registry.registerMemberSource(libRef, () -> List.of(generic), LanguageScope.BSL);
+    registry.registerMemberSource(libRef, () -> List.of(generic), FileType.BSL);
 
     ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезPlaceholder", List.of("X"));
@@ -181,7 +181,7 @@ class RegisterCommonLibraryExpansionTest {
     var libRef = registry.intern(TypeKind.PLATFORM, "БиблиотекаБезШаблона");
     var plain = MemberDescriptor.property("Реальный",
       registry.intern(TypeKind.PLATFORM, "Строка"));
-    registry.registerMemberSource(libRef, () -> List.of(plain), LanguageScope.BSL);
+    registry.registerMemberSource(libRef, () -> List.of(plain), FileType.BSL);
 
     ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезШаблона", List.of("X"));

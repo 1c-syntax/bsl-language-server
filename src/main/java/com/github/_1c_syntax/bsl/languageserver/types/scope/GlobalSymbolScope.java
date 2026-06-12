@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.scope;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -86,15 +85,15 @@ public class GlobalSymbolScope {
   public record Entry(Symbol symbol, Role role) {
   }
 
-  /** Запись вместе с её языковым скоупом. */
-  private record ScopedEntry(Entry entry, LanguageScope scope) {
+  /** Запись вместе с языком файлов, в которых она видима. */
+  private record ScopedEntry(Entry entry, FileType fileType) {
   }
 
   /**
-   * Имена → записи (ключ — lowercased). Одно имя может иметь НЕСКОЛЬКО записей
-   * с разными языковыми скоупами: например, {@code КодировкаТекста}
-   * зарегистрирована и BSL-паком, и oscript-паком с разными описаниями —
-   * выбор варианта делается при чтении по типу файла.
+   * Имена → записи (ключ — lowercased). Одно имя может иметь ДВЕ записи —
+   * по одной на язык: например, {@code КодировкаТекста} зарегистрирована и
+   * BSL-паком, и oscript-паком с разными описаниями — выбор варианта делается
+   * при чтении по типу файла.
    */
   private final Map<String, List<ScopedEntry>> entries = new ConcurrentHashMap<>();
   /** Исходные написания (для отображения). */
@@ -103,36 +102,26 @@ public class GlobalSymbolScope {
   private final Map<String, List<String>> aliasesBySymbol = new ConcurrentHashMap<>();
 
   /**
-   * Зарегистрировать имя в global scope со скоупом {@link LanguageScope#BOTH}.
+   * Зарегистрировать имя в global scope с привязкой к языку файлов.
+   * Повторная регистрация имени с тем же языком заменяет предыдущую запись;
+   * с другим языком — добавляет языковой вариант (выбор при чтении —
+   * {@link #findEntry(String, FileType)}). Сущность, видимая в обоих языках,
+   * регистрируется двумя вызовами.
    *
-   * @param name   имя (как пишется в коде); ru/en-алиасы регистрируются отдельными вызовами
-   * @param symbol символ
-   * @param role   роль ({@link Role#VALUE} для глобал-значений, {@link Role#TYPE_NAME} для имён классов)
+   * @param name     имя (как пишется в коде); ru/en-алиасы регистрируются отдельными вызовами
+   * @param symbol   символ
+   * @param role     роль ({@link Role#VALUE} для глобал-значений, {@link Role#TYPE_NAME} для имён классов)
+   * @param fileType язык файлов, в которых имя видимо
    */
-  public void register(String name, Symbol symbol, Role role) {
-    register(name, symbol, role, LanguageScope.BOTH);
-  }
-
-  /**
-   * То же, что {@link #register(String, Symbol, Role)}, но с явным языковым скоупом.
-   * Повторная регистрация имени с тем же скоупом заменяет предыдущую запись;
-   * с другим скоупом — добавляет языковой вариант (выбор при чтении —
-   * {@link #findEntry(String, FileType)}).
-   *
-   * @param name   имя (как пишется в коде); ru/en-алиасы регистрируются отдельными вызовами
-   * @param symbol символ
-   * @param role   роль ({@link Role#VALUE} для глобал-значений, {@link Role#TYPE_NAME} для имён классов)
-   * @param scope  языковой скоуп записи
-   */
-  public void register(String name, Symbol symbol, Role role, LanguageScope scope) {
+  public void register(String name, Symbol symbol, Role role, FileType fileType) {
     if (name == null || name.isBlank() || symbol == null) {
       return;
     }
     var key = name.toLowerCase(Locale.ROOT);
     var list = entries.computeIfAbsent(key, k -> Collections.synchronizedList(new ArrayList<>()));
     synchronized (list) {
-      list.removeIf(se -> se.scope() == scope);
-      list.add(new ScopedEntry(new Entry(symbol, role), scope));
+      list.removeIf(se -> se.fileType() == fileType);
+      list.add(new ScopedEntry(new Entry(symbol, role), fileType));
     }
     displayNames.putIfAbsent(key, name);
     aliasesBySymbol
@@ -166,15 +155,11 @@ public class GlobalSymbolScope {
   }
 
   /**
-   * Найти запись по имени с выбором языкового варианта по типу файла:
-   * сперва запись с точным скоупом ({@link LanguageScope#BSL} для BSL-файла,
-   * {@link LanguageScope#OS} для OS-файла), затем — совместимая
-   * ({@link LanguageScope#BOTH}).
+   * Найти запись по имени с выбором языкового варианта по типу файла.
    *
    * @param name     имя (регистронезависимо)
    * @param fileType тип файла-потребителя
-   * @return запись подходящего языкового варианта; empty, если ни одна
-   *         запись не видима в данном типе файла
+   * @return запись варианта данного языка; empty, если имя в этом языке не видимо
    */
   public Optional<Entry> findEntry(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
@@ -184,12 +169,10 @@ public class GlobalSymbolScope {
     if (list == null) {
       return Optional.empty();
     }
-    var exact = fileType == FileType.OS ? LanguageScope.OS : LanguageScope.BSL;
     synchronized (list) {
       return list.stream()
-        .filter(se -> se.scope() == exact)
+        .filter(se -> se.fileType() == fileType)
         .findFirst()
-        .or(() -> list.stream().filter(se -> se.scope().matches(fileType)).findFirst())
         .map(ScopedEntry::entry);
     }
   }

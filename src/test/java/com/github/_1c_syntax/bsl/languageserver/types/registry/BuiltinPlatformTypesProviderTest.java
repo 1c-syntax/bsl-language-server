@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -79,7 +79,7 @@ class BuiltinPlatformTypesProviderTest {
     var provider = new BuiltinPlatformTypesProvider(holder);
 
     // when / then
-    assertThat(provider.getLanguageScope()).isEqualTo(LanguageScope.BSL);
+    assertThat(provider.getFileType()).isEqualTo(FileType.BSL);
   }
 
   @Test

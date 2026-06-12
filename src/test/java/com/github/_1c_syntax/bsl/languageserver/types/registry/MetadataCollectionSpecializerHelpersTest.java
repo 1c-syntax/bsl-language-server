@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextName;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -462,7 +462,7 @@ class MetadataCollectionSpecializerHelpersTest {
     var generic = MemberDescriptor.genericProperty("<X>",
       elementRef, "").withBilingualName(BilingualString.of("<X>", "<X>"));
     registry.registerMemberSource(baseRef, () -> java.util.List.of(generic),
-      LanguageScope.BSL);
+      FileType.BSL);
     MD docA = Document.builder().name("ПродажиТоваров").build();
     MD docBlank = Document.builder().name("").build();
 
@@ -491,7 +491,7 @@ class MetadataCollectionSpecializerHelpersTest {
     var inerent = MemberDescriptor.property("Количество",
       registry.registerConfigurationType("Число"), "");
     registry.registerMemberSource(baseRef, () -> java.util.List.of(getMethod, inerent),
-      LanguageScope.BSL);
+      FileType.BSL);
 
     var result = MetadataCollectionSpecializer.buildGroupCollectionMembers(
       registry, baseRef, elementRef, java.util.List.of());
@@ -531,7 +531,7 @@ class MetadataCollectionSpecializerHelpersTest {
     var generic = MemberDescriptor.genericProperty("<X>",
       elementRef, "").withBilingualName(BilingualString.of("<X>", "<X>"));
     registry.registerMemberSource(baseRef, () -> java.util.List.of(generic),
-      LanguageScope.BSL);
+      FileType.BSL);
     var children = java.util.List.of(
       MetadataCollectionSpecializer.ChildName.of("Контрагент"));
 

@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Тесты register*-API и lookup-методов {@link TypeRegistry} (intern,
  * registerUserType/ConfigurationType/Alias, resolveGenericByPrefix,
- * findAllGenericsByFamilyCore, setLanguageScope).
+ * findAllGenericsByFamilyCore, registerFileType/isVisibleIn).
  */
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -74,7 +73,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerUserTypeAddsAlias() {
     // given / when
-    var ref = typeRegistry.registerUserType("МойКласс", declaration);
+    var ref = typeRegistry.registerUserType("МойКласс", declaration, FileType.BSL);
 
     // then
     assertThat(typeRegistry.resolve("МойКласс")).contains(ref);
@@ -86,10 +85,11 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerUserTypeRespectsLanguageScope() {
     // given / when
-    var ref = typeRegistry.registerUserType("МойOSКласс", declaration, LanguageScope.OS);
+    var ref = typeRegistry.registerUserType("МойOSКласс", declaration, FileType.OS);
 
     // then
-    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.OS);
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isTrue();
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isFalse();
     assertThat(typeRegistry.resolve("МойOSКласс", FileType.OS)).contains(ref);
     assertThat(typeRegistry.resolve("МойOSКласс", FileType.BSL)).isEmpty();
   }
@@ -100,7 +100,8 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerConfigurationType("Справочники.Контрагенты");
 
     // then
-    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.BSL);
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isTrue();
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isFalse();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.BSL)).contains(ref);
     assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.OS))
       .as("конфигурационные типы недоступны в OS")
@@ -121,25 +122,27 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
-  void setLanguageScopeOverwritesExistingScope() {
-    // given
-    var ref = typeRegistry.registerUserType("Y", declaration, LanguageScope.OS);
+  void registerFileTypeIsAdditive() {
+    // given — тип зарегистрирован OS-источником
+    var ref = typeRegistry.registerUserType("Y", declaration, FileType.OS);
 
-    // when
-    typeRegistry.setLanguageScope(ref, LanguageScope.BOTH);
+    // when — повторная регистрация другим языком расширяет видимость
+    typeRegistry.registerFileType(ref, FileType.BSL);
 
     // then
-    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.BOTH);
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isTrue();
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isTrue();
   }
 
   @Test
-  void getLanguageScopeReturnsBothForUnknownRef() {
-    // given
+  void unknownTypeIsVisibleEverywhere() {
+    // given — тип без зарегистрированной языковой принадлежности
     var ref = new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
       TypeKind.USER, "НезарегистрированныйТип");
 
-    // when / then
-    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.BOTH);
+    // when / then — отсутствие знания не повод фильтровать
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isTrue();
+    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isTrue();
   }
 
   @Test
@@ -166,12 +169,12 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerDescriptionIgnoresBlankInput() {
     // given
-    var ref = typeRegistry.registerUserType("Т", declaration);
+    var ref = typeRegistry.registerUserType("Т", declaration, FileType.BSL);
 
     // when
-    typeRegistry.registerDescription(null, "x", LanguageScope.BOTH);
-    typeRegistry.registerDescription(ref, null, LanguageScope.BOTH);
-    typeRegistry.registerDescription(ref, "  ", LanguageScope.BOTH);
+    typeRegistry.registerDescription(null, "x", FileType.BSL);
+    typeRegistry.registerDescription(ref, null, FileType.BSL);
+    typeRegistry.registerDescription(ref, "  ", FileType.BSL);
 
     // then — описание не сохранилось
     assertThat(typeRegistry.getDescription(ref)).isEmpty();
@@ -180,10 +183,10 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerDescriptionStoresAndExposesByScope() {
     // given
-    var ref = typeRegistry.registerUserType("Т2", declaration);
+    var ref = typeRegistry.registerUserType("Т2", declaration, FileType.BSL);
 
     // when
-    typeRegistry.registerDescription(ref, "ru-описание", LanguageScope.BOTH);
+    typeRegistry.registerDescription(ref, "ru-описание", FileType.BSL);
 
     // then
     assertThat(typeRegistry.getDescription(ref)).isEqualTo("ru-описание");
@@ -192,13 +195,13 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerConstructorsIgnoresEmptyList() {
     // given
-    var ref = typeRegistry.registerUserType("ТипK", declaration);
+    var ref = typeRegistry.registerUserType("ТипK", declaration, FileType.BSL);
 
     // when
-    typeRegistry.registerConstructors(ref, java.util.List.of(), LanguageScope.BOTH);
+    typeRegistry.registerConstructors(ref, java.util.List.of(), FileType.BSL);
     typeRegistry.registerConstructors(null,
       java.util.List.of(com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY),
-      LanguageScope.BOTH);
+      FileType.BSL);
 
     // then — конструкторы не зарегистрированы
     assertThat(typeRegistry.getConstructors(ref)).isEmpty();
@@ -207,7 +210,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void supportsForEachAndIndexAccessReturnFalseByDefault() {
     // given
-    var ref = typeRegistry.registerUserType("ТипУ", declaration);
+    var ref = typeRegistry.registerUserType("ТипУ", declaration, FileType.BSL);
 
     // when / then — без явной регистрации флаги выключены.
     assertThat(typeRegistry.supportsForEach(ref)).isFalse();
@@ -217,7 +220,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void getTypeParametersReturnsEmptyForNonGeneric() {
     // given
-    var ref = typeRegistry.registerUserType("ТипП", declaration);
+    var ref = typeRegistry.registerUserType("ТипП", declaration, FileType.BSL);
 
     // when / then
     assertThat(typeRegistry.getTypeParameters(ref)).isEmpty();
@@ -226,7 +229,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void displayNameFallsBackToQualifiedNameWhenNoBilingual() {
     // given
-    var ref = typeRegistry.registerUserType("ТипD", declaration);
+    var ref = typeRegistry.registerUserType("ТипD", declaration, FileType.BSL);
 
     // when
     var ru = typeRegistry.displayName(ref,
@@ -239,7 +242,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void getForEachDescriptionDefaultsToEmpty() {
     // given
-    var ref = typeRegistry.registerUserType("ТипF", declaration);
+    var ref = typeRegistry.registerUserType("ТипF", declaration, FileType.BSL);
 
     // when / then
     assertThat(typeRegistry.getForEachDescription(ref)).isEmpty();
@@ -249,7 +252,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void getDefaultElementTypesEmptyForNonCollection() {
     // given
-    var ref = typeRegistry.registerUserType("ТипE", declaration);
+    var ref = typeRegistry.registerUserType("ТипE", declaration, FileType.BSL);
 
     // when / then
     assertThat(typeRegistry.getDefaultElementTypes(ref))
@@ -291,11 +294,11 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerConstructorSourceWithoutScopeUsesBoth() {
     // given
-    var ref = typeRegistry.registerUserType("МойТипC", declaration);
+    var ref = typeRegistry.registerUserType("МойТипC", declaration, FileType.BSL);
     var sig = com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY;
 
-    // when — overload без scope.
-    typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig));
+    // when
+    typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig), FileType.BSL);
 
     // then — конструктор виден через getConstructors.
     assertThat(typeRegistry.getConstructors(ref)).contains(sig);
@@ -304,11 +307,11 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerConstructorSourceIgnoresNullArgs() {
     // given
-    var ref = typeRegistry.registerUserType("МойТипC2", declaration);
+    var ref = typeRegistry.registerUserType("МойТипC2", declaration, FileType.BSL);
 
     // when
-    typeRegistry.registerConstructorSource(null, () -> java.util.List.of(), LanguageScope.BOTH);
-    typeRegistry.registerConstructorSource(ref, null, LanguageScope.BOTH);
+    typeRegistry.registerConstructorSource(null, () -> java.util.List.of(), FileType.BSL);
+    typeRegistry.registerConstructorSource(ref, null, FileType.BSL);
 
     // then — никаких источников не зарегистрировано.
     assertThat(typeRegistry.getConstructors(ref)).isEmpty();
@@ -317,9 +320,9 @@ class TypeRegistryRegistrationTest {
   @Test
   void getConstructorsScopeMismatchFiltersOutSource() {
     // given — конструктор-источник зарегистрирован с BSL-only scope.
-    var ref = typeRegistry.registerUserType("МойТипK", declaration);
+    var ref = typeRegistry.registerUserType("МойТипK", declaration, FileType.BSL);
     var sig = com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY;
-    typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig), LanguageScope.BSL);
+    typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig), FileType.BSL);
 
     // when / then — для BSL виден, для OS — отфильтрован.
     assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).contains(sig);
@@ -329,9 +332,9 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerConstructorsScopeMismatchFiltersOut() {
     // given
-    var ref = typeRegistry.registerUserType("МойТипR3", declaration);
+    var ref = typeRegistry.registerUserType("МойТипR3", declaration, FileType.BSL);
     var sig = com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY;
-    typeRegistry.registerConstructors(ref, java.util.List.of(sig), LanguageScope.BSL);
+    typeRegistry.registerConstructors(ref, java.util.List.of(sig), FileType.BSL);
 
     // when / then
     assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).contains(sig);
@@ -349,25 +352,25 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerSpecializationByNameWithBlankReturnsUnknown() {
     // given
-    var generic = typeRegistry.registerUserType("ТипG", declaration);
+    var generic = typeRegistry.registerUserType("ТипG", declaration, FileType.BSL);
     java.util.Map<String, String> bindings = java.util.Map.of("X", "Y");
 
     // when / then — blank specializedName → UNKNOWN.
-    assertThat(typeRegistry.registerSpecialization((String) null, generic, bindings, LanguageScope.BOTH))
+    assertThat(typeRegistry.registerSpecialization((String) null, generic, bindings, FileType.BSL))
       .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
-    assertThat(typeRegistry.registerSpecialization("", generic, bindings, LanguageScope.BOTH))
+    assertThat(typeRegistry.registerSpecialization("", generic, bindings, FileType.BSL))
       .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
-    assertThat(typeRegistry.registerSpecialization("  ", generic, bindings, LanguageScope.BOTH))
+    assertThat(typeRegistry.registerSpecialization("  ", generic, bindings, FileType.BSL))
       .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
   }
 
   @Test
   void registerAsGlobalPropertyWithScope() {
     // given
-    var ref = typeRegistry.registerUserType("ТипP", declaration);
+    var ref = typeRegistry.registerUserType("ТипP", declaration, FileType.BSL);
 
-    // when — overload с LanguageScope (без SyntheticKind, default = PLATFORM_GLOBAL_PROPERTY).
-    typeRegistry.registerAsGlobalProperty(ref, LanguageScope.BOTH);
+    // when — overload с FileType (без SyntheticKind, default = PLATFORM_GLOBAL_PROPERTY).
+    typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
 
     // then — не падает.
     assertThat(typeRegistry.getMembers(ref)).isNotNull();
@@ -376,12 +379,12 @@ class TypeRegistryRegistrationTest {
   @Test
   void registerSpecializationWithEmptyGenericReturnsEmptyMembers() {
     // given — specialized type, generic type без членов.
-    var generic = typeRegistry.registerUserType("ПустойGeneric", declaration);
-    var specialized = typeRegistry.registerUserType("СпециализированныйТип", declaration);
+    var generic = typeRegistry.registerUserType("ПустойGeneric", declaration, FileType.BSL);
+    var specialized = typeRegistry.registerUserType("СпециализированныйТип", declaration, FileType.BSL);
     java.util.Map<String, String> bindings = java.util.Map.of("Имя", "МойТип");
 
     // when
-    typeRegistry.registerSpecialization(specialized, generic, bindings, LanguageScope.BOTH);
+    typeRegistry.registerSpecialization(specialized, generic, bindings, FileType.BSL);
 
     // then — нет членов у specialized.
     assertThat(typeRegistry.getMembers(specialized)).isEmpty();
@@ -390,7 +393,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void isReadOnlyMemberFalseForNullArgsAndUnregisteredRef() {
     // given
-    var ref = typeRegistry.registerUserType("Тип1ReadOnlyCheck", declaration);
+    var ref = typeRegistry.registerUserType("Тип1ReadOnlyCheck", declaration, FileType.BSL);
 
     // when / then
     assertThat(typeRegistry.isReadOnlyMember(ref, "X")).isFalse();
@@ -401,7 +404,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void getDescriptionByLanguageFallsBackToFileTypeMethod() {
     // given
-    var ref = typeRegistry.registerUserType("ТипD2", declaration);
+    var ref = typeRegistry.registerUserType("ТипD2", declaration, FileType.BSL);
 
     // when — описание не регистрировали; и (lang) и (FileType) → "".
     var ruDesc = typeRegistry.getDescription(ref,
@@ -414,7 +417,7 @@ class TypeRegistryRegistrationTest {
   @Test
   void getForEachDescriptionAndIndexAccessRespectLanguage() {
     // given
-    var ref = typeRegistry.registerUserType("ТипL", declaration);
+    var ref = typeRegistry.registerUserType("ТипL", declaration, FileType.BSL);
 
     // when / then — без регистрации для обоих языков empty.
     assertThat(typeRegistry.getForEachDescription(ref,

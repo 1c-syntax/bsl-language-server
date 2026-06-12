@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -157,7 +157,7 @@ public class ConfigurationGenericExpander {
   private void specializeGeneric(TypeRef generic, Map<String, String> bindings) {
     var specializedName = TypeRef.specialize(generic, bindings).qualifiedName();
     if (!specializedName.equals(generic.qualifiedName())) {
-      typeRegistry.registerSpecialization(specializedName, generic, bindings, LanguageScope.BSL);
+      typeRegistry.registerSpecialization(specializedName, generic, bindings, FileType.BSL);
     }
   }
 
@@ -217,7 +217,7 @@ public class ConfigurationGenericExpander {
       return;
     }
     MemberSource source = () -> snapshot;
-    typeRegistry.registerMemberSource(ref, source, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(ref, source, FileType.BSL);
   }
 
   static <T extends MDObject> List<String> namesOf(List<? extends T> items) {

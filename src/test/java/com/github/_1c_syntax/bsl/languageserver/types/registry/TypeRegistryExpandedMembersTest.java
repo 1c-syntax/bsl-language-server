@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -57,7 +57,7 @@ class TypeRegistryExpandedMembersTest {
     var template = MemberDescriptor.genericProperty("<Имя картинки>", pictureRef, "")
       .withBilingualName(BilingualString.of("<Имя картинки>", "<Icon name>"));
     MemberSource src = () -> List.of(template);
-    registry.registerMemberSource(ref, src, LanguageScope.BSL);
+    registry.registerMemberSource(ref, src, FileType.BSL);
 
     var expanded = registry.expandedMembers(ref, Map.of(),
       Map.of("Имя картинки", List.of("ОбщаяКартинка1", "ОбщаяКартинка2")));
@@ -74,7 +74,7 @@ class TypeRegistryExpandedMembersTest {
     var pictureRef = registry.intern(TypeKind.PLATFORM, "Картинка");
     var template = MemberDescriptor.genericProperty("<Имя картинки>", pictureRef, "")
       .withBilingualName(BilingualString.of("<Имя картинки>", "<Icon name>"));
-    registry.registerMemberSource(ref, () -> List.of(template), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
 
     var expanded = registry.expandedMembers(ref, Map.of(),
       Map.of("Имя картинки", List.of("MyIcon")));
@@ -97,7 +97,7 @@ class TypeRegistryExpandedMembersTest {
     var ref = registry.intern(TypeKind.PLATFORM, "Тип");
     var plainMember = MemberDescriptor.property("Регулярный",
       registry.intern(TypeKind.PLATFORM, "Строка"));
-    registry.registerMemberSource(ref, () -> List.of(plainMember), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(plainMember), FileType.BSL);
 
     var expanded = registry.expandedMembers(ref, Map.of(),
       Map.of("Имя", List.of("X")));
@@ -109,7 +109,7 @@ class TypeRegistryExpandedMembersTest {
     var ref = registry.intern(TypeKind.PLATFORM, "Тип");
     var template = MemberDescriptor.genericProperty("<Имя картинки>",
       registry.intern(TypeKind.PLATFORM, "Картинка"), "");
-    registry.registerMemberSource(ref, () -> List.of(template), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
 
     // У шаблона placeholder «Имя картинки», но в expansions передаём «Имя стиля» —
     // нет совпадения, expansion не материализует ничего.
@@ -122,7 +122,7 @@ class TypeRegistryExpandedMembersTest {
   void registerMemberExpansion_emptyMap_isNoOp() {
     var ref = registry.intern(TypeKind.PLATFORM, "T");
     var gen = registry.intern(TypeKind.PLATFORM, "T<gen>");
-    registry.registerMemberExpansion(ref, gen, Map.of(), Map.of(), LanguageScope.BSL);
+    registry.registerMemberExpansion(ref, gen, Map.of(), Map.of(), FileType.BSL);
     assertThat(registry.getMembers(ref)).isEmpty();
   }
 
@@ -133,12 +133,12 @@ class TypeRegistryExpandedMembersTest {
     var pictureRef = registry.intern(TypeKind.PLATFORM, "ПеречислениеСсылка.ВидыКонтрагента");
     var template = MemberDescriptor.genericProperty("<Имя значения>", pictureRef, "")
       .withBilingualName(BilingualString.of("<Имя значения>", "<Value name>"));
-    registry.registerMemberSource(genRef, () -> List.of(template), LanguageScope.BSL);
+    registry.registerMemberSource(genRef, () -> List.of(template), FileType.BSL);
 
     registry.registerMemberExpansion(specRef, genRef,
       Map.of("Имя перечисления", "ВидыКонтрагента"),
       Map.of("Имя значения", List.of("Юридическое", "Физическое")),
-      LanguageScope.BSL);
+      FileType.BSL);
 
     var members = registry.getMembers(specRef);
     assertThat(members).extracting(MemberDescriptor::name)
@@ -150,7 +150,7 @@ class TypeRegistryExpandedMembersTest {
     var ref = registry.intern(TypeKind.PLATFORM, "Тип");
     var template = MemberDescriptor.genericProperty("<X>", ref, "")
       .withBilingualName(BilingualString.of("<X>", "<X>"));
-    registry.registerMemberSource(ref, () -> List.of(template), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
     assertThat(registry.expandedMembers(ref, Map.of(), Map.of("X", List.of("Один"))))
       .extracting(MemberDescriptor::name)
       .containsExactly("Один");

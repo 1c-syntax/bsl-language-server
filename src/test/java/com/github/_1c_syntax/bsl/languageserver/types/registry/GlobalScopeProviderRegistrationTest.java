@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
@@ -70,7 +69,7 @@ class GlobalScopeProviderRegistrationTest {
     var ref = new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
 
     // when
-    scope.registerGlobalProperty(ref, List.of("Справочники", "Catalogs"));
+    scope.registerGlobalProperty(ref, List.of("Справочники", "Catalogs"), FileType.BSL);
 
     // then — registerGlobalProperty публикует в GlobalSymbolScope как
     // SyntheticSymbol с типом-значением ref.
@@ -85,10 +84,10 @@ class GlobalScopeProviderRegistrationTest {
   @Test
   void registerGlobalPropertyIgnoresBlankNamesAndDeclinesNullRef() {
     // when
-    scope.registerGlobalProperty(null, List.of("X"));
-    scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "T"), List.of());
+    scope.registerGlobalProperty(null, List.of("X"), FileType.BSL);
+    scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "T"), List.of(), FileType.BSL);
     scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "T"),
-      java.util.Arrays.asList("", "  ", null, "Real"));
+      java.util.Arrays.asList("", "  ", null, "Real"), FileType.BSL);
 
     // then — null ref и пустой names → no-op; blank/null имена пропускаются
     assertThat(scope.findGlobal("Real")).isPresent();
@@ -101,8 +100,8 @@ class GlobalScopeProviderRegistrationTest {
     var ref = new TypeRef(TypeKind.PLATFORM, "X");
 
     // when — два разных скоупа на одно имя → BOTH
-    scope.registerGlobalProperty(ref, List.of("X"), LanguageScope.BSL);
-    scope.registerGlobalProperty(ref, List.of("X"), LanguageScope.OS);
+    scope.registerGlobalProperty(ref, List.of("X"), FileType.BSL);
+    scope.registerGlobalProperty(ref, List.of("X"), FileType.OS);
 
     // then
     assertThat(scope.findGlobal("X", FileType.BSL)).isPresent();
@@ -116,7 +115,7 @@ class GlobalScopeProviderRegistrationTest {
 
     // when
     scope.registerGlobalProperty(ref, List.of("КодировкаТекста"),
-      LanguageScope.BOTH, "desc", SyntheticKind.PLATFORM_GLOBAL_ENUM);
+      FileType.BSL, "desc", SyntheticKind.PLATFORM_GLOBAL_ENUM);
 
     // then — символ виден, kind — enum
     var sym = scope.findGlobal("КодировкаТекста").orElseThrow();
@@ -131,7 +130,7 @@ class GlobalScopeProviderRegistrationTest {
     var ref = new TypeRef(TypeKind.PLATFORM, "Структура");
 
     // when
-    scope.registerPlatformClass(ref, List.of("Структура", "Structure"), LanguageScope.BOTH, "");
+    scope.registerPlatformClass(ref, List.of("Структура", "Structure"), FileType.BSL, "");
 
     // then — присутствует в classes, кодируется как TYPE_NAME
     assertThat(scope.getClasses()).contains("Структура", "Structure");
@@ -208,8 +207,8 @@ class GlobalScopeProviderRegistrationTest {
     var classRef = new TypeRef(TypeKind.PLATFORM, "ОчередьСтек");
 
     // when
-    scope.registerGlobalProperty(propRef, List.of("МояОчередь"));
-    scope.registerPlatformClass(classRef, List.of("ОчередьСтек"), LanguageScope.BOTH, "");
+    scope.registerGlobalProperty(propRef, List.of("МояОчередь"), FileType.BSL);
+    scope.registerPlatformClass(classRef, List.of("ОчередьСтек"), FileType.BSL, "");
 
     // then — Synthetic.getName() возвращает canonical типа.
     var contexts = scope.getGlobalContexts();
@@ -223,7 +222,7 @@ class GlobalScopeProviderRegistrationTest {
   void getGlobalContextNamesProjectsContextSymbolsToNames() {
     // given
     scope.registerGlobalProperty(
-      new TypeRef(TypeKind.PLATFORM, "МойУникальныйТипПровайдер"), List.of("МойГлобал"));
+      new TypeRef(TypeKind.PLATFORM, "МойУникальныйТипПровайдер"), List.of("МойГлобал"), FileType.BSL);
 
     // when
     var names = scope.getGlobalContextNames();
@@ -237,8 +236,8 @@ class GlobalScopeProviderRegistrationTest {
     // given — два символа: один BSL-only, второй OS-only.
     var bslRef = new TypeRef(TypeKind.PLATFORM, "СОПТ_BslOnly");
     var osRef = new TypeRef(TypeKind.PLATFORM, "СОПТ_OsOnly");
-    scope.registerGlobalProperty(bslRef, List.of("СОПТ_BslOnly"), LanguageScope.BSL);
-    scope.registerGlobalProperty(osRef, List.of("СОПТ_OsOnly"), LanguageScope.OS);
+    scope.registerGlobalProperty(bslRef, List.of("СОПТ_BslOnly"), FileType.BSL);
+    scope.registerGlobalProperty(osRef, List.of("СОПТ_OsOnly"), FileType.OS);
 
     // when
     var bslNames = scope.getGlobalContexts(FileType.BSL).stream()
@@ -255,7 +254,7 @@ class GlobalScopeProviderRegistrationTest {
   void findGlobalContextResolvesToValueType() {
     // given
     var ref = new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
-    scope.registerGlobalProperty(ref, List.of("Справочники"));
+    scope.registerGlobalProperty(ref, List.of("Справочники"), FileType.BSL);
 
     // when
     var resolved = scope.findGlobalContext("Справочники", FileType.BSL);
@@ -268,7 +267,7 @@ class GlobalScopeProviderRegistrationTest {
   void findGlobalContextEmptyWhenScopeMismatch() {
     // given — символ зарегистрирован только в OS.
     var ref = new TypeRef(TypeKind.PLATFORM, "T");
-    scope.registerGlobalProperty(ref, List.of("OS_Only"), LanguageScope.OS);
+    scope.registerGlobalProperty(ref, List.of("OS_Only"), FileType.OS);
 
     // when / then
     assertThat(scope.findGlobalContext("OS_Only", FileType.BSL)).isEmpty();
@@ -354,7 +353,7 @@ class GlobalScopeProviderRegistrationTest {
   void findGlobalCaseInsensitiveOnRegisteredSymbol() {
     // given
     scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "ТипC"),
-      List.of("МойГлобалC"));
+      List.of("МойГлобалC"), FileType.BSL);
 
     // when / then — поиск независим от регистра.
     assertThat(scope.findGlobal("мойглобалc")).isPresent();
@@ -365,7 +364,7 @@ class GlobalScopeProviderRegistrationTest {
   void findGlobalEntryReturnsEntryWithRole() {
     // given
     scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "ТипR"),
-      List.of("МойГлобалR"));
+      List.of("МойГлобалR"), FileType.BSL);
 
     // when
     var entry = scope.findGlobalEntry("МойГлобалR", FileType.BSL);
@@ -394,7 +393,7 @@ class GlobalScopeProviderRegistrationTest {
   void findGlobalWithScopeMismatchReturnsEmpty() {
     // given
     var ref = new TypeRef(TypeKind.PLATFORM, "ТипSP");
-    scope.registerGlobalProperty(ref, List.of("СП_Имя"), LanguageScope.BSL);
+    scope.registerGlobalProperty(ref, List.of("СП_Имя"), FileType.BSL);
 
     // when — поиск через findGlobal с OS-fileType отсекает BSL-scope.
     var bslFound = scope.findGlobal("СП_Имя", FileType.BSL);
@@ -460,10 +459,10 @@ class GlobalScopeProviderRegistrationTest {
     // given
     var propRef = new TypeRef(TypeKind.PLATFORM, "ТипPP");
     var enumRef = new TypeRef(TypeKind.PLATFORM, "ТипEE");
-    scope.registerGlobalProperty(propRef, List.of("ПрG"));
+    scope.registerGlobalProperty(propRef, List.of("ПрG"), FileType.BSL);
     // Регистрация enum через kind в registerGlobalProperty с явным SyntheticKind.PLATFORM_GLOBAL_ENUM
     scope.registerGlobalProperty(enumRef, List.of("ПрE"),
-      LanguageScope.BOTH, "", SyntheticKind.PLATFORM_GLOBAL_ENUM);
+      FileType.BSL, "", SyntheticKind.PLATFORM_GLOBAL_ENUM);
 
     // when / then — оба видны через findGlobal.
     assertThat(scope.findGlobal("ПрG")).isPresent();

@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.scope;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
@@ -42,8 +41,8 @@ class GlobalSymbolScopeTest {
       "OS-описание", TypeRef.UNKNOWN);
 
     // when
-    scope.register("КодировкаТекста", bslSym, GlobalSymbolScope.Role.VALUE, LanguageScope.BSL);
-    scope.register("КодировкаТекста", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+    scope.register("КодировкаТекста", bslSym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("КодировкаТекста", osSym, GlobalSymbolScope.Role.VALUE, FileType.OS);
 
     // then
     assertThat(scope.findEntry("КодировкаТекста", FileType.BSL))
@@ -53,31 +52,13 @@ class GlobalSymbolScopeTest {
   }
 
   @Test
-  void findEntryPrefersExactScopeOverBoth() {
-    // given
-    var scope = new GlobalSymbolScope();
-    var bothSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "BOTH", TypeRef.UNKNOWN);
-    var osSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "OS", TypeRef.UNKNOWN);
-
-    // when
-    scope.register("Имя", bothSym, GlobalSymbolScope.Role.VALUE, LanguageScope.BOTH);
-    scope.register("Имя", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
-
-    // then — для OS-файла точный скоуп выигрывает у BOTH, для BSL остаётся BOTH
-    assertThat(scope.findEntry("Имя", FileType.OS))
-      .map(GlobalSymbolScope.Entry::symbol).contains(osSym);
-    assertThat(scope.findEntry("Имя", FileType.BSL))
-      .map(GlobalSymbolScope.Entry::symbol).contains(bothSym);
-  }
-
-  @Test
   void findEntryReturnsEmptyWhenNoVariantMatchesFileType() {
     // given
     var scope = new GlobalSymbolScope();
     var osSym = new SyntheticSymbol("ФС", SyntheticKind.LIBRARY_MODULE, "", TypeRef.UNKNOWN);
 
     // when — OS-only запись
-    scope.register("ФС", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+    scope.register("ФС", osSym, GlobalSymbolScope.Role.VALUE, FileType.OS);
 
     // then
     assertThat(scope.findEntry("ФС", FileType.OS)).isPresent();
@@ -91,9 +72,9 @@ class GlobalSymbolScopeTest {
     var first = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "первый", TypeRef.UNKNOWN);
     var second = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "второй", TypeRef.UNKNOWN);
 
-    // when — повторная регистрация с тем же скоупом заменяет запись
-    scope.register("Имя", first, GlobalSymbolScope.Role.VALUE, LanguageScope.BOTH);
-    scope.register("Имя", second, GlobalSymbolScope.Role.VALUE, LanguageScope.BOTH);
+    // when — повторная регистрация с тем же языком заменяет запись
+    scope.register("Имя", first, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Имя", second, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // then
     assertThat(scope.findSymbol("Имя")).contains(second);
@@ -105,8 +86,8 @@ class GlobalSymbolScopeTest {
     var scope = new GlobalSymbolScope();
     var bslSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "BSL", TypeRef.UNKNOWN);
     var osSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "OS", TypeRef.UNKNOWN);
-    scope.register("Имя", bslSym, GlobalSymbolScope.Role.VALUE, LanguageScope.BSL);
-    scope.register("Имя", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+    scope.register("Имя", bslSym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Имя", osSym, GlobalSymbolScope.Role.VALUE, FileType.OS);
 
     // when
     scope.unregister(osSym);
@@ -121,7 +102,7 @@ class GlobalSymbolScopeTest {
   void findsSymbolCaseInsensitive() {
     var scope = new GlobalSymbolScope();
     var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
-    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     assertThat(scope.findSymbol("справочники")).contains(sym);
     assertThat(scope.findSymbol("СПРАВОЧНИКИ")).contains(sym);
@@ -133,8 +114,8 @@ class GlobalSymbolScopeTest {
   void supportsRuEnAliases() {
     var scope = new GlobalSymbolScope();
     var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
-    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
-    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     assertThat(scope.findSymbol("catalogs")).contains(sym);
     assertThat(scope.findSymbol("справочники")).contains(sym);
@@ -159,8 +140,8 @@ class GlobalSymbolScopeTest {
   void unregisterRemovesAllAliases() {
     var scope = new GlobalSymbolScope();
     var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
-    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
-    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     scope.unregister(sym);
 
@@ -173,8 +154,8 @@ class GlobalSymbolScopeTest {
     var scope = new GlobalSymbolScope();
     var valueSym = new SyntheticSymbol("ФС", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
     var typeSym = new SyntheticSymbol("СессияПользователя", SyntheticKind.TYPE_NAME, "");
-    scope.register("ФС", valueSym, GlobalSymbolScope.Role.VALUE);
-    scope.register("СессияПользователя", typeSym, GlobalSymbolScope.Role.TYPE_NAME);
+    scope.register("ФС", valueSym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("СессияПользователя", typeSym, GlobalSymbolScope.Role.TYPE_NAME, FileType.BSL);
 
     scope.clear(GlobalSymbolScope.Role.VALUE);
 
@@ -189,10 +170,10 @@ class GlobalSymbolScopeTest {
     var sym = new SyntheticSymbol("X", SyntheticKind.TYPE_NAME, "");
 
     // when
-    scope.register("", sym, GlobalSymbolScope.Role.VALUE);
-    scope.register("   ", sym, GlobalSymbolScope.Role.VALUE);
-    scope.register(null, sym, GlobalSymbolScope.Role.VALUE);
-    scope.register("X", null, GlobalSymbolScope.Role.VALUE);
+    scope.register("", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("   ", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register(null, sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("X", null, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // then
     assertThat(scope.findSymbol("X")).isEmpty();
@@ -215,7 +196,7 @@ class GlobalSymbolScopeTest {
     // given
     var scope = new GlobalSymbolScope();
     var sym = new SyntheticSymbol("ФайловыеПотоки", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
-    scope.register("ФайловыеПотоки", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("ФайловыеПотоки", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // when
     var names = scope.getNames();
@@ -229,8 +210,8 @@ class GlobalSymbolScopeTest {
     // given
     var scope = new GlobalSymbolScope();
     var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
-    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
-    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // when
     var entries = scope.getEntries();
@@ -246,9 +227,9 @@ class GlobalSymbolScopeTest {
     var scope = new GlobalSymbolScope();
     var sym1 = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
     var sym2 = new SyntheticSymbol("ФС", SyntheticKind.LIBRARY_MODULE, "");
-    scope.register("Справочники", sym1, GlobalSymbolScope.Role.VALUE);
-    scope.register("Catalogs", sym1, GlobalSymbolScope.Role.VALUE);
-    scope.register("ФС", sym2, GlobalSymbolScope.Role.VALUE);
+    scope.register("Справочники", sym1, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Catalogs", sym1, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("ФС", sym2, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // when
     var symbols = scope.streamSymbols().toList();
@@ -263,8 +244,8 @@ class GlobalSymbolScopeTest {
     var scope = new GlobalSymbolScope();
     var sym1 = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
     var sym2 = new SyntheticSymbol("Y", SyntheticKind.TYPE_NAME, "");
-    scope.register("X", sym1, GlobalSymbolScope.Role.VALUE);
-    scope.register("Y", sym2, GlobalSymbolScope.Role.TYPE_NAME);
+    scope.register("X", sym1, GlobalSymbolScope.Role.VALUE, FileType.BSL);
+    scope.register("Y", sym2, GlobalSymbolScope.Role.TYPE_NAME, FileType.BSL);
 
     // when
     scope.clear();
