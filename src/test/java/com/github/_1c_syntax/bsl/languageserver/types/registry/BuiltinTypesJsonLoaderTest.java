@@ -173,6 +173,25 @@ class BuiltinTypesJsonLoaderTest {
     assertThat(anyParamWithType).isTrue();
   }
 
+  @Test
+  void errorCategoryEnumIsLoadedFromBuiltinJson() {
+    // given — системное перечисление КатегорияОшибки перенесено в BSL-пак
+    // из bsl-context (синтакс-помощник платформы 8.3.26)
+    var errorCategory = bslType("КатегорияОшибки");
+
+    // when
+    var networkError = member(errorCategory, "ОшибкаСети");
+
+    // then — перечисление двуязычно, глобально и несёт все 28 значений
+    assertThat(errorCategory.isEnum()).isTrue();
+    assertThat(errorCategory.exposedAsGlobal()).isTrue();
+    assertThat(errorCategory.name().en()).isEqualTo("ErrorCategory");
+    assertThat(errorCategory.members()).hasSize(28);
+    assertThat(networkError.matches("NetworkError")).as("значение находится по en-имени").isTrue();
+    assertThat(typeNames(networkError.returnTypes())).containsExactly("КатегорияОшибки");
+    assertThat(networkError.metadata().sinceVersion()).isEqualTo("8.3.17");
+  }
+
   private static TypeDecl oscriptType(String name) {
     return type(OSCRIPT_RESOURCE, name);
   }
