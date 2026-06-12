@@ -194,7 +194,7 @@ public class EventHandlerResolver {
     // events наследуются от generic-типа (например, ДокументОбъект.<Имя документа>)
     // автоматически через MemberSource, который TypeRegistry.registerSpecialization
     // регистрирует на специализированный TypeRef.
-    return typeRegistry.getMembers(ownerTypeRef.get()).stream()
+    return typeRegistry.getMembers(ownerTypeRef.get(), documentContext.getFileType()).stream()
       .filter(m -> m.kind() == MemberKind.EVENT)
       .filter(m -> m.name().toLowerCase(Locale.ROOT).equals(key))
       .findFirst();

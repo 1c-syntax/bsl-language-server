@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
@@ -33,7 +34,6 @@ import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
@@ -261,7 +261,7 @@ public class ConfigurationTypesProvider {
     }
     var names = specs.stream().map(HandlerSpec::name).distinct().toList();
     var templates = typeRegistry.expandedMembers(typeRef, Map.of(),
-      Map.of(placeholder, names));
+      Map.of(placeholder, names), FileType.BSL);
     if (templates.isEmpty()) {
       return;
     }
@@ -273,7 +273,7 @@ public class ConfigurationTypesProvider {
         return sig == null ? m : m.withSignatures(List.of(sig));
       })
       .toList();
-    typeRegistry.registerMemberSource(typeRef, () -> withSignatures, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(typeRef, () -> withSignatures, FileType.BSL);
   }
 
   /** Сигнатура HTTP-обработчика: один параметр {@code Запрос} типа {@code HTTPСервисЗапрос}. */
@@ -463,8 +463,8 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
       }
       typeRegistry.registerDisplayName(ref, BilingualString.of(collectionRu, collectionEn));
-      typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.BSL);
-      typeRegistry.registerAsGlobalProperty(ref);
+      typeRegistry.registerMemberSource(ref, () -> members, FileType.BSL);
+      typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
 
       // Платформенные методы коллекции-менеджера (СправочникиМенеджер,
       // ДокументыМенеджер) — уровня всех справочников/документов, например
@@ -568,8 +568,8 @@ public class ConfigurationTypesProvider {
       fresh.addAll(buildCommonAttributeMembers(capturedCommon));
       return fresh;
     };
-    typeRegistry.registerMemberSource(objectRef, objectSource, LanguageScope.BSL);
-    typeRegistry.registerMemberSource(refRef, refSource, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(objectRef, objectSource, FileType.BSL);
+    typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
 
     // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
     // признаки учёта и флаги учёта субконто для плана счетов.
@@ -598,9 +598,9 @@ public class ConfigurationTypesProvider {
     }
     var captured = List.copyOf(extras);
     MemberSource source = () -> buildAttributeMembers(captured);
-    typeRegistry.registerMemberSource(objectRef, source, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(objectRef, source, FileType.BSL);
     if (!refRef.equals(objectRef)) {
-      typeRegistry.registerMemberSource(refRef, source, LanguageScope.BSL);
+      typeRegistry.registerMemberSource(refRef, source, FileType.BSL);
     }
   }
 
@@ -650,17 +650,17 @@ public class ConfigurationTypesProvider {
         // на каждый getMembers, поэтому язык читается per-call и подхватывает
         // workspace/didChangeConfiguration.
         MemberSource columnSource = () -> buildAttributeMembers(tsAttributes);
-        typeRegistry.registerMemberSource(rowRef, columnSource, LanguageScope.BSL);
+        typeRegistry.registerMemberSource(rowRef, columnSource, FileType.BSL);
         // Для удобства dot-completion'а ТЧ-коллекция тоже показывает колонки —
         // обращение `ТЧ.Колонка` к коллекции встречается в коде (через индекс/первую строку).
-        typeRegistry.registerMemberSource(collRef, columnSource, LanguageScope.BSL);
+        typeRegistry.registerMemberSource(collRef, columnSource, FileType.BSL);
       }
 
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
     if (!tsMembers.isEmpty()) {
       var immutableTs = List.copyOf(tsMembers);
-      typeRegistry.registerMemberSource(objectRef, () -> immutableTs, LanguageScope.BSL);
+      typeRegistry.registerMemberSource(objectRef, () -> immutableTs, FileType.BSL);
     }
   }
 
@@ -675,8 +675,8 @@ public class ConfigurationTypesProvider {
       if (parent == null) {
         return List.of();
       }
-      return typeRegistry.getMembers(parent);
-    }, LanguageScope.BSL);
+      return typeRegistry.getMembers(parent, FileType.BSL);
+    }, FileType.BSL);
   }
 
   /**
@@ -739,7 +739,7 @@ public class ConfigurationTypesProvider {
     var typeBindings = Map.of(parameters.get(0), enumName);
     var memberExpansions = Map.<String, List<String>>of(memberPlaceholderName(typeRegistry, generic), valueNames);
     typeRegistry.registerMemberExpansion(managerRef, generic, typeBindings, memberExpansions,
-      LanguageScope.BSL);
+      FileType.BSL);
   }
 
   /**
@@ -775,7 +775,7 @@ public class ConfigurationTypesProvider {
       .toList();
     // В отличие от значений перечислений (placeholder generic-члена менеджера), у менеджеров
     // справочников/планов нет placeholder'а под предопределённые — регистрируем members напрямую.
-    typeRegistry.registerMemberSource(managerRef, () -> members, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(managerRef, () -> members, FileType.BSL);
   }
 
   /**
@@ -848,7 +848,7 @@ public class ConfigurationTypesProvider {
     if (expansions.isEmpty()) {
       return;
     }
-    typeRegistry.registerMemberExpansion(specialized, generic, typeBindings, expansions, LanguageScope.BSL);
+    typeRegistry.registerMemberExpansion(specialized, generic, typeBindings, expansions, FileType.BSL);
   }
 
   /**
@@ -868,7 +868,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     var captured = List.copyOf(columns);
-    typeRegistry.registerMemberSource(specRef, () -> buildAttributeMembers(captured), LanguageScope.BSL);
+    typeRegistry.registerMemberSource(specRef, () -> buildAttributeMembers(captured), FileType.BSL);
   }
 
   /**
@@ -916,7 +916,7 @@ public class ConfigurationTypesProvider {
    * это {@code "Имя значения"}). Источник — bsl-context-разобранное имя члена.
    */
   static String memberPlaceholderName(TypeRegistry typeRegistry, TypeRef generic) {
-    return typeRegistry.getMembers(generic).stream()
+    return typeRegistry.getMembers(generic, FileType.BSL).stream()
       .filter(MemberDescriptor::generic)
       .findFirst()
       .flatMap(m -> ContextNames.placeholders(m.bilingualName().primary()).stream().findFirst())
@@ -995,7 +995,7 @@ public class ConfigurationTypesProvider {
     if (generic == null) {
       return;
     }
-    for (var m : typeRegistry.getMembers(generic)) {
+    for (var m : typeRegistry.getMembers(generic, FileType.BSL)) {
       if (m.generic()) {
         continue;
       }
@@ -1025,7 +1025,7 @@ public class ConfigurationTypesProvider {
     if (generic == null) {
       return result;
     }
-    for (var m : typeRegistry.getMembers(generic)) {
+    for (var m : typeRegistry.getMembers(generic, FileType.BSL)) {
       if (m.generic()) {
         continue;
       }

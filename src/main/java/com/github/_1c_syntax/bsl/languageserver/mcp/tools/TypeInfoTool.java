@@ -99,7 +99,7 @@ public class TypeInfoTool {
       var properties = membersOfKind(members, MemberKind.PROPERTY);
       var methods = membersOfKind(members, MemberKind.METHOD);
 
-      var description = typeService.getDescription(typeRef, Language.RU);
+      var description = typeService.getDescription(typeRef, Language.RU, fileType);
       return new Result(
         typeRef.qualifiedName(),
         typeRef.kind().name(),

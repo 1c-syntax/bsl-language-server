@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.context.api.ContextType;
@@ -28,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
@@ -374,7 +374,7 @@ public class MetadataCollectionSpecializer {
     }
     if (!overrides.isEmpty()) {
       var captured = List.copyOf(overrides.values());
-      typeRegistry.registerMemberOverride(ownerRef, () -> captured, LanguageScope.BSL);
+      typeRegistry.registerMemberOverride(ownerRef, () -> captured, FileType.BSL);
     }
   }
 
@@ -481,7 +481,7 @@ public class MetadataCollectionSpecializer {
     }
     MemberSource source = () ->
       buildGroupCollectionMembers(typeRegistry, baseRef, elementTypeRef, capturedMdos);
-    typeRegistry.registerMemberSource(specRef, source, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(specRef, source, FileType.BSL);
     return specRef;
   }
 
@@ -489,7 +489,7 @@ public class MetadataCollectionSpecializer {
                                                              TypeRef baseRef,
                                                              TypeRef elementTypeRef,
                                                              List<MD> mdos) {
-    var raw = typeRegistry.getMembers(baseRef);
+    var raw = typeRegistry.getMembers(baseRef, FileType.BSL);
     if (raw.isEmpty()) {
       return List.of();
     }
@@ -533,10 +533,10 @@ public class MetadataCollectionSpecializer {
     var overrides = buildPerOwnerOverrides(perOwnerName, owner);
     var capturedElement = elementTypeRef;
     typeRegistry.registerMemberSource(perOwnerRef,
-      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement)),
-      LanguageScope.BSL);
+      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
+      FileType.BSL);
     if (!overrides.isEmpty()) {
-      typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, LanguageScope.BSL);
+      typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, FileType.BSL);
     }
     return perOwnerRef;
   }
@@ -599,7 +599,7 @@ public class MetadataCollectionSpecializer {
     typeRegistry.registerMemberSource(perCollRef,
       () -> buildPerOwnerCollectionMembers(typeRegistry, capturedBase, capturedElement,
         capturedChildren, ownerSuffix),
-      LanguageScope.BSL);
+      FileType.BSL);
     overrides.add(new MemberDescriptor(
       BilingualString.of(spec.ru(), spec.en()),
       MemberKind.PROPERTY,
@@ -654,7 +654,7 @@ public class MetadataCollectionSpecializer {
                                                                 TypeRef elementRef,
                                                                 List<ChildName> children,
                                                                 String ownerSuffix) {
-    var raw = typeRegistry.getMembers(baseRef);
+    var raw = typeRegistry.getMembers(baseRef, FileType.BSL);
     var elementTypeSet = TypeSet.of(elementRef);
     var result = new ArrayList<MemberDescriptor>(raw.size() + children.size());
     var hasGenericTemplate = false;

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.context.api.ContextName;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -170,10 +171,12 @@ class EventHandlerResolverTest {
     var eventDescriptor = MemberDescriptor.event(
       "ОбработкаКоманды", "",
       List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
-    Mockito.when(typeRegistry.getMembers(commandRef)).thenReturn(List.of(eventDescriptor));
+    Mockito.when(typeRegistry.getMembers(Mockito.eq(commandRef), Mockito.any()))
+      .thenReturn(List.of(eventDescriptor));
 
     var doc = Mockito.mock(DocumentContext.class);
     Mockito.when(doc.getModuleType()).thenReturn(ModuleType.CommandModule);
+    Mockito.when(doc.getFileType()).thenReturn(FileType.BSL);
 
     assertThat(resolver.lookupContract(doc, "ОбработкаКоманды")).isPresent();
     assertThat(resolver.lookupContract(doc, "ЧтоТоЕщё")).isEmpty();

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +37,7 @@ class GlobalScopeProviderResourceTest {
 
   @Test
   void loadFromResourceMergesLegacyKeywordsField() {
-    var loaded = invokeLoadFromResource(
-      "keyword-fallback/globals-legacy-keywords.json", LanguageScope.BSL);
+    var loaded = invokeLoadFromResource("keyword-fallback/globals-legacy-keywords.json");
 
     // legacy keywords из globals.json объединены со scope-фолбэком keyword-loader'a:
     // legacy1/legacy2 — точно есть, classes тоже подгружены.
@@ -48,18 +46,17 @@ class GlobalScopeProviderResourceTest {
 
   @Test
   void loadFromResourceReturnsEmptyOnIOException() {
-    var loaded = invokeLoadFromResource(
-      "keyword-fallback/does-not-exist.json", LanguageScope.BSL);
+    var loaded = invokeLoadFromResource("keyword-fallback/does-not-exist.json");
 
     assertThat(loaded).isNotNull();
   }
 
   @SneakyThrows
-  private static Object invokeLoadFromResource(String resourcePath, LanguageScope scope) {
+  private static Object invokeLoadFromResource(String resourcePath) {
     Method method = null;
     for (var m : GlobalScopeProvider.class.getDeclaredMethods()) {
       if (m.getName().equals("loadFromResource")
-        && m.getParameterCount() == 2) {
+        && m.getParameterCount() == 1) {
         method = m;
         break;
       }
@@ -68,6 +65,6 @@ class GlobalScopeProviderResourceTest {
       throw new IllegalStateException("loadFromResource not found");
     }
     method.setAccessible(true);
-    return method.invoke(null, resourcePath, scope);
+    return method.invoke(null, resourcePath);
   }
 }

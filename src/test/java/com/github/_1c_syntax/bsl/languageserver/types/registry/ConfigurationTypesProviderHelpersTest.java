@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -363,7 +363,7 @@ class ConfigurationTypesProviderHelpersTest {
     var generic = MemberDescriptor.genericProperty("<Имя значения>",
         registry.registerConfigurationType("ПеречислениеСсылка.X"), "")
       .withBilingualName(BilingualString.of("<Имя значения>", "<Value name>"));
-    registry.registerMemberSource(ref, () -> List.of(generic), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(generic), FileType.BSL);
 
     var name = ConfigurationTypesProvider.memberPlaceholderName(registry, ref);
     assertThat(name).isEqualTo("Имя значения");
@@ -712,7 +712,7 @@ class ConfigurationTypesProviderHelpersTest {
       (registry, p) -> {
         p.tryRegister();
         var typeRef = registry.resolve("Модуль HTTP-сервиса").orElseThrow();
-        var names = registry.getMembers(typeRef).stream().map(MemberDescriptor::name).toList();
+        var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("URLTemplate1GET");
       });
   }
@@ -786,7 +786,7 @@ class ConfigurationTypesProviderHelpersTest {
       (registry, p) -> {
         p.tryRegister();
         var typeRef = registry.resolve("Модуль Web-сервиса").orElseThrow();
-        var names = registry.getMembers(typeRef).stream().map(MemberDescriptor::name).toList();
+        var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("Операция1");
       });
   }
@@ -819,7 +819,7 @@ class ConfigurationTypesProviderHelpersTest {
       (registry, p) -> {
         p.tryRegister();
         var typeRef = registry.resolve("Модуль сервиса интеграции").orElseThrow();
-        var names = registry.getMembers(typeRef).stream().map(MemberDescriptor::name).toList();
+        var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("ОбработчикСообщения");
       });
   }
@@ -862,7 +862,17 @@ class ConfigurationTypesProviderHelpersTest {
     WorkspaceContextHolder.set(workspaceUri);
     try {
       var packTypes = new java.util.ArrayList<TypePackProvider.TypeDecl>(typeDecls);
-      PlatformTypesProvider pack = () -> packTypes;
+      PlatformTypesProvider pack = new PlatformTypesProvider() {
+        @Override
+        public java.util.List<TypePackProvider.TypeDecl> getTypes() {
+          return packTypes;
+        }
+
+        @Override
+        public FileType getFileType() {
+          return FileType.BSL;
+        }
+      };
       var rawRegistry = new TypeRegistry(List.of(pack),
         Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
@@ -897,7 +907,7 @@ class ConfigurationTypesProviderHelpersTest {
     var ref = registry.registerConfigurationType("Тип");
     var regular = MemberDescriptor.property("Регулярный",
       new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(TypeKind.PLATFORM, "Строка"));
-    registry.registerMemberSource(ref, () -> List.of(regular), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(regular), FileType.BSL);
 
     assertThat(ConfigurationTypesProvider.memberPlaceholderName(registry, ref)).isEmpty();
   }

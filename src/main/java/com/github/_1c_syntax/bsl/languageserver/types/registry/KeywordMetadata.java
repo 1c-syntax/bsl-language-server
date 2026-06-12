@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider.KeywordDescription;
 
 import java.util.List;
@@ -31,12 +30,14 @@ import java.util.Map;
 /**
  * Результат разбора {@code builtin-keywords.json}/{@code builtin-oscript-keywords.json}
  * через {@link KeywordMetadataLoader}: плоский список имён keyword'ов
- * (canonical + alias по обоим написаниям), их language-scope, сниппеты
- * автодополнения и описания (с поддержкой {@code descriptionByParent}).
+ * (canonical + alias по обоим написаниям), сниппеты автодополнения и
+ * описания (с поддержкой {@code descriptionByParent}). Языковая
+ * принадлежность определяется тем, чей ресурс разбирался, — снаружи,
+ * в per-language наборах {@code GlobalScopeProvider}.
  */
-record KeywordMetadata(List<String> keywords, Map<String, LanguageScope> scopes,
+record KeywordMetadata(List<String> keywords,
                        Map<String, LanguageKeywordSnippet> snippets,
                        Map<String, KeywordDescription> descriptions) {
 
-  static final KeywordMetadata EMPTY = new KeywordMetadata(List.of(), Map.of(), Map.of(), Map.of());
+  static final KeywordMetadata EMPTY = new KeywordMetadata(List.of(), Map.of(), Map.of());
 }

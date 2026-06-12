@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
@@ -93,8 +92,8 @@ class OScriptModuleMembersProviderTest {
 
     var moduleRef = new TypeRef(TypeKind.USER, "dual.Модуль");
     var classRef = new TypeRef(TypeKind.USER, "dual.Класс");
-    when(typeRegistry.registerUserType(eq("dual.Модуль"), any(), eq(LanguageScope.OS))).thenReturn(moduleRef);
-    when(typeRegistry.registerUserType(eq("dual.Класс"), any(), eq(LanguageScope.OS))).thenReturn(classRef);
+    when(typeRegistry.registerUserType(eq("dual.Модуль"), any(), eq(FileType.OS))).thenReturn(moduleRef);
+    when(typeRegistry.registerUserType(eq("dual.Класс"), any(), eq(FileType.OS))).thenReturn(classRef);
 
     // when
     provider.register(documentContext);

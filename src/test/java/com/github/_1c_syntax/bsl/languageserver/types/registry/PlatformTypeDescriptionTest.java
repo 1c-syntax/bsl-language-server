@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.junit.jupiter.api.Test;
@@ -43,24 +44,26 @@ class PlatformTypeDescriptionTest extends AbstractServerContextAwareTest {
   void exposesOscriptClassDescription() {
     initServerContext();
     var ref = typeRegistry.resolve("ИнформацияОбОшибке").orElseThrow();
-    assertThat(typeRegistry.getDescription(ref)).isNotBlank();
+    assertThat(typeRegistry.getDescription(ref, FileType.OS)).isNotBlank();
   }
 
   @Test
   void exposesSystemEnumDescription() {
     initServerContext();
-    // КодировкаТекста — system enum с описанием.
+    // КодировкаТекста — system enum; описание в JSON-fallback есть только в OneScript-наборе.
     var ref = typeRegistry.resolve("КодировкаТекста").orElseThrow();
-    assertThat(typeRegistry.getDescription(ref)).isNotBlank();
+    assertThat(typeRegistry.getDescription(ref, FileType.OS)).isNotBlank();
   }
 
   @Test
   void exposesConstructorsForArray() {
     initServerContext();
     var ref = typeRegistry.resolve("Массив").orElseThrow();
-    var ctors = typeRegistry.getConstructors(ref);
+    var ctors = typeRegistry.getConstructors(ref, FileType.OS);
     assertThat(ctors).isNotEmpty();
     // 3 варианта: По умолчанию (0 параметров), По количеству элементов (1), На основании фиксированного (1).
     assertThat(ctors).hasSizeGreaterThanOrEqualTo(2);
+    // BSL-набор имеет собственные конструкторы Массива.
+    assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).isNotEmpty();
   }
 }

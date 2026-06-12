@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider.KeywordDescription;
 import org.jspecify.annotations.Nullable;
 
@@ -56,16 +55,13 @@ final class KeywordMetadataBuilder {
   private static final String LOCALE_RU = "ru";
   private static final String LOCALE_EN = "en";
 
-  private final LanguageScope scope;
   private final Predicate<String> includeInCompletion;
   private final Set<String> seen = new HashSet<>();
   private final List<String> keywords = new ArrayList<>();
-  private final Map<String, LanguageScope> scopes = new HashMap<>();
   private final Map<String, LanguageKeywordSnippet> snippets = new HashMap<>();
   private final Map<String, KeywordDescription> descriptions = new HashMap<>();
 
-  KeywordMetadataBuilder(LanguageScope scope, Predicate<String> includeInCompletion) {
-    this.scope = scope;
+  KeywordMetadataBuilder(Predicate<String> includeInCompletion) {
     this.includeInCompletion = includeInCompletion;
   }
 
@@ -86,15 +82,13 @@ final class KeywordMetadataBuilder {
   }
 
   KeywordMetadata build() {
-    return new KeywordMetadata(List.copyOf(keywords), Map.copyOf(scopes),
+    return new KeywordMetadata(List.copyOf(keywords),
       Map.copyOf(snippets), Map.copyOf(descriptions));
   }
 
   private void register(String written) {
-    var lc = written.toLowerCase(Locale.ROOT);
-    if (seen.add(lc)) {
+    if (seen.add(written.toLowerCase(Locale.ROOT))) {
       keywords.add(written);
-      scopes.put(lc, scope);
     }
   }
 
