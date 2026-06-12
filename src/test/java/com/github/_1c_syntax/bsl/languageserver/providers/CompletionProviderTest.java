@@ -1220,7 +1220,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .as("при поддержке markdown пометка об устаревании сохраняет markdown-разметку")
       .isTrue();
     assertThat(doc.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
-    assertThat(doc.getRight().getValue()).contains("**Устарела.**");
+    assertThat(doc.getRight().getValue()).contains("**Устарело.**");
   }
 
   @Test
@@ -1240,7 +1240,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .isTrue();
     assertThat(doc.getLeft())
       .as("звёздочки markdown должны быть убраны для plaintext-клиента")
-      .contains("Устарела.")
+      .contains("Устарело.")
       .doesNotContain("**");
   }
 
