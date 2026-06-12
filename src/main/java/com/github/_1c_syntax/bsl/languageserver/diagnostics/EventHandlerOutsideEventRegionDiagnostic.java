@@ -42,6 +42,7 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -110,10 +111,14 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     if (regionOpt.isEmpty()) {
       return false;
     }
-    var regionName = regionOpt.get().getName();
+    var regionName = regionOpt.get().getName().toLowerCase(Locale.ROOT);
     return isFormModule
-      ? FORM_EVENT_REGION_PREFIXES.stream().anyMatch(regionName::startsWith)
-      : OBJECT_EVENT_REGIONS.contains(regionName);
+      ? FORM_EVENT_REGION_PREFIXES.stream()
+        .map(p -> p.toLowerCase(Locale.ROOT))
+        .anyMatch(regionName::startsWith)
+      : OBJECT_EVENT_REGIONS.stream()
+        .map(r -> r.toLowerCase(Locale.ROOT))
+        .anyMatch(regionName::equals);
   }
 
   @Override
