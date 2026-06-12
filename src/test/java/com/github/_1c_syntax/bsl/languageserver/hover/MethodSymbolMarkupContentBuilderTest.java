@@ -162,7 +162,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
       """);
     assertThat(blocks.get(1)).matches("\\[CommonModule.ПервыйОбщийМодуль]\\(.*CommonModules/.*/Ext/Module.bsl#\\d+\\)\n\n");
-    assertThat(blocks.get(2)).isEqualTo("**Устарело.** См. НеУстаревшаяПроцедура.\n\n");
+    assertThat(blocks.get(2)).isEqualTo("**Устарела.** См. НеУстаревшаяПроцедура.\n\n");
     assertThat(blocks.get(3)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 
@@ -176,8 +176,8 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
-    assertThat(content).contains("**Устарело.**");
-    assertThat(content).doesNotContain("**Устарело.** ");
+    assertThat(content).contains("**Устарела.**");
+    assertThat(content).doesNotContain("**Устарела.** ");
   }
 
   @Test
@@ -190,7 +190,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
-    assertThat(content).doesNotContain("**Устарело.**");
+    assertThat(content).doesNotContain("**Устарела.**");
   }
 
 

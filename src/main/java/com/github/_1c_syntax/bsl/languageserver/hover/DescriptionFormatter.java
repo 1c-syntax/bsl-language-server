@@ -74,7 +74,7 @@ public class DescriptionFormatter {
    * Формирует секцию признака устаревания метода для всплывающего окна.
    *
    * @param methodSymbol символ метода, для которого строится секция
-   * @return markdown-блок «Устарело.» с текстом причины устаревания (если он
+   * @return markdown-блок «Устарела.» с текстом причины устаревания (если он
    *   указан в описании метода), либо пустая строка, если метод не устарел
    */
   public String getDeprecatedSection(MethodSymbol methodSymbol) {
