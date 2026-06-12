@@ -712,6 +712,44 @@ class BSLWorkspaceServiceTest {
     assertThat(workspaceServerContext().getDocument(newUri)).isNotNull();
   }
 
+  /**
+   * При переименовании каталога через didRenameFiles все документы внутри каталога
+   * должны быть зарегистрированы по новым URI, а старые — удалены из контекста.
+   */
+  @Test
+  void testDidRenameFiles_MovesFolder() throws IOException {
+    // given
+    var oldModule = createTestFile("FolderRename/OldName/Module.bsl");
+    var oldModuleUri = Absolute.uri(oldModule.toURI());
+
+    var ctx = workspaceServerContext();
+    var documentContext = ctx.addDocument(oldModuleUri);
+    ctx.rebuildDocument(documentContext);
+    ctx.tryClearDocument(documentContext);
+
+    assertThat(ctx.getDocument(oldModuleUri)).isNotNull();
+
+    var oldFolder = tempDir.resolve("FolderRename").resolve("OldName").toFile();
+    var newFolder = tempDir.resolve("FolderRename").resolve("NewName").toFile();
+    FileUtils.moveDirectory(oldFolder, newFolder);
+
+    var oldFolderUri = Absolute.uri(oldFolder.toURI());
+    var newFolderUri = Absolute.uri(newFolder.toURI());
+    var newModuleUri = Absolute.uri(newFolder.toPath().resolve("Module.bsl").toFile().toURI());
+
+    var fileRename = new FileRename(oldFolderUri.toString(), newFolderUri.toString());
+    var params = new RenameFilesParams(List.of(fileRename));
+
+    // when
+    workspaceService.didRenameFiles(params);
+    await().until(() -> ctx.getDocument(newModuleUri) != null
+      && ctx.getDocument(oldModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(oldModuleUri)).isNull();
+    assertThat(ctx.getDocument(newModuleUri)).isNotNull();
+  }
+
   private ServerContext workspaceServerContext() {
     return serverContextProvider.getServerContext(Absolute.uri(tempDir.toUri())).orElseThrow();
   }

@@ -48,7 +48,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -301,18 +303,24 @@ public class BSLWorkspaceService implements WorkspaceService {
   }
 
   /**
-   * Обрабатывает событие создания нового файла в файловой системе.
+   * Обрабатывает событие создания нового файла или каталога в файловой системе.
    * <p>
-   * Добавляет файл в контекст сервера. Если файл не открыт в редакторе,
-   * выполняет его парсинг и анализ, после чего сразу очищает вторичные данные
-   * для экономии памяти. Для открытых файлов обработка пропускается,
-   * т.к. их содержимое управляется через события textDocument/didOpen.
+   * Если URI указывает на каталог, делегирует обработку в {@link #handleCreatedFolderEvent},
+   * который рекурсивно добавляет все вложенные документы. Для файлов добавляет документ
+   * в контекст сервера. Если файл не открыт в редакторе, выполняет его парсинг и анализ,
+   * после чего сразу очищает вторичные данные для экономии памяти. Для открытых файлов
+   * обработка пропускается, т.к. их содержимое управляется через события textDocument/didOpen.
    * Пути, попадающие под {@code excludePaths} из конфигурации, пропускаются.
    *
-   * @param uri URI созданного файла
+   * @param uri URI созданного файла или каталога
    */
   private void handleCreatedFileEvent(URI uri) {
     var context = getContextForDocument(uri);
+    var path = Paths.get(uri);
+    if (Files.isDirectory(path)) {
+      handleCreatedFolderEvent(context, uri);
+      return;
+    }
     if (isExcludedPath(context, uri)) {
       return;
     }
@@ -322,6 +330,38 @@ public class BSLWorkspaceService implements WorkspaceService {
     if (!isDocumentOpened) {
       context.rebuildDocument(documentContext);
       context.tryClearDocument(documentContext);
+    }
+  }
+
+  /**
+   * Обрабатывает событие создания каталога в файловой системе.
+   * <p>
+   * Рекурсивно обходит созданный каталог и добавляет все BSL- и OneScript-файлы
+   * в контекст сервера. Пути из {@code excludePaths} пропускаются.
+   *
+   * @param context   контекст сервера
+   * @param folderUri URI созданного каталога
+   */
+  private void handleCreatedFolderEvent(ServerContext context, URI folderUri) {
+    var folderPath = Paths.get(folderUri);
+    try (var stream = Files.walk(folderPath)) {
+      stream
+        .filter(Files::isRegularFile)
+        .map(path -> path.toUri())
+        .map(Absolute::uri)
+        .forEach(fileUri -> {
+          if (isExcludedPath(context, fileUri)) {
+            return;
+          }
+          var documentContext = context.addDocument(fileUri);
+          var isDocumentOpened = context.isDocumentOpened(documentContext);
+          if (!isDocumentOpened) {
+            context.rebuildDocument(documentContext);
+            context.tryClearDocument(documentContext);
+          }
+        });
+    } catch (IOException e) {
+      LOGGER.warn("Не удалось обойти созданный каталог: {}", folderUri, e);
     }
   }
 
