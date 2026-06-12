@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781196061041,
+  "lastUpdate": 1781261841748,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36859,6 +36859,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.066857800022206",
             "extra": "mean: 285.3086904684703 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6966a7f7492673bbac01a065dc948d2c787a8812",
+          "message": "Merge pull request #4043 from 1c-syntax/claude/fix-rename-module-guard\n\nfix(RenameProvider): не переименовывать символы с SymbolKind.Module",
+          "timestamp": "2026-06-12T09:03:05+02:00",
+          "tree_id": "851b9ec3bb3c34a29aab9703f4e13bdde8e20c89",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6966a7f7492673bbac01a065dc948d2c787a8812"
+        },
+        "date": 1781261832630,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.07045698165894,
+            "unit": "sec",
+            "range": "stddev: 2.3364150586781838",
+            "extra": "mean: 284.07045698165894 sec\nrounds: 3"
           }
         ]
       }
