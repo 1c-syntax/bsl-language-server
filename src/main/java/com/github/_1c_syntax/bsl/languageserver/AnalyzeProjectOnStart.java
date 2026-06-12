@@ -44,6 +44,7 @@ public class AnalyzeProjectOnStart {
 
   private final DiagnosticProvider diagnosticProvider;
   private final LanguageClientHolder languageClientHolder;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration configuration;
   @Qualifier("analyzeOnStartExecutor")
@@ -63,6 +64,12 @@ public class AnalyzeProjectOnStart {
 
     var serverContext = event.getSource();
 
+    // Клиент с pull-моделью сам запросит диагностики (в том числе через
+    // workspace/diagnostic/refresh), поэтому push-публикацию по открытым документам
+    // для него выполнять не нужно — иначе возникает второй конкурирующий источник
+    // тех же диагностик.
+    var publishDiagnostics = !clientCapabilitiesHolder.supportsPullDiagnostics();
+
     var documentContexts = serverContext.getDocuments().values();
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
@@ -73,7 +80,9 @@ public class AnalyzeProjectOnStart {
           progress.tick();
 
           serverContext.rebuildDocument(documentContext);
-          diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+          if (publishDiagnostics) {
+            diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+          }
 
           serverContext.tryClearDocument(documentContext);
         })

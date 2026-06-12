@@ -65,7 +65,6 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -120,7 +119,6 @@ import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.TypeHierarchyItem;
@@ -882,10 +880,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
-    clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getDiagnostic)
-      .isPresent();
+    clientSupportsPullDiagnostics = clientCapabilitiesHolder.supportsPullDiagnostics();
   }
 
   /**
