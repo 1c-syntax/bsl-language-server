@@ -116,11 +116,41 @@ public final class FormatProvider {
     var lastToken = tokens.getLast();
 
     var locale = documentContext.getScriptVariantLocale();
-    return getTextEdits(
+    var options = params.getOptions();
+    var edits = getTextEdits(
       tokens,
       locale,
-      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
+      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), options
     );
+
+    if (edits.isEmpty() || !(options.isInsertFinalNewline() || options.isTrimFinalNewlines())) {
+      return edits;
+    }
+
+    var edit = edits.getFirst();
+    edit.setNewText(normalizeFinalNewlines(edit.getNewText(), options));
+    return edits;
+  }
+
+  /**
+   * Приводит хвостовые переводы строк отформатированного текста к виду, требуемому
+   * протокольными опциями {@link FormattingOptions}.
+   * <p>
+   * Диапазон правки полного форматирования всегда покрывает документ до конца, поэтому достаточно
+   * нормализовать сам текст: {@code insertFinalNewline} гарантирует ровно один завершающий перевод
+   * строки, а {@code trimFinalNewlines} (когда первый не взведён) удаляет все переводы строк после
+   * последней содержательной строки.
+   *
+   * @param text    отформатированный текст без нормализации хвоста
+   * @param options протокольные опции форматирования с взведённым флагом хвоста
+   * @return текст с нормализованным хвостом переводов строк
+   */
+  private static String normalizeFinalNewlines(String text, FormattingOptions options) {
+    var body = StringUtils.stripEnd(text, "\r\n");
+    if (options.isInsertFinalNewline()) {
+      return body + "\n";
+    }
+    return body;
   }
 
   /**
@@ -515,7 +545,30 @@ public final class FormatProvider {
       }
     }
 
-    return newTextBuilder.toString();
+    var result = newTextBuilder.toString();
+    if (options.isTrimTrailingWhitespace()) {
+      result = trimTrailingWhitespacePerLine(result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Удаляет хвостовые пробелы и табуляции в каждой строке текста, сохраняя сами переводы строк.
+   * <p>
+   * Применяется при включённой опции {@code trimTrailingWhitespace} протокольных
+   * {@link FormattingOptions}: форматтер не должен оставлять строки, состоящие из одних пробелов
+   * (например выровненные пустые строки внутри блоков).
+   *
+   * @param text исходный текст результата форматирования
+   * @return текст, в котором ни одна строка не оканчивается пробелом или табуляцией
+   */
+  private static String trimTrailingWhitespacePerLine(String text) {
+    var lines = text.split("\n", -1);
+    for (var i = 0; i < lines.length; i++) {
+      lines[i] = StringUtils.stripEnd(lines[i], " \t");
+    }
+    return String.join("\n", lines);
   }
 
   private String checkAndFormatKeyword(Token token, Locale languageLocale) {
