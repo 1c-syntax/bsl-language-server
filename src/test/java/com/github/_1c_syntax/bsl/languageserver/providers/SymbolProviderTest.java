@@ -223,6 +223,46 @@ class SymbolProviderTest {
       .anyMatch(symbolInformation -> symbolInformation.getName().equals(symbolName));
   }
 
+  @Test
+  void getSymbolsFuzzySubsequenceMatch() {
+
+    // given
+    // Запрос «ГСП» не является непрерывной подстрокой имени «ГлобальнаяСервернаяПроцедура»,
+    // поэтому regex-сопоставление его не находит. Однако символы Г, С, П встречаются
+    // в имени в том же порядке, поэтому fuzzy-сопоставление по подпоследовательности
+    // должно вернуть символ.
+    var params = new WorkspaceSymbolParams("ГСП");
+
+    // when
+    var symbols = symbolProvider.getSymbols(params);
+
+    // then
+    assertThat(symbols)
+      .anyMatch(symbolInformation ->
+        symbolInformation.getName().equals("ГлобальнаяСервернаяПроцедура")
+          && symbolInformation.getKind() == SymbolKind.Method
+      );
+  }
+
+  @Test
+  void getSymbolsFuzzySubsequenceCaseInsensitive() {
+
+    // given
+    // Регистр символов запроса не должен влиять на сопоставление по подпоследовательности
+    // (кириллица приводится к нижнему регистру).
+    var params = new WorkspaceSymbolParams("гсп");
+
+    // when
+    var symbols = symbolProvider.getSymbols(params);
+
+    // then
+    assertThat(symbols)
+      .anyMatch(symbolInformation ->
+        symbolInformation.getName().equals("ГлобальнаяСервернаяПроцедура")
+          && symbolInformation.getKind() == SymbolKind.Method
+      );
+  }
+
   /**
    * Создаёт mock символа-метода с заданным именем для проверки сопоставления имён.
    *
