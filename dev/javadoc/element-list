@@ -48,6 +48,9 @@ com.github._1c_syntax.bsl.languageserver.infrastructure
 com.github._1c_syntax.bsl.languageserver.inlayhints
 com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure
 com.github._1c_syntax.bsl.languageserver.jsonrpc
+com.github._1c_syntax.bsl.languageserver.mcp
+com.github._1c_syntax.bsl.languageserver.mcp.dto
+com.github._1c_syntax.bsl.languageserver.mcp.tools
 com.github._1c_syntax.bsl.languageserver.providers
 com.github._1c_syntax.bsl.languageserver.recognizer
 com.github._1c_syntax.bsl.languageserver.references
