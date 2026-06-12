@@ -154,7 +154,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
+    assertThat(blocks).hasSize(4);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Процедура УстаревшаяПроцедура() Экспорт
@@ -162,7 +162,35 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
       """);
     assertThat(blocks.get(1)).matches("\\[CommonModule.ПервыйОбщийМодуль]\\(.*CommonModules/.*/Ext/Module.bsl#\\d+\\)\n\n");
-    assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
+    assertThat(blocks.get(2)).isEqualTo("**Устарело.** См. НеУстаревшаяПроцедура.\n\n");
+    assertThat(blocks.get(3)).isEqualTo("Процедура - Устаревшая процедура\n\n");
+  }
+
+  @Test
+  void testDeprecatedMethodWithoutInfo() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяБезПояснения").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).contains("**Устарело.**");
+    assertThat(content).doesNotContain("**Устарело.** ");
+  }
+
+  @Test
+  void testNonDeprecatedMethodHasNoDeprecationBlock() {
+    // given
+    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).doesNotContain("**Устарело.**");
   }
 
 
