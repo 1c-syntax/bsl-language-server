@@ -220,7 +220,7 @@ public class ConfigurationTypesProvider {
     }));
   }
 
-  private void collectWebProcedures(MD md, List<HandlerSpec> sink) {
+  private static void collectWebProcedures(MD md, List<HandlerSpec> sink) {
     if (!(md instanceof WebService web)) {
       return;
     }
@@ -231,7 +231,7 @@ public class ConfigurationTypesProvider {
     });
   }
 
-  private void collectIntegrationHandlers(MD md, List<HandlerSpec> sink) {
+  private static void collectIntegrationHandlers(MD md, List<HandlerSpec> sink) {
     if (!(md instanceof IntegrationService isvc)) {
       return;
     }

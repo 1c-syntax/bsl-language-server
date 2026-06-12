@@ -125,19 +125,19 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
     doReturn(FileType.BSL).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+      .anyMatch(UnusedLocalMethodDiagnostic.class::isInstance);
 
     // UnusedLocalMethodDiagnostic не привязан к ModuleType — фильтрация по типу модуля
     // и наличию HBK выполняется внутри check.
     doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
     doReturn(FileType.BSL).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+      .anyMatch(UnusedLocalMethodDiagnostic.class::isInstance);
 
     doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
     doReturn(FileType.OS).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
-      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+      .anyMatch(UnusedLocalMethodDiagnostic.class::isInstance);
   }
 
   @Test

@@ -41,7 +41,6 @@ import java.io.Serial;
  * Отличается от {@code ServerContextPopulatedEvent}, который публикуется по
  * завершении полного обхода файлов workspace (cross-document готовность).
  */
-@SuppressWarnings("java:S6832") // не Spring bean — event публикуется вручную через ApplicationEventPublisher
 public class ConfigurationTypesRegisteredEvent extends ApplicationEvent {
 
   @Serial

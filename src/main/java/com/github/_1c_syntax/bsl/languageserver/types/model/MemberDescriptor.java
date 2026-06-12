@@ -230,7 +230,6 @@ public record MemberDescriptor(
    * {@link #returnTypes} и {@link SignatureDescriptor#returnType} заменены
    * по {@code bindings}.
    */
-  @SuppressWarnings("java:S1698") // identity-сравнение намеренно: TypeRef.specialize возвращает тот же объект если ничего не поменялось
   public MemberDescriptor specialize(Map<String, String> bindings) {
     if (bindings == null || bindings.isEmpty()) {
       return this;
@@ -243,8 +242,8 @@ public record MemberDescriptor(
       for (var sig : newSignatures) {
         var specializedReturn = TypeRef.specialize(sig.returnTypes(), bindings);
         var specializedParameters = specializeParameters(sig.parameters(), bindings);
-        var returnChanged = specializedReturn != sig.returnTypes();
-        var parametersChanged = specializedParameters != sig.parameters();
+        var returnChanged = !specializedReturn.equals(sig.returnTypes());
+        var parametersChanged = !specializedParameters.equals(sig.parameters());
         if (returnChanged || parametersChanged) {
           rebuilt.add(new SignatureDescriptor(specializedParameters, specializedReturn,
             sig.bilingualDescription()));
@@ -257,7 +256,7 @@ public record MemberDescriptor(
         newSignatures = rebuilt;
       }
     }
-    if (newReturnTypes == returnTypes && !signaturesChanged) {
+    if (newReturnTypes.equals(returnTypes) && !signaturesChanged) {
       return this;
     }
     return new MemberDescriptor(bilingualName, kind, bilingualDescription,
@@ -269,7 +268,6 @@ public record MemberDescriptor(
    * параметр не изменился — возвращает исходный список, чтобы вверху
    * сравнение по ссылке сработало без аллокаций.
    */
-  @SuppressWarnings("java:S1698") // identity-сравнение намеренно: TypeRef.specialize возвращает тот же объект если ничего не поменялось
   private static List<ParameterDescriptor> specializeParameters(List<ParameterDescriptor> params,
                                                                 Map<String, String> bindings) {
     if (params.isEmpty()) {
@@ -279,7 +277,7 @@ public record MemberDescriptor(
     for (var i = 0; i < params.size(); i++) {
       var p = params.get(i);
       var specializedTypes = TypeRef.specialize(p.types(), bindings);
-      if (specializedTypes == p.types()) {
+      if (specializedTypes.equals(p.types())) {
         if (rebuilt != null) {
           rebuilt.add(p);
         }

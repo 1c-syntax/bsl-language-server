@@ -109,6 +109,9 @@ public class EventHandlerResolver {
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
   private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
 
+  /** Ru-имя + en-алиас — каждое событие может занять до двух ключей в карте. */
+  private static final int NAME_ALIASES_PER_EVENT = 2;
+
   /**
    * Встроенные события OneScript-класса. {@code ПриСозданииОбъекта} —
    * конструктор с переменным числом параметров; {@code ОбработкаПолученияПредставления} —
@@ -251,9 +254,6 @@ public class EventHandlerResolver {
     }
     sink.put(moduleType, Map.copyOf(byName));
   }
-
-  /** Ru-имя + en-алиас — каждое событие может занять до двух ключей в карте. */
-  private static final int NAME_ALIASES_PER_EVENT = 2;
 
   /**
    * Owner-тип модуля: {@code ДокументОбъект.Покупатели},

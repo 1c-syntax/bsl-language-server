@@ -75,17 +75,12 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
 
   @Override
   public void check() {
-    for (var method : documentContext.getSymbolTree().getMethods()) {
-      var contractOpt = eventContractsIndex.getContract(documentContext, method.getName());
-      if (contractOpt.isEmpty()) {
-        continue;
-      }
-      var contractSignatures = contractOpt.get().signatures();
-      if (contractSignatures.isEmpty()) {
-        continue;
-      }
-      checkSignature(method, contractSignatures);
-    }
+    documentContext.getSymbolTree().getMethods().forEach(method ->
+      eventContractsIndex.getContract(documentContext, method.getName())
+        .map(MemberDescriptor::signatures)
+        .filter(signatures -> !signatures.isEmpty())
+        .ifPresent(signatures -> checkSignature(method, signatures))
+    );
   }
 
   /**
@@ -113,7 +108,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
   }
 
   private static boolean fitsAnySignature(int userParamCount, int[] requiredCounts, int[] totalCounts) {
-    for (int i = 0; i < requiredCounts.length; i++) {
+    for (var i = 0; i < requiredCounts.length; i++) {
       if (userParamCount >= requiredCounts[i] && userParamCount <= totalCounts[i]) {
         return true;
       }
@@ -127,21 +122,16 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
                                         DocumentContext documentContext) {
     var textEdits = new ArrayList<TextEdit>();
     var fixedDiagnostics = new ArrayList<Diagnostic>();
-    for (var diagnostic : diagnostics) {
-      var method = findMethodAt(documentContext, diagnostic.getRange().getStart());
-      if (method.isEmpty()) {
-        continue;
-      }
-      var contract = eventContractsIndex.getContract(documentContext, method.get().getName());
-      if (contract.isEmpty() || contract.get().signatures().isEmpty()) {
-        continue;
-      }
-      buildSignatureFix(documentContext, method.get(), contract.get())
+    diagnostics.forEach(diagnostic ->
+      findMethodAt(documentContext, diagnostic.getRange().getStart())
+        .flatMap(method -> eventContractsIndex.getContract(documentContext, method.getName())
+          .filter(contract -> !contract.signatures().isEmpty())
+          .flatMap(contract -> buildSignatureFix(documentContext, method, contract)))
         .ifPresent((TextEdit edit) -> {
           textEdits.add(edit);
           fixedDiagnostics.add(diagnostic);
-        });
-    }
+        })
+    );
     if (textEdits.isEmpty()) {
       return List.of();
     }
@@ -168,7 +158,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     var methodParams = method.getParameters();
     var targetSize = contractParams.size();
     var names = new ArrayList<String>(targetSize);
-    for (int i = 0; i < targetSize; i++) {
+    for (var i = 0; i < targetSize; i++) {
       if (i < methodParams.size() && !methodParams.get(i).getName().isBlank()) {
         names.add(methodParams.get(i).getName());
       } else {
@@ -237,7 +227,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
   }
 
   private static int indexOf(List<Token> tokens, int tokenType) {
-    for (int i = 0; i < tokens.size(); i++) {
+    for (var i = 0; i < tokens.size(); i++) {
       if (tokens.get(i).getType() == tokenType) {
         return i;
       }
@@ -247,9 +237,9 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
 
   /** Индекс парного RPAREN с учётом баланса для default-value выражений. */
   private static int matchingRparenIndex(List<Token> tokens, int lparenIndex) {
-    int depth = 0;
-    for (int i = lparenIndex; i < tokens.size(); i++) {
-      int type = tokens.get(i).getType();
+    var depth = 0;
+    for (var i = lparenIndex; i < tokens.size(); i++) {
+      var type = tokens.get(i).getType();
       if (type == BSLLexer.LPAREN) {
         depth++;
       } else if (type == BSLLexer.RPAREN) {
@@ -257,6 +247,8 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
         if (depth == 0) {
           return i;
         }
+      } else {
+        // ничего: ни LPAREN, ни RPAREN — другие токены параметров не влияют на баланс скобок
       }
     }
     return -1;
