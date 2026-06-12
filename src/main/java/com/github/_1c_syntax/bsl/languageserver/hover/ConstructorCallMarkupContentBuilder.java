@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.ConstructorCallSymbol;
@@ -45,7 +44,7 @@ public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder
   @Override
   public MarkupContent getContent(Reference reference) {
     var symbol = (ConstructorCallSymbol) reference.symbol();
-    var fileType = FileType.fromUri(reference.uri());
+    var fileType = reference.from().getOwner().getFileType();
     var ctors = symbol.getConstructors();
     if (ctors.isEmpty()) {
       return constructorHoverBuilder.build(

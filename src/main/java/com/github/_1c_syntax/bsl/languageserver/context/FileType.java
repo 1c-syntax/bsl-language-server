@@ -21,11 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import org.apache.commons.io.FilenameUtils;
-
-import java.net.URI;
-import java.util.Locale;
-
 /**
  * Тип файла исходного кода.
  */
@@ -37,24 +32,5 @@ public enum FileType {
   /**
    * Файл OScript (OneScript).
    */
-  OS;
-
-  /**
-   * Определяет тип файла по расширению из URI.
-   *
-   * @param uri URI документа.
-   * @return {@link #OS} для расширения {@code .os}, иначе {@link #BSL}
-   *         (в том числе при отсутствии пути или неизвестном расширении).
-   */
-  public static FileType fromUri(URI uri) {
-    String uriPath = uri.getPath();
-    if (uriPath == null) {
-      return BSL;
-    }
-    try {
-      return valueOf(FilenameUtils.getExtension(uriPath).toUpperCase(Locale.ENGLISH));
-    } catch (IllegalArgumentException ignored) {
-      return BSL;
-    }
-  }
+  OS
 }
