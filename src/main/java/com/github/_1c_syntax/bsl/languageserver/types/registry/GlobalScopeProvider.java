@@ -98,24 +98,13 @@ public class GlobalScopeProvider {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-keywords.json";
 
   /**
-   * Наборы каждого языка по отдельности — единственное хранилище загруженных
-   * глобалов: {@link FileType#BSL} ← bsl-context либо JSON-fallback,
-   * {@link FileType#OS} ← oscript-JSON. Все lookup'ы (функции, классы,
-   * ключевые слова и их описания/сниппеты, платформенные переменные и
-   * перечисления) читают набор языка файла-потребителя.
+   * Данные каждого языка по отдельности — единственное хранилище глобалов:
+   * снапшот загрузки ({@link FileType#BSL} ← bsl-context либо JSON-fallback,
+   * {@link FileType#OS} ← oscript-JSON) плюс runtime-реестр имён глобальных
+   * свойств ({@code LanguageData.globalContextNames}). Все lookup'ы читают
+   * набор языка файла-потребителя.
    */
-  private final Map<FileType, Loaded> byFileType;
-  /**
-   * lowercased имена глобальных свойств, видимые в файлах каждого языка.
-   * В отличие от {@link #byFileType} (иммутабельный снапшот загрузки из
-   * JSON/bsl-context), это runtime-реестр: заполняется
-   * {@link #registerGlobalProperty} в течение жизни workspace (общие модули
-   * конфигурации, library-модули, публикация bootstrap'ом).
-   */
-  private final Map<FileType, Set<String>> globalContextNames = Map.of(
-    FileType.BSL, ConcurrentHashMap.newKeySet(),
-    FileType.OS, ConcurrentHashMap.newKeySet()
-  );
+  private final Map<FileType, LanguageData> byFileType;
   /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
@@ -310,15 +299,15 @@ public class GlobalScopeProvider {
     // считаем символ доступным.
     var fnRegistered = byFileType.get(FileType.BSL).functions.containsKey(lc)
       || byFileType.get(FileType.OS).functions.containsKey(lc);
-    var propRegistered = globalContextNames.get(FileType.BSL).contains(lc)
-      || globalContextNames.get(FileType.OS).contains(lc);
+    var propRegistered = byFileType.get(FileType.BSL).globalContextNames.contains(lc)
+      || byFileType.get(FileType.OS).globalContextNames.contains(lc);
     var varRegistered = byFileType.get(FileType.BSL).variableNames.contains(lc)
       || byFileType.get(FileType.OS).variableNames.contains(lc);
     if (!fnRegistered && !propRegistered && !varRegistered) {
       return sym;
     }
     boolean visible = (fnRegistered && byFileType.get(fileType).functions.containsKey(lc))
-      || globalContextNames.get(fileType).contains(lc)
+      || byFileType.get(fileType).globalContextNames.contains(lc)
       || byFileType.get(fileType).variableNames.contains(lc);
     return visible ? sym : Optional.empty();
   }
@@ -538,7 +527,7 @@ public class GlobalScopeProvider {
         continue;
       }
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE, fileType);
-      globalContextNames.get(fileType).add(name.toLowerCase(Locale.ROOT));
+      byFileType.get(fileType).globalContextNames.add(name.toLowerCase(Locale.ROOT));
     }
   }
 
@@ -636,11 +625,11 @@ public class GlobalScopeProvider {
       return true;
     }
     var lc = name.toLowerCase(Locale.ROOT);
-    if (globalContextNames.get(fileType).contains(lc)) {
+    if (byFileType.get(fileType).globalContextNames.contains(lc)) {
       return true;
     }
     // не зарегистрировано ни в одном языке — не фильтруем
-    return globalContextNames.values().stream().noneMatch(names -> names.contains(lc));
+    return byFileType.values().stream().noneMatch(data -> data.globalContextNames.contains(lc));
   }
 
   /**
@@ -767,7 +756,7 @@ public class GlobalScopeProvider {
    * из {@link #RESOURCE_PATH} JSON (fallback). JSON не читается, когда
    * bsl-context дал результат — иначе данные дублируются.
    */
-  private static Loaded loadBsl(BslContextHolder bslContextHolder) {
+  private static LanguageData loadBsl(BslContextHolder bslContextHolder) {
     var providerOpt = bslContextHolder.get();
     if (providerOpt.isPresent()) {
       return buildBslFromContext(providerOpt.get());
@@ -775,7 +764,7 @@ public class GlobalScopeProvider {
     return loadFromResource(RESOURCE_PATH);
   }
 
-  private static Loaded buildBslFromContext(ContextProvider provider) {
+  private static LanguageData buildBslFromContext(ContextProvider provider) {
     var globalContext = provider.getGlobalContext();
     // Bilingual: если provider — Platform, тащим en-attachments для всех
     // глобальных функций (description, returnValueDescription, notes,
@@ -885,7 +874,7 @@ public class GlobalScopeProvider {
       }
     }
 
-    return new Loaded(
+    return new LanguageData(
       Collections.unmodifiableMap(functions),
       List.copyOf(classes),
       List.copyOf(keywords),
@@ -963,7 +952,7 @@ public class GlobalScopeProvider {
     functions.putIfAbsent(name.toLowerCase(Locale.ROOT), descriptor);
   }
 
-  private static Loaded loadFromResource(String resourcePath) {
+  private static LanguageData loadFromResource(String resourcePath) {
     var mapper = JsonMapper.builder().build();
     try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       @SuppressWarnings("unchecked")
@@ -986,12 +975,12 @@ public class GlobalScopeProvider {
           keywords.add(k);
         }
       }
-      return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
+      return new LanguageData(functions, List.copyOf(classes), List.copyOf(keywords), variables,
         List.of(),
         Map.copyOf(keywordMeta.snippets()), Map.copyOf(keywordMeta.descriptions()));
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
-      return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
+      return new LanguageData(Collections.emptyMap(), List.of(), List.of(), List.of(),
         List.of(), Map.of(), Map.of());
     }
   }
@@ -1145,7 +1134,15 @@ public class GlobalScopeProvider {
     return result;
   }
 
-  private record Loaded(
+  /**
+   * Все данные глобальной области одного языка: иммутабельный снапшот загрузки
+   * (функции, классы, ключевые слова, платформенные переменные/перечисления,
+   * описания/сниппеты ключевых слов), производный индекс {@code variableNames}
+   * и мутабельный runtime-реестр {@code globalContextNames} (имена глобальных
+   * свойств, регистрируемые {@code registerGlobalProperty} в течение жизни
+   * workspace: общие модули конфигурации, library-модули, публикации bootstrap'а).
+   */
+  private record LanguageData(
     Map<String, MemberDescriptor> functions,
     List<String> classes,
     List<String> keywords,
@@ -1153,24 +1150,27 @@ public class GlobalScopeProvider {
     List<PlatformVariable> platformEnums,
     Map<String, LanguageKeywordSnippet> keywordSnippets,
     Map<String, KeywordDescription> keywordDescriptions,
-    Set<String> variableNames
+    Set<String> variableNames,
+    Set<String> globalContextNames
   ) {
 
     /**
-     * Канонический конструктор без производного индекса: {@code variableNames}
+     * Конструктор от снапшота загрузки: производный индекс {@code variableNames}
      * (lowercased имена + алиасы платформенных переменных и перечислений,
-     * для O(1)-проверки видимости в {@code findGlobal}) вычисляется здесь.
+     * для O(1)-проверки видимости в {@code findGlobal}) вычисляется здесь,
+     * runtime-реестр {@code globalContextNames} создаётся пустым.
      */
-    Loaded(Map<String, MemberDescriptor> functions,
-           List<String> classes,
-           List<String> keywords,
-           List<PlatformVariable> platformVariables,
-           List<PlatformVariable> platformEnums,
-           Map<String, LanguageKeywordSnippet> keywordSnippets,
-           Map<String, KeywordDescription> keywordDescriptions) {
+    LanguageData(Map<String, MemberDescriptor> functions,
+                 List<String> classes,
+                 List<String> keywords,
+                 List<PlatformVariable> platformVariables,
+                 List<PlatformVariable> platformEnums,
+                 Map<String, LanguageKeywordSnippet> keywordSnippets,
+                 Map<String, KeywordDescription> keywordDescriptions) {
       this(functions, classes, keywords, platformVariables, platformEnums,
         keywordSnippets, keywordDescriptions,
-        variableNames(platformVariables, platformEnums));
+        variableNames(platformVariables, platformEnums),
+        ConcurrentHashMap.newKeySet());
     }
 
     private static Set<String> variableNames(List<PlatformVariable> variables, List<PlatformVariable> enums) {
