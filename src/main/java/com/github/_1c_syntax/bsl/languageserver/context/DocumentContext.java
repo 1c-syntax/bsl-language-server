@@ -53,7 +53,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -394,21 +393,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   private static FileType computeFileType(URI uri) {
-    String uriPath = uri.getPath();
-    if (uriPath == null) {
-      return FileType.BSL;
-    }
-
-    FileType fileTypeFromUri;
-    try {
-      fileTypeFromUri = FileType.valueOf(
-        FilenameUtils.getExtension(uriPath).toUpperCase(Locale.ENGLISH)
-      );
-    } catch (IllegalArgumentException ignored) {
-      fileTypeFromUri = FileType.BSL;
-    }
-
-    return fileTypeFromUri;
+    return FileType.fromUri(uri);
   }
 
   private String[] computeContentList() {

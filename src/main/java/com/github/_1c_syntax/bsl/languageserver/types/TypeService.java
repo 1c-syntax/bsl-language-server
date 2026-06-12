@@ -235,6 +235,19 @@ public class TypeService {
   }
 
   /**
+   * Описание типа в указанной локали LS с фильтрацией по типу файла (BSL/OS) —
+   * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
+   *
+   * @param typeRef тип.
+   * @param language локаль интерфейса LS.
+   * @param fileType тип файла-потребителя.
+   * @return описание; пустая строка, если описание отсутствует.
+   */
+  public String getDescription(TypeRef typeRef, Language language, FileType fileType) {
+    return typeRegistry.getDescription(typeRef, language, fileType);
+  }
+
+  /**
    * Имя типа для отображения в указанной локали LS (ru/en, с fallback).
    *
    * @param typeRef тип.
@@ -349,7 +362,7 @@ public class TypeService {
         var ref = sym.getValueType();
         var desc = sym.getDescription();
         if (desc == null || desc.isBlank()) {
-          desc = typeRegistry.getDescription(ref);
+          desc = typeRegistry.getDescription(ref, fileType);
         }
         return new TypedMember(ref,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),

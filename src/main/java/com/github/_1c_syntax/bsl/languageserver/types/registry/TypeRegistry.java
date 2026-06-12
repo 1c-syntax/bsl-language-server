@@ -177,8 +177,9 @@ public class TypeRegistry {
    * Двуязычные описания типов (ru + en) — параллельный индекс к
    * {@link #descriptions}, который продолжает хранить scoped primary-форму
    * для legacy-логики. Заполняется из {@link TypePackProvider.TypeDecl#description()}.
+   * Один тип может иметь описания с разными скоупами (BSL/OS) — фильтрация при чтении.
    */
-  private final Map<TypeRef, BilingualString> typeDescriptionsBilingual = new ConcurrentHashMap<>();
+  private final Map<TypeRef, List<ScopedBilingualDescription>> typeDescriptionsBilingual = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -186,6 +187,10 @@ public class TypeRegistry {
 
   /** Описание типа вместе с его языковым скоупом. */
   private record ScopedDescription(String text, LanguageScope scope) {
+  }
+
+  /** Двуязычное описание типа вместе с его языковым скоупом. */
+  private record ScopedBilingualDescription(BilingualString text, LanguageScope scope) {
   }
 
   /** Набор конструкторов вместе с его языковым скоупом. */
@@ -1037,7 +1042,8 @@ public class TypeRegistry {
       // через primary для legacy-индекса; en-сторону отдаёт displayDescription(ref, lang).
       registerDescription(ref, decl.description().primary(), scope);
       if (!decl.description().isEmpty()) {
-        typeDescriptionsBilingual.putIfAbsent(ref, decl.description());
+        typeDescriptionsBilingual.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
+          .add(new ScopedBilingualDescription(decl.description(), scope));
       }
     }
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
@@ -1155,13 +1161,40 @@ public class TypeRegistry {
     return indexAccessDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
-  /** Описание типа в указанной локали (для hover'а класса/конструктора). */
+  /** Описание типа в указанной локали (для hover'а класса/конструктора), без фильтрации по типу файла. */
   public String getDescription(TypeRef ref, Language language) {
-    var bn = typeDescriptionsBilingual.get(ref);
-    if (bn != null && !bn.isEmpty()) {
-      return bn.forLanguage(language);
+    var list = typeDescriptionsBilingual.get(ref);
+    if (list != null) {
+      for (var sd : List.copyOf(list)) {
+        if (!sd.text().isEmpty()) {
+          return sd.text().forLanguage(language);
+        }
+      }
     }
     return getDescription(ref);
+  }
+
+  /**
+   * То же, что {@link #getDescription(TypeRef, Language)}, но с фильтрацией по
+   * {@link FileType}: когда тип имеет разные описания в BSL и OS (например,
+   * {@code ТаблицаЗначений}), возвращается описание, чей скоуп совместим с
+   * {@code fileType}.
+   *
+   * @param ref      ссылка на тип.
+   * @param language локаль интерфейса LS.
+   * @param fileType тип файла-потребителя.
+   * @return описание; пустая строка, если подходящего описания нет.
+   */
+  public String getDescription(TypeRef ref, Language language, FileType fileType) {
+    var list = typeDescriptionsBilingual.get(ref);
+    if (list != null) {
+      for (var sd : List.copyOf(list)) {
+        if (sd.scope().matches(fileType) && !sd.text().isEmpty()) {
+          return sd.text().forLanguage(language);
+        }
+      }
+    }
+    return getDescription(ref, fileType);
   }
 
   /**

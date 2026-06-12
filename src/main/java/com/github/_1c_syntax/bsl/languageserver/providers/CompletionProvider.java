@@ -678,7 +678,7 @@ public final class CompletionProvider {
           .collect(java.util.stream.Collectors.joining(", "));
         item.setDetail("(" + paramList + ")");
       }
-      var desc = typeService.getDescription(ref, scriptVariant);
+      var desc = typeService.getDescription(ref, scriptVariant, fileType);
       if (!desc.isEmpty()) {
         item.setDocumentation(desc);
       }
