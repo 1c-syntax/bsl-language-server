@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -60,6 +61,7 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
@@ -69,10 +71,15 @@ import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SignatureHelpParams;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
+import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
+import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
@@ -478,11 +485,67 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didSave(params);
 
     var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
-    assertThat(capturedWorkspaceUri.get())
-      .as("Workspace context must be set when DiagnosticProvider.computeAndPublishDiagnostics is called during "
-        + "didSave (otherwise workspace-scoped LanguageServerConfiguration cannot be resolved)")
-      .isNotNull()
-      .isEqualTo(expectedWorkspaceUri);
+    await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+      assertThat(capturedWorkspaceUri.get())
+        .as("Workspace context must be set when DiagnosticProvider.computeAndPublishDiagnostics is called during "
+          + "didSave (otherwise workspace-scoped LanguageServerConfiguration cannot be resolved)")
+        .isNotNull()
+        .isEqualTo(expectedWorkspaceUri)
+    );
+  }
+
+  /**
+   * Воспроизводит валидацию устаревшего содержимого:
+   * клиент шлёт didChange и сразу didSave; пока {@code DocumentChangeExecutor} не применил изменения
+   * (применение детерминированно заблокировано write lock документа), didSave обязан дождаться
+   * свежего содержимого, а не валидировать старый текст.
+   */
+  @Test
+  void didSave_validatesFreshContentAfterPendingDidChange() throws IOException {
+    // given - opened document and a client without pull diagnostics support
+    var textDocumentItem = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(textDocumentItem));
+
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(new ClientCapabilities()));
+    textDocumentService.handleInitializeEvent(null);
+    clearInvocations(diagnosticProvider);
+
+    var validatedContent = new AtomicReference<String>();
+    doAnswer(invocation -> {
+      DocumentContext validatedDocument = invocation.getArgument(0);
+      validatedContent.compareAndSet(null, validatedDocument.getContent());
+      return null;
+    }).when(diagnosticProvider).computeAndPublishDiagnostics(any());
+
+    var uri = Absolute.uri(textDocumentItem.getUri());
+    var maybeContext = serverContextProvider.getServerContextUnsafe(uri);
+    assertThat(maybeContext).isPresent();
+    var documentLock = maybeContext.get().getDocumentLock(uri);
+
+    // when - didChange is still pending (blocked by the write lock) and didSave arrives immediately
+    documentLock.writeLock().lock();
+    try {
+      var changeParams = new DidChangeTextDocumentParams();
+      changeParams.setTextDocument(new VersionedTextDocumentIdentifier(textDocumentItem.getUri(), 2));
+      changeParams.setContentChanges(List.of(
+        new TextDocumentContentChangeEvent(Ranges.create(0, 0, 0, 0), "// fresh change marker\n")
+      ));
+      textDocumentService.didChange(changeParams);
+
+      var saveParams = new DidSaveTextDocumentParams();
+      saveParams.setTextDocument(new TextDocumentIdentifier(textDocumentItem.getUri()));
+      textDocumentService.didSave(saveParams);
+    } finally {
+      documentLock.writeLock().unlock();
+    }
+
+    // then - validation must see the content with the pending change applied
+    await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+      assertThat(validatedContent.get())
+        .as("didSave must validate document content with all pending didChange applied")
+        .isNotNull()
+        .startsWith("// fresh change marker")
+    );
   }
 
   @Test
@@ -617,8 +680,67 @@ class BSLTextDocumentServiceTest {
     var result = textDocumentService.implementation(params).get();
 
     assertThat(result).isNotNull();
-    assertThat(result.isRight()).isTrue();
-    assertThat(result.getRight()).isEmpty();
+    assertThat(result.isLeft()).isTrue();
+    assertThat(result.getLeft()).isEmpty();
+  }
+
+  @Test
+  void prepareTypeHierarchyRoutesForOsClass() throws Exception {
+    // Открываем всю цепочку, чтобы super/subtypes резолвились в непустой результат.
+    openOsDocument("./src/test/resources/type-hierarchy/Животное.os");
+    openOsDocument("./src/test/resources/type-hierarchy/Кошка.os");
+    openOsDocument("./src/test/resources/type-hierarchy/Собака.os");
+    var item = openOsDocument("./src/test/resources/type-hierarchy/Млекопитающее.os");
+    var docId = new TextDocumentIdentifier(item.getUri());
+
+    var prepared = textDocumentService
+      .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
+
+    assertThat(prepared).isNotNull().isNotEmpty();
+
+    var hierarchyItem = prepared.get(0);
+    var supertypes = textDocumentService
+      .typeHierarchySupertypes(new TypeHierarchySupertypesParams(hierarchyItem)).get();
+    var subtypes = textDocumentService
+      .typeHierarchySubtypes(new TypeHierarchySubtypesParams(hierarchyItem)).get();
+
+    assertThat(supertypes).isNotNull().isNotEmpty();
+    assertThat(subtypes).isNotNull().isNotEmpty();
+  }
+
+  @Test
+  void prepareTypeHierarchyReturnsNullForNonHierarchyOsFile() throws Exception {
+    // Плоский .os-класс без наследования/реализаций — иерархии нет, ожидаем null.
+    var item = openOsDocument("./src/test/resources/standalone-class.os");
+    var docId = new TextDocumentIdentifier(item.getUri());
+
+    var prepared = textDocumentService
+      .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
+
+    assertThat(prepared).isNull();
+  }
+
+  @Test
+  void implementationRoutesForOsInterface() throws Exception {
+    var item = openOsDocument("./src/test/resources/oscript-libraries/interface-lib/src/МойИнтерфейс.os");
+    var docId = new TextDocumentIdentifier(item.getUri());
+
+    var result = textDocumentService
+      .implementation(new ImplementationParams(docId, new Position(0, 0))).get();
+
+    assertThat(result).isNotNull();
+    assertThat(result.isLeft()).isTrue();
+    // Реализации (Реализация1/Реализация2) проиндексированы как library-классы interface-lib.
+    assertThat(result.getLeft()).isNotEmpty();
+  }
+
+  private TextDocumentItem openOsDocument(String path) throws IOException {
+    File file = new File(path);
+    String uri = Absolute.uri(file).toString();
+    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    var item = new TextDocumentItem(uri, "bsl", 1, content);
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+    return item;
   }
 
   /**
@@ -761,6 +883,38 @@ class BSLTextDocumentServiceTest {
     var params = new CallHierarchyOutgoingCallsParams(item);
     var result = textDocumentService.callHierarchyOutgoingCalls(params).get();
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  void prepareTypeHierarchyUnknownFile() throws Exception {
+    var params = new TypeHierarchyPrepareParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.prepareTypeHierarchy(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void typeHierarchySupertypesUnknownFile() throws Exception {
+    var params = new TypeHierarchySupertypesParams(unknownTypeHierarchyItem());
+    var result = textDocumentService.typeHierarchySupertypes(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void typeHierarchySubtypesUnknownFile() throws Exception {
+    var params = new TypeHierarchySubtypesParams(unknownTypeHierarchyItem());
+    var result = textDocumentService.typeHierarchySubtypes(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  private TypeHierarchyItem unknownTypeHierarchyItem() {
+    var zeroRange = new Range(new Position(0, 0), new Position(0, 0));
+    return new TypeHierarchyItem(
+      "Unknown",
+      SymbolKind.Class,
+      getTextDocumentIdentifier().getUri(),
+      zeroRange,
+      zeroRange
+    );
   }
 
   @Test

@@ -3690,5 +3690,153 @@
         ]
       }
     ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Диаграмма",
+    "members": [
+      {
+        "name": "ПалитраЦветов",
+        "nameRu": "ПалитраЦветов",
+        "nameEn": "ColorPalette",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ПалитраЦветов"]
+      },
+      {
+        "name": "ЦветНачалаГрадиентнойПалитры",
+        "nameRu": "ЦветНачалаГрадиентнойПалитры",
+        "nameEn": "GradientPaletteStartColor",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ЦветНачалаГрадиентнойПалитры"]
+      },
+      {
+        "name": "ЦветКонцаГрадиентнойПалитры",
+        "nameRu": "ЦветКонцаГрадиентнойПалитры",
+        "nameEn": "GradientPaletteEndColor",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ЦветКонцаГрадиентнойПалитры"]
+      },
+      {
+        "name": "ПолучитьПалитру",
+        "nameRu": "ПолучитьПалитру",
+        "nameEn": "GetPalette",
+        "kind": "METHOD",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ПолучитьПалитру"]
+      },
+      {
+        "name": "УстановитьПалитру",
+        "nameRu": "УстановитьПалитру",
+        "nameEn": "SetPalette",
+        "kind": "METHOD",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.УстановитьПалитру"]
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": []
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДиаграммаГанта",
+    "members": [
+      {
+        "name": "ПалитраЦветов",
+        "nameRu": "ПалитраЦветов",
+        "nameEn": "ColorPalette",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ПалитраЦветов"]
+      },
+      {
+        "name": "ЦветНачалаГрадиентнойПалитры",
+        "nameRu": "ЦветНачалаГрадиентнойПалитры",
+        "nameEn": "GradientPaletteStartColor",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ЦветНачалаГрадиентнойПалитры"]
+      },
+      {
+        "name": "ЦветКонцаГрадиентнойПалитры",
+        "nameRu": "ЦветКонцаГрадиентнойПалитры",
+        "nameEn": "GradientPaletteEndColor",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ЦветКонцаГрадиентнойПалитры"]
+      },
+      {
+        "name": "ПолучитьПалитру",
+        "nameRu": "ПолучитьПалитру",
+        "nameEn": "GetPalette",
+        "kind": "METHOD",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ПолучитьПалитру"]
+      },
+      {
+        "name": "УстановитьПалитру",
+        "nameRu": "УстановитьПалитру",
+        "nameEn": "SetPalette",
+        "kind": "METHOD",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.УстановитьПалитру"]
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": []
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "СводнаяДиаграмма",
+    "members": [
+      {
+        "name": "ПалитраЦветов",
+        "nameRu": "ПалитраЦветов",
+        "nameEn": "ColorPalette",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ПалитраЦветов"]
+      },
+      {
+        "name": "ЦветНачалаГрадиентнойПалитры",
+        "nameRu": "ЦветНачалаГрадиентнойПалитры",
+        "nameEn": "GradientPaletteStartColor",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ЦветНачалаГрадиентнойПалитры"]
+      },
+      {
+        "name": "ЦветКонцаГрадиентнойПалитры",
+        "nameRu": "ЦветКонцаГрадиентнойПалитры",
+        "nameEn": "GradientPaletteEndColor",
+        "kind": "PROPERTY",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ЦветКонцаГрадиентнойПалитры"]
+      },
+      {
+        "name": "ПолучитьПалитру",
+        "nameRu": "ПолучитьПалитру",
+        "nameEn": "GetPalette",
+        "kind": "METHOD",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.ПолучитьПалитру"]
+      },
+      {
+        "name": "УстановитьПалитру",
+        "nameRu": "УстановитьПалитру",
+        "nameEn": "SetPalette",
+        "kind": "METHOD",
+        "deprecatedSinceVersion": "8.3.12",
+        "recommendedReplacements": ["ОписаниеПалитрыЦветов.УстановитьПалитру"]
+      }
+    ]
   }
 ]

@@ -120,6 +120,8 @@ public class ReferenceIndexFiller {
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private final ModuleReference.ParsedAccessors parsedAccessors =
+      ModuleReference.parseAccessors(configuration.getReferencesOptions().getCommonModuleAccessors());
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
@@ -141,6 +143,9 @@ public class ReferenceIndexFiller {
         return super.visitCallStatement(ctx);
       }
 
+      // Метод, вызванный у результата getter-а общего модуля: ОбщегоНазначения.ОбщийМодуль("Имя").Метод()
+      registerCommonModuleMethodOnGetter(ctx.IDENTIFIER(), null, ctx.modifier(), ctx.accessCall());
+
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
         tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
@@ -157,6 +162,9 @@ public class ReferenceIndexFiller {
 
     @Override
     public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+      // Метод, вызванный у результата getter-а общего модуля: ОбщегоНазначения.ОбщийМодуль("Имя").Метод()
+      registerCommonModuleMethodOnGetter(ctx.IDENTIFIER(), ctx.globalMethodCall(), ctx.modifier(), null);
+
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
         tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
@@ -366,6 +374,33 @@ public class ReferenceIndexFiller {
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
       index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+    }
+
+    /**
+     * Регистрирует вызов метода у результата getter-а общего модуля
+     * ({@code ОбщегоНазначения.ОбщийМодуль("Имя").Метод(...)} или {@code ОбщийМодуль("Имя").Метод(...)}).
+     * <p>
+     * Сам getter-метод ({@code ОбщийМодуль}) регистрируется отдельно (через {@code checkCall}),
+     * а здесь добавляется ссылка на метод возвращённого общего модуля, чтобы он корректно
+     * разрешался и проверялся (см. #3974).
+     */
+    private void registerCommonModuleMethodOnGetter(
+      @Nullable TerminalNode baseIdentifier,
+      BSLParser.@Nullable GlobalMethodCallContext baseGlobalCall,
+      List<? extends BSLParser.ModifierContext> modifiers,
+      BSLParser.@Nullable AccessCallContext trailingCall
+    ) {
+      ModuleReference.extractMethodCallOnGetterModule(
+          baseIdentifier, baseGlobalCall, modifiers, trailingCall, parsedAccessors)
+        .ifPresent(call -> documentContext.getServerContext()
+          .getConfiguration()
+          .findCommonModule(call.moduleName())
+          .ifPresent(commonModule -> addMethodCall(
+            commonModule.getMdoReference().getMdoRef(),
+            ModuleType.CommonModule,
+            call.methodNameToken().getText(),
+            Ranges.create(call.methodNameToken())
+          )));
     }
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {

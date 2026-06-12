@@ -40,6 +40,7 @@ import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.ImplementationRegistrationOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentHighlightOptions;
@@ -68,6 +69,7 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.TypeHierarchyRegistrationOptions;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
@@ -121,6 +123,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
+    clientCapabilitiesHolder.setClientInfo(params.getClientInfo());
 
     setConfigurationRoot(params);
 
@@ -141,7 +144,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
+    capabilities.setImplementationProvider(getImplementationProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
+    capabilities.setTypeHierarchyProvider(getTypeHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
     capabilities.setRenameProvider(getRenameProvider(params));
@@ -368,6 +373,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return definitionOptions;
   }
 
+  private static ImplementationRegistrationOptions getImplementationProvider() {
+    var implementationRegistrationOptions = new ImplementationRegistrationOptions();
+    implementationRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return implementationRegistrationOptions;
+  }
+
   private static ReferenceOptions getReferencesProvider() {
     var referenceOptions = new ReferenceOptions();
     referenceOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -378,6 +389,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
     callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
     return callHierarchyRegistrationOptions;
+  }
+
+  private static TypeHierarchyRegistrationOptions getTypeHierarchyProvider() {
+    var typeHierarchyRegistrationOptions = new TypeHierarchyRegistrationOptions();
+    typeHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return typeHierarchyRegistrationOptions;
   }
 
   private static WorkspaceSymbolOptions getWorkspaceProvider() {

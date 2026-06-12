@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -118,11 +119,16 @@ public class CodeLensProvider {
    * сапплаер линзы (параметр-тип класса сапплаера).
    *
    * @param codeLens Линза, из которой необходимо извлечь данные.
-   * @return Извлеченные данные линзы.
+   * @return Извлеченные данные линзы либо {@code null}, если линза пришла без поля
+   *         {@link CodeLens#getData()} — резолвить такую линзу нечем.
    */
   @SneakyThrows
-  public CodeLensData extractData(CodeLens codeLens) {
+  public @Nullable CodeLensData extractData(CodeLens codeLens) {
     var rawCodeLensData = codeLens.getData();
+
+    if (rawCodeLensData == null) {
+      return null;
+    }
 
     if (rawCodeLensData instanceof CodeLensData data) {
       return data;

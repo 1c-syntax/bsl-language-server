@@ -191,27 +191,44 @@ public final class FormatProvider {
     String ch, Position position, DocumentContext documentContext
   ) {
     if ("\n".equals(ch)) {
-      if (position.getLine() == 0) {
-        return null;
-      }
-      var targetLineLsp = position.getLine() - 1;
-      var contentList = documentContext.getContentList();
-      if (targetLineLsp >= contentList.length) {
-        return null;
-      }
-      // Ограничиваем диапазон концом строки без переноса: только что набранный пользователем
-      // перевод строки не должен попасть внутрь replace-range, иначе editor может проглотить
-      // новую строку при отсутствии хвостового переноса в newText.
-      var lineLength = contentList[targetLineLsp].length();
-      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
-      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, lineLength);
+      return resolveEnterWindow(position, documentContext);
     }
     if (";".equals(ch)) {
-      var targetLineLsp = position.getLine();
-      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, position.getCharacter());
-      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, position.getCharacter());
+      return resolveSemicolonWindow(position, documentContext);
     }
     return null;
+  }
+
+  private static @Nullable EditWindow resolveEnterWindow(Position position, DocumentContext documentContext) {
+    if (position.getLine() == 0) {
+      return null;
+    }
+    var targetLineLsp = position.getLine() - 1;
+    var contentList = documentContext.getContentList();
+    if (targetLineLsp >= contentList.length) {
+      return null;
+    }
+    // Ограничиваем диапазон концом строки без переноса: только что набранный пользователем
+    // перевод строки не должен попасть внутрь replace-range, иначе editor может проглотить
+    // новую строку при отсутствии хвостового переноса в newText.
+    var lineLength = contentList[targetLineLsp].length();
+    var range = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
+    return new EditWindow(targetLineLsp, targetLineLsp + 1, range, lineLength);
+  }
+
+  private static @Nullable EditWindow resolveSemicolonWindow(Position position, DocumentContext documentContext) {
+    var targetLineLsp = position.getLine();
+    var contentList = documentContext.getContentList();
+    if (targetLineLsp >= contentList.length) {
+      return null;
+    }
+    // Курсор может оказаться правее фактического конца синхронизированной строки (только что
+    // набранный ';' ещё не доехал до серверной копии документа — рассинхрон у LSP4IJ). Без клампа
+    // диапазон правки уехал бы за конец строки и форматтер дописал бы хвостовой перенос строки,
+    // затирая набранный символ. Зеркалим клампинг ветки "\n".
+    var cutoff = Math.min(position.getCharacter(), contentList[targetLineLsp].length());
+    var range = Ranges.create(targetLineLsp, 0, targetLineLsp, cutoff);
+    return new EditWindow(targetLineLsp, targetLineLsp + 1, range, cutoff);
   }
 
   private record LineTokens(List<Token> tokens, @Nullable Token firstSignificant, int firstSignificantIndex) {

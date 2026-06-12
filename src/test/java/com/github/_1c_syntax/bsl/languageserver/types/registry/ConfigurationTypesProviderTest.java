@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -53,13 +55,18 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   @Autowired
   private LanguageServerConfiguration configuration;
 
-  @Test
-  void registersCatalogTypesWithRuAndEnAliases() {
-    initServerContext(PATH_TO_METADATA);
-    // прогреваем lazy-конфигурацию
+  @BeforeEach
+  void setUp() {
+    // initServerContextOnce + tryRegister один раз на класс — тесты read-only:
+    // дёргают только typeRegistry.resolve/getMembers и typeService.displayName,
+    // состояние ServerContext'а/реестра не модифицируют.
+    initServerContextOnce(Absolute.path(PATH_TO_METADATA));
     context.getConfiguration();
     provider.tryRegister();
+  }
 
+  @Test
+  void registersCatalogTypesWithRuAndEnAliases() {
     var ru = typeRegistry.resolve("Справочники.Справочник1");
     var en = typeRegistry.resolve("Catalogs.Справочник1");
     var managerRu = typeRegistry.resolve("СправочникМенеджер.Справочник1");
@@ -77,9 +84,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void configurationTypeDisplayNamesAreBilingual() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // Менеджер-обёртка: в EN показывается CatalogManager.Справочник1, а не ru-написание.
     var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
@@ -98,9 +102,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   void informationRegisterManagerInheritsPlatformMembers() {
     // Менеджер регистра сведений специализируется платформенным generic'ом
     // РегистрСведенийМенеджер.<Имя> и наследует его методы.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var managerRef = typeRegistry.resolve("РегистрСведенийМенеджер.РегистрСведений1").orElseThrow();
     var memberNames = typeRegistry.getMembers(managerRef).stream().map(m -> m.name()).toList();
@@ -117,9 +118,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   void filterCriterionManagerInheritsPlatformMembers() {
     // Менеджер критерия отбора специализируется платформенным generic'ом
     // КритерийОтбораМенеджер.<Имя> и наследует его методы.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var managerRef = typeRegistry.resolve("КритерийОтбораМенеджер.КритерийОтбора1").orElseThrow();
     var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
@@ -132,9 +130,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   void catalogManagerExposesPredefinedValues() {
     // Менеджер справочника отдаёт предопределённые значения как члены
     // (Справочники.Справочник1.ПредопределённыйЭлемент1), включая вложенные в группах.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
     var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
@@ -154,9 +149,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void registersCollectionNamespacesWithMetadataMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var nsRu = globalScopeProvider.findGlobalContext("Справочники");
     var nsEn = globalScopeProvider.findGlobalContext("Catalogs");
@@ -181,9 +173,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void registersConfigurationQualifiedNamesForCompletion() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var qualified = globalScopeProvider.getConfigurationQualifiedNames();
     assertThat(qualified)
@@ -193,9 +182,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentRefInheritsPlatformMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // Конкретный тип `ДокументСсылка.Документ1` получает members обоих источников:
     // реквизиты из метаданных + платформенные members из generic-семейства
@@ -217,9 +203,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentManagerInheritsPlatformMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На `ДокументМенеджер.Документ1` подмешиваются методы платформенного
     // generic-менеджера документа (НайтиПоНомеру, СоздатьДокумент, …).
@@ -231,9 +214,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void emptyRefOnManagerReturnsSpecializedRef() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На `ДокументМенеджер.Документ1.ПустаяСсылка()` тип возврата должен
     // специализироваться в конкретный `ДокументСсылка.Документ1`, а не
@@ -257,9 +237,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentsCollectionInheritsCollectionManagerMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На коллекции `Документы` подмешиваются методы платформенного
     // `ДокументыМенеджер` (ТипВсеСсылки).
@@ -273,9 +250,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void genericSlotsFilteredOutFromInheritedMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // Generic-слоты <Имя реквизита>, <Имя общего реквизита> платформенного
     // generic-типа не должны утекать в специализированный ref/object тип.
@@ -287,9 +261,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void standardAttributesGetDescriptionsFromPlatform() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // У стандартного реквизита `Дата` в mdclasses описание пустое, а
     // платформенный generic-тип в HBK содержит описание — оно должно
@@ -307,9 +278,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentExposesTabularSectionMember() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На `ДокументОбъект.Документ1` есть member-property `ТабличнаяЧасть1`,
     // тип которого — `ДокументТабличнаяЧасть.Документ1.ТабличнаяЧасть1`.
@@ -325,9 +293,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void commonAttributeAddedToApplicableDocument() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // `ОбщийРеквизит1`: content явно включает Документ1 (Use=USE) и исключает
     // Справочник1 (DontUse). Поэтому ref-тип документа получает реквизит как
@@ -345,9 +310,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void tabularSectionRowExposesColumns() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var rowRef = typeRegistry.resolve("ДокументТабличнаяЧастьСтрока.Документ1.ТабличнаяЧасть1");
     assertThat(rowRef).isPresent();
@@ -362,9 +324,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // displayName(language) возвращает имя в нужной локали. Это и есть единая
     // точка для hover/диагностик (через matches) и completion (через displayName)
     // без необходимости держать два параллельных дескриптора per-language.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1").orElseThrow();
     var members = typeRegistry.getMembers(ref);
@@ -399,9 +358,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // (СправочникСсылка.<Имя справочника>). В JSON-fallback они заданы двуязычно
     // (descriptionRu/descriptionEn), и displayDescription(language) должен отдавать
     // описание в нужной локали — иначе hover на en-проекте показывает ru-текст.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var ref = typeRegistry.resolve("СправочникСсылка.Справочник1").orElseThrow();
     var members = typeRegistry.getMembers(ref);

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
@@ -202,6 +203,32 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     // then
     assertThat(all).extracting(LibraryEntry::qualifiedName)
       .contains("MyModule", "MyClass");
+  }
+
+  @Test
+  void classNamesUsesQualifiedNameForLibraryClass() {
+    // given — у класса RenamedClass qualifiedName из lib.config отличается от basename файла.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+    var renamed = context.getDocument(Absolute.uri(fixtureRoot.resolve("src/mainclass.os").toUri()));
+
+    // when / then — берётся qualifiedName, а не basename.
+    assertThat(index.classNames(renamed)).containsExactly("RenamedClass");
+    assertThat(index.isLibraryClass(renamed)).isTrue();
+  }
+
+  @Test
+  void classNamesAreEmptyForNonLibraryFile() {
+    // given — обычный .os, не зарегистрированный в lib.config.
+    initServerContext();
+    var plain = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n", context);
+
+    // when / then — имён нет, library-классом не считается.
+    assertThat(index.classNames(plain)).isEmpty();
+    assertThat(index.isLibraryClass(plain)).isFalse();
   }
 
   @Test
