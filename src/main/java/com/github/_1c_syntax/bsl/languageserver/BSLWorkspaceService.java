@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.bsl.languageserver.utils.PathExclusionUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -44,11 +45,14 @@ import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.net.URI;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -313,6 +317,13 @@ public class BSLWorkspaceService implements WorkspaceService {
    */
   private void handleCreatedFileEvent(URI uri) {
     var context = getContextForDocument(uri);
+
+    var file = toFile(uri);
+    if (file != null && file.isDirectory()) {
+      handleCreatedFolderEvent(context, file);
+      return;
+    }
+
     if (isExcludedPath(context, uri)) {
       return;
     }
@@ -323,6 +334,65 @@ public class BSLWorkspaceService implements WorkspaceService {
       context.rebuildDocument(documentContext);
       context.tryClearDocument(documentContext);
     }
+  }
+
+  /**
+   * Обрабатывает событие создания каталога в файловой системе.
+   * <p>
+   * Клиенты (в т.ч. VS Code) при создании или переименовании каталога присылают одно событие
+   * с URI каталога без событий по вложенным файлам. Каталог рекурсивно обходится, и все найденные
+   * BSL/OS-файлы добавляются в контекст сервера. Поиск файлов и учёт {@code excludePaths}
+   * переиспользуют логику {@link BSLFiles#listBslFiles} — ту же,
+   * что применяется при первичном наполнении контекста в {@link ServerContext#populateContext()}.
+   *
+   * @param context контекст сервера
+   * @param folder  созданный каталог
+   */
+  private void handleCreatedFolderEvent(ServerContext context, File folder) {
+    var excludePaths = getExcludePaths(context);
+    var files = BSLFiles.listBslFiles(folder.toPath(), excludePaths);
+
+    for (var file : files) {
+      var fileUri = Absolute.uri(file.toURI());
+      var documentContext = context.addDocument(fileUri);
+
+      var isDocumentOpened = context.isDocumentOpened(documentContext);
+      if (!isDocumentOpened) {
+        context.rebuildDocument(documentContext);
+        context.tryClearDocument(documentContext);
+      }
+    }
+  }
+
+  /**
+   * Преобразует URI в {@link File}, если это файловый URI.
+   *
+   * @param uri URI файла или каталога
+   * @return {@link File} или {@code null}, если URI не указывает на путь в файловой системе
+   */
+  @Nullable
+  private static File toFile(URI uri) {
+    try {
+      return Paths.get(uri).toFile();
+    } catch (IllegalArgumentException | FileSystemNotFoundException e) {
+      LOGGER.debug("Не удалось преобразовать URI в путь файловой системы: {}", uri, e);
+      return null;
+    }
+  }
+
+  /**
+   * Возвращает список {@code excludePaths} из конфигурации workspace {@code context}.
+   *
+   * @param context контекст сервера
+   * @return список паттернов исключения; {@code null}, если конфигурация недоступна
+   */
+  @Nullable
+  private static List<String> getExcludePaths(ServerContext context) {
+    var cfg = context.getLanguageServerConfiguration();
+    if (cfg == null) {
+      return null;
+    }
+    return cfg.getExcludePaths();
   }
 
   /**

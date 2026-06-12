@@ -712,6 +712,87 @@ class BSLWorkspaceServiceTest {
     assertThat(workspaceServerContext().getDocument(newUri)).isNotNull();
   }
 
+  /**
+   * Клиенты (VS Code) при создании каталога присылают одно событие с URI каталога без событий
+   * по вложенным файлам. Все BSL/OS-файлы внутри каталога должны быть добавлены в контекст.
+   */
+  @Test
+  void testDidCreateFiles_Folder() throws IOException {
+    // given
+    var objectModule = createTestFile("Catalogs/Items/Ext/ObjectModule.bsl");
+    var formModule = createTestFile("Catalogs/Items/Forms/ItemForm/Ext/Form/Module.bsl");
+
+    var objectModuleUri = Absolute.uri(objectModule.toURI());
+    var formModuleUri = Absolute.uri(formModule.toURI());
+
+    var ctx = workspaceServerContext();
+    assertThat(ctx.getDocument(objectModuleUri)).isNull();
+    assertThat(ctx.getDocument(formModuleUri)).isNull();
+
+    var createdFolder = tempDir.resolve("Catalogs").resolve("Items").toFile();
+    var folderUri = Absolute.uri(createdFolder.toURI());
+
+    var params = new CreateFilesParams(List.of(new FileCreate(folderUri.toString())));
+
+    // when
+    workspaceService.didCreateFiles(params);
+    await().until(() -> ctx.getDocument(objectModuleUri) != null && ctx.getDocument(formModuleUri) != null);
+
+    // then
+    assertThat(ctx.getDocument(objectModuleUri)).isNotNull();
+    assertThat(ctx.getDocument(formModuleUri)).isNotNull();
+  }
+
+  /**
+   * При переименовании каталога присылается один FileRename с URI каталога без вложенных файлов.
+   * Документы внутри каталога должны появиться в контексте по новым URI и исчезнуть по старым.
+   */
+  @Test
+  void testDidRenameFiles_Folder() throws IOException {
+    // given
+    var oldObjectModule = createTestFile("Catalogs/Orders/Ext/ObjectModule.bsl");
+    var oldFormModule = createTestFile("Catalogs/Orders/Forms/ItemForm/Ext/Form/Module.bsl");
+
+    var oldObjectModuleUri = Absolute.uri(oldObjectModule.toURI());
+    var oldFormModuleUri = Absolute.uri(oldFormModule.toURI());
+
+    var ctx = workspaceServerContext();
+    for (var uri : List.of(oldObjectModuleUri, oldFormModuleUri)) {
+      var documentContext = ctx.addDocument(uri);
+      ctx.rebuildDocument(documentContext);
+      ctx.tryClearDocument(documentContext);
+    }
+
+    var oldFolder = tempDir.resolve("Catalogs").resolve("Orders").toFile();
+    var newFolder = tempDir.resolve("Catalogs").resolve("Documents").toFile();
+    FileUtils.moveDirectory(oldFolder, newFolder);
+
+    var oldFolderUri = Absolute.uri(oldFolder.toURI());
+    var newFolderUri = Absolute.uri(newFolder.toURI());
+
+    var newObjectModuleUri = Absolute.uri(newFolder.toPath()
+      .resolve("Ext").resolve("ObjectModule.bsl").toUri());
+    var newFormModuleUri = Absolute.uri(newFolder.toPath()
+      .resolve("Forms").resolve("ItemForm").resolve("Ext").resolve("Form").resolve("Module.bsl").toUri());
+
+    var params = new RenameFilesParams(List.of(
+      new FileRename(oldFolderUri.toString(), newFolderUri.toString())
+    ));
+
+    // when
+    workspaceService.didRenameFiles(params);
+    await().until(() -> ctx.getDocument(newObjectModuleUri) != null
+      && ctx.getDocument(newFormModuleUri) != null
+      && ctx.getDocument(oldObjectModuleUri) == null
+      && ctx.getDocument(oldFormModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(oldObjectModuleUri)).isNull();
+    assertThat(ctx.getDocument(oldFormModuleUri)).isNull();
+    assertThat(ctx.getDocument(newObjectModuleUri)).isNotNull();
+    assertThat(ctx.getDocument(newFormModuleUri)).isNotNull();
+  }
+
   private ServerContext workspaceServerContext() {
     return serverContextProvider.getServerContext(Absolute.uri(tempDir.toUri())).orElseThrow();
   }
