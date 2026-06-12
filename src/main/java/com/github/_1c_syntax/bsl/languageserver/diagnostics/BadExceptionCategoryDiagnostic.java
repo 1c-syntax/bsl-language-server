@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RaiseStatementContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -80,14 +81,14 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
       .map(ci -> ci.modifier().getLast())
       .map(BSLParser.ModifierContext::accessProperty)
       .map(BSLParser.AccessPropertyContext::IDENTIFIER)
-      .map(identifierNode -> identifierNode.getText().toLowerCase())
+      .map(identifierNode -> identifierNode.getText().toLowerCase(Locale.ROOT))
       .filter(FORBIDDEN_CATEGORIES::contains)
       .isPresent();
   }
 
   private boolean isErrorCategoryQualifier(BSLParser.ComplexIdentifierContext ci) {
     return Optional.ofNullable(ci.IDENTIFIER())
-      .map(id -> id.getText().toLowerCase())
+      .map(id -> id.getText().toLowerCase(Locale.ROOT))
       .filter(root -> root.equals("категорияошибки") || root.equals("errorcategory"))
       .isPresent();
   }
