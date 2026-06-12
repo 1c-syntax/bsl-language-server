@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.AnalyzeFileTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
@@ -154,15 +155,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", null);
-
-    assertThat(result.name()).isEqualTo("Массив");
-    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
-  }
-
-  @Test
-  void typeInfoReturnsMethodsAndPropertiesWithExplicitBslFileType() {
-    var result = typeInfoTool.typeInfo("Массив", "bsl");
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -170,7 +163,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesWithOsFileType() {
-    var result = typeInfoTool.typeInfo("Массив", "os");
+    var result = typeInfoTool.typeInfo("Массив", FileType.OS);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -178,15 +171,8 @@ class McpToolsTest {
 
   @Test
   void typeInfoThrowsForUnknownType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", null))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL))
       .isInstanceOf(IllegalArgumentException.class);
-  }
-
-  @Test
-  void typeInfoThrowsForInvalidFileType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", "invalid"))
-      .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Unknown file type");
   }
 
   @Test
