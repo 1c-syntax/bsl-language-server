@@ -242,7 +242,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * (neovim, helix и др.) без статической конфигурации наблюдателей сами ничего не присылают
    * в {@code workspace/didChangeWatchedFiles}, из-за чего индекс устаревает при операциях
    * вне редактора (git checkout, выгрузка из конфигуратора). Регистрируются наблюдатели на
-   * {@code **&#47;*.bsl}, {@code **&#47;*.os} и {@code **&#47;.bsl-language-server.json}.
+   * {@code **&#47;*.bsl} и {@code **&#47;*.os}; за конфигурационным файлом следит сам сервер
+   * (см. {@code ConfigurationFileSystemWatcher}), поэтому клиентский наблюдатель за ним не нужен.
    * <p>
    * Если клиент не заявил динамическую регистрацию или не подключён, метод ничего не делает.
    */
@@ -255,8 +256,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       var watchKind = WatchKind.Create | WatchKind.Change | WatchKind.Delete;
       var watchers = List.of(
         new FileSystemWatcher(Either.forLeft("**/*.bsl"), watchKind),
-        new FileSystemWatcher(Either.forLeft("**/*.os"), watchKind),
-        new FileSystemWatcher(Either.forLeft("**/.bsl-language-server.json"), watchKind)
+        new FileSystemWatcher(Either.forLeft("**/*.os"), watchKind)
       );
 
       var registrationOptions = new DidChangeWatchedFilesRegistrationOptions(watchers);

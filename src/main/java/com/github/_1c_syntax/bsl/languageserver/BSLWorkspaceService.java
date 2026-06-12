@@ -384,15 +384,10 @@ public class BSLWorkspaceService implements WorkspaceService {
    * Возвращает список {@code excludePaths} из конфигурации workspace {@code context}.
    *
    * @param context контекст сервера
-   * @return список паттернов исключения; {@code null}, если конфигурация недоступна
+   * @return список паттернов исключения
    */
-  @Nullable
   private static List<String> getExcludePaths(ServerContext context) {
-    var cfg = context.getLanguageServerConfiguration();
-    if (cfg == null) {
-      return null;
-    }
-    return cfg.getExcludePaths();
+    return context.getLanguageServerConfiguration().getExcludePaths();
   }
 
   /**

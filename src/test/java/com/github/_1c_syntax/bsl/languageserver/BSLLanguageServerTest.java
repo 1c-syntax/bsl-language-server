@@ -223,7 +223,7 @@ class BSLLanguageServerTest {
     assertThat(options.getWatchers())
       .extracting(FileSystemWatcher::getGlobPattern)
       .extracting(globPattern -> globPattern.getLeft())
-      .containsExactlyInAnyOrder("**/*.bsl", "**/*.os", "**/.bsl-language-server.json");
+      .containsExactlyInAnyOrder("**/*.bsl", "**/*.os");
   }
 
   @Test
