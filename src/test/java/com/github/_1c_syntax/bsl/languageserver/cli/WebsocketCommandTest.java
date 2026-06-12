@@ -59,4 +59,16 @@ class WebsocketCommandTest {
     verify(configuration, times(2)).update(any());
   }
 
+  @Test
+  void testMcpFlagEnablesMcpAndReturnsNonStandardCode() {
+    // given
+    var commandLine = new CommandLine(WebsocketCommand.class, factory);
+
+    // when
+    var call = commandLine.execute("--mcp");
+
+    // then
+    assertThat(call).isEqualTo(-1);
+  }
+
 }
