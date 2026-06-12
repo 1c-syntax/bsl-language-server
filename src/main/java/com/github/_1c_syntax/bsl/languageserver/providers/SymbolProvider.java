@@ -42,7 +42,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -75,13 +74,7 @@ public class SymbolProvider {
     var queryString = Optional.ofNullable(params.getQuery())
       .orElse("");
 
-    Pattern pattern;
-    try {
-      pattern = CaseInsensitivePattern.compile(queryString);
-    } catch (PatternSyntaxException e) {
-      LOGGER.debug(e.getMessage(), e);
-      return Collections.emptyList();
-    }
+    var pattern = compilePattern(queryString);
 
     // Search for symbols in all workspace contexts
     return serverContextProvider.getAllContexts().values().stream()
@@ -90,6 +83,25 @@ public class SymbolProvider {
       .filter(symbolEntry -> queryString.isEmpty() || pattern.matcher(symbolEntry.symbol().getName()).find())
       .map(SymbolProvider::createWorkspaceSymbol)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Компилирует запрос {@code workspace/symbol} в шаблон для сопоставления имён символов.
+   * <p>
+   * Запрос трактуется как регулярное выражение. Если оно невалидно, спецификация LSP допускает
+   * "расслабленную" обработку, поэтому вместо возврата пустого результата выполняется откат на
+   * буквальное сопоставление подстроки.
+   *
+   * @param queryString строка запроса пользователя
+   * @return скомпилированный шаблон с флагами {@code CASE_INSENSITIVE} и {@code UNICODE_CASE}
+   */
+  private static Pattern compilePattern(String queryString) {
+    try {
+      return CaseInsensitivePattern.compile(queryString);
+    } catch (PatternSyntaxException e) {
+      LOGGER.debug(e.getMessage(), e);
+      return Pattern.compile(Pattern.quote(queryString), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    }
   }
 
   private static Stream<SymbolEntry> getSymbolEntries(DocumentContext documentContext) {
