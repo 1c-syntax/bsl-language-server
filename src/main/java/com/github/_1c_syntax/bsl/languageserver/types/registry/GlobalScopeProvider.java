@@ -106,12 +106,12 @@ public class GlobalScopeProvider {
    */
   private final Map<FileType, Loaded> byFileType;
   /**
-   * lowercased имена платформенных переменных и системных перечислений
-   * (canonical + алиасы) по языкам — индекс для проверки видимости имени
-   * в {@link #findGlobal(String, FileType)}.
+   * lowercased имена глобальных свойств, видимые в файлах каждого языка.
+   * В отличие от {@link #byFileType} (иммутабельный снапшот загрузки из
+   * JSON/bsl-context), это runtime-реестр: заполняется
+   * {@link #registerGlobalProperty} в течение жизни workspace (общие модули
+   * конфигурации, library-модули, публикация bootstrap'ом).
    */
-  private final Map<FileType, Set<String>> platformVariableNames;
-  /** lowercased имена глобальных свойств (через registerGlobalProperty), видимые в файлах каждого языка. */
   private final Map<FileType, Set<String>> globalContextNames = Map.of(
     FileType.BSL, ConcurrentHashMap.newKeySet(),
     FileType.OS, ConcurrentHashMap.newKeySet()
@@ -159,25 +159,7 @@ public class GlobalScopeProvider {
     var os = loadFromResource(OSCRIPT_RESOURCE_PATH);
     var bsl = loadBsl(bslContextHolder);
     this.byFileType = Map.of(FileType.BSL, bsl, FileType.OS, os);
-    this.platformVariableNames = Map.of(
-      FileType.BSL, variableNames(bsl),
-      FileType.OS, variableNames(os)
-    );
     this.globalSymbolScope = globalSymbolScope;
-  }
-
-  /** lowercased имена (canonical + алиасы) платформенных переменных и перечислений набора. */
-  private static Set<String> variableNames(Loaded data) {
-    var result = new HashSet<String>();
-    for (var list : List.of(data.platformVariables, data.platformEnums)) {
-      for (var v : list) {
-        result.add(v.name().toLowerCase(Locale.ROOT));
-        for (var alias : v.aliases()) {
-          result.add(alias.toLowerCase(Locale.ROOT));
-        }
-      }
-    }
-    return Set.copyOf(result);
   }
 
   /**
@@ -330,14 +312,14 @@ public class GlobalScopeProvider {
       || byFileType.get(FileType.OS).functions.containsKey(lc);
     var propRegistered = globalContextNames.get(FileType.BSL).contains(lc)
       || globalContextNames.get(FileType.OS).contains(lc);
-    var varRegistered = platformVariableNames.get(FileType.BSL).contains(lc)
-      || platformVariableNames.get(FileType.OS).contains(lc);
+    var varRegistered = byFileType.get(FileType.BSL).variableNames.contains(lc)
+      || byFileType.get(FileType.OS).variableNames.contains(lc);
     if (!fnRegistered && !propRegistered && !varRegistered) {
       return sym;
     }
     boolean visible = (fnRegistered && byFileType.get(fileType).functions.containsKey(lc))
       || globalContextNames.get(fileType).contains(lc)
-      || platformVariableNames.get(fileType).contains(lc);
+      || byFileType.get(fileType).variableNames.contains(lc);
     return visible ? sym : Optional.empty();
   }
 
@@ -1170,8 +1152,39 @@ public class GlobalScopeProvider {
     List<PlatformVariable> platformVariables,
     List<PlatformVariable> platformEnums,
     Map<String, LanguageKeywordSnippet> keywordSnippets,
-    Map<String, KeywordDescription> keywordDescriptions
+    Map<String, KeywordDescription> keywordDescriptions,
+    Set<String> variableNames
   ) {
+
+    /**
+     * Канонический конструктор без производного индекса: {@code variableNames}
+     * (lowercased имена + алиасы платформенных переменных и перечислений,
+     * для O(1)-проверки видимости в {@code findGlobal}) вычисляется здесь.
+     */
+    Loaded(Map<String, MemberDescriptor> functions,
+           List<String> classes,
+           List<String> keywords,
+           List<PlatformVariable> platformVariables,
+           List<PlatformVariable> platformEnums,
+           Map<String, LanguageKeywordSnippet> keywordSnippets,
+           Map<String, KeywordDescription> keywordDescriptions) {
+      this(functions, classes, keywords, platformVariables, platformEnums,
+        keywordSnippets, keywordDescriptions,
+        variableNames(platformVariables, platformEnums));
+    }
+
+    private static Set<String> variableNames(List<PlatformVariable> variables, List<PlatformVariable> enums) {
+      var result = new HashSet<String>();
+      for (var list : List.of(variables, enums)) {
+        for (var v : list) {
+          result.add(v.name().toLowerCase(Locale.ROOT));
+          for (var alias : v.aliases()) {
+            result.add(alias.toLowerCase(Locale.ROOT));
+          }
+        }
+      }
+      return Set.copyOf(result);
+    }
   }
 
   /**
