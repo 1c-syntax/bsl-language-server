@@ -116,8 +116,8 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
     var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
 
     assertThat(supertypes)
-      .hasSize(1)
-      .allMatch(item -> item.getName().equals("Млекопитающее"));
+      .extracting(TypeHierarchyItem::getName)
+      .contains("Млекопитающее");
   }
 
   @Test
@@ -127,6 +127,21 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
     var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
 
     assertThat(supertypes).isEmpty();
+  }
+
+  @Test
+  void supertypesIncludeImplementedInterfaces() {
+    // given — Собака наследует Млекопитающее (&Расширяет) и реализует
+    // интерфейс Плавающее (&Реализует).
+    var document = document("Собака.os");
+
+    // when
+    var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
+
+    // then — в супертипах и родитель, и реализуемый интерфейс.
+    assertThat(supertypes)
+      .extracting(TypeHierarchyItem::getName)
+      .containsExactlyInAnyOrder("Млекопитающее", "Плавающее");
   }
 
   @Test
