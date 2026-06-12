@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
@@ -69,6 +70,7 @@ public final class RenameProvider {
 
     var position = params.getPosition();
     var sourceDefinedSymbol = referenceResolver.findReference(documentContext.getUri(), position)
+      .filter(RenameProvider::isRenameable)
       .flatMap(Reference::getSourceDefinedSymbol);
 
     Map<String, List<TextEdit>> changes = Stream.concat(
@@ -102,8 +104,22 @@ public final class RenameProvider {
   public @Nullable Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
+      .filter(RenameProvider::isRenameable)
       .map(Reference::selectionRange)
       .orElse(null);
+  }
+
+  /**
+   * Проверяет, поддерживается ли переименование символа, на который указывает ссылка.
+   * <p>
+   * Имя модуля задаётся метаданными и не может быть переименовано текстовой правкой,
+   * поэтому ссылки на символы с {@link SymbolKind#Module} не переименовываются.
+   *
+   * @param reference Ссылка на символ.
+   * @return {@code true}, если символ можно переименовать через текстовую правку.
+   */
+  private static boolean isRenameable(Reference reference) {
+    return reference.symbol().getSymbolKind() != SymbolKind.Module;
   }
 
   private static Collector<Reference, ?, List<TextEdit>> getTexEdits(RenameParams params) {

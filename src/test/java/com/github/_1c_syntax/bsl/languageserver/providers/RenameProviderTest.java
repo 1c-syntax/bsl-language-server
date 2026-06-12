@@ -47,6 +47,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
   private RenameProvider renameProvider;
 
   private static final String PATH_TO_FILE = "./src/test/resources/providers/rename.bsl";
+  private static final String PATH_TO_COMMON_MODULE_FILE = "./src/test/resources/providers/renameCommonModule.bsl";
 
   @BeforeEach
   void prepareServerContext() {
@@ -141,6 +142,40 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
       .hasSize(2)
       .contains(new TextEdit(Ranges.create(0, 24, 26), newName))
       .contains(new TextEdit(Ranges.create(1, 17, 19), newName));
+  }
+
+  @Test
+  void testRenameOnCommonModuleNameProducesNoEdits() {
+    // given
+    // курсор на "ПервыйОбщийМодуль" в "ПервыйОбщийМодуль.НеУстаревшаяПроцедура()"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+
+    var params = new RenameParams();
+    params.setPosition(new Position(1, 5));
+    params.setNewName("НовоеИмя");
+
+    // when
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
+
+    // then
+    // имя общего модуля задаётся метаданными и не может быть переименовано текстовой правкой
+    assertThat(workspaceEdit.getChanges()).isEmpty();
+  }
+
+  @Test
+  void testPrepareRenameOnCommonModuleNameIsRejected() {
+    // given
+    // курсор на "ПервыйОбщийМодуль" в "ПервыйОбщийМодуль.НеУстаревшаяПроцедура()"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(1, 5));
+
+    // when
+    var range = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    assertThat(range).isNull();
   }
 
   @Test
