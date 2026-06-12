@@ -29,9 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
-import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.DiagnosticCapabilities;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,9 +63,6 @@ class AnalyzeProjectOnStartTest {
   @Autowired
   private LanguageClientHolder languageClientHolder;
 
-  @Autowired
-  private ClientCapabilitiesHolder clientCapabilitiesHolder;
-
   private ServerContext serverContext;
   @Autowired
   private LanguageServerConfiguration configuration;
@@ -84,7 +78,6 @@ class AnalyzeProjectOnStartTest {
   @AfterEach
   void tearDown() {
     WorkspaceContextHolder.clear();
-    clientCapabilitiesHolder.setCapabilities(null);
   }
 
   @Test
@@ -124,34 +117,7 @@ class AnalyzeProjectOnStartTest {
     // when
     analyzeProjectOnStart.handleEvent(new ServerContextPopulatedEvent(serverContext));
 
-    // then
     verify(serverContext, times(1)).getDocuments();
     verify(languageClient, times(1)).publishDiagnostics(any());
-  }
-
-  @Test
-  void doesNotPublishDiagnosticsToPullClient() {
-    // given
-    configuration.getDiagnosticsOptions().setAnalyzeOnStart(true);
-    languageClientHolder.connect(languageClient);
-    clientCapabilitiesHolder.setCapabilities(pullDiagnosticsCapabilities());
-
-    TestUtils.getDocumentContext("A = 0", serverContext);
-
-    // when
-    analyzeProjectOnStart.handleEvent(new ServerContextPopulatedEvent(serverContext));
-
-    // then
-    verify(serverContext, times(1)).getDocuments();
-    verify(serverContext, times(1)).rebuildDocument(any());
-    verify(languageClient, never()).publishDiagnostics(any());
-  }
-
-  private static ClientCapabilities pullDiagnosticsCapabilities() {
-    var textDocument = new TextDocumentClientCapabilities();
-    textDocument.setDiagnostic(new DiagnosticCapabilities());
-    var capabilities = new ClientCapabilities();
-    capabilities.setTextDocument(textDocument);
-    return capabilities;
   }
 }

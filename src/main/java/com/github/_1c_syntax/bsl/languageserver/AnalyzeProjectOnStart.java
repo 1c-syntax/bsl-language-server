@@ -63,12 +63,6 @@ public class AnalyzeProjectOnStart {
 
     var serverContext = event.getSource();
 
-    // Клиент с pull-моделью сам запросит диагностики (в том числе через
-    // workspace/diagnostic/refresh), поэтому push-публикацию по открытым документам
-    // для него выполнять не нужно — иначе возникает второй конкурирующий источник
-    // тех же диагностик.
-    var publishDiagnostics = !diagnosticProvider.supportsPullDiagnostics();
-
     var documentContexts = serverContext.getDocuments().values();
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
@@ -79,9 +73,7 @@ public class AnalyzeProjectOnStart {
           progress.tick();
 
           serverContext.rebuildDocument(documentContext);
-          if (publishDiagnostics) {
-            diagnosticProvider.computeAndPublishDiagnostics(documentContext);
-          }
+          diagnosticProvider.computeAndPublishDiagnostics(documentContext);
 
           serverContext.tryClearDocument(documentContext);
         })
