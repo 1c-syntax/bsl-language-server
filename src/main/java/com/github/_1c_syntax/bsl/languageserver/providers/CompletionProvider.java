@@ -811,11 +811,12 @@ public final class CompletionProvider {
       .filter(doc -> !doc.isBlank())
       .orElseGet(() -> member.displayDescription(scriptVariant));
     var sb = new StringBuilder();
-    if (symDesc.isDeprecated()) {
-      sb.append(scriptVariant == Language.EN ? "**Deprecated.**" : "**Устарела.**");
-      if (!symDesc.getDeprecationInfo().isBlank()) {
-        sb.append(' ').append(symDesc.getDeprecationInfo());
-      }
+    // Сам факт устаревания клиенту сообщает родной механизм LSP (markDeprecated:
+    // CompletionItemTag.Deprecated или legacy-флаг deprecated) — текстовая пометка
+    // в documentation его бы дублировала. В документацию попадает только причина
+    // устаревания, которую тегом не передать.
+    if (symDesc.isDeprecated() && !symDesc.getDeprecationInfo().isBlank()) {
+      sb.append(symDesc.getDeprecationInfo());
       if (!purpose.isBlank()) {
         sb.append("\n\n");
       }
