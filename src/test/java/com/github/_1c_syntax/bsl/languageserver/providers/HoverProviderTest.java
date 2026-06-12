@@ -115,6 +115,60 @@ class HoverProviderTest {
   }
 
   @Test
+  void hoverOnGlobalFunctionInOsFileShowsOneScriptVariant() {
+    // Регрессия #4054: ПодробноеПредставлениеОшибки существует и в BSL, и в OneScript.
+    // В .os-файле hover должен показывать OneScript-вариант без платформенного
+    // deprecation «с 8.3.17» и рекомендации ОбработкаОшибок.ПодробноеПредставлениеОшибки.
+    // given
+    var content = """
+      Попытка
+        ВызватьИсключение "Ошибка";
+      Исключение
+        Сообщить(ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
+      КонецПопытки;
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «ПодробноеПредставлениеОшибки»
+    params.setPosition(new Position(3, 15));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown)
+      .as("hover в .os не должен содержать BSL-метаданных устаревания")
+      .doesNotContain("8.3.17")
+      .doesNotContain("ОбработкаОшибок.ПодробноеПредставлениеОшибки");
+  }
+
+  @Test
+  void hoverOnGlobalFunctionInBslFileShowsBslVariant() {
+    // Контрольная точка к #4054: в .bsl-файле тот же hover показывает BSL-вариант
+    // с deprecation-метаданными платформы.
+    // given
+    var content = """
+      Сообщить(ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «ПодробноеПредставлениеОшибки»
+    params.setPosition(new Position(0, 12));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown).contains("8.3.17");
+  }
+
+  @Test
   void hoverOnDereferencedPropertyMustNotMatchSameNameLocalVariable() {
     // Регрессия: правая часть dereference `Контейнер.Поле` — это имя свойства, а не bare-identifier.
     // ReferenceIndex не должен ловить эту позицию как ссылку на локальную переменную с таким же именем,

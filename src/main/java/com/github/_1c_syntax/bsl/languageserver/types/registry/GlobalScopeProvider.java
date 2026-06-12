@@ -98,6 +98,14 @@ public class GlobalScopeProvider {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-keywords.json";
 
   private final Map<String, MemberDescriptor> functions;
+  /**
+   * lowercased имя функции (canonical + alias) → OneScript-дескриптор из
+   * {@link #OSCRIPT_RESOURCE_PATH}. Для имён, существующих в обоих языках
+   * (например, {@code ПодробноеПредставлениеОшибки}), в {@link #functions}
+   * после merge лежит BSL-вариант с платформенными метаданными (deprecation,
+   * рекомендации) — в OS-файлах вместо него должен отдаваться этот дескриптор.
+   */
+  private final Map<String, MemberDescriptor> osFunctions;
   private final List<String> classes;
   private final List<String> keywords;
   private final List<PlatformVariable> platformVariables;
@@ -154,15 +162,30 @@ public class GlobalScopeProvider {
     Collections.newSetFromMap(new ConcurrentHashMap<>());
 
   /**
+   * Загружает наполнение глобальной области:
+   * <ul>
+   *   <li>OneScript (OS) — всегда из ресурса {@link #OSCRIPT_RESOURCE_PATH};</li>
+   *   <li>BSL — целиком из bsl-context, если платформа 1С установлена и парсинг
+   *       прошёл (функции из глобального контекста, классы для {@code Новый} —
+   *       из ContextType, ключевые слова — из {@code LANGUAGE_KEYWORD}
+   *       категорий LITERAL/STATEMENT/OPERATOR/DECLARATION, платформенные
+   *       переменные — из {@code ContextEnum}). JSON в этом случае не читается.
+   *       Если bsl-context недоступен — fallback на ресурс {@link #RESOURCE_PATH}.</li>
+   * </ul>
+   *
    * @param bslContextHolder источник BSL-глобалов из синтакс-помощника
    *                         установленной платформы 1С (через {@code bsl-context}).
    *                         Если платформа найдена — её содержимое заменяет
    *                         встроенный {@code builtin-globals.json} для BSL-части
    *                         (OS-часть всегда из ресурса). Если платформа недоступна —
    *                         fallback на JSON-ресурс.
+   * @param globalSymbolScope глобальная область символов, в которую публикуются
+   *                          загруженные глобалы и register*-регистрации.
    */
   public GlobalScopeProvider(BslContextHolder bslContextHolder, GlobalSymbolScope globalSymbolScope) {
-    var loaded = load(bslContextHolder);
+    var os = loadFromResource(OSCRIPT_RESOURCE_PATH, LanguageScope.OS);
+    var loaded = merge(loadBsl(bslContextHolder), os);
+    this.osFunctions = os.functions;
     this.functions = loaded.functions;
     this.classes = loaded.classes;
     this.keywords = loaded.keywords;
@@ -513,13 +536,19 @@ public class GlobalScopeProvider {
 
   /**
    * То же, что {@link #getFunctions()}, но с фильтрацией по типу файла.
+   * Для OS-файлов имена, существующие в обоих языках, отдаются
+   * OneScript-дескриптором (см. {@link #osFunctions}).
    */
   public Collection<MemberDescriptor> getFunctions(FileType fileType) {
     var result = new LinkedHashSet<MemberDescriptor>();
     for (var entry : functions.entrySet()) {
       var s = functionScopes.get(entry.getKey());
       if (s == null || s.matches(fileType)) {
-        result.add(entry.getValue());
+        var descriptor = entry.getValue();
+        if (fileType == FileType.OS) {
+          descriptor = osFunctions.getOrDefault(entry.getKey(), descriptor);
+        }
+        result.add(descriptor);
       }
     }
     return result;
@@ -534,6 +563,8 @@ public class GlobalScopeProvider {
 
   /**
    * То же, что {@link #findFunction(String)}, но с фильтрацией по типу файла.
+   * Для OS-файлов имена, существующие в обоих языках, резолвятся в
+   * OneScript-дескриптор (см. {@link #osFunctions}).
    */
   public Optional<MemberDescriptor> findFunction(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
@@ -544,6 +575,12 @@ public class GlobalScopeProvider {
       var s = functionScopes.get(lc);
       if (s != null && !s.matches(fileType)) {
         return Optional.empty();
+      }
+    }
+    if (fileType == FileType.OS) {
+      var osDescriptor = osFunctions.get(lc);
+      if (osDescriptor != null) {
+        return Optional.of(osDescriptor);
       }
     }
     return Optional.ofNullable(functions.get(lc));
@@ -853,24 +890,6 @@ public class GlobalScopeProvider {
     return List.copyOf(configurationQualifiedNames);
   }
 
-
-  /**
-   * Загружает наполнение глобальной области:
-   * <ul>
-   *   <li>OneScript (OS) — всегда из ресурса {@link #OSCRIPT_RESOURCE_PATH};</li>
-   *   <li>BSL — целиком из bsl-context, если платформа 1С установлена и парсинг
-   *       прошёл (функции из глобального контекста, классы для {@code Новый} —
-   *       из ContextType, ключевые слова — из {@code LANGUAGE_KEYWORD}
-   *       категорий LITERAL/STATEMENT/OPERATOR/DECLARATION, платформенные
-   *       переменные — из {@code ContextEnum}). JSON в этом случае не читается.
-   *       Если bsl-context недоступен — fallback на ресурс {@link #RESOURCE_PATH}.</li>
-   * </ul>
-   */
-  private static Loaded load(BslContextHolder bslContextHolder) {
-    var os = loadFromResource(OSCRIPT_RESOURCE_PATH, LanguageScope.OS);
-    var bsl = loadBsl(bslContextHolder);
-    return merge(bsl, os);
-  }
 
   /**
    * BSL-часть глобальной области: либо из bsl-context (если есть), либо
