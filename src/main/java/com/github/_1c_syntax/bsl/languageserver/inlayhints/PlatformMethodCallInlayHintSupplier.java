@@ -284,12 +284,16 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     }
     var lang = currentLanguage();
     var variadicIndex = variadicIndex(parameters);
+    // Единственный пустой callParam — это запись вида `Метод()` / `Новый Тип()`,
+    // т.е. ноль фактических аргументов. Пропуск аргумента (`Метод(а,,б)`) даёт
+    // несколько callParam'ов, в которых пустой обозначает именно опущенный довод.
+    var hasSkippedArguments = args.size() > 1;
     for (var i = 0; i < args.size(); i++) {
       var unit = paramAt(parameters, variadicIndex, i, lang);
       if (unit == null) {
         break;
       }
-      appendHint(sink, member, unit, args.get(i));
+      appendHint(sink, member, unit, args.get(i), hasSkippedArguments);
     }
   }
 
@@ -317,14 +321,17 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
   }
 
   private void appendHint(List<InlayHint> sink, MemberDescriptor member, NamedParam unit,
-                          BSLParser.CallParamContext callParam) {
+                          BSLParser.CallParamContext callParam, boolean argumentSkipAllowed) {
     var passedValue = callParam.getText();
-    // `Новый Тип();` парсится как один пустой callParam — не показываем хинт для
-    // пустого аргумента, иначе получим бессмысленное `Новый Массив(Массив:);`.
+    // Пустой довод — либо `Метод()`/`Новый Тип()` (ноль аргументов, хинт не нужен),
+    // либо пропущенный аргумент `Метод(а,,б)`. Для пропущенного при включённом
+    // showDefaultValues показываем значение по умолчанию из сигнатуры.
     if (passedValue.isBlank()) {
-      return;
-    }
-    if (!showParametersWithTheSameName() && shadowsName(passedValue, unit.name(), unit.descriptor())) {
+      if (!argumentSkipAllowed || !showDefaultValues() || unit.descriptor().defaultValue().isBlank()) {
+        return;
+      }
+    } else if (!showParametersWithTheSameName()
+      && shadowsName(passedValue, unit.name(), unit.descriptor())) {
       return;
     }
     var hint = new InlayHint();
