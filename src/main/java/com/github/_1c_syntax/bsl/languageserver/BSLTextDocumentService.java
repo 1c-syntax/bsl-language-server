@@ -779,16 +779,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     var documentContext = maybeDocument.get();
 
-    var serverContext = getContextForDocument(params.getTextDocument().getUri());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
-      return;
-    }
-
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+    withFreshDocumentContextNullable(documentContext, () -> {
       if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
         validate(documentContext);
       }
+      return null;
     });
   }
 
