@@ -63,7 +63,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(objectEn.get()).isEqualTo(objectRu.get());
 
     // members могут быть пустыми (модуль пуст), но запрос не должен падать
-    assertThat(typeRegistry.getMembers(managerRu.get())).isNotNull();
+    assertThat(typeRegistry.getMembers(managerRu.get(), FileType.BSL)).isNotNull();
   }
 
   @Test
@@ -79,7 +79,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     var ns = globalScopeProvider.findGlobalContext("ПервыйОбщийМодуль", FileType.BSL);
     assertThat(ns).isPresent();
 
-    var members = typeRegistry.getMembers(ns.get());
+    var members = typeRegistry.getMembers(ns.get(), FileType.BSL);
     assertThat(members)
       .extracting(m -> m.name())
       .contains("НеУстаревшаяПроцедура", "НеУстаревшаяФункция", "УстаревшаяПроцедура", "УстаревшаяФункция");
@@ -100,7 +100,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
 
     typeRegistry.resolve("");
     var ns = globalScopeProvider.findGlobalContext("ОбщегоНазначения", FileType.BSL).orElseThrow();
-    var members = typeRegistry.getMembers(ns);
+    var members = typeRegistry.getMembers(ns, FileType.BSL);
 
     var method = members.stream()
       .filter(m -> "ЗначениеВМассиве".equals(m.name()))

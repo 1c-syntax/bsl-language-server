@@ -212,7 +212,7 @@ public class ConfigurationGenericExpander {
       return;
     }
     var snapshot = typeRegistry.expandedMembers(ref, Map.of(),
-      Map.of(placeholder, childNames));
+      Map.of(placeholder, childNames), FileType.BSL);
     if (snapshot.isEmpty()) {
       return;
     }

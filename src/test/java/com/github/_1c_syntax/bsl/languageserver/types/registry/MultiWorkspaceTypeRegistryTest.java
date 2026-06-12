@@ -88,7 +88,7 @@ class MultiWorkspaceTypeRegistryTest {
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isEmpty();
     var nsRefA = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
-    assertThat(typeRegistry.getMembers(nsRefA))
+    assertThat(typeRegistry.getMembers(nsRefA, FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("Контрагенты");
 
@@ -97,7 +97,7 @@ class MultiWorkspaceTypeRegistryTest {
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isEmpty();
     var nsRefB = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
-    assertThat(typeRegistry.getMembers(nsRefB))
+    assertThat(typeRegistry.getMembers(nsRefB, FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("Номенклатура");
   }

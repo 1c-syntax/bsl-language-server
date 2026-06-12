@@ -105,7 +105,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // РегистрСведенийМенеджер.<Имя> и наследует его методы.
 
     var managerRef = typeRegistry.resolve("РегистрСведенийМенеджер.РегистрСведений1").orElseThrow();
-    var memberNames = typeRegistry.getMembers(managerRef).stream().map(m -> m.name()).toList();
+    var memberNames = typeRegistry.getMembers(managerRef, FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(memberNames)
       .as("менеджер регистра сведений должен наследовать платформенные методы из generic'а")
       .contains("СоздатьНаборЗаписей", "Выбрать");
@@ -121,7 +121,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // КритерийОтбораМенеджер.<Имя> и наследует его методы.
 
     var managerRef = typeRegistry.resolve("КритерийОтбораМенеджер.КритерийОтбора1").orElseThrow();
-    var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
+    var memberNames = typeRegistry.getMembers(managerRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
     assertThat(memberNames)
       .as("менеджер критерия отбора должен наследовать платформенные методы из generic'а")
       .contains("Выбрать", "ПолучитьФорму");
@@ -133,7 +133,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // (Справочники.Справочник1.ПредопределённыйЭлемент1), включая вложенные в группах.
 
     var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
-    var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
+    var memberNames = typeRegistry.getMembers(managerRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
     assertThat(memberNames)
       .as("менеджер справочника должен отдавать предопределённые значения, включая вложенные в группах")
       .contains(
@@ -144,7 +144,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
     // Цепочка Справочники.Справочник1 ведёт на тот же менеджер — предопределённые видны и через неё.
     var viaCollection = typeRegistry.resolve("Справочники.Справочник1").orElseThrow();
-    assertThat(typeRegistry.getMembers(viaCollection).stream().map(MemberDescriptor::name))
+    assertThat(typeRegistry.getMembers(viaCollection, FileType.BSL).stream().map(MemberDescriptor::name))
       .contains("ПредопределённыйЭлемент1", "ВложенныйЭлемент");
   }
 
@@ -158,7 +158,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     assertThat(nsEn).isPresent();
     assertThat(nsEn.get()).isEqualTo(nsRu.get());
 
-    var members = typeRegistry.getMembers(nsRu.get());
+    var members = typeRegistry.getMembers(nsRu.get(), FileType.BSL);
     assertThat(members)
       .extracting(m -> m.name())
       .contains("Справочник1");
@@ -189,7 +189,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // (Дата, Номер, ВерсияДанных, Метаданные(), ПолучитьОбъект()).
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
-    var members = typeRegistry.getMembers(ref.get());
+    var members = typeRegistry.getMembers(ref.get(), FileType.BSL);
     var names = members.stream().map(m -> m.name()).toList();
     assertThat(names)
       .as("платформенные стандартные свойства должны подмешиваться")
@@ -209,7 +209,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // generic-менеджера документа (НайтиПоНомеру, СоздатьДокумент, …).
     var ref = typeRegistry.resolve("ДокументМенеджер.Документ1");
     assertThat(ref).isPresent();
-    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(ref.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names).contains("НайтиПоНомеру", "СоздатьДокумент", "ПустаяСсылка", "Выбрать");
   }
 
@@ -220,7 +220,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // специализироваться в конкретный `ДокументСсылка.Документ1`, а не
     // оставаться generic-шаблоном `ДокументСсылка.<Имя документа>`.
     var ref = typeRegistry.resolve("ДокументМенеджер.Документ1").orElseThrow();
-    var empty = typeRegistry.getMembers(ref).stream()
+    var empty = typeRegistry.getMembers(ref, FileType.BSL).stream()
       .filter(m -> "ПустаяСсылка".equals(m.name()))
       .findFirst().orElseThrow();
     assertThat(empty.returnType().qualifiedName())
@@ -228,7 +228,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
       .isEqualTo("ДокументСсылка.Документ1");
 
     var catRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
-    var catEmpty = typeRegistry.getMembers(catRef).stream()
+    var catEmpty = typeRegistry.getMembers(catRef, FileType.BSL).stream()
       .filter(m -> "ПустаяСсылка".equals(m.name()))
       .findFirst().orElseThrow();
     assertThat(catEmpty.returnType().qualifiedName())
@@ -243,7 +243,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // `ДокументыМенеджер` (ТипВсеСсылки).
     var ref = typeRegistry.resolve("Документы");
     assertThat(ref).isPresent();
-    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(ref.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names)
       .as("MD-инстансы и метод коллекции-менеджера")
       .contains("Документ1", "ТипВсеСсылки");
@@ -256,7 +256,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // generic-типа не должны утекать в специализированный ref/object тип.
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
-    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(ref.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names).isNotEmpty().noneMatch(n -> n.startsWith("<") && n.endsWith(">"));
   }
 
@@ -268,7 +268,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // подмешиваться при сборке member'а.
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
-    var data = typeRegistry.getMembers(ref.get()).stream()
+    var data = typeRegistry.getMembers(ref.get(), FileType.BSL).stream()
       .filter(m -> "Дата".equalsIgnoreCase(m.name()))
       .findFirst();
     assertThat(data).isPresent();
@@ -284,7 +284,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // тип которого — `ДокументТабличнаяЧасть.Документ1.ТабличнаяЧасть1`.
     var objectRef = typeRegistry.resolve("ДокументОбъект.Документ1");
     assertThat(objectRef).isPresent();
-    var ts = typeRegistry.getMembers(objectRef.get()).stream()
+    var ts = typeRegistry.getMembers(objectRef.get(), FileType.BSL).stream()
       .filter(m -> "ТабличнаяЧасть1".equals(m.name()))
       .findFirst();
     assertThat(ts).isPresent();
@@ -300,12 +300,12 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // member, а ref-тип справочника — нет.
     var docRef = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(docRef).isPresent();
-    var docMembers = typeRegistry.getMembers(docRef.get()).stream().map(m -> m.name()).toList();
+    var docMembers = typeRegistry.getMembers(docRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(docMembers).contains("ОбщийРеквизит1");
 
     var catRef = typeRegistry.resolve("СправочникСсылка.Справочник1");
     assertThat(catRef).isPresent();
-    var catMembers = typeRegistry.getMembers(catRef.get()).stream().map(m -> m.name()).toList();
+    var catMembers = typeRegistry.getMembers(catRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(catMembers).isNotEmpty().doesNotContain("ОбщийРеквизит1");
   }
 
@@ -314,7 +314,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
     var rowRef = typeRegistry.resolve("ДокументТабличнаяЧастьСтрока.Документ1.ТабличнаяЧасть1");
     assertThat(rowRef).isPresent();
-    var names = typeRegistry.getMembers(rowRef.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(rowRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names).contains("Реквизит1", "Реквизит2");
   }
 
@@ -327,7 +327,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // без необходимости держать два параллельных дескриптора per-language.
 
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1").orElseThrow();
-    var members = typeRegistry.getMembers(ref);
+    var members = typeRegistry.getMembers(ref, FileType.BSL);
 
     // matches должен находить «Дата»/«Date», «Номер»/«Number», «Ссылка»/«Ref»
     // в одном и том же MemberDescriptor — без дублирования.
@@ -361,7 +361,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // описание в нужной локали — иначе hover на en-проекте показывает ru-текст.
 
     var ref = typeRegistry.resolve("СправочникСсылка.Справочник1").orElseThrow();
-    var members = typeRegistry.getMembers(ref);
+    var members = typeRegistry.getMembers(ref, FileType.BSL);
 
     var ssylka = members.stream()
       .filter(m -> m.matches("Ссылка"))

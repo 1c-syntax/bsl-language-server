@@ -100,8 +100,11 @@ public class TypeRegistry {
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
-  /** Тип ↔ список источников членов (один тип может расширяться многими источниками). */
-  private final Map<TypeRef, List<ScopedMemberSource>> memberSources = new ConcurrentHashMap<>();
+  /**
+   * Источники членов типов в разрезе языка (один тип может расширяться многими
+   * источниками; порядок значим — {@link #registerMemberOverride} вставляет в начало).
+   */
+  private final Map<FileType, Map<TypeRef, List<MemberSource>>> memberSources = perFileType();
 
   /**
    * Мемоизация {@link #getMembers(TypeRef, FileType)}. Сборка членов
@@ -117,12 +120,10 @@ public class TypeRegistry {
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
-    // fileType штатно бывает null: одноаргументный getMembers(ref) зовёт getMembers(ref, null)
-    // («фильтрация по скоупу не применяется»). ref допускает null защитно (см. computeMembers).
-    // Поэтому естественный порядок ключа — null-safe.
+    // ref допускает null защитно (см. computeMembers), поэтому порядок ключа — null-safe.
     private static final Comparator<MembersKey> NATURAL_ORDER = Comparator
       .comparing(MembersKey::ref, Comparator.nullsFirst(Comparator.naturalOrder()))
-      .thenComparing(MembersKey::fileType, Comparator.nullsFirst(Comparator.naturalOrder()));
+      .thenComparing(MembersKey::fileType);
 
     @Override
     public int compareTo(MembersKey other) {
@@ -140,13 +141,17 @@ public class TypeRegistry {
     FileType.BSL, ConcurrentHashMap.newKeySet(),
     FileType.OS, ConcurrentHashMap.newKeySet()
   );
-  /** Тип ↔ список описаний с их скоупом. В одном типе разные описания для BSL/OS допускаются. */
-  private final Map<TypeRef, List<ScopedDescription>> descriptions = new ConcurrentHashMap<>();
-  /** Тип ↔ список наборов конструкторов с их скоупом. */
-  private final Map<TypeRef, List<ScopedConstructors>> constructors = new ConcurrentHashMap<>();
-  /** Тип ↔ динамические источники конструкторов (например, OScript-класс из SymbolTree). */
-  private final Map<TypeRef, List<ScopedConstructorSource>> constructorSources
-    = new ConcurrentHashMap<>();
+  /** Описания типов в разрезе языка (первая регистрация выигрывает). */
+  private final Map<FileType, Map<TypeRef, String>> descriptions = perFileType();
+  /** Конструкторы типов в разрезе языка (повторные регистрации конкатенируются). */
+  private final Map<FileType, Map<TypeRef, List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>>> constructors = perFileType();
+  /** Динамические источники конструкторов в разрезе языка (например, OScript-класс из SymbolTree). */
+  private final Map<FileType, Map<TypeRef, List<Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>>>>> constructorSources = perFileType();
+
+  /** Пустой контейнер с разрезами по всем языкам. */
+  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
+    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
+  }
   /**
    * Тип ↔ типы элементов «по умолчанию» для коллекции. Заполняется из
    * {@link TypePackProvider.TypeDecl#defaultElementTypes()} при регистрации.
@@ -180,38 +185,12 @@ public class TypeRegistry {
   private final Map<TypeRef, BilingualString> displayNames = new ConcurrentHashMap<>();
 
   /**
-   * Двуязычные описания типов (ru + en) — параллельный индекс к
+   * Двуязычные описания типов (ru + en) в разрезе языка — параллельный индекс к
    * {@link #descriptions}, который продолжает хранить scoped primary-форму
-   * для legacy-логики. Заполняется из {@link TypePackProvider.TypeDecl#description()}.
-   * Один тип может иметь описания с разными скоупами (BSL/OS) — фильтрация при чтении.
+   * для legacy-логики. Заполняется из {@link TypePackProvider.TypeDecl#description()},
+   * первая регистрация выигрывает.
    */
-  private final Map<TypeRef, List<ScopedBilingualDescription>> typeDescriptionsBilingual = new ConcurrentHashMap<>();
-
-  /** Источник членов вместе с языком файлов, в которых он видим. */
-  private record ScopedMemberSource(MemberSource source, FileType fileType) {
-  }
-
-  /** Описание типа вместе с языком файлов, в которых оно видимо. */
-  private record ScopedDescription(String text, FileType fileType) {
-  }
-
-  /** Двуязычное описание типа вместе с языком файлов, в которых оно видимо. */
-  private record ScopedBilingualDescription(BilingualString text, FileType fileType) {
-  }
-
-  /** Набор конструкторов вместе с языком файлов, в которых они видимы. */
-  private record ScopedConstructors(
-    List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> list,
-    FileType fileType
-  ) {
-  }
-
-  /** Динамический источник конструкторов вместе с языком файлов, в которых он видим. */
-  private record ScopedConstructorSource(
-    java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> supplier,
-    FileType fileType
-  ) {
-  }
+  private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
 
   @PostConstruct
   void bootstrap() {
@@ -306,10 +285,9 @@ public class TypeRegistry {
   /**
    * Найти тип по имени с фильтрацией по типу файла. Тип будет возвращён,
    * только если он видим в {@code fileType} (см. {@link #isVisibleIn}).
-   * Если {@code fileType == null} — фильтрация не применяется.
    */
   public Optional<TypeRef> resolve(String name, FileType fileType) {
-    return resolve(name).filter(ref -> fileType == null || isVisibleIn(ref, fileType));
+    return resolve(name).filter(ref -> isVisibleIn(ref, fileType));
   }
 
   /**
@@ -360,17 +338,9 @@ public class TypeRegistry {
   }
 
   /**
-   * Получить полный набор членов типа — union по всем зарегистрированным
-   * {@link MemberSource}'ам. Дубли по имени отбрасываются (побеждает первый
-   * зарегистрированный источник).
-   */
-  public Collection<MemberDescriptor> getMembers(TypeRef ref) {
-    return getMembers(ref, null);
-  }
-
-  /**
-   * То же, что {@link #getMembers(TypeRef)}, но фильтрует источники по языковому скоупу.
-   * При {@code fileType == null} фильтрация не применяется.
+   * Получить полный набор членов типа в разрезе языка — union по всем
+   * зарегистрированным {@link MemberSource}'ам этого языка. Дубли по имени
+   * отбрасываются (побеждает первый зарегистрированный источник).
    * <p>
    * Fallback по имени: TypeRef в LS — это пара {@code (kind, qualifiedName)}, и
    * один и тот же тип может предъявляться с разными kind'ами в зависимости от
@@ -395,21 +365,16 @@ public class TypeRegistry {
   }
 
   private List<MemberDescriptor> computeMembers(TypeRef ref, FileType fileType) {
-    var sources = resolveMemberSources(ref);
-    if (sources.isEmpty()) {
+    if (ref == null) {
       return List.of();
     }
     // Snapshot: список source'ов может модифицироваться параллельно через
     // registerMemberSource/registerMemberOverride (Phase B/C MetadataCollectionSpecializer
-    // и др. workspace-scoped провайдеры). sources — CopyOnWriteArrayList,
+    // и др. workspace-scoped провайдеры). Список — CopyOnWriteArrayList,
     // снимок через List.copyOf дёшев и стабилен на время итерации.
-    List<ScopedMemberSource> snapshot = List.copyOf(sources);
     var byName = new LinkedHashMap<String, MemberDescriptor>();
-    for (var scoped : snapshot) {
-      if (fileType != null && scoped.fileType() != fileType) {
-        continue;
-      }
-      for (var member : scoped.source().getMembers()) {
+    for (var source : List.copyOf(resolveMemberSources(ref, fileType))) {
+      for (var member : source.getMembers()) {
         byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
       }
     }
@@ -419,17 +384,19 @@ public class TypeRegistry {
   }
 
   /**
-   * Источники членов типа с fallback на канонический псевдоним.
+   * Источники членов типа в разрезе языка с fallback на канонический псевдоним.
    *
-   * @param ref тип, для которого ищутся источники членов.
+   * @param ref      тип, для которого ищутся источники членов.
+   * @param fileType язык файла-потребителя.
    * @return список источников; пустой, если их нет.
    */
-  private List<ScopedMemberSource> resolveMemberSources(TypeRef ref) {
-    var sources = memberSources.get(ref);
-    if ((sources == null || sources.isEmpty()) && ref != null) {
+  private List<MemberSource> resolveMemberSources(TypeRef ref, FileType fileType) {
+    var byRef = memberSources.get(fileType);
+    var sources = byRef.get(ref);
+    if (sources == null || sources.isEmpty()) {
       var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
       if (canonical != null && !canonical.equals(ref)) {
-        sources = memberSources.get(canonical);
+        sources = byRef.get(canonical);
       }
     }
     return sources == null ? List.of() : sources;
@@ -456,8 +423,8 @@ public class TypeRegistry {
    * @param fileType язык файла, в котором члены источника видимы.
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
-    memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
-      .add(new ScopedMemberSource(source, fileType));
+    memberSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
+      .add(source);
     membersEpoch.incrementAndGet();
   }
 
@@ -472,8 +439,8 @@ public class TypeRegistry {
    * в реестре — другие members (Справочники, Перечисления, …) приходят оттуда.
    */
   public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
-    var list = memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>());
-    list.addFirst(new ScopedMemberSource(source, fileType));
+    memberSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
+      .addFirst(source);
     membersEpoch.incrementAndGet();
   }
 
@@ -554,7 +521,7 @@ public class TypeRegistry {
     var safeBindings = Map.copyOf(bindings);
     registerSpecializedDisplayName(specializedRef, genericRef, safeBindings);
     MemberSource source = () -> {
-      var raw = getMembers(genericRef);
+      var raw = getMembers(genericRef, fileType);
       if (raw.isEmpty()) {
         return List.of();
       }
@@ -610,7 +577,7 @@ public class TypeRegistry {
     var safeTypeBindings = Map.copyOf(typeBindings);
     var safeExpansions = deepCopyExpansions(memberExpansions);
     MemberSource source = () -> {
-      var materialized = expandGenericMembers(genericRef, safeTypeBindings, safeExpansions);
+      var materialized = expandGenericMembers(genericRef, safeTypeBindings, safeExpansions, fileType);
       // Индексируем как делает registerSpecialization: read-only/версионные
       // members проверяются через memberMetadataIndex.
       for (var member : materialized) {
@@ -643,13 +610,14 @@ public class TypeRegistry {
    */
   public List<MemberDescriptor> expandedMembers(TypeRef genericRef,
                                                 Map<String, String> typeBindings,
-                                                Map<String, List<String>> memberExpansions) {
+                                                Map<String, List<String>> memberExpansions,
+                                                FileType fileType) {
     if (memberExpansions.isEmpty()) {
       return List.of();
     }
     var safeTypeBindings = Map.copyOf(typeBindings);
     var safeExpansions = deepCopyExpansions(memberExpansions);
-    return expandGenericMembers(genericRef, safeTypeBindings, safeExpansions);
+    return expandGenericMembers(genericRef, safeTypeBindings, safeExpansions, fileType);
   }
 
   /**
@@ -662,8 +630,9 @@ public class TypeRegistry {
    */
   private List<MemberDescriptor> expandGenericMembers(TypeRef genericRef,
                                                       Map<String, String> typeBindings,
-                                                      Map<String, List<String>> memberExpansions) {
-    var raw = getMembers(genericRef);
+                                                      Map<String, List<String>> memberExpansions,
+                                                      FileType fileType) {
+    var raw = getMembers(genericRef, fileType);
     if (raw.isEmpty()) {
       return List.of();
     }
@@ -858,41 +827,30 @@ public class TypeRegistry {
   }
 
   /**
-   * Описание типа из источника (JSON-пакета или динамической регистрации).
-   * Возвращает пустую строку, если описание отсутствует.
-   */
-  public String getDescription(TypeRef ref) {
-    return getDescription(ref, (FileType) null);
-  }
-
-  /**
-   * Описание типа с фильтрацией по {@link FileType}. Возвращает первое описание,
-   * чей скоуп совместим с переданным {@code fileType} ({@code null} ⇒ без фильтра,
-   * возвращается первое зарегистрированное). Если ни одно описание не подходит — "".
+   * Описание типа из источника (JSON-пакета или динамической регистрации)
+   * в разрезе указанного языка. Возвращает пустую строку, если описание отсутствует.
+   *
+   * @param ref      ссылка на тип.
+   * @param fileType язык файла-потребителя.
+   * @return описание или пустая строка.
    */
   public String getDescription(TypeRef ref, FileType fileType) {
-    var list = descriptions.get(ref);
-    if (list == null || list.isEmpty()) {
-      return "";
-    }
-    for (var sd : list) {
-      if (fileType == null || sd.fileType() == fileType) {
-        return sd.text();
-      }
-    }
-    return "";
+    return descriptions.get(fileType).getOrDefault(ref, "");
   }
 
   /**
-   * Зарегистрировать описание типа со скоупом. Допускается несколько описаний
-   * на один TypeRef с разными скоупами (BSL/OS) — фильтрация при чтении.
+   * Зарегистрировать описание типа в разрезе языка. Повторная регистрация
+   * того же языка игнорируется (первая выигрывает).
+   *
+   * @param ref      ссылка на тип.
+   * @param text     текст описания.
+   * @param fileType язык файла, в котором описание видимо.
    */
   public void registerDescription(TypeRef ref, String text, FileType fileType) {
     if (ref == null || text == null || text.isBlank()) {
       return;
     }
-    descriptions.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-      .add(new ScopedDescription(text, fileType));
+    descriptions.get(fileType).putIfAbsent(ref, text);
   }
 
   /**
@@ -900,34 +858,18 @@ public class TypeRegistry {
    * Возвращает пустой список, если конструкторов нет (например, для типов
    * без блока {@code constructors} в JSON или для system enums).
    */
-  public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(TypeRef ref) {
-    return getConstructors(ref, null);
-  }
-
-  /**
-   * То же, что {@link #getConstructors(TypeRef)}, но фильтрует по {@link FileType}.
-   * Конкатенирует все наборы (pack + динамические источники), чьи скоупы совместимы.
-   */
   public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
     TypeRef ref, FileType fileType
   ) {
     var result = new ArrayList<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>();
-    var fromPack = constructors.get(ref);
+    var fromPack = constructors.get(fileType).get(ref);
     if (fromPack != null) {
-      for (var scoped : fromPack) {
-        if (fileType != null && scoped.fileType() != fileType) {
-          continue;
-        }
-        result.addAll(scoped.list());
-      }
+      result.addAll(fromPack);
     }
-    var sources = constructorSources.get(ref);
+    var sources = constructorSources.get(fileType).get(ref);
     if (sources != null) {
-      for (var scoped : sources) {
-        if (fileType != null && scoped.fileType() != fileType) {
-          continue;
-        }
-        var sigs = scoped.supplier().get();
+      for (var supplier : List.copyOf(sources)) {
+        var sigs = supplier.get();
         if (sigs != null) {
           result.addAll(sigs);
         }
@@ -952,8 +894,8 @@ public class TypeRegistry {
     if (ref == null || ctors == null || ctors.isEmpty()) {
       return;
     }
-    constructors.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-      .add(new ScopedConstructors(List.copyOf(ctors), fileType));
+    constructors.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
+      .addAll(ctors);
   }
 
   /**
@@ -970,8 +912,8 @@ public class TypeRegistry {
     if (ref == null || source == null) {
       return;
     }
-    constructorSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-      .add(new ScopedConstructorSource(source, fileType));
+    constructorSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
+      .add(source);
   }
 
   /**
@@ -1000,7 +942,7 @@ public class TypeRegistry {
   public void unregisterUserType(String qualifiedName) {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.remove(ref);
-    memberSources.remove(ref);
+    memberSources.values().forEach(byRef -> byRef.remove(ref));
     membersEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
@@ -1028,8 +970,7 @@ public class TypeRegistry {
       // через primary для legacy-индекса; en-сторону отдаёт displayDescription(ref, lang).
       registerDescription(ref, decl.description().primary(), fileType);
       if (!decl.description().isEmpty()) {
-        typeDescriptionsBilingual.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
-          .add(new ScopedBilingualDescription(decl.description(), fileType));
+        typeDescriptionsBilingual.get(fileType).putIfAbsent(ref, decl.description());
       }
     }
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
@@ -1147,38 +1088,20 @@ public class TypeRegistry {
     return indexAccessDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
-  /** Описание типа в указанной локали (для hover'а класса/конструктора), без фильтрации по типу файла. */
-  public String getDescription(TypeRef ref, Language language) {
-    var list = typeDescriptionsBilingual.get(ref);
-    if (list != null) {
-      for (var sd : List.copyOf(list)) {
-        if (!sd.text().isEmpty()) {
-          return sd.text().forLanguage(language);
-        }
-      }
-    }
-    return getDescription(ref);
-  }
-
   /**
-   * То же, что {@link #getDescription(TypeRef, Language)}, но с фильтрацией по
-   * {@link FileType}: когда тип имеет разные описания в BSL и OS (например,
-   * {@code ТаблицаЗначений}), возвращается описание, чей скоуп совместим с
-   * {@code fileType}.
+   * Описание типа в указанной локали (для hover'а класса/конструктора) в разрезе
+   * языка: когда тип имеет разные описания в BSL и OS (например,
+   * {@code ТаблицаЗначений}), возвращается описание языка файла-потребителя.
    *
    * @param ref      ссылка на тип.
    * @param language локаль интерфейса LS.
-   * @param fileType тип файла-потребителя.
+   * @param fileType язык файла-потребителя.
    * @return описание; пустая строка, если подходящего описания нет.
    */
   public String getDescription(TypeRef ref, Language language, FileType fileType) {
-    var list = typeDescriptionsBilingual.get(ref);
-    if (list != null) {
-      for (var sd : List.copyOf(list)) {
-        if (sd.fileType() == fileType && !sd.text().isEmpty()) {
-          return sd.text().forLanguage(language);
-        }
-      }
+    var bilingual = typeDescriptionsBilingual.get(fileType).get(ref);
+    if (bilingual != null && !bilingual.isEmpty()) {
+      return bilingual.forLanguage(language);
     }
     return getDescription(ref, fileType);
   }

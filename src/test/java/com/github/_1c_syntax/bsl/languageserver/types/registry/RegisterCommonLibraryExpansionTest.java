@@ -76,7 +76,7 @@ class RegisterCommonLibraryExpansionTest {
       registry, "БиблиотекаКартинок", List.of("ОбщаяКартинка1", "ОбщаяКартинка2"));
 
     var libRef = registry.resolve("БиблиотекаКартинок").orElseThrow();
-    var memberNames = registry.getMembers(libRef).stream()
+    var memberNames = registry.getMembers(libRef, FileType.BSL).stream()
       .map(MemberDescriptor::name)
       .toList();
     // Шаблон сохраняется (он же source); добавились материализованные имена.
@@ -93,7 +93,7 @@ class RegisterCommonLibraryExpansionTest {
       registry, "БиблиотекаКартинок", List.of("MyPic"));
 
     var libRef = registry.resolve("БиблиотекаКартинок").orElseThrow();
-    var materialized = registry.getMembers(libRef).stream()
+    var materialized = registry.getMembers(libRef, FileType.BSL).stream()
       .filter(m -> m.name().equals("MyPic"))
       .findFirst()
       .orElseThrow();
@@ -110,7 +110,7 @@ class RegisterCommonLibraryExpansionTest {
       registry, "БиблиотекаСтилей", List.of());
 
     var libRef = registry.resolve("БиблиотекаСтилей").orElseThrow();
-    var memberNames = registry.getMembers(libRef).stream()
+    var memberNames = registry.getMembers(libRef, FileType.BSL).stream()
       .map(MemberDescriptor::name)
       .toList();
     assertThat(memberNames).containsExactly("<Имя стиля>");
@@ -169,7 +169,7 @@ class RegisterCommonLibraryExpansionTest {
     ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезPlaceholder", List.of("X"));
 
-    assertThat(registry.getMembers(libRef))
+    assertThat(registry.getMembers(libRef, FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("ПростоеИмя");
   }
@@ -186,7 +186,7 @@ class RegisterCommonLibraryExpansionTest {
     ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезШаблона", List.of("X"));
 
-    assertThat(registry.getMembers(libRef))
+    assertThat(registry.getMembers(libRef, FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("Реальный");
   }

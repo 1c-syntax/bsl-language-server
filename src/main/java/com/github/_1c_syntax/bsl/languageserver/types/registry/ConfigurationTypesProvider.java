@@ -526,7 +526,7 @@ public class ConfigurationTypesProvider {
       if (parent == null) {
         return List.of();
       }
-      return typeRegistry.getMembers(parent);
+      return typeRegistry.getMembers(parent, FileType.BSL);
     }, FileType.BSL);
   }
 
@@ -767,7 +767,7 @@ public class ConfigurationTypesProvider {
    * это {@code "Имя значения"}). Источник — bsl-context-разобранное имя члена.
    */
   static String memberPlaceholderName(TypeRegistry typeRegistry, TypeRef generic) {
-    return typeRegistry.getMembers(generic).stream()
+    return typeRegistry.getMembers(generic, FileType.BSL).stream()
       .filter(MemberDescriptor::generic)
       .findFirst()
       .flatMap(m -> ContextNames.placeholders(m.bilingualName().primary()).stream().findFirst())
@@ -846,7 +846,7 @@ public class ConfigurationTypesProvider {
     if (generic == null) {
       return;
     }
-    for (var m : typeRegistry.getMembers(generic)) {
+    for (var m : typeRegistry.getMembers(generic, FileType.BSL)) {
       if (m.generic()) {
         continue;
       }
@@ -876,7 +876,7 @@ public class ConfigurationTypesProvider {
     if (generic == null) {
       return result;
     }
-    for (var m : typeRegistry.getMembers(generic)) {
+    for (var m : typeRegistry.getMembers(generic, FileType.BSL)) {
       if (m.generic()) {
         continue;
       }

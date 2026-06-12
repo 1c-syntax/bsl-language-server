@@ -60,7 +60,7 @@ class TypeRegistryExpandedMembersTest {
     registry.registerMemberSource(ref, src, FileType.BSL);
 
     var expanded = registry.expandedMembers(ref, Map.of(),
-      Map.of("Имя картинки", List.of("ОбщаяКартинка1", "ОбщаяКартинка2")));
+      Map.of("Имя картинки", List.of("ОбщаяКартинка1", "ОбщаяКартинка2")), FileType.BSL);
 
     assertThat(expanded)
       .extracting(MemberDescriptor::name)
@@ -77,7 +77,7 @@ class TypeRegistryExpandedMembersTest {
     registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
 
     var expanded = registry.expandedMembers(ref, Map.of(),
-      Map.of("Имя картинки", List.of("MyIcon")));
+      Map.of("Имя картинки", List.of("MyIcon")), FileType.BSL);
 
     assertThat(expanded).hasSize(1);
     var member = expanded.get(0);
@@ -88,7 +88,7 @@ class TypeRegistryExpandedMembersTest {
   @Test
   void emptyExpansions_returnsEmpty() {
     var ref = registry.intern(TypeKind.PLATFORM, "Тип");
-    var expanded = registry.expandedMembers(ref, Map.of(), Map.of());
+    var expanded = registry.expandedMembers(ref, Map.of(), Map.of(), FileType.BSL);
     assertThat(expanded).isEmpty();
   }
 
@@ -100,7 +100,7 @@ class TypeRegistryExpandedMembersTest {
     registry.registerMemberSource(ref, () -> List.of(plainMember), FileType.BSL);
 
     var expanded = registry.expandedMembers(ref, Map.of(),
-      Map.of("Имя", List.of("X")));
+      Map.of("Имя", List.of("X")), FileType.BSL);
     assertThat(expanded).isEmpty();
   }
 
@@ -114,7 +114,7 @@ class TypeRegistryExpandedMembersTest {
     // У шаблона placeholder «Имя картинки», но в expansions передаём «Имя стиля» —
     // нет совпадения, expansion не материализует ничего.
     var expanded = registry.expandedMembers(ref, Map.of(),
-      Map.of("Имя стиля", List.of("X")));
+      Map.of("Имя стиля", List.of("X")), FileType.BSL);
     assertThat(expanded).isEmpty();
   }
 
@@ -123,7 +123,7 @@ class TypeRegistryExpandedMembersTest {
     var ref = registry.intern(TypeKind.PLATFORM, "T");
     var gen = registry.intern(TypeKind.PLATFORM, "T<gen>");
     registry.registerMemberExpansion(ref, gen, Map.of(), Map.of(), FileType.BSL);
-    assertThat(registry.getMembers(ref)).isEmpty();
+    assertThat(registry.getMembers(ref, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -140,7 +140,7 @@ class TypeRegistryExpandedMembersTest {
       Map.of("Имя значения", List.of("Юридическое", "Физическое")),
       FileType.BSL);
 
-    var members = registry.getMembers(specRef);
+    var members = registry.getMembers(specRef, FileType.BSL);
     assertThat(members).extracting(MemberDescriptor::name)
       .containsExactly("Юридическое", "Физическое");
   }
@@ -151,7 +151,7 @@ class TypeRegistryExpandedMembersTest {
     var template = MemberDescriptor.genericProperty("<X>", ref, "")
       .withBilingualName(BilingualString.of("<X>", "<X>"));
     registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
-    assertThat(registry.expandedMembers(ref, Map.of(), Map.of("X", List.of("Один"))))
+    assertThat(registry.expandedMembers(ref, Map.of(), Map.of("X", List.of("Один")), FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("Один");
   }

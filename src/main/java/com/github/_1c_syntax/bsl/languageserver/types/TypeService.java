@@ -224,17 +224,6 @@ public class TypeService {
   }
 
   /**
-   * Описание типа в указанной локали LS (с fallback).
-   *
-   * @param typeRef тип.
-   * @param language локаль интерфейса LS.
-   * @return описание; пустая строка, если описание отсутствует.
-   */
-  public String getDescription(TypeRef typeRef, Language language) {
-    return typeRegistry.getDescription(typeRef, language);
-  }
-
-  /**
    * Описание типа в указанной локали LS с фильтрацией по типу файла (BSL/OS) —
    * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
    *

@@ -64,13 +64,13 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     // её член — менеджер-обёртка с методом МетодМенеджера.
     typeRegistry.resolve("");
     var collection = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
-    var catalogsMembers = typeRegistry.getMembers(collection);
+    var catalogsMembers = typeRegistry.getMembers(collection, FileType.BSL);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");
     var memberReturn = catalogsMembers.stream()
       .filter(m -> "СправочникСМенеджером".equals(m.name()))
       .findFirst().orElseThrow().returnType();
     assertThat(memberReturn.qualifiedName()).isEqualTo("СправочникМенеджер.СправочникСМенеджером");
-    assertThat(typeRegistry.getMembers(memberReturn))
+    assertThat(typeRegistry.getMembers(memberReturn, FileType.BSL))
       .extracting(m -> m.name())
       .as("methods of manager wrapper should include exported МетодМенеджера")
       .contains("МетодМенеджера");

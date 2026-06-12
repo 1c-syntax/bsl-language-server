@@ -88,7 +88,7 @@ class TypeRegistrySpecializationTest {
 
     assertThat(specRef.qualifiedName()).isEqualTo("СправочникСсылка.МойТестовый");
 
-    var members = typeRegistry.getMembers(specRef);
+    var members = typeRegistry.getMembers(specRef, FileType.BSL);
     var memberNames = members.stream().map(MemberDescriptor::name).toList();
     // На СправочникСсылка.<Имя> в JSON есть Ссылка/Код/ПолучитьОбъект и т.п.
     assertThat(memberNames)
@@ -157,7 +157,7 @@ class TypeRegistrySpecializationTest {
     // Запрос с другим kind (PLATFORM вместо CONFIGURATION) — должен через
     // aliasIndex резолвиться в canonical ref и отдать тот же member.
     var platformLookup = new TypeRef(TypeKind.PLATFORM, "ТипДляFallback");
-    var members = typeRegistry.getMembers(platformLookup);
+    var members = typeRegistry.getMembers(platformLookup, FileType.BSL);
     assertThat(members)
       .extracting(MemberDescriptor::name)
       .containsExactly("М");

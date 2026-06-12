@@ -177,7 +177,7 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerDescription(ref, "  ", FileType.BSL);
 
     // then — описание не сохранилось
-    assertThat(typeRegistry.getDescription(ref)).isEmpty();
+    assertThat(typeRegistry.getDescription(ref, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -189,7 +189,7 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerDescription(ref, "ru-описание", FileType.BSL);
 
     // then
-    assertThat(typeRegistry.getDescription(ref)).isEqualTo("ru-описание");
+    assertThat(typeRegistry.getDescription(ref, FileType.BSL)).isEqualTo("ru-описание");
   }
 
   @Test
@@ -204,7 +204,7 @@ class TypeRegistryRegistrationTest {
       FileType.BSL);
 
     // then — конструкторы не зарегистрированы
-    assertThat(typeRegistry.getConstructors(ref)).isEmpty();
+    assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -301,7 +301,7 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig), FileType.BSL);
 
     // then — конструктор виден через getConstructors.
-    assertThat(typeRegistry.getConstructors(ref)).contains(sig);
+    assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).contains(sig);
   }
 
   @Test
@@ -314,7 +314,7 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerConstructorSource(ref, null, FileType.BSL);
 
     // then — никаких источников не зарегистрировано.
-    assertThat(typeRegistry.getConstructors(ref)).isEmpty();
+    assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -373,7 +373,7 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
 
     // then — не падает.
-    assertThat(typeRegistry.getMembers(ref)).isNotNull();
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL)).isNotNull();
   }
 
   @Test
@@ -387,7 +387,7 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerSpecialization(specialized, generic, bindings, FileType.BSL);
 
     // then — нет членов у specialized.
-    assertThat(typeRegistry.getMembers(specialized)).isEmpty();
+    assertThat(typeRegistry.getMembers(specialized, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -406,9 +406,9 @@ class TypeRegistryRegistrationTest {
     // given
     var ref = typeRegistry.registerUserType("ТипD2", declaration, FileType.BSL);
 
-    // when — описание не регистрировали; и (lang) и (FileType) → "".
+    // when — описание не регистрировали → "".
     var ruDesc = typeRegistry.getDescription(ref,
-      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU);
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU, FileType.BSL);
 
     // then
     assertThat(ruDesc).isEmpty();

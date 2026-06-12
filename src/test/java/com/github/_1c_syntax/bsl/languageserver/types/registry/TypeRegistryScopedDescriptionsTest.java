@@ -57,12 +57,4 @@ class TypeRegistryScopedDescriptionsTest {
       .doesNotContain("табличном виде");
   }
 
-  @Test
-  void descriptionWithoutFileTypeKeepsLegacyBehaviour() {
-    // given
-    var ref = typeRegistry.resolve("ТаблицаЗначений").orElseThrow();
-
-    // when / then — без типа файла отдаётся первое зарегистрированное описание
-    assertThat(typeRegistry.getDescription(ref, Language.RU)).isNotEmpty();
-  }
 }

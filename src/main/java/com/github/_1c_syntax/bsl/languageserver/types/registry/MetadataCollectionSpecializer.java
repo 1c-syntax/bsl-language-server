@@ -489,7 +489,7 @@ public class MetadataCollectionSpecializer {
                                                              TypeRef baseRef,
                                                              TypeRef elementTypeRef,
                                                              List<MD> mdos) {
-    var raw = typeRegistry.getMembers(baseRef);
+    var raw = typeRegistry.getMembers(baseRef, FileType.BSL);
     if (raw.isEmpty()) {
       return List.of();
     }
@@ -533,7 +533,7 @@ public class MetadataCollectionSpecializer {
     var overrides = buildPerOwnerOverrides(perOwnerName, owner);
     var capturedElement = elementTypeRef;
     typeRegistry.registerMemberSource(perOwnerRef,
-      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement)),
+      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
       FileType.BSL);
     if (!overrides.isEmpty()) {
       typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, FileType.BSL);
@@ -654,7 +654,7 @@ public class MetadataCollectionSpecializer {
                                                                 TypeRef elementRef,
                                                                 List<ChildName> children,
                                                                 String ownerSuffix) {
-    var raw = typeRegistry.getMembers(baseRef);
+    var raw = typeRegistry.getMembers(baseRef, FileType.BSL);
     var elementTypeSet = TypeSet.of(elementRef);
     var result = new ArrayList<MemberDescriptor>(raw.size() + children.size());
     var hasGenericTemplate = false;

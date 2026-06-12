@@ -120,7 +120,7 @@ class MetadataCollectionSpecializerUnitTest {
     var specializer = new MetadataCollectionSpecializer(registry, holder, serverProvider);
     specializer.specialize();
 
-    var members = registry.getMembers(ownerRef);
+    var members = registry.getMembers(ownerRef, FileType.BSL);
     var documentsMember = members.stream()
       .filter(m -> m.name().equals("Документы")).findFirst().orElseThrow();
     assertThat(documentsMember.returnType().qualifiedName())
@@ -133,7 +133,7 @@ class MetadataCollectionSpecializerUnitTest {
     var specRef = registry.intern(
       TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Документы");
-    var specMembers = registry.getMembers(specRef);
+    var specMembers = registry.getMembers(specRef, FileType.BSL);
     var specMemberNames = specMembers.stream().map(MemberDescriptor::name).toList();
     assertThat(specMemberNames).contains("Покупатели", "Получить");
     var buyersMember = specMembers.stream()
@@ -247,12 +247,12 @@ class MetadataCollectionSpecializerUnitTest {
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
 
     // Phase B: верхний override Документы.
-    assertThat(registry.getMembers(ownerRef).stream()
+    assertThat(registry.getMembers(ownerRef, FileType.BSL).stream()
       .filter(m -> m.name().equals("Документы")).findFirst().orElseThrow()
       .returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.Документы");
     // Phase C: nested override Реквизиты на ОбъектМетаданных: Документ.
-    assertThat(registry.getMembers(documentTypeRef).stream()
+    assertThat(registry.getMembers(documentTypeRef, FileType.BSL).stream()
       .filter(m -> m.name().equals("Реквизиты")).findFirst().orElseThrow()
       .returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.Реквизиты");
@@ -266,7 +266,7 @@ class MetadataCollectionSpecializerUnitTest {
     var perCollRef = registry.intern(
       TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Реквизиты.Покупатели");
-    var perCollMembers = registry.getMembers(perCollRef);
+    var perCollMembers = registry.getMembers(perCollRef, FileType.BSL);
     assertThat(perCollMembers).isNotNull();
 
     // perMdoRef (ОбъектМетаданных: Документ.Покупатели) — purchased через
@@ -274,7 +274,7 @@ class MetadataCollectionSpecializerUnitTest {
     var perMdoRef = registry.intern(
       TypeKind.PLATFORM,
       "ОбъектМетаданных: Документ.Покупатели");
-    var perMdoMembers = registry.getMembers(perMdoRef);
+    var perMdoMembers = registry.getMembers(perMdoRef, FileType.BSL);
     // у perMdoRef должны быть override-членов известных коллекций.
     var perMdoNames = perMdoMembers.stream().map(MemberDescriptor::name).toList();
     assertThat(perMdoNames).contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты");
@@ -326,7 +326,7 @@ class MetadataCollectionSpecializerUnitTest {
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
 
-    var members = registry.getMembers(docTypeRef);
+    var members = registry.getMembers(docTypeRef, FileType.BSL);
     assertThat(members.stream().filter(m -> m.name().equals("ТабличныеЧасти")).findFirst().orElseThrow()
       .returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.ТабличныеЧасти");
@@ -367,7 +367,7 @@ class MetadataCollectionSpecializerUnitTest {
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
 
     // Никаких override — Версия остаётся со старым returnType (Строка).
-    var members = registry.getMembers(ownerRef);
+    var members = registry.getMembers(ownerRef, FileType.BSL);
     assertThat(members.stream().filter(m -> m.name().equals("Версия")).findFirst().orElseThrow()
       .returnType().qualifiedName()).isEqualTo("Строка");
   }
@@ -401,7 +401,7 @@ class MetadataCollectionSpecializerUnitTest {
     var unknownRef = registry.registerConfigurationType("ОбъектМетаданныхНезнакомый");
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
-    assertThat(registry.getMembers(unknownRef)).isEmpty();
+    assertThat(registry.getMembers(unknownRef, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -432,7 +432,7 @@ class MetadataCollectionSpecializerUnitTest {
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
     // Blank propertyName → continue без override.
-    assertThat(registry.getMembers(ownerRef)).isEmpty();
+    assertThat(registry.getMembers(ownerRef, FileType.BSL)).isEmpty();
   }
 
   @Test
