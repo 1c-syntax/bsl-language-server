@@ -87,13 +87,15 @@ public class TypeInfoTool {
     generateOutputSchema = false)
   public Result typeInfo(
     @McpToolParam(required = true, description = McpToolParams.TYPE_NAME)
-    String typeName
+    String typeName,
+    @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
+    FileType fileType
   ) {
     try (var ignored = WorkspaceContextHolder.forUri(anyWorkspaceUri())) {
-      var typeRef = typeService.resolve(typeName, FileType.BSL)
+      var typeRef = typeService.resolve(typeName, fileType)
         .orElseThrow(() -> new IllegalArgumentException("Type is not found: " + typeName));
 
-      var members = typeService.getMembers(typeRef, FileType.BSL);
+      var members = typeService.getMembers(typeRef, fileType);
       var properties = membersOfKind(members, MemberKind.PROPERTY);
       var methods = membersOfKind(members, MemberKind.METHOD);
 
