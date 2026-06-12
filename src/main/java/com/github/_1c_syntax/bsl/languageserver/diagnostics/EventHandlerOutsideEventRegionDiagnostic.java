@@ -68,22 +68,22 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * ({@code ОбработчикиСобытийФормы}, {@code ОбработчикиСобытийЭлементов*}),
    * проверяем по префиксу.
    */
+  private static final String OBJECT_TARGET_REGION = "ОбработчикиСобытий";
+  private static final String FORM_TARGET_REGION = "ОбработчикиСобытийФормы";
+
   private static final Set<String> OBJECT_EVENT_REGIONS = Set.of(
-    "ОбработчикиСобытий",
+    OBJECT_TARGET_REGION,
     "EventHandlers"
   );
 
   private static final Set<String> FORM_EVENT_REGION_PREFIXES = Set.of(
-    "ОбработчикиСобытийФормы",
+    FORM_TARGET_REGION,
     "ОбработчикиСобытийЭлементовШапкиФормы",
     "ОбработчикиСобытийЭлементовТаблицыФормы",
     "FormEventHandlers",
     "FormHeaderItemsEventHandlers",
     "FormTableItemsEventHandlers"
   );
-
-  private static final String OBJECT_TARGET_REGION = "ОбработчикиСобытий";
-  private static final String FORM_TARGET_REGION = "ОбработчикиСобытийФормы";
 
   private final EventContractsIndex eventContractsIndex;
 
@@ -93,38 +93,33 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
 
   @Override
   public void check() {
-    var moduleType = documentContext.getModuleType();
-    var isFormModule = moduleType == ModuleType.FormModule;
-    var methods = documentContext.getSymbolTree().getMethods();
-    for (var method : methods) {
-      if (eventContractsIndex.getContract(documentContext, method.getName()).isEmpty()) {
-        continue;
-      }
-      var regionOpt = method.getRegion();
-      if (regionOpt.isEmpty()) {
-        diagnosticStorage.addDiagnostic(method.getSubNameRange(),
-          info.getMessage(method.getName()));
-        continue;
-      }
-      var regionName = regionOpt.get().getName();
-      var ok = isFormModule
-        ? FORM_EVENT_REGION_PREFIXES.stream().anyMatch(regionName::startsWith)
-        : OBJECT_EVENT_REGIONS.contains(regionName);
-      if (!ok) {
-        diagnosticStorage.addDiagnostic(method.getSubNameRange(),
-          info.getMessage(method.getName()));
-      }
+    var isFormModule = documentContext.getModuleType() == ModuleType.FormModule;
+    documentContext.getSymbolTree().getMethods().stream()
+      .filter(this::isEventHandler)
+      .filter(method -> !isInEventRegion(method, isFormModule))
+      .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(),
+        info.getMessage(method.getName())));
+  }
+
+  private boolean isEventHandler(MethodSymbol method) {
+    return eventContractsIndex.getContract(documentContext, method.getName()).isPresent();
+  }
+
+  private static boolean isInEventRegion(MethodSymbol method, boolean isFormModule) {
+    var regionOpt = method.getRegion();
+    if (regionOpt.isEmpty()) {
+      return false;
     }
+    var regionName = regionOpt.get().getName();
+    return isFormModule
+      ? FORM_EVENT_REGION_PREFIXES.stream().anyMatch(regionName::startsWith)
+      : OBJECT_EVENT_REGIONS.contains(regionName);
   }
 
   @Override
   public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics,
                                         CodeActionParams params,
                                         DocumentContext documentContext) {
-    var moduleType = documentContext.getModuleType();
-    var isForm = moduleType == ModuleType.FormModule;
-    var targetRegion = isForm ? FORM_TARGET_REGION : OBJECT_TARGET_REGION;
-
     var methods = new ArrayList<MethodSymbol>();
     var fixedDiagnostics = new ArrayList<Diagnostic>();
     for (var diagnostic : diagnostics) {
@@ -152,6 +147,8 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     if (methodTexts.isEmpty()) {
       return List.of();
     }
+    var targetRegion = documentContext.getModuleType() == ModuleType.FormModule
+      ? FORM_TARGET_REGION : OBJECT_TARGET_REGION;
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());

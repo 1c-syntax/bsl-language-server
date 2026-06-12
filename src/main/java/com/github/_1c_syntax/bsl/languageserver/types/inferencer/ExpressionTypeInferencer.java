@@ -1237,26 +1237,35 @@ public class ExpressionTypeInferencer {
     }
     var name = variable.getName();
     var parameters = method.getParameters();
-    for (int i = 0; i < parameters.size(); i++) {
-      ParameterDefinition parameter = parameters.get(i);
-      if (!parameter.getName().equalsIgnoreCase(name)) {
-        continue;
+    for (var i = 0; i < parameters.size(); i++) {
+      var parameter = parameters.get(i);
+      if (parameter.getName().equalsIgnoreCase(name)) {
+        return resolveParameterTypes(method, parameter, name, i);
       }
-      var direct = symbolTypeIndex.getDeclaredParameterTypes(parameter);
-      if (!direct.isEmpty()) {
-        return direct;
-      }
-      var fromHyperlink = parameterHyperlinkTypes(parameter, method.getOwner());
-      if (!fromHyperlink.isEmpty()) {
-        return fromHyperlink;
-      }
-      var fromContract = eventHandlerParameterTypes(method, i);
-      if (!fromContract.isEmpty()) {
-        return fromContract;
-      }
-      return inheritedParameterTypes(method, name);
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Источники типа параметра в порядке убывания приоритета: doc-комментарий,
+   * hyperlink-ссылка, контракт платформенного события (для обработчиков),
+   * наследование от родительского метода в иерархии.
+   */
+  private TypeSet resolveParameterTypes(MethodSymbol method, ParameterDefinition parameter,
+                                        String name, int paramIndex) {
+    var direct = symbolTypeIndex.getDeclaredParameterTypes(parameter);
+    if (!direct.isEmpty()) {
+      return direct;
+    }
+    var fromHyperlink = parameterHyperlinkTypes(parameter, method.getOwner());
+    if (!fromHyperlink.isEmpty()) {
+      return fromHyperlink;
+    }
+    var fromContract = eventHandlerParameterTypes(method, paramIndex);
+    if (!fromContract.isEmpty()) {
+      return fromContract;
+    }
+    return inheritedParameterTypes(method, name);
   }
 
   /**
@@ -1280,7 +1289,7 @@ public class ExpressionTypeInferencer {
     if (params.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    int idx = paramIndex < params.size() ? paramIndex : params.size() - 1;
+    var idx = paramIndex < params.size() ? paramIndex : (params.size() - 1);
     var param = params.get(idx);
     if (paramIndex >= params.size() && !param.variadic()) {
       return TypeSet.EMPTY;

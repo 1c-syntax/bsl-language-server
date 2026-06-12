@@ -87,7 +87,7 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
     if (methods.isEmpty()) {
       return Map.of();
     }
-    Map<String, Optional<MemberDescriptor>> result = new HashMap<>(methods.size());
+    Map<String, Optional<MemberDescriptor>> result = HashMap.newHashMap(methods.size());
     for (var method : methods) {
       var key = method.getName().toLowerCase(Locale.ROOT);
       result.put(key, eventHandlerResolver.lookupContract(documentContext, method.getName()));

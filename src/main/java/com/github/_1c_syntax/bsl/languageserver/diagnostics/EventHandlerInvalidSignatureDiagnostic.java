@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
@@ -45,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Сигнатура метода-обработчика платформенного события не соответствует
@@ -80,36 +80,45 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
       if (contractOpt.isEmpty()) {
         continue;
       }
-      var contract = contractOpt.get();
-      var contractSignatures = contract.signatures();
+      var contractSignatures = contractOpt.get().signatures();
       if (contractSignatures.isEmpty()) {
         continue;
       }
-      // Берём основную (первую) сигнатуру события — варианты сигнатур у
-      // одного события встречаются у форм (с/без доп. параметров расширения)
-      // и для целей валидации достаточно совпадения с любой из них.
-      var requiredCounts = contractSignatures.stream()
-        .mapToInt(sig -> (int) sig.parameters().stream().filter(p -> !p.optional()).count())
-        .toArray();
-      var totalCounts = contractSignatures.stream()
-        .mapToInt(sig -> sig.parameters().size())
-        .toArray();
-      var userParamCount = method.getParameters().size();
-      boolean fits = false;
-      for (int i = 0; i < requiredCounts.length; i++) {
-        if (userParamCount >= requiredCounts[i] && userParamCount <= totalCounts[i]) {
-          fits = true;
-          break;
-        }
-      }
-      if (!fits) {
-        // Подставим максимальное число параметров среди вариантов сигнатур —
-        // это самая «строгая» формулировка ожидаемого контракта.
-        var expected = Arrays.stream(totalCounts).max().orElse(0);
-        diagnosticStorage.addDiagnostic(method.getSubNameRange(),
-          info.getMessage(method.getName(), expected, userParamCount));
+      checkSignature(method, contractSignatures);
+    }
+  }
+
+  /**
+   * Сравнивает арность метода с допустимыми диапазонами параметров событий.
+   * Варианты сигнатур у одного события встречаются у форм (с/без доп.
+   * параметров расширения) — для целей валидации достаточно совпадения
+   * с любой из них.
+   */
+  private void checkSignature(MethodSymbol method, List<SignatureDescriptor> contractSignatures) {
+    var requiredCounts = contractSignatures.stream()
+      .mapToInt(sig -> (int) sig.parameters().stream().filter(p -> !p.optional()).count())
+      .toArray();
+    var totalCounts = contractSignatures.stream()
+      .mapToInt(sig -> sig.parameters().size())
+      .toArray();
+    int userParamCount = method.getParameters().size();
+    if (fitsAnySignature(userParamCount, requiredCounts, totalCounts)) {
+      return;
+    }
+    // Подставим максимальное число параметров среди вариантов сигнатур —
+    // это самая «строгая» формулировка ожидаемого контракта.
+    int expected = Arrays.stream(totalCounts).max().orElse(0);
+    diagnosticStorage.addDiagnostic(method.getSubNameRange(),
+      info.getMessage(method.getName(), expected, userParamCount));
+  }
+
+  private static boolean fitsAnySignature(int userParamCount, int[] requiredCounts, int[] totalCounts) {
+    for (int i = 0; i < requiredCounts.length; i++) {
+      if (userParamCount >= requiredCounts[i] && userParamCount <= totalCounts[i]) {
+        return true;
       }
     }
+    return false;
   }
 
   @Override
@@ -128,7 +137,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
         continue;
       }
       buildSignatureFix(documentContext, method.get(), contract.get())
-        .ifPresent(edit -> {
+        .ifPresent((TextEdit edit) -> {
           textEdits.add(edit);
           fixedDiagnostics.add(diagnostic);
         });
@@ -157,7 +166,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
                                                       MemberDescriptor contract) {
     var contractParams = contract.signatures().get(0).parameters();
     var methodParams = method.getParameters();
-    int targetSize = contractParams.size();
+    var targetSize = contractParams.size();
     var names = new ArrayList<String>(targetSize);
     for (int i = 0; i < targetSize; i++) {
       if (i < methodParams.size() && !methodParams.get(i).getName().isBlank()) {
@@ -220,7 +229,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
   }
 
   private static boolean isAfterPosition(Token token, Position position) {
-    int line = token.getLine() - 1;
+    var line = token.getLine() - 1;
     if (line > position.getLine()) {
       return true;
     }
@@ -243,8 +252,11 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
       int type = tokens.get(i).getType();
       if (type == BSLLexer.LPAREN) {
         depth++;
-      } else if (type == BSLLexer.RPAREN && --depth == 0) {
-        return i;
+      } else if (type == BSLLexer.RPAREN) {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
       }
     }
     return -1;

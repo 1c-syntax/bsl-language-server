@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.context.api.ContextEvent;
 import com.github._1c_syntax.bsl.context.platform.EnAttachments;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -97,7 +99,7 @@ public class EventHandlerResolver {
    * {@code ГлобальныйКонтекст} платформы; ищем их в типе-обёртке самого
    * приложения, чьё qualifiedName совпадает с именем модуля.
    */
-  private static final Set<ModuleType> GLOBAL_HOST_MODULES = Set.of(
+  private static final Set<ModuleType> GLOBAL_HOST_MODULES = EnumSet.of(
     ModuleType.ManagedApplicationModule,
     ModuleType.OrdinaryApplicationModule,
     ModuleType.SessionModule,
@@ -198,7 +200,7 @@ public class EventHandlerResolver {
       .findFirst();
   }
 
-  private Optional<MemberDescriptor> lookupOScriptClassEvent(String methodName) {
+  private static Optional<MemberDescriptor> lookupOScriptClassEvent(String methodName) {
     var key = methodName.toLowerCase(Locale.ROOT);
     var ruKey = OSCRIPT_CLASS_EVENT_ALIASES_EN_TO_RU.getOrDefault(key, key);
     return Optional.ofNullable(OSCRIPT_CLASS_EVENTS_BY_NAME.get(ruKey));
@@ -232,21 +234,26 @@ public class EventHandlerResolver {
                                 ModuleType moduleType,
                                 List<ContextEvent> events,
                                 Function<Object, EnAttachments> enLookup) {
-    if (events == null || events.isEmpty()) {
+    if (events.isEmpty()) {
       return;
     }
-    Map<String, MemberDescriptor> byName = new HashMap<>(events.size() * 2);
+    // Каждое событие может добавиться дважды (ru-имя и en-алиас), поэтому
+    // capacity на оба варианта.
+    Map<String, MemberDescriptor> byName = HashMap.newHashMap(events.size() * NAME_ALIASES_PER_EVENT);
     for (var event : events) {
       var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(event, enLookup);
       byName.put(descriptor.name().toLowerCase(Locale.ROOT), descriptor);
       // En-имя из bilingualName тоже как alias, чтобы lookup по English-имени работал.
-      var en = descriptor.bilingualName() == null ? "" : descriptor.bilingualName().en();
+      var en = descriptor.bilingualName().en();
       if (!en.isBlank()) {
         byName.putIfAbsent(en.toLowerCase(Locale.ROOT), descriptor);
       }
     }
     sink.put(moduleType, Map.copyOf(byName));
   }
+
+  /** Ru-имя + en-алиас — каждое событие может занять до двух ключей в карте. */
+  private static final int NAME_ALIASES_PER_EVENT = 2;
 
   /**
    * Owner-тип модуля: {@code ДокументОбъект.Покупатели},
@@ -264,20 +271,18 @@ public class EventHandlerResolver {
     if (wrapperRu == null) {
       return Optional.empty();
     }
-    var mdObjectOpt = documentContext.getMdObject();
-    if (mdObjectOpt.isEmpty()) {
-      return Optional.empty();
-    }
-    var mdObject = mdObjectOpt.get();
-    var fullName = mdObject.getMdoType().fullName();
-    if (fullName.getRu().isBlank()) {
-      return Optional.empty();
-    }
+    return documentContext.getMdObject()
+      .flatMap(md -> mdoSpecificQualifiedName(md, wrapperRu))
+      .flatMap(typeRegistry::resolve);
+  }
+
+  /** Сборка {@code <FullName.ru><Суффикс>.<Имя>} для MDO; пусто, если части не заполнены. */
+  private static Optional<String> mdoSpecificQualifiedName(MD mdObject, String wrapperRu) {
+    var fullName = mdObject.getMdoType().fullName().getRu();
     var name = mdObject.getName();
-    if (name.isBlank()) {
+    if (fullName.isBlank() || name.isBlank()) {
       return Optional.empty();
     }
-    var qualifiedRu = fullName.getRu() + wrapperRu + "." + name;
-    return typeRegistry.resolve(qualifiedRu);
+    return Optional.of(fullName + wrapperRu + "." + name);
   }
 }

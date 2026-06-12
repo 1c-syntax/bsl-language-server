@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;

@@ -127,8 +127,8 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
 
-    // UnusedLocalMethodDiagnostic с modules={} выбирается для всех ModuleType;
-    // фильтрация по типу модуля и наличию HBK выполняется внутри check().
+    // UnusedLocalMethodDiagnostic не привязан к ModuleType — фильтрация по типу модуля
+    // и наличию HBK выполняется внутри check.
     doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
     doReturn(FileType.BSL).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))

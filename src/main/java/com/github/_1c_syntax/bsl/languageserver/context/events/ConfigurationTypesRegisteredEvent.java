@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.events;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.springframework.context.ApplicationEvent;
 
+import java.io.Serial;
+
 /**
  * Публикуется однократно когда {@code ConfigurationTypesProvider} успешно
  * зарегистрировал конфигурационные типы (Document/Catalog/InformationRegister/…)
@@ -39,7 +41,11 @@ import org.springframework.context.ApplicationEvent;
  * Отличается от {@code ServerContextPopulatedEvent}, который публикуется по
  * завершении полного обхода файлов workspace (cross-document готовность).
  */
+@SuppressWarnings("java:S6832") // не Spring bean — event публикуется вручную через ApplicationEventPublisher
 public class ConfigurationTypesRegisteredEvent extends ApplicationEvent {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   public ConfigurationTypesRegisteredEvent(ServerContext source) {
     super(source);

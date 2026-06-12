@@ -305,7 +305,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
 
   private static int indexOfParameter(MethodSymbol method, String name) {
     var params = method.getParameters();
-    for (int i = 0; i < params.size(); i++) {
+    for (var i = 0; i < params.size(); i++) {
       if (params.get(i).getName().equalsIgnoreCase(name)) {
         return i;
       }
@@ -321,7 +321,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     if (params.isEmpty()) {
       return Optional.empty();
     }
-    int idx = index < params.size() ? index : params.size() - 1;
+    var idx = index < params.size() ? index : (params.size() - 1);
     var p = params.get(idx);
     if (index >= params.size() && !p.variadic()) {
       return Optional.empty();

@@ -230,6 +230,7 @@ public record MemberDescriptor(
    * {@link #returnTypes} и {@link SignatureDescriptor#returnType} заменены
    * по {@code bindings}.
    */
+  @SuppressWarnings("java:S1698") // identity-сравнение намеренно: TypeRef.specialize возвращает тот же объект если ничего не поменялось
   public MemberDescriptor specialize(Map<String, String> bindings) {
     if (bindings == null || bindings.isEmpty()) {
       return this;
@@ -268,13 +269,14 @@ public record MemberDescriptor(
    * параметр не изменился — возвращает исходный список, чтобы вверху
    * сравнение по ссылке сработало без аллокаций.
    */
+  @SuppressWarnings("java:S1698") // identity-сравнение намеренно: TypeRef.specialize возвращает тот же объект если ничего не поменялось
   private static List<ParameterDescriptor> specializeParameters(List<ParameterDescriptor> params,
                                                                 Map<String, String> bindings) {
     if (params.isEmpty()) {
       return params;
     }
     List<ParameterDescriptor> rebuilt = null;
-    for (int i = 0; i < params.size(); i++) {
+    for (var i = 0; i < params.size(); i++) {
       var p = params.get(i);
       var specializedTypes = TypeRef.specialize(p.types(), bindings);
       if (specializedTypes == p.types()) {
@@ -285,7 +287,7 @@ public record MemberDescriptor(
       }
       if (rebuilt == null) {
         rebuilt = new ArrayList<>(params.size());
-        for (int j = 0; j < i; j++) {
+        for (var j = 0; j < i; j++) {
           rebuilt.add(params.get(j));
         }
       }

@@ -32,7 +32,6 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -72,9 +71,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
 
     // признак "обработчик события платформы" + платформенное описание события
-    var eventSection = buildEventHandlerSection(eventContract,
-      resources.getResourceString(getClass(), EVENT_HANDLER_HEADER_KEY));
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventSection);
+    eventContract.ifPresent(contract -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
+      buildEventHandlerSection(contract, resources.getResourceString(getClass(), EVENT_HANDLER_HEADER_KEY))));
 
     // описание метода
     var purposeSection = descriptionFormatter.getPurposeSection(symbol);
@@ -111,19 +109,14 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
   }
 
   /**
-   * Если метод является обработчиком платформенного события owner-типа
-   * модуля, формирует секцию-шапку «&lt;header&gt;: &lt;имя&gt;» + описание
-   * события из bsl-context. Заголовок локализован через ресурсы класса.
+   * Секция-шапка «&lt;header&gt;: &lt;имя&gt;» + описание события из bsl-context.
+   * Заголовок локализован через ресурсы класса.
    */
-  private static String buildEventHandlerSection(Optional<MemberDescriptor> contract, String header) {
-    if (contract.isEmpty()) {
-      return "";
-    }
-    var event = contract.get();
+  private static String buildEventHandlerSection(MemberDescriptor event, String header) {
     var sj = new StringJoiner("\n");
     sj.add("**" + header + ":** `" + event.name() + "`");
     var description = event.description();
-    if (description != null && !description.isBlank()) {
+    if (!description.isBlank()) {
       sj.add("");
       sj.add(description);
     }

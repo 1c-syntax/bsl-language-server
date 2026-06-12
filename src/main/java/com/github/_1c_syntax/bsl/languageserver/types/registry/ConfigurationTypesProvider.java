@@ -52,6 +52,8 @@ import com.github._1c_syntax.bsl.mdo.Enum;
 import com.github._1c_syntax.bsl.mdo.HTTPService;
 import com.github._1c_syntax.bsl.mdo.IntegrationService;
 import com.github._1c_syntax.bsl.mdo.WebService;
+import com.github._1c_syntax.bsl.mdo.children.HTTPServiceMethod;
+import com.github._1c_syntax.bsl.mdo.children.IntegrationServiceChannel;
 import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
 import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
@@ -211,7 +213,7 @@ public class ConfigurationTypesProvider {
     if (!(md instanceof HTTPService http)) {
       return;
     }
-    http.getUrlTemplates().forEach(tpl -> tpl.getMethods().forEach(m -> {
+    http.getUrlTemplates().forEach(tpl -> tpl.getMethods().forEach((HTTPServiceMethod m) -> {
       if (!m.getHandler().isBlank()) {
         sink.add(new HandlerSpec(m.getHandler(), httpServiceMethodSignature()));
       }
@@ -222,7 +224,7 @@ public class ConfigurationTypesProvider {
     if (!(md instanceof WebService web)) {
       return;
     }
-    web.getOperations().forEach(op -> {
+    web.getOperations().forEach((WebServiceOperation op) -> {
       if (!op.getProcedureName().isBlank()) {
         sink.add(new HandlerSpec(op.getProcedureName(), webOperationSignature(op)));
       }
@@ -233,7 +235,7 @@ public class ConfigurationTypesProvider {
     if (!(md instanceof IntegrationService isvc)) {
       return;
     }
-    isvc.getIntegrationServiceChannels().forEach(ch -> {
+    isvc.getIntegrationServiceChannels().forEach((IntegrationServiceChannel ch) -> {
       if (!ch.getReceiveMessageProcessing().isBlank()) {
         sink.add(new HandlerSpec(ch.getReceiveMessageProcessing(),
           integrationChannelSignature()));
@@ -258,15 +260,15 @@ public class ConfigurationTypesProvider {
       return;
     }
     var names = specs.stream().map(HandlerSpec::name).distinct().toList();
-    var sigByName = specs.stream()
-      .collect(Collectors.toMap(HandlerSpec::name, HandlerSpec::signature, (a, b) -> a));
     var templates = typeRegistry.expandedMembers(typeRef, Map.of(),
       Map.of(placeholder, names));
     if (templates.isEmpty()) {
       return;
     }
+    var sigByName = specs.stream()
+      .collect(Collectors.toMap(HandlerSpec::name, HandlerSpec::signature, (a, b) -> a));
     var withSignatures = templates.stream()
-      .map(m -> {
+      .map((MemberDescriptor m) -> {
         var sig = sigByName.get(m.name());
         return sig == null ? m : m.withSignatures(List.of(sig));
       })
@@ -288,7 +290,7 @@ public class ConfigurationTypesProvider {
    * Типы пока не сопоставляем — XSD-тип параметра ({@code {ns}type}) требует
    * отдельной мапы в BSL-типы; до её появления оставляем пусто.
    */
-  private SignatureDescriptor webOperationSignature(WebServiceOperation op) {
+  private static SignatureDescriptor webOperationSignature(WebServiceOperation op) {
     var params = op.getParameters().stream()
       .map(p -> new ParameterDescriptor(
         BilingualString.of(p.getName(), p.getName()),
@@ -298,7 +300,7 @@ public class ConfigurationTypesProvider {
   }
 
   /** Сигнатура обработчика канала: один параметр {@code Сообщение}. */
-  private SignatureDescriptor integrationChannelSignature() {
+  private static SignatureDescriptor integrationChannelSignature() {
     var param = new ParameterDescriptor(
       BilingualString.of("Сообщение", "Message"),
       TypeSet.EMPTY, false, BilingualString.EMPTY, "");

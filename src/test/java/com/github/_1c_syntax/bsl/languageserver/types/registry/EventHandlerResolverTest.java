@@ -81,11 +81,11 @@ class EventHandlerResolverTest {
     assertThat(params.get(0).bilingualName().ru()).isEqualTo("Представление");
     assertThat(params.get(0).bilingualName().en()).isEqualTo("Presentation");
     assertThat(params.get(0).types().refs()).singleElement()
-      .extracting(t -> t.qualifiedName()).isEqualTo("Строка");
+      .extracting(TypeRef::qualifiedName).isEqualTo("Строка");
     assertThat(params.get(1).bilingualName().ru()).isEqualTo("СтандартнаяОбработка");
     assertThat(params.get(1).bilingualName().en()).isEqualTo("StandardProcessing");
     assertThat(params.get(1).types().refs()).singleElement()
-      .extracting(t -> t.qualifiedName()).isEqualTo("Булево");
+      .extracting(TypeRef::qualifiedName).isEqualTo("Булево");
   }
 
   @Test
