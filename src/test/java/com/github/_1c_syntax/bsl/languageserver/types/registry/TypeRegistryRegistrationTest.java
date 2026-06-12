@@ -88,8 +88,6 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerUserType("МойOSКласс", declaration, FileType.OS);
 
     // then
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isTrue();
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isFalse();
     assertThat(typeRegistry.resolve("МойOSКласс", FileType.OS)).contains(ref);
     assertThat(typeRegistry.resolve("МойOSКласс", FileType.BSL)).isEmpty();
   }
@@ -100,8 +98,6 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerConfigurationType("Справочники.Контрагенты");
 
     // then
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isTrue();
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isFalse();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.BSL)).contains(ref);
     assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.OS))
       .as("конфигурационные типы недоступны в OS")
@@ -130,19 +126,19 @@ class TypeRegistryRegistrationTest {
     typeRegistry.registerFileType(ref, FileType.BSL);
 
     // then
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isTrue();
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isTrue();
+    assertThat(typeRegistry.resolve("Y", FileType.BSL)).contains(ref);
+    assertThat(typeRegistry.resolve("Y", FileType.OS)).contains(ref);
   }
 
   @Test
   void unknownTypeIsVisibleEverywhere() {
-    // given — тип без зарегистрированной языковой принадлежности
-    var ref = new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
-      TypeKind.USER, "НезарегистрированныйТип");
+    // given — TypeRef есть в aliasIndex, но языковую принадлежность никто не объявлял
+    var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТипБезЯзыка");
+    typeRegistry.registerConfigurationTypeAlias("ТипБезЯзыка", ref);
 
     // when / then — отсутствие знания не повод фильтровать
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.BSL)).isTrue();
-    assertThat(typeRegistry.isVisibleIn(ref, FileType.OS)).isTrue();
+    assertThat(typeRegistry.resolve("ТипБезЯзыка", FileType.BSL)).contains(ref);
+    assertThat(typeRegistry.resolve("ТипБезЯзыка", FileType.OS)).contains(ref);
   }
 
   @Test

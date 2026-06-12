@@ -299,7 +299,7 @@ public class TypeRegistry {
    * @param fileType тип файла-потребителя.
    * @return {@code true}, если тип видим в файлах данного типа.
    */
-  public boolean isVisibleIn(TypeRef ref, FileType fileType) {
+  private boolean isVisibleIn(TypeRef ref, FileType fileType) {
     if (visibleTypes.get(fileType).contains(ref)) {
       return true;
     }
