@@ -44,7 +44,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
@@ -255,61 +254,16 @@ public class GlobalScopeProvider {
   /** Параллельный Symbol-фронт. Заполняется лениво в {@link #ensureGlobalsPublished()}. */
   private final GlobalSymbolScope globalSymbolScope;
 
-  /**
-   * Источник данных о библиотеках OneScript (lib.config + oscript_modules).
-   * Используется для фильтрации видимости symbol'ов из библиотек в BSL-файлах
-   * и для согласования с {@code #Использовать &lt;libName&gt;}.
-   * <p>
-   * Field-injection с {@code required=false} здесь — обход циклической
-   * зависимости: {@code OScriptLibraryIndex} → {@code OScriptModuleMembersProvider}
-   * → {@code GlobalScopeProvider} (для регистрации library-классов/модулей).
-   * Корректный фикс — перевести регистрацию на ApplicationEvent'ы, чтобы
-   * {@code OScriptModuleMembersProvider} не зависел от
-   * {@code GlobalScopeProvider}; это отдельная задача.
-   */
-  @Autowired(required = false)
-  private @Nullable OScriptLibraryIndex oScriptLibraryIndex;
-
   private final AtomicBoolean globalsPublished = new AtomicBoolean(false);
 
   /**
-   * Поиск symbol'а в глобальной области (globals + library entries) с фильтрацией
-   * по типу файла: library-entries скрываются в BSL-файлах; функции и глобальные
-   * свойства фильтруются по языку своего источника.
+   * Поиск symbol'а в глобальной области (globals + library entries) в разрезе
+   * указанного языка. Дополнительных проверок видимости нет: запись в разрезе
+   * существует ровно тогда, когда имя зарегистрировано для этого языка.
    */
   public Optional<Symbol> findGlobal(String name, FileType fileType) {
     ensureGlobalsPublished();
-    // Выбор языкового варианта записи (BSL/OS) — в GlobalSymbolScope;
-    // ниже остаётся только проверка видимости имени в данном типе файла.
-    var sym = globalSymbolScope.findEntry(name, fileType).map(GlobalSymbolScope.Entry::symbol);
-    if (sym.isEmpty()) {
-      return sym;
-    }
-    var lc = name.toLowerCase(Locale.ROOT);
-    // Library entries — только в OS-файлах.
-    if (oScriptLibraryIndex != null && oScriptLibraryIndex.findByName(lc).isPresent()) {
-      return fileType == FileType.OS ? sym : Optional.empty();
-    }
-    // Имя может быть зарегистрировано в нескольких категориях (функция, глобальное
-    // свойство, платформенная переменная) одновременно с РАЗНЫМИ скоупами:
-    // например, `КодировкаТекста` — это и OS-only глобальное свойство (из
-    // oscript-pack), и BSL-only платформенная переменная (из bsl-context).
-    // Имя видимо в данном fileType, если ХОТЯ БЫ ОДНА категория его так разрешает.
-    // Если ни одной категории не зарегистрировано (классы, ключевые слова и т.п.) —
-    // считаем символ доступным.
-    var fnRegistered = byFileType.get(FileType.BSL).functions.containsKey(lc)
-      || byFileType.get(FileType.OS).functions.containsKey(lc);
-    var propRegistered = byFileType.get(FileType.BSL).globalContextNames.contains(lc)
-      || byFileType.get(FileType.OS).globalContextNames.contains(lc);
-    var varRegistered = byFileType.get(FileType.BSL).variableNames.contains(lc)
-      || byFileType.get(FileType.OS).variableNames.contains(lc);
-    if (!fnRegistered && !propRegistered && !varRegistered) {
-      return sym;
-    }
-    boolean visible = (fnRegistered && byFileType.get(fileType).functions.containsKey(lc))
-      || byFileType.get(fileType).globalContextNames.contains(lc)
-      || byFileType.get(fileType).variableNames.contains(lc);
-    return visible ? sym : Optional.empty();
+    return globalSymbolScope.findEntry(name, fileType).map(GlobalSymbolScope.Entry::symbol);
   }
 
   /**
@@ -530,7 +484,6 @@ public class GlobalScopeProvider {
         continue;
       }
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE, fileType);
-      byFileType.get(fileType).globalContextNames.add(name.toLowerCase(Locale.ROOT));
     }
   }
 
@@ -564,14 +517,18 @@ public class GlobalScopeProvider {
   );
 
   /**
-   * Все VALUE-символы в global scope без фильтра по типу файла
+   * Все VALUE-символы global scope разреза указанного языка
    * (property + enum + library-module). Унифицированный вход для всего,
    * что можно использовать как ресивер dot-выражения. Имена классов для
    * {@code Новый} ({@link SyntheticKind#TYPE_NAME}, Role.TYPE_NAME) сюда не
-   * попадают — они выдаются через {@link #getClasses()}.
+   * попадают — они выдаются через {@link #getClasses(FileType)}.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return синтетические символы глобальных контекстов.
    */
-  public List<SyntheticSymbol> getGlobalContexts() {
-    return globalSymbolScope.streamSymbols()
+  public List<SyntheticSymbol> getGlobalContexts(FileType fileType) {
+    ensureGlobalsPublished();
+    return globalSymbolScope.streamSymbols(fileType)
       .filter(SyntheticSymbol.class::isInstance)
       .map(SyntheticSymbol.class::cast)
       .filter(s -> CONTEXT_KINDS.contains(s.getSyntheticKind()))
@@ -580,23 +537,11 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * То же, что {@link #getGlobalContexts()}, но с фильтрацией по типу файла.
-   */
-  public List<SyntheticSymbol> getGlobalContexts(FileType fileType) {
-    return getGlobalContexts().stream()
-      .filter(s -> matchesGlobalScope(s.getName(), fileType))
-      .toList();
-  }
-
-  /**
-   * @return canonical-имена всех VALUE-имён в global scope (property + enum + library-module).
-   */
-  public Collection<String> getGlobalContextNames() {
-    return getGlobalContexts().stream().map(SyntheticSymbol::getName).toList();
-  }
-
-  /**
-   * То же, что {@link #getGlobalContextNames()}, но с фильтрацией по типу файла.
+   * Canonical-имена VALUE-имён global scope разреза указанного языка
+   * (property + enum + library-module).
+   *
+   * @param fileType язык файла-потребителя.
+   * @return имена глобальных контекстов.
    */
   public Collection<String> getGlobalContextNames(FileType fileType) {
     return getGlobalContexts(fileType).stream().map(SyntheticSymbol::getName).toList();
@@ -612,27 +557,12 @@ public class GlobalScopeProvider {
    * @return тип-значение имени или {@link Optional#empty()}.
    */
   public Optional<TypeRef> findGlobalContext(String name, FileType fileType) {
-    if (!matchesGlobalScope(name, fileType)) {
-      return Optional.empty();
-    }
     return findGlobalEntry(name, fileType)
       .filter(entry -> entry.role() == GlobalSymbolScope.Role.VALUE)
       .map(GlobalSymbolScope.Entry::symbol)
       .filter(SyntheticSymbol.class::isInstance)
       .map(s -> ((SyntheticSymbol) s).getValueType())
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
-  }
-
-  private boolean matchesGlobalScope(String name, FileType fileType) {
-    if (name == null) {
-      return true;
-    }
-    var lc = name.toLowerCase(Locale.ROOT);
-    if (byFileType.get(fileType).globalContextNames.contains(lc)) {
-      return true;
-    }
-    // не зарегистрировано ни в одном языке — не фильтруем
-    return byFileType.values().stream().noneMatch(data -> data.globalContextNames.contains(lc));
   }
 
   /**
@@ -706,7 +636,9 @@ public class GlobalScopeProvider {
     if (name == null || name.isBlank()) {
       return;
     }
-    globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
+    globalSymbolScope.findEntry(name, FileType.OS)
+      .map(GlobalSymbolScope.Entry::symbol)
+      .ifPresent(globalSymbolScope::unregister);
   }
 
   /**
@@ -1138,12 +1070,9 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Все данные глобальной области одного языка: иммутабельный снапшот загрузки
-   * (функции, классы, ключевые слова, платформенные переменные/перечисления,
-   * описания/сниппеты ключевых слов), производный индекс {@code variableNames}
-   * и мутабельный runtime-реестр {@code globalContextNames} (имена глобальных
-   * свойств, регистрируемые {@code registerGlobalProperty} в течение жизни
-   * workspace: общие модули конфигурации, library-модули, публикации bootstrap'а).
+   * Иммутабельный снапшот загруженных глобалов одного языка: функции, классы,
+   * ключевые слова, платформенные переменные/перечисления, описания и сниппеты
+   * ключевых слов. Runtime-регистрации живут в {@code GlobalSymbolScope}.
    */
   private record LanguageData(
     Map<String, MemberDescriptor> functions,
@@ -1152,42 +1081,8 @@ public class GlobalScopeProvider {
     List<PlatformVariable> platformVariables,
     List<PlatformVariable> platformEnums,
     Map<String, LanguageKeywordSnippet> keywordSnippets,
-    Map<String, KeywordDescription> keywordDescriptions,
-    Set<String> variableNames,
-    Set<String> globalContextNames
+    Map<String, KeywordDescription> keywordDescriptions
   ) {
-
-    /**
-     * Конструктор от снапшота загрузки: производный индекс {@code variableNames}
-     * (lowercased имена + алиасы платформенных переменных и перечислений,
-     * для O(1)-проверки видимости в {@code findGlobal}) вычисляется здесь,
-     * runtime-реестр {@code globalContextNames} создаётся пустым.
-     */
-    LanguageData(Map<String, MemberDescriptor> functions,
-                 List<String> classes,
-                 List<String> keywords,
-                 List<PlatformVariable> platformVariables,
-                 List<PlatformVariable> platformEnums,
-                 Map<String, LanguageKeywordSnippet> keywordSnippets,
-                 Map<String, KeywordDescription> keywordDescriptions) {
-      this(functions, classes, keywords, platformVariables, platformEnums,
-        keywordSnippets, keywordDescriptions,
-        variableNames(platformVariables, platformEnums),
-        ConcurrentHashMap.newKeySet());
-    }
-
-    private static Set<String> variableNames(List<PlatformVariable> variables, List<PlatformVariable> enums) {
-      var result = new HashSet<String>();
-      for (var list : List.of(variables, enums)) {
-        for (var v : list) {
-          result.add(v.name().toLowerCase(Locale.ROOT));
-          for (var alias : v.aliases()) {
-            result.add(alias.toLowerCase(Locale.ROOT));
-          }
-        }
-      }
-      return Set.copyOf(result);
-    }
   }
 
   /**

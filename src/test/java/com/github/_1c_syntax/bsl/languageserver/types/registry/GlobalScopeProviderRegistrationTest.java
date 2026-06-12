@@ -216,7 +216,7 @@ class GlobalScopeProviderRegistrationTest {
     scope.registerPlatformClass(classRef, List.of("ОчередьСтек"), FileType.BSL, "");
 
     // then — Synthetic.getName() возвращает canonical типа.
-    var contexts = scope.getGlobalContexts();
+    var contexts = scope.getGlobalContexts(FileType.BSL);
     assertThat(contexts).extracting(SyntheticSymbol::getName).contains("ОчередьСообщений");
     assertThat(contexts).extracting(SyntheticSymbol::getName)
       .as("имена классов (TYPE_NAME) не попадают в global contexts")
@@ -230,7 +230,7 @@ class GlobalScopeProviderRegistrationTest {
       new TypeRef(TypeKind.PLATFORM, "МойУникальныйТипПровайдер"), List.of("МойГлобал"), FileType.BSL);
 
     // when
-    var names = scope.getGlobalContextNames();
+    var names = scope.getGlobalContextNames(FileType.BSL);
 
     // then
     assertThat(names).contains("МойУникальныйТипПровайдер");

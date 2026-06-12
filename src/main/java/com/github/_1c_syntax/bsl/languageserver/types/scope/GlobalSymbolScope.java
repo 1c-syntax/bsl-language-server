@@ -125,28 +125,14 @@ public class GlobalSymbolScope {
   }
 
   /**
-   * Найти символ по имени (регистронезависимо), без фильтрации по типу файла.
+   * Найти символ по имени (регистронезависимо) в разрезе указанного языка.
+   *
+   * @param name     имя (регистронезависимо)
+   * @param fileType тип файла-потребителя
+   * @return символ данного языка; empty, если имя в этом языке не видимо
    */
-  public Optional<Symbol> findSymbol(String name) {
-    return findEntry(name).map(Entry::symbol);
-  }
-
-  /**
-   * Найти запись по имени (символ + роль), без фильтрации по типу файла:
-   * первый найденный языковой вариант (в порядке BSL, OS).
-   */
-  public Optional<Entry> findEntry(String name) {
-    if (name == null || name.isBlank()) {
-      return Optional.empty();
-    }
-    var key = name.toLowerCase(Locale.ROOT);
-    for (var fileType : FileType.values()) {
-      var entry = entries.get(fileType).get(key);
-      if (entry != null) {
-        return Optional.of(entry);
-      }
-    }
-    return Optional.empty();
+  public Optional<Symbol> findSymbol(String name, FileType fileType) {
+    return findEntry(name, fileType).map(Entry::symbol);
   }
 
   /**
@@ -164,38 +150,43 @@ public class GlobalSymbolScope {
   }
 
   /**
-   * @return все зарегистрированные имена в исходном написании.
+   * Зарегистрированные имена разреза указанного языка в исходном написании.
+   *
+   * @param fileType тип файла-потребителя
+   * @return имена разреза
    */
-  public Collection<String> getNames() {
-    return entries.values().stream()
-      .flatMap(byName -> byName.keySet().stream())
-      .distinct()
+  public Collection<String> getNames(FileType fileType) {
+    return entries.get(fileType).keySet().stream()
       .map(k -> displayNames.getOrDefault(k, k))
       .toList();
   }
 
   /**
-   * @return все записи scope'а (без дублирующих алиасов и языковых вариантов:
-   *         по одной записи на уникальный символ).
+   * Записи разреза указанного языка (без дублирующих алиасов:
+   * по одной записи на уникальный символ).
+   *
+   * @param fileType тип файла-потребителя
+   * @return записи разреза
    */
-  public Collection<Entry> getEntries() {
+  public Collection<Entry> getEntries(FileType fileType) {
     var seen = Collections.newSetFromMap(new IdentityHashMap<Symbol, Boolean>());
     var result = new ArrayList<Entry>();
-    for (var byName : entries.values()) {
-      for (var entry : byName.values()) {
-        if (seen.add(entry.symbol())) {
-          result.add(entry);
-        }
+    for (var entry : entries.get(fileType).values()) {
+      if (seen.add(entry.symbol())) {
+        result.add(entry);
       }
     }
     return result;
   }
 
   /**
-   * @return все уникальные символы scope'а (без дубликатов алиасов).
+   * Уникальные символы разреза указанного языка (без дубликатов алиасов).
+   *
+   * @param fileType тип файла-потребителя
+   * @return поток символов разреза
    */
-  public java.util.stream.Stream<Symbol> streamSymbols() {
-    return getEntries().stream().map(Entry::symbol);
+  public java.util.stream.Stream<Symbol> streamSymbols(FileType fileType) {
+    return getEntries(fileType).stream().map(Entry::symbol);
   }
 
   /**

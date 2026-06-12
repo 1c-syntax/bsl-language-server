@@ -77,7 +77,7 @@ class GlobalSymbolScopeTest {
     scope.register("Имя", second, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // then
-    assertThat(scope.findSymbol("Имя")).contains(second);
+    assertThat(scope.findSymbol("Имя", FileType.BSL)).contains(second);
   }
 
   @Test
@@ -104,9 +104,9 @@ class GlobalSymbolScopeTest {
     var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
     scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
-    assertThat(scope.findSymbol("справочники")).contains(sym);
-    assertThat(scope.findSymbol("СПРАВОЧНИКИ")).contains(sym);
-    assertThat(scope.findEntry("Справочники"))
+    assertThat(scope.findSymbol("справочники", FileType.BSL)).contains(sym);
+    assertThat(scope.findSymbol("СПРАВОЧНИКИ", FileType.BSL)).contains(sym);
+    assertThat(scope.findEntry("Справочники", FileType.BSL))
       .map(GlobalSymbolScope.Entry::role).contains(GlobalSymbolScope.Role.VALUE);
   }
 
@@ -117,8 +117,8 @@ class GlobalSymbolScopeTest {
     scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
     scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
-    assertThat(scope.findSymbol("catalogs")).contains(sym);
-    assertThat(scope.findSymbol("справочники")).contains(sym);
+    assertThat(scope.findSymbol("catalogs", FileType.BSL)).contains(sym);
+    assertThat(scope.findSymbol("справочники", FileType.BSL)).contains(sym);
   }
 
   @Test
@@ -145,8 +145,8 @@ class GlobalSymbolScopeTest {
 
     scope.unregister(sym);
 
-    assertThat(scope.findSymbol("справочники")).isEmpty();
-    assertThat(scope.findSymbol("catalogs")).isEmpty();
+    assertThat(scope.findSymbol("справочники", FileType.BSL)).isEmpty();
+    assertThat(scope.findSymbol("catalogs", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -159,8 +159,8 @@ class GlobalSymbolScopeTest {
 
     scope.clear(GlobalSymbolScope.Role.VALUE);
 
-    assertThat(scope.findSymbol("ФС")).isEmpty();
-    assertThat(scope.findSymbol("СессияПользователя")).isPresent();
+    assertThat(scope.findSymbol("ФС", FileType.BSL)).isEmpty();
+    assertThat(scope.findSymbol("СессияПользователя", FileType.BSL)).isPresent();
   }
 
   @Test
@@ -176,8 +176,8 @@ class GlobalSymbolScopeTest {
     scope.register("X", null, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // then
-    assertThat(scope.findSymbol("X")).isEmpty();
-    assertThat(scope.getNames()).isEmpty();
+    assertThat(scope.findSymbol("X", FileType.BSL)).isEmpty();
+    assertThat(scope.getNames(FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -186,9 +186,9 @@ class GlobalSymbolScopeTest {
     var scope = new GlobalSymbolScope();
 
     // when / then
-    assertThat(scope.findEntry(null)).isEmpty();
-    assertThat(scope.findEntry("")).isEmpty();
-    assertThat(scope.findEntry("   ")).isEmpty();
+    assertThat(scope.findEntry(null, FileType.BSL)).isEmpty();
+    assertThat(scope.findEntry("", FileType.BSL)).isEmpty();
+    assertThat(scope.findEntry("   ", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -199,7 +199,7 @@ class GlobalSymbolScopeTest {
     scope.register("ФайловыеПотоки", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // when
-    var names = scope.getNames();
+    var names = scope.getNames(FileType.BSL);
 
     // then
     assertThat(names).contains("ФайловыеПотоки");
@@ -214,7 +214,7 @@ class GlobalSymbolScopeTest {
     scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // when
-    var entries = scope.getEntries();
+    var entries = scope.getEntries(FileType.BSL);
 
     // then
     assertThat(entries).hasSize(1);
@@ -232,7 +232,7 @@ class GlobalSymbolScopeTest {
     scope.register("ФС", sym2, GlobalSymbolScope.Role.VALUE, FileType.BSL);
 
     // when
-    var symbols = scope.streamSymbols().toList();
+    var symbols = scope.streamSymbols(FileType.BSL).toList();
 
     // then
     assertThat(symbols).containsExactlyInAnyOrder(sym1, sym2);
@@ -251,9 +251,9 @@ class GlobalSymbolScopeTest {
     scope.clear();
 
     // then
-    assertThat(scope.findSymbol("X")).isEmpty();
-    assertThat(scope.findSymbol("Y")).isEmpty();
-    assertThat(scope.getEntries()).isEmpty();
-    assertThat(scope.getNames()).isEmpty();
+    assertThat(scope.findSymbol("X", FileType.BSL)).isEmpty();
+    assertThat(scope.findSymbol("Y", FileType.BSL)).isEmpty();
+    assertThat(scope.getEntries(FileType.BSL)).isEmpty();
+    assertThat(scope.getNames(FileType.BSL)).isEmpty();
   }
 }
