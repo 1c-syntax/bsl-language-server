@@ -21,12 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDelta;
@@ -34,7 +38,10 @@ import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SemanticTokensWorkspaceCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -75,6 +82,9 @@ public class SemanticTokensProvider {
 
   @Qualifier("semanticTokensExecutor")
   private final ExecutorService executor;
+
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final LanguageClientHolder clientHolder;
 
   /**
    * Cache for storing previous token data by resultId.
@@ -264,6 +274,40 @@ public class SemanticTokensProvider {
   @EventListener
   public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     clearCache(event.getUri());
+  }
+
+  /**
+   * Обрабатывает событие завершения наполнения контекста сервера.
+   * <p>
+   * Часть сапплаеров (например, подсветка вызовов методов) опирается на индекс ссылок,
+   * который наполняется только после {@code populateContext}. Если клиент запросил токены
+   * до наполнения индекса, подсветка остаётся устаревшей до следующей правки файла.
+   * Поэтому по завершении наполнения контекста инициируется запрос
+   * {@code workspace/semanticTokens/refresh}.
+   *
+   * @param event Событие завершения наполнения контекста сервера.
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    refreshSemanticTokens();
+  }
+
+  /**
+   * Отправить запрос на обновление семантических токенов.
+   * <p>
+   * Запрос отправляется только в случае поддержки клиентом возможности
+   * {@code workspace.semanticTokens.refreshSupport}.
+   */
+  public void refreshSemanticTokens() {
+    boolean refreshSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getSemanticTokens)
+      .map(SemanticTokensWorkspaceCapabilities::getRefreshSupport)
+      .orElse(Boolean.FALSE);
+
+    if (refreshSupport) {
+      clientHolder.execIfConnected(LanguageClient::refreshSemanticTokens);
+    }
   }
 
   /**

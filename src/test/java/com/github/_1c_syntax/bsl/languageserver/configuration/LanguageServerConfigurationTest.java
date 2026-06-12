@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8Platfor
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
-import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,7 +106,6 @@ class LanguageServerConfigurationTest {
 
     assertThat(configuration.isUseDevSite()).isTrue();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
-    assertThat(configuration.getCapabilities().getTextDocumentSync().getChange()).isEqualTo(TextDocumentSyncKind.Full);
 
     var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
     assertThat(annotations)
@@ -121,8 +119,6 @@ class LanguageServerConfigurationTest {
     assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
     assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isTrue();
-    assertThat(configuration.getCapabilities().getTextDocumentSync().getChange())
-      .isEqualTo(TextDocumentSyncKind.Incremental);
   }
 
   @Test

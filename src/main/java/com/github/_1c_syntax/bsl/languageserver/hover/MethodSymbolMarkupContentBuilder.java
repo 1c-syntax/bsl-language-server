@@ -54,6 +54,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
     // сигнатура
     // местоположение метода
+    // признак устаревания
     // описание метода
     // параметры
     // возвращаемое значение
@@ -69,6 +70,10 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // местоположение метода
     var methodLocation = descriptionFormatter.getLocation(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
+
+    // признак устаревания
+    var deprecatedSection = descriptionFormatter.getDeprecatedSection(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, deprecatedSection);
 
     // признак "обработчик события платформы" + платформенное описание события
     eventContract.ifPresent(contract -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
