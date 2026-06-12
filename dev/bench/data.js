@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781261841748,
+  "lastUpdate": 1781264173977,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36890,6 +36890,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.3364150586781838",
             "extra": "mean: 284.07045698165894 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58d7f7a4340859a97aee9a1618e81aa6546d157d",
+          "message": "Merge pull request #4044 from 1c-syntax/claude/fix-selectionrange-caret\n\nfix(SelectionRangeProvider): находить токен при каретке сразу после идентификатора",
+          "timestamp": "2026-06-12T09:23:58+02:00",
+          "tree_id": "06e189dc2535ba88363f139753828a330550e56a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/58d7f7a4340859a97aee9a1618e81aa6546d157d"
+        },
+        "date": 1781264164768,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 281.2499924500783,
+            "unit": "sec",
+            "range": "stddev: 9.02302634942199",
+            "extra": "mean: 281.2499924500783 sec\nrounds: 3"
           }
         ]
       }
