@@ -114,4 +114,25 @@ class TypeRegistryScopedSourcesTest {
     assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).hasSize(1);
     assertThat(typeRegistry.getConstructors(ref, FileType.OS)).hasSize(1);
   }
+
+  @Test
+  void registerMemberOverrideInvalidatesMembersCache() {
+    // given — члены типа уже прочитаны и мемоизированы
+    var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйКэшОверрайда");
+    typeRegistry.registerMemberSource(ref,
+      () -> List.of(MemberDescriptor.property("Базовый", TypeRef.UNKNOWN, "")),
+      FileType.BSL);
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("Базовый");
+
+    // when — override регистрируется ПОСЛЕ первого чтения
+    typeRegistry.registerMemberOverride(ref,
+      () -> List.of(MemberDescriptor.property("Переопределённый", TypeRef.UNKNOWN, "")),
+      FileType.BSL);
+
+    // then — кэш инвалидирован, override виден без рестарта
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL))
+      .extracting(MemberDescriptor::name)
+      .containsExactly("Переопределённый", "Базовый");
+  }
 }

@@ -474,6 +474,7 @@ public class TypeRegistry {
   public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
     var list = memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>());
     list.addFirst(new ScopedMemberSource(source, fileType));
+    membersEpoch.incrementAndGet();
   }
 
   /**
