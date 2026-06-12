@@ -100,7 +100,7 @@ public class SymbolProvider {
       return CaseInsensitivePattern.compile(queryString);
     } catch (PatternSyntaxException e) {
       LOGGER.debug(e.getMessage(), e);
-      return Pattern.compile(Pattern.quote(queryString), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      return CaseInsensitivePattern.compile(Pattern.quote(queryString));
     }
   }
 
