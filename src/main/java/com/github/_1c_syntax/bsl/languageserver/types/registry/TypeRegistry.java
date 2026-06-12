@@ -427,7 +427,7 @@ public class TypeRegistry {
 
   /**
    * Аналог {@link #registerMemberSource}, но вставляет источник в НАЧАЛО списка,
-   * чтобы при сборе членов через {@link #getMembers(TypeRef)} он выигрывал
+   * чтобы при сборе членов через {@link #getMembers(TypeRef, FileType)} он выигрывал
    * dedup ({@code putIfAbsent} по имени). Используется для override returnType
    * у конкретного member'а уже зарегистрированного типа (например, подмена
    * {@code ОбъектМетаданныхКонфигурация.Документы} с общего
@@ -488,7 +488,7 @@ public class TypeRegistry {
    * Регистрируется ленивый {@link MemberSource} для {@code specializedRef},
    * который при каждом запросе:
    * <ol>
-   *   <li>берёт members generic-типа через {@link #getMembers(TypeRef)};</li>
+   *   <li>берёт members generic-типа через {@link #getMembers(TypeRef, FileType)};</li>
    *   <li>отфильтровывает {@link MemberDescriptor#generic()} (слотовые
    *       члены вида {@code <Имя реквизита>});</li>
    *   <li>применяет {@link MemberDescriptor#specialize(Map)} к каждому
@@ -898,7 +898,7 @@ public class TypeRegistry {
   /**
    * Зарегистрировать динамический источник конструкторов для типа (например,
    * {@code ПриСозданииОбъекта} OneScript-класса из SymbolTree).
-   * Источник вызывается каждый раз при запросе {@link #getConstructors(TypeRef)},
+   * Источник вызывается каждый раз при запросе {@link #getConstructors(TypeRef, FileType)},
    * что обеспечивает hot-reload без ручной инвалидации.
    */
   public void registerConstructorSource(
