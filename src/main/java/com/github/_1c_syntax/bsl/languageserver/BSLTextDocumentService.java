@@ -197,6 +197,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private boolean clientSupportsPullDiagnostics;
 
+  // Кэшируется на initialize. linkSupport — gate для ответа LocationLink[] на запрос
+  // textDocument/definition. Если клиент не заявил поддержку, ответ понижается до Location[].
+  private boolean clientSupportsDefinitionLinkSupport;
+
   @PreDestroy
   private void onDestroy() {
     // Shutdown all document executors
@@ -276,7 +280,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       documentContext,
       () -> toLocationResult(
         definitionProvider.getDefinition(documentContext, params),
-        clientSupportsDefinitionLinkSupport()
+        clientSupportsDefinitionLinkSupport
       )
     );
   }
@@ -322,21 +326,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       .map(link -> new Location(link.getTargetUri(), link.getTargetSelectionRange()))
       .toList();
     return Either.forLeft(locations);
-  }
-
-  /**
-   * Проверить, заявил ли клиент поддержку возможности
-   * {@code textDocument.definition.linkSupport}.
-   *
-   * @return {@code true}, если клиент поддерживает ответ {@link LocationLink} для запроса
-   *         {@code textDocument/definition}.
-   */
-  private boolean clientSupportsDefinitionLinkSupport() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getDefinition)
-      .map(DefinitionCapabilities::getLinkSupport)
-      .orElse(false);
   }
 
   @Override
@@ -922,16 +911,24 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
-   * Проверяет поддержку клиентом pull-модели диагностик.
+   * Кэширует клиентские возможности, влияющие на формат ответов: поддержку
+   * pull-модели диагностик и поддержку {@code textDocument.definition.linkSupport}.
    *
    * @param ignored Событие
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
-    clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getTextDocument)
+    var textDocumentCapabilities = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument);
+
+    clientSupportsPullDiagnostics = textDocumentCapabilities
       .map(TextDocumentClientCapabilities::getDiagnostic)
       .isPresent();
+
+    clientSupportsDefinitionLinkSupport = textDocumentCapabilities
+      .map(TextDocumentClientCapabilities::getDefinition)
+      .map(DefinitionCapabilities::getLinkSupport)
+      .orElse(false);
   }
 
   /**

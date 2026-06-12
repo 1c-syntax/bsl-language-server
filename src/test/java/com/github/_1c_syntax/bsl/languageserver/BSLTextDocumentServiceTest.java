@@ -829,6 +829,7 @@ class BSLTextDocumentServiceTest {
     textDocumentCapabilities.setDefinition(new DefinitionCapabilities(false, true));
     capabilities.setTextDocument(textDocumentCapabilities);
     when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    textDocumentService.handleInitializeEvent(null);
 
     var locationLink = new LocationLink(
       textDocumentItem.getUri(),
@@ -857,6 +858,7 @@ class BSLTextDocumentServiceTest {
     var capabilities = new ClientCapabilities();
     capabilities.setTextDocument(new TextDocumentClientCapabilities());
     when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    textDocumentService.handleInitializeEvent(null);
 
     var targetSelectionRange = Ranges.create(0, 10, 0, 20);
     var locationLink = new LocationLink(
