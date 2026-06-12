@@ -1656,6 +1656,104 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionRanksLocalMethodAboveGlobalFunctionAndKeyword() {
+    // sortText-«корзины»: локальный метод документа должен ранжироваться выше
+    // (лексикографически меньший sortText) глобальной функции и ключевого слова,
+    // чтобы не тонуть среди сотен платформенных кандидатов.
+    // given
+    var content = """
+      Процедура Сообщение() Экспорт
+      КонецПроцедуры
+
+      Сооб""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, 4));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var localMethod = sortTextOf(items, "Сообщение");
+    var globalFunction = sortTextOf(items, "Сообщить");
+
+    // then
+    assertThat(localMethod)
+      .as("sortText локального метода и глобальной функции должны быть проставлены")
+      .isNotNull();
+    assertThat(globalFunction).isNotNull();
+    assertThat(localMethod)
+      .as("локальный метод документа ранжируется выше глобальной функции")
+      .isLessThan(globalFunction);
+  }
+
+  @Test
+  void noDotCompletionRanksLocalVariableAboveKeyword() {
+    // Локальная переменная документа должна ранжироваться выше ключевого слова.
+    // given
+    var content = """
+      Перем ЕслиЧтоТо;
+
+      Е""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, 1));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var localVariable = sortTextOf(items, "ЕслиЧтоТо");
+    var keyword = sortTextOf(items, "Если");
+
+    // then
+    assertThat(localVariable).isNotNull();
+    assertThat(keyword).as("ключевое слово Если должно быть в выдаче").isNotNull();
+    assertThat(localVariable)
+      .as("локальная переменная ранжируется выше ключевого слова")
+      .isLessThan(keyword);
+  }
+
+  @Test
+  void noDotCompletionDemotesDeprecatedLocalMethodBelowNonDeprecatedNeighbor() {
+    // Устаревший локальный метод получает sortText хуже неустаревшего соседа той же
+    // корзины. Имя устаревшего («МетодА») лексикографически меньше неустаревшего
+    // («МетодБ») — значит, перестановку обеспечивает именно пометка устаревания.
+    // given
+    var content = """
+      // Устарела. См. МетодБ.
+      Процедура МетодА() Экспорт
+      КонецПроцедуры
+
+      Процедура МетодБ() Экспорт
+      КонецПроцедуры
+
+      Мет""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(7, 3));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var deprecated = sortTextOf(items, "МетодА");
+    var fresh = sortTextOf(items, "МетодБ");
+
+    // then
+    assertThat(deprecated).as("устаревший метод должен быть в выдаче").isNotNull();
+    assertThat(fresh).isNotNull();
+    assertThat(deprecated)
+      .as("устаревший метод ранжируется ниже неустаревшего соседа, несмотря на меньшее имя")
+      .isGreaterThan(fresh);
+  }
+
+  private static String sortTextOf(List<CompletionItem> items, String label) {
+    return items.stream()
+      .filter(it -> label.equals(it.getLabel()))
+      .map(CompletionItem::getSortText)
+      .findFirst()
+      .orElse(null);
+  }
+
+  @Test
   void positionBeyondEndOfFileReturnsEmptyOrSafe() {
     // given — позиция за пределами файла.
     var documentContext = TestUtils.getDocumentContext("Сооб");
