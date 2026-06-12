@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.scope;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
@@ -29,6 +31,91 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalSymbolScopeTest {
+
+  @Test
+  void findEntrySelectsLanguageVariantByFileType() {
+    // given — одно имя зарегистрировано двумя языковыми вариантами (issue #4054)
+    var scope = new GlobalSymbolScope();
+    var bslSym = new SyntheticSymbol("КодировкаТекста", SyntheticKind.PLATFORM_GLOBAL_ENUM,
+      "BSL-описание", TypeRef.UNKNOWN);
+    var osSym = new SyntheticSymbol("КодировкаТекста", SyntheticKind.PLATFORM_GLOBAL_ENUM,
+      "OS-описание", TypeRef.UNKNOWN);
+
+    // when
+    scope.register("КодировкаТекста", bslSym, GlobalSymbolScope.Role.VALUE, LanguageScope.BSL);
+    scope.register("КодировкаТекста", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+
+    // then
+    assertThat(scope.findEntry("КодировкаТекста", FileType.BSL))
+      .map(GlobalSymbolScope.Entry::symbol).contains(bslSym);
+    assertThat(scope.findEntry("КодировкаТекста", FileType.OS))
+      .map(GlobalSymbolScope.Entry::symbol).contains(osSym);
+  }
+
+  @Test
+  void findEntryPrefersExactScopeOverBoth() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var bothSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "BOTH", TypeRef.UNKNOWN);
+    var osSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "OS", TypeRef.UNKNOWN);
+
+    // when
+    scope.register("Имя", bothSym, GlobalSymbolScope.Role.VALUE, LanguageScope.BOTH);
+    scope.register("Имя", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+
+    // then — для OS-файла точный скоуп выигрывает у BOTH, для BSL остаётся BOTH
+    assertThat(scope.findEntry("Имя", FileType.OS))
+      .map(GlobalSymbolScope.Entry::symbol).contains(osSym);
+    assertThat(scope.findEntry("Имя", FileType.BSL))
+      .map(GlobalSymbolScope.Entry::symbol).contains(bothSym);
+  }
+
+  @Test
+  void findEntryReturnsEmptyWhenNoVariantMatchesFileType() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var osSym = new SyntheticSymbol("ФС", SyntheticKind.LIBRARY_MODULE, "", TypeRef.UNKNOWN);
+
+    // when — OS-only запись
+    scope.register("ФС", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+
+    // then
+    assertThat(scope.findEntry("ФС", FileType.OS)).isPresent();
+    assertThat(scope.findEntry("ФС", FileType.BSL)).isEmpty();
+  }
+
+  @Test
+  void registerSameScopeReplacesEntry() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var first = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "первый", TypeRef.UNKNOWN);
+    var second = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "второй", TypeRef.UNKNOWN);
+
+    // when — повторная регистрация с тем же скоупом заменяет запись
+    scope.register("Имя", first, GlobalSymbolScope.Role.VALUE, LanguageScope.BOTH);
+    scope.register("Имя", second, GlobalSymbolScope.Role.VALUE, LanguageScope.BOTH);
+
+    // then
+    assertThat(scope.findSymbol("Имя")).contains(second);
+  }
+
+  @Test
+  void unregisterRemovesOnlyOwnLanguageVariant() {
+    // given — два языковых варианта одного имени
+    var scope = new GlobalSymbolScope();
+    var bslSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "BSL", TypeRef.UNKNOWN);
+    var osSym = new SyntheticSymbol("Имя", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "OS", TypeRef.UNKNOWN);
+    scope.register("Имя", bslSym, GlobalSymbolScope.Role.VALUE, LanguageScope.BSL);
+    scope.register("Имя", osSym, GlobalSymbolScope.Role.VALUE, LanguageScope.OS);
+
+    // when
+    scope.unregister(osSym);
+
+    // then — BSL-вариант остаётся
+    assertThat(scope.findEntry("Имя", FileType.BSL))
+      .map(GlobalSymbolScope.Entry::symbol).contains(bslSym);
+    assertThat(scope.findEntry("Имя", FileType.OS)).isEmpty();
+  }
 
   @Test
   void findsSymbolCaseInsensitive() {
