@@ -20,6 +20,7 @@
 * <a href="#websocket">Run in websocket mode</a>
 * <a href="#analyze">Run in analyzer mode</a>
 * <a href="#format">Run in formatter mode</a>
+* [Run in MCP mode](features/McpMode.md)
 * <a href="#configuration">Configuration file</a>
 * <a href="reporters">Reporters</a>
 * <a href="diagnostics">Diagnostics</a>

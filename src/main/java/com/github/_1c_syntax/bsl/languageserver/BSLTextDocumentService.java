@@ -65,7 +65,6 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -120,7 +119,6 @@ import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.TypeHierarchyItem;
@@ -182,7 +180,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
   private final SignatureHelpProvider signatureHelpProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
@@ -273,7 +270,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either.forRight(definitionProvider.getDefinition(documentContext, params))
+      () -> definitionProvider.getDefinition(documentContext, params)
     );
   }
 
@@ -779,16 +776,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     var documentContext = maybeDocument.get();
 
-    var serverContext = getContextForDocument(params.getTextDocument().getUri());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
-      return;
-    }
-
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+    withFreshDocumentContextNullable(documentContext, () -> {
       if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
         validate(documentContext);
       }
+      return null;
     });
   }
 
@@ -881,16 +873,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
-   * Проверяет поддержку клиентом pull-модели диагностик.
+   * Кэширует поддержку клиентом pull-модели диагностик, влияющую на способ публикации
+   * диагностик при закрытии документа.
    *
    * @param ignored Событие
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
-    clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getDiagnostic)
-      .isPresent();
+    clientSupportsPullDiagnostics = diagnosticProvider.supportsPullDiagnostics();
   }
 
   /**

@@ -19,7 +19,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.54.0"
     id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.10.0"
+    id("io.sentry.jvm.gradle") version "6.11.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.24.0"
@@ -33,6 +33,7 @@ repositories {
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
     maven("https://central.sonatype.com/repository/maven-snapshots")
+    maven(url = "https://repo.spring.io/milestone")
 }
 
 
@@ -85,6 +86,14 @@ dependencies {
     // lsp4j core
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
+
+    // Spring AI MCP (Model Context Protocol) server starters.
+    // Spring AI 2.0 is the first line compatible with Spring Boot 4 (milestone at the time of writing).
+    // - core starter: STDIO transport (`mcp` subcommand);
+    // - webmvc starter: Streamable HTTP transport, served on the same servlet container as LSP-over-WS.
+    api(platform("org.springframework.ai:spring-ai-bom:2.0.0-RC2"))
+    api("org.springframework.ai:spring-ai-starter-mcp-server")
+    api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.35.0")

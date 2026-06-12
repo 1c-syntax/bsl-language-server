@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <!-- Цель fallback-логов. По умолчанию System.out. В режимах, где stdout занят протоколом
+         (mcp-stdio — MCP по stdio; lsp-mcp — LSP по stdio рядом с MCP по HTTP), уводим в System.err,
+         чтобы не загрязнять канал протокола. У websocket-mcp stdout свободен — остаётся System.out. -->
+    <springProfile name="mcp-stdio | lsp-mcp">
+        <property name="CONSOLE_TARGET" value="System.err"/>
+    </springProfile>
+    <springProfile name="!(mcp-stdio | lsp-mcp)">
+        <property name="CONSOLE_TARGET" value="System.out"/>
+    </springProfile>
     <include resource="language-client-aware-appender.xml" />
     <root level="INFO">
         <appender-ref ref="LANGUAGE_CLIENT_AWARE" />

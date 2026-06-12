@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatSelectionRanges;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class SelectionRangeProviderTest {
@@ -140,6 +141,43 @@ class SelectionRangeProviderTest {
       .extractParent() // sub
       .extractParent() // file
       .hasRange(documentContext.getSymbolTree().getModule().getRange())
+    ;
+  }
+
+  @Test
+  void caretRightAfterIdentifierBehavesLikeCaretInsideIdentifier() {
+    // given
+    var paramsInsideIdentifier = selection(18, 10);
+    var paramsAfterIdentifier = selection(18, 12);
+
+    // when
+    var rangesInsideIdentifier = provider.getSelectionRange(documentContext, paramsInsideIdentifier);
+    var rangesAfterIdentifier = provider.getSelectionRange(documentContext, paramsAfterIdentifier);
+
+    // then
+    assertThatSelectionRanges(rangesAfterIdentifier)
+      .hasSize(1)
+      .element(0)
+      .hasRange(18, 4, 12)
+      .hasParentWithRange(18, 4, 17)
+    ;
+    assertThat(rangesAfterIdentifier).isEqualTo(rangesInsideIdentifier);
+  }
+
+  @Test
+  void caretRightAfterLastTokenOnLineSelectsThatToken() {
+    // given
+    var params = selection(18, 17);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(18, 16, 17)
+      .hasParentWithRange(18, 4, 17)
     ;
   }
 

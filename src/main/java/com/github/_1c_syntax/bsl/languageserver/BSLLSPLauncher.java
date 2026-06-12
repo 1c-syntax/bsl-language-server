@@ -24,10 +24,12 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.McpCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
@@ -41,6 +43,7 @@ import picocli.CommandLine.Unmatched;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -62,7 +65,8 @@ import static picocli.CommandLine.Command;
     FormatCommand.class,
     VersionCommand.class,
     LanguageServerStartCommand.class,
-    WebsocketCommand.class
+    WebsocketCommand.class,
+    McpCommand.class
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
@@ -100,6 +104,9 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     CaseInsensitivePattern.compile("--spring\\..*"),
     CaseInsensitivePattern.compile("--app\\..*"),
     CaseInsensitivePattern.compile("--logging\\..*"),
+    CaseInsensitivePattern.compile("--server\\..*"),
+    // Опции команды по умолчанию (lsp), допустимые без явного указания команды: `--mcp`, `--mcp-path`.
+    CaseInsensitivePattern.compile("--mcp(-path)?(=.*)?"),
     CaseInsensitivePattern.compile("--debug")
   );
 
@@ -108,8 +115,11 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private int exitCode;
 
   public static void main(String[] args) {
+    applyMcpEndpointPath(args);
+
     var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
       .web(getWebApplicationType(args))
+      .profiles(getActiveProfiles(args))
       .run(args);
 
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
@@ -170,14 +180,107 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     return 0;
   }
 
-  private static WebApplicationType getWebApplicationType(String[] args) {
-    WebApplicationType webApplicationType;
-    var argsList = Arrays.asList(args);
-    if (argsList.contains("-w") || argsList.contains("websocket")) {
-      webApplicationType = WebApplicationType.SERVLET;
-    } else {
-      webApplicationType = WebApplicationType.NONE;
+  static WebApplicationType getWebApplicationType(String[] args) {
+    // A servlet container is needed for the LSP WebSocket endpoint or any MCP HTTP transport (Streamable / SSE).
+    if (isWebsocketMode(args) || isMcpHttp(args) || isMcpSubcommandOverHttp(args)) {
+      return WebApplicationType.SERVLET;
     }
-    return webApplicationType;
+    return WebApplicationType.NONE;
+  }
+
+  static String[] getActiveProfiles(String[] args) {
+    if (isMcpHttp(args)) {
+      // `--mcp` flag: MCP over Streamable HTTP alongside LSP. Two distinct sub-profiles by the LSP
+      // transport it sits next to: `websocket-mcp` (stdout free) vs `lsp-mcp` (stdout is the LSP channel).
+      var lspTransportProfile = isWebsocketMode(args) ? "websocket-mcp" : "lsp-mcp";
+      return new String[]{"mcp", lspTransportProfile};
+    }
+    if (isMcpSubcommand(args)) {
+      // standalone `mcp` subcommand: transport selected by --protocol (stdio | sse | streamable).
+      var transportProfile = switch (mcpProtocol(args)) {
+        case "sse" -> "mcp-sse";
+        case "streamable" -> "mcp-streamable";
+        default -> "mcp-stdio";
+      };
+      return new String[]{"mcp", transportProfile};
+    }
+    return new String[0];
+  }
+
+  private static boolean isWebsocketMode(String[] args) {
+    var argsList = Arrays.asList(args);
+    return argsList.contains("-w") || argsList.contains("websocket");
+  }
+
+  /**
+   * Флаг {@code --mcp} — поднять MCP по Streamable HTTP рядом с LSP. Команда {@code lsp}
+   * необязательна (это режим по умолчанию), поэтому флаг работает и без неё, и с {@code websocket}.
+   */
+  private static boolean hasMcpFlag(String[] args) {
+    return Arrays.asList(args).contains("--mcp");
+  }
+
+  /**
+   * MCP по Streamable HTTP рядом с LSP (по stdio или websocket) — флаг {@code --mcp}.
+   */
+  private static boolean isMcpHttp(String[] args) {
+    return hasMcpFlag(args);
+  }
+
+  /**
+   * Самостоятельная команда {@code mcp} (транспорт выбирается параметром {@code --protocol}).
+   */
+  private static boolean isMcpSubcommand(String[] args) {
+    return Arrays.asList(args).contains("mcp");
+  }
+
+  /**
+   * Значение {@code --protocol} команды {@code mcp} (по умолчанию {@code stdio}).
+   */
+  private static String mcpProtocol(String[] args) {
+    var protocol = extractOptionValue(args, "--protocol");
+    return protocol == null ? "stdio" : protocol.toLowerCase(Locale.ROOT);
+  }
+
+  /**
+   * Команда {@code mcp} с HTTP-транспортом ({@code --protocol sse|streamable}) — требует servlet-контейнера.
+   */
+  private static boolean isMcpSubcommandOverHttp(String[] args) {
+    if (!isMcpSubcommand(args)) {
+      return false;
+    }
+    var protocol = mcpProtocol(args);
+    return protocol.equals("sse") || protocol.equals("streamable");
+  }
+
+  /**
+   * Перенести значение {@code --mcp-path} в системное свойство до старта контекста:
+   * эндпоинт Streamable HTTP регистрируется автоконфигурацией на refresh, раньше выполнения команды.
+   */
+  static void applyMcpEndpointPath(String[] args) {
+    if (!isMcpHttp(args)) {
+      return;
+    }
+    var mcpPath = extractOptionValue(args, "--mcp-path");
+    if (mcpPath != null && !mcpPath.isBlank()) {
+      System.setProperty("spring.ai.mcp.server.streamable-http.mcp-endpoint", mcpPath);
+    }
+  }
+
+  /**
+   * Извлечь значение опции, поддерживая обе формы: {@code --opt=value} и {@code --opt value}.
+   */
+  @Nullable
+  private static String extractOptionValue(String[] args, String option) {
+    var prefix = option + "=";
+    for (var i = 0; i < args.length; i++) {
+      if (args[i].startsWith(prefix)) {
+        return args[i].substring(prefix.length());
+      }
+      if (args[i].equals(option) && i + 1 < args.length) {
+        return args[i + 1];
+      }
+    }
+    return null;
   }
 }

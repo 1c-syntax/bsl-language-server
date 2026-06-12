@@ -29,8 +29,12 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -38,6 +42,7 @@ import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -47,6 +52,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
   private RenameProvider renameProvider;
 
   private static final String PATH_TO_FILE = "./src/test/resources/providers/rename.bsl";
+  private static final String PATH_TO_COMMON_MODULE_FILE = "./src/test/resources/providers/renameCommonModule.bsl";
 
   @BeforeEach
   void prepareServerContext() {
@@ -59,6 +65,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
 
     var params = new RenameParams();
     params.setPosition(new Position(1, 0));
+    params.setNewName("НовоеИмя");
 
     // when
     var workspaceEdit = renameProvider.getRename(documentContext, params);
@@ -141,6 +148,78 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
       .hasSize(2)
       .contains(new TextEdit(Ranges.create(0, 24, 26), newName))
       .contains(new TextEdit(Ranges.create(1, 17, 19), newName));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "имя с пробелом", "1Имя", "Если", "КонецФункции"})
+  void testRenameWithInvalidNewNameThrowsInvalidParams(String invalidNewName) {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new RenameParams();
+    params.setPosition(new Position(0, 14));
+    params.setNewName(invalidNewName);
+
+    // when - then
+    assertThatThrownBy(() -> renameProvider.getRename(documentContext, params))
+      .isInstanceOfSatisfying(ResponseErrorException.class, exception ->
+        assertThat(exception.getResponseError().getCode())
+          .isEqualTo(ResponseErrorCode.InvalidParams.getValue())
+      );
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"НовоеИмя", "NewName", "_Имя_С_Подчеркиванием2"})
+  void testRenameWithValidNewNameReturnsEdits(String validNewName) {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new RenameParams();
+    params.setPosition(new Position(0, 14));
+    params.setNewName(validNewName);
+
+    // when
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
+
+    // then
+    assertThat(workspaceEdit.getChanges().get(documentContext.getUri().toString()))
+      .hasSize(2)
+      .contains(new TextEdit(Ranges.create(0, 8, 18), validNewName))
+      .contains(new TextEdit(Ranges.create(6, 0, 10), validNewName));
+  }
+
+  @Test
+  void testRenameOnCommonModuleNameProducesNoEdits() {
+    // given
+    // курсор на "ПервыйОбщийМодуль" в "ПервыйОбщийМодуль.НеУстаревшаяПроцедура()"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+
+    var params = new RenameParams();
+    params.setPosition(new Position(1, 5));
+    params.setNewName("НовоеИмя");
+
+    // when
+    var workspaceEdit = renameProvider.getRename(documentContext, params);
+
+    // then
+    // имя общего модуля задаётся метаданными и не может быть переименовано текстовой правкой
+    assertThat(workspaceEdit.getChanges()).isEmpty();
+  }
+
+  @Test
+  void testPrepareRenameOnCommonModuleNameIsRejected() {
+    // given
+    // курсор на "ПервыйОбщийМодуль" в "ПервыйОбщийМодуль.НеУстаревшаяПроцедура()"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(1, 5));
+
+    // when
+    var range = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    assertThat(range).isNull();
   }
 
   @Test

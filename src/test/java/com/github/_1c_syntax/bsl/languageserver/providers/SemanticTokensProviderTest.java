@@ -21,14 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -38,10 +43,15 @@ import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SemanticTokensWorkspaceCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +63,10 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -69,6 +83,18 @@ class SemanticTokensProviderTest {
 
   @Autowired
   private ServerContextProvider serverContextProvider;
+
+  @Autowired
+  private ServerContext serverContext;
+
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @Autowired
+  private LanguageClientHolder clientHolder;
 
   // region Helper types and methods
 
@@ -1905,6 +1931,63 @@ class SemanticTokensProviderTest {
 
     // then — пересечение на строке-продолжении найдено (без multiline-учёта было бы 0).
     assertThat(overlaps).hasSize(1);
+  }
+
+  // endregion
+
+  // region Refresh on populated context
+
+  @Test
+  void testSemanticTokensRefreshOnServerContextPopulated() {
+    // given
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareSemanticTokensRefreshSupport(true);
+
+    // when
+    applicationEventPublisher.publishEvent(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    verify(languageClient).refreshSemanticTokens();
+  }
+
+  @Test
+  void testSemanticTokensDoNotRefreshOnServerContextPopulated_ifClientDoesNotSupportRefresh() {
+    // given
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareSemanticTokensRefreshSupport(false);
+
+    // when
+    applicationEventPublisher.publishEvent(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    verify(languageClient, never()).refreshSemanticTokens();
+  }
+
+  @Test
+  void testSemanticTokensRefresh_ifLanguageClientIsNotConnected() {
+    // given
+    // no connected language client
+
+    // when
+    var event = new ServerContextPopulatedEvent(serverContext);
+
+    // then
+    assertThatNoException().isThrownBy(() -> provider.handleServerContextPopulated(event));
+  }
+
+  private void prepareSemanticTokensRefreshSupport(boolean refreshSupport) {
+    var workspaceClientCapabilities = new WorkspaceClientCapabilities();
+    workspaceClientCapabilities.setSemanticTokens(new SemanticTokensWorkspaceCapabilities(refreshSupport));
+    var clientCapabilities = new ClientCapabilities(
+      workspaceClientCapabilities,
+      mock(TextDocumentClientCapabilities.class),
+      mock(Object.class)
+    );
+    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
   }
 
   // endregion

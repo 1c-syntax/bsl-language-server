@@ -27,13 +27,20 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -57,6 +64,7 @@ public final class RenameProvider {
 
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
+  private final Resources resources;
 
   /**
    * {@link WorkspaceEdit}
@@ -67,8 +75,11 @@ public final class RenameProvider {
    */
   public WorkspaceEdit getRename(DocumentContext documentContext, RenameParams params) {
 
+    checkNewName(params.getNewName());
+
     var position = params.getPosition();
     var sourceDefinedSymbol = referenceResolver.findReference(documentContext.getUri(), position)
+      .filter(RenameProvider::isRenameable)
       .flatMap(Reference::getSourceDefinedSymbol);
 
     Map<String, List<TextEdit>> changes = Stream.concat(
@@ -102,8 +113,22 @@ public final class RenameProvider {
   public @Nullable Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
+      .filter(RenameProvider::isRenameable)
       .map(Reference::selectionRange)
       .orElse(null);
+  }
+
+  /**
+   * Проверяет, поддерживается ли переименование символа, на который указывает ссылка.
+   * <p>
+   * Имя модуля задаётся метаданными и не может быть переименовано текстовой правкой,
+   * поэтому ссылки на символы с {@link SymbolKind#Module} не переименовываются.
+   *
+   * @param reference Ссылка на символ.
+   * @return {@code true}, если символ можно переименовать через текстовую правку.
+   */
+  private static boolean isRenameable(Reference reference) {
+    return reference.symbol().getSymbolKind() != SymbolKind.Module;
   }
 
   private static Collector<Reference, ?, List<TextEdit>> getTexEdits(RenameParams params) {
@@ -115,6 +140,25 @@ public final class RenameProvider {
 
   private static TextEdit newTextEdit(RenameParams params, Range range) {
     return new TextEdit(range, params.getNewName());
+  }
+
+  private void checkNewName(@Nullable String newName) {
+    if (!isValidIdentifier(newName)) {
+      var message = resources.getResourceString(getClass(), "invalidNewName", newName);
+      throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
+    }
+  }
+
+  private static boolean isValidIdentifier(@Nullable String newName) {
+    if (newName == null || newName.isEmpty()) {
+      return false;
+    }
+
+    var tokens = new BSLTokenizer(newName).getTokens();
+
+    return tokens.size() == 2
+      && tokens.get(0).getType() == BSLLexer.IDENTIFIER
+      && newName.equals(tokens.get(0).getText());
   }
 
 }
