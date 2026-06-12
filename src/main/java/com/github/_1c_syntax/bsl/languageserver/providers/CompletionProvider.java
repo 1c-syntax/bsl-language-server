@@ -812,7 +812,7 @@ public final class CompletionProvider {
       .orElseGet(() -> member.displayDescription(scriptVariant));
     var sb = new StringBuilder();
     if (symDesc.isDeprecated()) {
-      sb.append(scriptVariant == Language.EN ? "**Deprecated.**" : "**Устарело.**");
+      sb.append(scriptVariant == Language.EN ? "**Deprecated.**" : "**Устарела.**");
       if (!symDesc.getDeprecationInfo().isBlank()) {
         sb.append(' ').append(symDesc.getDeprecationInfo());
       }
