@@ -43,6 +43,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.ParameterInformation;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -107,11 +108,62 @@ public final class SignatureHelpProvider {
       signatures.add(toSignatureInformation(descriptor.displayName(lang), sig, lang, argCount));
     }
 
+    var activeSignature = pickActiveSignature(descriptor.signatures(), doCall, activeParameter, documentContext);
+    activeSignature = applyRetriggerContext(params, signatures, activeParameter, activeSignature);
+
     var help = new SignatureHelp();
     help.setSignatures(signatures);
-    help.setActiveSignature(pickActiveSignature(descriptor.signatures(), doCall, activeParameter, documentContext));
+    help.setActiveSignature(activeSignature);
     help.setActiveParameter(activeParameter);
     return help;
+  }
+
+  /**
+   * Учитывает {@link SignatureHelpContext} повторного вызова (retrigger): если клиент прислал
+   * сигнатуру, выбранную пользователем стрелками, и она всё ещё подходит для текущей позиции,
+   * сохраняет пользовательский выбор вместо серверного пересчёта.
+   * <p>
+   * Выбор пользователя сохраняется только когда вызов — retrigger, присланная активная сигнатура
+   * по индексу и метке совпадает с заново построенной сигнатурой и её число параметров вмещает
+   * текущий активный параметр. Иначе возвращается серверный {@code serverActiveSignature}.
+   *
+   * @param params                 параметры запроса signature help (источник контекста retrigger)
+   * @param signatures             заново построенные сигнатуры для текущей позиции
+   * @param activeParameter        индекс активного параметра под курсором (0-based)
+   * @param serverActiveSignature  активная сигнатура, вычисленная серверной логикой
+   * @return индекс активной сигнатуры с учётом пользовательского выбора при retrigger
+   */
+  private static int applyRetriggerContext(
+    SignatureHelpParams params,
+    List<SignatureInformation> signatures,
+    int activeParameter,
+    int serverActiveSignature
+  ) {
+    var context = params.getContext();
+    if (context == null || !context.isRetrigger()) {
+      return serverActiveSignature;
+    }
+    var previous = context.getActiveSignatureHelp();
+    if (previous == null || previous.getActiveSignature() == null) {
+      return serverActiveSignature;
+    }
+    int picked = previous.getActiveSignature();
+    if (picked < 0 || picked >= signatures.size()) {
+      return serverActiveSignature;
+    }
+    var previousSignatures = previous.getSignatures();
+    if (previousSignatures == null || picked >= previousSignatures.size()) {
+      return serverActiveSignature;
+    }
+    var previousLabel = previousSignatures.get(picked).getLabel();
+    var currentSignature = signatures.get(picked);
+    if (previousLabel == null || !previousLabel.equals(currentSignature.getLabel())) {
+      return serverActiveSignature;
+    }
+    if (activeParameter >= currentSignature.getParameters().size()) {
+      return serverActiveSignature;
+    }
+    return picked;
   }
 
   /**
