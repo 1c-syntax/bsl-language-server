@@ -48,6 +48,7 @@ import com.github._1c_syntax.bsl.mdo.children.Recalculation;
 import com.github._1c_syntax.bsl.mdo.children.Resource;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -203,7 +204,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = Mockito.mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), Mockito.mock(ApplicationEventPublisher.class));
 
       provider.tryRegister();
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
@@ -241,7 +242,7 @@ class ConfigurationTypesProviderHelpersTest {
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), Mockito.mock(ApplicationEventPublisher.class));
 
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
@@ -286,7 +287,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = Mockito.mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), Mockito.mock(ApplicationEventPublisher.class));
 
       provider.tryRegister();
 
@@ -340,7 +341,7 @@ class ConfigurationTypesProviderHelpersTest {
     var lsConfig = Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
     var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), Mockito.mock(ApplicationEventPublisher.class));
   }
 
   // === memberPlaceholderName ===
@@ -709,7 +710,7 @@ class ConfigurationTypesProviderHelpersTest {
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), Mockito.mock(ApplicationEventPublisher.class));
       assertion.accept(registry, provider);
     } finally {
       WorkspaceContextHolder.clear();

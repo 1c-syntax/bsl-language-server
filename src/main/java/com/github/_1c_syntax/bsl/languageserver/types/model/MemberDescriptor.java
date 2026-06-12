@@ -205,6 +205,12 @@ public record MemberDescriptor(
       signatures, sourceSymbol, generic, metadata, newAsync);
   }
 
+  /** Копия дескриптора с подменёнными сигнатурами. */
+  public MemberDescriptor withSignatures(List<SignatureDescriptor> newSignatures) {
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      newSignatures, sourceSymbol, generic, metadata, async);
+  }
+
   /** Копия дескриптора с признаком generic (placeholder в имени). */
   public MemberDescriptor withGeneric(boolean newGeneric) {
     if (this.generic == newGeneric) {
@@ -235,12 +241,15 @@ public record MemberDescriptor(
       var rebuilt = new ArrayList<SignatureDescriptor>(newSignatures.size());
       for (var sig : newSignatures) {
         var specializedReturn = TypeRef.specialize(sig.returnTypes(), bindings);
-        if (specializedReturn == sig.returnTypes()) {
-          rebuilt.add(sig);
-        } else {
-          rebuilt.add(new SignatureDescriptor(sig.parameters(), specializedReturn,
+        var specializedParameters = specializeParameters(sig.parameters(), bindings);
+        var returnChanged = specializedReturn != sig.returnTypes();
+        var parametersChanged = specializedParameters != sig.parameters();
+        if (returnChanged || parametersChanged) {
+          rebuilt.add(new SignatureDescriptor(specializedParameters, specializedReturn,
             sig.bilingualDescription()));
           signaturesChanged = true;
+        } else {
+          rebuilt.add(sig);
         }
       }
       if (signaturesChanged) {
@@ -252,6 +261,38 @@ public record MemberDescriptor(
     }
     return new MemberDescriptor(bilingualName, kind, bilingualDescription,
       newReturnTypes, newSignatures, sourceSymbol, generic, metadata, async);
+  }
+
+  /**
+   * Проносит {@code bindings} в типы параметров сигнатуры. Если ни один
+   * параметр не изменился — возвращает исходный список, чтобы вверху
+   * сравнение по ссылке сработало без аллокаций.
+   */
+  private static List<ParameterDescriptor> specializeParameters(List<ParameterDescriptor> params,
+                                                                Map<String, String> bindings) {
+    if (params.isEmpty()) {
+      return params;
+    }
+    List<ParameterDescriptor> rebuilt = null;
+    for (int i = 0; i < params.size(); i++) {
+      var p = params.get(i);
+      var specializedTypes = TypeRef.specialize(p.types(), bindings);
+      if (specializedTypes == p.types()) {
+        if (rebuilt != null) {
+          rebuilt.add(p);
+        }
+        continue;
+      }
+      if (rebuilt == null) {
+        rebuilt = new ArrayList<>(params.size());
+        for (int j = 0; j < i; j++) {
+          rebuilt.add(params.get(j));
+        }
+      }
+      rebuilt.add(new ParameterDescriptor(p.bilingualName(), specializedTypes, p.optional(),
+        p.bilingualDescription(), p.defaultValue(), p.variadic()));
+    }
+    return rebuilt == null ? params : List.copyOf(rebuilt);
   }
 
   public static MemberDescriptor method(String name) {

@@ -25,11 +25,14 @@ import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
@@ -46,6 +49,10 @@ import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
+import com.github._1c_syntax.bsl.mdo.HTTPService;
+import com.github._1c_syntax.bsl.mdo.IntegrationService;
+import com.github._1c_syntax.bsl.mdo.WebService;
+import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
 import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -62,6 +69,7 @@ import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -73,6 +81,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Регистрирует {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
@@ -126,17 +135,21 @@ public class ConfigurationTypesProvider {
   private final LanguageServerConfiguration configuration;
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
+  private final ApplicationEventPublisher eventPublisher;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   @EventListener
-  public void handleEvent(DocumentContextContentChangedEvent event) {
+  public void handleEvent(ServerContextPopulatedEvent event) {
     tryRegister();
   }
 
   /**
-   * Идемпотентная регистрация. Вызывается при первом изменении документа после
-   * загрузки конфигурации; повторные вызовы — no-op.
+   * Идемпотентная регистрация. Вызывается при заполнении ServerContext (после
+   * того как платформенные generic-типы загружены через {@code BslContextPlatformTypesProvider}
+   * — это критично для {@code registerFamilySpecializations}, который ищет
+   * generic'и по familyCore и без них пропускает специализации). Повторные
+   * вызовы — no-op.
    */
   public void tryRegister() {
     if (registered.get()) {
@@ -160,6 +173,140 @@ public class ConfigurationTypesProvider {
     var children = configuration.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects", workspaceUri, children.size());
     register(children);
+    registerServiceModuleEventSpecializations(children);
+    eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
+  }
+
+  /**
+   * Развёртывает generic-события платформенных типов модулей сервисов в
+   * конкретные имена обработчиков, объявленных в конфигурации:
+   * <ul>
+   *   <li>{@code Модуль HTTP-сервиса.<Имя обработчика>} ← {@code HTTPService.urlTemplates.methods.handler}
+   *       с сигнатурой {@code (Запрос: HTTPСервисЗапрос)};</li>
+   *   <li>{@code Модуль Web-сервиса.<Имя обработчика>} ← {@code WebService.operations.procedureName}
+   *       с параметрами {@code WebServiceOperation.parameters};</li>
+   *   <li>{@code Модуль сервиса интеграции.<Имя обработчика полученного сообщения>}
+   *       ← {@code IntegrationService.integrationServiceChannels.receiveMessageProcessing}.</li>
+   * </ul>
+   * Generic-события прилетают из HBK с placeholder'ом в имени; здесь они
+   * материализуются именами из mdclasses + кастомные сигнатуры подменяются на
+   * реальные параметры из XML.
+   */
+  private void registerServiceModuleEventSpecializations(Iterable<MD> children) {
+    var httpEvents = new ArrayList<HandlerSpec>();
+    var webEvents = new ArrayList<HandlerSpec>();
+    var integrationEvents = new ArrayList<HandlerSpec>();
+    for (var md : children) {
+      collectHttpHandlers(md, httpEvents);
+      collectWebProcedures(md, webEvents);
+      collectIntegrationHandlers(md, integrationEvents);
+    }
+    registerServiceHandlerEvents("Модуль HTTP-сервиса", "Имя обработчика", httpEvents);
+    registerServiceHandlerEvents("Модуль Web-сервиса", "Имя обработчика", webEvents);
+    registerServiceHandlerEvents("Модуль сервиса интеграции",
+      "Имя обработчика полученного сообщения", integrationEvents);
+  }
+
+  private void collectHttpHandlers(MD md, List<HandlerSpec> sink) {
+    if (!(md instanceof HTTPService http)) {
+      return;
+    }
+    http.getUrlTemplates().forEach(tpl -> tpl.getMethods().forEach(m -> {
+      if (!m.getHandler().isBlank()) {
+        sink.add(new HandlerSpec(m.getHandler(), httpServiceMethodSignature()));
+      }
+    }));
+  }
+
+  private void collectWebProcedures(MD md, List<HandlerSpec> sink) {
+    if (!(md instanceof WebService web)) {
+      return;
+    }
+    web.getOperations().forEach(op -> {
+      if (!op.getProcedureName().isBlank()) {
+        sink.add(new HandlerSpec(op.getProcedureName(), webOperationSignature(op)));
+      }
+    });
+  }
+
+  private void collectIntegrationHandlers(MD md, List<HandlerSpec> sink) {
+    if (!(md instanceof IntegrationService isvc)) {
+      return;
+    }
+    isvc.getIntegrationServiceChannels().forEach(ch -> {
+      if (!ch.getReceiveMessageProcessing().isBlank()) {
+        sink.add(new HandlerSpec(ch.getReceiveMessageProcessing(),
+          integrationChannelSignature()));
+      }
+    });
+  }
+
+  /**
+   * Материализует generic-event типа по placeholder'у и подменяет signatures
+   * на сигнатуру с реальными параметрами обработчика из mdclasses.
+   * <p>
+   * Описание/двуязычие/sinceVersion event'а наследуются от HBK-шаблона: общий
+   * для всего семейства источник правды.
+   */
+  private void registerServiceHandlerEvents(String typeQualifiedName, String placeholder,
+                                            List<HandlerSpec> specs) {
+    if (specs.isEmpty()) {
+      return;
+    }
+    var typeRef = typeRegistry.resolve(typeQualifiedName).orElse(null);
+    if (typeRef == null) {
+      return;
+    }
+    var names = specs.stream().map(HandlerSpec::name).distinct().toList();
+    var sigByName = specs.stream()
+      .collect(Collectors.toMap(HandlerSpec::name, HandlerSpec::signature, (a, b) -> a));
+    var templates = typeRegistry.expandedMembers(typeRef, Map.of(),
+      Map.of(placeholder, names));
+    if (templates.isEmpty()) {
+      return;
+    }
+    var withSignatures = templates.stream()
+      .map(m -> {
+        var sig = sigByName.get(m.name());
+        return sig == null ? m : m.withSignatures(List.of(sig));
+      })
+      .toList();
+    typeRegistry.registerMemberSource(typeRef, () -> withSignatures, LanguageScope.BSL);
+  }
+
+  /** Сигнатура HTTP-обработчика: один параметр {@code Запрос} типа {@code HTTPСервисЗапрос}. */
+  private SignatureDescriptor httpServiceMethodSignature() {
+    var requestRef = typeRegistry.resolve("HTTPСервисЗапрос").orElse(TypeRef.UNKNOWN);
+    var param = new ParameterDescriptor(
+      BilingualString.of("Запрос", "Request"),
+      TypeSet.of(requestRef), false, BilingualString.EMPTY, "");
+    return new SignatureDescriptor(List.of(param), TypeSet.EMPTY, "");
+  }
+
+  /**
+   * Сигнатура обработчика операции Web-сервиса: имена параметров из XML.
+   * Типы пока не сопоставляем — XSD-тип параметра ({@code {ns}type}) требует
+   * отдельной мапы в BSL-типы; до её появления оставляем пусто.
+   */
+  private SignatureDescriptor webOperationSignature(WebServiceOperation op) {
+    var params = op.getParameters().stream()
+      .map(p -> new ParameterDescriptor(
+        BilingualString.of(p.getName(), p.getName()),
+        TypeSet.EMPTY, false, BilingualString.EMPTY, ""))
+      .toList();
+    return new SignatureDescriptor(params, TypeSet.EMPTY, "");
+  }
+
+  /** Сигнатура обработчика канала: один параметр {@code Сообщение}. */
+  private SignatureDescriptor integrationChannelSignature() {
+    var param = new ParameterDescriptor(
+      BilingualString.of("Сообщение", "Message"),
+      TypeSet.EMPTY, false, BilingualString.EMPTY, "");
+    return new SignatureDescriptor(List.of(param), TypeSet.EMPTY, "");
+  }
+
+  /** Пара «имя обработчика → его сигнатура» для регистрации event'ов на типе модуля. */
+  private record HandlerSpec(String name, SignatureDescriptor signature) {
   }
 
   private void register(Iterable<MD> children) {

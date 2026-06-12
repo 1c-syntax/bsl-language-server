@@ -373,6 +373,15 @@ public class ServerContext {
   }
 
   /**
+   * Возвращает иммутабельный снимок открытых документов workspace
+   * (т.е. тех, для которых клиент прислал {@code textDocument/didOpen}
+   * и не прислал {@code textDocument/didClose}).
+   */
+  public Set<DocumentContext> getOpenedDocuments() {
+    return Set.copyOf(openedDocuments);
+  }
+
+  /**
    * Перестроить документ. В качестве содержимого будут использоваться данные,
    * прочитанные из файла, с которым связан документ.
    *

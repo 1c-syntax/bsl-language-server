@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.description.HyperlinkTypeDescription;
@@ -93,6 +95,45 @@ public class DescriptionFormatter {
     }
 
     return "";
+  }
+
+  /**
+   * Секция «Параметры» для метода, который является обработчиком платформенного
+   * события. Имена и типы берутся из контракта события (bsl-context), а не из
+   * шапки-комментария пользователя — контракт авторитетен, шапка может
+   * устаревать или отсутствовать.
+   */
+  public String getParametersSection(MemberDescriptor eventContract) {
+    if (eventContract.signatures().isEmpty()) {
+      return "";
+    }
+    var parameters = eventContract.signatures().get(0).parameters();
+    if (parameters.isEmpty()) {
+      return "";
+    }
+    var result = new StringJoiner("  \n");
+    parameters.forEach(p -> result.add(eventParameterToString(p)));
+    var parametersSection = new StringJoiner("\n");
+    parametersSection.add("**" + getResourceString(PARAMETERS_KEY) + ":**");
+    parametersSection.add("");
+    parametersSection.add(result.toString());
+    return parametersSection.toString();
+  }
+
+  private static String eventParameterToString(ParameterDescriptor parameter) {
+    var name = parameter.bilingualName().ru();
+    if (name.isBlank()) {
+      name = parameter.bilingualName().en();
+    }
+    var types = parameter.types().refs().stream()
+      .map(t -> t.qualifiedName())
+      .collect(Collectors.joining(" | "));
+    var line = PARAMETER_TEMPLATE.formatted(name, types);
+    var description = parameter.bilingualDescription().ru();
+    if (!description.isBlank()) {
+      line = line + " — " + description;
+    }
+    return line;
   }
 
   public String getReturnedValueSection(MethodSymbol methodSymbol) {

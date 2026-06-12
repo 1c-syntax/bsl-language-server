@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
@@ -109,6 +110,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final AutumnComponentInferencer autumnComponentInferencer;
+  private final EventContractsIndex eventContractsIndex;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -1189,7 +1191,9 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     var name = variable.getName();
-    for (ParameterDefinition parameter : method.getParameters()) {
+    var parameters = method.getParameters();
+    for (int i = 0; i < parameters.size(); i++) {
+      ParameterDefinition parameter = parameters.get(i);
       if (!parameter.getName().equalsIgnoreCase(name)) {
         continue;
       }
@@ -1201,9 +1205,42 @@ public class ExpressionTypeInferencer {
       if (!fromHyperlink.isEmpty()) {
         return fromHyperlink;
       }
+      var fromContract = eventHandlerParameterTypes(method, i);
+      if (!fromContract.isEmpty()) {
+        return fromContract;
+      }
       return inheritedParameterTypes(method, name);
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Тип параметра обработчика платформенного события из контракта (bsl-context).
+   * Сопоставление строго <b>по позиции</b>: имена параметров обработчика задаёт
+   * пользователь — они не обязаны совпадать с именами в контракте. Если последний
+   * параметр контракта помечен {@code variadic}, все параметры метода с индексом
+   * за ним наследуют его тип (хвост переменной арности — например, конструктор
+   * OneScript-класса {@code ПриСозданииОбъекта(а, б, в, ...)}).
+   */
+  private TypeSet eventHandlerParameterTypes(MethodSymbol method, int paramIndex) {
+    var contractOpt = eventContractsIndex.getContract(method.getOwner(), method.getName());
+    if (contractOpt.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var signatures = contractOpt.get().signatures();
+    if (signatures.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var params = signatures.get(0).parameters();
+    if (params.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    int idx = paramIndex < params.size() ? paramIndex : params.size() - 1;
+    var param = params.get(idx);
+    if (paramIndex >= params.size() && !param.variadic()) {
+      return TypeSet.EMPTY;
+    }
+    return param.types();
   }
 
   /**

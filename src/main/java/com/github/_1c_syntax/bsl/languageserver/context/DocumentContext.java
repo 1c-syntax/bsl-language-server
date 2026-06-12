@@ -299,6 +299,20 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return diagnostics.getOrCompute();
   }
 
+  /**
+   * Сбрасывает закэшированные диагностики. Нужно, когда внешний триггер
+   * (например, регистрация конфигурационных типов) меняет результат
+   * вычисления диагностик, а содержимое документа не поменялось.
+   */
+  public void clearDiagnostics() {
+    diagnosticsLock.lock();
+    try {
+      diagnostics.clear();
+    } finally {
+      diagnosticsLock.unlock();
+    }
+  }
+
   public List<Diagnostic> getComputedDiagnostics() {
     return Optional
       .ofNullable(diagnostics.get())

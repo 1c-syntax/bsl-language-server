@@ -65,13 +65,15 @@ public class ConfigurationModuleMembersProvider {
   private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_RU = Map.of(
     ModuleType.ManagerModule, "Менеджер",
     ModuleType.ObjectModule, "Объект",
-    ModuleType.RecordSetModule, "НаборЗаписей"
+    ModuleType.RecordSetModule, "НаборЗаписей",
+    ModuleType.ValueManagerModule, "МенеджерЗначения"
   );
 
   private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_EN = Map.of(
     ModuleType.ManagerModule, "Manager",
     ModuleType.ObjectModule, "Object",
-    ModuleType.RecordSetModule, "RecordSet"
+    ModuleType.RecordSetModule, "RecordSet",
+    ModuleType.ValueManagerModule, "ValueManager"
   );
 
   private final TypeRegistry typeRegistry;

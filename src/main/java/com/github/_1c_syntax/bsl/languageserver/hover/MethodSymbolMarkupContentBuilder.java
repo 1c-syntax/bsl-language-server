@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -38,6 +41,7 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
   private final DescriptionFormatter descriptionFormatter;
+  private final EventContractsIndex eventContractsIndex;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -52,6 +56,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // примеры
     // варианты вызова
 
+    var eventContract = eventContractsIndex.getContract(symbol.getOwner(), symbol.getName());
+
     // сигнатура
     var signature = descriptionFormatter.getSignature(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
@@ -60,12 +66,19 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     var methodLocation = descriptionFormatter.getLocation(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
 
+    // признак "обработчик события платформы" + платформенное описание события
+    var eventSection = buildEventHandlerSection(eventContract);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventSection);
+
     // описание метода
     var purposeSection = descriptionFormatter.getPurposeSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
 
-    // параметры
-    var parametersSection = descriptionFormatter.getParametersSection(symbol);
+    // параметры: для обработчика — контракт события (имена/типы), иначе —
+    // шапка-комментарий пользователя
+    var parametersSection = eventContract.isPresent()
+      ? descriptionFormatter.getParametersSection(eventContract.get())
+      : descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 
     // возвращаемое значение
@@ -89,6 +102,26 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
   @Override
   public Class<? extends Symbol> getSymbolClass() {
     return MethodSymbol.class;
+  }
+
+  /**
+   * Если метод является обработчиком платформенного события owner-типа
+   * модуля, формирует секцию-шапку «Обработчик события платформы: <имя>»
+   * + описание события из bsl-context.
+   */
+  private static String buildEventHandlerSection(Optional<MemberDescriptor> contract) {
+    if (contract.isEmpty()) {
+      return "";
+    }
+    var event = contract.get();
+    var sj = new StringJoiner("\n");
+    sj.add("**" + "Обработчик события платформы" + ":** `" + event.name() + "`");
+    var description = event.description();
+    if (description != null && !description.isBlank()) {
+      sj.add("");
+      sj.add(description);
+    }
+    return sj.toString();
   }
 
 }

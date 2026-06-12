@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -127,6 +129,40 @@ public final class DiagnosticProvider {
         languageClient.refreshDiagnostics();
       });
     }
+  }
+
+  /**
+   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * <p>
+   * После регистрации конфигурационных типов diagnostic'и, опирающиеся на
+   * реестр типов (UnknownMember, EventHandler*, и т.п.), могут давать
+   * результат, отличный от того, что был вычислен до регистрации. Поэтому:
+   * <ol>
+   *   <li>Инвалидируем закэшированные диагностики во всех документах
+   *       workspace — иначе клиент после refresh получит старый кэш.</li>
+   *   <li>Просим клиента перезапросить (pull) или push'им сами, если
+   *       клиент не поддерживает refresh.</li>
+   * </ol>
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    var serverContext = event.getSource();
+    serverContext.getDocuments().values().forEach(DocumentContext::clearDiagnostics);
+
+    if (clientSupportsRefresh) {
+      clientHolder.execIfConnected((LanguageClient languageClient) -> {
+        LOGGER.debug("Requesting diagnostic refresh from client after configuration types registered");
+        languageClient.refreshDiagnostics();
+      });
+    } else {
+      pushDiagnosticsToOpenedDocuments(serverContext);
+    }
+  }
+
+  private void pushDiagnosticsToOpenedDocuments(ServerContext serverContext) {
+    var opened = serverContext.getOpenedDocuments();
+    LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
+    opened.forEach(this::computeAndPublishDiagnostics);
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {

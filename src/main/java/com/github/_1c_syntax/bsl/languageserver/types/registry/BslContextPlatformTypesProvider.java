@@ -131,7 +131,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * — это {@code getDescriptionEn}; для других имплементаций — всегда пустая
    * строка (en-HBK не загружен или используется внешний адаптер).
    */
-  private static Function<Object, EnAttachments> enLookupOf(ContextProvider provider) {
+  static Function<Object, EnAttachments> enLookupOf(ContextProvider provider) {
     if (provider instanceof PlatformContextProvider pcp) {
       return pcp::getEnAttachments;
     }
@@ -359,7 +359,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       TypeSet.EMPTY,
       signatures,
       null,
-      false,
+      event.isGeneric(),
       metadataOf(event),
       false
     );

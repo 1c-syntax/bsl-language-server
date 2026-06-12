@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -93,6 +95,18 @@ public class InferredVariableTypeIndex extends AbstractDocumentLifecycleClearabl
   @Override
   public void clear(URI uri) {
     typesByUri.remove(uri);
+  }
+
+  /**
+   * Полный сброс кэша после регистрации конфигурационных типов: типы
+   * параметров обработчиков платформенных событий разрешаются через
+   * {@code EventContractsIndex}, который до регистрации возвращал пусто
+   * (owner-тип модуля не в реестре). Кэшированные «пустые» инференсы
+   * параметров надо пересчитать с уже заполненным реестром.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    typesByUri.clear();
   }
 
   private static URI uriOf(VariableSymbol variable) {

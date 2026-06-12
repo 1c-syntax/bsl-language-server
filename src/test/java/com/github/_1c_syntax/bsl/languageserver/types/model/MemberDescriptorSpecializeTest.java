@@ -76,6 +76,48 @@ class MemberDescriptorSpecializeTest {
   }
 
   @Test
+  void specializeAppliesBindingsToParameterTypes() {
+    var paramGeneric = new ParameterDescriptor("ОбъектКопирования",
+      TypeSet.of(CATALOG_OBJECT_GENERIC), false, "", "");
+    var paramUnrelated = new ParameterDescriptor("Отказ",
+      TypeSet.of(UNDEFINED), false, "", "");
+    var sig = new SignatureDescriptor(List.of(paramGeneric, paramUnrelated),
+      TypeSet.EMPTY, "");
+    var event = new MemberDescriptor(
+      "ПриКопировании",
+      MemberKind.EVENT,
+      "",
+      TypeSet.EMPTY,
+      List.of(sig),
+      null,
+      false,
+      PlatformMetadata.EMPTY);
+
+    var specialized = event.specialize(Map.of("Имя справочника", "Контрагенты"));
+
+    var params = specialized.signatures().get(0).parameters();
+    assertThat(params.get(0).types().refs().iterator().next().qualifiedName())
+      .isEqualTo("СправочникОбъект.Контрагенты");
+    // Параметр без placeholder в типе остаётся той же ссылкой (без аллокации).
+    assertThat(params.get(1)).isSameAs(paramUnrelated);
+  }
+
+  @Test
+  void withSignaturesReturnsCopyWithReplacement() {
+    var member = MemberDescriptor.event("Event", "",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    var newParam = new ParameterDescriptor("Запрос", TypeSet.EMPTY, false, "", "");
+    var newSig = new SignatureDescriptor(List.of(newParam), TypeSet.EMPTY, "");
+
+    var replaced = member.withSignatures(List.of(newSig));
+
+    assertThat(replaced).isNotSameAs(member);
+    assertThat(replaced.name()).isEqualTo("Event");
+    assertThat(replaced.signatures()).hasSize(1);
+    assertThat(replaced.signatures().get(0).parameters()).hasSize(1);
+  }
+
+  @Test
   void specializePreservesUnrelatedFields() {
     var meta = new PlatformMetadata("8.3.10", "", List.of(), java.util.Set.of(), null, "", "", List.of(), List.of());
     var member = new MemberDescriptor(

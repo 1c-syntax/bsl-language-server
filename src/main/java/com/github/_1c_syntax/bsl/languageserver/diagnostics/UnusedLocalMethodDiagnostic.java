@@ -29,15 +29,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.EnumSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -45,10 +44,6 @@ import java.util.regex.Pattern;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  modules = {
-    ModuleType.CommonModule,
-    ModuleType.ObjectModule
-  },
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
@@ -56,7 +51,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.UNUSED
   }
 )
-public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
+public class UnusedLocalMethodDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
     "(ПриСозданииОбъекта|OnObjectCreate)"
@@ -75,6 +70,10 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
   );
   private static final boolean CHECK_OBJECT_MODULE = false;
 
+  private final ReferenceIndex referenceIndex;
+  private final EventContractsIndex eventContractsIndex;
+  private final BslContextHolder bslContextHolder;
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = ATTACHABLE_METHOD_PREFIXES
@@ -87,12 +86,66 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
   )
   private boolean checkObjectModule = CHECK_OBJECT_MODULE;
 
+  public UnusedLocalMethodDiagnostic(ReferenceIndex referenceIndex,
+                                     EventContractsIndex eventContractsIndex,
+                                     BslContextHolder bslContextHolder) {
+    this.referenceIndex = referenceIndex;
+    this.eventContractsIndex = eventContractsIndex;
+    this.bslContextHolder = bslContextHolder;
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     this.attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(
       (String) configuration.getOrDefault("attachableMethodPrefixes", ATTACHABLE_METHOD_PREFIXES));
 
     this.checkObjectModule = (boolean) configuration.getOrDefault("checkObjectModule", CHECK_OBJECT_MODULE);
+  }
+
+  @Override
+  public void check() {
+    var moduleType = documentContext.getModuleType();
+    // Формы пока вне зоны действия: обработчики декларируются в Form.xml
+    // блоком <Events>, без отдельной поддержки их не отличить от «забытых» методов.
+    if (moduleType == ModuleType.FormModule) {
+      return;
+    }
+    // CommonModule (нет событий) и OScriptClass (события захардкожены в резолвере)
+    // диагностируем всегда — HBK для них не требуется.
+    if (moduleType == ModuleType.CommonModule || moduleType == ModuleType.OScriptClass) {
+      reportUnused();
+      return;
+    }
+    // С HBK обработчики корректно отсекаются через EventContractsIndex — работаем
+    // во всех остальных модулях кроме форм.
+    if (isHbkLoaded()) {
+      reportUnused();
+      return;
+    }
+    // Без HBK — старое поведение: только ObjectModule по флагу.
+    if (moduleType == ModuleType.ObjectModule && checkObjectModule) {
+      reportUnused();
+    }
+  }
+
+  private void reportUnused() {
+    documentContext.getSymbolTree().getMethods()
+      .stream()
+      .filter(method -> !method.isExport())
+      .filter(method -> !isOverride(method))
+      .filter(method -> !isAttachable(method))
+      .filter(method -> !isHandler(method))
+      // Платформенный обработчик события (резолвится EventHandlerResolver'ом
+      // по имени метода в object/manager/recordset/global/OScript-модулях).
+      // Он вызывается платформой по триггеру события, в теле модуля никаких
+      // вызовов не будет.
+      .filter(method -> eventContractsIndex.getContract(documentContext, method.getName()).isEmpty())
+      .filter(method -> referenceIndex.getReferencesTo(method).isEmpty())
+      .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(), info.getMessage(method.getName())));
+  }
+
+  private boolean isHbkLoaded() {
+    return bslContextHolder.get().isPresent();
   }
 
   private boolean isAttachable(MethodSymbol methodSymbol) {
@@ -108,30 +161,5 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .map(Annotation::getKind)
       .anyMatch(EXTENSION_ANNOTATIONS::contains);
-  }
-
-  @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
-    var moduleType = documentContext.getModuleType();
-    if (!checkObjectModule && moduleType == ModuleType.ObjectModule) {
-      return ctx;
-    }
-
-    var collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
-      .stream()
-      .map(parseTree ->
-        ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
-      .toList();
-
-    documentContext.getSymbolTree().getMethods()
-      .stream()
-      .filter(method -> !method.isExport())
-      .filter(method -> !isOverride(method))
-      .filter(method -> !isAttachable(method))
-      .filter(method -> !isHandler(method))
-      .filter(method -> !collect.contains(method.getName().toLowerCase(Locale.ENGLISH)))
-      .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(), info.getMessage(method.getName())));
-
-    return ctx;
   }
 }
