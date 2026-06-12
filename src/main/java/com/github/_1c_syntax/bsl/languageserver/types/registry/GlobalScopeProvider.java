@@ -336,9 +336,12 @@ public class GlobalScopeProvider {
     // Регистрируем глобальные функции в GlobalSymbolScope как synthetic-методы.
     // Каждый язык публикует свой набор со своим скоупом: для имён, существующих
     // в обоих языках, появляются ДВА варианта записи — выбор при чтении по типу файла.
-    var symbolsByDescriptor = new HashMap<MemberDescriptor, SyntheticSymbol>();
     for (var fileType : FileType.values()) {
       var data = byFileType.get(fileType);
+      // Кэш на ОДИН язык: склеивает ru-имя и en-алиас одного дескриптора в один
+      // SyntheticSymbol (aliasesBySymbol/getEntries в GlobalSymbolScope работают
+      // по identity). Межъязыкового переиспользования символов нет намеренно.
+      var symbolsByDescriptor = new HashMap<MemberDescriptor, SyntheticSymbol>();
       for (var entry : data.functions.entrySet()) {
         registerFunctionSymbol(symbolsByDescriptor, entry.getKey(), entry.getValue(), fileType);
       }
