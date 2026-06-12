@@ -75,7 +75,11 @@ public class ReferenceIndex {
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = symbol.getOwner().getMdoRef();
     var moduleType = symbol.getOwner().getModuleType();
-    var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
+    // Ссылки на модуль сохраняются с пустым symbolName (см. addModuleReference),
+    // поэтому ключ поиска должен строиться симметрично.
+    var symbolName = symbol.getSymbolKind() == SymbolKind.Module
+      ? ""
+      : symbol.getName().toLowerCase(Locale.ENGLISH);
     var scopeName = "";
 
     if (symbol.getSymbolKind() == SymbolKind.Variable) {
