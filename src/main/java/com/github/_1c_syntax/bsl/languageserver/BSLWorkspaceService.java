@@ -31,10 +31,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.PathExclusionUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.CreateFilesParams;
+import org.eclipse.lsp4j.DeleteFilesParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.eclipse.lsp4j.RenameFilesParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
@@ -90,27 +93,112 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         for (var fileEvent : params.getChanges()) {
           var uri = Absolute.uri(fileEvent.getUri());
-
-          serverContextProvider.getServerContext(uri).ifPresentOrElse(
-            context -> {
-              var workspaceUri = context.getWorkspaceUri();
-              if (workspaceUri == null) {
-                LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
-                return;
-              }
-              WorkspaceContextHolder.run(workspaceUri, () -> {
-                switch (fileEvent.getType()) {
-                  case Deleted -> handleDeletedFileEvent(uri);
-                  case Created -> handleCreatedFileEvent(uri);
-                  case Changed -> handleChangedFileEvent(uri);
-                }
-              });
-            },
-            () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
-          );
+          runInWorkspaceContext(uri, () -> {
+            switch (fileEvent.getType()) {
+              case Deleted -> handleDeletedFileEvent(uri);
+              case Created -> handleCreatedFileEvent(uri);
+              case Changed -> handleChangedFileEvent(uri);
+            }
+          });
         }
       },
       executor
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает уведомление {@code workspace/didCreateFiles}: для каждого URI добавляет
+   * документ(ы) в контекст сервера аналогично событию создания в
+   * {@code workspace/didChangeWatchedFiles}. Пути из {@code excludePaths} и открытые в редакторе
+   * документы учитываются так же, как в существующих обработчиках.
+   *
+   * @param params параметры уведомления о созданных файлах
+   */
+  @Override
+  public void didCreateFiles(CreateFilesParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        for (var file : params.getFiles()) {
+          var uri = Absolute.uri(file.getUri());
+          runInWorkspaceContext(uri, () -> handleCreatedFileEvent(uri));
+        }
+      },
+      executor
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает уведомление {@code workspace/didDeleteFiles}: для каждого URI удаляет
+   * документ(ы) из контекста сервера. Для каталога удаление выполняется по префиксу URI
+   * с границей {@code /} (переиспользуется логика обработки удаления каталога из
+   * {@code workspace/didChangeWatchedFiles}).
+   *
+   * @param params параметры уведомления об удалённых файлах
+   */
+  @Override
+  public void didDeleteFiles(DeleteFilesParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        for (var file : params.getFiles()) {
+          var uri = Absolute.uri(file.getUri());
+          runInWorkspaceContext(uri, () -> handleDeletedFileEvent(uri));
+        }
+      },
+      executor
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает уведомление {@code workspace/didRenameFiles}: каждое переименование
+   * выполняется атомарно как удаление документа(ов) по старому URI и создание по новому,
+   * включая переименование каталогов. Пути из {@code excludePaths} и открытые в редакторе
+   * документы учитываются так же, как в существующих обработчиках.
+   *
+   * @param params параметры уведомления о переименованных файлах
+   */
+  @Override
+  public void didRenameFiles(RenameFilesParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        for (var file : params.getFiles()) {
+          var oldUri = Absolute.uri(file.getOldUri());
+          var newUri = Absolute.uri(file.getNewUri());
+          runInWorkspaceContext(oldUri, () -> handleDeletedFileEvent(oldUri));
+          runInWorkspaceContext(newUri, () -> handleCreatedFileEvent(newUri));
+        }
+      },
+      executor
+    );
+  }
+
+  /**
+   * Выполняет действие над файлом в контексте его workspace.
+   * <p>
+   * Резолвит контекст сервера и устанавливает workspace-контекст на текущем треде
+   * (через {@link WorkspaceContextHolder}), чтобы workspace-scoped proxy beans корректно
+   * разрешались в {@code @EventListener}-методах. Если workspace для URI не найден,
+   * действие пропускается.
+   *
+   * @param uri    URI файла или каталога
+   * @param action действие, выполняемое в установленном workspace-контексте
+   */
+  private void runInWorkspaceContext(URI uri, Runnable action) {
+    serverContextProvider.getServerContext(uri).ifPresentOrElse(
+      context -> {
+        var workspaceUri = context.getWorkspaceUri();
+        if (workspaceUri == null) {
+          LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
+          return;
+        }
+        WorkspaceContextHolder.run(workspaceUri, action);
+      },
+      () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
     );
   }
 

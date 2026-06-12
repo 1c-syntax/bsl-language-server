@@ -51,6 +51,11 @@ import org.eclipse.lsp4j.DocumentOnTypeFormattingOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
+import org.eclipse.lsp4j.FileOperationFilter;
+import org.eclipse.lsp4j.FileOperationOptions;
+import org.eclipse.lsp4j.FileOperationPattern;
+import org.eclipse.lsp4j.FileOperationPatternKind;
+import org.eclipse.lsp4j.FileOperationsServerCapabilities;
 import org.eclipse.lsp4j.FileSystemWatcher;
 import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
@@ -544,7 +549,38 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     workspaceFoldersOptions.setChangeNotifications(Boolean.TRUE);
 
     workspaceCapabilities.setWorkspaceFolders(workspaceFoldersOptions);
+    workspaceCapabilities.setFileOperations(getFileOperationsCapabilities());
     return workspaceCapabilities;
+  }
+
+  /**
+   * Формирует возможности сервера по обработке файловых операций рабочей области
+   * ({@code didCreate}/{@code didRename}/{@code didDelete}). Фильтры покрывают BSL- и
+   * OneScript-файлы ({@code **&#47;*.bsl}, {@code **&#47;*.os}), а также каталоги, чтобы
+   * получать события переименования и удаления папок целиком.
+   *
+   * @return возможности сервера по файловым операциям
+   */
+  private static FileOperationsServerCapabilities getFileOperationsCapabilities() {
+    var fileOperations = new FileOperationsServerCapabilities();
+
+    var options = new FileOperationOptions(getFileOperationFilters());
+    fileOperations.setDidCreate(options);
+    fileOperations.setDidRename(options);
+    fileOperations.setDidDelete(options);
+
+    return fileOperations;
+  }
+
+  private static List<FileOperationFilter> getFileOperationFilters() {
+    var folderPattern = new FileOperationPattern("**/*");
+    folderPattern.setMatches(FileOperationPatternKind.Folder);
+
+    return List.of(
+      new FileOperationFilter(new FileOperationPattern("**/*.bsl")),
+      new FileOperationFilter(new FileOperationPattern("**/*.os")),
+      new FileOperationFilter(folderPattern)
+    );
   }
 
 }
