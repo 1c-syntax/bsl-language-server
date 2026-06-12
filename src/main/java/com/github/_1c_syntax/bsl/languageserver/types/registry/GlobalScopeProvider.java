@@ -522,12 +522,8 @@ public class GlobalScopeProvider {
     for (var entry : functions.entrySet()) {
       var s = functionScopes.get(entry.getKey());
       if (s == null || s.matches(fileType)) {
-        if (fileType == FileType.OS) {
-          var osOverride = osFunctionOverrides.get(entry.getKey());
-          result.add(osOverride != null ? osOverride : entry.getValue());
-        } else {
-          result.add(entry.getValue());
-        }
+        var osOverride = fileType == FileType.OS ? osFunctionOverrides.get(entry.getKey()) : null;
+        result.add(osOverride != null ? osOverride : entry.getValue());
       }
     }
     return result;
@@ -1116,6 +1112,11 @@ public class GlobalScopeProvider {
     functionScopes.merge(lc, LanguageScope.BSL, LanguageScope::merge);
   }
 
+  /**
+   * Объединяет два {@link Loaded}: {@code a} — BSL-часть, {@code b} — OS-часть.
+   * Для функций, присутствующих в обеих частях, BSL-дескриптор идёт в основную map,
+   * а OS-дескриптор сохраняется в {@code osFunctionOverrides}.
+   */
   private static Loaded merge(Loaded a, Loaded b) {
     var functions = new LinkedHashMap<String, MemberDescriptor>(a.functions);
     var functionScopes = new HashMap<String, LanguageScope>(a.functionScopes);
