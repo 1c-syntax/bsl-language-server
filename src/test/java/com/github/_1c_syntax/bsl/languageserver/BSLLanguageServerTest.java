@@ -247,6 +247,28 @@ class BSLLanguageServerTest {
   }
 
   @Test
+  void initializeDeclaresFileOperationsCapabilities() throws ExecutionException, InterruptedException {
+    // given
+    var params = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    params.setWorkspaceFolders(List.of(workspaceFolder));
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    var fileOperations = initialize.getCapabilities().getWorkspace().getFileOperations();
+    assertThat(fileOperations).isNotNull();
+    assertThat(fileOperations.getDidCreate()).isNotNull();
+    assertThat(fileOperations.getDidRename()).isNotNull();
+    assertThat(fileOperations.getDidDelete()).isNotNull();
+
+    assertThat(fileOperations.getDidDelete().getFilters())
+      .extracting(filter -> filter.getPattern().getGlob())
+      .containsExactlyInAnyOrder("**/*.bsl", "**/*.os", "**/*");
+  }
+
+  @Test
   @SuppressWarnings("deprecation")
   void initializeWithRootUri() throws ExecutionException, InterruptedException {
     // given
