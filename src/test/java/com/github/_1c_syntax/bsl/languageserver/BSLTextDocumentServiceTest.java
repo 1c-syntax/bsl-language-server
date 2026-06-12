@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -60,6 +61,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.PrepareRenameParams;
@@ -82,6 +84,7 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,6 +111,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -131,6 +135,8 @@ class BSLTextDocumentServiceTest {
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
   @MockitoSpyBean
   private HoverProvider hoverProvider;
+  @MockitoSpyBean
+  private DefinitionProvider definitionProvider;
 
   @BeforeEach
   void setUp() {
@@ -809,6 +815,31 @@ class BSLTextDocumentServiceTest {
     var result = textDocumentService.definition(params).get();
     assertThat(result.isRight()).isTrue();
     assertThat(result.getRight()).isEmpty();
+  }
+
+  @Test
+  void definitionDelegatesToProvider() throws Exception {
+    // given - открытый документ; провайдер сам решает формат ответа (linkSupport),
+    // сервис лишь делегирует ему запрос.
+    var textDocumentItem = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(textDocumentItem));
+
+    var locationLink = new LocationLink(
+      textDocumentItem.getUri(),
+      Ranges.create(0, 0, 0, 10),
+      Ranges.create(0, 10, 0, 20),
+      Ranges.create(1, 4, 1, 8)
+    );
+    doReturn(Either.forRight(List.of(locationLink))).when(definitionProvider).getDefinition(any(), any());
+
+    // when
+    var params = new DefinitionParams(getTextDocumentIdentifier(), new Position(1, 4));
+    var result = textDocumentService.definition(params).get();
+
+    // then - сервис прозрачно возвращает результат провайдера
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight()).hasSize(1);
+    assertThat(result.getRight().get(0)).isEqualTo(locationLink);
   }
 
   @Test

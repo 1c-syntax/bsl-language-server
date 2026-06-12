@@ -81,9 +81,10 @@ public class DefinitionTool {
         new Position(line, character)
       );
 
-      var definitions = definitionProvider.getDefinition(documentContext, params).stream()
-        .map(DefinitionDto::from)
-        .toList();
+      var definitions = definitionProvider.getDefinition(documentContext, params).map(
+        locations -> locations.stream().map(DefinitionDto::from).toList(),
+        links -> links.stream().map(DefinitionDto::from).toList()
+      );
 
       return new Result(file, definitions);
     });

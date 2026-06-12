@@ -270,7 +270,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either.forRight(definitionProvider.getDefinition(documentContext, params))
+      () -> definitionProvider.getDefinition(documentContext, params)
     );
   }
 
@@ -873,7 +873,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
-   * Проверяет поддержку клиентом pull-модели диагностик.
+   * Кэширует поддержку клиентом pull-модели диагностик, влияющую на способ публикации
+   * диагностик при закрытии документа.
    *
    * @param ignored Событие
    */

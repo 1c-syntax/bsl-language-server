@@ -21,20 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.DefinitionCapabilities;
 import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @CleanupContextBeforeClassAndAfterClass
 class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTest {
@@ -44,6 +56,28 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
 
   @Autowired
   private OScriptLibraryIndex index;
+
+  @MockitoSpyBean
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @BeforeEach
+  void enableLinkSupport() {
+    // Тесты проверяют targetUri ссылок, поэтому ожидают ответ в виде LocationLink[]:
+    // заявляем клиентскую поддержку textDocument.definition.linkSupport.
+    var capabilities = new ClientCapabilities();
+    var textDocumentCapabilities = new TextDocumentClientCapabilities();
+    textDocumentCapabilities.setDefinition(new DefinitionCapabilities(false, true));
+    capabilities.setTextDocument(textDocumentCapabilities);
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    definitionProvider.handleInitializeEvent();
+  }
+
+  private static List<? extends LocationLink> locationLinks(
+    Either<List<? extends Location>, List<? extends LocationLink>> definitions
+  ) {
+    assertThat(definitions.isRight()).isTrue();
+    return definitions.getRight();
+  }
 
   @Test
   void definitionOfLibraryClassInNewExpressionPointsToClassFile() {
@@ -58,7 +92,7 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     int col = content.indexOf("MyClass") - lineStart;
     params.setPosition(new Position(1, col + 2));
 
-    var definitions = definitionProvider.getDefinition(dc, params);
+    var definitions = locationLinks(definitionProvider.getDefinition(dc, params));
 
     assertThat(definitions)
       .as("go-to-definition на классе MyClass в выражении Новый должен вести в .os-файл")
@@ -80,7 +114,7 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     int col = "X.".length();
     params.setPosition(new Position(2, col + 2));
 
-    var definitions = definitionProvider.getDefinition(dc, params);
+    var definitions = locationLinks(definitionProvider.getDefinition(dc, params));
 
     assertThat(definitions)
       .as("go-to-definition на методе экземпляра library-класса должен вести в .os-файл")
@@ -106,7 +140,7 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     int colInLine = methodCol - (lineBreak + 1);
     params.setPosition(new Position(1, colInLine + 2));
 
-    var definitions = definitionProvider.getDefinition(dc, params);
+    var definitions = locationLinks(definitionProvider.getDefinition(dc, params));
 
     assertThat(definitions)
       .as("go-to-definition на методе MyModule.ВывестиСообщение должен вести в файл библиотеки")
@@ -126,7 +160,7 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(1, 2));
 
-    var definitions = definitionProvider.getDefinition(dc, params);
+    var definitions = locationLinks(definitionProvider.getDefinition(dc, params));
 
     assertThat(definitions)
       .as("go-to-definition на имени модуля библиотеки должен вести в файл модуля")
@@ -148,7 +182,7 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     int colMethod = content.indexOf("НовоеИмяФайла") - content.indexOf('\n') - 1;
     params.setPosition(new Position(1, colMethod + 2));
 
-    var definitions = definitionProvider.getDefinition(dc, params);
+    var definitions = locationLinks(definitionProvider.getDefinition(dc, params));
 
     assertThat(definitions)
       .as("go-to-def на методе модуля (когда тот же файл регистрирует и класс) должен вести в .os-файл")
@@ -174,7 +208,7 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(1, 2));
 
-    var definitions = definitionProvider.getDefinition(dc, params);
+    var definitions = locationLinks(definitionProvider.getDefinition(dc, params));
 
     assertThat(definitions)
       .as("go-to-def на имени модуля библиотеки (модуль+класс с одного файла) должен вести в .os-файл")

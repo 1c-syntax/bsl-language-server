@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.dto;
 
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 
 /**
@@ -37,6 +38,14 @@ public record DefinitionDto(String uri, RangeDto range, RangeDto selectionRange)
       link.getTargetUri(),
       RangeDto.from(link.getTargetRange()),
       RangeDto.from(link.getTargetSelectionRange())
+    );
+  }
+
+  public static DefinitionDto from(Location location) {
+    return new DefinitionDto(
+      location.getUri(),
+      RangeDto.from(location.getRange()),
+      RangeDto.from(location.getRange())
     );
   }
 }
