@@ -85,17 +85,16 @@ public class GlobalSymbolScope {
   public record Entry(Symbol symbol, Role role) {
   }
 
-  /** Запись вместе с языком файлов, в которых она видима. */
-  private record ScopedEntry(Entry entry, FileType fileType) {
-  }
-
   /**
-   * Имена → записи (ключ — lowercased). Одно имя может иметь ДВЕ записи —
-   * по одной на язык: например, {@code КодировкаТекста} зарегистрирована и
-   * BSL-паком, и oscript-паком с разными описаниями — выбор варианта делается
-   * при чтении по типу файла.
+   * Записи каждого языка по отдельности (ключ внутренней мапы — lowercased имя).
+   * Одно имя может присутствовать в обоих разрезах: например,
+   * {@code КодировкаТекста} зарегистрирована и BSL-паком, и oscript-паком
+   * с разными описаниями — читается разрез языка файла-потребителя.
    */
-  private final Map<String, List<ScopedEntry>> entries = new ConcurrentHashMap<>();
+  private final Map<FileType, Map<String, Entry>> entries = Map.of(
+    FileType.BSL, new ConcurrentHashMap<>(),
+    FileType.OS, new ConcurrentHashMap<>()
+  );
   /** Исходные написания (для отображения). */
   private final Map<String, String> displayNames = new ConcurrentHashMap<>();
   /** Имя символа → список ключей, под которыми он зарегистрирован (для unregister). */
@@ -118,11 +117,7 @@ public class GlobalSymbolScope {
       return;
     }
     var key = name.toLowerCase(Locale.ROOT);
-    var list = entries.computeIfAbsent(key, k -> Collections.synchronizedList(new ArrayList<>()));
-    synchronized (list) {
-      list.removeIf(se -> se.fileType() == fileType);
-      list.add(new ScopedEntry(new Entry(symbol, role), fileType));
-    }
+    entries.get(fileType).put(key, new Entry(symbol, role));
     displayNames.putIfAbsent(key, name);
     aliasesBySymbol
       .computeIfAbsent(symbolKey(symbol), k -> Collections.synchronizedList(new ArrayList<>()))
@@ -137,51 +132,44 @@ public class GlobalSymbolScope {
   }
 
   /**
-   * Найти запись по имени (символ + роль), без фильтрации по типу файла.
-   * Если имя имеет несколько языковых вариантов — возвращается первый
-   * зарегистрированный.
+   * Найти запись по имени (символ + роль), без фильтрации по типу файла:
+   * первый найденный языковой вариант (в порядке BSL, OS).
    */
   public Optional<Entry> findEntry(String name) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    var list = entries.get(name.toLowerCase(Locale.ROOT));
-    if (list == null) {
-      return Optional.empty();
+    var key = name.toLowerCase(Locale.ROOT);
+    for (var fileType : FileType.values()) {
+      var entry = entries.get(fileType).get(key);
+      if (entry != null) {
+        return Optional.of(entry);
+      }
     }
-    synchronized (list) {
-      return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0).entry());
-    }
+    return Optional.empty();
   }
 
   /**
-   * Найти запись по имени с выбором языкового варианта по типу файла.
+   * Найти запись по имени в разрезе указанного языка.
    *
    * @param name     имя (регистронезависимо)
    * @param fileType тип файла-потребителя
-   * @return запись варианта данного языка; empty, если имя в этом языке не видимо
+   * @return запись данного языка; empty, если имя в этом языке не видимо
    */
   public Optional<Entry> findEntry(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    var list = entries.get(name.toLowerCase(Locale.ROOT));
-    if (list == null) {
-      return Optional.empty();
-    }
-    synchronized (list) {
-      return list.stream()
-        .filter(se -> se.fileType() == fileType)
-        .findFirst()
-        .map(ScopedEntry::entry);
-    }
+    return Optional.ofNullable(entries.get(fileType).get(name.toLowerCase(Locale.ROOT)));
   }
 
   /**
    * @return все зарегистрированные имена в исходном написании.
    */
   public Collection<String> getNames() {
-    return entries.keySet().stream()
+    return entries.values().stream()
+      .flatMap(byName -> byName.keySet().stream())
+      .distinct()
       .map(k -> displayNames.getOrDefault(k, k))
       .toList();
   }
@@ -193,12 +181,10 @@ public class GlobalSymbolScope {
   public Collection<Entry> getEntries() {
     var seen = Collections.newSetFromMap(new IdentityHashMap<Symbol, Boolean>());
     var result = new ArrayList<Entry>();
-    for (var list : entries.values()) {
-      synchronized (list) {
-        for (var se : list) {
-          if (seen.add(se.entry().symbol())) {
-            result.add(se.entry());
-          }
+    for (var byName : entries.values()) {
+      for (var entry : byName.values()) {
+        if (seen.add(entry.symbol())) {
+          result.add(entry);
         }
       }
     }
@@ -224,15 +210,14 @@ public class GlobalSymbolScope {
       return;
     }
     for (var alias : aliases) {
-      var list = entries.get(alias);
-      if (list != null) {
-        synchronized (list) {
-          list.removeIf(se -> se.entry().symbol() == symbol);
-          if (list.isEmpty()) {
-            entries.remove(alias);
-            displayNames.remove(alias);
-          }
+      for (var byName : entries.values()) {
+        var entry = byName.get(alias);
+        if (entry != null && entry.symbol() == symbol) {
+          byName.remove(alias);
         }
+      }
+      if (!isRegisteredName(alias)) {
+        displayNames.remove(alias);
       }
     }
   }
@@ -241,7 +226,7 @@ public class GlobalSymbolScope {
    * Очистить весь scope (используется при полной переиндексации library-сущностей).
    */
   public void clear() {
-    entries.clear();
+    entries.values().forEach(Map::clear);
     displayNames.clear();
     aliasesBySymbol.clear();
   }
@@ -252,14 +237,15 @@ public class GlobalSymbolScope {
    * @param role роль, по которой фильтруются удаляемые записи
    */
   public void clear(Role role) {
-    for (var list : entries.values()) {
-      synchronized (list) {
-        list.removeIf(se -> se.entry().role() == role);
-      }
+    for (var byName : entries.values()) {
+      byName.values().removeIf(entry -> entry.role() == role);
     }
-    entries.entrySet().removeIf(e -> e.getValue().isEmpty());
-    aliasesBySymbol.entrySet().removeIf(e -> e.getValue().stream().noneMatch(entries::containsKey));
-    displayNames.keySet().removeIf(k -> !entries.containsKey(k));
+    aliasesBySymbol.entrySet().removeIf(e -> e.getValue().stream().noneMatch(this::isRegisteredName));
+    displayNames.keySet().removeIf(k -> !isRegisteredName(k));
+  }
+
+  private boolean isRegisteredName(String key) {
+    return entries.values().stream().anyMatch(byName -> byName.containsKey(key));
   }
 
   private static String symbolKey(Symbol symbol) {

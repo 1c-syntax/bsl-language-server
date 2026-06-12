@@ -111,8 +111,11 @@ public class GlobalScopeProvider {
    * в {@link #findGlobal(String, FileType)}.
    */
   private final Map<FileType, Set<String>> platformVariableNames;
-  /** lowercased имя глобального свойства (через registerGlobalProperty) → языки файлов, в которых оно видимо. */
-  private final Map<String, Set<FileType>> globalContextScopes = new ConcurrentHashMap<>();
+  /** lowercased имена глобальных свойств (через registerGlobalProperty), видимые в файлах каждого языка. */
+  private final Map<FileType, Set<String>> globalContextNames = Map.of(
+    FileType.BSL, ConcurrentHashMap.newKeySet(),
+    FileType.OS, ConcurrentHashMap.newKeySet()
+  );
   /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
@@ -325,14 +328,15 @@ public class GlobalScopeProvider {
     // считаем символ доступным.
     var fnRegistered = byFileType.get(FileType.BSL).functions.containsKey(lc)
       || byFileType.get(FileType.OS).functions.containsKey(lc);
-    var propFileTypes = globalContextScopes.get(lc);
+    var propRegistered = globalContextNames.get(FileType.BSL).contains(lc)
+      || globalContextNames.get(FileType.OS).contains(lc);
     var varRegistered = platformVariableNames.get(FileType.BSL).contains(lc)
       || platformVariableNames.get(FileType.OS).contains(lc);
-    if (!fnRegistered && propFileTypes == null && !varRegistered) {
+    if (!fnRegistered && !propRegistered && !varRegistered) {
       return sym;
     }
     boolean visible = (fnRegistered && byFileType.get(fileType).functions.containsKey(lc))
-      || (propFileTypes != null && propFileTypes.contains(fileType))
+      || globalContextNames.get(fileType).contains(lc)
       || platformVariableNames.get(fileType).contains(lc);
     return visible ? sym : Optional.empty();
   }
@@ -552,9 +556,7 @@ public class GlobalScopeProvider {
         continue;
       }
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE, fileType);
-      globalContextScopes
-        .computeIfAbsent(name.toLowerCase(Locale.ROOT), k -> ConcurrentHashMap.newKeySet())
-        .add(fileType);
+      globalContextNames.get(fileType).add(name.toLowerCase(Locale.ROOT));
     }
   }
 
@@ -651,8 +653,12 @@ public class GlobalScopeProvider {
     if (name == null) {
       return true;
     }
-    var fileTypes = globalContextScopes.get(name.toLowerCase(Locale.ROOT));
-    return fileTypes == null || fileTypes.contains(fileType);
+    var lc = name.toLowerCase(Locale.ROOT);
+    if (globalContextNames.get(fileType).contains(lc)) {
+      return true;
+    }
+    // не зарегистрировано ни в одном языке — не фильтруем
+    return globalContextNames.values().stream().noneMatch(names -> names.contains(lc));
   }
 
   /**

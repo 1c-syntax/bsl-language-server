@@ -133,10 +133,13 @@ class GlobalScopeProviderRegistrationTest {
     // when
     scope.registerPlatformClass(ref, List.of("Структура", "Structure"), FileType.BSL, "");
 
-    // then — присутствует в classes, кодируется как TYPE_NAME
-    assertThat(scope.getClasses(FileType.BSL)).contains("Структура", "Structure");
-    var entry = scope.findGlobalEntry("Структура", FileType.BSL);
-    assertThat(entry).map(GlobalSymbolScope.Entry::role)
+    // then — оба имени кодируются как TYPE_NAME в разрезе своего языка;
+    // статический список classes динамической регистрацией не расширяется.
+    assertThat(scope.findGlobalEntry("Структура", FileType.BSL))
+      .map(GlobalSymbolScope.Entry::role)
+      .contains(GlobalSymbolScope.Role.TYPE_NAME);
+    assertThat(scope.findGlobalEntry("Structure", FileType.BSL))
+      .map(GlobalSymbolScope.Entry::role)
       .contains(GlobalSymbolScope.Role.TYPE_NAME);
   }
 
@@ -148,15 +151,16 @@ class GlobalScopeProviderRegistrationTest {
     // when
     scope.registerLibraryModule("ФС", ref);
 
-    // then
-    assertThat(scope.findGlobal("ФС", FileType.BSL)).isPresent();
-    assertThat(scope.findGlobal("фс", FileType.BSL)).isPresent();  // case-insensitive
+    // then — library-модуль OneScript видим только в OS-файлах
+    assertThat(scope.findGlobal("ФС", FileType.OS)).isPresent();
+    assertThat(scope.findGlobal("фс", FileType.OS)).isPresent();  // case-insensitive
+    assertThat(scope.findGlobal("ФС", FileType.BSL)).isEmpty();
 
     // when — снятие
     scope.unregisterLibraryModule("ФС");
 
     // then
-    assertThat(scope.findGlobal("ФС", FileType.BSL)).isEmpty();
+    assertThat(scope.findGlobal("ФС", FileType.OS)).isEmpty();
   }
 
   @Test

@@ -132,8 +132,14 @@ public class TypeRegistry {
 
   private record CachedMembers(long epoch, List<MemberDescriptor> members) {
   }
-  /** Тип → языки файлов, в которых он видим. Отсутствие записи — видим везде. */
-  private final Map<TypeRef, Set<FileType>> typeFileTypes = new ConcurrentHashMap<>();
+  /**
+   * Типы, видимые в файлах каждого языка. Тип, не зарегистрированный ни в одном
+   * разрезе, считается видимым везде (отсутствие знания — не повод фильтровать).
+   */
+  private final Map<FileType, Set<TypeRef>> visibleTypes = Map.of(
+    FileType.BSL, ConcurrentHashMap.newKeySet(),
+    FileType.OS, ConcurrentHashMap.newKeySet()
+  );
   /** Тип ↔ список описаний с их скоупом. В одном типе разные описания для BSL/OS допускаются. */
   private final Map<TypeRef, List<ScopedDescription>> descriptions = new ConcurrentHashMap<>();
   /** Тип ↔ список наборов конструкторов с их скоупом. */
@@ -316,8 +322,15 @@ public class TypeRegistry {
    * @return {@code true}, если тип видим в файлах данного типа.
    */
   public boolean isVisibleIn(TypeRef ref, FileType fileType) {
-    var fileTypes = typeFileTypes.get(ref);
-    return fileTypes == null || fileTypes.contains(fileType);
+    if (visibleTypes.get(fileType).contains(ref)) {
+      return true;
+    }
+    for (var typed : visibleTypes.values()) {
+      if (typed.contains(ref)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -328,7 +341,7 @@ public class TypeRegistry {
    * @param fileType тип файла, в котором тип становится видимым.
    */
   public void registerFileType(TypeRef ref, FileType fileType) {
-    typeFileTypes.computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet()).add(fileType);
+    visibleTypes.get(fileType).add(ref);
   }
 
   /**
@@ -988,7 +1001,7 @@ public class TypeRegistry {
     types.remove(ref);
     memberSources.remove(ref);
     membersEpoch.incrementAndGet();
-    typeFileTypes.remove(ref);
+    visibleTypes.values().forEach(typed -> typed.remove(ref));
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
   }
 

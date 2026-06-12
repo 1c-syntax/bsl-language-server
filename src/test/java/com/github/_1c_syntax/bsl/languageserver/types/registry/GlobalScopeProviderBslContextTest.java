@@ -241,8 +241,10 @@ class GlobalScopeProviderBslContextTest {
       .build();
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)), new GlobalSymbolScope());
-    // Generic-placeholder отфильтрован; в scope остаются только настоящие глобалы из fallback-JSON.
-    assertThat(scope.getGlobalPropertyNames(FileType.BSL)).isNotEmpty().doesNotContain("<Имя справочника>");
+    // Generic-placeholder отфильтрован: в BSL-наборе его нет ни в каком виде.
+    assertThat(scope.getGlobalPropertyNames(FileType.BSL)).doesNotContain("<Имя справочника>");
+    // OS-набор из oscript-JSON не зависит от bsl-context и не пуст.
+    assertThat(scope.getGlobalPropertyNames(FileType.OS)).isNotEmpty();
   }
 
   // --- builders ---
