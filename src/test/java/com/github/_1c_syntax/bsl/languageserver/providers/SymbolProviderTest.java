@@ -103,6 +103,8 @@ class SymbolProviderTest {
   void getSymbolsContainerName() {
 
     // given
+    // конфигурация фикстуры объявляет ScriptVariant=Russian,
+    // поэтому представление ссылки на объект метаданных ожидается в русском варианте
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when

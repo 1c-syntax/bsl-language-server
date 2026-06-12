@@ -28,12 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -85,16 +86,17 @@ public class SymbolProvider {
     // Search for symbols in all workspace contexts
     return serverContextProvider.getAllContexts().values().stream()
       .flatMap(serverContext -> serverContext.getDocuments().values().stream())
-      .flatMap(SymbolProvider::getSymbolPairs)
-      .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
+      .flatMap(SymbolProvider::getSymbolEntries)
+      .filter(symbolEntry -> queryString.isEmpty() || pattern.matcher(symbolEntry.symbol().getName()).find())
       .map(SymbolProvider::createWorkspaceSymbol)
       .collect(Collectors.toList());
   }
 
-  private static Stream<Pair<URI, SourceDefinedSymbol>> getSymbolPairs(DocumentContext documentContext) {
+  private static Stream<SymbolEntry> getSymbolEntries(DocumentContext documentContext) {
+    var scriptVariant = scriptVariantOf(documentContext);
     return documentContext.getSymbolTree().getChildrenFlat().stream()
       .filter(SymbolProvider::isSupported)
-      .map(symbol -> Pair.of(documentContext.getUri(), symbol));
+      .map(symbol -> new SymbolEntry(documentContext.getUri(), symbol, scriptVariant));
   }
 
   private static boolean isSupported(Symbol symbol) {
@@ -106,9 +108,9 @@ public class SymbolProvider {
     };
   }
 
-  private static WorkspaceSymbol createWorkspaceSymbol(Pair<URI, SourceDefinedSymbol> symbolPair) {
-    var uri = symbolPair.getKey();
-    var symbol = symbolPair.getValue();
+  private static WorkspaceSymbol createWorkspaceSymbol(SymbolEntry symbolEntry) {
+    var uri = symbolEntry.uri();
+    var symbol = symbolEntry.symbol();
     var location = new Location(uri.toString(), symbol.getRange());
 
     var workspaceSymbol = new WorkspaceSymbol();
@@ -116,7 +118,7 @@ public class SymbolProvider {
     workspaceSymbol.setKind(symbol.getSymbolKind());
     workspaceSymbol.setLocation(Either.forLeft(location));
     workspaceSymbol.setTags(symbol.getTags());
-    getContainerName(symbol).ifPresent(workspaceSymbol::setContainerName);
+    getContainerName(symbol, symbolEntry.scriptVariant()).ifPresent(workspaceSymbol::setContainerName);
 
     return workspaceSymbol;
   }
@@ -124,16 +126,40 @@ public class SymbolProvider {
   /**
    * Формирует человекочитаемое имя контейнера символа на основе связанного объекта метаданных.
    * <p>
-   * Используется ссылка на объект метаданных в русском представлении
-   * (например, {@code ОбщийМодуль.ПервыйОбщийМодуль}), что позволяет различать одноимённые
-   * символы из разных объектов конфигурации.
+   * Представление ссылки на объект метаданных (например, {@code ОбщийМодуль.ПервыйОбщийМодуль}
+   * или {@code CommonModule.ПервыйОбщийМодуль}) берётся в варианте встроенного языка проекта,
+   * что позволяет различать одноимённые символы из разных объектов конфигурации.
    *
-   * @param symbol Символ, для которого формируется имя контейнера
+   * @param symbol        Символ, для которого формируется имя контейнера
+   * @param scriptVariant Вариант встроенного языка проекта, в котором формируется представление ссылки
    * @return Имя контейнера, либо {@link Optional#empty()}, если документ не связан с объектом метаданных
    */
-  private static Optional<String> getContainerName(SourceDefinedSymbol symbol) {
+  private static Optional<String> getContainerName(SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
     return symbol.getOwner().getMdObject()
       .map(MD::getMdoReference)
-      .map(MdoReference::getMdoRefRu);
+      .map(mdoReference -> mdoReference.getMdoRef(scriptVariant));
+  }
+
+  /**
+   * Определяет вариант встроенного языка проекта для формирования представления ссылок.
+   *
+   * @param documentContext Контекст документа, для которого определяется вариант языка
+   * @return Вариант встроенного языка проекта
+   */
+  private static ScriptVariant scriptVariantOf(DocumentContext documentContext) {
+    var language = documentContext.getScriptVariantLanguage();
+    return language == Language.EN
+      ? ScriptVariant.ENGLISH
+      : ScriptVariant.RUSSIAN;
+  }
+
+  /**
+   * Символ рабочей области вместе с разрешёнными атрибутами документа-источника.
+   *
+   * @param uri           Идентификатор документа, в котором определён символ
+   * @param symbol        Символ исходного кода
+   * @param scriptVariant Вариант встроенного языка проекта документа-источника
+   */
+  private record SymbolEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
   }
 }
