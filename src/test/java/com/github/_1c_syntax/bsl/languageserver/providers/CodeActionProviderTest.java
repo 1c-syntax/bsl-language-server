@@ -167,6 +167,68 @@ class CodeActionProviderTest {
     ;
   }
 
+  @Test
+  void testSourceFixAll() {
+    // given
+    CodeActionParams params = new CodeActionParams();
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+
+    // клиент при сохранении присылает only без context.diagnostics
+    codeActionContext.setOnly(List.of(CodeActionKind.SourceFixAll));
+    codeActionContext.setDiagnostics(Collections.emptyList());
+
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .extracting(Either::getRight)
+      .isNotEmpty()
+      .allMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.SourceFixAll))
+      .anyMatch(codeAction -> !codeAction.getEdit().getChanges().isEmpty());
+  }
+
+  @Test
+  void testQuickFixDoesNotReturnSourceFixAll() {
+    // given
+    CodeActionParams params = new CodeActionParams();
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
+      CanonicalSpellingKeywordsDiagnostic.class,
+      configuration,
+      stringInterner);
+    DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
+
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
+      .filter(diagnostic -> diagnostic.getCode().equals(diagnosticCode))
+      .collect(Collectors.toList());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+
+    codeActionContext.setOnly(List.of(CodeActionKind.QuickFix));
+    codeActionContext.setDiagnostics(diagnostics);
+
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .extracting(Either::getRight)
+      .isNotEmpty()
+      .noneMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.SourceFixAll));
+  }
+
   private static boolean toBoolean(@Nullable Boolean value) {
     if (value == null) {
       return false;

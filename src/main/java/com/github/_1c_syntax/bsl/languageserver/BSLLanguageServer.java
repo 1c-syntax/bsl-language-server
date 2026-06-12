@@ -293,7 +293,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     var codeActionKinds = List.of(
       CodeActionKind.QuickFix,
-      CodeActionKind.Refactor
+      CodeActionKind.Refactor,
+      CodeActionKind.SourceFixAll
     );
 
     codeActionOptions.setCodeActionKinds(codeActionKinds);
