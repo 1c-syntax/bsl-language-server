@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -63,7 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *       (если файл принадлежит индексированной библиотеке с {@code lib.config}),
  *       fallback — basename файла;</li>
  *   <li>регистрирует тип через {@link TypeRegistry#registerUserType} со скоупом
- *       {@link LanguageScope#OS};</li>
+ *       {@link FileType#OS};</li>
  *   <li>регистрирует ленивый {@code MemberSource}, который при каждом запросе
  *       идёт в актуальный {@code SymbolTree} документа (это даёт hot-reload);</li>
  *   <li>для OScriptClass дополнительно регистрирует ленивый источник
@@ -126,13 +126,13 @@ public class OScriptModuleMembersProvider {
     var firstTimeForName = names.add(qualifiedName);
 
     var module = documentContext.getSymbolTree().getModule();
-    var ref = typeRegistry.registerUserType(qualifiedName, module, LanguageScope.OS);
+    var ref = typeRegistry.registerUserType(qualifiedName, module, FileType.OS);
 
     if (firstTimeForName) {
-      typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), LanguageScope.OS);
+      typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), FileType.OS);
       if (libraryEntry != null) {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
-          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
           registerInheritedMembers(documentContext, ref);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
@@ -144,7 +144,7 @@ public class OScriptModuleMembersProvider {
           globalScopeProvider.registerLibraryModule(qualifiedName, ref);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
-        typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+        typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
         registerInheritedMembers(documentContext, ref);
       }
       LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName,
@@ -184,7 +184,7 @@ public class OScriptModuleMembersProvider {
     typeRegistry.registerMemberSource(
       classRef,
       () -> typeRelations.inheritedMembers(documentContext, classRef),
-      LanguageScope.OS
+      FileType.OS
     );
   }
 

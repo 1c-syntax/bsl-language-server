@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -54,7 +55,7 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void findGlobalContextByName() {
     typeRegistry.resolve("");
-    var encoding = globalScopeProvider.findGlobalContext("КодировкаТекста");
+    var encoding = globalScopeProvider.findGlobalContext("КодировкаТекста", FileType.BSL);
     assertThat(encoding).isPresent();
     assertThat(encoding.get().qualifiedName()).isEqualTo("КодировкаТекста");
   }
@@ -62,14 +63,14 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void englishAliasIsRegistered() {
     typeRegistry.resolve("");
-    var encoding = globalScopeProvider.findGlobalContext("TextEncoding");
+    var encoding = globalScopeProvider.findGlobalContext("TextEncoding", FileType.BSL);
     assertThat(encoding).isPresent();
   }
 
   @Test
   void globalPropertyNamesIncludeBuiltinEnums() {
     typeRegistry.resolve("");
-    assertThat(globalScopeProvider.getGlobalContextNames())
+    assertThat(globalScopeProvider.getGlobalContextNames(FileType.BSL))
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }
 

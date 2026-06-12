@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -61,7 +61,7 @@ public class BuiltinOScriptPlatformTypesProvider implements PlatformTypesProvide
   }
 
   @Override
-  public LanguageScope getLanguageScope() {
-    return LanguageScope.OS;
+  public FileType getFileType() {
+    return FileType.OS;
   }
 }

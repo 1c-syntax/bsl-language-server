@@ -44,10 +44,11 @@ public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder
   @Override
   public MarkupContent getContent(Reference reference) {
     var symbol = (ConstructorCallSymbol) reference.symbol();
+    var fileType = reference.from().getOwner().getFileType();
     var ctors = symbol.getConstructors();
     if (ctors.isEmpty()) {
       return constructorHoverBuilder.build(
-        symbol.getTypeName(), symbol.getTypeRef(), null, ctors, false, symbol.getClassDescription());
+        symbol.getTypeName(), symbol.getTypeRef(), null, ctors, false, symbol.getClassDescription(), fileType);
     }
     int chosenIndex = SignatureSelection.pickIndexByArity(ctors, symbol.getArgCount());
     boolean disclaim = false;
@@ -58,7 +59,8 @@ public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder
     } else {
       chosen = ctors.get(chosenIndex);
     }
-    return constructorHoverBuilder.build(symbol.getTypeName(), symbol.getTypeRef(), chosen, ctors, disclaim, symbol.getClassDescription());
+    return constructorHoverBuilder.build(
+      symbol.getTypeName(), symbol.getTypeRef(), chosen, ctors, disclaim, symbol.getClassDescription(), fileType);
   }
 
 

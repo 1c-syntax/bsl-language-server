@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -62,14 +63,14 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     // sanity: коллекция Справочники зарегистрирована как глобальное свойство,
     // её член — менеджер-обёртка с методом МетодМенеджера.
     typeRegistry.resolve("");
-    var collection = globalScopeProvider.findGlobalContext("Справочники").orElseThrow();
-    var catalogsMembers = typeRegistry.getMembers(collection);
+    var collection = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
+    var catalogsMembers = typeRegistry.getMembers(collection, FileType.BSL);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");
     var memberReturn = catalogsMembers.stream()
       .filter(m -> "СправочникСМенеджером".equals(m.name()))
       .findFirst().orElseThrow().returnType();
     assertThat(memberReturn.qualifiedName()).isEqualTo("СправочникМенеджер.СправочникСМенеджером");
-    assertThat(typeRegistry.getMembers(memberReturn))
+    assertThat(typeRegistry.getMembers(memberReturn, FileType.BSL))
       .extracting(m -> m.name())
       .as("methods of manager wrapper should include exported МетодМенеджера")
       .contains("МетодМенеджера");

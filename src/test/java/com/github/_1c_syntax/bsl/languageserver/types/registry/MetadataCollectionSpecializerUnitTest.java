@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextName;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
@@ -30,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.mdo.children.ObjectAttribute;
@@ -90,11 +90,11 @@ class MetadataCollectionSpecializerUnitTest {
       .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
     var getMethod = MemberDescriptor.property("Получить", elementTypeRef, "");
     registry.registerMemberSource(baseCollectionRef,
-      () -> List.of(generic, getMethod), LanguageScope.BSL);
+      () -> List.of(generic, getMethod), FileType.BSL);
 
     // owner: property "Документы" пока возвращает базовый тип КоллекцияОбъектовМетаданных.
     var docsMember = MemberDescriptor.property("Документы", baseCollectionRef, "");
-    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), LanguageScope.BSL);
+    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), FileType.BSL);
 
     var provider = mockProvider("ОбъектМетаданныхКонфигурация",
       mockProperty("Документы", "Documents",
@@ -120,7 +120,7 @@ class MetadataCollectionSpecializerUnitTest {
     var specializer = new MetadataCollectionSpecializer(registry, holder, serverProvider);
     specializer.specialize();
 
-    var members = registry.getMembers(ownerRef);
+    var members = registry.getMembers(ownerRef, FileType.BSL);
     var documentsMember = members.stream()
       .filter(m -> m.name().equals("Документы")).findFirst().orElseThrow();
     assertThat(documentsMember.returnType().qualifiedName())
@@ -133,7 +133,7 @@ class MetadataCollectionSpecializerUnitTest {
     var specRef = registry.intern(
       TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Документы");
-    var specMembers = registry.getMembers(specRef);
+    var specMembers = registry.getMembers(specRef, FileType.BSL);
     var specMemberNames = specMembers.stream().map(MemberDescriptor::name).toList();
     assertThat(specMemberNames).contains("Покупатели", "Получить");
     var buyersMember = specMembers.stream()
@@ -198,14 +198,14 @@ class MetadataCollectionSpecializerUnitTest {
         documentTypeRef, "")
       .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
     registry.registerMemberSource(baseCollectionRef,
-      () -> List.of(generic), LanguageScope.BSL);
+      () -> List.of(generic), FileType.BSL);
 
     // Документ-тип содержит nested-collection "Реквизиты".
     var docAttrs = MemberDescriptor.property("Реквизиты", baseCollectionRef, "");
-    registry.registerMemberSource(documentTypeRef, () -> List.of(docAttrs), LanguageScope.BSL);
+    registry.registerMemberSource(documentTypeRef, () -> List.of(docAttrs), FileType.BSL);
 
     var docsMember = MemberDescriptor.property("Документы", baseCollectionRef, "");
-    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), LanguageScope.BSL);
+    registry.registerMemberSource(ownerRef, () -> List.of(docsMember), FileType.BSL);
 
     var provider = mockProvider(List.of(
       mockType("ОбъектМетаданныхКонфигурация",
@@ -247,12 +247,12 @@ class MetadataCollectionSpecializerUnitTest {
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
 
     // Phase B: верхний override Документы.
-    assertThat(registry.getMembers(ownerRef).stream()
+    assertThat(registry.getMembers(ownerRef, FileType.BSL).stream()
       .filter(m -> m.name().equals("Документы")).findFirst().orElseThrow()
       .returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.Документы");
     // Phase C: nested override Реквизиты на ОбъектМетаданных: Документ.
-    assertThat(registry.getMembers(documentTypeRef).stream()
+    assertThat(registry.getMembers(documentTypeRef, FileType.BSL).stream()
       .filter(m -> m.name().equals("Реквизиты")).findFirst().orElseThrow()
       .returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.Реквизиты");
@@ -266,7 +266,7 @@ class MetadataCollectionSpecializerUnitTest {
     var perCollRef = registry.intern(
       TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Реквизиты.Покупатели");
-    var perCollMembers = registry.getMembers(perCollRef);
+    var perCollMembers = registry.getMembers(perCollRef, FileType.BSL);
     assertThat(perCollMembers).isNotNull();
 
     // perMdoRef (ОбъектМетаданных: Документ.Покупатели) — purchased через
@@ -274,7 +274,7 @@ class MetadataCollectionSpecializerUnitTest {
     var perMdoRef = registry.intern(
       TypeKind.PLATFORM,
       "ОбъектМетаданных: Документ.Покупатели");
-    var perMdoMembers = registry.getMembers(perMdoRef);
+    var perMdoMembers = registry.getMembers(perMdoRef, FileType.BSL);
     // у perMdoRef должны быть override-членов известных коллекций.
     var perMdoNames = perMdoMembers.stream().map(MemberDescriptor::name).toList();
     assertThat(perMdoNames).contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты");
@@ -296,10 +296,10 @@ class MetadataCollectionSpecializerUnitTest {
         baseCollectionRef, "")
       .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
     registry.registerMemberSource(baseCollectionRef,
-      () -> List.of(generic), LanguageScope.BSL);
+      () -> List.of(generic), FileType.BSL);
 
     var tabSection = MemberDescriptor.property("ТабличныеЧасти", baseCollectionRef, "");
-    registry.registerMemberSource(docTypeRef, () -> List.of(tabSection), LanguageScope.BSL);
+    registry.registerMemberSource(docTypeRef, () -> List.of(tabSection), FileType.BSL);
 
     // На nested-уровне (ОбъектМетаданных: Документ) HBK-маркера у ТабличныеЧасти НЕТ.
     // Fallback: COLLECTION_BY_NAME["табличныечасти"] → CollectionSpec с element
@@ -326,7 +326,7 @@ class MetadataCollectionSpecializerUnitTest {
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
 
-    var members = registry.getMembers(docTypeRef);
+    var members = registry.getMembers(docTypeRef, FileType.BSL);
     assertThat(members.stream().filter(m -> m.name().equals("ТабличныеЧасти")).findFirst().orElseThrow()
       .returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.ТабличныеЧасти");
@@ -342,7 +342,7 @@ class MetadataCollectionSpecializerUnitTest {
 
     var unrelated = MemberDescriptor.property("Версия",
       registry.registerConfigurationType("Строка"), "");
-    registry.registerMemberSource(ownerRef, () -> List.of(unrelated), LanguageScope.BSL);
+    registry.registerMemberSource(ownerRef, () -> List.of(unrelated), FileType.BSL);
 
     var provider = mockProvider("ОбъектМетаданныхКонфигурация",
       // property типа Строка — НЕ коллекция → должна быть пропущена в specialize.
@@ -367,7 +367,7 @@ class MetadataCollectionSpecializerUnitTest {
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
 
     // Никаких override — Версия остаётся со старым returnType (Строка).
-    var members = registry.getMembers(ownerRef);
+    var members = registry.getMembers(ownerRef, FileType.BSL);
     assertThat(members.stream().filter(m -> m.name().equals("Версия")).findFirst().orElseThrow()
       .returnType().qualifiedName()).isEqualTo("Строка");
   }
@@ -401,7 +401,7 @@ class MetadataCollectionSpecializerUnitTest {
     var unknownRef = registry.registerConfigurationType("ОбъектМетаданныхНезнакомый");
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
-    assertThat(registry.getMembers(unknownRef)).isEmpty();
+    assertThat(registry.getMembers(unknownRef, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -432,7 +432,7 @@ class MetadataCollectionSpecializerUnitTest {
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
     // Blank propertyName → continue без override.
-    assertThat(registry.getMembers(ownerRef)).isEmpty();
+    assertThat(registry.getMembers(ownerRef, FileType.BSL)).isEmpty();
   }
 
   @Test

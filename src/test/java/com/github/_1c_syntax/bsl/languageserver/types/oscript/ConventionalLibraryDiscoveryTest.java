@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
@@ -109,10 +110,10 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
 
     var classRef = typeRegistry.resolve("MyClass");
     assertThat(classRef).isPresent();
-    assertThat(typeRegistry.getMembers(classRef.get()))
+    assertThat(typeRegistry.getMembers(classRef.get(), FileType.OS))
       .extracting(m -> m.name()).contains("ПолучитьСтроку", "СтатусМодуля");
 
-    var ctor = typeRegistry.getConstructors(classRef.get());
+    var ctor = typeRegistry.getConstructors(classRef.get(), FileType.OS);
     assertThat(ctor).hasSize(1);
     assertThat(ctor.get(0).parameters()).extracting(p -> p.name()).containsExactly("Имя");
   }
@@ -211,7 +212,7 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
 
     var fsRef = typeRegistry.resolve("ФС");
     assertThat(fsRef).isPresent();
-    assertThat(typeRegistry.getMembers(fsRef.get()))
+    assertThat(typeRegistry.getMembers(fsRef.get(), FileType.OS))
       .extracting(m -> m.name()).contains("КаталогПустой");
   }
 }

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 
 /**
  * Маркерный интерфейс провайдеров платформенных типов.
@@ -32,10 +32,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
  */
 public interface PlatformTypesProvider extends TypePackProvider {
   /**
-   * Языковой скоуп типов, поставляемых этим провайдером. По умолчанию
-   * {@link LanguageScope#BOTH} (видны и в BSL, и в OS файлах).
+   * Язык файлов, в которых видимы типы, поставляемые этим провайдером.
+   *
+   * @return тип файла (BSL или OS).
    */
-  default LanguageScope getLanguageScope() {
-    return LanguageScope.BOTH;
-  }
+  FileType getFileType();
 }

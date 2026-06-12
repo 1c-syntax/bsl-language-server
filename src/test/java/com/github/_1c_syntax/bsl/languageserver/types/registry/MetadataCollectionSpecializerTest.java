@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -71,7 +72,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var rootRef = typeRegistry.resolve("ОбъектМетаданныхКонфигурация").orElse(null);
     assertThat(rootRef).as("ОбъектМетаданныхКонфигурация должен быть зарегистрирован").isNotNull();
 
-    var documentsMember = findMember(typeRegistry.getMembers(rootRef), "Документы");
+    var documentsMember = findMember(typeRegistry.getMembers(rootRef, FileType.BSL), "Документы");
     assertThat(documentsMember)
       .as("Свойство Документы должно присутствовать на ОбъектМетаданныхКонфигурация")
       .isNotNull();
@@ -91,7 +92,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var baseRef = typeRegistry.resolve("КоллекцияОбъектовМетаданных").orElse(null);
     assertThat(baseRef).as("КоллекцияОбъектовМетаданных должен быть в реестре").isNotNull();
 
-    var members = typeRegistry.getMembers(baseRef);
+    var members = typeRegistry.getMembers(baseRef, FileType.BSL);
     var hasGeneric = members.stream().anyMatch(MemberDescriptor::generic);
     var names = memberNames(members);
     assertThat(hasGeneric)
@@ -110,7 +111,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
 
     // Метаданные.Документы.Документ1 → ОбъектМетаданных: Документ.Документ1.
     var groupRef = typeRegistry.intern(TypeKind.PLATFORM, "КоллекцияОбъектовМетаданных.Документы");
-    var members = typeRegistry.getMembers(groupRef);
+    var members = typeRegistry.getMembers(groupRef, FileType.BSL);
     var allNames = memberNames(members);
     var doc1Member = findMember(members, "Документ1");
     assertThat(doc1Member)
@@ -131,10 +132,10 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     // Триггерим материализацию через group collection — это активирует
     // регистрацию per-MDO source'ов внутри лямбды.
     var groupRef = typeRegistry.intern(TypeKind.PLATFORM, "КоллекцияОбъектовМетаданных.Документы");
-    typeRegistry.getMembers(groupRef);  // force lazy
+    typeRegistry.getMembers(groupRef, FileType.BSL);  // force lazy
 
     var perMdoRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
-    var names = memberNames(typeRegistry.getMembers(perMdoRef));
+    var names = memberNames(typeRegistry.getMembers(perMdoRef, FileType.BSL));
     assertThat(names)
       .as("На per-MDO Документ1 должны быть property для всех известных коллекций. Получено: %s", names)
       .contains("Реквизиты", "СтандартныеРеквизиты", "ТабличныеЧасти", "Формы", "Макеты", "Команды");
@@ -151,7 +152,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var perMdoTypeRef = typeRegistry.intern(
       com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM,
       "ОбъектМетаданных: Документ.Документ1");
-    var attrsMember = findMember(typeRegistry.getMembers(perMdoTypeRef), "Реквизиты");
+    var attrsMember = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), "Реквизиты");
     assertThat(attrsMember)
       .as("На per-MDO типе должно быть property Реквизиты")
       .isNotNull();
@@ -162,7 +163,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var attrsCollRef = typeRegistry.intern(
       com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Реквизиты.Документ1");
-    var names = memberNames(typeRegistry.getMembers(attrsCollRef));
+    var names = memberNames(typeRegistry.getMembers(attrsCollRef, FileType.BSL));
     assertThat(names)
       .as("Реквизиты Документ1: имена реквизитов из mdclasses")
       .contains("Реквизит1", "Реквизит2", "Реквизит3");
@@ -177,7 +178,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     // Стандартные реквизиты Документа1: Ссылка, Дата, Номер, Проведен,
     // ПометкаУдаления, МоментВремени. У каждого returnType — ОписаниеСтандартногоРеквизита.
     var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
-    var stdAttrsMember = findMember(typeRegistry.getMembers(perMdoTypeRef), "СтандартныеРеквизиты");
+    var stdAttrsMember = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), "СтандартныеРеквизиты");
     assertThat(stdAttrsMember)
       .as("На per-MDO типе должно быть property СтандартныеРеквизиты")
       .isNotNull();
@@ -186,7 +187,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
 
     var stdAttrsCollRef = typeRegistry.intern(TypeKind.PLATFORM,
       "ОписанияСтандартныхРеквизитов.СтандартныеРеквизиты.Документ1");
-    var members = typeRegistry.getMembers(stdAttrsCollRef);
+    var members = typeRegistry.getMembers(stdAttrsCollRef, FileType.BSL);
     var names = memberNames(members);
     assertThat(names)
       .as("Стандартные реквизиты Документ1: hardcoded набор")
@@ -213,8 +214,8 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
       "ОбъектМетаданных: ТабличнаяЧасть.Документ1.ТабличнаяЧасть1");
     // Триггерим material через top-level (lazy внутри source-лямбд иначе не сработает).
     typeRegistry.getMembers(typeRegistry.intern(TypeKind.PLATFORM,
-      "КоллекцияОбъектовМетаданных.ТабличныеЧасти.Документ1"));
-    var perTsMembers = typeRegistry.getMembers(perTsRef);
+      "КоллекцияОбъектовМетаданных.ТабличныеЧасти.Документ1"), FileType.BSL);
+    var perTsMembers = typeRegistry.getMembers(perTsRef, FileType.BSL);
     var stdAttrsMember = findMember(perTsMembers, "СтандартныеРеквизиты");
     assertThat(stdAttrsMember)
       .as("На per-TS типе должно быть property СтандартныеРеквизиты. Members: %s",
@@ -225,7 +226,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
 
     var stdAttrsCollRef = typeRegistry.intern(TypeKind.PLATFORM,
       "ОписанияСтандартныхРеквизитов.СтандартныеРеквизиты.Документ1.ТабличнаяЧасть1");
-    var names = memberNames(typeRegistry.getMembers(stdAttrsCollRef));
+    var names = memberNames(typeRegistry.getMembers(stdAttrsCollRef, FileType.BSL));
     assertThat(names)
       .as("Стандартные реквизиты ТЧ: НомерСтроки и Ссылка")
       .contains("НомерСтроки", "Ссылка");
@@ -242,7 +243,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var tsCollRef = typeRegistry.intern(
       com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.ТабличныеЧасти.Документ1");
-    var tsMember = findMember(typeRegistry.getMembers(tsCollRef), "ТабличнаяЧасть1");
+    var tsMember = findMember(typeRegistry.getMembers(tsCollRef, FileType.BSL), "ТабличнаяЧасть1");
     assertThat(tsMember).as("ТабличнаяЧасть1 материализована").isNotNull();
     assertThat(tsMember.returnType().qualifiedName())
       .isEqualTo("ОбъектМетаданных: ТабличнаяЧасть.Документ1.ТабличнаяЧасть1");
@@ -251,7 +252,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var perTsRef = typeRegistry.intern(
       com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM,
       "ОбъектМетаданных: ТабличнаяЧасть.Документ1.ТабличнаяЧасть1");
-    var tsAttrsMember = findMember(typeRegistry.getMembers(perTsRef), "Реквизиты");
+    var tsAttrsMember = findMember(typeRegistry.getMembers(perTsRef, FileType.BSL), "Реквизиты");
     assertThat(tsAttrsMember).isNotNull();
     assertThat(tsAttrsMember.returnType().qualifiedName())
       .isEqualTo("КоллекцияОбъектовМетаданных.Реквизиты.Документ1.ТабличнаяЧасть1");
@@ -259,7 +260,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var tsAttrsCollRef = typeRegistry.intern(
       com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Реквизиты.Документ1.ТабличнаяЧасть1");
-    var tsAttrsNames = memberNames(typeRegistry.getMembers(tsAttrsCollRef));
+    var tsAttrsNames = memberNames(typeRegistry.getMembers(tsAttrsCollRef, FileType.BSL));
     assertThat(tsAttrsNames)
       .as("Реквизиты ТабличнаяЧасть1 — колонки ТЧ из mdclasses")
       .contains("Реквизит1", "Реквизит2");
@@ -276,7 +277,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     // Оба должны попасть в returnTypes — иначе hover показывает только первый.
     var docTypeRef = typeRegistry.resolve("ОбъектМетаданных: Документ").orElse(null);
     assertThat(docTypeRef).isNotNull();
-    var periodicity = findMember(typeRegistry.getMembers(docTypeRef), "ПериодичностьНомера");
+    var periodicity = findMember(typeRegistry.getMembers(docTypeRef, FileType.BSL), "ПериодичностьНомера");
     assertThat(periodicity).as("Свойство ПериодичностьНомера должно быть").isNotNull();
     var typeNames = periodicity.returnTypes().refs().stream()
       .map(TypeRef::qualifiedName)
@@ -295,7 +296,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     // Свойства на других базовых типах (НЕ КоллекцияОбъектовМетаданных):
     // returnType должен быть synthetic specialized с правильным base'ом.
     var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
-    var members = typeRegistry.getMembers(perMdoTypeRef);
+    var members = typeRegistry.getMembers(perMdoTypeRef, FileType.BSL);
 
     var dvizheniya = findMember(members, "Движения");
     assertThat(dvizheniya).as("Свойство Движения должно быть на Документ1").isNotNull();
@@ -336,7 +337,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     // ЗначениеСвойстваОбъектаМетаданных.
     var movementsCollRef = typeRegistry.intern(TypeKind.PLATFORM,
       "КоллекцияЗначенийСвойстваОбъектаМетаданных.Движения.Документ1");
-    var members = typeRegistry.getMembers(movementsCollRef);
+    var members = typeRegistry.getMembers(movementsCollRef, FileType.BSL);
     var byName = new java.util.HashMap<String, MemberDescriptor>();
     for (var m : members) {
       byName.put(m.name(), m);
@@ -368,7 +369,7 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     var groupRef = typeRegistry.intern(
       com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM,
       "КоллекцияОбъектовМетаданных.Документы");
-    var getMethod = findMember(typeRegistry.getMembers(groupRef), "Получить");
+    var getMethod = findMember(typeRegistry.getMembers(groupRef, FileType.BSL), "Получить");
     assertThat(getMethod).as("Метод Получить должен присутствовать").isNotNull();
     assertThat(getMethod.returnType().qualifiedName())
       .as("Получить() на КоллекцияОбъектовМетаданных.Документы → ОбъектМетаданных: Документ")

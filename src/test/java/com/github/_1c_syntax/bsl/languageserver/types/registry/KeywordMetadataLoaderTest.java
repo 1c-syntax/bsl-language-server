@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import org.junit.jupiter.api.Test;
 
 import java.util.function.Predicate;
@@ -39,7 +38,7 @@ class KeywordMetadataLoaderTest {
   @Test
   void missingResourceReturnsEmpty() {
     var result = KeywordMetadataLoader.load(
-      "no/such/resource.json", LanguageScope.BSL, ALLOW_ALL);
+      "no/such/resource.json", ALLOW_ALL);
 
     assertThat(result).isSameAs(KeywordMetadata.EMPTY);
   }
@@ -49,7 +48,7 @@ class KeywordMetadataLoaderTest {
 
     // given — поле "keywords" в JSON — строка, а не массив.
     var result = KeywordMetadataLoader.load(
-      "keyword-fallback/keywords-not-a-list.json", LanguageScope.BSL, ALLOW_ALL);
+      "keyword-fallback/keywords-not-a-list.json", ALLOW_ALL);
 
     assertThat(result.keywords()).isEmpty();
     assertThat(result.snippets()).isEmpty();
@@ -61,7 +60,7 @@ class KeywordMetadataLoaderTest {
     // given — массив "keywords" содержит строку, число, null и одну валидную
     // запись-Map: должна остаться только последняя.
     var result = KeywordMetadataLoader.load(
-      "keyword-fallback/keywords-mixed-entries.json", LanguageScope.BSL, ALLOW_ALL);
+      "keyword-fallback/keywords-mixed-entries.json", ALLOW_ALL);
 
     assertThat(result.keywords()).containsExactly("Если", "If");
     assertThat(result.snippets()).containsOnlyKeys("если", "if");

@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -64,7 +64,7 @@ class RegisterCommonLibraryExpansionTest {
         "<" + placeholderName + ">", valueRef, "")
       .withBilingualName(BilingualString.of(
         "<" + placeholderName + ">", "<" + enPlaceholder + ">"));
-    registry.registerMemberSource(ref, () -> List.of(template), LanguageScope.BSL);
+    registry.registerMemberSource(ref, () -> List.of(template), FileType.BSL);
   }
 
   @Test
@@ -76,7 +76,7 @@ class RegisterCommonLibraryExpansionTest {
       registry, "БиблиотекаКартинок", List.of("ОбщаяКартинка1", "ОбщаяКартинка2"));
 
     var libRef = registry.resolve("БиблиотекаКартинок").orElseThrow();
-    var memberNames = registry.getMembers(libRef).stream()
+    var memberNames = registry.getMembers(libRef, FileType.BSL).stream()
       .map(MemberDescriptor::name)
       .toList();
     // Шаблон сохраняется (он же source); добавились материализованные имена.
@@ -93,7 +93,7 @@ class RegisterCommonLibraryExpansionTest {
       registry, "БиблиотекаКартинок", List.of("MyPic"));
 
     var libRef = registry.resolve("БиблиотекаКартинок").orElseThrow();
-    var materialized = registry.getMembers(libRef).stream()
+    var materialized = registry.getMembers(libRef, FileType.BSL).stream()
       .filter(m -> m.name().equals("MyPic"))
       .findFirst()
       .orElseThrow();
@@ -110,7 +110,7 @@ class RegisterCommonLibraryExpansionTest {
       registry, "БиблиотекаСтилей", List.of());
 
     var libRef = registry.resolve("БиблиотекаСтилей").orElseThrow();
-    var memberNames = registry.getMembers(libRef).stream()
+    var memberNames = registry.getMembers(libRef, FileType.BSL).stream()
       .map(MemberDescriptor::name)
       .toList();
     assertThat(memberNames).containsExactly("<Имя стиля>");
@@ -164,12 +164,12 @@ class RegisterCommonLibraryExpansionTest {
     var libRef = registry.intern(TypeKind.PLATFORM, "БиблиотекаБезPlaceholder");
     var generic = MemberDescriptor.genericProperty("ПростоеИмя",
         registry.intern(TypeKind.PLATFORM, "Строка"), "");
-    registry.registerMemberSource(libRef, () -> List.of(generic), LanguageScope.BSL);
+    registry.registerMemberSource(libRef, () -> List.of(generic), FileType.BSL);
 
     ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезPlaceholder", List.of("X"));
 
-    assertThat(registry.getMembers(libRef))
+    assertThat(registry.getMembers(libRef, FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("ПростоеИмя");
   }
@@ -181,12 +181,12 @@ class RegisterCommonLibraryExpansionTest {
     var libRef = registry.intern(TypeKind.PLATFORM, "БиблиотекаБезШаблона");
     var plain = MemberDescriptor.property("Реальный",
       registry.intern(TypeKind.PLATFORM, "Строка"));
-    registry.registerMemberSource(libRef, () -> List.of(plain), LanguageScope.BSL);
+    registry.registerMemberSource(libRef, () -> List.of(plain), FileType.BSL);
 
     ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезШаблона", List.of("X"));
 
-    assertThat(registry.getMembers(libRef))
+    assertThat(registry.getMembers(libRef, FileType.BSL))
       .extracting(MemberDescriptor::name)
       .containsExactly("Реальный");
   }

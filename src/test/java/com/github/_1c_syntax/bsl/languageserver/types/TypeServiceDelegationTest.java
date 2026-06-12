@@ -150,12 +150,13 @@ class TypeServiceDelegationTest {
   void getDescriptionByLanguageDelegates() {
     // given
     when(typeRegistry.getDescription(eq(ARRAY),
-      any(com.github._1c_syntax.bsl.languageserver.configuration.Language.class)))
+      any(com.github._1c_syntax.bsl.languageserver.configuration.Language.class),
+      eq(FileType.BSL)))
       .thenReturn("ru-описание");
 
     // when / then
     assertThat(typeService.getDescription(ARRAY,
-      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU, FileType.BSL))
       .isEqualTo("ru-описание");
   }
 
