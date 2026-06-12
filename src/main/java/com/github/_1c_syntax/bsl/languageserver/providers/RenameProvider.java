@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
@@ -34,6 +37,9 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -57,6 +63,7 @@ public final class RenameProvider {
 
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
+  private final Resources resources;
 
   /**
    * {@link WorkspaceEdit}
@@ -66,6 +73,8 @@ public final class RenameProvider {
    * @return Изменения документов
    */
   public WorkspaceEdit getRename(DocumentContext documentContext, RenameParams params) {
+
+    checkNewName(params.getNewName());
 
     var position = params.getPosition();
     var sourceDefinedSymbol = referenceResolver.findReference(documentContext.getUri(), position)
@@ -115,6 +124,25 @@ public final class RenameProvider {
 
   private static TextEdit newTextEdit(RenameParams params, Range range) {
     return new TextEdit(range, params.getNewName());
+  }
+
+  private void checkNewName(@Nullable String newName) {
+    if (!isValidIdentifier(newName)) {
+      var message = resources.getResourceString(getClass(), "invalidNewName", newName);
+      throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
+    }
+  }
+
+  private static boolean isValidIdentifier(@Nullable String newName) {
+    if (newName == null || newName.isEmpty()) {
+      return false;
+    }
+
+    var tokens = new BSLTokenizer(newName).getTokens();
+
+    return tokens.size() == 2
+      && tokens.get(0).getType() == BSLLexer.IDENTIFIER
+      && newName.equals(tokens.get(0).getText());
   }
 
 }
