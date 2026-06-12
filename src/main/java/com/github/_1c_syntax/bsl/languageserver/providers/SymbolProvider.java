@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
@@ -71,7 +72,30 @@ public class SymbolProvider {
     VariableKind.GLOBAL
   );
 
+  /**
+   * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} без поддержки отмены.
+   *
+   * @param params Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса
+   * @return Список найденных символов рабочей области
+   */
   public List<? extends WorkspaceSymbol> getSymbols(WorkspaceSymbolParams params) {
+    return getSymbols(params, () -> {
+      // запрос без поддержки отмены: проверка отмены не выполняется
+    });
+  }
+
+  /**
+   * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} с поддержкой отмены.
+   * <p>
+   * Отмена проверяется на границе каждого документа: если клиент отменил запрос
+   * (например, прислав новый запрос при следующем нажатии клавиши), обход прерывается
+   * исключением {@link java.util.concurrent.CancellationException}.
+   *
+   * @param params        Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса
+   * @param cancelChecker Проверяющий отмену запроса; вызывается на границе каждого документа
+   * @return Список найденных символов рабочей области
+   */
+  public List<? extends WorkspaceSymbol> getSymbols(WorkspaceSymbolParams params, CancelChecker cancelChecker) {
     var queryString = Optional.ofNullable(params.getQuery())
       .orElse("");
 
@@ -81,6 +105,7 @@ public class SymbolProvider {
     // Search for symbols in all workspace contexts
     return serverContextProvider.getAllContexts().values().stream()
       .flatMap(serverContext -> serverContext.getDocuments().values().stream())
+      .peek(documentContext -> cancelChecker.checkCanceled())
       .flatMap(SymbolProvider::getSymbolEntries)
       .filter(symbolEntry -> matches(queryString, lowerCasedQuery, pattern, symbolEntry.symbol().getName()))
       .map(SymbolProvider::createWorkspaceSymbol)

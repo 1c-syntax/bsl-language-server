@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +47,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -261,6 +264,42 @@ class SymbolProviderTest {
         symbolInformation.getName().equals("ГлобальнаяСервернаяПроцедура")
           && symbolInformation.getKind() == SymbolKind.Method
       );
+  }
+
+  @Test
+  void getSymbolsCancelledCheckerInterruptsSearch() {
+
+    // given
+    // Отменённый CancelChecker должен прервать обход документов исключением CancellationException.
+    var params = new WorkspaceSymbolParams();
+    CancelChecker cancelChecker = () -> {
+      throw new CancellationException();
+    };
+
+    // when / then
+    assertThatThrownBy(() -> symbolProvider.getSymbols(params, cancelChecker))
+      .isInstanceOf(CancellationException.class);
+  }
+
+  @Test
+  void getSymbolsNonCancelledCheckerReturnsFullResult() {
+
+    // given
+    // Не-отменённый CancelChecker не должен влиять на результат: выдача совпадает
+    // с перегрузкой без checker-а.
+    var params = new WorkspaceSymbolParams();
+    CancelChecker cancelChecker = () -> {
+      // not cancelled
+    };
+
+    // when
+    var symbolsWithChecker = symbolProvider.getSymbols(params, cancelChecker);
+    var symbolsWithoutChecker = symbolProvider.getSymbols(params);
+
+    // then
+    assertThat(symbolsWithChecker)
+      .hasSizeGreaterThan(0)
+      .hasSameSizeAs(symbolsWithoutChecker);
   }
 
   /**
