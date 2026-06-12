@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781275685147,
+  "lastUpdate": 1781277983965,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36983,6 +36983,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.358757386130634",
             "extra": "mean: 291.45204615592957 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36f7a99691fea880a592490f3108ee284ddd6394",
+          "message": "Merge pull request #4048 from 1c-syntax/claude/fix-didsave-stale-validate\n\nfix(BSLTextDocumentService): валидировать в didSave свежее содержимое документа",
+          "timestamp": "2026-06-12T09:48:38+02:00",
+          "tree_id": "87f2d2694b6cbd35f12859362f59a8f03e5bd6c0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/36f7a99691fea880a592490f3108ee284ddd6394"
+        },
+        "date": 1781277975438,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 283.4509793122609,
+            "unit": "sec",
+            "range": "stddev: 8.306622057496217",
+            "extra": "mean: 283.4509793122609 sec\nrounds: 3"
           }
         ]
       }
