@@ -175,6 +175,32 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
     assertThat(subtypes).isEmpty();
   }
 
+  @Test
+  void subtypesIncludeInterfaceImplementors() {
+    // given — интерфейс Плавающее реализован классом Собака (&Реализует).
+    var document = document("Плавающее.os");
+
+    // when
+    var subtypes = provider.subtypes(document, new TypeHierarchySubtypesParams(item(document)));
+
+    // then — реализатор интерфейса попадает в подтипы.
+    assertThat(subtypes)
+      .extracting(TypeHierarchyItem::getName)
+      .containsExactly("Собака");
+  }
+
+  @Test
+  void subtypesEmptyForInterfaceWithoutImplementors() {
+    // given — интерфейс Летающее без реализаторов.
+    var document = document("Летающее.os");
+
+    // when
+    var subtypes = provider.subtypes(document, new TypeHierarchySubtypesParams(item(document)));
+
+    // then
+    assertThat(subtypes).isEmpty();
+  }
+
   private DocumentContext document(String fileName) {
     var uri = uri(fileName);
     var documentContext = context.getDocument(uri);
