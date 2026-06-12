@@ -494,7 +494,7 @@ public class GlobalScopeProvider {
    * {@link GlobalSymbolScope.Role#TYPE_NAME} для каждого имени/алиаса,
    * чтобы hover/findGlobal на имени класса в {@code Новый <Класс>(...)} нашёл
    * символ с описанием класса. Сами сигнатуры конструкторов хранятся в
-   * {@link TypeRegistry#getConstructors(TypeRef)}.
+   * {@link TypeRegistry#getConstructors(TypeRef, FileType)}.
    */
   public void registerPlatformClass(TypeRef ref, Collection<String> names, FileType fileType, String description) {
     if (ref == null || names == null || names.isEmpty()) {
@@ -590,7 +590,7 @@ public class GlobalScopeProvider {
   /**
    * Зарегистрировать synthetic-symbol для библиотечного модуля OneScript
    * (записи {@code <module>} из {@code lib.config}). Symbol становится
-   * видимым через {@link #findGlobal(String)} с фильтрацией по {@link FileType}
+   * видимым через {@link #findGlobal(String, FileType)} в OS-разрезе
    * (через {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex}).
    * Источник {@link TypeRef} и {@code libOrigin} — {@code OScriptLibraryIndex}.
    */
