@@ -43,7 +43,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.CompletionParams;
-import org.eclipse.lsp4j.DefinitionCapabilities;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
@@ -62,7 +61,6 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHintParams;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -86,6 +84,7 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -819,17 +818,11 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void definitionReturnsLocationLinksWhenClientSupportsLinkSupport() throws Exception {
-    // given - открытый документ и клиент, заявивший textDocument.definition.linkSupport
+  void definitionDelegatesToProvider() throws Exception {
+    // given - открытый документ; провайдер сам решает формат ответа (linkSupport),
+    // сервис лишь делегирует ему запрос.
     var textDocumentItem = getTextDocumentItem();
     textDocumentService.didOpen(new DidOpenTextDocumentParams(textDocumentItem));
-
-    var capabilities = new ClientCapabilities();
-    var textDocumentCapabilities = new TextDocumentClientCapabilities();
-    textDocumentCapabilities.setDefinition(new DefinitionCapabilities(false, true));
-    capabilities.setTextDocument(textDocumentCapabilities);
-    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
-    textDocumentService.handleInitializeEvent(null);
 
     var locationLink = new LocationLink(
       textDocumentItem.getUri(),
@@ -837,47 +830,16 @@ class BSLTextDocumentServiceTest {
       Ranges.create(0, 10, 0, 20),
       Ranges.create(1, 4, 1, 8)
     );
-    doReturn(List.of(locationLink)).when(definitionProvider).getDefinition(any(), any());
+    doReturn(Either.forRight(List.of(locationLink))).when(definitionProvider).getDefinition(any(), any());
 
     // when
     var params = new DefinitionParams(getTextDocumentIdentifier(), new Position(1, 4));
     var result = textDocumentService.definition(params).get();
 
-    // then - клиент с поддержкой связей получает LocationLink[]
+    // then - сервис прозрачно возвращает результат провайдера
     assertThat(result.isRight()).isTrue();
     assertThat(result.getRight()).hasSize(1);
     assertThat(result.getRight().get(0)).isEqualTo(locationLink);
-  }
-
-  @Test
-  void definitionDowngradesToLocationsWhenClientLacksLinkSupport() throws Exception {
-    // given - открытый документ и клиент без textDocument.definition.linkSupport
-    var textDocumentItem = getTextDocumentItem();
-    textDocumentService.didOpen(new DidOpenTextDocumentParams(textDocumentItem));
-
-    var capabilities = new ClientCapabilities();
-    capabilities.setTextDocument(new TextDocumentClientCapabilities());
-    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
-    textDocumentService.handleInitializeEvent(null);
-
-    var targetSelectionRange = Ranges.create(0, 10, 0, 20);
-    var locationLink = new LocationLink(
-      textDocumentItem.getUri(),
-      Ranges.create(0, 0, 0, 10),
-      targetSelectionRange,
-      Ranges.create(1, 4, 1, 8)
-    );
-    doReturn(List.of(locationLink)).when(definitionProvider).getDefinition(any(), any());
-
-    // when
-    var params = new DefinitionParams(getTextDocumentIdentifier(), new Position(1, 4));
-    var result = textDocumentService.definition(params).get();
-
-    // then - клиент без поддержки связей получает Location[] с тем же uri и selectionRange
-    assertThat(result.isLeft()).isTrue();
-    assertThat(result.getLeft()).hasSize(1);
-    assertThat(result.getLeft().get(0))
-      .isEqualTo(new Location(textDocumentItem.getUri(), targetSelectionRange));
   }
 
   @Test
