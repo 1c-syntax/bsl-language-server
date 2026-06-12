@@ -28,7 +28,6 @@ import lombok.ToString;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.InitializeParams;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -73,22 +72,5 @@ public class ClientCapabilitiesHolder {
    */
   public Optional<ClientInfo> getClientInfo() {
     return Optional.ofNullable(clientInfo);
-  }
-
-  /**
-   * Проверить, поддерживает ли клиент pull-модель диагностик
-   * ({@code textDocument/diagnostic}).
-   * <p>
-   * Признаком поддержки считается наличие возможности
-   * {@code textDocument.diagnostic} в заявленных возможностях клиента.
-   *
-   * @return {@code true}, если клиент поддерживает pull-модель диагностик,
-   *   иначе {@code false} (в том числе если клиент ещё не подключён).
-   */
-  public boolean supportsPullDiagnostics() {
-    return getCapabilities()
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getDiagnostic)
-      .isPresent();
   }
 }

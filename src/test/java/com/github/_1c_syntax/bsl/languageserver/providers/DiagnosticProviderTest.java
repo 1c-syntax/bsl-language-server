@@ -32,10 +32,12 @@ import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeR
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DiagnosticWorkspaceCapabilities;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -231,6 +233,34 @@ class DiagnosticProviderTest {
 
     // then
     verify(languageClient, never()).refreshDiagnostics();
+  }
+
+  @Test
+  void testSupportsPullDiagnosticsReturnsTrueWhenClientDeclaresDiagnosticCapability() {
+    // given
+    var capabilities = new ClientCapabilities();
+    var textDocument = new TextDocumentClientCapabilities();
+    textDocument.setDiagnostic(new DiagnosticCapabilities());
+    capabilities.setTextDocument(textDocument);
+    clientCapabilitiesHolder.setCapabilities(capabilities);
+
+    // when
+    var supportsPullDiagnostics = diagnosticProvider.supportsPullDiagnostics();
+
+    // then
+    assertThat(supportsPullDiagnostics).isTrue();
+  }
+
+  @Test
+  void testSupportsPullDiagnosticsReturnsFalseWhenClientDoesNotDeclareDiagnosticCapability() {
+    // given
+    clientCapabilitiesHolder.setCapabilities(new ClientCapabilities());
+
+    // when
+    var supportsPullDiagnostics = diagnosticProvider.supportsPullDiagnostics();
+
+    // then
+    assertThat(supportsPullDiagnostics).isFalse();
   }
 
   private void initializeRefreshSupport(boolean refreshSupport) {

@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.DiagnosticWorkspaceCapabilities;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.context.event.EventListener;
@@ -86,6 +87,25 @@ public final class DiagnosticProvider {
     var diagnostics = documentContext.getDiagnostics();
     var report = new RelatedFullDocumentDiagnosticReport(diagnostics);
     return new DocumentDiagnosticReport(report);
+  }
+
+  /**
+   * Проверить, поддерживает ли клиент pull-модель диагностик
+   * ({@code textDocument/diagnostic}).
+   * <p>
+   * Признаком поддержки считается наличие возможности
+   * {@code textDocument.diagnostic} в заявленных возможностях клиента.
+   * Для таких клиентов сервер не выполняет push-публикацию диагностик
+   * через {@code textDocument/publishDiagnostics}, а отдаёт их по запросу.
+   *
+   * @return {@code true}, если клиент поддерживает pull-модель диагностик,
+   *   иначе {@code false} (в том числе если клиент ещё не подключён).
+   */
+  public boolean supportsPullDiagnostics() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getDiagnostic)
+      .isPresent();
   }
 
   /**

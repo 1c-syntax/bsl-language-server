@@ -180,7 +180,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
   private final SignatureHelpProvider signatureHelpProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
@@ -880,7 +879,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
-    clientSupportsPullDiagnostics = clientCapabilitiesHolder.supportsPullDiagnostics();
+    clientSupportsPullDiagnostics = diagnosticProvider.supportsPullDiagnostics();
   }
 
   /**
