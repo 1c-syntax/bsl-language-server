@@ -515,7 +515,30 @@ public final class FormatProvider {
       }
     }
 
-    return newTextBuilder.toString();
+    var result = newTextBuilder.toString();
+    if (options.isTrimTrailingWhitespace()) {
+      result = trimTrailingWhitespacePerLine(result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Удаляет хвостовые пробелы и табуляции в каждой строке текста, сохраняя сами переводы строк.
+   * <p>
+   * Применяется при включённой опции {@code trimTrailingWhitespace} протокольных
+   * {@link FormattingOptions}: форматтер не должен оставлять строки, состоящие из одних пробелов
+   * (например выровненные пустые строки внутри блоков).
+   *
+   * @param text исходный текст результата форматирования
+   * @return текст, в котором ни одна строка не оканчивается пробелом или табуляцией
+   */
+  private static String trimTrailingWhitespacePerLine(String text) {
+    var lines = text.split("\n", -1);
+    for (var i = 0; i < lines.length; i++) {
+      lines[i] = StringUtils.stripEnd(lines[i], " \t");
+    }
+    return String.join("\n", lines);
   }
 
   private String checkAndFormatKeyword(Token token, Locale languageLocale) {

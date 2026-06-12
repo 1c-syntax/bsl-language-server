@@ -124,6 +124,37 @@ class FormatProviderTest {
   }
 
   @Test
+  void testFormatTrimsTrailingWhitespace() throws IOException {
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    var options = new FormattingOptions(4, true);
+    options.setTrimTrailingWhitespace(true);
+    params.setOptions(options);
+
+    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.getFirst();
+    String[] resultLines = textEdit.getNewText().split("\n", -1);
+    for (String line : resultLines) {
+      assertThat(line)
+        .as("line must not have trailing whitespace: <%s>", line)
+        .isEqualTo(line.stripTrailing());
+    }
+  }
+
+  @Test
   void testFormatRuKeywords() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
     var formattedFile = new File("./src/test/resources/providers/format_formattedKeywordsRu.bsl");
