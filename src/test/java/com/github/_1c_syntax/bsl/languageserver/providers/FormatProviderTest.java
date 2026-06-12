@@ -155,6 +155,59 @@ class FormatProviderTest {
   }
 
   @Test
+  void testFormatInsertsFinalNewline() {
+    // given
+    String fileContent = "А = 1;";
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    var options = new FormattingOptions(4, true);
+    options.setInsertFinalNewline(true);
+    params.setOptions(options);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.getFirst();
+    assertThat(textEdit.getNewText()).endsWith("\n");
+    assertThat(textEdit.getNewText()).doesNotEndWith("\n\n");
+  }
+
+  @Test
+  void testFormatTrimsFinalNewlinesKeepsSingleNewline() {
+    // given: документ с лишними пустыми строками в конце и обе хвостовые опции взведены
+    String fileContent = "А = 1;\n\n\n\n";
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    var options = new FormattingOptions(4, true);
+    options.setInsertFinalNewline(true);
+    options.setTrimFinalNewlines(true);
+    params.setOptions(options);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then: на хвосте ровно один перевод строки, без лишних пустых строк
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.getFirst();
+    assertThat(textEdit.getNewText()).endsWith("\n");
+    assertThat(textEdit.getNewText()).doesNotEndWith("\n\n");
+  }
+
+  @Test
   void testFormatRuKeywords() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
     var formattedFile = new File("./src/test/resources/providers/format_formattedKeywordsRu.bsl");
