@@ -27,10 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,6 +145,40 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
       })
     ;
   }
+  @Test
+  void testHintsAreEmittedForEveryCallSiteOfSameMethod() {
+
+    // given — ChangeHealth(...) вызывается в нескольких процедурах файла; диапазон
+    // охватывает весь документ, поэтому в выборку попадают все вызовы метода.
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    var lines = documentContext.getContentList();
+    var lastLine = Math.max(0, lines.length - 1);
+    var fullRange = new Range(
+      new Position(0, 0),
+      Ranges.create(lastLine, 0, lines[lastLine].length()).getEnd()
+    );
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, fullRange);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then — каждый из восьми вызовов ChangeHealth(...) даёт по две подсказки
+    // (PlayersHealth и Amount), а позиции подсказок уникальны (вызовы не схлопнулись).
+    var changeHealthHints = inlayHints.stream()
+      .filter(hint -> hint.getLabel().isLeft())
+      .filter(hint -> {
+        var label = hint.getLabel().getLeft();
+        return "PlayersHealth:".equals(label) || "Amount:".equals(label);
+      })
+      .toList();
+    assertThat(changeHealthHints).hasSize(16);
+    assertThat(changeHealthHints)
+      .extracting(InlayHint::getPosition)
+      .doesNotHaveDuplicates();
+  }
+
   @Test
   void testConstructorCallInlayHints() {
 

@@ -39,12 +39,14 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Поставщик подсказок о параметрах вызываемого метода.
@@ -72,60 +74,97 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
-    return referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
+    var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
       .filter(reference -> Ranges.containsPosition(range, reference.selectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
-      .map(this::toInlayHints)
-      .flatMap(Collection::stream)
       .toList();
+    if (references.isEmpty()) {
+      return List.of();
+    }
+
+    // Один обход AST документа на все ссылки: сопоставляем каждый вызов с
+    // диапазоном имени метода (тем же, что хранится в reference.selectionRange()),
+    // чтобы дальше резолвить вызов по ссылке за O(1) вместо обхода AST на каждую ссылку.
+    var doCallsByMethodNameRange = collectDoCallsByMethodNameRange(documentContext);
+
+    var result = new ArrayList<InlayHint>();
+    for (var reference : references) {
+      var doCall = doCallsByMethodNameRange.get(reference.selectionRange());
+      if (doCall != null) {
+        result.addAll(toInlayHints(reference, doCall));
+      }
+    }
+    return result;
   }
 
-  private List<InlayHint> toInlayHints(Reference reference) {
+  /**
+   * Собирает все {@code doCall}-узлы документа в карту по диапазону имени
+   * вызываемого метода (для конструктора — по диапазону имени типа).
+   * <p>
+   * Этот диапазон совпадает с {@link Reference#selectionRange()} соответствующей
+   * ссылки, что позволяет резолвить вызов по ссылке без повторного обхода AST.
+   *
+   * @param documentContext контекст документа, AST которого обходится
+   * @return карта «диапазон имени метода → узел вызова»; пустая, если AST отсутствует
+   */
+  private static Map<Range, BSLParser.DoCallContext> collectDoCallsByMethodNameRange(
+    DocumentContext documentContext
+  ) {
+    var ast = documentContext.getAst();
+    if (ast == null) {
+      return Map.of();
+    }
+    var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
+    var result = new HashMap<Range, BSLParser.DoCallContext>(doCalls.size());
+    for (var node : doCalls) {
+      var doCall = (BSLParser.DoCallContext) node;
+      var methodNameRange = methodNameRange(doCall.getParent());
+      if (methodNameRange != null) {
+        result.putIfAbsent(methodNameRange, doCall);
+      }
+    }
+    return result;
+  }
+
+  private List<InlayHint> toInlayHints(Reference reference, BSLParser.DoCallContext doCall) {
 
     var methodSymbol = (MethodSymbol) reference.symbol();
     var parameters = methodSymbol.getParameters();
 
-    var ast = reference.from().getOwner().getAst();
-    var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
+    var callParamList = doCall.callParamList();
+    if (callParamList == null) {
+      return List.of();
+    }
+    var callParams = callParamList.callParam();
 
-    return doCalls.stream()
-      .map(BSLParser.DoCallContext.class::cast)
-      .filter(doCall -> isRightMethod(doCall.getParent(), reference))
-      .map(BSLParser.DoCallContext::callParamList)
-      .map(BSLParser.CallParamListContext::callParam)
-      .map((List<? extends BSLParser.CallParamContext> callParams) -> {
-        var hints = new ArrayList<InlayHint>();
-        for (var i = 0; i < parameters.size(); i++) {
+    var hints = new ArrayList<InlayHint>();
+    for (var i = 0; i < parameters.size(); i++) {
 
-          // todo: show all parameters (in config)?
-          if (callParams.size() < i + 1) {
-            break;
-          }
+      // todo: show all parameters (in config)?
+      if (callParams.size() < i + 1) {
+        break;
+      }
 
-          var parameter = parameters.get(i);
-          var callParam = callParams.get(i);
+      var parameter = parameters.get(i);
+      var callParam = callParams.get(i);
 
-          var passedValue = callParam.getText();
+      var passedValue = callParam.getText();
 
-          if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
-            continue;
-          }
+      if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
+        continue;
+      }
 
-          var inlayHint = new InlayHint();
-          inlayHint.setKind(InlayHintKind.Parameter);
+      var inlayHint = new InlayHint();
+      inlayHint.setKind(InlayHintKind.Parameter);
 
-          setLabelAndPadding(inlayHint, parameter, passedValue, reference);
-          setPosition(inlayHint, callParam);
-          setTooltip(inlayHint, parameter);
+      setLabelAndPadding(inlayHint, parameter, passedValue, reference);
+      setPosition(inlayHint, callParam);
+      setTooltip(inlayHint, parameter);
 
-          hints.add(inlayHint);
-        }
+      hints.add(inlayHint);
+    }
 
-        return hints;
-      })
-      .flatMap(Collection::stream)
-      .toList();
-
+    return hints;
   }
 
   private void setLabelAndPadding(
@@ -167,20 +206,24 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
   }
 
 
-  private static boolean isRightMethod(ParserRuleContext doCallParent, Reference reference) {
-    var selectionRange = reference.selectionRange();
-
+  /**
+   * Диапазон имени вызываемого метода для родителя {@code doCall}-узла —
+   * именно его {@link ReferenceIndex} хранит в {@link Reference#selectionRange()}.
+   *
+   * @param doCallParent родительский узел вызова (methodCall, globalMethodCall или newExpression)
+   * @return диапазон имени метода/типа либо {@code null}, если узел не является вызовом метода
+   */
+  private static Range methodNameRange(ParserRuleContext doCallParent) {
     if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
-      return selectionRange.equals(Ranges.create(methodCallContext.methodName()));
+      return Ranges.create(methodCallContext.methodName());
     } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-      return selectionRange.equals(Ranges.create(globalMethodCallContext.methodName()));
+      return Ranges.create(globalMethodCallContext.methodName());
     } else if (doCallParent instanceof BSLParser.NewExpressionContext newExpressionContext) {
       var typeName = newExpressionContext.typeName();
-      return typeName != null
-        && typeName.IDENTIFIER() != null
-        && selectionRange.equals(Ranges.create(typeName.IDENTIFIER()));
-    } else {
-      return false;
+      if (typeName != null && typeName.IDENTIFIER() != null) {
+        return Ranges.create(typeName.IDENTIFIER());
+      }
     }
+    return null;
   }
 }
