@@ -45,6 +45,7 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -87,15 +88,57 @@ public class SymbolProvider {
       .orElse("");
 
     var pattern = compilePattern(queryString);
+    var lowerCasedQuery = queryString.toLowerCase(Locale.ROOT);
 
     // Search for symbols in all workspace contexts
     return serverContextProvider.getAllContexts().values().stream()
       .flatMap(serverContext -> serverContext.getDocuments().values().stream())
       .peek(documentContext -> cancelChecker.checkCanceled())
       .flatMap(SymbolProvider::getSymbolEntries)
-      .filter(symbolEntry -> queryString.isEmpty() || pattern.matcher(symbolEntry.symbol().getName()).find())
+      .filter(symbolEntry -> matches(queryString, lowerCasedQuery, pattern, symbolEntry.symbol().getName()))
       .map(SymbolProvider::createWorkspaceSymbol)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Проверяет, соответствует ли имя символа запросу {@code workspace/symbol}.
+   * <p>
+   * Пустой запрос соответствует любому символу. В остальных случаях имя считается совпавшим,
+   * если оно совпадает с запросом как с регулярным выражением (поведение по умолчанию) ЛИБО
+   * содержит символы запроса как подпоследовательность. Спецификация LSP рекомендует
+   * "расслабленное" сопоставление, оставляя клиенту дофильтрацию и ранжирование результатов.
+   *
+   * @param queryString      Исходная строка запроса пользователя
+   * @param lowerCasedQuery  Строка запроса, приведённая к нижнему регистру для сопоставления по подпоследовательности
+   * @param pattern          Скомпилированный шаблон регулярного выражения для запроса
+   * @param symbolName       Имя проверяемого символа
+   * @return {@code true}, если имя символа соответствует запросу хотя бы одним из способов
+   */
+  private static boolean matches(String queryString, String lowerCasedQuery, Pattern pattern, String symbolName) {
+    return queryString.isEmpty()
+      || pattern.matcher(symbolName).find()
+      || isSubsequence(lowerCasedQuery, symbolName.toLowerCase(Locale.ROOT));
+  }
+
+  /**
+   * Определяет, является ли строка запроса подпоследовательностью имени символа.
+   * <p>
+   * Каждый символ запроса должен встречаться в имени в том же порядке, но не обязательно подряд.
+   * Обе строки ожидаются уже приведёнными к нижнему регистру для регистронезависимого сопоставления.
+   *
+   * @param query Строка запроса в нижнем регистре
+   * @param name  Имя символа в нижнем регистре
+   * @return {@code true}, если все символы запроса встречаются в имени в исходном порядке
+   */
+  private static boolean isSubsequence(String query, String name) {
+    var queryIndex = 0;
+    var queryLength = query.length();
+    for (var nameIndex = 0; queryIndex < queryLength && nameIndex < name.length(); nameIndex++) {
+      if (query.charAt(queryIndex) == name.charAt(nameIndex)) {
+        queryIndex++;
+      }
+    }
+    return queryIndex == queryLength;
   }
 
   /**
