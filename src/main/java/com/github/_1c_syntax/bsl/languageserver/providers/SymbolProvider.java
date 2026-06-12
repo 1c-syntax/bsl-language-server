@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -114,7 +116,24 @@ public class SymbolProvider {
     workspaceSymbol.setKind(symbol.getSymbolKind());
     workspaceSymbol.setLocation(Either.forLeft(location));
     workspaceSymbol.setTags(symbol.getTags());
+    getContainerName(symbol).ifPresent(workspaceSymbol::setContainerName);
 
     return workspaceSymbol;
+  }
+
+  /**
+   * Формирует человекочитаемое имя контейнера символа на основе связанного объекта метаданных.
+   * <p>
+   * Используется ссылка на объект метаданных в русском представлении
+   * (например, {@code ОбщийМодуль.ПервыйОбщийМодуль}), что позволяет различать одноимённые
+   * символы из разных объектов конфигурации.
+   *
+   * @param symbol Символ, для которого формируется имя контейнера
+   * @return Имя контейнера, либо {@link Optional#empty()}, если документ не связан с объектом метаданных
+   */
+  private static Optional<String> getContainerName(SourceDefinedSymbol symbol) {
+    return symbol.getOwner().getMdObject()
+      .map(MD::getMdoReference)
+      .map(MdoReference::getMdoRefRu);
   }
 }

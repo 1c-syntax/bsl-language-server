@@ -99,6 +99,24 @@ class SymbolProviderTest {
     ;
   }
 
+  @Test
+  void getSymbolsContainerName() {
+
+    // given
+    var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
+
+    // when
+    var symbols = symbolProvider.getSymbols(params);
+
+    // then
+    assertThat(symbols)
+      .anyMatch(workspaceSymbol ->
+        uriContains(workspaceSymbol, "ПервыйОбщийМодуль")
+          && "ОбщийМодуль.ПервыйОбщийМодуль".equals(workspaceSymbol.getContainerName())
+      )
+    ;
+  }
+
   @SneakyThrows
   private boolean uriContains(WorkspaceSymbol workspaceSymbol, String name) {
     return Path.of(new URI(workspaceSymbol.getLocation().getLeft().getUri())).toString().contains(name);
