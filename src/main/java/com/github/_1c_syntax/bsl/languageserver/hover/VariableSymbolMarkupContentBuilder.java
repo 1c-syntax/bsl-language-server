@@ -240,7 +240,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       line.append(": ").append(typeLabel);
     }
     if (!description.isBlank()) {
-      line.append(" - ").append(description);
+      line.append(" — ").append(description);
     }
     return line.toString();
   }
