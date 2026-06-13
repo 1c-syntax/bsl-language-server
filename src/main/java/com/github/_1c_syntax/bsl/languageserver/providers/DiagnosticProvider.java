@@ -200,8 +200,13 @@ public final class DiagnosticProvider {
       return;
     }
     if (pushFallback) {
-      serverContext.getDocuments().values().forEach(DocumentContext::clearDiagnostics);
-      pushDiagnosticsToOpenedDocuments(serverContext);
+      // Чистим кэш только у открытых документов — закрытые не используются клиентом
+      // прямо сейчас, а AnalyzeProjectOnStart их recomputes на следующем
+      // ServerContextPopulatedEvent.
+      var opened = serverContext.getOpenedDocuments();
+      opened.forEach(DocumentContext::clearDiagnostics);
+      LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
+      opened.forEach(this::computeAndPublishDiagnostics);
     }
   }
 
