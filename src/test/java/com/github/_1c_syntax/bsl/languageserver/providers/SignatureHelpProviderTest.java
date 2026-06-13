@@ -21,19 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.ParameterInformationCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpCapabilities;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureHelpTriggerKind;
 import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.SignatureInformationCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,6 +55,35 @@ class SignatureHelpProviderTest {
 
   @Autowired
   private LanguageServerConfiguration languageServerConfiguration;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @AfterEach
+  void resetClientCapabilities() {
+    clientCapabilitiesHolder.setCapabilities(null);
+    signatureHelpProvider.handleInitializeEvent();
+  }
+
+  private void initSignatureHelpCapabilities(boolean labelOffsetSupport, boolean markdownDocumentation) {
+    var parameterInformation = new ParameterInformationCapabilities();
+    parameterInformation.setLabelOffsetSupport(labelOffsetSupport);
+    var signatureInformation = new SignatureInformationCapabilities();
+    signatureInformation.setParameterInformation(parameterInformation);
+    if (markdownDocumentation) {
+      signatureInformation.setDocumentationFormat(List.of(MarkupKind.MARKDOWN, MarkupKind.PLAINTEXT));
+    } else {
+      signatureInformation.setDocumentationFormat(List.of(MarkupKind.PLAINTEXT));
+    }
+    var signatureHelp = new SignatureHelpCapabilities();
+    signatureHelp.setSignatureInformation(signatureInformation);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setSignatureHelp(signatureHelp);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    signatureHelpProvider.handleInitializeEvent();
+  }
 
   @Test
   void testNoSignatureWithoutCall() {
@@ -716,6 +755,111 @@ class SignatureHelpProviderTest {
 
     // then — метка не совпадает, используется серверная логика (0).
     assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void parameterLabelUsesOffsetsWhenClientSupportsLabelOffset() {
+    // given — клиент заявил labelOffsetSupport.
+    initSignatureHelpCapabilities(true, false);
+    var content =
+      "Процедура МояПроцедура(А, Б) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "МояПроцедура(1, 2);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "МояПроцедура(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — ParameterInformation.label задан офсетами [start, end), которые
+    // указывают на подстроку параметра внутри label сигнатуры.
+    assertThat(help.getSignatures()).hasSize(1);
+    var sig = help.getSignatures().get(0);
+    var paramLabel = sig.getParameters().get(0).getLabel();
+    assertThat(paramLabel.isRight()).isTrue();
+    var offsets = paramLabel.getRight();
+    assertThat(sig.getLabel().substring(offsets.getFirst(), offsets.getSecond())).isEqualTo("А");
+  }
+
+  @Test
+  void parameterLabelUsesStringWhenClientDoesNotSupportLabelOffset() {
+    // given — клиент НЕ заявил labelOffsetSupport.
+    initSignatureHelpCapabilities(false, false);
+    var content =
+      "Процедура МояПроцедура(А, Б) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "МояПроцедура(1, 2);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "МояПроцедура(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — ParameterInformation.label задан строкой-подстрокой параметра.
+    assertThat(help.getSignatures()).hasSize(1);
+    var sig = help.getSignatures().get(0);
+    var paramLabel = sig.getParameters().get(0).getLabel();
+    assertThat(paramLabel.isLeft()).isTrue();
+    assertThat(paramLabel.getLeft()).isEqualTo("А");
+  }
+
+  @Test
+  void signatureDocumentationUsesMarkdownWhenClientSupportsIt() {
+    // given — клиент поддерживает markdown в documentation сигнатуры.
+    initSignatureHelpCapabilities(true, true);
+    var content =
+      "// Описание метода.\n"
+        + "Процедура МояПроцедура(А) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "МояПроцедура(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(4, "МояПроцедура(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — documentation сигнатуры — MarkupContent(MARKDOWN).
+    assertThat(help.getSignatures()).hasSize(1);
+    var documentation = help.getSignatures().get(0).getDocumentation();
+    assertThat(documentation).isNotNull();
+    assertThat(documentation.isRight()).isTrue();
+    assertThat(documentation.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(documentation.getRight().getValue()).contains("Описание метода");
+  }
+
+  @Test
+  void signatureDocumentationUsesPlaintextWhenClientDoesNotSupportMarkdown() {
+    // given — клиент не поддерживает markdown в documentation сигнатуры.
+    initSignatureHelpCapabilities(true, false);
+    var content =
+      "// Описание метода.\n"
+        + "Процедура МояПроцедура(А) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "МояПроцедура(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(4, "МояПроцедура(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — documentation сигнатуры — обычная строка (plaintext).
+    assertThat(help.getSignatures()).hasSize(1);
+    var documentation = help.getSignatures().get(0).getDocumentation();
+    assertThat(documentation).isNotNull();
+    assertThat(documentation.isLeft()).isTrue();
+    assertThat(documentation.getLeft()).contains("Описание метода");
   }
 
   private static SignatureHelpContext userPickedContext(SignatureHelp previous, int activeSignature) {
