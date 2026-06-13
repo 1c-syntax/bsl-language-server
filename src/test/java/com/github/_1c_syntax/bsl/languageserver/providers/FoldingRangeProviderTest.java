@@ -45,7 +45,7 @@ class FoldingRangeProviderTest {
 
     List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
-    assertThat(foldingRanges).hasSize(11);
+    assertThat(foldingRanges).hasSize(13);
 
     // regions
     assertThat(foldingRanges)
@@ -57,6 +57,8 @@ class FoldingRangeProviderTest {
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 12 && foldingRange.getEndLine() == 14)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 23 && foldingRange.getEndLine() == 24)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 28 && foldingRange.getEndLine() == 29)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 35 && foldingRange.getEndLine() == 37)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 39 && foldingRange.getEndLine() == 41)
     ;
 
 
