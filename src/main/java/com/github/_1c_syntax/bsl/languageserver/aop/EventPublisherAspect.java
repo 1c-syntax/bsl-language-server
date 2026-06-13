@@ -242,7 +242,7 @@ public class EventPublisherAspect {
     ));
   }
 
-  private void publishEvent(Object event) {
+  private void publishEvent(ApplicationEvent event) {
     var contexts = snapshot.get();
     if (contexts.length == 0) {
       LOGGER.warn("Trying to send event in not active event publisher.");
@@ -285,7 +285,7 @@ public class EventPublisherAspect {
    * если владелец не определяется (тогда вызывающий рассылает во все контексты).
    */
   private static @Nullable ApplicationContext findOwningContext(
-    ApplicationContext[] contexts, Object event
+    ApplicationContext[] contexts, ApplicationEvent event
   ) {
     var serverContext = extractServerContext(event);
     if (serverContext != null) {
@@ -326,19 +326,18 @@ public class EventPublisherAspect {
    * routing по identity. {@code null} — у события нет привязки к конкретному
    * ServerContext (глобальные события вроде Initialize, LSC).
    */
-  private static @Nullable ServerContext extractServerContext(Object event) {
-    var fromWorkspace = extractFromWorkspaceEvent(event);
-    if (fromWorkspace != null) {
-      return fromWorkspace;
+  private static @Nullable ServerContext extractServerContext(ApplicationEvent event) {
+    // События с source = ServerContext (DocumentAdded/Removed/Closed, Populated):
+    // ловим через instanceof ниже.
+    var src = event.getSource();
+    if (src instanceof DocumentContext documentContext) {
+      return documentContext.getServerContext();
     }
-    if (event instanceof ApplicationEvent appEvent) {
-      return extractFromApplicationEventSource(appEvent.getSource());
+    if (src instanceof ServerContext serverContext) {
+      return serverContext;
     }
-    return null;
-  }
-
-  /** События workspace-жизненного цикла: source = ServerContextProvider, ServerContext в поле. */
-  private static @Nullable ServerContext extractFromWorkspaceEvent(Object event) {
+    // События workspace-жизненного цикла: source = ServerContextProvider, но они
+    // несут ServerContext в отдельном поле.
     if (event instanceof WorkspaceAddedEvent addedWs) {
       return addedWs.getServerContext();
     }
@@ -347,17 +346,6 @@ public class EventPublisherAspect {
     }
     if (event instanceof OScriptLibraryIndexedEvent indexed) {
       return indexed.getServerContext();
-    }
-    return null;
-  }
-
-  /** События с source = ServerContext или DocumentContext (Populated, DocumentAdded/Removed/Closed). */
-  private static @Nullable ServerContext extractFromApplicationEventSource(Object src) {
-    if (src instanceof DocumentContext documentContext) {
-      return documentContext.getServerContext();
-    }
-    if (src instanceof ServerContext serverContext) {
-      return serverContext;
     }
     return null;
   }
