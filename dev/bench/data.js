@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781328121832,
+  "lastUpdate": 1781381691412,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37076,6 +37076,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 15.663451298185299",
             "extra": "mean: 281.1522972583771 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "92d255df2d41e0f76b64da7f26d98dd681841f66",
+          "message": "Merge pull request #4072 from 1c-syntax/claude/javadoc-build-fix-gp1jtl\n\nfix(javadoc): исправить сломанные @link-ссылки в сборке javadoc",
+          "timestamp": "2026-06-12T23:18:21+02:00",
+          "tree_id": "a235823a0a32ba7da17622e8d2e84faab533d1e4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/92d255df2d41e0f76b64da7f26d98dd681841f66"
+        },
+        "date": 1781381683173,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 273.68152983983356,
+            "unit": "sec",
+            "range": "stddev: 10.44558349826978",
+            "extra": "mean: 273.68152983983356 sec\nrounds: 3"
           }
         ]
       }
