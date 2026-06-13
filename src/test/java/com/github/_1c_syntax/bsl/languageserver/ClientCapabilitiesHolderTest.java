@@ -21,72 +21,63 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ClientCapabilitiesHolderTest {
 
-  @ParameterizedTest
-  @CsvSource({
-    "Visual Studio Code, true",
-    "Cursor, true",
-    "Antigravity, true",
-    "code-server, true",
-    "Neovim, false",
-    "Some Editor, false",
-    "'', false"
-  })
-  void staticIsVsCodeLikeClientReflectsCanonicalSet(String clientName, boolean expected) {
-    // given
-    // when
-    var result = ClientCapabilitiesHolder.isVsCodeLikeClient(clientName);
-
-    // then
-    assertThat(result).isEqualTo(expected);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"Visual Studio Code", "Cursor", "Antigravity", "code-server"})
-  void instanceIsVsCodeLikeClientIsTrueForVsCodeLikeClients(String clientName) {
+  @Test
+  void getClientInfoReturnsStoredValue() {
     // given
     var holder = new ClientCapabilitiesHolder();
-    holder.setClientInfo(new ClientInfo(clientName, "1.0.0"));
+    var clientInfo = new ClientInfo("Visual Studio Code", "1.0.0");
+    holder.setClientInfo(clientInfo);
 
     // when
-    var result = holder.isVsCodeLikeClient();
+    var result = holder.getClientInfo();
 
     // then
-    assertThat(result).isTrue();
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"Neovim", "Some Editor"})
-  void instanceIsVsCodeLikeClientIsFalseForOtherClients(String clientName) {
-    // given
-    var holder = new ClientCapabilitiesHolder();
-    holder.setClientInfo(new ClientInfo(clientName, "1.0.0"));
-
-    // when
-    var result = holder.isVsCodeLikeClient();
-
-    // then
-    assertThat(result).isFalse();
+    assertThat(result).contains(clientInfo);
   }
 
   @Test
-  void instanceIsVsCodeLikeClientIsFalseWhenClientInfoIsAbsent() {
+  void getClientInfoIsEmptyWhenAbsent() {
     // given
     var holder = new ClientCapabilitiesHolder();
 
     // when
-    var result = holder.isVsCodeLikeClient();
+    var result = holder.getClientInfo();
 
     // then
-    assertThat(result).isFalse();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getCapabilitiesReturnsStoredValue() {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+    var capabilities = new ClientCapabilities();
+    holder.setCapabilities(capabilities);
+
+    // when
+    var result = holder.getCapabilities();
+
+    // then
+    assertThat(result).contains(capabilities);
+  }
+
+  @Test
+  void getCapabilitiesIsEmptyWhenAbsent() {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+
+    // when
+    var result = holder.getCapabilities();
+
+    // then
+    assertThat(result).isEmpty();
   }
 }

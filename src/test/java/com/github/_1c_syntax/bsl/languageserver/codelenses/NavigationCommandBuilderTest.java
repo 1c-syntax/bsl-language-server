@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -33,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -47,11 +49,13 @@ class NavigationCommandBuilderTest {
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   private void connectVsCodeLikeClient() {
-    when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(true);
+    when(clientCapabilitiesHolder.getClientInfo())
+      .thenReturn(Optional.of(new ClientInfo("Visual Studio Code", "1.0.0")));
   }
 
   private void connectOtherClient() {
-    when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(false);
+    when(clientCapabilitiesHolder.getClientInfo())
+      .thenReturn(Optional.of(new ClientInfo("Neovim", "1.0.0")));
   }
 
   @Test
