@@ -153,6 +153,27 @@ public class ConfigurationTypesProvider {
    * вызовы — no-op.
    */
   public @Nullable ServerContext tryRegister() {
+    var serverContext = resolveServerContextToRegister();
+    if (serverContext == null) {
+      return null;
+    }
+    if (!registered.compareAndSet(false, true)) {
+      return null;
+    }
+    var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
+    LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
+      WorkspaceContextHolder.get(), children.size());
+    register(children);
+    serviceModuleEventRegistrar.register(children);
+    return serverContext;
+  }
+
+  /**
+   * Возвращает {@link ServerContext}, пригодный для регистрации конфигурационных
+   * типов: workspace установлен, контекст найден, конфигурация не пуста и
+   * регистрация ещё не выполнялась. Иначе — {@code null}.
+   */
+  private @Nullable ServerContext resolveServerContextToRegister() {
     if (registered.get()) {
       return null;
     }
@@ -161,20 +182,9 @@ public class ConfigurationTypesProvider {
       return null;
     }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null) {
+    if (serverContext == null || serverContext.getConfiguration().isEmpty()) {
       return null;
     }
-    var configuration = serverContext.getConfiguration();
-    if (configuration.isEmpty()) {
-      return null;
-    }
-    if (!registered.compareAndSet(false, true)) {
-      return null;
-    }
-    var children = configuration.getChildrenByMdoRef().values();
-    LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects", workspaceUri, children.size());
-    register(children);
-    serviceModuleEventRegistrar.register(children);
     return serverContext;
   }
 

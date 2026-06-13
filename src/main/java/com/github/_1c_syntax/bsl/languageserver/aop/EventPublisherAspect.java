@@ -151,9 +151,8 @@ public class EventPublisherAspect {
     returning = "serverContext"
   )
   public void configurationTypesRegistered(JoinPoint joinPoint, @Nullable ServerContext serverContext) {
-    // tryRegister возвращает ServerContext только при реальной регистрации;
-    // при null (повторный вызов, не та фаза, пустая конфигурация) событие не публикуем.
     if (serverContext != null) {
+      // tryRegister отдаёт non-null только при реальной регистрации, отсев no-op
       publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
     }
   }
