@@ -27,7 +27,9 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
  * <p>
  * Сам по себе платформенный тип может расширяться пользовательскими членами
  * (см. {@code ConfigurationModuleMembersProvider}). Для запроса полного списка
- * членов используйте {@link com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry#getMembers(TypeRef)}.
+ * членов используйте {@link com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry#getMembers(TypeRef, com.github._1c_syntax.bsl.languageserver.context.FileType)}.
+ *
+ * @param ref ссылка на тип в реестре типов
  */
 public record PlatformType(TypeRef ref) implements Type {
 }

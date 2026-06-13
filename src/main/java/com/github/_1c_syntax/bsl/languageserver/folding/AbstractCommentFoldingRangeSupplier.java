@@ -71,6 +71,8 @@ public abstract class AbstractCommentFoldingRangeSupplier implements FoldingRang
   }
 
   /**
+   * Возвращает список комментариев документа, для которых рассчитываются области сворачивания.
+   *
    * @param documentContext Контекст документа, для которого надо получить список комментариев
    * @return Список токенов-комментариев
    */

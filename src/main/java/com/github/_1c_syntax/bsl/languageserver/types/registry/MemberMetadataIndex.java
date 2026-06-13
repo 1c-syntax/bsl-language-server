@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -46,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * сюда не попадают (у них нет accessMode/версий).
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class MemberMetadataIndex {
 
   private final Map<TypeRef, Set<String>> readOnlyByType = new ConcurrentHashMap<>();

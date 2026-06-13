@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -84,11 +84,11 @@ class TypeRegistrySpecializationTest {
     var specRef = typeRegistry.registerSpecialization(
       "СправочникСсылка.МойТестовый", generic,
       Map.of("Имя справочника", "МойТестовый"),
-      LanguageScope.BSL);
+      FileType.BSL);
 
     assertThat(specRef.qualifiedName()).isEqualTo("СправочникСсылка.МойТестовый");
 
-    var members = typeRegistry.getMembers(specRef);
+    var members = typeRegistry.getMembers(specRef, FileType.BSL);
     var memberNames = members.stream().map(MemberDescriptor::name).toList();
     // На СправочникСсылка.<Имя> в JSON есть Ссылка/Код/ПолучитьОбъект и т.п.
     assertThat(memberNames)
@@ -116,7 +116,7 @@ class TypeRegistrySpecializationTest {
     var specRef = typeRegistry.registerSpecialization(
       "ТестДженерик.Контрагенты", generic,
       Map.of("Имя", "Контрагенты"),
-      LanguageScope.BSL);
+      FileType.BSL);
 
     assertThat(typeRegistry.displayName(specRef, Language.RU)).isEqualTo("ТестДженерик.Контрагенты");
     assertThat(typeRegistry.displayName(specRef, Language.EN)).isEqualTo("TestGeneric.Контрагенты");
@@ -152,12 +152,12 @@ class TypeRegistrySpecializationTest {
     var configRef = typeRegistry.registerConfigurationType("ТипДляFallback");
     typeRegistry.registerMemberSource(configRef,
       () -> List.of(MemberDescriptor.property("М", TypeRef.UNKNOWN, "")),
-      LanguageScope.BSL);
+      FileType.BSL);
 
     // Запрос с другим kind (PLATFORM вместо CONFIGURATION) — должен через
     // aliasIndex резолвиться в canonical ref и отдать тот же member.
     var platformLookup = new TypeRef(TypeKind.PLATFORM, "ТипДляFallback");
-    var members = typeRegistry.getMembers(platformLookup);
+    var members = typeRegistry.getMembers(platformLookup, FileType.BSL);
     assertThat(members)
       .extracting(MemberDescriptor::name)
       .containsExactly("М");

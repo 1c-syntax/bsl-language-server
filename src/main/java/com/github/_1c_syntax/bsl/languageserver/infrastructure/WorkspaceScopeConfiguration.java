@@ -32,14 +32,14 @@ import org.springframework.context.annotation.Configuration;
 public class WorkspaceScopeConfiguration {
 
   @Bean
-  public WorkspaceScope workspaceScope() {
-    return new WorkspaceScope();
+  public WorkspaceBeanScope workspaceScope() {
+    return new WorkspaceBeanScope();
   }
 
   @Bean
-  public static CustomScopeConfigurer workspaceScopeConfigurer(WorkspaceScope workspaceScope) {
+  public static CustomScopeConfigurer workspaceScopeConfigurer(WorkspaceBeanScope workspaceScope) {
     var configurer = new CustomScopeConfigurer();
-    configurer.addScope(WorkspaceScope.SCOPE_NAME, workspaceScope);
+    configurer.addScope(WorkspaceBeanScope.SCOPE_NAME, workspaceScope);
     return configurer;
   }
 }

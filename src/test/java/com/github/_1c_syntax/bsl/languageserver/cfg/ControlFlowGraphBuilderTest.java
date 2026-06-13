@@ -904,6 +904,30 @@ class ControlFlowGraphBuilderTest {
     assertThat(diagnostics).isNotNull();
   }
 
+  @Test
+  void test_danglingTopLevelPreprocessorBeforeLoopShouldNotCrash() {
+    // https://1c-syntax.sentry.io/issues/7468655563
+    // IllegalArgumentException: no such vertex in graph: <empty block>
+    // Оторванный top-level препроцессор (#Иначе/#ИначеЕсли/#КонецЕсли) не должен взводить
+    // флаг top-level препроцессора и протекать на вложенный #Если без парного #КонецЕсли.
+    var code = """
+      #Иначе
+      Пока А Цикл
+      #Если Сервер Тогда
+      КонецЦикла;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+
+    // Should not throw IllegalArgumentException
+    var graph = builder.buildGraph(parseTree);
+
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 

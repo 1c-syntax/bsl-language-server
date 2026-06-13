@@ -186,14 +186,7 @@ public class PlatformMemberHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        sb.append("- `").append(p.displayName(lang)).append('`');
-        var typesLabel = renderTypeSet(p.types(), lang);
-        if (!typesLabel.isEmpty()) {
-          sb.append(": ").append(typesLabel);
-        }
-        if (p.optional()) {
-          sb.append(" _(").append(tr("optionalParameter")).append(")_");
-        }
+        HoverParameters.appendNameAndType(sb, p.displayName(lang), renderTypeSet(p.types(), lang), p.optional());
         if (!p.defaultValue().isBlank()) {
           sb.append(" _= ").append(p.defaultValue()).append('_');
         }

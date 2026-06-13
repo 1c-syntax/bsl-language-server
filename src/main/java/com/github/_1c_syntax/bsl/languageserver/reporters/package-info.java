@@ -19,4 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * Репортеры результатов анализа в различные форматы (JSON, JUnit, SARIF и т.п.).
+ */
 package com.github._1c_syntax.bsl.languageserver.reporters;

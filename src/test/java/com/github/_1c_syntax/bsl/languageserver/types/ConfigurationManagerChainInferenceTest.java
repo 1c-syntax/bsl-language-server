@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -46,6 +48,9 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry typeRegistry;
 
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
   @Test
   void chainResolvesManagerModuleMethodReturnType() {
     initServerContext(PATH_TO_METADATA);
@@ -57,14 +62,15 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
 
     // sanity: коллекция Справочники зарегистрирована как глобальное свойство,
     // её член — менеджер-обёртка с методом МетодМенеджера.
-    var collection = typeService.findGlobalContext("Справочники").orElseThrow();
-    var catalogsMembers = typeRegistry.getMembers(collection);
+    typeRegistry.resolve("");
+    var collection = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
+    var catalogsMembers = typeRegistry.getMembers(collection, FileType.BSL);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");
     var memberReturn = catalogsMembers.stream()
       .filter(m -> "СправочникСМенеджером".equals(m.name()))
       .findFirst().orElseThrow().returnType();
     assertThat(memberReturn.qualifiedName()).isEqualTo("СправочникМенеджер.СправочникСМенеджером");
-    assertThat(typeRegistry.getMembers(memberReturn))
+    assertThat(typeRegistry.getMembers(memberReturn, FileType.BSL))
       .extracting(m -> m.name())
       .as("methods of manager wrapper should include exported МетодМенеджера")
       .contains("МетодМенеджера");
@@ -84,7 +90,7 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     String assignedVar
   ) {
     // Кладём курсор на имя метода в правой части присваивания, как в
-    // CommonModuleCallInferenceTest — inferAtPosition возвращает тип
+    // CommonModuleCallInferenceTest — expressionTypesAt возвращает тип
     // объемлющего выражения (вызова), а не самой переменной слева.
     var marker = assignedVar + " = ";
     var rhsStart = content.indexOf(marker) + marker.length();
@@ -94,7 +100,7 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     int line = content.substring(0, methodIdx).split("\n").length - 1;
     int pos = methodIdx - lineStart + 1;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, pos));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, pos));
     assertThat(types.refs())
       .as("chain return type for %s", assignedVar)
       .hasSize(1);

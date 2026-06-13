@@ -113,7 +113,7 @@ class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<Assi
     initServerContext(PATH_TO_METADATA);
     // Регистрируем тестовый контент под РЕАЛЬНЫМ URI Module.bsl в workspace
     // и токенизируем — cross-document резолв (PlatformMemberReferenceFinder →
-    // typeService.findMemberAt) находит этот же DocumentContext с валидным AST,
+    // typeService.memberAt) находит этот же DocumentContext с валидным AST,
     // никакого спая с подменой только getUri() (которая ломала инвариант
     // «URI и AST принадлежат одному файлу») не нужно.
     var fileContent = getText(diagnosticInstance.getClass().getSimpleName());

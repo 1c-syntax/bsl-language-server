@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
@@ -40,14 +41,15 @@ import java.util.StringJoiner;
  */
 @Component
 @RequiredArgsConstructor
-public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<ModuleSymbol> {
+public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final Resources resources;
   private final DescriptionFormatter descriptionFormatter;
   private final OScriptClassConstructorRenderer oScriptClassConstructorRenderer;
 
   @Override
-  public MarkupContent getContent(ModuleSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (ModuleSymbol) reference.symbol();
     var documentContext = symbol.getOwner();
 
     // Для OneScript-классов без явного конструктора (ссылка из Новый ИмяКласса()

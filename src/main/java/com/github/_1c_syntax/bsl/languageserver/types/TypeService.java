@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -33,11 +32,14 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -46,13 +48,10 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-import jakarta.annotation.Nullable;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +62,7 @@ import java.util.Optional;
  * {@link ExpressionTypeInferencer}/{@link TypeRegistry}.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class TypeService {
 
@@ -75,21 +74,17 @@ public class TypeService {
   private final DereferenceMemberMatcher dereferenceMatcher;
 
   /**
-   * Получить набор типов на позиции (точка входа для hover/completion).
+   * Тип значения, на которое указывает ссылка (контейнер символ+документ+диапазон):
+   * source-defined символ → его тип-значение, synthetic → valueType,
+   * platform-member → returnTypes.
+   *
+   * @param reference ссылка на символ.
+   * @return набор типов значения ссылки; {@link TypeSet#EMPTY}, если тип не определяется.
    */
-  public TypeSet findTypes(URI uri, Position position) {
-    return referenceResolver.findReference(uri, position)
-      .map(this::findTypes)
-      .orElse(TypeSet.EMPTY);
-  }
-
-  /**
-   * Получить набор типов для конкретной {@link Reference}.
-   */
-  public TypeSet findTypes(Reference reference) {
+  public TypeSet typesAt(Reference reference) {
     var sourceDefined = reference.getSourceDefinedSymbol();
     if (sourceDefined.isPresent()) {
-      return findTypes(sourceDefined.get());
+      return inferencer.inferSymbol(sourceDefined.get());
     }
     if (reference.symbol() instanceof SyntheticSymbol synthetic) {
       var valueType = synthetic.getValueType();
@@ -107,18 +102,25 @@ public class TypeService {
   }
 
   /**
-   * Получить набор типов для символа.
+   * Тип <b>всего выражения</b>, охватывающего позицию (наименьшее объемлющее
+   * {@code RULE_expression}), вычисленный инференсером по AST. Позиционно
+   * <b>не</b>чувствителен <i>внутри</i> выражения: для {@code Г + А.Б.В} вернёт тип
+   * суммы независимо от того, на каком сегменте курсор. Используется для вывода
+   * типа выражения-аргумента вызова целиком.
+   *
+   * @param documentContext контекст документа.
+   * @param position позиция внутри выражения.
+   * @return тип охватывающего выражения; {@link TypeSet#EMPTY}, если не выводится.
    */
-  public TypeSet findTypes(SourceDefinedSymbol symbol) {
-    return inferencer.inferSymbol(symbol);
-  }
-
-  /**
-   * Получить типы выражения, начинающегося в указанной позиции.
-   * Используется hover'ом/completion'ом для произвольного выражения,
-   * не привязанного к именованному символу.
-   */
-  public TypeSet inferAtPosition(DocumentContext documentContext, Position position) {
+  public TypeSet expressionTypesAt(DocumentContext documentContext, Position position) {
+    // Инференсер читает глобальный скоуп из GlobalScopeProvider (findGlobalEntry,
+    // moduleTypeByUri), который наполняется как побочный эффект @PostConstruct
+    // bootstrap() workspace-scoped TypeRegistry (registerPack →
+    // globalScopeProvider.registerGlobalProperty/registerPlatformClass). Чтение
+    // GlobalScopeProvider сам этот bootstrap не триггерит, поэтому первый в скоупе
+    // вывод по глобальному символу увидел бы пустой скоуп. Дёргаем TypeRegistry,
+    // чтобы материализовать bean и прогнать bootstrap; resolve("") — самый дешёвый
+    // вызов: на пустом имени сразу возвращает empty.
     typeRegistry.resolve("");
     return ExpressionAtPosition.findExpressionTree(documentContext, position)
       .map(expression -> inferencer.infer(expression, documentContext))
@@ -126,7 +128,10 @@ public class TypeService {
   }
 
   /**
-   * Список типов параметров метода — для signature help.
+   * Типы параметров метода (по порядку) — для signature help.
+   *
+   * @param method метод, чьи типы параметров нужны.
+   * @return список наборов типов по параметрам, в порядке объявления.
    */
    public List<TypeSet> getParameterTypes(MethodSymbol method) {
      return method.getParameters().stream()
@@ -136,113 +141,135 @@ public class TypeService {
 
   /**
    * Объявленный тип возвращаемого значения метода — для signature help/hover.
+   *
+   * @param method метод.
+   * @return набор типов возвращаемого значения; {@link TypeSet#EMPTY}, если не объявлен.
    */
   public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
     return symbolTypeIndex.getDeclaredReturnTypes(method);
   }
 
   /**
-   * Члены типа (методы + свойства) — для completion на точке.
-   */
-  public Collection<MemberDescriptor> getMembers(TypeRef typeRef) {
-    return typeRegistry.getMembers(typeRef);
-  }
-
-  /**
-   * То же, что {@link #getMembers(TypeRef)}, но фильтрует члены по языковому скоупу
-   * источника. Источники, не совместимые с {@code fileType}, пропускаются.
+   * Члены типа (методы + свойства) — для completion/hover/inferencer. Фильтрует:
+   * <ul>
+   *   <li>по языковому скоупу источника (источники, несовместимые с {@code fileType},
+   *       пропускаются);</li>
+   *   <li>generic-шаблоны ({@link MemberDescriptor#generic()} — placeholder'ы вида
+   *       {@code <Имя картинки>}, {@code <Имя документа>}) — они хранятся в
+   *       {@link TypeRegistry} как материал для materialization
+   *       ({@code registerMemberExpansion}/{@code registerSpecialization}), но
+   *       внешним потребителям бесполезны.</li>
+   * </ul>
+   *
+   * @param typeRef тип, чьи члены нужны.
+   * @param fileType тип файла-потребителя (BSL/OS) для фильтрации по скоупу.
+   * @return члены типа без generic-шаблонов.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef typeRef, FileType fileType) {
-    return typeRegistry.getMembers(typeRef, fileType);
+    var raw = typeRegistry.getMembers(typeRef, fileType);
+    if (raw.isEmpty()) {
+      return raw;
+    }
+    var filtered = new ArrayList<MemberDescriptor>(raw.size());
+    for (var member : raw) {
+      if (!member.generic()) {
+        filtered.add(member);
+      }
+    }
+    return filtered;
   }
 
   /**
-   * Описание типа (текст для hover); пустая строка, если описание отсутствует.
+   * Члены типа, применимые к указанной локали скрипта — для автодополнения.
+   * <p>
+   * В отличие от {@link #getMembers(TypeRef, FileType)} (служит резолву имён и
+   * выводу типов — там матч идёт по обоим написаниям), здесь член отсеивается,
+   * если у него нет написания в запрошенной локали
+   * ({@link MemberDescriptor#appliesTo(Language)}). Так из ru-автодополнения
+   * уходят, например, англоязычные {@code [DeprecatedName]}-алиасы OneScript
+   * без русской пары ({@code HTTPЗапрос.GetBodyAsBinary}). Отбор зависит только
+   * от имени члена — никаких проверок устаревания и прочих свойств. Резолв
+   * таких имён для диагностик сохраняется: {@link #getMembers(TypeRef, FileType)}
+   * по-прежнему отдаёт их.
+   *
+   * @param typeRef  тип, чьи члены нужны.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @param language локаль скрипта (ru/en) для отбора написаний.
+   * @return члены, применимые к данной локали.
    */
-  public String getDescription(TypeRef typeRef) {
-    return typeRegistry.getDescription(typeRef);
+  public Collection<MemberDescriptor> getMembers(TypeRef typeRef, FileType fileType, Language language) {
+    var members = getMembers(typeRef, fileType);
+    if (members.isEmpty()) {
+      return members;
+    }
+    var result = new ArrayList<MemberDescriptor>(members.size());
+    for (var member : members) {
+      if (member.appliesTo(language)) {
+        result.add(member);
+      }
+    }
+    return result;
   }
 
   /**
-   * То же, но фильтрует описания по скоупу языка (BSL/OS). Используется,
+   * Описание типа (текст для hover). Фильтрует описания по скоупу языка (BSL/OS) —
    * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
+   *
+   * @param typeRef тип.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @return описание; пустая строка, если описание отсутствует.
    */
   public String getDescription(TypeRef typeRef, FileType fileType) {
     return typeRegistry.getDescription(typeRef, fileType);
   }
 
-  /** Описание типа в указанной локали LS (с fallback). */
-  public String getDescription(TypeRef typeRef, Language language) {
-    return typeRegistry.getDescription(typeRef, language);
+  /**
+   * Описание типа в указанной локали LS с фильтрацией по типу файла (BSL/OS) —
+   * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
+   *
+   * @param typeRef тип.
+   * @param language локаль интерфейса LS.
+   * @param fileType тип файла-потребителя.
+   * @return описание; пустая строка, если описание отсутствует.
+   */
+  public String getDescription(TypeRef typeRef, Language language, FileType fileType) {
+    return typeRegistry.getDescription(typeRef, language, fileType);
   }
 
-  /** Имя типа для отображения в указанной локали LS (ru/en, с fallback). */
+  /**
+   * Имя типа для отображения в указанной локали LS (ru/en, с fallback).
+   *
+   * @param typeRef тип.
+   * @param language локаль интерфейса LS.
+   * @return отображаемое имя типа.
+   */
   public String displayName(TypeRef typeRef, Language language) {
     return typeRegistry.displayName(typeRef, language);
   }
 
   /**
    * Сигнатуры конструкторов типа (для платформенных классов из JSON-пакета).
-   * Пустой список, если конструкторов нет.
+   * Фильтрует по скоупу языка (BSL/OS).
+   *
+   * @param typeRef тип.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @return сигнатуры конструкторов; пустой список, если конструкторов нет.
    */
-  public java.util.List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(TypeRef typeRef) {
-    return typeRegistry.getConstructors(typeRef);
-  }
-
-  /**
-   * То же, но фильтрует конструкторы по скоупу языка (BSL/OS).
-   */
-  public java.util.List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
+  public List<SignatureDescriptor> getConstructors(
     TypeRef typeRef, FileType fileType
   ) {
     return typeRegistry.getConstructors(typeRef, fileType);
   }
 
   /**
-   * Резолв типа по имени (включая Ru/En алиасы и qualifiedName).
-   */
-  public Optional<TypeRef> resolve(String name) {
-    return typeRegistry.resolve(name);
-  }
-
-  /**
-   * Резолв типа по имени с учётом языкового скоупа.
+   * Резолв типа по имени с учётом языкового скоупа (включая Ru/En алиасы и qualifiedName).
+   *
+   * @param name имя типа.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @return найденный тип, либо empty.
    */
   public Optional<TypeRef> resolve(String name, FileType fileType) {
     return typeRegistry.resolve(name, fileType);
-  }
-
-  /**
-   * Найти тип имени в global scope (любое VALUE-имя: property, enum, library-module).
-   */
-  public Optional<TypeRef> findGlobalContext(String name) {
-    return findGlobalContext(name, null);
-  }
-
-  /**
-   * То же, что {@link #findGlobalContext(String)}, но с фильтрацией по типу файла.
-   */
-  public Optional<TypeRef> findGlobalContext(String name, FileType fileType) {
-    // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы system enum'ы
-    // и прочие глобальные свойства из платформенных провайдеров были зарегистрированы.
-    typeRegistry.resolve(name);
-    return globalScopeProvider.findGlobalContext(name, fileType);
-  }
-
-  /**
-   * @return имена всех VALUE-имён в global scope (property + enum + library-module).
-   */
-  public Collection<String> getGlobalContextNames() {
-    typeRegistry.resolve("");
-    return globalScopeProvider.getGlobalContextNames();
-  }
-
-  /**
-   * То же, что {@link #getGlobalContextNames()}, но с фильтрацией по типу файла.
-   */
-  public Collection<String> getGlobalContextNames(FileType fileType) {
-    typeRegistry.resolve("");
-    return globalScopeProvider.getGlobalContextNames(fileType);
   }
 
   /**
@@ -250,23 +277,29 @@ public class TypeService {
    * выражениям без source-defined символа: цепочки accessor'ов,
    * платформенные типы, library-модули).
    *
-   * @return описание найденного члена + тип-владелец и диапазон под курсором.
+   * @param documentContext контекст документа.
+   * @param position позиция в документе.
+   * @return описание найденного члена + тип-владелец и диапазон под курсором; empty, если члена нет.
    */
-  public Optional<TypedMember> findMemberAt(DocumentContext documentContext, Position position) {
-    return findMembersAt(documentContext, position).stream().findFirst();
+  public Optional<TypedMember> memberAt(DocumentContext documentContext, Position position) {
+    return membersAt(documentContext, position).stream().findFirst();
   }
 
   /**
-   * То же, что {@link #findMemberAt(DocumentContext, Position)}, но возвращает
+   * То же, что {@link #memberAt(DocumentContext, Position)}, но возвращает
    * <b>все</b> члены-кандидаты, когда тип ресивера выведен как union из
    * нескольких типов (например, переменная присваивается значениями разных
    * типов в разных ветках). Потребителям, проверяющим метаданные члена
    * (устаревание, доступность по версии платформы), важен каждый возможный
    * тип-владелец: вызов небезопасен, если хотя бы один из них делает член
    * устаревшим/недоступным. Для глобальных функций/свойств список из одного
-   * элемента. Порядок совпадает с {@link #findMemberAt} (первый элемент тот же).
+   * элемента. Порядок совпадает с {@link #memberAt} (первый элемент тот же).
+   *
+   * @param documentContext контекст документа.
+   * @param position позиция в документе.
+   * @return все члены-кандидаты в позиции; пустой список, если члена нет.
    */
-  public List<TypedMember> findMembersAt(DocumentContext documentContext, Position position) {
+  public List<TypedMember> membersAt(DocumentContext documentContext, Position position) {
     var terminal = identifierTerminalAt(documentContext, position).orElse(null);
     if (terminal == null) {
       return List.of();
@@ -308,17 +341,17 @@ public class TypeService {
     }
 
     return globalScopeProvider.findGlobalEntry(bareName, fileType)
-      .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
-      .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol)
+      .filter(e -> e.role() != GlobalSymbolScope.Role.TYPE_NAME)
+      .map(GlobalSymbolScope.Entry::symbol)
       .filter(SyntheticSymbol.class::isInstance)
       .map(SyntheticSymbol.class::cast)
-      .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
+      .filter(s -> s.getSyntheticKind() != SyntheticKind.PLATFORM_GLOBAL_METHOD)
       .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN))
       .map((SyntheticSymbol sym) -> {
         var ref = sym.getValueType();
         var desc = sym.getDescription();
         if (desc == null || desc.isBlank()) {
-          desc = typeRegistry.getDescription(ref);
+          desc = typeRegistry.getDescription(ref, fileType);
         }
         return new TypedMember(ref,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),
@@ -335,12 +368,18 @@ public class TypeService {
    * <p>
    * Предполагает, что позиция указывает на аксессор члена — это контракт
    * вызывающего ({@code visitAccessProperty} / {@code visitMethodCall}).
+   *
+   * @param documentContext контекст документа.
+   * @param position позиция аксессора члена.
+   * @return типы ресивера (для имени типа в сообщении), либо empty, если член найден
+   *     или тип ресивера не выведен / содержит UNKNOWN/ANY.
    */
   public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, Position position) {
-    if (!findMembersAt(documentContext, position).isEmpty()) {
+    if (!membersAt(documentContext, position).isEmpty()) {
       return Optional.empty();
     }
-    return receiverTypesAt(documentContext, position).filter(TypeService::allConcrete);
+    var receiver = receiverTypesAt(documentContext, position);
+    return allConcrete(receiver) ? Optional.of(receiver) : Optional.empty();
   }
 
   /**
@@ -350,19 +389,91 @@ public class TypeService {
    * <p>
    * Предполагает, что позиция указывает на имя голого вызова — это контракт
    * вызывающего ({@code visitGlobalMethodCall}).
+   *
+   * @param documentContext контекст документа.
+   * @param position позиция имени голого вызова.
+   * @return {@code true}, если имя не резолвится ни в глобал, ни в source-defined символ.
    */
   public boolean isUnknownGlobalAt(DocumentContext documentContext, Position position) {
-    return findMembersAt(documentContext, position).isEmpty()
+    return membersAt(documentContext, position).isEmpty()
       && referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
   }
 
   /**
-   * Типы ресивера для выражения {@code ресивер.член} в позиции. Empty, если в
-   * позиции нет dereference-выражения.
+   * Тип ресивера доступа к члену в позиции — самодостаточная верхнеуровневая
+   * точка входа. Пустой {@link TypeSet}, если в позиции нет доступа к члену.
+   * <p>
+   * Покрывает все формы без оркестрации со стороны консьюмера:
+   * <ul>
+   *   <li>курсор на члене ({@code Ресивер.Чле|н}, {@code Ресивер.Метод()}) —
+   *       выводит тип левой части dereference (в т.ч. для именованного ресивера,
+   *       т.к. инференс идентификатора сам идёт в индекс ссылок и global scope);</li>
+   *   <li>висячая точка ({@code Ресивер.|}) — резолвит выражение-ресивер,
+   *       заканчивающееся перед точкой.</li>
+   * </ul>
+   *
+   * @param documentContext контекст документа.
+   * @param position позиция доступа к члену (на члене или сразу за точкой).
+   * @return типы ресивера; {@link TypeSet#EMPTY}, если в позиции нет доступа к члену.
    */
-  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, Position position) {
-    return identifierTerminalAt(documentContext, position)
-      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, position, terminal));
+  public TypeSet receiverTypesAt(DocumentContext documentContext, Position position) {
+    var viaMember = identifierTerminalAt(documentContext, position)
+      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, position, terminal))
+      .orElse(TypeSet.EMPTY);
+    if (!viaMember.isEmpty()) {
+      return viaMember;
+    }
+    return receiverEndBeforeDot(documentContext, position)
+      .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd))
+      .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Тип ресивера-сегмента, заканчивающегося в позиции {@code receiverEnd} (последний
+   * символ ресивера перед висячей точкой). Позиционно-чувствительно: сначала индекс
+   * ссылок (именованный символ/член в позиции, например переменная {@code Структура}
+   * с её локальными полями), и лишь если пусто — тип охватывающего выражения (для
+   * ресивера-результата вызова {@code Ф().|} и т.п.). Прямой {@code expressionTypesAt}
+   * здесь нельзя: он накрыл бы незавершённое {@code Ресивер.Член} и не разрешил член.
+   */
+  private TypeSet receiverSegmentTypes(DocumentContext documentContext, Position receiverEnd) {
+    var fromIndex = referenceResolver.findReference(documentContext.getUri(), receiverEnd)
+      .map(this::typesAt)
+      .orElse(TypeSet.EMPTY);
+    if (!fromIndex.isEmpty()) {
+      return fromIndex;
+    }
+    return expressionTypesAt(documentContext, receiverEnd);
+  }
+
+  /**
+   * Если {@code position} стоит сразу за точкой доступа к члену (возможно, с уже
+   * набранным префиксом члена) — позиция последнего символа ресивера перед точкой.
+   * Используется для висячей точки, где завершённого dereference в AST ещё нет.
+   */
+  private static Optional<Position> receiverEndBeforeDot(DocumentContext documentContext, Position position) {
+    var lines = documentContext.getContentList();
+    if (position.getLine() >= lines.length) {
+      return Optional.empty();
+    }
+    var line = lines[position.getLine()];
+    var col = Math.min(position.getCharacter(), line.length());
+    var i = col;
+    while (i > 0 && isIdentChar(line.charAt(i - 1))) {
+      i--;
+    }
+    if (i == 0 || line.charAt(i - 1) != '.') {
+      return Optional.empty();
+    }
+    var dotColumn = i - 1;
+    if (dotColumn == 0) {
+      return Optional.empty();
+    }
+    return Optional.of(new Position(position.getLine(), dotColumn - 1));
+  }
+
+  private static boolean isIdentChar(char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
   }
 
   /** Все типы из набора конкретны (без {@link TypeRef#ANY} / {@link TypeRef#UNKNOWN}). */

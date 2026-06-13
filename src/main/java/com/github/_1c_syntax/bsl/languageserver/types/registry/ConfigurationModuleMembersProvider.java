@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -34,8 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +56,7 @@ import java.util.function.Supplier;
  * ручной инвалидации.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 @Slf4j
 public class ConfigurationModuleMembersProvider {
@@ -77,6 +75,7 @@ public class ConfigurationModuleMembersProvider {
   );
 
   private final TypeRegistry typeRegistry;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -123,12 +122,13 @@ public class ConfigurationModuleMembersProvider {
     }
 
     var prev = registeredByUri.put(documentContext.getUri(), ref);
+    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
       // тот же URI/тип — источник уже зарегистрирован, AST подхватится автоматически
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), LanguageScope.BSL);
+    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -145,17 +145,18 @@ public class ConfigurationModuleMembersProvider {
     var ref = typeRegistry.registerConfigurationType(name);
 
     var prev = registeredByUri.put(documentContext.getUri(), ref);
+    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), LanguageScope.BSL);
+    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
     // Source-symbol — ModuleSymbol этого DocumentContext'а. Lazy-резолв,
     // чтобы пережить rebuild: SymbolTree пересоздаётся, но Supplier всегда
     // возвращает актуальный getModule().
     Supplier<Symbol> moduleSymbolSupplier =
       () -> documentContext.getSymbolTree().getModule();
-    typeRegistry.registerAsGlobalProperty(ref, LanguageScope.BSL,
+    typeRegistry.registerAsGlobalProperty(ref, FileType.BSL,
       SyntheticKind.PLATFORM_GLOBAL_PROPERTY, moduleSymbolSupplier);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }

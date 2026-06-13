@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +62,12 @@ class OScriptLibraryFileSystemWatcherTest {
   private OScriptLibraryIndex index;
 
   @Autowired
+  private OScriptModuleMembersProvider moduleMembersProvider;
+
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
+  @Autowired
   private ServerContextProvider serverContextProvider;
 
   @TempDir
@@ -80,6 +87,39 @@ class OScriptLibraryFileSystemWatcherTest {
   void tearDown() {
     WorkspaceContextHolder.clear();
     serverContextProvider.clear();
+  }
+
+  @Test
+  void moduleTypeByUriIndexedOnRegisterAndClearedOnUnregister() throws IOException {
+    // given — workspace c lib.config, объявляющим module ModOne
+    Files.writeString(workspaceDir.resolve("ModOne.os"), """
+      Процедура Привет() Экспорт
+      КонецПроцедуры
+      """);
+    Files.writeString(workspaceDir.resolve("lib.config"), """
+      <package-def>
+        <module name="ModOne" file="ModOne.os"/>
+      </package-def>
+      """);
+    var modUri = Absolute.uri(workspaceDir.resolve("ModOne.os").toUri());
+
+    // when — reindex регистрирует module-as-type
+    index.reindex(serverContextProvider.getServerContext(workspaceUri).orElseThrow());
+
+    // then — обратный индекс URI→тип заполнен
+    WorkspaceContextHolder.run(workspaceUri, () ->
+      assertThat(globalScopeProvider.moduleTypeByUri(modUri))
+        .as("после регистрации тип модуля по URI должен быть в индексе")
+        .isPresent());
+
+    // when — документ удалён из контекста (тот же путь, что у handleDocumentRemoved)
+    WorkspaceContextHolder.run(workspaceUri, () -> moduleMembersProvider.unregister(modUri));
+
+    // then — обратный индекс по URI очищен, без протечки
+    WorkspaceContextHolder.run(workspaceUri, () ->
+      assertThat(globalScopeProvider.moduleTypeByUri(modUri))
+        .as("после unregister URI→тип должен исчезнуть")
+        .isEmpty());
   }
 
   @Test

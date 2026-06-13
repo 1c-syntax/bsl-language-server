@@ -32,8 +32,10 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemResolveSupportCapabilities;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -41,8 +43,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Set;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CompletionProviderTest extends AbstractServerContextAwareTest {
@@ -65,6 +69,19 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   private void enableSnippetSupport(boolean enabled) {
     var itemCaps = new CompletionItemCapabilities();
     itemCaps.setSnippetSupport(enabled);
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent();
+  }
+
+  private void enableMarkdownDocumentation(boolean enabled) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setDocumentationFormat(enabled ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
     var completionCaps = new CompletionCapabilities();
     completionCaps.setCompletionItem(itemCaps);
     var textDocumentCaps = new TextDocumentClientCapabilities();
@@ -157,6 +174,64 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .isNotEmpty()
       .extracting(CompletionItem::getLabel)
       .contains("Добавить");
+  }
+
+  @Test
+  void dotCompletionOnMidCallDotOfCommonModuleReturnsModuleMembers() {
+    // #3991: автодополнение прямо на точке внутри уже завершённого вызова
+    // общего модуля — `ОбщегоНазначения.|ОбщийМодуль("Имя")` — должно давать
+    // члены модуля (тип ресивера), а не тип возврата вызова.
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleMidCallCompletion.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `\tОбщегоНазначения.ОбщийМодуль("Имя");` — позиция сразу после точки
+    // (таб + 16 символов имени модуля + точка → член начинается с char 18)
+    params.setPosition(new Position(1, 18));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("mid-call точка должна предлагать члены общего модуля, а не тип возврата вызова")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains("ОбщийМодуль", "ЗначениеВМассиве");
+  }
+
+  @Test
+  void dotCompletionOnCatalogManagerReturnsPredefinedValues() {
+    // Автодополнение после `Справочники.Справочник1.` должно предлагать
+    // предопределённые значения справочника (включая вложенные в группах).
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PredefinedValuesCompletion.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `Справочники.Справочник1.` — позиция сразу после завершающей точки
+    params.setPosition(new Position(1, 24));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("после `Справочники.Справочник1.` должны предлагаться предопределённые значения")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains(
+        "ПредопределённыйЭлемент1",
+        "ПредопределённыйЭлемент2",
+        "ПредопределённаяГруппа",
+        "ВложенныйЭлемент");
   }
 
   @Test
@@ -833,6 +908,12 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     assertThat(detailMatchesSignature || detailMatchesMultiSignaturesCount)
       .as("detail метода — либо `(...)`, либо `N вариантов синтаксиса`, а не текст описания. Получили: %s", detail)
       .isTrue();
+    if (detailMatchesSignature) {
+      // Необязательные параметры теперь помечаются «?», а не квадратными скобками.
+      assertThat(detail)
+        .as("необязательные параметры — через «?», без квадратных скобок. Получили: %s", detail)
+        .doesNotContain("[").doesNotContain("]");
+    }
   }
 
   @Test
@@ -1015,8 +1096,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .as("документация члена — на русском при language=RU")
         .contains("Добавляет значение");
       assertThat(add.getDetail())
-        .as("имя параметра в сигнатуре — на русском; необязательный → в квадратных скобках")
-        .isEqualTo("([Значение])");
+        .as("имя параметра в сигнатуре — на русском; необязательный → со знаком «?»")
+        .isEqualTo("(Значение?)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -1034,8 +1115,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .contains("Adds a value")
         .doesNotContain("Добавляет");
       assertThat(add.getDetail())
-        .as("имя параметра в сигнатуре — на английском; необязательный → в квадратных скобках")
-        .isEqualTo("([Value])");
+        .as("имя параметра в сигнатуре — на английском; необязательный → со знаком «?»")
+        .isEqualTo("(Value?)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -1087,6 +1168,84 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var doc = item.getDocumentation();
     assertThat(doc).as("у члена должна быть проставлена документация").isNotNull();
     return doc.isLeft() ? doc.getLeft() : doc.getRight().getValue();
+  }
+
+  @Test
+  void documentationReturnedAsMarkdownMarkupWhenClientSupportsMarkdown() {
+    // given
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then
+    var doc = add.getDocumentation();
+    assertThat(doc.isRight())
+      .as("при поддержке markdown документация отдаётся как MarkupContent, а не голой строкой")
+      .isTrue();
+    assertThat(doc.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(doc.getRight().getValue()).contains("Добавляет значение");
+  }
+
+  @Test
+  void documentationReturnedAsPlainStringWhenClientLacksMarkdown() {
+    // given
+    enableMarkdownDocumentation(false);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then
+    var doc = add.getDocumentation();
+    assertThat(doc.isLeft())
+      .as("без поддержки markdown документация отдаётся голой строкой (plaintext)")
+      .isTrue();
+    assertThat(doc.getLeft()).contains("Добавляет значение");
+  }
+
+  @Test
+  void deprecatedItemDocumentationKeepsReasonWithoutTextualMarker() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("ПервыйОбщийМодуль.");
+
+    // when
+    var deprecated = dotCompletionItem(documentContext, new Position(0, 18), "УстаревшаяПроцедура");
+
+    // then
+    assertThat(deprecated.getDeprecated())
+      .as("факт устаревания передаётся родным механизмом LSP, а не текстом в documentation")
+      .isTrue();
+    var doc = deprecated.getDocumentation();
+    assertThat(doc.isRight()).isTrue();
+    assertThat(doc.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(doc.getRight().getValue())
+      .as("в documentation остаётся только причина устаревания, без дублирующей пометки")
+      .contains("См. НеУстаревшаяПроцедура.")
+      .doesNotContain("Устарела", "Устарело", "Deprecated");
+  }
+
+  @Test
+  void deprecatedItemReasonShownForPlaintextClient() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    enableMarkdownDocumentation(false);
+    var documentContext = TestUtils.getDocumentContext("ПервыйОбщийМодуль.");
+
+    // when
+    var deprecated = dotCompletionItem(documentContext, new Position(0, 18), "УстаревшаяПроцедура");
+
+    // then
+    var doc = deprecated.getDocumentation();
+    assertThat(doc.isLeft())
+      .as("без поддержки markdown документация отдаётся голой строкой")
+      .isTrue();
+    assertThat(doc.getLeft())
+      .contains("См. НеУстаревшаяПроцедура.")
+      .doesNotContain("**");
   }
 
   @Test
@@ -1498,6 +1657,104 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionRanksLocalMethodAboveGlobalFunctionAndKeyword() {
+    // sortText-«корзины»: локальный метод документа должен ранжироваться выше
+    // (лексикографически меньший sortText) глобальной функции и ключевого слова,
+    // чтобы не тонуть среди сотен платформенных кандидатов.
+    // given
+    var content = """
+      Процедура Сообщение() Экспорт
+      КонецПроцедуры
+
+      Сооб""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, 4));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var localMethod = sortTextOf(items, "Сообщение");
+    var globalFunction = sortTextOf(items, "Сообщить");
+
+    // then
+    assertThat(localMethod)
+      .as("sortText локального метода и глобальной функции должны быть проставлены")
+      .isNotNull();
+    assertThat(globalFunction).isNotNull();
+    assertThat(localMethod)
+      .as("локальный метод документа ранжируется выше глобальной функции")
+      .isLessThan(globalFunction);
+  }
+
+  @Test
+  void noDotCompletionRanksLocalVariableAboveKeyword() {
+    // Локальная переменная документа должна ранжироваться выше ключевого слова.
+    // given
+    var content = """
+      Перем ЕслиЧтоТо;
+
+      Е""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, 1));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var localVariable = sortTextOf(items, "ЕслиЧтоТо");
+    var keyword = sortTextOf(items, "Если");
+
+    // then
+    assertThat(localVariable).isNotNull();
+    assertThat(keyword).as("ключевое слово Если должно быть в выдаче").isNotNull();
+    assertThat(localVariable)
+      .as("локальная переменная ранжируется выше ключевого слова")
+      .isLessThan(keyword);
+  }
+
+  @Test
+  void noDotCompletionDemotesDeprecatedLocalMethodBelowNonDeprecatedNeighbor() {
+    // Устаревший локальный метод получает sortText хуже неустаревшего соседа той же
+    // корзины. Имя устаревшего («МетодА») лексикографически меньше неустаревшего
+    // («МетодБ») — значит, перестановку обеспечивает именно пометка устаревания.
+    // given
+    var content = """
+      // Устарела. См. МетодБ.
+      Процедура МетодА() Экспорт
+      КонецПроцедуры
+
+      Процедура МетодБ() Экспорт
+      КонецПроцедуры
+
+      Мет""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(7, 3));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var deprecated = sortTextOf(items, "МетодА");
+    var fresh = sortTextOf(items, "МетодБ");
+
+    // then
+    assertThat(deprecated).as("устаревший метод должен быть в выдаче").isNotNull();
+    assertThat(fresh).isNotNull();
+    assertThat(deprecated)
+      .as("устаревший метод ранжируется ниже неустаревшего соседа, несмотря на меньшее имя")
+      .isGreaterThan(fresh);
+  }
+
+  private static String sortTextOf(List<CompletionItem> items, String label) {
+    return items.stream()
+      .filter(it -> label.equals(it.getLabel()))
+      .map(CompletionItem::getSortText)
+      .findFirst()
+      .orElse(null);
+  }
+
+  @Test
   void positionBeyondEndOfFileReturnsEmptyOrSafe() {
     // given — позиция за пределами файла.
     var documentContext = TestUtils.getDocumentContext("Сооб");
@@ -1510,5 +1767,77 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
     // then — supplier не падает.
     assertThat(result).isNotNull();
+  }
+
+  private void enableDocumentationResolveSupport(boolean markdown) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setDocumentationFormat(markdown ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
+    itemCaps.setResolveSupport(new CompletionItemResolveSupportCapabilities(List.of("documentation")));
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent();
+  }
+
+  @Test
+  void dotCompletionItemArrivesWithoutDocumentationButWithDataWhenResolveSupported() {
+    // given — клиент умеет лениво разрешать documentation
+    enableDocumentationResolveSupport(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then — documentation отложена, но data приложена для resolve
+    assertThat(add.getDocumentation())
+      .as("при поддержке resolveSupport documentation отдаётся лениво")
+      .isNull();
+    assertThat(add.getData())
+      .as("для отложенного resolve в item кладётся data-ключ члена")
+      .isNotNull();
+    // detail остаётся жадным (фильтрация/вставка не требуют resolve)
+    assertThat(add.getDetail()).isEqualTo("(Значение?)");
+  }
+
+  @Test
+  void resolveCompletionItemRestoresSameDocumentationAsEagerWhenResolveSupported() {
+    // given — ленивый item из dot-completion
+    enableDocumentationResolveSupport(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+    var lazy = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // when — клиент запрашивает resolve этого item
+    var resolved = completionProvider.resolveCompletionItem(lazy);
+
+    // then — documentation восстановлена тем же контентом, что был бы жадным
+    assertThat(resolved.getDocumentation())
+      .as("resolve восстанавливает documentation")
+      .isNotNull();
+    assertThat(resolved.getDocumentation().getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(resolved.getDocumentation().getRight().getValue()).contains("Добавляет значение");
+    assertThat(resolved.getData())
+      .as("после resolve data очищается для экономии трафика")
+      .isNull();
+  }
+
+  @Test
+  void dotCompletionKeepsEagerDocumentationWhenClientLacksResolveSupport() {
+    // given — клиент без resolveSupport (только markdown documentation)
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then — прежнее поведение: documentation приходит сразу, data не нужна
+    assertThat(add.getDocumentation())
+      .as("без resolveSupport documentation остаётся жадной")
+      .isNotNull();
+    assertThat(add.getDocumentation().getRight().getValue()).contains("Добавляет значение");
+    assertThat(add.getData()).isNull();
   }
 }

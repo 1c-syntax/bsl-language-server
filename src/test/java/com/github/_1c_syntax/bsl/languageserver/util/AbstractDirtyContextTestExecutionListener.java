@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import org.springframework.core.Ordered;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestContext;
@@ -50,7 +50,7 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
    *       {@code ServerContextDocumentRemovedEvent} через AOP, на котором
    *       зависят downstream-индексы ({@code ReferenceIndex},
    *       {@code OScriptLibraryIndex}, и т.п.);</li>
-   *   <li>{@code WorkspaceScope.removeWorkspace(uri)} — уничтожает
+   *   <li>{@code WorkspaceBeanScope.removeWorkspace(uri)} — уничтожает
    *       workspace-scoped beans (TypeRegistry, GlobalScopeProvider,
    *       BslContextHolder, ...) с их destruction callbacks. При следующем
    *       обращении они создадутся заново.</li>
@@ -64,11 +64,11 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
    */
   protected static void liteCleanup(TestContext testContext) {
     ServerContextProvider provider;
-    WorkspaceScope workspaceScope;
+    WorkspaceBeanScope workspaceScope;
     LanguageServerConfiguration configBean;
     try {
       provider = testContext.getApplicationContext().getBean(ServerContextProvider.class);
-      workspaceScope = testContext.getApplicationContext().getBean(WorkspaceScope.class);
+      workspaceScope = testContext.getApplicationContext().getBean(WorkspaceBeanScope.class);
       configBean = testContext.getApplicationContext().getBean(LanguageServerConfiguration.class);
     } catch (Exception e) {
       return; // Spring контекст ещё не готов.
@@ -77,7 +77,7 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
     // Workspace-scoped beans живы пока scope их держит. Сбрасываем конфигурацию КАЖДОГО
     // workspace в scope (включая искусственный file:///test-workspace из
     // WorkspaceContextTestExecutionListener'а), затем сносим всё через provider.clear().
-    // Перебираем uris из самого WorkspaceScope, а не из provider.getAllContexts() —
+    // Перебираем uris из самого WorkspaceBeanScope, а не из provider.getAllContexts() —
     // часть workspace'ов (test-default) проходят мимо ServerContextProvider.
     for (var uri : workspaceScope.getRegisteredWorkspaceUris()) {
       // two-arg forUri — чтобы не зависеть от наличия URI в WORKSPACE_NAMES
@@ -94,7 +94,7 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
     // provider.clear() уничтожает workspace-scoped beans только для тех URI, что были
     // зарегистрированы через addWorkspace (живут в provider.contexts). Виртуальные
     // workspace'ы — например, file:///test-workspace из WorkspaceContextTestExecutionListener'а
-    // или async-propagated — обходят provider, но создают beans в WorkspaceScope.store.
+    // или async-propagated — обходят provider, но создают beans в WorkspaceBeanScope.store.
     // Без явного removeWorkspace их TypeRegistry / OScriptLibraryIndex / GlobalScopeProvider
     // переживают cleanup и подкидывают флэйк (см. ConventionalLibraryDiscoveryTest pollution).
     for (var uri : workspaceScope.getRegisteredWorkspaceUris()) {

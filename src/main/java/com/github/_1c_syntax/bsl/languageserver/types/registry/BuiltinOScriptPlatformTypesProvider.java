@@ -22,9 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -42,14 +40,14 @@ import java.util.List;
  * {@code language-gating}, в этом провайдере не реализуется.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class BuiltinOScriptPlatformTypesProvider implements PlatformTypesProvider {
 
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json";
 
-  /** см. {@link BuiltinPlatformTypesProvider#CACHED_TYPES} — JSON парсится один раз на JVM. */
-  private static final List<TypeDecl> CACHED_TYPES = List.copyOf(BuiltinPlatformTypesProvider.loadFromResource(RESOURCE_PATH));
+  /** JSON парсится общим {@link BuiltinTypesJsonLoader} один раз на JVM. */
+  private static final List<TypeDecl> CACHED_TYPES = List.copyOf(BuiltinTypesJsonLoader.load(RESOURCE_PATH));
 
   private final List<TypeDecl> types;
 
@@ -63,7 +61,7 @@ public class BuiltinOScriptPlatformTypesProvider implements PlatformTypesProvide
   }
 
   @Override
-  public LanguageScope getLanguageScope() {
-    return LanguageScope.OS;
+  public FileType getFileType() {
+    return FileType.OS;
   }
 }

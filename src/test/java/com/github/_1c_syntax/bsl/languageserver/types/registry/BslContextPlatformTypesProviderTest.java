@@ -186,6 +186,70 @@ class BslContextPlatformTypesProviderTest {
   }
 
   @Test
+  void enumValueWithPlaceholderName_isMarkedAsGenericTemplate() {
+    // Значение enum-«библиотеки» с placeholder в имени (<Имя картинки>) должно
+    // быть помечено generic=true, чтобы expandedMembers мог раскрыть его в
+    // конкретные имена из конфигурации (CommonPicture).
+    var pictureLib = PlatformContextEnum.builder()
+      .name(new ContextName("БиблиотекаКартинок", "PictureLib"))
+      .values(List.of(
+        new PlatformContextEnumValue(new ContextName("<Имя картинки>", "<Icon name>")),
+        new PlatformContextEnumValue(new ContextName("АктивироватьЗадачу", "ActivateTask"))
+      ))
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(pictureLib)))
+      .getTypes().iterator().next();
+
+    var members = decl.members();
+    assertThat(members).hasSize(2);
+    var templates = members.stream().filter(com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor::generic).toList();
+    var concrete = members.stream().filter(m -> !m.generic()).toList();
+    assertThat(templates).extracting(m -> m.name()).containsExactly("<Имя картинки>");
+    assertThat(concrete).extracting(m -> m.name()).containsExactly("АктивироватьЗадачу");
+  }
+
+  @Test
+  void enumValueReturnType_followsEnumValueType_whenPresent() {
+    // У enum-«библиотеки» определён общий тип элементов (valueType()).
+    // Соответственно returnType значений должен быть этим типом, а не самим
+    // enum'ом — иначе БиблиотекаКартинок.ИнтервалДат имеет тип
+    // «БиблиотекаКартинок» вместо «Картинка».
+    var pictureLib = PlatformContextEnum.builder()
+      .name(new ContextName("БиблиотекаКартинок", "PictureLib"))
+      .values(List.of(
+        new PlatformContextEnumValue(new ContextName("ИнтервалДат", "DateInterval"))
+      ))
+      .valueType(new ContextName("Картинка", "Picture"))
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(pictureLib)))
+      .getTypes().iterator().next();
+
+    assertThat(decl.members()).hasSize(1);
+    assertThat(decl.members().iterator().next().returnType().qualifiedName())
+      .isEqualTo("Картинка");
+  }
+
+  @Test
+  void enumValueReturnType_fallbacksToEnumRef_whenValueTypeAbsent() {
+    // Обычное системное перечисление: valueType отсутствует —
+    // returnType значений = сам enum.
+    var enumeration = PlatformContextEnum.builder()
+      .name(new ContextName("ВидДвиженияНакопления", "AccumulationRecordType"))
+      .values(List.of(
+        new PlatformContextEnumValue(new ContextName("Приход", "Receipt"))
+      ))
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(enumeration)))
+      .getTypes().iterator().next();
+
+    assertThat(decl.members().iterator().next().returnType().qualifiedName())
+      .isEqualTo("ВидДвиженияНакопления");
+  }
+
+  @Test
   void enumValuesPublishedAsPropertiesOfEnumType() {
     var enumeration = PlatformContextEnum.builder()
       .name(new ContextName("КодировкаТекста", "TextEncoding"))

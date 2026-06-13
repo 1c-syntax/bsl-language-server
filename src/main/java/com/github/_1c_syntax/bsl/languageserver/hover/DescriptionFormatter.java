@@ -56,6 +56,7 @@ public class DescriptionFormatter {
   private static final String RETURNED_VALUE_KEY = "returnedValue";
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
+  private static final String DEPRECATED_FLAG_KEY = "deprecatedFlag";
   private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
 
   private final Resources resources;
@@ -67,6 +68,31 @@ public class DescriptionFormatter {
       markupBuilder.add("");
       markupBuilder.add("---");
     }
+  }
+
+  /**
+   * Формирует секцию признака устаревания метода для всплывающего окна.
+   *
+   * @param methodSymbol символ метода, для которого строится секция
+   * @return markdown-блок «Устарела.» с текстом причины устаревания (если он
+   *   указан в описании метода), либо пустая строка, если метод не устарел
+   */
+  public String getDeprecatedSection(MethodSymbol methodSymbol) {
+    if (!methodSymbol.isDeprecated()) {
+      return "";
+    }
+
+    var deprecatedFlag = "**" + getResourceString(DEPRECATED_FLAG_KEY) + "**";
+    var deprecationInfo = methodSymbol.getDescription()
+      .map(MethodDescription::getDeprecationInfo)
+      .filter(info -> !info.isBlank())
+      .orElse("");
+
+    if (deprecationInfo.isEmpty()) {
+      return deprecatedFlag;
+    }
+
+    return deprecatedFlag + " " + deprecationInfo;
   }
 
   public String getPurposeSection(MethodSymbol methodSymbol) {
@@ -249,6 +275,9 @@ public class DescriptionFormatter {
       }
 
       if (parameterDefinition.isOptional()) {
+        // Необязательный параметр помечаем «?»: знак приклеивается к типу
+        // (Имя: Тип?), а при отсутствии типа — к имени (Имя?).
+        parameter.append('?');
         parameter.append(" = ");
         parameter.append(parameterDefinition.getDefaultValue().value());
       }

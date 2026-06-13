@@ -21,76 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.platform;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.mdclasses.CF;
-import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
- * Чисто-функциональные ветви {@link PlatformMemberCalls}: парсинг версий,
- * sentinel {@code "*"} (oscript-конвенция), префикс-фильтр «Удалить»/«Delete».
- * Полный путь резолва покрывается тестами диагностик {@code DeprecatedMethodCall}
- * и {@code UnavailableMemberCall}.
+ * Чисто-функциональные ветви {@link PlatformMemberCalls}: префикс-фильтр
+ * «Удалить»/«Delete». Полный путь резолва покрывается тестами диагностик
+ * {@code DeprecatedMethodCall} и {@code UnavailableMemberCall}; версионная
+ * применимость члена — в {@code PlatformMemberVersionsTest}.
  */
 class PlatformMemberCallsTest {
-
-  @Test
-  void firesDeprecatedTriggersWhenTargetReachesVersion() {
-    var target = new CompatibilityMode("8.3.20");
-    assertThat(PlatformMemberCalls.firesDeprecated("8.3.10", target)).isTrue();
-    assertThat(PlatformMemberCalls.firesDeprecated("8.3.20", target)).isTrue();
-  }
-
-  @Test
-  void firesDeprecatedSilentForOlderTarget() {
-    var target = new CompatibilityMode("8.3.10");
-    assertThat(PlatformMemberCalls.firesDeprecated("8.3.17", target)).isFalse();
-  }
-
-  @Test
-  void firesDeprecatedSilentForEmptyOrInvalidVersion() {
-    var target = new CompatibilityMode("8.3.20");
-    assertThat(PlatformMemberCalls.firesDeprecated("", target)).isFalse();
-    assertThat(PlatformMemberCalls.firesDeprecated(null, target)).isFalse();
-    assertThat(PlatformMemberCalls.firesDeprecated("8.3", target)).isFalse();
-    assertThat(PlatformMemberCalls.firesDeprecated("кривая", target)).isFalse();
-  }
-
-  @Test
-  void firesDeprecatedFiresOnSentinelRegardlessOfTarget() {
-
-    // oscript-конвенция: deprecated без версионирования.
-    var anyTarget = new CompatibilityMode("8.3.10");
-    assertThat(PlatformMemberCalls.firesDeprecated(PlatformMemberCalls.DEPRECATED_ALWAYS, anyTarget)).isTrue();
-  }
-
-  @Test
-  void firesUnavailableTriggersWhenTargetBelowSince() {
-    var target = new CompatibilityMode("8.3.10");
-    assertThat(PlatformMemberCalls.firesUnavailable("8.3.18", target)).isTrue();
-  }
-
-  @Test
-  void firesUnavailableSilentAtSinceOrNewer() {
-    var target = new CompatibilityMode("8.3.18");
-    assertThat(PlatformMemberCalls.firesUnavailable("8.3.18", target)).isFalse();
-    assertThat(PlatformMemberCalls.firesUnavailable("8.3.10", new CompatibilityMode("8.3.20"))).isFalse();
-  }
-
-  @Test
-  void firesUnavailableSilentForEmptyOrInvalidVersion() {
-    var target = new CompatibilityMode("8.3.10");
-    assertThat(PlatformMemberCalls.firesUnavailable("", target)).isFalse();
-    assertThat(PlatformMemberCalls.firesUnavailable(null, target)).isFalse();
-    assertThat(PlatformMemberCalls.firesUnavailable("8.3", target)).isFalse();
-  }
 
   @Test
   void hasDeletedPrefixCoversRuAndEnPrefixes() {
@@ -110,45 +51,5 @@ class PlatformMemberCallsTest {
     assertThat(PlatformMemberCalls.hasDeletedPrefix("Поле")).isFalse();
     assertThat(PlatformMemberCalls.hasDeletedPrefix(null)).isFalse();
     assertThat(PlatformMemberCalls.hasDeletedPrefix("")).isFalse();
-  }
-
-  @Test
-  void targetCompatibilityModePrefersExplicitOption() {
-
-    // given — задана явная настройка v8platform.targetVersion=8.3.20.
-    var doc = mock(DocumentContext.class);
-    var config = mock(LanguageServerConfiguration.class);
-    var v8opts = mock(V8PlatformOptions.class);
-    when(config.getV8PlatformOptions()).thenReturn(v8opts);
-    when(v8opts.getTargetVersion()).thenReturn("8.3.20");
-
-    // when
-    var mode = PlatformMemberCalls.targetCompatibilityMode(doc, config);
-
-    // then — конфиг-режим не запрашивается, отдан explicit.
-    assertThat(CompatibilityMode.compareTo(mode, new CompatibilityMode("8.3.20"))).isZero();
-  }
-
-  @Test
-  void targetCompatibilityModeFallsBackToConfigurationMode() {
-
-    // given — explicit не задан / невалиден; CompatibilityMode берётся из конфигурации.
-    var doc = mock(DocumentContext.class);
-    var config = mock(LanguageServerConfiguration.class);
-    var v8opts = mock(V8PlatformOptions.class);
-    when(config.getV8PlatformOptions()).thenReturn(v8opts);
-    when(v8opts.getTargetVersion()).thenReturn("");
-    var serverContext = mock(ServerContext.class);
-    var mdConfig = mock(CF.class);
-    when(doc.getServerContext()).thenReturn(serverContext);
-    when(serverContext.getConfiguration()).thenReturn(mdConfig);
-    var configMode = new CompatibilityMode("8.3.14");
-    when(mdConfig.getCompatibilityMode()).thenReturn(configMode);
-
-    // when
-    var mode = PlatformMemberCalls.targetCompatibilityMode(doc, config);
-
-    // then
-    assertThat(mode).isSameAs(configMode);
   }
 }

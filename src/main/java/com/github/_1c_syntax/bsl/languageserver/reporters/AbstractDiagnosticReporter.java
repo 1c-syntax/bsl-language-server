@@ -37,11 +37,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
 
+  /** Провайдер per-workspace {@link ServerContext}. */
   protected final ServerContextProvider serverContextProvider;
+  /** Реестр метаинформации о диагностиках. */
   protected final DiagnosticInfos diagnosticInfos;
 
   /**
-   * Получить ServerContext для workspace из AnalysisInfo.
+   * Получить {@link ServerContext} для workspace из {@link AnalysisInfo}.
+   *
+   * @param analysisInfo информация об анализе, содержащая каталог исходников workspace
+   * @return контекст workspace, соответствующий каталогу исходников
    */
   protected ServerContext getServerContext(AnalysisInfo analysisInfo) {
     var workspaceUri = Path.of(analysisInfo.sourceDir()).toUri();
@@ -50,7 +55,9 @@ public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
   }
 
   /**
-   * Получить DiagnosticInfo по коду для workspace из AnalysisInfo.
+   * Получить соответствие «код диагностики → {@link DiagnosticInfo}».
+   *
+   * @return карта метаинформации о диагностиках по их кодам
    */
   protected Map<String, DiagnosticInfo> getDiagnosticInfosByCode() {
     return diagnosticInfos.getByCode();

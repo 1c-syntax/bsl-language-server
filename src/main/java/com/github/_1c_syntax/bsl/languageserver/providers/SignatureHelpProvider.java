@@ -31,11 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -49,7 +47,6 @@ import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Tuple;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -78,7 +75,6 @@ public final class SignatureHelpProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
-  private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
 
   /**
@@ -140,8 +136,8 @@ public final class SignatureHelpProvider {
 
   /**
    * Извлекает типы фактических аргументов из {@code doCall} через
-   * {@link TypeService#inferAtPosition}. Незаполненный аргумент или
-   * аргумент с неизвестным типом → {@link TypeSet#EMPTY}.
+   * {@link TypeService#expressionTypesAt(DocumentContext, org.eclipse.lsp4j.Position)}. Незаполненный
+   * аргумент или аргумент с неизвестным типом → {@link TypeSet#EMPTY}.
    */
   private List<TypeSet> inferArgTypes(BSLParser.DoCallContext doCall, DocumentContext documentContext) {
     var paramList = doCall.callParamList();
@@ -161,7 +157,7 @@ public final class SignatureHelpProvider {
       }
       var start = arg.getStart();
       var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
-      result.add(typeService.inferAtPosition(documentContext, position));
+      result.add(typeService.expressionTypesAt(documentContext, position));
     }
     return result;
   }
@@ -302,46 +298,10 @@ public final class SignatureHelpProvider {
     if (methodName == null) {
       return Optional.empty();
     }
-    // Walk up: ищем complexIdentifier ИЛИ callStatement (получатель)
-    var receiver = findReceiverExpression(mc);
-    if (receiver == null) {
-      return Optional.empty();
-    }
-    // Позиция конца ресивера = непосредственно перед DOT текущего accessCall.
-    // Родитель methodCall — это accessCall, чей первый токен — DOT.
-    // receiver.getStop() даёт конец всего внешнего узла (вплоть до закрывающей ')'),
-    // что неверно для цепочек вида `a.b.Method(` или `Var.Method(`.
-    var accessCall = (mc.getParent() instanceof BSLParser.AccessCallContext ac) ? ac : null;
-    Token receiverEnd;
-    if (accessCall != null && accessCall.getStart() != null) {
-      // Берём токен непосредственно перед DOT accessCall'a.
-      var dotToken = accessCall.getStart();
-      receiverEnd = findTokenBefore(receiver, dotToken);
-      if (receiverEnd == null) {
-        receiverEnd = receiver.getStop();
-      }
-    } else {
-      receiverEnd = receiver.getStop();
-    }
-    if (receiverEnd == null) {
-      return Optional.empty();
-    }
-    var pos = new Position(receiverEnd.getLine() - 1,
-      receiverEnd.getCharPositionInLine() + receiverEnd.getText().length() - 1);
-    var typeSet = typeService.findTypes(documentContext.getUri(), pos);
-    if (typeSet.isEmpty()) {
-      typeSet = typeService.inferAtPosition(documentContext, pos);
-    }
-    if (typeSet.isEmpty()) {
-      // Fallback: голое имя OneScript library-модуля как ресивер (нет Symbol/инференса).
-      // В BSL-файлах library-модули недоступны.
-      if (documentContext.getFileType() != com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
-        var libRef = findLibraryModuleReceiver(mc, receiver);
-        if (libRef != null) {
-          typeSet = TypeSet.of(libRef);
-        }
-      }
-    }
+    // тип ресивера — по позиции имени метода
+    var memberToken = mc.methodName().IDENTIFIER().getSymbol();
+    var memberPos = new Position(memberToken.getLine() - 1, memberToken.getCharPositionInLine());
+    var typeSet = typeService.receiverTypesAt(documentContext, memberPos);
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, documentContext.getFileType())) {
         if (member.kind() == MemberKind.METHOD && member.matches(methodName)) {
@@ -350,100 +310,6 @@ public final class SignatureHelpProvider {
       }
     }
     return Optional.empty();
-  }
-
-  /**
-   * Находит последний токен внутри {@code receiver}, чей tokenIndex меньше tokenIndex {@code before}.
-   * Используется чтобы получить позицию конца «приёмника» перед DOT текущего accessCall.
-   */
-  @Nullable
-  private static Token findTokenBefore(ParserRuleContext receiver, Token before) {
-    if (receiver.getStart() == null || before == null) {
-      return null;
-    }
-    return findTokenBeforeRec(receiver, before.getTokenIndex());
-  }
-
-  @Nullable
-  private static Token findTokenBeforeRec(ParseTree node, int limit) {
-    if (node instanceof TerminalNode tn) {
-      var token = tn.getSymbol();
-      return (token.getTokenIndex() < limit) ? token : null;
-    }
-    Token best = null;
-    for (int i = 0; i < node.getChildCount(); i++) {
-      var child = findTokenBeforeRec(node.getChild(i), limit);
-      if (child != null && (best == null || child.getTokenIndex() > best.getTokenIndex())) {
-        best = child;
-      }
-    }
-    return best;
-  }
-
-  @Nullable
-  private static ParserRuleContext findReceiverExpression(BSLParser.MethodCallContext mc) {
-    // accessCall — родитель methodCall. Родитель accessCall — modifier (внутри complexIdentifier)
-    // ИЛИ напрямую callStatement (для statements типа MyMod.method(...);).
-    var node = (ParseTree) mc;
-    while (node != null
-      && !(node instanceof BSLParser.ComplexIdentifierContext)
-      && !(node instanceof BSLParser.CallStatementContext)) {
-      node = node.getParent();
-    }
-    return (ParserRuleContext) node;
-  }
-
-  /**
-   * Если ресивер аксес-колла — голый идентификатор (нет промежуточных модификаторов
-   * между {@code IDENTIFIER} ресивера и текущим methodCall), то пробуем
-   * зарезолвить его как имя OneScript library-модуля.
-   */
-  @Nullable
-  private TypeRef findLibraryModuleReceiver(BSLParser.MethodCallContext mc, ParserRuleContext receiver) {
-    TerminalNode idNode;
-    List<? extends BSLParser.ModifierContext> modifiers;
-    BSLParser.AccessCallContext directAccessCall = null;
-    if (receiver instanceof BSLParser.ComplexIdentifierContext complex) {
-      idNode = complex.IDENTIFIER();
-      modifiers = complex.modifier();
-    } else if (receiver instanceof BSLParser.CallStatementContext callStatement) {
-      idNode = callStatement.IDENTIFIER();
-      modifiers = callStatement.modifier();
-      directAccessCall = callStatement.accessCall();
-    } else {
-      return null;
-    }
-    if (idNode == null) {
-      return null;
-    }
-    // methodCall сидит либо в первом модификаторе complexIdentifier, либо
-    // напрямую в callStatement.accessCall (без модификаторов между ними).
-    boolean firstAccess;
-    if (directAccessCall != null && (modifiers == null || modifiers.isEmpty())) {
-      firstAccess = isInside(mc, directAccessCall);
-    } else if (modifiers != null && !modifiers.isEmpty()) {
-      firstAccess = isInside(mc, modifiers.get(0));
-    } else {
-      return null;
-    }
-    if (!firstAccess) {
-      return null;
-    }
-    return oScriptLibraryIndex.findByName(idNode.getText())
-      .filter(e -> e.kind() == OScriptLibraryIndex.EntryKind.MODULE)
-      .flatMap(e -> typeService.resolve(e.qualifiedName(), com.github._1c_syntax.bsl.languageserver.context.FileType.OS))
-      .orElse(null);
-  }
-
-  private static boolean isInside(ParseTree descendant, ParseTree ancestor) {
-    ParseTree walker = descendant;
-    while (walker != null) {
-      if (walker == ancestor) {
-        return true;
-      }
-      walker = walker.getParent();
-    }
-    return false;
   }
 
   private Optional<MemberDescriptor> resolveConstructor(DocumentContext documentContext, BSLParser.NewExpressionContext nex) {
@@ -506,29 +372,10 @@ public final class SignatureHelpProvider {
     var units = expandParameters(sig.parameters(), lang, argCount);
     var paramInfos = new ArrayList<ParameterInformation>(units.size());
     for (var i = 0; i < units.size(); i++) {
-      var unit = units.get(i);
-      var p = unit.descriptor();
       if (i > 0) {
         label.append(", ");
       }
-      var start = label.length();
-      label.append(unit.name());
-      var typesLabel = renderTypes(p.types(), lang);
-      if (!typesLabel.isEmpty()) {
-        label.append(": ").append(typesLabel);
-      }
-      if (p.optional() && !p.defaultValue().isBlank()) {
-        // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
-        label.append(" = ").append(p.defaultValue());
-      }
-      var end = label.length();
-      var info = new ParameterInformation();
-      info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
-      var pDesc = p.displayDescription(lang);
-      if (!pDesc.isBlank()) {
-        info.setDocumentation(pDesc);
-      }
-      paramInfos.add(info);
+      paramInfos.add(appendParameter(label, units.get(i), lang));
     }
     label.append(')');
     if (sig.returnType() != null && sig.returnType() != TypeRef.UNKNOWN) {
@@ -540,6 +387,37 @@ public final class SignatureHelpProvider {
     var sigDesc = sig.displayDescription(lang);
     if (!sigDesc.isBlank()) {
       info.setDocumentation(sigDesc);
+    }
+    return info;
+  }
+
+  /**
+   * Дописать в {@code label} один параметр ({@code Имя: Тип? = Значение}) и вернуть
+   * соответствующий {@link ParameterInformation} с диапазоном подсветки.
+   * Необязательный параметр помечается «?»: знак приклеивается к типу
+   * ({@code Имя: Тип?}), а при отсутствии типа — к имени ({@code Имя?}).
+   */
+  private ParameterInformation appendParameter(StringBuilder label, ParamUnit unit, Language lang) {
+    var p = unit.descriptor();
+    var start = label.length();
+    label.append(unit.name());
+    var typesLabel = renderTypes(p.types(), lang);
+    if (!typesLabel.isEmpty()) {
+      label.append(": ").append(typesLabel);
+    }
+    if (p.optional()) {
+      label.append('?');
+    }
+    if (p.optional() && !p.defaultValue().isBlank()) {
+      // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
+      label.append(" = ").append(p.defaultValue());
+    }
+    var end = label.length();
+    var info = new ParameterInformation();
+    info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
+    var pDesc = p.displayDescription(lang);
+    if (!pDesc.isBlank()) {
+      info.setDocumentation(pDesc);
     }
     return info;
   }

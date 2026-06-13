@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,6 +85,89 @@ class ReferencesProviderTest extends AbstractServerContextAwareTest {
 
     assertThat(reference.getUri()).isEqualTo(documentContext.getUri().toString());
     assertThat(reference.getRange()).isEqualTo(Ranges.create(4, 0, 10));
+  }
+
+  @Test
+  void testLocalMethodsWithIncludeDeclaration() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+    params.setContext(new ReferenceContext(true));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var declaration = new Location(documentContext.getUri().toString(), Ranges.create(0, 8, 18));
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(2)
+      .containsExactlyInAnyOrder(declaration, call);
+  }
+
+  @Test
+  void testLocalMethodsWithoutIncludeDeclaration() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+    params.setContext(new ReferenceContext(false));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(1)
+      .containsExactly(call);
+  }
+
+  @Test
+  void testIncludeDeclarationWhenCursorOnDeclarationDoesNotDuplicate() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    // курсор стоит на самом объявлении функции
+    params.setPosition(new Position(0, 12));
+    params.setContext(new ReferenceContext(true));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var declaration = new Location(documentContext.getUri().toString(), Ranges.create(0, 8, 18));
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(2)
+      .containsExactlyInAnyOrder(declaration, call);
+  }
+
+  @Test
+  void testNullContextDoesNotFail() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    // context намеренно не задан — по умолчанию null
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(1)
+      .containsExactly(call);
   }
 
   @Test

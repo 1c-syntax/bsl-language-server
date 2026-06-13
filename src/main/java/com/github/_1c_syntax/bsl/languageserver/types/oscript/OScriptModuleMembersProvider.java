@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -39,8 +39,6 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +48,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -62,7 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *       (если файл принадлежит индексированной библиотеке с {@code lib.config}),
  *       fallback — basename файла;</li>
  *   <li>регистрирует тип через {@link TypeRegistry#registerUserType} со скоупом
- *       {@link LanguageScope#OS};</li>
+ *       {@link FileType#OS};</li>
  *   <li>регистрирует ленивый {@code MemberSource}, который при каждом запросе
  *       идёт в актуальный {@code SymbolTree} документа (это даёт hot-reload);</li>
  *   <li>для OScriptClass дополнительно регистрирует ленивый источник
@@ -71,17 +72,19 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class OScriptModuleMembersProvider {
 
   private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
+  private final OScriptExtends oScriptExtends;
+  private final TypeRelations typeRelations;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
-  private final Map<URI, java.util.Set<String>> registeredByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Set<String>> registeredByUri = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -123,19 +126,26 @@ public class OScriptModuleMembersProvider {
     var firstTimeForName = names.add(qualifiedName);
 
     var module = documentContext.getSymbolTree().getModule();
-    var ref = typeRegistry.registerUserType(qualifiedName, module, LanguageScope.OS);
+    var ref = typeRegistry.registerUserType(qualifiedName, module, FileType.OS);
 
     if (firstTimeForName) {
-      typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), LanguageScope.OS);
+      typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), FileType.OS);
       if (libraryEntry != null) {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
-          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
+          registerInheritedMembers(documentContext, ref);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
+          // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
+          // (единый источник в GlobalScopeProvider вместо обращения инференсера к
+          // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
+          // роль CLASS не должна перетирать тип модуля под тем же URI.
+          globalScopeProvider.indexModuleType(uri, ref);
           globalScopeProvider.registerLibraryModule(qualifiedName, ref);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
-        typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+        typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
+        registerInheritedMembers(documentContext, ref);
       }
       LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName,
         libraryEntry != null ? libraryEntry.kind() : documentContext.getModuleType());
@@ -148,6 +158,7 @@ public class OScriptModuleMembersProvider {
    * удалении любого {@code .os}-документа из {@code ServerContext}.
    */
   public void unregister(URI uri) {
+    globalScopeProvider.removeModuleType(uri);
     var names = registeredByUri.remove(uri);
     if (names == null) {
       return;
@@ -157,6 +168,24 @@ public class OScriptModuleMembersProvider {
       globalScopeProvider.unregisterLibraryModule(name);
       globalScopeProvider.unregisterLibraryClass(name);
     }
+  }
+
+  /**
+   * Зарегистрировать ленивый источник членов, наследуемых от родительского
+   * класса библиотеки {@code extends} (аннотация {@code &Расширяет} над
+   * {@code ПриСозданииОбъекта}). Обход цепочки наследования и защита от циклов —
+   * в {@link TypeRelations}; здесь лишь регистрируется делегирующий источник. Источник добавляется ПОСЛЕ собственного источника
+   * членов класса, поэтому при дедупликации в {@link TypeRegistry#getMembers}
+   * собственные/переопределённые члены выигрывают у унаследованных. Резолв
+   * родителя ленивый — он может быть проиндексирован позже наследника, а смена
+   * {@code &Расширяет} подхватывается без ре-регистрации (hot-reload).
+   */
+  private void registerInheritedMembers(DocumentContext documentContext, TypeRef classRef) {
+    typeRegistry.registerMemberSource(
+      classRef,
+      () -> typeRelations.inheritedMembers(documentContext, classRef),
+      FileType.OS
+    );
   }
 
   private Collection<MemberDescriptor> collectMembers(DocumentContext documentContext) {

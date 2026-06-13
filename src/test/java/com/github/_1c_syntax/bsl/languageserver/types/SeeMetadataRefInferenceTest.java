@@ -57,7 +57,7 @@ class SeeMetadataRefInferenceTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
     assertThat(types.refs())
       .as("См. Справочник.Справочник1.Реквизит1 → Строка (Реквизит1 — xs:string)")
       .extracting(ref -> ref.qualifiedName())

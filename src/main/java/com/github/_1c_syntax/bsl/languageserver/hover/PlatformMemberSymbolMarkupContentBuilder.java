@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,12 +35,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class PlatformMemberSymbolMarkupContentBuilder implements MarkupContentBuilder<PlatformMemberSymbol> {
+public class PlatformMemberSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final PlatformMemberHoverBuilder platformMemberHoverBuilder;
 
   @Override
-  public MarkupContent getContent(PlatformMemberSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (PlatformMemberSymbol) reference.symbol();
     return platformMemberHoverBuilder.build(
       symbol.getOwner(), symbol.getDescriptor(), symbol.getCallArgCount(), symbol.getArgTypes());
   }

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -40,6 +40,7 @@ import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.ImplementationRegistrationOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentHighlightOptions;
@@ -68,6 +69,7 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.TypeHierarchyRegistrationOptions;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
@@ -103,13 +105,12 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
-  private static final CapabilitiesOptions DEFAULT_CAPABILITIES = new CapabilitiesOptions();
-
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContextProvider serverContextProvider;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
   @Qualifier("populateContextExecutor")
@@ -121,6 +122,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
+    clientCapabilitiesHolder.setClientInfo(params.getClientInfo());
 
     setConfigurationRoot(params);
 
@@ -141,7 +143,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
+    capabilities.setImplementationProvider(getImplementationProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
+    capabilities.setTypeHierarchyProvider(getTypeHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
     capabilities.setRenameProvider(getRenameProvider(params));
@@ -250,7 +254,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   * Формирует настройки синхронизации текстовых документов на основе глобальной конфигурации сервера.
+   *
+   * @return настройки синхронизации текстовых документов
    */
   private TextDocumentSyncOptions getTextDocumentSyncOptions() {
     var textDocumentSync = new TextDocumentSyncOptions();
@@ -269,10 +275,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
+   * Возвращает тип синхронизации документов, заданный в глобальной конфигурации сервера
+   * (по умолчанию Incremental).
+   *
+   * @return тип синхронизации текстовых документов
    */
-  private static TextDocumentSyncKind getConfiguredSyncKind() {
-    return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
+  private TextDocumentSyncKind getConfiguredSyncKind() {
+    return globalConfiguration.getCapabilities()
+      .getTextDocumentSync()
+      .getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {
@@ -282,7 +293,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     var codeActionKinds = List.of(
       CodeActionKind.QuickFix,
-      CodeActionKind.Refactor
+      CodeActionKind.Refactor,
+      CodeActionKind.SourceFixAll
     );
 
     codeActionOptions.setCodeActionKinds(codeActionKinds);
@@ -344,7 +356,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static CompletionOptions getCompletionProvider() {
     var completionOptions = new CompletionOptions();
-    completionOptions.setResolveProvider(Boolean.FALSE);
+    completionOptions.setResolveProvider(Boolean.TRUE);
     completionOptions.setTriggerCharacters(List.of("."));
     return completionOptions;
   }
@@ -368,6 +380,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return definitionOptions;
   }
 
+  private static ImplementationRegistrationOptions getImplementationProvider() {
+    var implementationRegistrationOptions = new ImplementationRegistrationOptions();
+    implementationRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return implementationRegistrationOptions;
+  }
+
   private static ReferenceOptions getReferencesProvider() {
     var referenceOptions = new ReferenceOptions();
     referenceOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -378,6 +396,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
     callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
     return callHierarchyRegistrationOptions;
+  }
+
+  private static TypeHierarchyRegistrationOptions getTypeHierarchyProvider() {
+    var typeHierarchyRegistrationOptions = new TypeHierarchyRegistrationOptions();
+    typeHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return typeHierarchyRegistrationOptions;
   }
 
   private static WorkspaceSymbolOptions getWorkspaceProvider() {

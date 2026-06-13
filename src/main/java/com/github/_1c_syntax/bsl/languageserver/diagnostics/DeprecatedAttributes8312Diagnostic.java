@@ -79,25 +79,17 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String GANTT_CHART_RU = "ДиаграммаГанта";
   private static final String PIVOT_CHART_EN = "PivotChart";
   private static final String PIVOT_CHART_RU = "СводнаяДиаграмма";
-  // General deprecated attributes
+  // Ниже — устаревшие имена, которых нет в актуальном СП и в HBK
+  // (вендор удалил их из документации, перенести в платформенный JSON-fallback
+  // не получится — DeprecatedMethodCallDiagnostic найдёт члена по СП и пройдёт
+  // мимо). Хардкод оставлен как safety-net для конфигураций с режимом
+  // совместимости < 8.3.12, где обращение к этим членам формально ещё валидно.
   private static final String SHOW_LEGEND_EN = "ShowLegend";
   private static final String SHOW_LEGEND_RU = "ОтображатьЛегенду";
   private static final String SHOW_TITLE_EN = "ShowTitle";
   private static final String SHOW_TITLE_RU = "ОтображатьЗаголовок";
-  // Chart deprecated attributes
-  private static final String COLOR_PALETTE_EN = "ColorPalette";
-  private static final String COLOR_PALETTE_RU = "ПалитраЦветов";
-  private static final String GRADIENT_PALETTE_START_COLOR_EN = "GradientPaletteStartColor";
-  private static final String GRADIENT_PALETTE_START_COLOR_RU = "ЦветНачалаГрадиентнойПалитры";
-  private static final String GRADIENT_PALETTE_END_COLOR_EN = "GradientPaletteEndColor";
-  private static final String GRADIENT_PALETTE_END_COLOR_RU = "ЦветКонцаГрадиентнойПалитры";
   private static final String GRADIENT_PALETTE_MAX_COLORS_EN = "GradientPaletteMaxColors";
   private static final String GRADIENT_PALETTE_MAX_COLORS_RU = "МаксимальноеКоличествоЦветовГрадиентнойПалитры";
-  // Chart deprecated methods
-  private static final String GET_PALETTE_EN = "GetPalette";
-  private static final String GET_PALETTE_RU = "ПолучитьПалитру";
-  private static final String SET_PALETTE_EN = "SetPalette";
-  private static final String SET_PALETTE_RU = "УстановитьПалитру";
 
   // Global context enum
   private static final String CHART_LABELS_ORIENTATION_RU = "ОриентацияМетокДиаграммы";
@@ -107,10 +99,6 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String CHILD_FORM_ITEMS_GROUP_RU = "ГруппировкаПодчиненныхЭлементовФормы";
   private static final String CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN = "Horizontal";
   private static final String CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU = "Горизонтальная";
-
-  // Global context methods
-  private static final String CLEAR_EVENT_LOG_EN = "ClearEventLog";
-  private static final String CLEAR_EVENT_LOG_RU = "ОчиститьЖурналРегистрации";
 
   private static final HashMap<String, String> NEW_ATTRIBUTES_AND_METHODS = new HashMap<>();
 
@@ -155,30 +143,10 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_RU.toLowerCase(Locale.ENGLISH),
       "одно из свойств ОбластьЗаголовкаДиаграммы, " +
         "ОбластьЗаголовкаДиаграммыГанта или ОбластьЗаголовкаСводнойДиаграммы");
-    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_EN.toLowerCase(Locale.ENGLISH),
-      "ColorPaletteDescription.ColorPalette");
-    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_RU.toLowerCase(Locale.ENGLISH),
-      "ОписаниеПалитрыЦветов.ПалитраЦветов");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_EN.toLowerCase(Locale.ENGLISH),
-      "ColorPaletteDescription.GradientPaletteStartColor");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_RU.toLowerCase(Locale.ENGLISH),
-      "ОписаниеПалитрыЦветов.ЦветНачалаГрадиентнойПалитры");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_EN.toLowerCase(Locale.ENGLISH),
-      "ColorPaletteDescription.GradientPaletteEndColor");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_RU.toLowerCase(Locale.ENGLISH),
-      "ОписаниеПалитрыЦветов.ЦветКонцаГрадиентнойПалитры");
     NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.GradientPaletteMaxColors");
     NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.МаксимальноеКоличествоЦветовГрадиентнойПалитры");
-    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_EN.toLowerCase(Locale.ENGLISH),
-      "ColorPaletteDescription.GetPalette");
-    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_RU.toLowerCase(Locale.ENGLISH),
-      "ОписаниеПалитрыЦветов.ПолучитьПалитру");
-    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_EN.toLowerCase(Locale.ENGLISH),
-      "ColorPaletteDescription.SetPalette");
-    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_RU.toLowerCase(Locale.ENGLISH),
-      "ОписаниеПалитрыЦветов.УстановитьПалитру");
     NEW_ATTRIBUTES_AND_METHODS.put(CHART_LABELS_ORIENTATION_RU.toLowerCase(Locale.ENGLISH),
       "ОриентацияПодписейДиаграммы");
     NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN.toLowerCase(Locale.ENGLISH),
@@ -193,10 +161,6 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
 
   private static final Pattern CHART_ATTRIBUTES_PATTERN = CaseInsensitivePattern.compile(
     getDeprecatedAttributesRegex(Metaobject.CHART)
-  );
-
-  private static final Pattern CHART_METHODS_PATTERN = CaseInsensitivePattern.compile(
-    getDeprecatedMethodsRegex(Metaobject.CHART)
   );
 
   private static final Pattern CHART_PLOT_AREA_NAME_PATTERN = CaseInsensitivePattern.compile(
@@ -218,42 +182,6 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final Pattern CHILD_FORM_ITEMS_GROUP_ATTRIBUTE_PATTERN = CaseInsensitivePattern.compile(
     getDeprecatedAttributesRegex(Metaobject.ENUM_ITEMS_GROUP)
   );
-
-  private static final Pattern CLEAR_EVENT_LOG_PATTERN = CaseInsensitivePattern.compile(
-    CLEAR_EVENT_LOG_EN + "|" + CLEAR_EVENT_LOG_RU
-  );
-
-  @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-
-    Matcher matcher = CHART_METHODS_PATTERN.matcher(ctx.methodName().getText());
-    if (matcher.matches()) {
-      String deprecatedMethod = matcher.group();
-      String message = info.getResourceString("deprecatedMethodsMessage",
-        deprecatedMethod,
-        Objects.requireNonNullElse(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedMethod.toLowerCase(Locale.ENGLISH)),
-          ""
-        )
-      );
-      diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
-    }
-
-    return super.visitMethodCall(ctx);
-  }
-
-  @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    Matcher matcher = CLEAR_EVENT_LOG_PATTERN.matcher(ctx.methodName().getText());
-    if (matcher.matches()) {
-      String deprecatedMethod = ctx.getStart().getText();
-      String message = info.getResourceString(
-        "deprecatedGlobalMethodsMessage",
-        deprecatedMethod
-      );
-      diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
-    }
-    return super.visitGlobalMethodCall(ctx);
-  }
 
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
@@ -331,31 +259,10 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     } else if (metaobject == Metaobject.CHART) {
       attributesPair.put(SHOW_LEGEND_EN, SHOW_LEGEND_RU);
       attributesPair.put(SHOW_TITLE_EN, SHOW_TITLE_RU);
-      attributesPair.put(COLOR_PALETTE_EN, COLOR_PALETTE_RU);
-      attributesPair.put(GRADIENT_PALETTE_START_COLOR_EN, GRADIENT_PALETTE_START_COLOR_RU);
-      attributesPair.put(GRADIENT_PALETTE_END_COLOR_EN, GRADIENT_PALETTE_END_COLOR_RU);
       attributesPair.put(GRADIENT_PALETTE_MAX_COLORS_EN, GRADIENT_PALETTE_MAX_COLORS_RU);
     } else if (metaobject == Metaobject.ENUM_ITEMS_GROUP) {
       attributesPair.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN, CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU);
     }
-    StringJoiner regex = new StringJoiner("|");
-
-    attributesPair.forEach((String k, String v) -> {
-      regex.add(k);
-      regex.add(v);
-    });
-
-    return regex.toString();
-  }
-
-  private static String getDeprecatedMethodsRegex(Metaobject metaobject) {
-    HashMap<String, String> attributesPair = new HashMap<>();
-
-    if (metaobject == Metaobject.CHART) {
-      attributesPair.put(GET_PALETTE_EN, GET_PALETTE_RU);
-      attributesPair.put(SET_PALETTE_EN, SET_PALETTE_RU);
-    }
-
     StringJoiner regex = new StringJoiner("|");
 
     attributesPair.forEach((String k, String v) -> {

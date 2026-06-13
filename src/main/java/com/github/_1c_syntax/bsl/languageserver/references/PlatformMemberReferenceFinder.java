@@ -36,7 +36,7 @@ import java.util.Optional;
 
 /**
  * Finder для членов платформенных/конфигурационных типов и глобальных
- * функций/свойств, разрешаемых через {@link TypeService#findMemberAt}.
+ * функций/свойств, разрешаемых через {@link TypeService#memberAt}.
  *
  * <p>Покрывает кейсы, у которых нет соответствующего
  * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol}
@@ -59,7 +59,7 @@ public class PlatformMemberReferenceFinder implements ReferenceFinder {
   public Optional<Reference> findReference(URI uri, Position position) {
     // Горячий путь inferencer/hover — без захвата per-document RWLock.
     return serverContextProvider.getDocumentUnsafeNoLock(uri)
-      .flatMap(document -> typeService.findMemberAt(document, position)
+      .flatMap(document -> typeService.memberAt(document, position)
         .map(member -> new Reference(
           document.getSymbolTree().getModule(),
           new PlatformMemberSymbol(

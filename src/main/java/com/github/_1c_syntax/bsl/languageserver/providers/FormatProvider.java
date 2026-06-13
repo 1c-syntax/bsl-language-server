@@ -116,11 +116,41 @@ public final class FormatProvider {
     var lastToken = tokens.getLast();
 
     var locale = documentContext.getScriptVariantLocale();
-    return getTextEdits(
+    var options = params.getOptions();
+    var edits = getTextEdits(
       tokens,
       locale,
-      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
+      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), options
     );
+
+    if (edits.isEmpty() || !(options.isInsertFinalNewline() || options.isTrimFinalNewlines())) {
+      return edits;
+    }
+
+    var edit = edits.getFirst();
+    edit.setNewText(normalizeFinalNewlines(edit.getNewText(), options));
+    return edits;
+  }
+
+  /**
+   * Приводит хвостовые переводы строк отформатированного текста к виду, требуемому
+   * протокольными опциями {@link FormattingOptions}.
+   * <p>
+   * Диапазон правки полного форматирования всегда покрывает документ до конца, поэтому достаточно
+   * нормализовать сам текст: {@code insertFinalNewline} гарантирует ровно один завершающий перевод
+   * строки, а {@code trimFinalNewlines} (когда первый не взведён) удаляет все переводы строк после
+   * последней содержательной строки.
+   *
+   * @param text    отформатированный текст без нормализации хвоста
+   * @param options протокольные опции форматирования с взведённым флагом хвоста
+   * @return текст с нормализованным хвостом переводов строк
+   */
+  private static String normalizeFinalNewlines(String text, FormattingOptions options) {
+    var body = StringUtils.stripEnd(text, "\r\n");
+    if (options.isInsertFinalNewline()) {
+      return body + "\n";
+    }
+    return body;
   }
 
   /**
@@ -191,27 +221,44 @@ public final class FormatProvider {
     String ch, Position position, DocumentContext documentContext
   ) {
     if ("\n".equals(ch)) {
-      if (position.getLine() == 0) {
-        return null;
-      }
-      var targetLineLsp = position.getLine() - 1;
-      var contentList = documentContext.getContentList();
-      if (targetLineLsp >= contentList.length) {
-        return null;
-      }
-      // Ограничиваем диапазон концом строки без переноса: только что набранный пользователем
-      // перевод строки не должен попасть внутрь replace-range, иначе editor может проглотить
-      // новую строку при отсутствии хвостового переноса в newText.
-      var lineLength = contentList[targetLineLsp].length();
-      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
-      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, lineLength);
+      return resolveEnterWindow(position, documentContext);
     }
     if (";".equals(ch)) {
-      var targetLineLsp = position.getLine();
-      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, position.getCharacter());
-      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, position.getCharacter());
+      return resolveSemicolonWindow(position, documentContext);
     }
     return null;
+  }
+
+  private static @Nullable EditWindow resolveEnterWindow(Position position, DocumentContext documentContext) {
+    if (position.getLine() == 0) {
+      return null;
+    }
+    var targetLineLsp = position.getLine() - 1;
+    var contentList = documentContext.getContentList();
+    if (targetLineLsp >= contentList.length) {
+      return null;
+    }
+    // Ограничиваем диапазон концом строки без переноса: только что набранный пользователем
+    // перевод строки не должен попасть внутрь replace-range, иначе editor может проглотить
+    // новую строку при отсутствии хвостового переноса в newText.
+    var lineLength = contentList[targetLineLsp].length();
+    var range = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
+    return new EditWindow(targetLineLsp, targetLineLsp + 1, range, lineLength);
+  }
+
+  private static @Nullable EditWindow resolveSemicolonWindow(Position position, DocumentContext documentContext) {
+    var targetLineLsp = position.getLine();
+    var contentList = documentContext.getContentList();
+    if (targetLineLsp >= contentList.length) {
+      return null;
+    }
+    // Курсор может оказаться правее фактического конца синхронизированной строки (только что
+    // набранный ';' ещё не доехал до серверной копии документа — рассинхрон у LSP4IJ). Без клампа
+    // диапазон правки уехал бы за конец строки и форматтер дописал бы хвостовой перенос строки,
+    // затирая набранный символ. Зеркалим клампинг ветки "\n".
+    var cutoff = Math.min(position.getCharacter(), contentList[targetLineLsp].length());
+    var range = Ranges.create(targetLineLsp, 0, targetLineLsp, cutoff);
+    return new EditWindow(targetLineLsp, targetLineLsp + 1, range, cutoff);
   }
 
   private record LineTokens(List<Token> tokens, @Nullable Token firstSignificant, int firstSignificantIndex) {
@@ -498,7 +545,30 @@ public final class FormatProvider {
       }
     }
 
-    return newTextBuilder.toString();
+    var result = newTextBuilder.toString();
+    if (options.isTrimTrailingWhitespace()) {
+      result = trimTrailingWhitespacePerLine(result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Удаляет хвостовые пробелы и табуляции в каждой строке текста, сохраняя сами переводы строк.
+   * <p>
+   * Применяется при включённой опции {@code trimTrailingWhitespace} протокольных
+   * {@link FormattingOptions}: форматтер не должен оставлять строки, состоящие из одних пробелов
+   * (например выровненные пустые строки внутри блоков).
+   *
+   * @param text исходный текст результата форматирования
+   * @return текст, в котором ни одна строка не оканчивается пробелом или табуляцией
+   */
+  private static String trimTrailingWhitespacePerLine(String text) {
+    var lines = text.split("\n", -1);
+    for (var i = 0; i < lines.length; i++) {
+      lines[i] = StringUtils.stripEnd(lines[i], " \t");
+    }
+    return String.join("\n", lines);
   }
 
   private String checkAndFormatKeyword(Token token, Locale languageLocale) {

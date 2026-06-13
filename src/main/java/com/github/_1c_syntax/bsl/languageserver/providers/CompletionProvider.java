@@ -21,12 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -37,6 +40,8 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Command;
@@ -44,20 +49,31 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemResolveSupportCapabilities;
+import org.eclipse.lsp4j.CompletionItemTag;
+import org.eclipse.lsp4j.CompletionItemTagSupportCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Провайдер для запросов {@code textDocument/completion}.
@@ -77,23 +93,68 @@ public final class CompletionProvider {
 
   private static final String TRIGGER_PARAMETER_HINTS_COMMAND = "editor.action.triggerParameterHints";
 
+  // sortText-«корзины» для no-dot completion. Клиент сортирует пункты по sortText
+  // лексикографически, поэтому меньший префикс = выше в списке. Без sortText всё
+  // сортируется по label, и локальные имена документа тонут среди сотен глобальных.
+  // Порядок: локальные имена документа → глобальные функции/контексты → классы и
+  // MD-имена → ключевые слова. Внутри корзины — стабильно по label.
+  private static final String BUCKET_LOCAL = "1";
+  private static final String BUCKET_GLOBAL = "2";
+  private static final String BUCKET_TYPE = "3";
+  private static final String BUCKET_KEYWORD = "4";
+  // Корзина членов типа в dot-completion: пользовательские/декларированные поля
+  // приоритетнее дефолтных членов того же типа.
+  private static final String BUCKET_MEMBER_FIELD = "1";
+  private static final String BUCKET_MEMBER_DEFAULT = "2";
+
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final JsonMapper jsonMapper;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
   // прикрепления `editor.action.triggerParameterHints` к completion item.
   private boolean snippetSupport;
 
+  // Кэшируется на initialize. Поддерживает ли клиент CompletionItemTag.Deprecated —
+  // если нет, помечаем устаревший член legacy-флагом setDeprecated.
+  private boolean deprecatedTagSupport;
+
+  // Кэшируется на initialize. Поддерживает ли клиент markdown в documentation completion item.
+  // Если да — documentation отдаётся как MarkupContent(MARKDOWN), иначе голой строкой
+  // (plaintext) с вырезанной markdown-разметкой, чтобы клиент не показывал звёздочки буквально.
+  private boolean markdownDocumentationSupport;
+
+  // Кэшируется на initialize. Объявил ли клиент в completionItem.resolveSupport свойство
+  // documentation — то есть готов лениво дотягивать описание через completionItem/resolve.
+  // Если да — для членов dot-completion documentation откладывается (см. buildMemberItem),
+  // иначе строится жадно, как раньше (клиент без resolve должен получить её сразу).
+  private boolean documentationResolveSupport;
+
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
-    snippetSupport = clientCapabilitiesHolder.getCapabilities()
+    var completionItem = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getCompletion)
-      .map(CompletionCapabilities::getCompletionItem)
+      .map(CompletionCapabilities::getCompletionItem);
+    snippetSupport = completionItem
       .map(CompletionItemCapabilities::getSnippetSupport)
+      .orElse(Boolean.FALSE);
+    deprecatedTagSupport = completionItem
+      .map(CompletionItemCapabilities::getTagSupport)
+      .map(CompletionItemTagSupportCapabilities::getValueSet)
+      .filter(valueSet -> valueSet.contains(CompletionItemTag.Deprecated))
+      .isPresent();
+    markdownDocumentationSupport = completionItem
+      .map(CompletionItemCapabilities::getDocumentationFormat)
+      .map(formats -> formats.contains(MarkupKind.MARKDOWN))
+      .orElse(Boolean.FALSE);
+    documentationResolveSupport = completionItem
+      .map(CompletionItemCapabilities::getResolveSupport)
+      .map(CompletionItemResolveSupportCapabilities::getProperties)
+      .map(properties -> properties.contains("documentation"))
       .orElse(Boolean.FALSE);
   }
 
@@ -164,13 +225,53 @@ public final class CompletionProvider {
     return Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN;
   }
 
-  private List<String> libraryEntryNames(OScriptLibraryIndex.EntryKind kind) {
-    var showImplicit = configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion();
-    return oScriptLibraryIndex.findEntries(kind).stream()
-      .filter(entry -> showImplicit || !entry.implicit())
-      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
-      .distinct()
-      .toList();
+  /**
+   * Видна ли library-запись в no-dot completion текущего документа.
+   * <p>
+   * Запись видна, если:
+   * <ul>
+   *   <li>файл — не BSL (в BSL OneScript-library-сущности скрыты целиком);</li>
+   *   <li>её библиотека объявлена в {@code #Использовать} ИЛИ это та же
+   *       библиотека-«пакет» (тот же корень), что и редактируемый файл
+   *       ({@code ownLibOrigin});</li>
+   *   <li>implicit-запись из чужой библиотеки скрывается при выключенном
+   *       {@code oscript.showImplicitLibraryEntriesInCompletion}; из своего
+   *       пакета implicit-запись видна всегда.</li>
+   * </ul>
+   */
+  private boolean libraryEntryVisible(OScriptLibraryIndex.LibraryEntry entry,
+                                      FileType fileType,
+                                      Set<String> usedLibsLower,
+                                      Optional<String> ownLibOrigin) {
+    if (fileType == FileType.BSL) {
+      return false;
+    }
+    var origin = entry.libOrigin();
+    if (origin.isBlank()) {
+      return true;
+    }
+    var originLower = origin.toLowerCase(Locale.ROOT);
+    boolean samePackage = ownLibOrigin.map(originLower::equals).orElse(false);
+    if (entry.implicit()
+      && !configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion()
+      && !samePackage) {
+      return false;
+    }
+    return samePackage || usedLibsLower.contains(originLower);
+  }
+
+  /**
+   * Видно ли имя из global scope с точки зрения library-gating. Если имя не
+   * относится к зарегистрированной library-записи — видно (платформенные и
+   * конфигурационные имена не ограничиваем).
+   */
+  private boolean libraryNameVisible(String name,
+                                     FileType fileType,
+                                     Set<String> usedLibsLower,
+                                     Optional<String> ownLibOrigin) {
+    return oScriptLibraryIndex.findByName(name)
+      .map(entry -> libraryEntryVisible(entry, fileType, usedLibsLower, ownLibOrigin))
+      .orElse(true);
   }
 
   /**
@@ -189,6 +290,19 @@ public final class CompletionProvider {
   }
 
   /**
+   * Generic-имена платформенных типов (e.g. {@code СправочникСсылка.<Имя справочника>},
+   * {@code ПерерасчетЗапись.<Имя перерасчета>}) — это шаблоны для specialization,
+   * не самостоятельные классы. В completion подставлять их буквально нельзя:
+   * у пользователя в коде такое имя — синтаксическая ошибка.
+   * <p>
+   * Детект placeholder'ов идёт через bsl-context ({@link ContextNames#placeholders}),
+   * а не через парсинг {@code <>} в LS — единая точка истины для имён generic'ов.
+   */
+  private static boolean isGenericTemplateName(String name) {
+    return !ContextNames.placeholders(name).isEmpty();
+  }
+
+  /**
    * @return предложения автодополнения для указанной позиции, обёрнутые в {@link CompletionList}.
    *     {@code isIncomplete = false}: список содержит все валидные кандидаты для текущего префикса
    *     — клиент может фильтровать дальше локально, повторно к серверу обращаться не обязан.
@@ -201,32 +315,80 @@ public final class CompletionProvider {
     return new CompletionList(false, items);
   }
 
+  /**
+   * Разрешает отложенную документацию completion item ({@code completionItem/resolve}).
+   * <p>
+   * Если item пришёл без {@link CompletionItem#getData()} — резолвить нечем, item
+   * возвращается как есть. Иначе по data-ключу восстанавливается тип-владелец и член,
+   * после чего {@code documentation} собирается тем же способом, что был бы при жадной
+   * сборке. Поле {@code data} очищается для экономии трафика.
+   *
+   * @param unresolved completion item, пришедший от клиента на разрешение.
+   * @return тот же item с проставленной {@code documentation} и очищенным {@code data};
+   *         либо неизменённый item, если данных для резолва нет.
+   */
+  public CompletionItem resolveCompletionItem(CompletionItem unresolved) {
+    var data = extractData(unresolved);
+    if (data == null) {
+      return unresolved;
+    }
+    var ref = new TypeRef(data.getTypeKind(), data.getTypeQualifiedName());
+    typeService.getMembers(ref, data.getFileType(), data.getScriptVariant()).stream()
+      .filter(member -> member.name().equals(data.getMemberName()))
+      .findFirst()
+      .ifPresent(member -> applyDocumentation(unresolved, member, data.getScriptVariant()));
+    unresolved.setData(null);
+    return unresolved;
+  }
+
+  /**
+   * Извлекает {@link CompletionData} из {@link CompletionItem#getData()}.
+   * <p>
+   * При прямом серверном вызове data — уже объект {@link CompletionData}; после
+   * round-trip через клиента lsp4j отдаёт её как JSON (Map/JsonElement), поэтому
+   * нетипизированное значение десериализуется через {@link JsonMapper}.
+   *
+   * @param item completion item, из которого извлекаются данные.
+   * @return извлечённые данные либо {@code null}, если data отсутствует.
+   */
+  @Nullable
+  private CompletionData extractData(CompletionItem item) {
+    var rawData = item.getData();
+    if (rawData == null) {
+      return null;
+    }
+    if (rawData instanceof CompletionData completionData) {
+      return completionData;
+    }
+    return jsonMapper.readValue(rawData.toString(), CompletionData.class);
+  }
+
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {
     var dotInfo = dotCompletionInfo(documentContext, position);
     if (dotInfo == null) {
       return List.of();
     }
     var fileType = documentContext.getFileType();
-    // позиция выражения — символ перед точкой
-    var beforeDot = new Position(position.getLine(), Math.max(0, dotInfo.dotColumn - 1));
-    var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
-    if (typeSet.isEmpty()) {
-      typeSet = typeService.inferAtPosition(documentContext, beforeDot);
-    }
+    // тип ресивера слева от точки
+    var typeSet = typeService.receiverTypesAt(documentContext, position);
     if (typeSet.isEmpty()) {
       return List.of();
     }
 
+    var scriptVariant = documentContext.getScriptVariantLanguage();
     var members = new LinkedHashMap<String, MemberDescriptor>();
+    // Имена декларированных полей — для приоритетной корзины sortText: пользовательские
+    // ключи должны ранжироваться выше дефолтных членов того же типа.
+    var localFieldNames = new HashSet<String>();
+    // Тип-владелец каждого члена — для отложенного восстановления документации в
+    // completionItem/resolve. Локальные поля (ключи структуры/колонки ТЗ)
+    // owner'а не получают: их описание пустое, резолвить нечего.
+    var owners = new LinkedHashMap<String, TypeRef>();
     for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getMembers(ref, fileType)) {
-        // Платформенные generic-«слоты» (например, `<Имя документа>`,
-        // `<Имя реквизита>`) — это абстрактные плейсхолдеры HBK, в реальной
-        // dot-completion они только мешают.
-        if (member.generic()) {
-          continue;
+      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
+        if (members.putIfAbsent(member.name(), member) == null) {
+          owners.put(member.name(), ref);
         }
-        members.putIfAbsent(member.name(), member);
       }
       // Декларированные ключи «открытого» объекта данных (Структура из
       // Новый Структура("К1, К2"), ТЗ с описанными колонками из JsDoc).
@@ -237,16 +399,40 @@ public final class CompletionProvider {
         var fieldName = entry.getKey();
         var fieldTypes = entry.getValue();
         var fieldRef = fieldTypes.refs().stream().findFirst().orElse(null);
-        members.putIfAbsent(fieldName, MemberDescriptor.property(fieldName, fieldRef, ""));
+        if (members.putIfAbsent(fieldName, MemberDescriptor.property(fieldName, fieldRef, "")) == null) {
+          localFieldNames.add(fieldName);
+        }
       }
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
-    var scriptVariant = documentContext.getScriptVariantLanguage();
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var filtered = members.values().stream()
       .filter(m -> matches(m.displayName(scriptVariant), prefix))
+      // Член, недоступный в целевой версии платформы (sinceVersion новее target),
+      // в автодополнении предлагать не нужно — его вызов помечает
+      // UnavailableMemberCall. Устаревшие при этом остаются (показываются
+      // зачёркнутыми).
+      .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
       .toList();
-    return toCompletionItems(filtered, scriptVariant);
+    var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target);
+    for (int i = 0; i < filtered.size(); i++) {
+      var member = filtered.get(i);
+      var bucket = localFieldNames.contains(member.name()) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
+      applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
+    }
+    return items;
+  }
+
+  /**
+   * Член устарел: платформенный — если устарел для целевой версии платформы
+   * ({@code target >= deprecatedSinceVersion}, как в {@code DeprecatedMethodCall});
+   * source-член — по пометке устаревания в doc-комментарии. Sentinel-версия
+   * oscript ({@code "*"}) срабатывает всегда.
+   */
+  private static boolean isMemberDeprecated(MemberDescriptor member, CompatibilityMode target) {
+    return PlatformMemberVersions.firesDeprecated(member.metadata().deprecatedSinceVersion(), target)
+      || member.getSymbolDescription().isDeprecated();
   }
 
   @Nullable
@@ -265,13 +451,13 @@ public final class CompletionProvider {
       if (i == 0 || line.charAt(i - 1) != '.') {
         return null;
       }
-      return new DotCompletionInfo(i - 1, line.substring(i, col));
+      return new DotCompletionInfo(line.substring(i, col));
     } catch (Exception e) {
       return null;
     }
   }
 
-  private record DotCompletionInfo(int dotColumn, String prefix) {
+  private record DotCompletionInfo(String prefix) {
   }
 
   private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {
@@ -286,43 +472,44 @@ public final class CompletionProvider {
     var items = new ArrayList<CompletionItem>();
 
     // Per-document #Использовать gating. Строгая семантика OneScript:
-    // library-сущность видна только если она объявлена в директиве
-    // #Использовать <libName>. Без директив — ничего из библиотек не видно.
-    // В BSL-файлах library-сущности скрыты целиком.
+    // сторонняя library-сущность видна только если её библиотека объявлена в
+    // директиве #Использовать <libName>. Без директив сторонние библиотеки не
+    // видны. В BSL-файлах library-сущности скрыты целиком.
     var usedLibs = UseDirectiveScanner.usedLibraries(documentContext);
     var usedLibsLower = usedLibs.isEmpty()
-      ? java.util.Set.<String>of()
-      : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toUnmodifiableSet());
-    java.util.function.Predicate<String> libVisible = name -> {
-      var origin = oScriptLibraryIndex.findByName(name).map(OScriptLibraryIndex.LibraryEntry::libOrigin);
-      if (origin.isEmpty()) {
-        return true;
-      }
-      if (fileType == FileType.BSL) {
-        return false;
-      }
-      return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
-    };
+      ? Set.<String>of()
+      : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.toUnmodifiableSet());
+    // Библиотека-«пакет» редактируемого файла: если сам документ является
+    // зарегистрированной library-записью, его соседи по тому же корню видны
+    // в completion без #Использовать (как implicit, так и explicit).
+    var ownLibOrigin = oScriptLibraryIndex.findByUri(Absolute.uri(documentContext.getUri()))
+      .map(OScriptLibraryIndex.LibraryEntry::libOrigin)
+      .filter(o -> o != null && !o.isBlank())
+      .map(o -> o.toLowerCase(Locale.ROOT));
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
       for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
-        if (isImplicitlyHiddenInCompletion(className)) {
+        if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
           continue;
         }
         if (matches(className, prefix)) {
-          items.add(buildPlatformClassCompletionItem(className, fileType, scriptVariant));
+          var item = buildPlatformClassCompletionItem(className, fileType, scriptVariant);
+          applySortText(item, BUCKET_TYPE, false);
+          items.add(item);
         }
       }
-      for (var libClassName : libraryEntryNames(OScriptLibraryIndex.EntryKind.CLASS)) {
-        if (!libVisible.test(libClassName)) {
+      for (var classEntry : oScriptLibraryIndex.findEntries(OScriptLibraryIndex.EntryKind.CLASS)) {
+        if (!libraryEntryVisible(classEntry, fileType, usedLibsLower, ownLibOrigin)) {
           continue;
         }
+        var libClassName = classEntry.qualifiedName();
         if (matches(libClassName, prefix)) {
           var item = new CompletionItem(libClassName);
           item.setKind(CompletionItemKind.Class);
           // Данных о конструкторе библиотечного класса здесь нет — сохраняем курсор между скобок.
           applyCallableInsertText(item, libClassName, true);
+          applySortText(item, BUCKET_TYPE, false);
           items.add(item);
         }
       }
@@ -332,44 +519,53 @@ public final class CompletionProvider {
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
       for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType, scriptVariant)) {
+        if (isGenericTemplateName(qualified)) {
+          continue;
+        }
         if (matches(qualified, prefix)) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
+          applySortText(item, BUCKET_TYPE, false);
           items.add(item);
         }
       }
     }
 
     // Global contexts — все VALUE-имена в global scope (property, enum, library-module).
-    // CompletionItemKind выбирается по фактическому SyntheticKind. Для library-модулей
-    // (SyntheticKind.LIBRARY_MODULE) применяется #Использовать-gating.
+    // CompletionItemKind выбирается по фактическому SyntheticKind. К library-сущностям
+    // применяется library-gating (#Использовать / свой пакет / implicit) через
+    // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
     for (var ctx : globalScopeProvider.getGlobalContexts(fileType)) {
       var name = ctx.getName();
       if (!matches(name, prefix)) {
         continue;
       }
-      if (ctx.getSyntheticKind() == SyntheticKind.LIBRARY_MODULE && !libVisible.test(name)) {
+      if (isGenericTemplateName(name)) {
         continue;
       }
-      if (isImplicitlyHiddenInCompletion(name)) {
+      if (!libraryNameVisible(name, fileType, usedLibsLower, ownLibOrigin)) {
         continue;
       }
       var item = new CompletionItem(name);
       item.setKind(completionKindForSynthetic(ctx.getSyntheticKind()));
+      applySortText(item, BUCKET_GLOBAL, false);
       items.add(item);
     }
 
     // Global functions. Один и тот же двуязычный дескриптор зарегистрирован
     // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
     // primary-имени через seenFn.
-    var seenFn = new java.util.HashSet<String>();
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
+    var seenFn = new HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
       var displayName = fn.displayName(scriptVariant);
       if (matches(displayName, prefix)) {
-        items.add(toCompletionItem(fn, scriptVariant));
+        var item = toCompletionItem(fn, scriptVariant, target);
+        applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
+        items.add(item);
       }
     }
 
@@ -379,6 +575,10 @@ public final class CompletionProvider {
         var item = new CompletionItem(method.getName());
         item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
+        if (method.isDeprecated()) {
+          markDeprecatedItem(item);
+        }
+        applySortText(item, BUCKET_LOCAL, method.isDeprecated());
         items.add(item);
       }
     }
@@ -388,6 +588,7 @@ public final class CompletionProvider {
       if (matches(variable.getName(), prefix)) {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
+        applySortText(item, BUCKET_LOCAL, false);
         items.add(item);
       }
     }
@@ -397,6 +598,7 @@ public final class CompletionProvider {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
+        applySortText(item, BUCKET_KEYWORD, false);
         items.add(item);
       }
     }
@@ -474,14 +676,21 @@ public final class CompletionProvider {
     }
   }
 
-  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant) {
-    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant);
+  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant, CompatibilityMode target) {
+    return buildMemberItem(member, null, FileType.BSL,
+      CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
   }
 
-  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members, Language scriptVariant) {
+  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members,
+                                                 Map<String, TypeRef> owners,
+                                                 FileType fileType,
+                                                 Language scriptVariant,
+                                                 CompatibilityMode target) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
-      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant));
+      var owner = owners.get(member.name());
+      items.add(buildMemberItem(member, owner, fileType,
+        CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target));
     }
     return items;
   }
@@ -499,9 +708,12 @@ public final class CompletionProvider {
    * {@code documentation} — VS Code показывал его дважды в подсказке.
    */
   private CompletionItem buildMemberItem(MemberDescriptor member,
+                                         @Nullable TypeRef owner,
+                                         FileType fileType,
                                          CompletionItemKind methodKind,
                                          CompletionItemKind propertyKind,
-                                         Language scriptVariant) {
+                                         Language scriptVariant,
+                                         CompatibilityMode target) {
     var displayName = member.displayName(scriptVariant);
     var item = new CompletionItem(displayName);
     if (member.kind() == MemberKind.METHOD) {
@@ -518,8 +730,57 @@ public final class CompletionProvider {
         item.setDetail(detail);
       }
     }
-    applyDocumentation(item, member, scriptVariant);
+    // documentation тяжела для широких типов (Глобальный контекст, union типов):
+    // если клиент умеет lazy-resolve и член резолвим обратно по owner-типу —
+    // откладываем её в completionItem/resolve, оставляя в ответе лишь data-ключ.
+    // Иначе строим жадно (прежнее поведение).
+    if (documentationResolveSupport && owner != null) {
+      item.setData(new CompletionData(
+        owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
+    } else {
+      applyDocumentation(item, member, scriptVariant);
+    }
+    markDeprecated(item, member, target);
     return item;
+  }
+
+  /** Помечает item устаревшим, если {@code member} устарел для целевой версии. */
+  private void markDeprecated(CompletionItem item, MemberDescriptor member, CompatibilityMode target) {
+    if (isMemberDeprecated(member, target)) {
+      markDeprecatedItem(item);
+    }
+  }
+
+  /**
+   * Проставляет {@code sortText} пункту автодополнения по схеме «корзина + флаг
+   * устаревания + label». Клиент сортирует пункты лексикографически по
+   * {@code sortText}: меньший префикс корзины поднимает группу выше, а
+   * устаревшие члены внутри корзины опускаются вниз (флаг {@code 1} против
+   * {@code 0}), даже если их имя лексикографически меньше неустаревшего соседа.
+   * Внутри корзины при равном статусе порядок стабилен по {@code label}.
+   *
+   * @param item       пункт автодополнения, которому проставляется {@code sortText}.
+   * @param bucket     префикс корзины ранжирования (см. {@code BUCKET_*}).
+   * @param deprecated {@code true}, если член устарел и должен опускаться вниз корзины.
+   */
+  private static void applySortText(CompletionItem item, String bucket, boolean deprecated) {
+    item.setSortText(bucket + (deprecated ? "1" : "0") + "_" + item.getLabel());
+  }
+
+  /**
+   * Помечает completion item устаревшим: при поддержке клиентом тегов —
+   * {@link CompletionItemTag#Deprecated}, иначе legacy-флагом
+   * {@link CompletionItem#setDeprecated}. Клиент рисует такой пункт
+   * зачёркнутым. Применяется ко всем устаревшим членам автодополнения —
+   * платформенным, глобальным функциям, членам конфигурации и
+   * пользовательским методам oscript-классов.
+   */
+  private void markDeprecatedItem(CompletionItem item) {
+    if (deprecatedTagSupport) {
+      item.setTags(List.of(CompletionItemTag.Deprecated));
+    } else {
+      item.setDeprecated(Boolean.TRUE);
+    }
   }
 
   /**
@@ -567,9 +828,9 @@ public final class CompletionProvider {
           .collect(java.util.stream.Collectors.joining(", "));
         item.setDetail("(" + paramList + ")");
       }
-      var desc = typeService.getDescription(ref, scriptVariant);
+      var desc = typeService.getDescription(ref, scriptVariant, fileType);
       if (!desc.isEmpty()) {
-        item.setDocumentation(desc);
+        setDocumentation(item, desc);
       }
     }
     applyCallableInsertText(item, className, ctorHasParameters);
@@ -625,10 +886,10 @@ public final class CompletionProvider {
       }
       var p = params.get(i);
       var paramName = p.displayName(scriptVariant);
+      sb.append(paramName);
       if (p.optional()) {
-        sb.append('[').append(paramName).append(']');
-      } else {
-        sb.append(paramName);
+        // Необязательный параметр помечаем «?» после имени: ИмяПараметра?.
+        sb.append('?');
       }
     }
     sb.append(')');
@@ -677,7 +938,7 @@ public final class CompletionProvider {
     return count + " " + word + " синтаксиса";
   }
 
-  private static void applyDocumentation(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
+  private void applyDocumentation(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
     var symDesc = member.getSymbolDescription();
     // У source-defined членов (пользовательские методы/свойства) описание —
     // это doc-comment в коде пользователя, он на языке проекта as-is.
@@ -689,11 +950,12 @@ public final class CompletionProvider {
       .filter(doc -> !doc.isBlank())
       .orElseGet(() -> member.displayDescription(scriptVariant));
     var sb = new StringBuilder();
-    if (symDesc.isDeprecated()) {
-      sb.append(scriptVariant == Language.EN ? "**Deprecated.**" : "**Устарело.**");
-      if (!symDesc.getDeprecationInfo().isBlank()) {
-        sb.append(' ').append(symDesc.getDeprecationInfo());
-      }
+    // Сам факт устаревания клиенту сообщает родной механизм LSP (markDeprecated:
+    // CompletionItemTag.Deprecated или legacy-флаг deprecated) — текстовая пометка
+    // в documentation его бы дублировала. В документацию попадает только причина
+    // устаревания, которую тегом не передать.
+    if (symDesc.isDeprecated() && !symDesc.getDeprecationInfo().isBlank()) {
+      sb.append(symDesc.getDeprecationInfo());
       if (!purpose.isBlank()) {
         sb.append("\n\n");
       }
@@ -702,7 +964,37 @@ public final class CompletionProvider {
       sb.append(purpose);
     }
     if (sb.length() > 0) {
-      item.setDocumentation(sb.toString());
+      setDocumentation(item, sb.toString());
     }
+  }
+
+  /**
+   * Проставляет documentation completion item с учётом клиентских capabilities.
+   * Если клиент поддерживает markdown в documentation completion item — текст отдаётся
+   * как {@link MarkupContent} с {@link MarkupKind#MARKDOWN}. Иначе документация отдаётся
+   * голой строкой (plaintext) с вырезанной markdown-разметкой, иначе клиент покажет
+   * управляющие символы (например, {@code **}) буквально.
+   *
+   * @param item     completion item, которому проставляется документация.
+   * @param markdown текст документации в формате markdown (без экранирования).
+   */
+  private void setDocumentation(CompletionItem item, String markdown) {
+    if (markdownDocumentationSupport) {
+      item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+    } else {
+      item.setDocumentation(stripMarkdownEmphasis(markdown));
+    }
+  }
+
+  /**
+   * Убирает markdown-разметку жирного начертания ({@code **...**}) из текста для
+   * plaintext-клиентов. В формируемой документации {@code **} используется только как
+   * обрамление жирного, поэтому достаточно удалить все вхождения {@code **}.
+   *
+   * @param value исходный текст с markdown-разметкой.
+   * @return текст без обрамляющих {@code **}.
+   */
+  private static String stripMarkdownEmphasis(String value) {
+    return value.replace("**", "");
   }
 }

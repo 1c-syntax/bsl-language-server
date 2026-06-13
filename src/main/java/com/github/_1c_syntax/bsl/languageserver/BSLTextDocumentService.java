@@ -45,12 +45,14 @@ import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.ImplementationProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SignatureHelpProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.TypeHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
@@ -63,7 +65,6 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -118,9 +119,12 @@ import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
+import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
+import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -166,15 +170,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final FoldingRangeProvider foldingRangeProvider;
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
+  private final ImplementationProvider implementationProvider;
   private final CompletionProvider completionProvider;
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
   private final CallHierarchyProvider callHierarchyProvider;
+  private final TypeHierarchyProvider typeHierarchyProvider;
   private final SelectionRangeProvider selectionRangeProvider;
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
   private final SignatureHelpProvider signatureHelpProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
@@ -224,6 +229,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
+  public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
+    return CompletableFuture.completedFuture(completionProvider.resolveCompletionItem(unresolved));
+  }
+
+  @Override
   public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
     var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
     if (maybeDocument.isEmpty()) {
@@ -265,7 +275,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either.forRight(definitionProvider.getDefinition(documentContext, params))
+      () -> definitionProvider.getDefinition(documentContext, params)
     );
   }
 
@@ -273,7 +283,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(
     ImplementationParams params
   ) {
-    return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> Either.forLeft(implementationProvider.getImplementations(documentContext, params))
+    );
   }
 
   @Override
@@ -339,6 +358,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Override
   public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
     var data = codeLensProvider.extractData(unresolved);
+    if (data == null) {
+      // Линза без данных — резолвить нечем, возвращаем как есть.
+      return CompletableFuture.completedFuture(unresolved);
+    }
     var maybeDocument = serverContextProvider.getDocumentUnsafe(data.getUri().toString());
     if (maybeDocument.isEmpty()) {
       return CompletableFuture.completedFuture(unresolved);
@@ -500,6 +523,55 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> callHierarchyProvider.outgoingCalls(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<@Nullable List<TypeHierarchyItem>> prepareTypeHierarchy(TypeHierarchyPrepareParams params) {
+    // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContextNullable(
+      documentContext,
+      () -> {
+        List<TypeHierarchyItem> typeHierarchyItems = typeHierarchyProvider.prepareTypeHierarchy(documentContext, params);
+        if (typeHierarchyItems.isEmpty()) {
+          return null;
+        }
+        return typeHierarchyItems;
+      }
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySupertypes(TypeHierarchySupertypesParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> typeHierarchyProvider.supertypes(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySubtypes(TypeHierarchySubtypesParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> typeHierarchyProvider.subtypes(documentContext, params)
     );
   }
 
@@ -709,16 +781,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     var documentContext = maybeDocument.get();
 
-    var serverContext = getContextForDocument(params.getTextDocument().getUri());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
-      return;
-    }
-
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+    withFreshDocumentContextNullable(documentContext, () -> {
       if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
         validate(documentContext);
       }
+      return null;
     });
   }
 
@@ -811,16 +878,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
-   * Проверяет поддержку клиентом pull-модели диагностик.
+   * Кэширует поддержку клиентом pull-модели диагностик, влияющую на способ публикации
+   * диагностик при закрытии документа.
    *
    * @param ignored Событие
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
-    clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getDiagnostic)
-      .isPresent();
+    clientSupportsPullDiagnostics = diagnosticProvider.supportsPullDiagnostics();
   }
 
   /**

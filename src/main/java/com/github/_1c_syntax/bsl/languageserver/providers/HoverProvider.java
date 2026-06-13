@@ -53,16 +53,16 @@ import java.util.Optional;
 public final class HoverProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final Map<Class<? extends Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
+  private final Map<Class<? extends Symbol>, MarkupContentBuilder> markupContentBuilders;
 
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .flatMap(reference -> findBuilder(reference.symbol())
-        .map(builder -> builder.getContent(reference.symbol()))
+        .map(builder -> builder.getContent(reference))
         .map(content -> new Hover(content, reference.selectionRange())));
   }
 
-  private Optional<MarkupContentBuilder<Symbol>> findBuilder(Symbol symbol) {
+  private Optional<MarkupContentBuilder> findBuilder(Symbol symbol) {
     var direct = markupContentBuilders.get(symbol.getClass());
     if (direct != null) {
       return Optional.of(direct);

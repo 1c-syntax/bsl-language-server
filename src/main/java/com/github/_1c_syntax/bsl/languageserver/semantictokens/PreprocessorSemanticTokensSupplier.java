@@ -80,7 +80,7 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
   }
 
   // Use directives as Namespace: #Использовать ...
-  // Native directives as Macro: #native
+  // Native/stack directives as Macro: #native, #stack
   private void addDirectives(List<SemanticTokenEntry> entries, BSLParser.FileContext ast) {
     for (var use : Trees.<BSLParser.UseContext>findAllRuleNodes(ast, BSLParser.RULE_use)) {
       addNamespaceForUse(entries, use);
@@ -96,10 +96,21 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
         helper.addRange(entries, Ranges.create(nativeKw), SemanticTokenTypes.Macro);
       }
     }
+
+    for (var stackCtx : Trees.<BSLParser.Preproc_stackContext>findAllRuleNodes(ast, BSLParser.RULE_preproc_stack)) {
+      var hash = stackCtx.HASH();
+      var stackKw = stackCtx.PREPROC_STACK();
+      if (hash != null) {
+        helper.addRange(entries, Ranges.create(hash), SemanticTokenTypes.Macro);
+      }
+      if (stackKw != null) {
+        helper.addRange(entries, Ranges.create(stackKw), SemanticTokenTypes.Macro);
+      }
+    }
   }
 
   // Other preprocessor directives: Macro for entire directive keyword (#Если, #КонецЕсли, etc.),
-  // excluding region start/end, native, use (handled as Namespace)
+  // excluding region start/end, native, stack, use (handled as Namespace)
   private void addOtherPreprocs(List<SemanticTokenEntry> entries, BSLParser.FileContext ast) {
     for (var preprocessor : Trees.<BSLParser.PreprocessorContext>findAllRuleNodes(ast, BSLParser.RULE_preprocessor)) {
       var containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
@@ -169,4 +180,3 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
       .ifPresent(id -> helper.addRange(entries, Ranges.create(id), SemanticTokenTypes.Variable));
   }
 }
-

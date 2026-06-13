@@ -25,8 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -55,7 +55,7 @@ public class ServerContextProvider {
 
   private final ObjectProvider<ServerContext> serverContextObjectProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
-  private final WorkspaceScope workspaceScope;
+  private final WorkspaceBeanScope workspaceScope;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
@@ -64,7 +64,7 @@ public class ServerContextProvider {
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextObjectProvider,
     LanguageServerConfiguration languageServerConfiguration,
-    WorkspaceScope workspaceScope
+    WorkspaceBeanScope workspaceScope
   ) {
     this.serverContextObjectProvider = serverContextObjectProvider;
     this.languageServerConfiguration = languageServerConfiguration;

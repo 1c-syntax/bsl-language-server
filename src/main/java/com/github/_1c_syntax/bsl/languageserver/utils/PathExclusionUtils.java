@@ -54,7 +54,12 @@ public class PathExclusionUtils {
   /** Суффикс «совпадает с любым потомком» в glob-паттерне (например, в {@code **\/.git/**}). */
   private static final String DESCENDANTS_SUFFIX = "/**";
 
-  /** Пара фильтров для {@code FileUtils.listFiles}: {@code true} — путь оставить. */
+  /**
+   * Пара фильтров для {@code FileUtils.listFiles}: {@code true} — путь оставить.
+   *
+   * @param directoryFilter фильтр директорий
+   * @param fileFilter      фильтр файлов
+   */
   public record ExclusionFilters(IOFileFilter directoryFilter, IOFileFilter fileFilter) {
     /** Никого не исключать. */
     public static final ExclusionFilters NONE =

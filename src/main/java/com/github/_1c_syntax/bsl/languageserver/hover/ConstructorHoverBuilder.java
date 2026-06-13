@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -62,7 +63,8 @@ public class ConstructorHoverBuilder {
     SignatureDescriptor chosen,
     List<SignatureDescriptor> ctors,
     boolean disclaim,
-    String classDescription
+    String classDescription,
+    FileType fileType
   ) {
     var sb = new StringBuilder();
     var lang = configuration.getLanguage();
@@ -76,11 +78,11 @@ public class ConstructorHoverBuilder {
     }
     sb.append(')').append("\n```\n");
     sb.append("\n_").append(tr("constructorOf")).append("_ `").append(localizedTypeName).append('`');
-    // Bilingual: всегда зовём typeService.getDescription(ref, lang) — он отдаст
-    // ru или en по текущей LS-локали. {@code classDescription} от caller'а
-    // используется только если registry не знает описание (legacy/source-defined
-    // символы).
-    var bilingual = typeService.getDescription(ref, lang);
+    // Bilingual: всегда зовём typeService.getDescription(ref, lang, fileType) — он
+    // отдаст ru или en по текущей LS-локали и вариант описания по языку файла
+    // (BSL/OS). {@code classDescription} от caller'а используется только если
+    // registry не знает описание (legacy/source-defined символы).
+    var bilingual = typeService.getDescription(ref, lang, fileType);
     var classDesc = !bilingual.isBlank() ? bilingual : (classDescription != null ? classDescription : "");
     if (!classDesc.isBlank()) {
       sb.append("\n\n").append(classDesc);
@@ -94,14 +96,7 @@ public class ConstructorHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        sb.append("- `").append(p.displayName(lang)).append('`');
-        var typesLabel = renderTypeSet(p.types(), lang);
-        if (!typesLabel.isEmpty()) {
-          sb.append(": ").append(typesLabel);
-        }
-        if (p.optional()) {
-          sb.append(" _(").append(tr("optionalParameter")).append(")_");
-        }
+        HoverParameters.appendNameAndType(sb, p.displayName(lang), renderTypeSet(p.types(), lang), p.optional());
         if (!p.defaultValue().isBlank()) {
           sb.append(" _= ").append(p.defaultValue()).append('_');
         }

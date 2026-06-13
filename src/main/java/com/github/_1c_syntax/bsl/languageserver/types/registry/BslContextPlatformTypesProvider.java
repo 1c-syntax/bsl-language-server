@@ -37,7 +37,7 @@ import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.context.api.ContextSignatureParameter;
 import com.github._1c_syntax.bsl.context.api.ContextType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -49,8 +49,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -92,7 +90,7 @@ import java.util.Set;
  */
 @Slf4j
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   private final BslContextHolder contextHolder;
@@ -109,8 +107,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   @Override
-  public LanguageScope getLanguageScope() {
-    return LanguageScope.BSL;
+  public FileType getFileType() {
+    return FileType.BSL;
   }
 
   private static List<TypeDecl> build(@Nullable ContextProvider provider) {
@@ -274,8 +272,14 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       var values = enumeration.values();
       var members = new ArrayList<MemberDescriptor>(values.size());
       var enumRef = new TypeRef(TypeKind.PLATFORM, context.name().getName());
+      // Тип элементов набора берётся из bsl-context (страница enum: значения
+      // имеют такой-то тип). Если общий тип задан (как у библиотек картинок,
+      // стилей, цветов), значения возвращают его; иначе сам enumRef.
+      var valueRef = enumeration.valueType()
+        .map(n -> new TypeRef(TypeKind.PLATFORM, n.getName()))
+        .orElse(enumRef);
       for (var value : values) {
-        members.add(toMemberDescriptor(value, enumRef, enLookup));
+        members.add(toMemberDescriptor(value, valueRef, enLookup));
       }
       return List.copyOf(members);
     }
@@ -340,13 +344,16 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return toMemberDescriptor(method, ctx -> EnAttachments.EMPTY);
   }
 
-  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef enumRef,
+  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef valueRef,
                                                      Function<Object, EnAttachments> enLookup) {
-    return MemberDescriptor.property(
-      value.name().getName(),
-      enumRef,
-      value.description()
-    ).withMetadata(metadataOf(value))
+    var name = value.name().getName();
+    // generic-флаг приходит из bsl-context (ContextEnumValue#isGeneric()) —
+    // это шаблоны вроде БиблиотекаКартинок.<Имя картинки>, которые потом
+    // материализуются из конфигурации.
+    var descriptor = value.isGeneric()
+      ? MemberDescriptor.genericProperty(name, valueRef, value.description())
+      : MemberDescriptor.property(name, valueRef, value.description());
+    return descriptor.withMetadata(metadataOf(value))
       .withBilingualName(bilingualName(value.name()))
       .withBilingualDescription(BilingualString.of(
         safe(value.description()), safe(enLookup.apply(value).description())));

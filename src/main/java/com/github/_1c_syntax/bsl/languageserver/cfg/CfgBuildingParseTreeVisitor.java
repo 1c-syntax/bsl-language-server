@@ -80,9 +80,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
         var probablyPreprocessor = Trees.getPreviousNode(fileBlock.getParent(), fileBlock,
           BSLParser.RULE_preprocessor);
 
-        if (probablyPreprocessor != fileBlock) {
-          hasTopLevelPreprocessor = true;
-          probablyPreprocessor.accept(this);
+        // Флаг top-level препроцессора должен взводиться только для #Если, который грамматика file
+        // "съедает" в начале модуля. Для оторванных #Иначе/#ИначеЕсли/#КонецЕсли его взводить нельзя,
+        // иначе он протечет на следующий вложенный #Если без парного #КонецЕсли и сломает стек блоков.
+        if (probablyPreprocessor instanceof BSLParser.PreprocessorContext preprocessor) {
+          hasTopLevelPreprocessor = preprocessor.preproc_if() != null;
+          preprocessor.accept(this);
         }
       }
     }

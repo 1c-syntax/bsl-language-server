@@ -58,7 +58,7 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
     assertThat(types.refs())
       .as("Объект.СоставнойРеквизит → {Строка, Число} (xs:string + xs:decimal)")
       .extracting(ref -> ref.qualifiedName())
@@ -81,7 +81,7 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
     assertThat(types.refs())
       .as("Объект.Реквизит1 → Строка (xs:string в метаданных)")
       .extracting(ref -> ref.qualifiedName())

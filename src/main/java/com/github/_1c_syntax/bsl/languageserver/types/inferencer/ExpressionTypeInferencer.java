@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -33,14 +34,17 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.ExtendsAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
@@ -61,18 +65,19 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Ленивый инференсер типов выражений.
@@ -86,7 +91,7 @@ import java.util.Set;
  * накапливает finder'ы из всего проекта (variable, method, module и т.д.).
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class ExpressionTypeInferencer {
 
@@ -101,11 +106,13 @@ public class ExpressionTypeInferencer {
 
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
+  private final InferredVariableTypeIndex inferredVariableTypeIndex;
+  private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final OScriptLibraryIndex oScriptLibraryIndex;
   private final AutumnComponentInferencer autumnComponentInferencer;
+  private final OScriptExtends oScriptExtends;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -137,22 +144,17 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Для библиотечного OneScript-модуля (запись {@code <module>} из {@code lib.config})
-   * имя модуля в выражении ссылается на тип-namespace с экспортами как членами.
-   * {@link OScriptLibraryIndex} знает qualifiedName по URI, {@link TypeRegistry#resolve}
-   * — соответствующий {@link TypeRef}.
+   * Имя модуля в выражении ссылается на тип-namespace с экспортами как членами
+   * (общий модуль {@code ОбщегоНазначения}, модуль менеджера/объекта, библиотечный
+   * OneScript-модуль). Тип берётся из единого обратного индекса URI→тип в
+   * {@link GlobalScopeProvider#moduleTypeByUri(java.net.URI)}, который наполняют
+   * провайдеры регистрации модулей. Инференсер больше не обращается к
+   * подсистемным индексам (oscript/configuration) напрямую.
    */
   private TypeSet inferModuleAsType(ModuleSymbol module) {
-    var uri = module.getOwner().getUri();
-    var entries = oScriptLibraryIndex.findEntriesByUri(uri);
-    if (entries.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new LinkedHashSet<TypeRef>();
-    for (var entry : entries) {
-      typeRegistry.resolve(entry.qualifiedName()).ifPresent(refs::add);
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    return globalScopeProvider.moduleTypeByUri(module.getOwner().getUri())
+      .map(TypeSet::of)
+      .orElse(TypeSet.EMPTY);
   }
 
   // ---------------------------------------------------------------------------
@@ -234,6 +236,16 @@ public class ExpressionTypeInferencer {
     var text = terminal.getText();
     if (text.isBlank()) {
       return TypeSet.EMPTY;
+    }
+    // Неявное поле родителя библиотеки extends: фреймворк создаёт _ОбъектРодитель
+    // в собранном объекте, в исходниках наследника оно не объявлено — типизируем
+    // его родительским классом, чтобы _ОбъектРодитель.МетодБазы() резолвился.
+    if (ExtendsAnnotations.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(text)
+      && ctx.documentContext.getFileType() == FileType.OS) {
+      var parent = parentClassType(ctx.documentContext);
+      if (!parent.isEmpty()) {
+        return parent;
+      }
     }
     // Глобальная область: платформенные глобалы, library-модули,
     // common-модули — все приходят через единый GlobalSymbolScope.
@@ -651,17 +663,11 @@ public class ExpressionTypeInferencer {
         if (!member.matches(memberName)) {
           continue;
         }
-        // Сначала composite-набор типов; для single-type returnType-fallback
-        // (legacy-проводка для членов, которые не используют новый API).
-        var memberTypes = member.returnTypes();
-        if (memberTypes != null && !memberTypes.isEmpty()) {
-          for (var ref : memberTypes.refs()) {
-            if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-              result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
-            }
+        // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
+        for (var ref : member.returnTypes().refs()) {
+          if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+            result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
           }
-        } else if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
-          result = result.union(enrichReturnRefWithElementFields(member.returnType(), elementSet));
         }
       }
     }
@@ -751,6 +757,15 @@ public class ExpressionTypeInferencer {
    * (секция {@code // Параметры:}).
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
+    // Кэш ключуется только по VariableSymbol, без fileType. Это корректно, потому что
+    // fileType документа детерминирован самой переменной (variable.getOwner().getFileType()),
+    // а inferSymbol всегда заводит ctx.documentContext == variable.getOwner() — то есть
+    // одна и та же переменная не инферится в двух разных fileType-контекстах.
+    var cached = inferredVariableTypeIndex.get(variable);
+    if (cached != null) {
+      return cached;
+    }
+
     var owner = variable.getOwner();
     TypeSet acc = TypeSet.EMPTY;
     Set<Position> visitedPositions = new HashSet<>();
@@ -775,9 +790,20 @@ public class ExpressionTypeInferencer {
       }
     }
     acc = acc.union(autumnInjectedType(variable));
+    acc = acc.union(extendsParentFieldType(variable));
     acc = attachDefaultElementTypes(acc);
     acc = accumulateStructureInsertFields(variable, acc, ctx);
     acc = accumulateValueTableColumnFields(variable, acc, ctx);
+
+    // Кэшируем только «чистый корень» инференса (visited содержит максимум саму
+    // переменную). Вложенный вызов (внутри инференса другой переменной, visited
+    // ≥ 2) мог быть усечён цикл-гардом и зависит от порядка обхода — его результат
+    // некорректно переиспользовать как самостоятельный. Перф от этого не страдает:
+    // горячий путь (ресивер member-доступа) — всегда корень, а вложенные выводы
+    // и так покрыты кэшем своего корня.
+    if (ctx.visited.size() <= 1) {
+      inferredVariableTypeIndex.put(variable, acc);
+    }
     return acc;
   }
 
@@ -793,6 +819,36 @@ public class ExpressionTypeInferencer {
     }
     return autumnComponentInferencer.inferInjectedType(
       variable.getAnnotations(), variable.getName(), variable.getOwner().getFileType());
+  }
+
+  /**
+   * Тип поля-держателя родителя библиотеки {@code extends}: поле, помеченное
+   * {@code &Родитель} (явный держатель), либо неявное поле
+   * {@code _ОбъектРодитель}. Типом становится родительский класс, объявленный
+   * через {@code &Расширяет} (в т.ч. через мета-аннотации). Так
+   * {@code Родитель.МетодБазы()} даёт автодополнение/hover по членам родителя.
+   */
+  private TypeSet extendsParentFieldType(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.MODULE) {
+      return TypeSet.EMPTY;
+    }
+    var owner = variable.getOwner();
+    if (owner.getFileType() != FileType.OS || !oScriptExtends.isParentHolder(variable)) {
+      return TypeSet.EMPTY;
+    }
+    return parentClassType(owner);
+  }
+
+  /**
+   * Тип родительского класса {@code .os}-документа (через {@code &Расширяет} /
+   * мета-аннотации), либо {@link TypeSet#EMPTY}, если наследование не объявлено
+   * или родитель не разрешается в зарегистрированный тип.
+   */
+  private TypeSet parentClassType(DocumentContext documentContext) {
+    return oScriptExtends.parentClassName(documentContext)
+      .flatMap(name -> typeRegistry.resolve(name, FileType.OS))
+      .map(TypeSet::of)
+      .orElse(TypeSet.EMPTY);
   }
 
   /**
@@ -831,46 +887,49 @@ public class ExpressionTypeInferencer {
     var variableName = variable.getName();
 
     var result = base;
-    for (var ruleNode : Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement)) {
-      if (!(ruleNode instanceof BSLParser.CallStatementContext call)) {
-        continue;
-      }
-      var name = extractInsertReceiverName(call);
-      if (name == null || !name.equalsIgnoreCase(variableName)) {
-        continue;
-      }
-      if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
-        continue;
-      }
-      var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
-      if (methodCall == null || !isInsertMethodName(methodCall)) {
-        continue;
-      }
-      var paramList = methodCall.doCall() == null ? null : methodCall.doCall().callParamList();
-      if (paramList == null) {
-        continue;
-      }
-      var params = paramList.callParam();
-      if (params.size() < 1) {
-        continue;
-      }
-      var keyExpr = params.get(0).expression();
-      var keyName = extractStringLiteralText(keyExpr);
-      if (keyName == null || keyName.isBlank()) {
-        continue;
-      }
-      TypeSet valueTypes;
-      if (params.size() >= 2 && params.get(1).expression() != null) {
-        var valueExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(params.get(1).expression());
-        valueTypes = valueExpr == null ? TypeSet.EMPTY : inferInternal(valueExpr, ctx);
-      } else {
-        valueTypes = TypeSet.of(UNDEFINED);
-      }
-      if (!valueTypes.isEmpty()) {
-        result = result.withField(headRef, keyName.trim(), valueTypes);
+    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variableName)) {
+      var field = insertedStructureField(call, variableName, scopeRange, ctx);
+      if (field != null && !field.types().isEmpty()) {
+        result = result.withField(headRef, field.name(), field.types());
       }
     }
     return result;
+  }
+
+  /**
+   * Поле структуры/соответствия, добавляемое вызовом {@code X.Вставить("Ключ", Значение)}
+   * для нужного ресивера в области видимости, либо {@code null}, если вызов не подходит.
+   *
+   * @param call         разбираемый callStatement.
+   * @param variableName имя переменной-ресивера.
+   * @param scopeRange   диапазон области видимости переменной (или {@code null}).
+   * @param ctx          контекст инференса для вывода типа значения.
+   * @return добавляемое поле (имя + типы значения) либо {@code null}.
+   */
+  @Nullable
+  private KeyedTypes insertedStructureField(
+    BSLParser.CallStatementContext call,
+    String variableName,
+    @Nullable Range scopeRange,
+    InferenceContext ctx
+  ) {
+    var params = mutationCallParams(
+      call, variableName, scopeRange, extractInsertReceiverName(call), ExpressionTypeInferencer::isInsertMethodName);
+    if (params == null) {
+      return null;
+    }
+    var keyName = extractStringLiteralText(params.get(0).expression());
+    if (keyName == null || keyName.isBlank()) {
+      return null;
+    }
+    TypeSet valueTypes;
+    if (params.size() >= 2 && params.get(1).expression() != null) {
+      var valueExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(params.get(1).expression());
+      valueTypes = valueExpr == null ? TypeSet.EMPTY : inferInternal(valueExpr, ctx);
+    } else {
+      valueTypes = TypeSet.of(UNDEFINED);
+    }
+    return new KeyedTypes(keyName.trim(), valueTypes);
   }
 
   /**
@@ -914,53 +973,98 @@ public class ExpressionTypeInferencer {
     TypeSet rowSet = TypeSet.of(rowRef);
     boolean hasColumns = false;
 
-    for (var ruleNode : Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement)) {
-      if (!(ruleNode instanceof BSLParser.CallStatementContext call)) {
-        continue;
+    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variableName)) {
+      var column = addedColumn(call, variableName, scopeRange, ctx);
+      if (column != null) {
+        rowSet = rowSet.withField(rowRef, column.name(), column.types());
+        hasColumns = true;
       }
-      var name = extractColumnsAddReceiverName(call);
-      if (name == null || !name.equalsIgnoreCase(variableName)) {
-        continue;
-      }
-      if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
-        continue;
-      }
-      var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
-      if (methodCall == null || !isAddMethodName(methodCall)) {
-        continue;
-      }
-      var paramList = methodCall.doCall() == null ? null : methodCall.doCall().callParamList();
-      if (paramList == null) {
-        continue;
-      }
-      var params = paramList.callParam();
-      if (params.isEmpty()) {
-        continue;
-      }
-      var keyExpr = params.get(0).expression();
-      var keyName = extractStringLiteralText(keyExpr);
-      if (keyName == null || keyName.isBlank()) {
-        continue;
-      }
-      // Второй аргумент по сигнатуре платформы — объект ОписаниеТипов. Выводим тип выражения
-      // через инференсер; если в нём есть ОписаниеТипов-ref, забираем его elementTypes
-      // (туда {@link #applyTypeDescriptionConstructorTypes} складывает имена типов из
-      // первого аргумента конструктора). Любое другое выражение (Тип(...), строковый
-      // литерал, переменная иного типа) даст пустой набор — колонка останется Неопределено.
-      TypeSet columnTypes = TypeSet.EMPTY;
-      if (params.size() >= 2) {
-        columnTypes = extractColumnTypes(params.get(1).expression(), ctx);
-      }
-      if (columnTypes.isEmpty()) {
-        columnTypes = TypeSet.of(UNDEFINED);
-      }
-      rowSet = rowSet.withField(rowRef, keyName.trim(), columnTypes);
-      hasColumns = true;
     }
     if (!hasColumns) {
       return base;
     }
     return base.withElement(headRef, rowSet);
+  }
+
+  /**
+   * Колонка таблицы значений, добавляемая вызовом {@code X.Колонки.Добавить("Имя", Тип)}
+   * для нужного ресивера в области видимости, либо {@code null}, если вызов не подходит.
+   *
+   * @param call         разбираемый callStatement.
+   * @param variableName имя переменной-ресивера.
+   * @param scopeRange   диапазон области видимости переменной (или {@code null}).
+   * @param ctx          контекст инференса для вывода типов колонки.
+   * @return добавляемая колонка (имя + типы) либо {@code null}.
+   */
+  @Nullable
+  private KeyedTypes addedColumn(
+    BSLParser.CallStatementContext call,
+    String variableName,
+    @Nullable Range scopeRange,
+    InferenceContext ctx
+  ) {
+    var params = mutationCallParams(
+      call, variableName, scopeRange, extractColumnsAddReceiverName(call), ExpressionTypeInferencer::isAddMethodName);
+    if (params == null) {
+      return null;
+    }
+    var keyName = extractStringLiteralText(params.get(0).expression());
+    if (keyName == null || keyName.isBlank()) {
+      return null;
+    }
+    // Второй аргумент по сигнатуре платформы — объект ОписаниеТипов. Выводим тип выражения
+    // через инференсер; если в нём есть ОписаниеТипов-ref, забираем его elementTypes
+    // (туда applyTypeDescriptionConstructorTypes складывает имена типов из первого аргумента
+    // конструктора). Любое другое выражение даст пустой набор — колонка останется Неопределено.
+    var columnTypes = params.size() >= 2 ? extractColumnTypes(params.get(1).expression(), ctx) : TypeSet.EMPTY;
+    return new KeyedTypes(keyName.trim(), columnTypes.isEmpty() ? TypeSet.of(UNDEFINED) : columnTypes);
+  }
+
+  /**
+   * Параметры mutation-вызова {@code X.Метод(...)}, если его базовый идентификатор совпадает
+   * с {@code receiverName}, вызов попадает в область видимости и его метод проходит предикат.
+   * Общий guard-префикс для {@link #insertedStructureField} и {@link #addedColumn}.
+   *
+   * @param call           разбираемый callStatement.
+   * @param receiverName   имя переменной-ресивера.
+   * @param scopeRange     диапазон области видимости (или {@code null} — без проверки).
+   * @param actualReceiver фактический базовый идентификатор вызова (или {@code null}).
+   * @param methodMatches  предикат на имя вызываемого метода.
+   * @return непустой список параметров вызова либо {@code null}, если вызов не подходит.
+   */
+  @Nullable
+  private static List<? extends BSLParser.CallParamContext> mutationCallParams(
+    BSLParser.CallStatementContext call,
+    String receiverName,
+    @Nullable Range scopeRange,
+    @Nullable String actualReceiver,
+    Predicate<BSLParser.MethodCallContext> methodMatches
+  ) {
+    if (actualReceiver == null || !actualReceiver.equalsIgnoreCase(receiverName)) {
+      return null;
+    }
+    if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
+      return null;
+    }
+    var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
+    if (methodCall == null || !methodMatches.test(methodCall)) {
+      return null;
+    }
+    var paramList = methodCall.doCall() == null ? null : methodCall.doCall().callParamList();
+    if (paramList == null) {
+      return null;
+    }
+    var params = paramList.callParam();
+    return params.isEmpty() ? null : params;
+  }
+
+  /**
+   * Имя и типы поля/колонки, накапливаемых из mutation-вызова.
+   *
+   * @param name  имя ключа/колонки.
+   * @param types типы значения/колонки.
+   */
+  private record KeyedTypes(String name, TypeSet types) {
   }
 
   private static boolean isValueTableLike(String typeName) {

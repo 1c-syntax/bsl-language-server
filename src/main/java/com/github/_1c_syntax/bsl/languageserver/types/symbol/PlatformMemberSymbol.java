@@ -27,17 +27,17 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import jakarta.annotation.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
 /**
  * Symbol для члена платформенного / конфигурационного типа или для
- * глобальной функции/свойства, разрешённого через {@code TypeService.findMemberAt}.
+ * глобальной функции/свойства, разрешённого через {@code TypeService.memberAt}.
  *
  * <p>Несёт в себе всё, что нужно построителю hover'а:
  * {@link MemberDescriptor} с сигнатурами/описаниями и арность вызова
@@ -50,8 +50,7 @@ public final class PlatformMemberSymbol implements Symbol {
 
   private final String name;
   /** {@code null} для глобальных функций/свойств без owner-типа. */
-  @Nullable
-  private final TypeRef owner;
+  private final @Nullable TypeRef owner;
   private final MemberDescriptor descriptor;
   /** Число фактических аргументов в текущем вызове; {@code -1} если не вызов. */
   private final int callArgCount;

@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 /**
  * Примитивный тип языка: {@code Строка}, {@code Число}, {@code Дата},
  * {@code Булево}, {@code Неопределено}, {@code Null}.
+ *
+ * @param ref ссылка на тип в реестре типов
  */
 public record PrimitiveType(TypeRef ref) implements Type {
 }

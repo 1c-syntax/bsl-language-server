@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
@@ -30,8 +31,6 @@ import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -72,7 +71,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class OScriptLibraryIndex {
 
@@ -230,6 +229,34 @@ public class OScriptLibraryIndex {
   /** @return все зарегистрированные записи (классы и модули вперемешку). */
   public Collection<LibraryEntry> allEntries() {
     return List.copyOf(entriesByName.values());
+  }
+
+  /**
+   * Имена, под которыми {@code .os}-класс известен другим классам (как в
+   * {@code Новый Имя} и аннотациях {@code &Расширяет}/{@code &Реализует}):
+   * {@code qualifiedName}'ы library-класса (их может быть несколько).
+   *
+   * @param documentContext контекст {@code .os}-документа-класса
+   * @return имена класса; пусто, если документ не зарегистрирован как library-класс
+   */
+  public List<String> classNames(DocumentContext documentContext) {
+    return findEntriesByUri(documentContext.getUri()).stream()
+      .filter(entry -> entry.kind() == EntryKind.CLASS)
+      .map(LibraryEntry::qualifiedName)
+      .distinct()
+      .toList();
+  }
+
+  /**
+   * Зарегистрирован ли документ как library-класс ({@code <class>} в
+   * {@code lib.config} или convention-каталог {@code Классы}).
+   *
+   * @param documentContext контекст {@code .os}-документа
+   * @return {@code true}, если документ — library-класс
+   */
+  public boolean isLibraryClass(DocumentContext documentContext) {
+    return findEntriesByUri(documentContext.getUri()).stream()
+      .anyMatch(entry -> entry.kind() == EntryKind.CLASS);
   }
 
   private void indexConventional(ConventionalLibraryDiscovery.ConventionalLibrary lib, ServerContext serverContext) {

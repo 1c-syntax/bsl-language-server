@@ -115,6 +115,207 @@ class HoverProviderTest {
   }
 
   @Test
+  void hoverOnGlobalFunctionInOsFileShowsOneScriptVariant() {
+    // Регрессия #4054: ПодробноеПредставлениеОшибки существует и в BSL, и в OneScript.
+    // В .os-файле hover должен показывать OneScript-вариант без платформенного
+    // deprecation «с 8.3.17» и рекомендации ОбработкаОшибок.ПодробноеПредставлениеОшибки.
+    // given
+    var content = """
+      Попытка
+        ВызватьИсключение "Ошибка";
+      Исключение
+        Сообщить(ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
+      КонецПопытки;
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «ПодробноеПредставлениеОшибки»
+    params.setPosition(new Position(3, 15));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown)
+      .as("hover в .os не должен содержать BSL-метаданных устаревания")
+      .doesNotContain("8.3.17")
+      .doesNotContain("ОбработкаОшибок.ПодробноеПредставлениеОшибки");
+  }
+
+  @Test
+  void hoverOnGlobalFunctionInBslFileShowsBslVariant() {
+    // Контрольная точка к #4054: в .bsl-файле тот же hover показывает BSL-вариант
+    // с deprecation-метаданными платформы.
+    // given
+    var content = """
+      Сообщить(ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «ПодробноеПредставлениеОшибки»
+    params.setPosition(new Position(0, 12));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown).contains("8.3.17");
+  }
+
+  @Test
+  void hoverOnNewExpressionInBslFileDoesNotShowOneScriptDescription() {
+    // Регрессия #4054: ТаблицаЗначений есть в обоих наборах типов; в JSON-fallback
+    // описание есть только у OneScript-варианта. В .bsl-файле hover конструктора
+    // не должен показывать OneScript-описание.
+    // given
+    var content = """
+      Т = Новый ТаблицаЗначений;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «ТаблицаЗначений»
+    params.setPosition(new Position(0, 12));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown)
+      .as("hover конструктора в .bsl не должен содержать OneScript-описание типа")
+      .doesNotContain("табличном виде");
+  }
+
+  @Test
+  void hoverOnNewExpressionInOsFileShowsOneScriptDescription() {
+    // Контрольная точка к #4054: в .os-файле OneScript-описание типа показывается.
+    // given
+    var content = """
+      Т = Новый ТаблицаЗначений;
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «ТаблицаЗначений»
+    params.setPosition(new Position(0, 12));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown).contains("табличном виде");
+  }
+
+  @Test
+  void hoverOnGlobalEnumInBslFileDoesNotShowOneScriptDescription() {
+    // Регрессия #4054: системное перечисление КодировкаТекста есть в обоих наборах
+    // (exposedAsGlobal), описание в JSON-fallback — только у OneScript-варианта.
+    // В .bsl-файле hover «голого» имени не должен показывать OneScript-описание.
+    // given
+    var content = """
+      К = КодировкаТекста.UTF8;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «КодировкаТекста»
+    params.setPosition(new Position(0, 8));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    if (optionalHover.isPresent()) {
+      var markdown = optionalHover.get().getContents().getRight().getValue();
+      assertThat(markdown)
+        .as("hover глобального перечисления в .bsl не должен содержать OneScript-описание")
+        .doesNotContain("допустимых кодировок");
+    }
+  }
+
+  @Test
+  void hoverOnGlobalEnumInOsFileShowsOneScriptDescription() {
+    // Контрольная точка к #4054: в .os-файле OneScript-описание перечисления показывается.
+    // given
+    var content = """
+      К = КодировкаТекста.UTF8;
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «КодировкаТекста»
+    params.setPosition(new Position(0, 8));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown).contains("допустимых кодировок");
+  }
+
+  @Test
+  void hoverOnKeywordInBslFileDoesNotShowOneScriptDescription() {
+    // Регрессия #4054: у ключевого слова Пока описание в JSON-fallback есть только
+    // в OneScript-наборе — оно не должно показываться в .bsl-файле.
+    // given
+    var content = """
+      Пока Истина Цикл
+      КонецЦикла;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «Пока»
+    params.setPosition(new Position(0, 1));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    if (optionalHover.isPresent()) {
+      var markdown = optionalHover.get().getContents().getRight().getValue();
+      assertThat(markdown)
+        .as("hover ключевого слова в .bsl не должен содержать OneScript-описание")
+        .doesNotContain("Оператор цикла Пока");
+    }
+  }
+
+  @Test
+  void hoverOnKeywordInOsFileShowsOneScriptDescription() {
+    // Контрольная точка к #4054: в .os-файле OneScript-описание ключевого слова показывается.
+    // given
+    var content = """
+      Пока Истина Цикл
+      КонецЦикла;
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «Пока»
+    params.setPosition(new Position(0, 1));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+    var markdown = optionalHover.get().getContents().getRight().getValue();
+    assertThat(markdown).contains("Оператор цикла Пока");
+  }
+
+  @Test
   void hoverOnDereferencedPropertyMustNotMatchSameNameLocalVariable() {
     // Регрессия: правая часть dereference `Контейнер.Поле` — это имя свойства, а не bare-identifier.
     // ReferenceIndex не должен ловить эту позицию как ссылку на локальную переменную с таким же именем,
@@ -155,7 +356,7 @@ class HoverProviderTest {
   void hoverOnMemberInLvalueAssignmentTarget() {
     // Регрессия: dereference в LHS присваивания (lValue) — hover должен резолвиться так же,
     // как в RHS. ExpressionAtPosition.findExpressionTree сейчас не покрывает lValue,
-    // поэтому findMemberAt возвращает пусто на `ИсточникДанных.Имя = …`.
+    // поэтому memberAt возвращает пусто на `ИсточникДанных.Имя = …`.
     var content = """
       СхемаКомпоновкиДанных = Новый СхемаКомпоновкиДанных;
       ИсточникДанных = СхемаКомпоновкиДанных.ИсточникиДанных.Добавить();

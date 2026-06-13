@@ -58,7 +58,7 @@ class TypeServiceBenchmarkTest {
       var ref = Reference.of(module, v,
         new Location(documentContext.getUri().toString(), v.getSelectionRange()),
         OccurrenceType.DEFINITION);
-      typeService.findTypes(ref);
+      typeService.typesAt(ref);
     }
 
     var start = System.nanoTime();
@@ -68,7 +68,7 @@ class TypeServiceBenchmarkTest {
         var ref = Reference.of(module, v,
           new Location(documentContext.getUri().toString(), v.getSelectionRange()),
           OccurrenceType.DEFINITION);
-        typeService.findTypes(ref);
+        typeService.typesAt(ref);
         callCount++;
       }
     }

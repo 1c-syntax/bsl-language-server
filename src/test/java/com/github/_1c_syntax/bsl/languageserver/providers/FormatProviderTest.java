@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
@@ -120,6 +121,90 @@ class FormatProviderTest {
     TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
 
+  }
+
+  @Test
+  void testFormatTrimsTrailingWhitespace() throws IOException {
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    var options = new FormattingOptions(4, true);
+    options.setTrimTrailingWhitespace(true);
+    params.setOptions(options);
+
+    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.getFirst();
+    String[] resultLines = textEdit.getNewText().split("\n", -1);
+    for (String line : resultLines) {
+      assertThat(line)
+        .as("line must not have trailing whitespace: <%s>", line)
+        .isEqualTo(line.stripTrailing());
+    }
+  }
+
+  @Test
+  void testFormatInsertsFinalNewline() {
+    // given
+    String fileContent = "А = 1;";
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    var options = new FormattingOptions(4, true);
+    options.setInsertFinalNewline(true);
+    params.setOptions(options);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.getFirst();
+    assertThat(textEdit.getNewText()).endsWith("\n");
+    assertThat(textEdit.getNewText()).doesNotEndWith("\n\n");
+  }
+
+  @Test
+  void testFormatTrimsFinalNewlinesKeepsSingleNewline() {
+    // given: документ с лишними пустыми строками в конце и обе хвостовые опции взведены
+    String fileContent = "А = 1;\n\n\n\n";
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    var options = new FormattingOptions(4, true);
+    options.setInsertFinalNewline(true);
+    options.setTrimFinalNewlines(true);
+    params.setOptions(options);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then: на хвосте ровно один перевод строки, без лишних пустых строк
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.getFirst();
+    assertThat(textEdit.getNewText()).endsWith("\n");
+    assertThat(textEdit.getNewText()).doesNotEndWith("\n\n");
   }
 
   @Test
@@ -429,6 +514,31 @@ class FormatProviderTest {
 
     // then: единственный токен строки выходит за курсор и отфильтрован, форматировать нечего
     assertThat(textEdits).isEmpty();
+  }
+
+  @Test
+  void testOnTypeFormattingSemicolonClampsCursorPastLineEnd() {
+    // given: рассинхрон клиента (LSP4IJ) — серверная копия строки ещё без набранной `;`,
+    // поэтому курсор (col 19) оказывается правее фактического конца строки (18 символов).
+    // Раньше ветка `;` не клампила позицию, диапазон правки уезжал за конец строки и при
+    // применении затирал только что набранную `;`.
+    String fileContent = "f = Новый Массив()";
+    var params = onTypeParams(";", 0, 19);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then: диапазон правки не выходит за конец синхронизированной строки и не содержит переноса
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange().getEnd().getCharacter()).isEqualTo(18);
+    assertThat(edit.getNewText()).doesNotContain("\n");
+    assertThat(edit.getNewText()).isEqualTo("f = Новый Массив()");
   }
 
   @Test

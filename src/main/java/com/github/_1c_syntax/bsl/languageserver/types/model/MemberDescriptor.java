@@ -128,6 +128,17 @@ public record MemberDescriptor(
     return bilingualName.forLanguage(language);
   }
 
+  /**
+   * Применим ли член к указанному языку скрипта — есть ли у него написание в
+   * этой локали. Двуязычные и нейтральные члены применимы к обеим локалям;
+   * одноязычные (например, англоязычный {@code [DeprecatedName]}-алиас
+   * OneScript без русской пары) — лишь к своей. Признак зависит только от
+   * имени члена, а не от прочих его свойств.
+   */
+  public boolean appliesTo(Language language) {
+    return bilingualName.hasLanguage(language);
+  }
+
   /** Описание члена для отображения в указанной локали LS. */
   public String displayDescription(Language language) {
     return bilingualDescription.forLanguage(language);
@@ -192,6 +203,15 @@ public record MemberDescriptor(
   public MemberDescriptor withAsync(boolean newAsync) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
       signatures, sourceSymbol, generic, metadata, newAsync);
+  }
+
+  /** Копия дескриптора с признаком generic (placeholder в имени). */
+  public MemberDescriptor withGeneric(boolean newGeneric) {
+    if (this.generic == newGeneric) {
+      return this;
+    }
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      signatures, sourceSymbol, newGeneric, metadata, async);
   }
 
   /** Compat shortcut для двуязычных имён ru/en строками. */

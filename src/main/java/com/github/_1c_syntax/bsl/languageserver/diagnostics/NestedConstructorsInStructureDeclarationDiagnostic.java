@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * Диагностика использования конструкторов с параметрами при объявлении структуры.
+ *
  * @author Leon Chagelishvili &lt;lChagelishvily@gmail.com&gt;
  */
 @DiagnosticMetadata(

@@ -35,14 +35,27 @@ public abstract class AbstractCallNode extends BslExpression {
 
   private final List<BslExpression> callArguments = new ArrayList<>();
 
+  /**
+   * Конструктор узла вызова.
+   */
   protected AbstractCallNode() {
     super(ExpressionNodeType.CALL);
   }
 
+  /**
+   * Добавляет аргумент вызова.
+   *
+   * @param argument добавляемый аргумент
+   */
   public void addArgument(BslExpression argument) {
     callArguments.add(argument);
   }
 
+  /**
+   * Возвращает неизменяемый список аргументов вызова.
+   *
+   * @return список аргументов вызова
+   */
   public List<BslExpression> arguments() {
     return Collections.unmodifiableList(callArguments);
   }

@@ -27,9 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -37,11 +35,11 @@ import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 /**
  * Сапплаер семантических токенов для вызовов методов платформенных типов через
@@ -49,69 +47,74 @@ import java.util.Set;
  * — типизированное выражение, чей тип резолвится через
  * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer}).
  * <p>
- * Метод резолвится через {@link TypeService#findMemberAt(DocumentContext, Position)}.
+ * Метод резолвится через {@link TypeService#memberAt(DocumentContext, Position)}.
  * Если найден member с {@link MemberKind#METHOD} — имя метода получает
  * {@link SemanticTokenTypes#Method} + {@link SemanticTokenModifiers#DefaultLibrary},
  * а для async-методов платформы (флаг {@link MemberDescriptor#async()}) добавляется
  * ещё и {@link SemanticTokenModifiers#Async}.
+ * <p>
+ * Симметричен {@link PlatformMemberPropertyAccessSemanticTokensSupplier} (обращения к
+ * свойствам через accessProperty) — общий каркас в
+ * {@link AbstractPlatformMemberSemanticTokensSupplier}.
  * <p>
  * Source-defined вызовы (методы общих модулей, локальные методы, OScript-library)
  * подсвечиваются через {@link MethodCallSemanticTokensSupplier} по ReferenceIndex —
  * этот сапплаер их пропускает, чтобы не дублировать токены.
  */
 @Component
-@RequiredArgsConstructor
-public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticTokensSupplier {
+public class PlatformMemberMethodCallSemanticTokensSupplier
+  extends AbstractPlatformMemberSemanticTokensSupplier<BSLParser.AccessCallContext> {
 
-  private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
   private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS = {
     SemanticTokenModifiers.DefaultLibrary,
     SemanticTokenModifiers.Async
   };
 
-  private final TypeService typeService;
   private final ReferenceIndex referenceIndex;
-  private final SemanticTokensHelper helper;
 
-  @Override
-  public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
-    var entries = new ArrayList<SemanticTokenEntry>();
-    var ast = documentContext.getAst();
-
-    // Позиции, уже обработанные MethodCallSemanticTokensSupplier: пропускаем,
-    // чтобы не дублировать токен на одной и той же позиции.
-    var sourceDefinedCallSites = collectSourceDefinedCallSites(documentContext);
-
-    for (var accessCall : Trees.<BSLParser.AccessCallContext>findAllRuleNodes(ast, BSLParser.RULE_accessCall)) {
-      methodNameRange(accessCall)
-        .filter(range -> !sourceDefinedCallSites.contains(range.getStart()))
-        .flatMap(range -> platformMethodAt(documentContext, range.getStart())
-          .map(descriptor -> new Resolved(range, descriptor)))
-        .ifPresent(resolved -> helper.addRange(
-          entries, resolved.range(), SemanticTokenTypes.Method, modifiers(resolved.descriptor())));
-    }
-
-    return entries;
+  public PlatformMemberMethodCallSemanticTokensSupplier(TypeService typeService,
+                                                        ReferenceIndex referenceIndex,
+                                                        SemanticTokensHelper helper) {
+    super(typeService, helper);
+    this.referenceIndex = referenceIndex;
   }
 
-  private static Optional<Range> methodNameRange(BSLParser.AccessCallContext accessCall) {
-    return Optional.ofNullable(accessCall.methodCall())
+  @Override
+  protected int ruleIndex() {
+    return BSLParser.RULE_accessCall;
+  }
+
+  @Override
+  protected Optional<Range> nameRange(BSLParser.AccessCallContext node) {
+    return Optional.ofNullable(node.methodCall())
       .map(BSLParser.MethodCallContext::methodName)
       .map(BSLParser.MethodNameContext::IDENTIFIER)
       .map(Ranges::create);
   }
 
+  @Override
+  protected BiPredicate<BSLParser.AccessCallContext, Range> skipFilter(DocumentContext documentContext) {
+    // Позиции, уже обработанные MethodCallSemanticTokensSupplier по ReferenceIndex:
+    // предвычисляем один раз на документ.
+    var sourceDefinedCallSites = collectSourceDefinedCallSites(documentContext);
+    return (node, range) -> sourceDefinedCallSites.contains(range.getStart());
+  }
+
+  @Override
+  protected void emit(List<SemanticTokenEntry> entries, DocumentContext documentContext, Range range) {
+    platformMethodAt(documentContext, range.getStart())
+      .ifPresent(descriptor -> helper.addRange(
+        entries, range, SemanticTokenTypes.Method, modifiers(descriptor)));
+  }
+
   private Optional<MemberDescriptor> platformMethodAt(DocumentContext documentContext, Position position) {
-    return typeService.findMemberAt(documentContext, position)
+    return typeService.memberAt(documentContext, position)
       .map(TypeService.TypedMember::descriptor)
       .filter(descriptor -> descriptor.kind() == MemberKind.METHOD);
   }
 
   static String[] modifiers(MemberDescriptor descriptor) {
     return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
-  }
-
-  private record Resolved(Range range, MemberDescriptor descriptor) {
   }
 
   private Set<Position> collectSourceDefinedCallSites(DocumentContext documentContext) {

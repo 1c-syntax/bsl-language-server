@@ -19,6 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * Вспомогательные утилиты общего назначения для работы с AST, диапазонами, путями и т.п.
+ */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.utils;
 

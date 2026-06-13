@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -44,7 +42,7 @@ import java.util.concurrent.ConcurrentMap;
  * {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext}.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class OScriptModuleTypeResolver {
 
   private final ConcurrentMap<URI, ModuleType> typesByUri = new ConcurrentHashMap<>();

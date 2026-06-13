@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -152,16 +153,58 @@ public class BSLWorkspaceService implements WorkspaceService {
    * <p>
    * Если файл был открыт в редакторе, сначала закрывает его и очищает вторичные данные.
    * Затем полностью удаляет документ из контекста сервера, включая все связанные метаданные.
+   * <p>
+   * Если документ с таким URI в контексте отсутствует, URI трактуется как удаленный каталог:
+   * клиенты (в т.ч. VS Code) при удалении каталога присылают одно событие Deleted с URI каталога
+   * без событий по вложенным файлам.
    *
-   * @param uri URI удаленного файла
+   * @param uri URI удаленного файла или каталога
    */
   private void handleDeletedFileEvent(URI uri) {
     var context = getContextForDocument(uri);
     var documentContext = context.getDocument(uri);
     if (documentContext == null) {
+      handleDeletedFolderEvent(context, uri);
       return;
     }
 
+    removeDocument(context, uri, documentContext);
+  }
+
+  /**
+   * Обрабатывает событие удаления каталога из файловой системы.
+   * <p>
+   * Удаляет из контекста сервера все документы, расположенные внутри каталога.
+   * Принадлежность каталогу определяется по префиксу URI с границей {@code /},
+   * чтобы не зацепить каталог-«тёзку» с общим строковым префиксом.
+   *
+   * @param context   контекст сервера
+   * @param folderUri URI удаленного каталога
+   */
+  private void handleDeletedFolderEvent(ServerContext context, URI folderUri) {
+    var folderUriString = folderUri.toString();
+    var prefix = folderUriString.endsWith("/") ? folderUriString : folderUriString + "/";
+
+    var deletedUris = context.getDocuments().keySet().stream()
+      .filter(documentUri -> documentUri.toString().startsWith(prefix))
+      .toList();
+
+    for (var documentUri : deletedUris) {
+      var documentContext = context.getDocument(documentUri);
+      if (documentContext != null) {
+        removeDocument(context, documentUri, documentContext);
+      }
+    }
+  }
+
+  /**
+   * Удаляет документ из контекста сервера, предварительно закрыв его, если он открыт в редакторе.
+   *
+   * @param context         контекст сервера
+   * @param uri             URI документа
+   * @param documentContext контекст документа
+   */
+  private static void removeDocument(ServerContext context, URI uri, DocumentContext documentContext) {
     var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (isDocumentOpened) {
       context.closeDocument(documentContext);

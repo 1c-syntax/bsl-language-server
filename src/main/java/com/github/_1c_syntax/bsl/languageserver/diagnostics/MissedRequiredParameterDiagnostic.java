@@ -39,6 +39,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +96,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     return super.visitNewExpression(ctx);
   }
 
-  private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, ParserRuleContext node) {
+  private void appendMethodCall(Token methodName, BSLParser.@Nullable DoCallContext doCallContext, ParserRuleContext node) {
     var methodCall = new MethodCall();
     methodCall.arguments = arguments(doCallContext);
     methodCall.range = Ranges.create(node);
@@ -178,7 +179,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       .toList();
   }
 
-  private static Boolean[] arguments(BSLParser.DoCallContext doCallContext) {
+  private static Boolean[] arguments(BSLParser.@Nullable DoCallContext doCallContext) {
     if (doCallContext == null) {
       return new Boolean[0];
     }

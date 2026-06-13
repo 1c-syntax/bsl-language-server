@@ -22,10 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,7 +56,7 @@ class ModuleSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
-    var content = markupContentBuilder.getContent(moduleSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, moduleSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -76,7 +80,7 @@ class ModuleSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
-    var content = markupContentBuilder.getContent(moduleSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, moduleSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -96,7 +100,7 @@ class ModuleSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
-    var content = markupContentBuilder.getContent(moduleSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, moduleSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -116,7 +120,7 @@ class ModuleSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
-    var content = markupContentBuilder.getContent(moduleSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, moduleSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -125,5 +129,10 @@ class ModuleSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     // (флаги доступности, режим повторного использования)
     // Конкретные значения зависят от тестовых метаданных
     assertThat(content).contains("---");
+  }
+
+  private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
+    return Reference.of(documentContext.getSymbolTree().getModule(), symbol,
+      new Location(documentContext.getUri().toString(), symbol.getSelectionRange()));
   }
 }

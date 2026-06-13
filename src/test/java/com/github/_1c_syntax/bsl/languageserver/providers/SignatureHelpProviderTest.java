@@ -78,6 +78,8 @@ class SignatureHelpProviderTest {
     var sig = help.getSignatures().get(0);
     assertThat(sig.getParameters()).hasSize(3);
     assertThat(sig.getLabel()).contains("МояПроцедура(");
+    // Необязательный параметр «Б = 5» (без аннотации типа) помечается «?» после имени: Б?
+    assertThat(sig.getLabel()).contains("Б?");
     assertThat(help.getActiveParameter()).isEqualTo(2);
   }
 

@@ -23,25 +23,38 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
-public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<VariableSymbol> {
+public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
@@ -53,7 +66,8 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private final TypeService typeService;
 
   @Override
-  public MarkupContent getContent(VariableSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (VariableSymbol) reference.symbol();
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура
@@ -70,7 +84,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
 
     // тип (выведенный)
-    var typesInfo = getInferredTypes(symbol);
+    var typesInfo = getInferredTypes(symbol, typeService.typesAt(reference));
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typesInfo);
 
     // местоположение переменной
@@ -114,39 +128,195 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     return resources.getResourceString(getClass(), key);
   }
 
-  private String getInferredTypes(VariableSymbol symbol) {
-    TypeSet types = typeService.findTypes(symbol);
+  private String getInferredTypes(VariableSymbol symbol, TypeSet types) {
     if (types.isEmpty()) {
       return "";
     }
     // Hover — элемент интерфейса, поэтому язык отображения берём из настроек
     // LS (configuration), а не из ScriptVariant (язык исходников).
     var lang = configuration.getLanguage();
-    String joined = types.refs().stream()
-      .map(ref -> renderRef(types, ref, lang))
+    String header = types.refs().stream()
+      .map(ref -> inlineTypeLabel(types, ref, lang, false))
       .collect(Collectors.joining(" | "));
-    return "%s: %s".formatted(getResourceString(TYPE_KEY), joined);
+
+    var sb = new StringBuilder("%s: %s".formatted(getResourceString(TYPE_KEY), header));
+
+    // Содержимое «открытых» объектов (Структура/Соответствие/Фиксированные,
+    // строка ТаблицыЗначений) рендерим маркдаун-списком под заголовком типа.
+    // Описания (и недостающие ключи) подмешиваем из doc-комментария параметра.
+    var bullets = new ArrayList<String>();
+    collectFieldBullets(bullets, types, lang, 0, docFieldIndex(symbol));
+    if (!bullets.isEmpty()) {
+      sb.append('\n');
+      bullets.forEach(line -> sb.append('\n').append(line));
+    }
+    return sb.toString();
   }
 
-  private String renderRef(TypeSet owner, TypeRef ref, Language lang) {
+  /**
+   * Собрать строки маркдаун-списка для полей «открытого» объекта в наборе типов.
+   * Поля берутся как из самих типов ({@link TypeSet#getLocalFields}), так и из
+   * типов-элементов коллекции (например, колонки {@code СтрокаТаблицыЗначений},
+   * подвешенной к {@code ТаблицаЗначений}). Поля union-типов дедуплицируются по
+   * имени; вложенные структуры рекурсивно получают увеличенный отступ.
+   *
+   * @param doc описания ключей из doc-комментария (имя ключа в нижнем регистре →
+   *            тип/описание/вложенные ключи); пустая мапа, если документации нет.
+   */
+  private void collectFieldBullets(
+    List<String> out, TypeSet types, Language lang, int indent, Map<String, DocField> doc
+  ) {
+    var pad = "  ".repeat(indent);
+    var rendered = new HashSet<String>();
+    for (var entry : collectFields(types).entrySet()) {
+      var key = entry.getKey();
+      rendered.add(key.toLowerCase(Locale.ROOT));
+      var fieldTypes = entry.getValue();
+      var info = doc.get(key.toLowerCase(Locale.ROOT));
+      out.add(fieldBullet(pad, key, fieldTypeLabel(fieldTypes, lang), info == null ? "" : info.description()));
+      collectFieldBullets(out, fieldTypes, lang, indent + 1, info == null ? Map.of() : info.children());
+    }
+    // Ключи, описанные в doc-комментарии, но не выведенные инференсером.
+    for (var info : doc.values()) {
+      if (rendered.contains(info.name().toLowerCase(Locale.ROOT))) {
+        continue;
+      }
+      out.add(fieldBullet(pad, info.name(), info.typeLabel(), info.description()));
+      collectDocOnlyBullets(out, info.children(), indent + 1);
+    }
+  }
+
+  /**
+   * Поля «открытого» объекта по всему набору типов: прямые {@code localFields}, а
+   * для коллекций без собственных полей — поля типа-элемента (колонки строки
+   * ТаблицыЗначений). Имена дедуплицируются (union-типы), значения объединяются.
+   */
+  private static Map<String, TypeSet> collectFields(TypeSet types) {
+    var fields = new LinkedHashMap<String, TypeSet>();
+    for (var ref : types.refs()) {
+      var localFields = types.getLocalFields(ref);
+      if (localFields.isEmpty()) {
+        var elementTypes = types.getElementTypes(ref);
+        for (var elemRef : elementTypes.refs()) {
+          elementTypes.getLocalFields(elemRef).forEach((name, value) -> fields.merge(name, value, TypeSet::union));
+        }
+      } else {
+        localFields.forEach((name, value) -> fields.merge(name, value, TypeSet::union));
+      }
+    }
+    return fields;
+  }
+
+  /** markdown-метка типов значения поля: имена в кавычках, объединение через {@code |}. */
+  private String fieldTypeLabel(TypeSet fieldTypes, Language lang) {
+    return fieldTypes.refs().stream()
+      .map(ref -> inlineTypeLabel(fieldTypes, ref, lang, true))
+      .collect(Collectors.joining(" | "));
+  }
+
+  /** Развернуть вложенные ключи, известные только из doc-комментария. */
+  private static void collectDocOnlyBullets(List<String> out, Map<String, DocField> doc, int indent) {
+    var pad = "  ".repeat(indent);
+    for (var info : doc.values()) {
+      out.add(fieldBullet(pad, info.name(), info.typeLabel(), info.description()));
+      collectDocOnlyBullets(out, info.children(), indent + 1);
+    }
+  }
+
+  private static String fieldBullet(String pad, String key, String typeLabel, String description) {
+    var line = new StringBuilder(pad).append("* **").append(key).append("**");
+    if (!typeLabel.isBlank()) {
+      line.append(": ").append(typeLabel);
+    }
+    if (!description.isBlank()) {
+      line.append(" — ").append(description);
+    }
+    return line.toString();
+  }
+
+  /**
+   * Однострочная подпись типа: имя (опционально в обратных кавычках) и, для
+   * коллекций, тип элемента через «из»/«Of». Поля здесь не разворачиваются —
+   * они идут отдельным списком. У «открытых» объектов с собственными полями
+   * тип элемента (КлючИЗначение) опускаем — он лишь шум на фоне списка ключей.
+   *
+   * @param code обрамлять ли имена типов обратными кавычками (для значений полей).
+   */
+  private String inlineTypeLabel(TypeSet owner, TypeRef ref, Language lang, boolean code) {
     var name = typeService.displayName(ref, lang);
+    var label = code ? ("`" + name + "`") : name;
     var elementTypes = owner.getElementTypes(ref);
-    if (!elementTypes.isEmpty()) {
+    if (!elementTypes.isEmpty() && owner.getLocalFields(ref).isEmpty()) {
       var elemJoined = elementTypes.refs().stream()
-        .map(r -> renderRef(elementTypes, r, lang))
-        .collect(Collectors.joining(", "));
-      name = name + collectionOf(lang) + elemJoined;
+        .map(r -> inlineTypeLabel(elementTypes, r, lang, code))
+        .collect(Collectors.joining(" | "));
+      label = label + collectionOf(lang) + elemJoined;
     }
-    var fields = owner.getLocalFields(ref);
-    if (!fields.isEmpty()) {
-      var fieldsJoined = fields.entrySet().stream()
-        .map(e -> e.getKey() + ": " + e.getValue().refs().stream()
-          .map(r -> renderRef(e.getValue(), r, lang))
-          .collect(Collectors.joining(" | ")))
-        .collect(Collectors.joining(", "));
-      name = name + " { " + fieldsJoined + " }";
+    return label;
+  }
+
+  /**
+   * Дерево описаний ключей структуры, разобранное из doc-комментария параметра
+   * (секция «Параметры:» с вложенными «* Ключ - Тип - описание»).
+   *
+   * @param name        исходное имя ключа (для doc-only ключей).
+   * @param typeLabel   markdown-метка типов ключа (для doc-only ключей).
+   * @param description описание ключа (может быть пустым).
+   * @param children    вложенные ключи (имя в нижнем регистре → описание).
+   */
+  private record DocField(String name, String typeLabel, String description, Map<String, DocField> children) {
+  }
+
+  /** Описания ключей из doc-комментария параметра (для PARAMETER-переменной). */
+  private Map<String, DocField> docFieldIndex(VariableSymbol symbol) {
+    if (symbol.getKind() != VariableKind.PARAMETER
+      || !(symbol.getScope() instanceof MethodSymbol method)) {
+      return Map.of();
     }
-    return name;
+    return method.getParameters().stream()
+      .filter(parameter -> parameter.getName().equalsIgnoreCase(symbol.getName()))
+      .findFirst()
+      .flatMap(ParameterDefinition::getDescription)
+      .map(description -> docFieldsFromTypes(description.types()))
+      .orElseGet(Map::of);
+  }
+
+  private static Map<String, DocField> docFieldsFromTypes(List<TypeDescription> types) {
+    var map = new LinkedHashMap<String, DocField>();
+    for (var type : types) {
+      for (ParameterDescription field : type.fields()) {
+        // Имя типа в doc-комментарии может содержать перечисление через запятую
+        // («Строка, Число») — разворачиваем в union с тем же разделителем, что и везде.
+        var typeLabel = field.types().stream()
+          .map(TypeDescription::name)
+          .flatMap(typeName -> Stream.of(typeName.split(",")))
+          .map(String::strip)
+          .filter(typeName -> !typeName.isEmpty())
+          .map(typeName -> "`" + typeName + "`")
+          .collect(Collectors.joining(" | "));
+        var description = field.types().stream()
+          .map(TypeDescription::description)
+          .filter(text -> text != null && !text.isBlank())
+          .map(VariableSymbolMarkupContentBuilder::cleanupKeyDescription)
+          .findFirst()
+          .orElse("");
+        var children = docFieldsFromTypes(field.types());
+        map.putIfAbsent(
+          field.name().toLowerCase(Locale.ROOT),
+          new DocField(field.name(), typeLabel, description, children)
+        );
+      }
+    }
+    return map;
+  }
+
+  /** Убрать хвостовое двоеточие у описания ключа-структуры (перед списком подключей). */
+  private static String cleanupKeyDescription(String text) {
+    var trimmed = text.strip();
+    if (trimmed.endsWith(":")) {
+      trimmed = trimmed.substring(0, trimmed.length() - 1).strip();
+    }
+    return trimmed;
   }
 
   /** Разделитель «коллекция → тип элемента» в локали отображения. */

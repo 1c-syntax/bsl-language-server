@@ -1,4 +1,6 @@
 import org.apache.tools.ant.filters.EscapeUnicode
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.tasks.bundling.Jar
 import org.jreleaser.model.Active.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -17,13 +19,13 @@ plugins {
     id("com.github.ben-manes.versions") version "0.54.0"
     id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.9.0"
+    id("io.sentry.jvm.gradle") version "6.11.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.24.0"
-    id("org.sonarqube") version "7.3.0.8198"
+    id("org.sonarqube") version "7.3.1.8318"
     id("me.champeau.jmh") version "0.7.3"
-    id("com.gorylenko.gradle-git-properties") version "3.0.3"
+    id("com.gorylenko.gradle-git-properties") version "4.0.1"
 }
 
 repositories {
@@ -31,6 +33,7 @@ repositories {
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
     maven("https://central.sonatype.com/repository/maven-snapshots")
+    maven(url = "https://repo.spring.io/milestone")
 }
 
 
@@ -84,13 +87,21 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
+    // Spring AI MCP (Model Context Protocol) server starters.
+    // Spring AI 2.0 is the first line compatible with Spring Boot 4 (milestone at the time of writing).
+    // - core starter: STDIO transport (`mcp` subcommand);
+    // - webmvc starter: Streamable HTTP transport, served on the same servlet container as LSP-over-WS.
+    api(platform("org.springframework.ai:spring-ai-bom:2.0.0-RC2"))
+    api("org.springframework.ai:spring-ai-starter-mcp-server")
+    api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
+
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.34.1")
-    api("io.github.1c-syntax:utils:0.7.0")
-    api("io.github.1c-syntax:mdclasses:0.18.0")
-    api("io.github.1c-syntax:bsl-common-library:0.10.1")
+    api("io.github.1c-syntax:bsl-parser:0.35.0")
+    api("io.github.1c-syntax:utils:0.7.2")
+    api("io.github.1c-syntax:mdclasses:0.19.1")
+    api("io.github.1c-syntax:bsl-common-library:0.11.0")
     api("io.github.1c-syntax:supportconf:0.16.0")
-    api("io.github.1c-syntax:bsl-context:0.5.1")
+    api("io.github.1c-syntax:bsl-context:0.7.0")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.0")
@@ -126,7 +137,7 @@ dependencies {
     implementation("org.apache.commons:commons-exec:1.6.0")
 
     // JGit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.7.0.202606012155-r")
 
     // progress bar
     implementation("me.tongfei:progressbar:0.10.2")
@@ -161,7 +172,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // test utils
-    testImplementation("com.github.hazendaz.jmockit:jmockit:2.1.0")
+    testImplementation("com.github.hazendaz.jmockit:jmockit:2.2.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -211,7 +222,9 @@ afterEvaluate {
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
 
-    tasks.named("sourcesJar") {
+    tasks.named<Jar>("sourcesJar") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn(tasks.generateGitProperties)
         dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
@@ -335,13 +348,24 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
+    // Версия antlr4 приходит транзитивно (через bsl-parser), поэтому берём её
+    // из разрешённого runtimeClasspath, чтобы ссылка на javadoc.io указывала
+    // ровно на используемую версию (иначе .../latest даёт redirect-warning).
+    val antlr4Version = configurations.runtimeClasspath.get()
+        .resolvedConfiguration.resolvedArtifacts
+        .map { it.moduleVersion.id }
+        .first { it.group == "io.github.1c-syntax" && it.name == "antlr4" }
+        .version
     options {
         this as StandardJavadocDocletOptions
         links(
             "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://javadoc.io/doc/org.antlr/antlr4-runtime/latest"
+            "https://javadoc.io/doc/io.github.1c-syntax/antlr4/$antlr4Version"
         )
+        // Проверяем корректность javadoc (битые ссылки, синтаксис, html),
+        // но не требуем наличия комментариев у каждого элемента (группа missing).
+        addBooleanOption("Xdoclint:all,-missing", true)
     }
 }
 

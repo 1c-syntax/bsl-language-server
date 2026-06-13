@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
   private TypeRegistry typeRegistry;
 
   @Autowired
-  private TypeService typeService;
+  private GlobalScopeProvider globalScopeProvider;
 
   @Test
   void registersManagerModuleMembers() {
@@ -63,7 +63,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(objectEn.get()).isEqualTo(objectRu.get());
 
     // members могут быть пустыми (модуль пуст), но запрос не должен падать
-    assertThat(typeRegistry.getMembers(managerRu.get())).isNotNull();
+    assertThat(typeRegistry.getMembers(managerRu.get(), FileType.BSL)).isNotNull();
   }
 
   @Test
@@ -75,10 +75,11 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
       + "ПервыйОбщийМодуль/Ext/Module.bsl");
 
-    var ns = typeService.findGlobalContext("ПервыйОбщийМодуль");
+    typeRegistry.resolve("");
+    var ns = globalScopeProvider.findGlobalContext("ПервыйОбщийМодуль", FileType.BSL);
     assertThat(ns).isPresent();
 
-    var members = typeRegistry.getMembers(ns.get());
+    var members = typeRegistry.getMembers(ns.get(), FileType.BSL);
     assertThat(members)
       .extracting(m -> m.name())
       .contains("НеУстаревшаяПроцедура", "НеУстаревшаяФункция", "УстаревшаяПроцедура", "УстаревшаяФункция");
@@ -97,8 +98,9 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile(
       "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
 
-    var ns = typeService.findGlobalContext("ОбщегоНазначения").orElseThrow();
-    var members = typeRegistry.getMembers(ns);
+    typeRegistry.resolve("");
+    var ns = globalScopeProvider.findGlobalContext("ОбщегоНазначения", FileType.BSL).orElseThrow();
+    var members = typeRegistry.getMembers(ns, FileType.BSL);
 
     var method = members.stream()
       .filter(m -> "ЗначениеВМассиве".equals(m.name()))

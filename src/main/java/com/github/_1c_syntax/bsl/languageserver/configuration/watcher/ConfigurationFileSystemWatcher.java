@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRe
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
-import com.sun.nio.file.SensitivityWatchEventModifier;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +64,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@SuppressWarnings("removal") // SensitivityWatchEventModifier is deprecated in jdk21
 public class ConfigurationFileSystemWatcher {
 
   private static final String CONFIG_FILE_NAME = ".bsl-language-server.json";
@@ -234,16 +232,11 @@ public class ConfigurationFileSystemWatcher {
 
     globalRegisteredPath = configurationDir;
 
-    // TODO: SensitivityWatchEventModifier is deprecated in java 21 and marked for removal.
-    // We need to drop usage of it here when we change our baseline to jdk 21
     globalWatchKey = globalRegisteredPath.register(
       watchService,
-      new WatchEvent.Kind[]{
-        ENTRY_CREATE,
-        ENTRY_DELETE,
-        ENTRY_MODIFY
-      },
-      SensitivityWatchEventModifier.HIGH
+      ENTRY_CREATE,
+      ENTRY_DELETE,
+      ENTRY_MODIFY
     );
 
     LOGGER.debug("Watch for global configuration file changes in {}", configurationDir);
@@ -276,15 +269,11 @@ public class ConfigurationFileSystemWatcher {
       existingWatchKey.cancel();
     }
 
-    // TODO: SensitivityWatchEventModifier is deprecated in java 21 and marked for removal.
     var watchKey = configDir.register(
       watchService,
-      new WatchEvent.Kind[]{
-        ENTRY_CREATE,
-        ENTRY_DELETE,
-        ENTRY_MODIFY
-      },
-      SensitivityWatchEventModifier.HIGH
+      ENTRY_CREATE,
+      ENTRY_DELETE,
+      ENTRY_MODIFY
     );
 
     workspaceWatchKeys.put(workspaceUri, watchKey);

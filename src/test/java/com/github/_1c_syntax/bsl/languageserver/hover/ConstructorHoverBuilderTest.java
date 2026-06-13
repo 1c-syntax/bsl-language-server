@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -76,7 +77,7 @@ class ConstructorHoverBuilderTest {
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(typeRegistry.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
-    when(typeService.getDescription(any(TypeRef.class), any(Language.class))).thenReturn("");
+    when(typeService.getDescription(any(TypeRef.class), any(Language.class), any(FileType.class))).thenReturn("");
     when(resources.getResourceString(eq(ConstructorHoverBuilder.class), any(String.class)))
       .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
   }
@@ -90,7 +91,7 @@ class ConstructorHoverBuilderTest {
     var chosen = new SignatureDescriptor(List.of(param), TypeSet.EMPTY, "");
 
     // when
-    var content = builder.build("Структура", STRUCTURE, chosen, List.of(chosen), false, "");
+    var content = builder.build("Структура", STRUCTURE, chosen, List.of(chosen), false, "", FileType.BSL);
 
     // then
     assertThat(content.getKind()).isEqualTo(MarkupKind.MARKDOWN);
@@ -107,7 +108,7 @@ class ConstructorHoverBuilderTest {
   @Test
   void buildWithoutChosenSignatureOmitsParameters() {
     // given / when
-    var content = builder.build("Структура", STRUCTURE, null, List.of(), false, "");
+    var content = builder.build("Структура", STRUCTURE, null, List.of(), false, "", FileType.BSL);
 
     // then
     var value = content.getValue();
@@ -123,7 +124,7 @@ class ConstructorHoverBuilderTest {
     var sig2 = new SignatureDescriptor(List.of(paramKeys), TypeSet.EMPTY, "с ключами");
 
     // when
-    var content = builder.build("Структура", STRUCTURE, sig1, List.of(sig1, sig2), false, "");
+    var content = builder.build("Структура", STRUCTURE, sig1, List.of(sig1, sig2), false, "", FileType.BSL);
 
     // then
     var value = content.getValue();
@@ -141,7 +142,7 @@ class ConstructorHoverBuilderTest {
     var sig = new SignatureDescriptor(List.of(paramX), TypeSet.EMPTY, "");
 
     // when
-    var content = builder.build("Структура", STRUCTURE, sig, List.of(sig), true, "");
+    var content = builder.build("Структура", STRUCTURE, sig, List.of(sig), true, "", FileType.BSL);
 
     // then
     assertThat(content.getValue()).contains("[noMatchingConstructor]");
@@ -150,11 +151,11 @@ class ConstructorHoverBuilderTest {
   @Test
   void buildFallsBackToClassDescriptionWhenTypeServiceEmpty() {
     // given
-    when(typeService.getDescription(eq(STRUCTURE), any(Language.class))).thenReturn("");
+    when(typeService.getDescription(eq(STRUCTURE), any(Language.class), any(FileType.class))).thenReturn("");
 
     // when
     var content = builder.build("Структура", STRUCTURE, null, List.of(),
-      false, "fallback-описание");
+      false, "fallback-описание", FileType.BSL);
 
     // then
     assertThat(content.getValue()).contains("fallback-описание");
@@ -163,12 +164,12 @@ class ConstructorHoverBuilderTest {
   @Test
   void buildPrefersTypeServiceDescriptionOverFallback() {
     // given
-    when(typeService.getDescription(eq(STRUCTURE), any(Language.class)))
+    when(typeService.getDescription(eq(STRUCTURE), any(Language.class), any(FileType.class)))
       .thenReturn("из реестра");
 
     // when
     var content = builder.build("Структура", STRUCTURE, null, List.of(),
-      false, "fallback");
+      false, "fallback", FileType.BSL);
 
     // then
     assertThat(content.getValue())
@@ -185,13 +186,13 @@ class ConstructorHoverBuilderTest {
     var sig = new SignatureDescriptor(List.of(param), TypeSet.EMPTY, "");
 
     // when
-    var content = builder.build("X", STRUCTURE, sig, List.of(sig), false, "");
+    var content = builder.build("X", STRUCTURE, sig, List.of(sig), false, "", FileType.BSL);
 
     // then
     var value = content.getValue();
     assertThat(value)
-      .contains("Опц")
-      .contains("[optionalParameter]")
+      .contains("`Опц`: Число?")
+      .doesNotContain("[optionalParameter]")
       .contains("= 42");
   }
 
@@ -201,7 +202,7 @@ class ConstructorHoverBuilderTest {
     when(typeRegistry.displayName(eq(STRUCTURE), any(Language.class))).thenReturn("");
 
     // when
-    var content = builder.build("CustomName", STRUCTURE, null, List.of(), false, "");
+    var content = builder.build("CustomName", STRUCTURE, null, List.of(), false, "", FileType.BSL);
 
     // then
     assertThat(content.getValue()).contains("CustomName");

@@ -3,7 +3,6 @@ name: Dependency Submission
 on:
   push:
     branches: [ develop ]
-  pull_request:
 
 permissions:
   contents: read

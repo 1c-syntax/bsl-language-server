@@ -21,13 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -37,10 +43,15 @@ import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SemanticTokensWorkspaceCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +63,10 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -68,6 +83,18 @@ class SemanticTokensProviderTest {
 
   @Autowired
   private ServerContextProvider serverContextProvider;
+
+  @Autowired
+  private ServerContext serverContext;
+
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @Autowired
+  private LanguageClientHolder clientHolder;
 
   // region Helper types and methods
 
@@ -1807,6 +1834,160 @@ class SemanticTokensProviderTest {
           .isNotEqualTo(4);
       }
     }
+  }
+
+  // endregion
+
+  // region findOverlaps
+
+  @Test
+  void findOverlaps_detectsConflictingTokensAtSamePosition() {
+    // given — два токена на одной позиции с разным типом (class vs property).
+    var classToken = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var propertyToken = new SemanticTokenEntry(0, 5, 10, 1, 0);
+
+    // when
+    var overlaps = TokenOverlaps.findOverlaps(List.of(classToken, propertyToken));
+
+    // then — конфликт зафиксирован.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_ignoresExactDuplicates() {
+    // given — полностью идентичные токены от разных сапплаеров (де-дуп их уберёт).
+    var token = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var duplicate = new SemanticTokenEntry(0, 5, 10, 0, 0);
+
+    // when
+    var overlaps = TokenOverlaps.findOverlaps(List.of(token, duplicate));
+
+    // then — точный дубль конфликтом не считается.
+    assertThat(overlaps).isEmpty();
+  }
+
+  @Test
+  void findOverlaps_ignoresAdjacentAndDistinctTokens() {
+    // given — смежные (стык в стык) и непересекающиеся токены на одной строке.
+    var first = new SemanticTokenEntry(0, 0, 5, 0, 0);
+    var adjacent = new SemanticTokenEntry(0, 5, 5, 1, 0);
+    var distantOtherLine = new SemanticTokenEntry(1, 2, 5, 2, 0);
+
+    // when
+    var overlaps = TokenOverlaps.findOverlaps(List.of(first, adjacent, distantOtherLine));
+
+    // then — пересечений нет.
+    assertThat(overlaps).isEmpty();
+  }
+
+  @Test
+  void findOverlaps_detectsPartialOverlap() {
+    // given — частичное наложение спанов на одной строке.
+    var a = new SemanticTokenEntry(0, 0, 8, 0, 0);
+    var b = new SemanticTokenEntry(0, 5, 8, 1, 0);
+
+    // when
+    var overlaps = TokenOverlaps.findOverlaps(List.of(a, b));
+
+    // then — частичное наложение — это конфликт.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_detectsSameStartDifferentLength() {
+    // given — общий start, но разная длина (один сапплаер покрасил шире другого).
+    var a = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var b = new SemanticTokenEntry(0, 5, 8, 0, 0);
+
+    // when
+    var overlaps = TokenOverlaps.findOverlaps(List.of(a, b));
+
+    // then — разная длина при общем начале — конфликт.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_detectsSameSpanDifferentModifiers() {
+    // given — совпадают позиция и тип, но различаются модификаторы.
+    var a = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var b = new SemanticTokenEntry(0, 5, 10, 0, 1);
+
+    // when
+    var overlaps = TokenOverlaps.findOverlaps(List.of(a, b));
+
+    // then — разные модификаторы на одном спане — конфликт.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_detectsMultilineTokenOverlapOnContinuationLine() {
+    // given — многострочный токен со строки 0 (длина уходит на строку 1) и токен
+    // на строке 1, попадающий в его продолжение. Строки длиной 5 символов.
+    var multiline = new SemanticTokenEntry(0, 0, 12, 0, 0);
+    var onNextLine = new SemanticTokenEntry(1, 2, 3, 1, 0);
+
+    // when — с учётом длин строк токен раскладывается на строки 0 и 1.
+    var overlaps = TokenOverlaps.findOverlaps(List.of(multiline, onNextLine), line -> 5);
+
+    // then — пересечение на строке-продолжении найдено (без multiline-учёта было бы 0).
+    assertThat(overlaps).hasSize(1);
+  }
+
+  // endregion
+
+  // region Refresh on populated context
+
+  @Test
+  void testSemanticTokensRefreshOnServerContextPopulated() {
+    // given
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareSemanticTokensRefreshSupport(true);
+
+    // when
+    applicationEventPublisher.publishEvent(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    verify(languageClient).refreshSemanticTokens();
+  }
+
+  @Test
+  void testSemanticTokensDoNotRefreshOnServerContextPopulated_ifClientDoesNotSupportRefresh() {
+    // given
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareSemanticTokensRefreshSupport(false);
+
+    // when
+    applicationEventPublisher.publishEvent(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    verify(languageClient, never()).refreshSemanticTokens();
+  }
+
+  @Test
+  void testSemanticTokensRefresh_ifLanguageClientIsNotConnected() {
+    // given
+    // no connected language client
+
+    // when
+    var event = new ServerContextPopulatedEvent(serverContext);
+
+    // then
+    assertThatNoException().isThrownBy(() -> provider.handleServerContextPopulated(event));
+  }
+
+  private void prepareSemanticTokensRefreshSupport(boolean refreshSupport) {
+    var workspaceClientCapabilities = new WorkspaceClientCapabilities();
+    workspaceClientCapabilities.setSemanticTokens(new SemanticTokensWorkspaceCapabilities(refreshSupport));
+    var clientCapabilities = new ClientCapabilities(
+      workspaceClientCapabilities,
+      mock(TextDocumentClientCapabilities.class),
+      mock(Object.class)
+    );
+    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
   }
 
   // endregion

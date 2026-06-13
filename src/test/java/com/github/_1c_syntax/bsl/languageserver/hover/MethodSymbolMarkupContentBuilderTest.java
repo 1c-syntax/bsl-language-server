@@ -22,10 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,7 +58,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -63,7 +67,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     assertThat(blocks).hasSize(5);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
-      Функция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, П2_5, Знач П3: Структура = "", П4: Массив | СписокЗначений, ПДата: ОбщийМодуль.СуперМетод = '20100101', ПДатаВремя = '20110101121212', П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт: Строка | Структура
+      Функция ИмяФункции(Знач П1: Дата | Число, П2: Число? = -10, П2_5, Знач П3: Структура? = "", П4: Массив | СписокЗначений, ПДата: ОбщийМодуль.СуперМетод? = '20100101', ПДатаВремя? = '20110101121212', П6? = Ложь, П7? = Истина, П8? = Неопределено, П9? = NULL) Экспорт: Строка | Структура
       ```
 
       """);
@@ -119,7 +123,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -143,14 +147,14 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
+    assertThat(blocks).hasSize(4);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Процедура УстаревшаяПроцедура() Экспорт
@@ -158,7 +162,40 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
       """);
     assertThat(blocks.get(1)).matches("\\[CommonModule.ПервыйОбщийМодуль]\\(.*CommonModules/.*/Ext/Module.bsl#\\d+\\)\n\n");
-    assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
+    assertThat(blocks.get(2)).isEqualTo("**Устарела.** См. НеУстаревшаяПроцедура.\n\n");
+    assertThat(blocks.get(3)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 
+  @Test
+  void testDeprecatedMethodWithoutInfo() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяБезПояснения").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).contains("**Устарела.**");
+    assertThat(content).doesNotContain("**Устарела.** ");
+  }
+
+  @Test
+  void testNonDeprecatedMethodHasNoDeprecationBlock() {
+    // given
+    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).doesNotContain("**Устарела.**");
+  }
+
+
+  private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
+    return Reference.of(documentContext.getSymbolTree().getModule(), symbol,
+      new Location(documentContext.getUri().toString(), symbol.getSelectionRange()));
+  }
 }

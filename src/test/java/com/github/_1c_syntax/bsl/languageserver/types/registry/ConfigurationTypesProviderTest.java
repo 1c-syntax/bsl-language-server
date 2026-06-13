@@ -21,12 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -53,13 +56,18 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   @Autowired
   private LanguageServerConfiguration configuration;
 
-  @Test
-  void registersCatalogTypesWithRuAndEnAliases() {
-    initServerContext(PATH_TO_METADATA);
-    // прогреваем lazy-конфигурацию
+  @BeforeEach
+  void setUp() {
+    // initServerContextOnce + tryRegister один раз на класс — тесты read-only:
+    // дёргают только typeRegistry.resolve/getMembers и typeService.displayName,
+    // состояние ServerContext'а/реестра не модифицируют.
+    initServerContextOnce(Absolute.path(PATH_TO_METADATA));
     context.getConfiguration();
     provider.tryRegister();
+  }
 
+  @Test
+  void registersCatalogTypesWithRuAndEnAliases() {
     var ru = typeRegistry.resolve("Справочники.Справочник1");
     var en = typeRegistry.resolve("Catalogs.Справочник1");
     var managerRu = typeRegistry.resolve("СправочникМенеджер.Справочник1");
@@ -77,9 +85,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void configurationTypeDisplayNamesAreBilingual() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // Менеджер-обёртка: в EN показывается CatalogManager.Справочник1, а не ru-написание.
     var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
@@ -98,12 +103,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   void informationRegisterManagerInheritsPlatformMembers() {
     // Менеджер регистра сведений специализируется платформенным generic'ом
     // РегистрСведенийМенеджер.<Имя> и наследует его методы.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var managerRef = typeRegistry.resolve("РегистрСведенийМенеджер.РегистрСведений1").orElseThrow();
-    var memberNames = typeRegistry.getMembers(managerRef).stream().map(m -> m.name()).toList();
+    var memberNames = typeRegistry.getMembers(managerRef, FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(memberNames)
       .as("менеджер регистра сведений должен наследовать платформенные методы из generic'а")
       .contains("СоздатьНаборЗаписей", "Выбрать");
@@ -117,31 +119,46 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   void filterCriterionManagerInheritsPlatformMembers() {
     // Менеджер критерия отбора специализируется платформенным generic'ом
     // КритерийОтбораМенеджер.<Имя> и наследует его методы.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var managerRef = typeRegistry.resolve("КритерийОтбораМенеджер.КритерийОтбора1").orElseThrow();
-    var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
+    var memberNames = typeRegistry.getMembers(managerRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
     assertThat(memberNames)
       .as("менеджер критерия отбора должен наследовать платформенные методы из generic'а")
       .contains("Выбрать", "ПолучитьФорму");
   }
 
   @Test
-  void registersCollectionNamespacesWithMetadataMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
+  void catalogManagerExposesPredefinedValues() {
+    // Менеджер справочника отдаёт предопределённые значения как члены
+    // (Справочники.Справочник1.ПредопределённыйЭлемент1), включая вложенные в группах.
 
-    var nsRu = typeService.findGlobalContext("Справочники");
-    var nsEn = typeService.findGlobalContext("Catalogs");
+    var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
+    var memberNames = typeRegistry.getMembers(managerRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
+    assertThat(memberNames)
+      .as("менеджер справочника должен отдавать предопределённые значения, включая вложенные в группах")
+      .contains(
+        "ПредопределённыйЭлемент1",
+        "ПредопределённыйЭлемент2",
+        "ПредопределённаяГруппа",
+        "ВложенныйЭлемент");
+
+    // Цепочка Справочники.Справочник1 ведёт на тот же менеджер — предопределённые видны и через неё.
+    var viaCollection = typeRegistry.resolve("Справочники.Справочник1").orElseThrow();
+    assertThat(typeRegistry.getMembers(viaCollection, FileType.BSL).stream().map(MemberDescriptor::name))
+      .contains("ПредопределённыйЭлемент1", "ВложенныйЭлемент");
+  }
+
+  @Test
+  void registersCollectionNamespacesWithMetadataMembers() {
+
+    var nsRu = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL);
+    var nsEn = globalScopeProvider.findGlobalContext("Catalogs", FileType.BSL);
 
     assertThat(nsRu).isPresent();
     assertThat(nsEn).isPresent();
     assertThat(nsEn.get()).isEqualTo(nsRu.get());
 
-    var members = typeRegistry.getMembers(nsRu.get());
+    var members = typeRegistry.getMembers(nsRu.get(), FileType.BSL);
     assertThat(members)
       .extracting(m -> m.name())
       .contains("Справочник1");
@@ -157,9 +174,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void registersConfigurationQualifiedNamesForCompletion() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var qualified = globalScopeProvider.getConfigurationQualifiedNames();
     assertThat(qualified)
@@ -169,16 +183,13 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentRefInheritsPlatformMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // Конкретный тип `ДокументСсылка.Документ1` получает members обоих источников:
     // реквизиты из метаданных + платформенные members из generic-семейства
     // (Дата, Номер, ВерсияДанных, Метаданные(), ПолучитьОбъект()).
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
-    var members = typeRegistry.getMembers(ref.get());
+    var members = typeRegistry.getMembers(ref.get(), FileType.BSL);
     var names = members.stream().map(m -> m.name()).toList();
     assertThat(names)
       .as("платформенные стандартные свойства должны подмешиваться")
@@ -193,29 +204,23 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentManagerInheritsPlatformMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На `ДокументМенеджер.Документ1` подмешиваются методы платформенного
     // generic-менеджера документа (НайтиПоНомеру, СоздатьДокумент, …).
     var ref = typeRegistry.resolve("ДокументМенеджер.Документ1");
     assertThat(ref).isPresent();
-    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(ref.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names).contains("НайтиПоНомеру", "СоздатьДокумент", "ПустаяСсылка", "Выбрать");
   }
 
   @Test
   void emptyRefOnManagerReturnsSpecializedRef() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На `ДокументМенеджер.Документ1.ПустаяСсылка()` тип возврата должен
     // специализироваться в конкретный `ДокументСсылка.Документ1`, а не
     // оставаться generic-шаблоном `ДокументСсылка.<Имя документа>`.
     var ref = typeRegistry.resolve("ДокументМенеджер.Документ1").orElseThrow();
-    var empty = typeRegistry.getMembers(ref).stream()
+    var empty = typeRegistry.getMembers(ref, FileType.BSL).stream()
       .filter(m -> "ПустаяСсылка".equals(m.name()))
       .findFirst().orElseThrow();
     assertThat(empty.returnType().qualifiedName())
@@ -223,7 +228,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
       .isEqualTo("ДокументСсылка.Документ1");
 
     var catRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
-    var catEmpty = typeRegistry.getMembers(catRef).stream()
+    var catEmpty = typeRegistry.getMembers(catRef, FileType.BSL).stream()
       .filter(m -> "ПустаяСсылка".equals(m.name()))
       .findFirst().orElseThrow();
     assertThat(catEmpty.returnType().qualifiedName())
@@ -233,15 +238,12 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentsCollectionInheritsCollectionManagerMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На коллекции `Документы` подмешиваются методы платформенного
     // `ДокументыМенеджер` (ТипВсеСсылки).
     var ref = typeRegistry.resolve("Документы");
     assertThat(ref).isPresent();
-    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(ref.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names)
       .as("MD-инстансы и метод коллекции-менеджера")
       .contains("Документ1", "ТипВсеСсылки");
@@ -249,30 +251,24 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void genericSlotsFilteredOutFromInheritedMembers() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // Generic-слоты <Имя реквизита>, <Имя общего реквизита> платформенного
     // generic-типа не должны утекать в специализированный ref/object тип.
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
-    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(ref.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names).isNotEmpty().noneMatch(n -> n.startsWith("<") && n.endsWith(">"));
   }
 
   @Test
   void standardAttributesGetDescriptionsFromPlatform() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // У стандартного реквизита `Дата` в mdclasses описание пустое, а
     // платформенный generic-тип в HBK содержит описание — оно должно
     // подмешиваться при сборке member'а.
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
-    var data = typeRegistry.getMembers(ref.get()).stream()
+    var data = typeRegistry.getMembers(ref.get(), FileType.BSL).stream()
       .filter(m -> "Дата".equalsIgnoreCase(m.name()))
       .findFirst();
     assertThat(data).isPresent();
@@ -283,15 +279,12 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void documentExposesTabularSectionMember() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // На `ДокументОбъект.Документ1` есть member-property `ТабличнаяЧасть1`,
     // тип которого — `ДокументТабличнаяЧасть.Документ1.ТабличнаяЧасть1`.
     var objectRef = typeRegistry.resolve("ДокументОбъект.Документ1");
     assertThat(objectRef).isPresent();
-    var ts = typeRegistry.getMembers(objectRef.get()).stream()
+    var ts = typeRegistry.getMembers(objectRef.get(), FileType.BSL).stream()
       .filter(m -> "ТабличнаяЧасть1".equals(m.name()))
       .findFirst();
     assertThat(ts).isPresent();
@@ -301,33 +294,27 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void commonAttributeAddedToApplicableDocument() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     // `ОбщийРеквизит1`: content явно включает Документ1 (Use=USE) и исключает
     // Справочник1 (DontUse). Поэтому ref-тип документа получает реквизит как
     // member, а ref-тип справочника — нет.
     var docRef = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(docRef).isPresent();
-    var docMembers = typeRegistry.getMembers(docRef.get()).stream().map(m -> m.name()).toList();
+    var docMembers = typeRegistry.getMembers(docRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(docMembers).contains("ОбщийРеквизит1");
 
     var catRef = typeRegistry.resolve("СправочникСсылка.Справочник1");
     assertThat(catRef).isPresent();
-    var catMembers = typeRegistry.getMembers(catRef.get()).stream().map(m -> m.name()).toList();
+    var catMembers = typeRegistry.getMembers(catRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(catMembers).isNotEmpty().doesNotContain("ОбщийРеквизит1");
   }
 
   @Test
   void tabularSectionRowExposesColumns() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var rowRef = typeRegistry.resolve("ДокументТабличнаяЧастьСтрока.Документ1.ТабличнаяЧасть1");
     assertThat(rowRef).isPresent();
-    var names = typeRegistry.getMembers(rowRef.get()).stream().map(m -> m.name()).toList();
+    var names = typeRegistry.getMembers(rowRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(names).contains("Реквизит1", "Реквизит2");
   }
 
@@ -338,12 +325,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // displayName(language) возвращает имя в нужной локали. Это и есть единая
     // точка для hover/диагностик (через matches) и completion (через displayName)
     // без необходимости держать два параллельных дескриптора per-language.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1").orElseThrow();
-    var members = typeRegistry.getMembers(ref);
+    var members = typeRegistry.getMembers(ref, FileType.BSL);
 
     // matches должен находить «Дата»/«Date», «Номер»/«Number», «Ссылка»/«Ref»
     // в одном и том же MemberDescriptor — без дублирования.
@@ -375,12 +359,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // (СправочникСсылка.<Имя справочника>). В JSON-fallback они заданы двуязычно
     // (descriptionRu/descriptionEn), и displayDescription(language) должен отдавать
     // описание в нужной локали — иначе hover на en-проекте показывает ru-текст.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    provider.tryRegister();
 
     var ref = typeRegistry.resolve("СправочникСсылка.Справочник1").orElseThrow();
-    var members = typeRegistry.getMembers(ref);
+    var members = typeRegistry.getMembers(ref, FileType.BSL);
 
     var ssylka = members.stream()
       .filter(m -> m.matches("Ссылка"))

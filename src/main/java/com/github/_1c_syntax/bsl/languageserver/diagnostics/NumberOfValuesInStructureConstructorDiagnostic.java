@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
+ * Диагностика ограничения на количество значений свойств, передаваемых в конструктор структуры.
+ *
  * @author Leon Chagelishvili &lt;lChagelishvily@gmail.com&gt;
  */
 @DiagnosticMetadata(

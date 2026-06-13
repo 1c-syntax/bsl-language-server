@@ -22,21 +22,20 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupContent;
 
 /**
- * Интерфейс построителя контента для всплывающего окна на основе символа.
- *
- * @param <T> Символ ({@link Symbol}) для которого предназначен данный построитель.
+ * Интерфейс построителя контента для всплывающего окна по ссылке под курсором.
  */
-public interface MarkupContentBuilder<T extends Symbol> {
+public interface MarkupContentBuilder {
   /**
-   * Возвращает контент для всплывающего окна на основе символа.
+   * Построить контент всплывающего окна для ссылки.
    *
-   * @param symbol Символ, для которого нужно построить контент.
-   * @return Сконструированный контент.
+   * @param reference ссылка под курсором.
+   * @return контент всплывающего окна.
    */
-  MarkupContent getContent(T symbol);
+  MarkupContent getContent(Reference reference);
 
   /**
    * Конкретный класс символа, который умеет обрабатывать данный построитель.

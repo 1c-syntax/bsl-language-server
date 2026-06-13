@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -28,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
@@ -62,7 +64,7 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     var moduleRef = typeRegistry.resolve("MyModule");
     assertThat(moduleRef).isPresent();
     assertThat(moduleRef.get().kind()).isEqualTo(TypeKind.USER);
-    var moduleMembers = typeRegistry.getMembers(moduleRef.get());
+    var moduleMembers = typeRegistry.getMembers(moduleRef.get(), FileType.OS);
     assertThat(moduleMembers).extracting(m -> m.name())
       .contains("ВывестиСообщение", "СформироватьСтроку", "СтатусМодуля");
 
@@ -70,12 +72,12 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     assertThat(entryNames(index, EntryKind.CLASS)).contains("MyClass");
     var classRef = typeRegistry.resolve("MyClass");
     assertThat(classRef).isPresent();
-    var ctor = typeRegistry.getConstructors(classRef.get());
+    var ctor = typeRegistry.getConstructors(classRef.get(), FileType.OS);
     assertThat(ctor).hasSize(1);
     assertThat(ctor.get(0).parameters()).extracting(p -> p.name()).containsExactly("Имя");
     assertThat(ctor.get(0).returnType()).isEqualTo(classRef.get());
 
-    var classMembers = typeRegistry.getMembers(classRef.get());
+    var classMembers = typeRegistry.getMembers(classRef.get(), FileType.OS);
     assertThat(classMembers).extracting(m -> m.name()).contains("ПолучитьСтроку", "СтатусМодуля");
     assertThat(classMembers).filteredOn(m -> m.name().equals("ПолучитьСтроку"))
       .first().extracting(m -> m.kind()).isEqualTo(MemberKind.METHOD);
@@ -117,7 +119,7 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     index.reindex(context);
 
     var moduleRef = typeRegistry.resolve("MyModule").orElseThrow();
-    assertThat(typeRegistry.getMembers(moduleRef)).extracting(m -> m.name())
+    assertThat(typeRegistry.getMembers(moduleRef, FileType.OS)).extracting(m -> m.name())
       .contains("ВывестиСообщение");
 
     var moduleUri = Absolute.uri(fixtureRoot.resolve("src/MyModule.os").toUri());
@@ -129,7 +131,7 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
       + "КонецПроцедуры\n";
     context.rebuildDocument(dc, newContent, dc.getVersion() + 1);
 
-    assertThat(typeRegistry.getMembers(moduleRef)).extracting(m -> m.name())
+    assertThat(typeRegistry.getMembers(moduleRef, FileType.OS)).extracting(m -> m.name())
       .contains("НоваяПроцедура")
       .doesNotContain("ВывестиСообщение");
   }
@@ -202,6 +204,32 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     // then
     assertThat(all).extracting(LibraryEntry::qualifiedName)
       .contains("MyModule", "MyClass");
+  }
+
+  @Test
+  void classNamesUsesQualifiedNameForLibraryClass() {
+    // given — у класса RenamedClass qualifiedName из lib.config отличается от basename файла.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+    var renamed = context.getDocument(Absolute.uri(fixtureRoot.resolve("src/mainclass.os").toUri()));
+
+    // when / then — берётся qualifiedName, а не basename.
+    assertThat(index.classNames(renamed)).containsExactly("RenamedClass");
+    assertThat(index.isLibraryClass(renamed)).isTrue();
+  }
+
+  @Test
+  void classNamesAreEmptyForNonLibraryFile() {
+    // given — обычный .os, не зарегистрированный в lib.config.
+    initServerContext();
+    var plain = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n", context);
+
+    // when / then — имён нет, library-классом не считается.
+    assertThat(index.classNames(plain)).isEmpty();
+    assertThat(index.isLibraryClass(plain)).isFalse();
   }
 
   @Test

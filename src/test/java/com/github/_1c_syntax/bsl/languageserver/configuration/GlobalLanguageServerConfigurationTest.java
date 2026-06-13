@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -95,6 +96,49 @@ class GlobalLanguageServerConfigurationTest {
     assertThat(configuration.getLanguage()).isEqualTo(Language.DEFAULT_LANGUAGE);
     assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.DEFAULT);
     assertThat(configuration.getConfigurationFile()).isNull();
+  }
+
+  @Test
+  void onApplicationReady_capabilitiesPresent_loadsTextDocumentSyncKind() throws Exception {
+    // given
+    var cwdConfig = tempDir.resolve("cwd-config.json");
+    Files.writeString(cwdConfig, """
+      {
+        "capabilities": {
+          "textDocumentSync": {
+            "change": "Full"
+          }
+        }
+      }
+      """);
+
+    var configuration = createConfiguration(
+      cwdConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then
+    assertThat(configuration.getCapabilities().getTextDocumentSync().getChange())
+      .isEqualTo(TextDocumentSyncKind.Full);
+  }
+
+  @Test
+  void onApplicationReady_capabilitiesMissing_usesDefaultSyncKind() throws Exception {
+    // given
+    var configuration = createConfiguration(
+      tempDir.resolve("non-existent-cwd.json").toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then
+    assertThat(configuration.getCapabilities().getTextDocumentSync().getChange())
+      .isEqualTo(TextDocumentSyncKind.Incremental);
   }
 
   private static GlobalLanguageServerConfiguration createConfiguration(

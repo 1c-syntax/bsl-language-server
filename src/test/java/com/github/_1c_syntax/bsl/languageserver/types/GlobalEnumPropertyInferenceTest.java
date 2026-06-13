@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +42,10 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+  @Autowired
+  private TypeRegistry typeRegistry;
 
   @BeforeEach
   void setUpWorkspaceContext() {
@@ -47,20 +54,23 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Test
   void findGlobalContextByName() {
-    var encoding = typeService.findGlobalContext("КодировкаТекста");
+    typeRegistry.resolve("");
+    var encoding = globalScopeProvider.findGlobalContext("КодировкаТекста", FileType.BSL);
     assertThat(encoding).isPresent();
     assertThat(encoding.get().qualifiedName()).isEqualTo("КодировкаТекста");
   }
 
   @Test
   void englishAliasIsRegistered() {
-    var encoding = typeService.findGlobalContext("TextEncoding");
+    typeRegistry.resolve("");
+    var encoding = globalScopeProvider.findGlobalContext("TextEncoding", FileType.BSL);
     assertThat(encoding).isPresent();
   }
 
   @Test
   void globalPropertyNamesIncludeBuiltinEnums() {
-    assertThat(typeService.getGlobalContextNames())
+    typeRegistry.resolve("");
+    assertThat(globalScopeProvider.getGlobalContextNames(FileType.BSL))
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }
 
@@ -72,7 +82,7 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
     var content = documentContext.getContent();
     var line = 0;
     var pos = content.indexOf("UTF8") + 1;
-    var types = typeService.inferAtPosition(documentContext, new Position(line, pos));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, pos));
     assertThat(types.refs()).hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName())
       .isEqualTo("КодировкаТекста");

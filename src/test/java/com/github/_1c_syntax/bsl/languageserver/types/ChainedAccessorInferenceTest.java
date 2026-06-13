@@ -58,7 +58,7 @@ class ChainedAccessorInferenceTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH);
     var variable = lookup(documentContext, "КоличествоЭлементов");
 
-    var types = typeService.findTypes(referenceOf(documentContext, variable));
+    var types = typeService.typesAt(referenceOf(documentContext, variable));
 
     assertThat(types.refs()).hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualToIgnoringCase("Число");
@@ -69,7 +69,7 @@ class ChainedAccessorInferenceTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH);
     var variable = lookup(documentContext, "КоличествоПолей");
 
-    var types = typeService.findTypes(referenceOf(documentContext, variable));
+    var types = typeService.typesAt(referenceOf(documentContext, variable));
 
     assertThat(types.refs()).hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualToIgnoringCase("Число");
@@ -80,7 +80,7 @@ class ChainedAccessorInferenceTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH);
     var variable = lookup(documentContext, "ВложенноеКоличество");
 
-    var types = typeService.findTypes(referenceOf(documentContext, variable));
+    var types = typeService.typesAt(referenceOf(documentContext, variable));
 
     // Массив.Получить(0) объявлен с return type Произвольный (из oscript stdlib).
     assertThat(types.refs()).hasSize(1);

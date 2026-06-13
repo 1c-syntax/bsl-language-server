@@ -267,6 +267,73 @@ class BSLWorkspaceServiceTest {
     assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
+  /**
+   * Клиенты (VS Code) при удалении каталога присылают одно событие Deleted с URI каталога,
+   * без событий по вложенным файлам. Все документы внутри каталога должны быть выгружены
+   * из контекста, а документы каталога-«тёзки» с общим строковым префиксом — остаться.
+   */
+  @Test
+  void testDidChangeWatchedFiles_Deleted_Folder() throws IOException {
+    // given
+    var objectModule = createTestFile("Catalogs/Goods/Ext/ObjectModule.bsl");
+    var formModule = createTestFile("Catalogs/Goods/Forms/ItemForm/Ext/Form/Module.bsl");
+    var namesakeModule = createTestFile("Catalogs/GoodsArchive/Ext/ObjectModule.bsl");
+
+    var objectModuleUri = Absolute.uri(objectModule.toURI());
+    var formModuleUri = Absolute.uri(formModule.toURI());
+    var namesakeModuleUri = Absolute.uri(namesakeModule.toURI());
+
+    var ctx = workspaceServerContext();
+    for (var uri : List.of(objectModuleUri, formModuleUri, namesakeModuleUri)) {
+      var documentContext = ctx.addDocument(uri);
+      ctx.rebuildDocument(documentContext);
+      ctx.tryClearDocument(documentContext);
+    }
+
+    var deletedFolder = tempDir.resolve("Catalogs").resolve("Goods").toFile();
+    FileUtils.deleteDirectory(deletedFolder);
+    var folderUri = Absolute.uri(deletedFolder.toURI());
+
+    var fileEvent = new FileEvent(folderUri.toString(), FileChangeType.Deleted);
+    var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
+
+    // when
+    workspaceService.didChangeWatchedFiles(params);
+    await().until(() -> ctx.getDocument(objectModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(objectModuleUri)).isNull();
+    assertThat(ctx.getDocument(formModuleUri)).isNull();
+    assertThat(ctx.getDocument(namesakeModuleUri)).isNotNull();
+  }
+
+  /** Открытый в редакторе документ внутри удалённого каталога тоже должен быть закрыт и выгружен. */
+  @Test
+  void testDidChangeWatchedFiles_Deleted_FolderWithOpenedDocument() throws IOException {
+    // given
+    var openedModule = createTestFile("Catalogs/Products/Ext/ObjectModule.bsl");
+    var openedModuleUri = Absolute.uri(openedModule.toURI());
+    var content = FileUtils.readFileToString(openedModule, StandardCharsets.UTF_8);
+
+    var ctx = workspaceServerContext();
+    var documentContext = ctx.addDocument(openedModuleUri);
+    ctx.openDocument(documentContext, content, 1);
+
+    var deletedFolder = tempDir.resolve("Catalogs").resolve("Products").toFile();
+    FileUtils.deleteDirectory(deletedFolder);
+    var folderUri = Absolute.uri(deletedFolder.toURI());
+
+    var fileEvent = new FileEvent(folderUri.toString(), FileChangeType.Deleted);
+    var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
+
+    // when
+    workspaceService.didChangeWatchedFiles(params);
+    await().until(() -> ctx.getDocument(openedModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(openedModuleUri)).isNull();
+  }
+
   @Test
   void testDidChangeWatchedFiles_MultipleEvents() throws IOException {
     // given

@@ -22,27 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
 import java.util.StringJoiner;
 
 /**
- * Построитель контента для всплывающего окна для {@link AnnotationSymbol}.
+ * Построитель контента для всплывающего окна для {@link AnnotationParamSymbol}.
  */
 @Component
 @RequiredArgsConstructor
-public class AnnotationParamSymbolMarkupContentBuilder implements MarkupContentBuilder<AnnotationParamSymbol> {
+public class AnnotationParamSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
-  public MarkupContent getContent(AnnotationParamSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (AnnotationParamSymbol) reference.symbol();
     var maybeMethodSymbol = symbol.getParent();
     if (maybeMethodSymbol.filter(MethodSymbol.class::isInstance).isEmpty()) {
       return new MarkupContent(MarkupKind.MARKDOWN, "");

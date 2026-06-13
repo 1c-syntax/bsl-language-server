@@ -90,7 +90,8 @@ public class KeywordReferenceFinder implements ReferenceFinder {
 
     var lang = configuration.getLanguage();
     var parentContext = findKeywordParentContext(terminal);
-    var descriptionOpt = globalScopeProvider.findKeywordDescription(terminal.getText(), lang, parentContext);
+    var descriptionOpt = globalScopeProvider.findKeywordDescription(
+      terminal.getText(), lang, parentContext, documentContext.getFileType());
     if (descriptionOpt.isEmpty()) {
       return Optional.empty();
     }
