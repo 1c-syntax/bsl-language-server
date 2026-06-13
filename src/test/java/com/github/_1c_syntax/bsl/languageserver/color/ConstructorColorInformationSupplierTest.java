@@ -50,10 +50,9 @@ class ConstructorColorInformationSupplierTest {
 
     // then
     assertThatColorInformations(colorInformation)
-      .hasSize(5)
+      .hasSize(4)
       .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(0, 4, 14))
       .hasColorAndRange(new Color(0.00392156862745098, 0.00784313725490196, 0.011764705882352941, 1), Ranges.create(1, 4, 23))
-      .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(2, 4, 35))
       .hasColorAndRange(new Color(0.00392156862745098, 0.00784313725490196, 0.011764705882352941, 1), Ranges.create(3, 4, 26))
       .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(4, 4, 17))
     ;
