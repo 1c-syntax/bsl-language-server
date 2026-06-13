@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
@@ -199,7 +200,7 @@ class SymbolProviderTest {
     // Провайдер должен корректно отобразить запись индекса в WorkspaceSymbol.
     var symbolName = "Метод(Параметр";
     var symbolUri = Absolute.uri("file:///module.bsl");
-    var entry = new WorkspaceSymbolIndex.Entry(
+    var entry = new Entry(
       symbolUri,
       symbolName,
       symbolName.toLowerCase(),

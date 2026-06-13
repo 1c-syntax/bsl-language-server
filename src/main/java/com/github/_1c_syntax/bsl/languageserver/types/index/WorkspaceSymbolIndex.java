@@ -33,9 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.apache.commons.collections4.trie.PatriciaTrie;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -61,7 +58,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Заменяет полный обход всех документов с последующим слепым усечением выдачи: символы
  * собираются один раз на событии {@link DocumentContextContentChangedEvent} в лёгкие
- * неизменяемые записи {@link Entry} (имя, его lowercase-форма, {@link SymbolKind}, диапазон,
+ * неизменяемые записи {@link Entry} (имя, его lowercase-форма, {@link org.eclipse.lsp4j.SymbolKind}, диапазон,
  * URI, теги и готовое имя контейнера). Запрос обслуживается из индекса с ранжированием по
  * релевантности; выдача возвращается целиком, без усечения.
  * <p>
@@ -88,6 +85,27 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Частота проверки отмены запроса (раз в N просмотренных записей).
    */
   private static final int CANCEL_CHECK_INTERVAL = 1024;
+
+  /**
+   * Скор точного совпадения имени с запросом (наиболее релевантно).
+   */
+  private static final int SCORE_EXACT = 0;
+
+  /**
+   * Скор совпадения имени по префиксу запроса.
+   */
+  private static final int SCORE_PREFIX = 1;
+
+  /**
+   * Скор совпадения запроса как непрерывной подстроки имени.
+   */
+  private static final int SCORE_SUBSTRING = 2;
+
+  /**
+   * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
+   * позиция первого совпавшего символа (более ранняя позиция — релевантнее).
+   */
+  private static final int SCORE_SUBSEQUENCE = 3;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -194,15 +212,14 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
    *
-   * @param query         строка запроса пользователя; {@code null} трактуется как пустая строка
+   * @param query         строка запроса пользователя (пустая строка означает «вернуть всё»)
    * @param cancelChecker проверяющий отмену запроса
    * @return полный ранжированный список найденных записей
    */
   public List<Entry> search(String query, CancelChecker cancelChecker) {
     cancelChecker.checkCanceled();
 
-    var normalizedQuery = query == null ? "" : query;
-    var lowerQuery = normalizedQuery.toLowerCase(Locale.ENGLISH);
+    var lowerQuery = query.toLowerCase(Locale.ENGLISH);
 
     lock.readLock().lock();
     try {
@@ -226,38 +243,69 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private List<Entry> searchMatching(String lowerQuery, CancelChecker cancelChecker) {
     var matches = new ArrayList<Scored>();
     var matchedKeys = new HashSet<String>();
-    var seen = 0;
+    var progress = new ScanProgress(cancelChecker);
 
-    // быстрый путь: префиксные совпадения сублинейно через дерево
+    collectPrefixMatches(lowerQuery, matches, matchedKeys, progress);
+    collectFuzzyMatches(lowerQuery, matches, matchedKeys, progress);
+
+    matches.sort(Comparator.naturalOrder());
+    return matches.stream().map(Scored::entry).toList();
+  }
+
+  /**
+   * Быстрый путь: префиксные совпадения сублинейно через {@link PatriciaTrie#prefixMap(Object)}.
+   * Точное совпадение получает {@link #SCORE_EXACT}, остальные префиксные — {@link #SCORE_PREFIX}.
+   * Просмотренные ключи добавляются в {@code matchedKeys}, чтобы добор их не пересчитывал.
+   *
+   * @param lowerQuery  lowercase-запрос (непустой)
+   * @param matches     накопитель кандидатов со скором
+   * @param matchedKeys накопитель уже учтённых ключей
+   * @param progress    счётчик прогресса для периодической проверки отмены
+   */
+  private void collectPrefixMatches(
+    String lowerQuery,
+    List<Scored> matches,
+    Set<String> matchedKeys,
+    ScanProgress progress
+  ) {
     for (var bucket : trie.prefixMap(lowerQuery).entrySet()) {
       matchedKeys.add(bucket.getKey());
+      var score = bucket.getKey().equals(lowerQuery) ? SCORE_EXACT : SCORE_PREFIX;
       for (var entry : bucket.getValue()) {
-        if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
-          cancelChecker.checkCanceled();
-        }
-        matches.add(new Scored(entry.lowerName().equals(lowerQuery) ? 0 : 1, entry));
+        progress.advance();
+        matches.add(new Scored(score, entry));
       }
     }
+  }
 
-    // добор: подстрока и подпоследовательность дерево по префиксу не ускоряет — общий проход
+  /**
+   * Добор подстрочных и fuzzy-совпадений: префиксное дерево их не ускоряет, поэтому идёт общий
+   * проход по ключам, не покрытым префиксным путём. Несовпавшие ключи отсеивает
+   * {@link #fuzzyScore(String, String)}.
+   *
+   * @param lowerQuery  lowercase-запрос (непустой)
+   * @param matches     накопитель кандидатов со скором
+   * @param matchedKeys ключи, уже учтённые префиксным путём
+   * @param progress    счётчик прогресса для периодической проверки отмены
+   */
+  private void collectFuzzyMatches(
+    String lowerQuery,
+    List<Scored> matches,
+    Set<String> matchedKeys,
+    ScanProgress progress
+  ) {
     for (var bucket : trie.entrySet()) {
-      if (matchedKeys.contains(bucket.getKey())) {
-        continue;
-      }
-      var fuzzyScore = fuzzyScore(bucket.getKey(), lowerQuery);
+      var fuzzyScore = matchedKeys.contains(bucket.getKey())
+        ? -1
+        : fuzzyScore(bucket.getKey(), lowerQuery);
       if (fuzzyScore < 0) {
         continue;
       }
       for (var entry : bucket.getValue()) {
-        if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
-          cancelChecker.checkCanceled();
-        }
+        progress.advance();
         matches.add(new Scored(fuzzyScore, entry));
       }
     }
-
-    matches.sort(Comparator.naturalOrder());
-    return matches.stream().map(Scored::entry).toList();
   }
 
   /**
@@ -268,12 +316,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    */
   private List<Entry> collectAll(CancelChecker cancelChecker) {
     var result = new ArrayList<Entry>();
-    var seen = 0;
+    var progress = new ScanProgress(cancelChecker);
     for (var bucket : trie.values()) {
       for (var entry : bucket) {
-        if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
-          cancelChecker.checkCanceled();
-        }
+        progress.advance();
         result.add(entry);
       }
     }
@@ -368,20 +414,20 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Вычислить скор «не-префиксного» совпадения lowercase-имени с lowercase-запросом.
    * <p>
    * Применяется только к ключам вне префиксного множества дерева (точное и префиксное
-   * совпадения там уже исключены). Меньшее значение — релевантнее: {@code 2} — непрерывная
-   * подстрока, {@code 3 + позиция} — подпоследовательность.
+   * совпадения там уже исключены). Меньшее значение — релевантнее: {@link #SCORE_SUBSTRING} —
+   * непрерывная подстрока, {@link #SCORE_SUBSEQUENCE}{@code  + позиция} — подпоследовательность.
    *
    * @param lowerName  lowercase-имя символа
    * @param lowerQuery lowercase-запрос (непустой, не префикс имени)
-   * @return скор {@code >= 2}, либо {@code -1}, если совпадения нет
+   * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если совпадения нет
    */
   private static int fuzzyScore(String lowerName, String lowerQuery) {
     if (lowerName.contains(lowerQuery)) {
-      return 2;
+      return SCORE_SUBSTRING;
     }
     var firstMatch = subsequenceFirstIndex(lowerName, lowerQuery);
     if (firstMatch >= 0) {
-      return 3 + firstMatch;
+      return SCORE_SUBSEQUENCE + firstMatch;
     }
     return -1;
   }
@@ -426,27 +472,29 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Неизменяемая запись индекса: всё необходимое для построения
-   * {@link org.eclipse.lsp4j.WorkspaceSymbol} без повторного обхода дерева символов.
-   *
-   * @param uri           URI документа-источника
-   * @param name          исходное имя символа
-   * @param lowerName     lowercase-форма имени для сопоставления
-   * @param kind          вид символа
-   * @param range         диапазон символа в документе
-   * @param tags          теги символа (например, {@link SymbolTag#Deprecated})
-   * @param containerName готовое имя контейнера (представление ссылки на объект метаданных) либо
-   *                      пустая строка, если документ не связан с объектом метаданных
+   * Счётчик просмотренных записей для периодической проверки отмены запроса.
+   * <p>
+   * Один экземпляр разделяется между этапами сканирования, чтобы интервал проверки отмены
+   * ({@link #CANCEL_CHECK_INTERVAL}) считался по суммарному прогрессу, а не сбрасывался на
+   * каждом этапе.
    */
-  public record Entry(
-    URI uri,
-    String name,
-    String lowerName,
-    SymbolKind kind,
-    Range range,
-    List<SymbolTag> tags,
-    String containerName
-  ) {
+  private static final class ScanProgress {
+    private final CancelChecker cancelChecker;
+    private int seen;
+
+    private ScanProgress(CancelChecker cancelChecker) {
+      this.cancelChecker = cancelChecker;
+    }
+
+    /**
+     * Учесть просмотр одной записи и проверить отмену по достижении интервала.
+     */
+    private void advance() {
+      seen++;
+      if ((seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
+        cancelChecker.checkCanceled();
+      }
+    }
   }
 
   /**

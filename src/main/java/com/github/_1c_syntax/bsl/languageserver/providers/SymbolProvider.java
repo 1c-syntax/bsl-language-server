@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
@@ -80,7 +81,7 @@ public class SymbolProvider {
    * @param entry запись индекса символов рабочей области
    * @return заполненный символ рабочей области
    */
-  private static WorkspaceSymbol createWorkspaceSymbol(WorkspaceSymbolIndex.Entry entry) {
+  private static WorkspaceSymbol createWorkspaceSymbol(Entry entry) {
     var location = new Location(entry.uri().toString(), entry.range());
 
     var workspaceSymbol = new WorkspaceSymbol();

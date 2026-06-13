@@ -106,7 +106,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     var result = index.search("Тест", NO_CANCEL);
 
     // then — точное совпадение выше префикса, префикс выше внутренней подстроки
-    var names = result.stream().map(WorkspaceSymbolIndex.Entry::name).toList();
+    var names = result.stream().map(Entry::name).toList();
     assertThat(names.indexOf("Тест")).isLessThan(names.indexOf("ТестДанных"));
     assertThat(names.indexOf("ТестДанных")).isLessThan(names.indexOf("ПерезаписьТеста"));
   }
@@ -130,7 +130,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     // then — все три совпадения присутствуют, ранжированы: точное, затем префикс,
     // затем подпоследовательность (порядок проверяется как подпоследовательность выдачи,
     // т.к. индекс — общий бин на класс и может содержать символы соседних тестов)
-    var names = result.stream().map(WorkspaceSymbolIndex.Entry::name).toList();
+    var names = result.stream().map(Entry::name).toList();
     assertThat(names)
       .contains("Дата", "ДатаНачала", "ДобавитьАтрибут")
       .containsSubsequence("Дата", "ДатаНачала", "ДобавитьАтрибут");
@@ -154,9 +154,10 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
     // then — найдены оба префиксных совпадения, имя без префикса отсутствует;
     // при равном скоре раньше идёт более короткое имя
-    var names = result.stream().map(WorkspaceSymbolIndex.Entry::name).toList();
-    assertThat(names).contains("ПровестиДокумент", "ПроверитьЗаполнение");
-    assertThat(names).doesNotContain("Очистить");
+    var names = result.stream().map(Entry::name).toList();
+    assertThat(names)
+      .contains("ПровестиДокумент", "ПроверитьЗаполнение")
+      .doesNotContain("Очистить");
     assertThat(names.indexOf("ПровестиДокумент")).isLessThan(names.indexOf("ПроверитьЗаполнение"));
   }
 
@@ -196,7 +197,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
     // then — символы этого документа присутствуют в полной выдаче пустого запроса
     assertThat(result)
-      .extracting(WorkspaceSymbolIndex.Entry::name)
+      .extracting(Entry::name)
       .contains("Первая", "Вторая", "Третья");
   }
 
