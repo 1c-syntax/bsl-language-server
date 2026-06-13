@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
+import org.eclipse.lsp4j.CompletionItemOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
@@ -417,6 +418,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var completionOptions = new CompletionOptions();
     completionOptions.setResolveProvider(Boolean.TRUE);
     completionOptions.setTriggerCharacters(List.of("."));
+    var completionItemOptions = new CompletionItemOptions();
+    completionItemOptions.setLabelDetailsSupport(Boolean.TRUE);
+    completionOptions.setCompletionItem(completionItemOptions);
     return completionOptions;
   }
 
