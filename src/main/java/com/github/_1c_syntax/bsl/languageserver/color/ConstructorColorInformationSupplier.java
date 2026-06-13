@@ -60,10 +60,11 @@ public class ConstructorColorInformationSupplier implements ColorInformationSupp
       .map(BSLParser.NewExpressionContext.class::cast)
       .filter(newExpression -> Constructors.typeName(newExpression).filter(name -> COLOR_PATTERN.matcher(name).matches()).isPresent())
       .map(ConstructorColorInformationSupplier::toColorInformation)
+      .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
 
-  private static ColorInformation toColorInformation(BSLParser.NewExpressionContext ctx) {
+  private static Optional<ColorInformation> toColorInformation(BSLParser.NewExpressionContext ctx) {
     byte redPosition;
     byte greenPosition;
     byte bluePosition;
@@ -82,32 +83,39 @@ public class ConstructorColorInformationSupplier implements ColorInformationSupp
       .map(BSLParser.DoCallContext::callParamList)
       .orElseGet(() -> new BSLParser.CallParamListContext(null, 0));
 
-    double red = getColorValue(callParams, redPosition);
-    double green = getColorValue(callParams, greenPosition);
-    double blue = getColorValue(callParams, bluePosition);
+    Optional<Double> red = getColorValue(callParams, redPosition);
+    Optional<Double> green = getColorValue(callParams, greenPosition);
+    Optional<Double> blue = getColorValue(callParams, bluePosition);
+
+    if (red.isEmpty() || green.isEmpty() || blue.isEmpty()) {
+      return Optional.empty();
+    }
 
     var range = Ranges.create(ctx);
-    var color = new Color(red, green, blue, DEFAULT_ALPHA_CHANNEL);
+    var color = new Color(red.get(), green.get(), blue.get(), DEFAULT_ALPHA_CHANNEL);
 
-    return new ColorInformation(range, color);
+    return Optional.of(new ColorInformation(range, color));
   }
 
-  private static Double getColorValue(BSLParser.CallParamListContext callParams, byte colorPosition) {
-    return Optional.ofNullable(callParams.callParam(colorPosition))
-      .map(BSLParser.CallParamContext::expression)
+  private static Optional<Double> getColorValue(BSLParser.CallParamListContext callParams, byte colorPosition) {
+    var callParam = callParams.callParam(colorPosition);
+    if (callParam == null || callParam.expression() == null) {
+      return Optional.of(0.0);
+    }
+
+    return Optional.of(callParam.expression())
       .filter(expression -> expression.getTokens().size() == 1)
       .map(expression -> expression.getTokens().getFirst())
       .map(Token::getText)
-      .map(ConstructorColorInformationSupplier::tryParseInteger)
-      .map(colorValue -> (double) colorValue / MAX_COLOR_COMPONENT_VALUE)
-      .orElse(0.0);
+      .flatMap(ConstructorColorInformationSupplier::tryParseInteger)
+      .map(colorValue -> (double) colorValue / MAX_COLOR_COMPONENT_VALUE);
   }
 
-  private static Integer tryParseInteger(String value) {
+  private static Optional<Integer> tryParseInteger(String value) {
     try {
-      return Integer.parseInt(value);
+      return Optional.of(Integer.parseInt(value));
     } catch (NumberFormatException e) {
-      return 0;
+      return Optional.empty();
     }
   }
 }
