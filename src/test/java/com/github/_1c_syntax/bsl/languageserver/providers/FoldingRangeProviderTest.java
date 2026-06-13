@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.folding.CodeBlockFoldingRangeSupplier;
+import com.github._1c_syntax.bsl.languageserver.folding.RegionFoldingRangeSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.FoldingRange;
@@ -30,13 +32,17 @@ import org.eclipse.lsp4j.FoldingRangeKind;
 import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class FoldingRangeProviderTest {
@@ -45,11 +51,22 @@ class FoldingRangeProviderTest {
   private FoldingRangeProvider foldingRangeProvider;
 
   @Autowired
+  private CodeBlockFoldingRangeSupplier codeBlockFoldingRangeSupplier;
+
+  @Autowired
+  private RegionFoldingRangeSupplier regionFoldingRangeSupplier;
+
+  @MockitoSpyBean
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @BeforeEach
+  void beforeEach() {
+    setCollapsedTextSupport(false);
+  }
 
   @AfterEach
   void afterEach() {
-    clientCapabilitiesHolder.setCapabilities(null);
+    setCollapsedTextSupport(false);
   }
 
   @Test
@@ -148,7 +165,7 @@ class FoldingRangeProviderTest {
     List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
     // then: границы диапазонов не меняются, текст-заглушка не выставляется
-    assertThat(foldingRanges).hasSize(11);
+    assertThat(foldingRanges).hasSize(13);
     assertThat(foldingRanges)
       .allMatch(foldingRange -> foldingRange.getCollapsedText() == null);
   }
@@ -161,6 +178,8 @@ class FoldingRangeProviderTest {
     textDocumentClientCapabilities.setFoldingRange(foldingRangeCapabilities);
     var clientCapabilities = new ClientCapabilities();
     clientCapabilities.setTextDocument(textDocumentClientCapabilities);
-    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(clientCapabilities));
+    codeBlockFoldingRangeSupplier.handleInitializeEvent();
+    regionFoldingRangeSupplier.handleInitializeEvent();
   }
 }

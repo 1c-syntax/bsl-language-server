@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.FoldingRangeCapabilities;
@@ -27,19 +27,20 @@ import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ClientCapabilitiesHolderTest {
+class FoldingRangeSupplierTest {
 
   @Test
   void collapsedTextSupportedWhenClientDeclaresIt() {
 
     // given
-    var holder = new ClientCapabilitiesHolder();
-    holder.setCapabilities(capabilitiesWithCollapsedText(true));
+    var capabilities = capabilitiesWithCollapsedText(true);
 
     // when
-    var supported = holder.isFoldingRangeCollapsedTextSupported();
+    var supported = FoldingRangeSupplier.isCollapsedTextSupported(Optional.of(capabilities));
 
     // then
     assertThat(supported).isTrue();
@@ -49,11 +50,10 @@ class ClientCapabilitiesHolderTest {
   void collapsedTextNotSupportedWhenClientDeclaresFalse() {
 
     // given
-    var holder = new ClientCapabilitiesHolder();
-    holder.setCapabilities(capabilitiesWithCollapsedText(false));
+    var capabilities = capabilitiesWithCollapsedText(false);
 
     // when
-    var supported = holder.isFoldingRangeCollapsedTextSupported();
+    var supported = FoldingRangeSupplier.isCollapsedTextSupported(Optional.of(capabilities));
 
     // then
     assertThat(supported).isFalse();
@@ -63,10 +63,10 @@ class ClientCapabilitiesHolderTest {
   void collapsedTextNotSupportedWhenCapabilitiesAbsent() {
 
     // given
-    var holder = new ClientCapabilitiesHolder();
+    Optional<ClientCapabilities> capabilities = Optional.empty();
 
     // when
-    var supported = holder.isFoldingRangeCollapsedTextSupported();
+    var supported = FoldingRangeSupplier.isCollapsedTextSupported(capabilities);
 
     // then
     assertThat(supported).isFalse();
@@ -76,13 +76,11 @@ class ClientCapabilitiesHolderTest {
   void collapsedTextNotSupportedWhenFoldingRangeCapabilitiesAbsent() {
 
     // given
-    var holder = new ClientCapabilitiesHolder();
-    var clientCapabilities = new ClientCapabilities();
-    clientCapabilities.setTextDocument(new TextDocumentClientCapabilities());
-    holder.setCapabilities(clientCapabilities);
+    var capabilities = new ClientCapabilities();
+    capabilities.setTextDocument(new TextDocumentClientCapabilities());
 
     // when
-    var supported = holder.isFoldingRangeCollapsedTextSupported();
+    var supported = FoldingRangeSupplier.isCollapsedTextSupported(Optional.of(capabilities));
 
     // then
     assertThat(supported).isFalse();

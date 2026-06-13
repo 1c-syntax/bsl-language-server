@@ -22,9 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeCapabilities;
+import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
@@ -38,4 +43,25 @@ public interface FoldingRangeSupplier {
    * @return Список областей сворачивания
    */
   List<FoldingRange> getFoldingRanges(DocumentContext documentContext);
+
+  /**
+   * Вычислить из сырых клиентских возможностей, поддерживает ли клиент свойство
+   * {@code collapsedText} у областей сворачивания
+   * (см. возможность {@code textDocument.foldingRange.foldingRange.collapsedText}, LSP 3.17).
+   * <p>
+   * Свойство позволяет серверу задавать осмысленный текст-заглушку свёрнутого блока вместо
+   * подстановки клиентом первой строки диапазона. Если клиент не заявил поддержку, сервер
+   * не должен выставлять {@link FoldingRange#setCollapsedText(String)}.
+   *
+   * @param capabilities Заявленные клиентом возможности (могут отсутствовать).
+   * @return {@code true}, если клиент заявил поддержку {@code collapsedText}, иначе {@code false}.
+   */
+  static boolean isCollapsedTextSupported(Optional<ClientCapabilities> capabilities) {
+    return capabilities
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getFoldingRange)
+      .map(FoldingRangeCapabilities::getFoldingRange)
+      .map(FoldingRangeSupportCapabilities::getCollapsedText)
+      .orElse(Boolean.FALSE);
+  }
 }
