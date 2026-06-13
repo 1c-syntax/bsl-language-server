@@ -340,9 +340,11 @@ public final class CompletionProvider {
    * Разрешает отложенную документацию completion item ({@code completionItem/resolve}).
    * <p>
    * Если item пришёл без {@link CompletionItem#getData()} — резолвить нечем, item
-   * возвращается как есть. Иначе по data-ключу восстанавливается тип-владелец и член,
-   * после чего {@code documentation} собирается тем же способом, что был бы при жадной
-   * сборке. Поле {@code data} очищается для экономии трафика.
+   * возвращается как есть. Иначе по data-ключу восстанавливается источник описания:
+   * для глобальной функции — она сама по имени в глобальной области видимости, для
+   * члена типа — тип-владелец и член. После чего {@code documentation} собирается тем
+   * же способом, что был бы при жадной сборке. Поле {@code data} очищается для
+   * экономии трафика.
    *
    * @param unresolved completion item, пришедший от клиента на разрешение.
    * @return тот же item с проставленной {@code documentation} и очищенным {@code data};
@@ -353,13 +355,36 @@ public final class CompletionProvider {
     if (data == null) {
       return unresolved;
     }
-    var ref = new TypeRef(data.getTypeKind(), data.getTypeQualifiedName());
-    typeService.getMembers(ref, data.getFileType(), data.getScriptVariant()).stream()
-      .filter(member -> member.name().equals(data.getMemberName()))
-      .findFirst()
-      .ifPresent(member -> applyDocumentation(unresolved, member, data.getScriptVariant()));
+    var functionName = data.getFunctionName();
+    if (functionName != null) {
+      globalScopeProvider.findFunction(functionName, data.getFileType())
+        .ifPresent(function -> applyDocumentation(unresolved, function, data.getScriptVariant()));
+    } else {
+      resolveMemberDocumentation(unresolved, data);
+    }
     unresolved.setData(null);
     return unresolved;
+  }
+
+  /**
+   * Восстанавливает {@code documentation} члена типа по ключу {@link CompletionData}
+   * dot-варианта (тип-владелец + имя члена). Если ключ типа неполон — ничего не делает.
+   *
+   * @param unresolved completion item, которому проставляется документация.
+   * @param data       ключ восстановления члена типа.
+   */
+  private void resolveMemberDocumentation(CompletionItem unresolved, CompletionData data) {
+    var typeKind = data.getTypeKind();
+    var typeQualifiedName = data.getTypeQualifiedName();
+    var memberName = data.getMemberName();
+    if (typeKind == null || typeQualifiedName == null || memberName == null) {
+      return;
+    }
+    var ref = new TypeRef(typeKind, typeQualifiedName);
+    typeService.getMembers(ref, data.getFileType(), data.getScriptVariant()).stream()
+      .filter(member -> member.name().equals(memberName))
+      .findFirst()
+      .ifPresent(member -> applyDocumentation(unresolved, member, data.getScriptVariant()));
   }
 
   /**
@@ -586,7 +611,7 @@ public final class CompletionProvider {
       }
       var displayName = fn.displayName(scriptVariant);
       if (matches(displayName, prefix)) {
-        var item = toCompletionItem(fn, scriptVariant, target);
+        var item = toCompletionItem(fn, fileType, scriptVariant, target);
         applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
         items.add(item);
       }
@@ -701,9 +726,21 @@ public final class CompletionProvider {
     }
   }
 
-  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant, CompatibilityMode target) {
-    return buildMemberItem(member, null, FileType.BSL,
+  /**
+   * Сборка completion item глобальной функции (no-dot). Метки/виды/детали/вставка строятся
+   * жадно. {@code documentation} тяжела для глобального контекста, поэтому при поддержке
+   * клиентом lazy-resolve она вовсе не строится изначально, а откладывается в
+   * {@code completionItem/resolve}: вместо текста в {@code data} кладётся ключ восстановления
+   * функции по имени (см. {@link CompletionData}). Клиент без resolveSupport получает её сразу.
+   */
+  private CompletionItem toCompletionItem(MemberDescriptor member, FileType fileType,
+                                          Language scriptVariant, CompatibilityMode target) {
+    var item = buildMemberItem(member, documentationResolveSupport,
       CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
+    if (documentationResolveSupport) {
+      item.setData(CompletionData.forFunction(member.name(), fileType, scriptVariant));
+    }
+    return item;
   }
 
   private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members,
@@ -714,8 +751,16 @@ public final class CompletionProvider {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
       var owner = owners.get(member.name());
-      items.add(buildMemberItem(member, owner, fileType,
-        CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target));
+      // documentation откладывается в resolve только когда член резолвим обратно по
+      // owner-типу. Локальные поля (owner == null) резолвить нечем — documentation строится сразу.
+      var deferDocumentation = documentationResolveSupport && owner != null;
+      var item = buildMemberItem(member, deferDocumentation,
+        CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target);
+      if (deferDocumentation) {
+        item.setData(CompletionData.forMember(
+          owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
+      }
+      items.add(item);
     }
     return items;
   }
@@ -734,10 +779,14 @@ public final class CompletionProvider {
    * </ul>
    * Раньше {@code purposeDescription} писалось одновременно в {@code detail} и в
    * {@code documentation} — VS Code показывал его дважды в подсказке.
+   *
+   * @param deferDocumentation если {@code true}, {@code documentation} вовсе не строится:
+   *                           она будет дотянута лениво в {@code completionItem/resolve}
+   *                           (ключ восстановления в {@code data} проставляет вызывающий).
+   *                           Если {@code false} — собирается жадно (прежнее поведение).
    */
   private CompletionItem buildMemberItem(MemberDescriptor member,
-                                         @Nullable TypeRef owner,
-                                         FileType fileType,
+                                         boolean deferDocumentation,
                                          CompletionItemKind methodKind,
                                          CompletionItemKind propertyKind,
                                          Language scriptVariant,
@@ -753,13 +802,9 @@ public final class CompletionProvider {
       applyPropertyDetail(item, member, scriptVariant);
     }
     // documentation тяжела для широких типов (Глобальный контекст, union типов):
-    // если клиент умеет lazy-resolve и член резолвим обратно по owner-типу —
-    // откладываем её в completionItem/resolve, оставляя в ответе лишь data-ключ.
-    // Иначе строим жадно (прежнее поведение).
-    if (documentationResolveSupport && owner != null) {
-      item.setData(new CompletionData(
-        owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
-    } else {
+    // если её откладывают в completionItem/resolve, изначально не строим вовсе
+    // (data-ключ проставит вызывающий). Иначе строим жадно (прежнее поведение).
+    if (!deferDocumentation) {
       applyDocumentation(item, member, scriptVariant);
     }
     markDeprecated(item, member, target);

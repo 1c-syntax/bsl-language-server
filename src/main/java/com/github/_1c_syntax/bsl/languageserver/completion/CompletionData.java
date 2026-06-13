@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 /**
  * DTO для хранения промежуточных данных completion item между его созданием
@@ -41,6 +42,15 @@ import lombok.NoArgsConstructor;
  * <p>
  * Сериализуется клиентом в JSON и приходит обратно как {@code JsonObject}/Map —
  * поля сделаны bean-style (Lombok {@code @Data}) для round-trip через Jackson.
+ * <p>
+ * Поддерживаются два вида ключа восстановления:
+ * <ul>
+ *   <li>член типа (dot-completion): заполнены {@code typeKind}/{@code typeQualifiedName}
+ *       и {@code memberName}, по ним восстанавливается член типа-владельца;</li>
+ *   <li>глобальная функция (no-dot completion): заполнено {@code functionName},
+ *       по нему функция ищется в глобальной области видимости. Поля типа-владельца
+ *       при этом не используются.</li>
+ * </ul>
  */
 @Data
 @NoArgsConstructor
@@ -49,21 +59,28 @@ public class CompletionData {
 
   /**
    * Вид типа-владельца члена (часть идентичности {@link com.github._1c_syntax.bsl.languageserver.types.model.TypeRef}).
+   * {@code null} для варианта глобальной функции.
    */
+  @Nullable
   private TypeKind typeKind;
 
   /**
    * Каноническое полное имя типа-владельца члена (часть идентичности TypeRef).
+   * {@code null} для варианта глобальной функции.
    */
+  @Nullable
   private String typeQualifiedName;
 
   /**
    * Имя члена (метода/свойства), для которого нужно восстановить документацию.
+   * {@code null} для варианта глобальной функции.
    */
+  @Nullable
   private String memberName;
 
   /**
-   * Тип файла-потребителя (BSL/OS) — влияет на набор членов типа.
+   * Тип файла-потребителя (BSL/OS) — влияет на набор членов типа и набор
+   * глобальных функций.
    */
   private FileType fileType;
 
@@ -71,4 +88,38 @@ public class CompletionData {
    * Локаль скрипта (ru/en) для отбора написаний и языка описания.
    */
   private Language scriptVariant;
+
+  /**
+   * Имя глобальной функции, для которой нужно восстановить документацию.
+   * Заполнено только для варианта глобальной функции; для члена типа — {@code null}.
+   */
+  @Nullable
+  private String functionName;
+
+  /**
+   * Создаёт ключ восстановления документации члена типа (dot-completion).
+   *
+   * @param typeKind          вид типа-владельца члена.
+   * @param typeQualifiedName каноническое полное имя типа-владельца.
+   * @param memberName        имя члена (метода/свойства).
+   * @param fileType          тип файла-потребителя (BSL/OS).
+   * @param scriptVariant     локаль скрипта (ru/en).
+   * @return ключ восстановления члена типа.
+   */
+  public static CompletionData forMember(TypeKind typeKind, String typeQualifiedName, String memberName,
+                                         FileType fileType, Language scriptVariant) {
+    return new CompletionData(typeKind, typeQualifiedName, memberName, fileType, scriptVariant, null);
+  }
+
+  /**
+   * Создаёт ключ восстановления документации глобальной функции (no-dot completion).
+   *
+   * @param functionName  имя глобальной функции.
+   * @param fileType      тип файла-потребителя (BSL/OS).
+   * @param scriptVariant локаль скрипта (ru/en).
+   * @return ключ восстановления глобальной функции.
+   */
+  public static CompletionData forFunction(String functionName, FileType fileType, Language scriptVariant) {
+    return new CompletionData(null, null, null, fileType, scriptVariant, functionName);
+  }
 }
