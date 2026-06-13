@@ -109,7 +109,7 @@ public class TypeHierarchyProvider {
       .map(this::toItem)
       .sorted(ITEM_COMPARATOR)
       .toList();
-    return result.isEmpty() ? Collections.emptyList() : result;
+    return result;
   }
 
   /**
@@ -135,7 +135,7 @@ public class TypeHierarchyProvider {
       .map(this::toItem)
       .sorted(ITEM_COMPARATOR)
       .toList();
-    return result.isEmpty() ? Collections.emptyList() : result;
+    return result;
   }
 
   /**
