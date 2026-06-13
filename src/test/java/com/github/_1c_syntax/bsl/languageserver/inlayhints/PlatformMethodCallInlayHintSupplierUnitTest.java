@@ -87,7 +87,7 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
     // when
     var hints = supplier.getInlayHints(documentContext, params);
 
-    // then — L96 return List.of().
+    // then — при отсутствии AST подсказок нет.
     assertThat(hints).isEmpty();
   }
 

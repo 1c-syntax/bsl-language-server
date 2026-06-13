@@ -29,9 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.hover.DescriptionFormatter;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
@@ -39,15 +37,11 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Поставщик подсказок о параметрах вызываемого метода.
@@ -83,58 +77,15 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
       return List.of();
     }
 
-    // Один обход AST документа на все ссылки: сопоставляем каждый вызов с
+    // Один обход AST документа на все ссылки: индекс сопоставляет каждый вызов с
     // диапазоном имени метода (тем же, что хранится в reference.selectionRange()),
     // чтобы дальше резолвить вызов по ссылке за O(1) вместо обхода AST на каждую ссылку.
-    var doCallsByMethodNameRange = collectDoCallsByMethodNameRange(documentContext);
+    var doCallRangeIndex = DoCallRangeIndex.of(documentContext);
 
     var result = new ArrayList<InlayHint>();
     for (var reference : references) {
-      var doCall = doCallsByMethodNameRange.get(rangeKey(reference.selectionRange()));
-      if (doCall != null) {
-        result.addAll(toInlayHints(reference, doCall));
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Строковый ключ карты вызовов по диапазону имени метода.
-   * <p>
-   * Используется вместо {@link Range} из lsp4j, который не реализует
-   * {@link Comparable}: {@link String} реализует {@link Comparable} и не зависит
-   * от деталей {@link Range#hashCode()}, что устраняет риск деградации хэш-карты
-   * при коллизиях ключей.
-   *
-   * @param range диапазон имени метода/типа
-   * @return ключ вида {@code "startLine:startChar:endLine:endChar"}
-   */
-  private static String rangeKey(Range range) {
-    var start = range.getStart();
-    var end = range.getEnd();
-    return start.getLine() + ":" + start.getCharacter() + ":" + end.getLine() + ":" + end.getCharacter();
-  }
-
-  /**
-   * Собирает все {@code doCall}-узлы документа в карту по диапазону имени
-   * вызываемого метода (для конструктора — по диапазону имени типа).
-   * <p>
-   * Этот диапазон совпадает с {@link Reference#selectionRange()} соответствующей
-   * ссылки, что позволяет резолвить вызов по ссылке без повторного обхода AST.
-   *
-   * @param documentContext контекст документа, AST которого обходится
-   * @return карта «ключ диапазона имени метода → узел вызова»; пустая, если вызовов нет
-   */
-  private static Map<String, BSLParser.DoCallContext> collectDoCallsByMethodNameRange(
-    DocumentContext documentContext
-  ) {
-    var ast = documentContext.getAst();
-    var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
-    Map<String, BSLParser.DoCallContext> result = HashMap.newHashMap(doCalls.size());
-    for (var node : doCalls) {
-      var doCall = (BSLParser.DoCallContext) node;
-      methodNameRange(doCall.getParent())
-        .ifPresent(methodNameRange -> result.putIfAbsent(rangeKey(methodNameRange), doCall));
+      doCallRangeIndex.doCallFor(reference)
+        .ifPresent(doCall -> result.addAll(toInlayHints(reference, doCall)));
     }
     return result;
   }
@@ -216,32 +167,5 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
     var markdown = descriptionFormatter.parameterToString(parameter);
     var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
     inlayHint.setTooltip(tooltip);
-  }
-
-
-  /**
-   * Диапазон имени вызываемого метода для родителя {@code doCall}-узла —
-   * именно его {@link ReferenceIndex} хранит в {@link Reference#selectionRange()}.
-   *
-   * @param doCallParent родительский узел вызова (methodCall, globalMethodCall или newExpression)
-   * @return диапазон имени метода/типа либо {@link Optional#empty()},
-   *   если узел не является вызовом метода
-   */
-  private static Optional<Range> methodNameRange(ParserRuleContext doCallParent) {
-    if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
-      var methodName = methodCallContext.methodName();
-      return methodName == null ? Optional.empty() : Optional.of(Ranges.create(methodName));
-    } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-      var methodName = globalMethodCallContext.methodName();
-      return methodName == null ? Optional.empty() : Optional.of(Ranges.create(methodName));
-    } else if (doCallParent instanceof BSLParser.NewExpressionContext newExpressionContext) {
-      var typeName = newExpressionContext.typeName();
-      if (typeName != null && typeName.IDENTIFIER() != null) {
-        return Optional.of(Ranges.create(typeName.IDENTIFIER()));
-      }
-      return Optional.empty();
-    } else {
-      return Optional.empty();
-    }
   }
 }
