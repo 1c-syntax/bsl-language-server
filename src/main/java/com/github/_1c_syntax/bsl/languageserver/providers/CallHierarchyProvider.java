@@ -36,6 +36,7 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -101,12 +103,9 @@ public class CallHierarchyProvider {
     CallHierarchyIncomingCallsParams params
   ) {
 
-    var uri = documentContext.getUri();
     var item = params.getItem();
-    var position = item.getSelectionRange().getStart();
 
-    return referenceResolver.findReference(uri, position)
-      .flatMap(Reference::getSourceDefinedSymbol)
+    return resolveSymbol(documentContext, item)
       .stream()
       .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
@@ -133,10 +132,9 @@ public class CallHierarchyProvider {
     CallHierarchyOutgoingCallsParams params
   ) {
 
-    var uri = documentContext.getUri();
-    var position = params.getItem().getSelectionRange().getStart();
-    return referenceResolver.findReference(uri, position)
-      .flatMap(Reference::getSourceDefinedSymbol)
+    var item = params.getItem();
+
+    return resolveSymbol(documentContext, item)
       .stream()
       .map(referenceIndex::getReferencesFrom)
       .flatMap(Collection::stream)
@@ -151,6 +149,28 @@ public class CallHierarchyProvider {
       .map(entry -> new CallHierarchyOutgoingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
       .sorted((o1, o2) -> callHierarchyItemComparator.compare(o1.getTo(), o2.getTo()))
       .toList();
+  }
+
+  /**
+   * Разрешить символ, соответствующий элементу иерархии вызовов.
+   * <p>
+   * Для элементов-методов символ повторно резолвится по позиции {@code selectionRange.getStart()}
+   * через {@link ReferenceResolver}. Для элемента-модуля ({@link SymbolKind#Module}) символ модуля
+   * не находится по позиции (первый токен тела модуля не является ссылкой), поэтому он берётся
+   * напрямую из символьного дерева документа.
+   *
+   * @param documentContext Контекст документа, которому принадлежит элемент иерархии.
+   * @param item            Элемент иерархии вызовов.
+   * @return Символ, соответствующий элементу, либо пустое значение, если символ не найден.
+   */
+  private Optional<SourceDefinedSymbol> resolveSymbol(DocumentContext documentContext, CallHierarchyItem item) {
+    if (item.getKind() == SymbolKind.Module) {
+      return Optional.of(documentContext.getSymbolTree().getModule());
+    }
+
+    var position = item.getSelectionRange().getStart();
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol);
   }
 
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
