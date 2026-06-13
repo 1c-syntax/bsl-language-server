@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -31,22 +33,34 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.AnnotatedTextEdit;
+import org.eclipse.lsp4j.ChangeAnnotation;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.ResourceOperation;
+import org.eclipse.lsp4j.SnippetTextEdit;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.WorkspaceEditCapabilities;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -65,9 +79,45 @@ public final class RenameProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final Resources resources;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируются на initialize. documentChanges — gate для построения WorkspaceEdit на
+  // documentChanges (List<TextDocumentEdit>) вместо legacy changes-map; changeAnnotationSupport —
+  // gate для аннотирования правок через ChangeAnnotation/AnnotatedTextEdit.
+  private boolean documentChangesSupport;
+  private boolean changeAnnotationSupport;
 
   /**
-   * {@link WorkspaceEdit}
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентские возможности {@code workspace.workspaceEdit.documentChanges} и
+   * {@code workspace.workspaceEdit.changeAnnotationSupport}, влияющие на формат результата
+   * переименования: при их отсутствии результат понижается до legacy changes-map без аннотаций.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    var workspaceEditCapabilities = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getWorkspaceEdit);
+
+    documentChangesSupport = workspaceEditCapabilities
+      .map(WorkspaceEditCapabilities::getDocumentChanges)
+      .orElse(Boolean.FALSE);
+
+    changeAnnotationSupport = workspaceEditCapabilities
+      .map(WorkspaceEditCapabilities::getChangeAnnotationSupport)
+      .isPresent();
+  }
+
+  /**
+   * Построить {@link WorkspaceEdit} с правками переименования символа.
+   * <p>
+   * Если клиент заявил {@code workspace.workspaceEdit.documentChanges}, правки группируются по
+   * документам в {@code documentChanges} ({@link TextDocumentEdit} с версионированным
+   * идентификатором документа); при дополнительной поддержке
+   * {@code workspace.workspaceEdit.changeAnnotationSupport} правки оборачиваются в
+   * {@link AnnotatedTextEdit} и связываются с {@link ChangeAnnotation}, описывающей переименование.
+   * Иначе результат понижается до legacy {@code changes}-map для обратной совместимости.
    *
    * @param documentContext Контекст документа.
    * @param params          Параметры вызова.
@@ -91,7 +141,50 @@ public final class RenameProvider {
         .stream().map(RenameProvider::referenceOf)
     ).collect(Collectors.groupingBy(ref -> ref.uri().toString(), getTexEdits(params)));
 
-    return new WorkspaceEdit(changes);
+    if (!documentChangesSupport) {
+      return new WorkspaceEdit(changes);
+    }
+
+    var oldName = sourceDefinedSymbol.map(SourceDefinedSymbol::getName).orElse(params.getNewName());
+    return buildDocumentChanges(changes, oldName, params.getNewName());
+  }
+
+  private WorkspaceEdit buildDocumentChanges(
+    Map<String, List<TextEdit>> changes,
+    String oldName,
+    String newName
+  ) {
+    var workspaceEdit = new WorkspaceEdit();
+
+    var annotationId = "";
+    if (changeAnnotationSupport && !changes.isEmpty()) {
+      annotationId = UUID.randomUUID().toString();
+      var label = resources.getResourceString(getClass(), "renameAnnotation", oldName, newName);
+      workspaceEdit.setChangeAnnotations(Map.of(annotationId, new ChangeAnnotation(label)));
+    }
+
+    var resolvedAnnotationId = annotationId;
+    List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = changes.entrySet().stream()
+      .map(entry -> {
+        var textDocument = new VersionedTextDocumentIdentifier(entry.getKey(), null);
+        var edits = annotate(entry.getValue(), resolvedAnnotationId);
+        return Either.<TextDocumentEdit, ResourceOperation>forLeft(new TextDocumentEdit(textDocument, edits));
+      })
+      .collect(Collectors.toList());
+
+    workspaceEdit.setDocumentChanges(documentChanges);
+    return workspaceEdit;
+  }
+
+  private static List<Either<TextEdit, SnippetTextEdit>> annotate(List<TextEdit> textEdits, String annotationId) {
+    return textEdits.stream()
+      .map(textEdit -> {
+        TextEdit edit = annotationId.isEmpty()
+          ? textEdit
+          : new AnnotatedTextEdit(textEdit.getRange(), textEdit.getNewText(), annotationId);
+        return Either.<TextEdit, SnippetTextEdit>forLeft(edit);
+      })
+      .collect(Collectors.toList());
   }
 
   private static Reference referenceOf(SourceDefinedSymbol symbol) {
