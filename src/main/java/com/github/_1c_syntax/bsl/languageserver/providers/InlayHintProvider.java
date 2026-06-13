@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure.InlayHintsConfiguration;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
@@ -37,9 +38,14 @@ import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +62,7 @@ public class InlayHintProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder clientHolder;
   private final LanguageServerConfiguration configuration;
+  private final JsonMapper jsonMapper;
 
   /**
    * Получить список inlay hints в документе.
@@ -72,6 +79,68 @@ public class InlayHintProvider {
       .map(supplier -> supplier.getInlayHints(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Разрешить хинт ({@code inlayHint/resolve}) — дорассчитать его «тяжёлые»
+   * поля (tooltip и т.п.).
+   * <p>
+   * По идентификатору сапплаера из {@link InlayHint#getData()} находит
+   * сапплаер-владельца и делегирует ему {@link InlayHintSupplier#resolve}.
+   * Хинт без данных или от неизвестного сапплаера возвращается без изменений.
+   * После разрешения поле {@link InlayHint#getData()} очищается для экономии
+   * трафика.
+   *
+   * @param documentContext Контекст документа, к которому относится хинт.
+   * @param unresolved      Неразрешённый хинт.
+   * @return Разрешённый хинт.
+   */
+  public InlayHint resolveInlayHint(DocumentContext documentContext, InlayHint unresolved) {
+    var supplierId = extractSupplierId(unresolved);
+    if (supplierId == null) {
+      return unresolved;
+    }
+
+    var resolved = allInlayHintSuppliers.stream()
+      .collect(Collectors.toMap(InlayHintSupplier::getId, Function.identity()))
+      .getOrDefault(supplierId, null);
+
+    if (resolved == null) {
+      return unresolved;
+    }
+
+    var result = resolved.resolve(documentContext, unresolved);
+    result.setData(null);
+    return result;
+  }
+
+  /**
+   * Извлечь URI документа из данных неразрешённого хинта — для поиска контекста
+   * документа перед резолвом.
+   *
+   * @param inlayHint Неразрешённый хинт.
+   * @return URI документа из {@link InlayHint#getData()}; {@code empty}, если данных нет.
+   */
+  public Optional<URI> extractUri(InlayHint inlayHint) {
+    var uri = dataField(inlayHint, "uri");
+    return uri == null ? Optional.empty() : Optional.of(Absolute.uri(uri));
+  }
+
+  private String extractSupplierId(InlayHint inlayHint) {
+    return dataField(inlayHint, "supplierId");
+  }
+
+  private String dataField(InlayHint inlayHint, String field) {
+    var rawData = inlayHint.getData();
+    if (rawData == null) {
+      return null;
+    }
+    // Клиент присылает data назад как JSON-объект (round-trip); in-process
+    // (тесты, single-jvm клиент) — как исходный объект сапплаера. Конвертируем
+    // через JsonMapper в карту единообразно для обоих случаев.
+    Map<String, Object> dataMap = jsonMapper.convertValue(rawData, Map.class);
+    var value = dataMap.get(field);
+    return value == null ? null : value.toString();
   }
 
   /**

@@ -514,7 +514,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static InlayHintRegistrationOptions getInlayHintProvider() {
     var inlayHintOptions = new InlayHintRegistrationOptions();
-    inlayHintOptions.setResolveProvider(Boolean.FALSE);
+    inlayHintOptions.setResolveProvider(Boolean.TRUE);
     inlayHintOptions.setWorkDoneProgress(Boolean.FALSE);
     return inlayHintOptions;
   }

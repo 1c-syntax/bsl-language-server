@@ -59,4 +59,21 @@ public interface InlayHintSupplier {
    * @return Список inlay hints в документе.
    */
   List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params);
+
+  /**
+   * Дорассчитать «тяжёлые» поля хинта (tooltip и т.п.) при обработке
+   * {@code inlayHint/resolve}.
+   * <p>
+   * Базовая реализация возвращает хинт без изменений: сапплаеры, не
+   * откладывающие построение полей, ничего не делают на резолве. Сапплаеры,
+   * кладущие данные в {@link InlayHint#getData()} при жадном расчёте, должны
+   * переопределить метод и восстановить отложенные поля по этим данным.
+   *
+   * @param documentContext Контекст документа, к которому относится хинт.
+   * @param inlayHint       Неразрешённый хинт (с заполненным {@link InlayHint#getData()}).
+   * @return Разрешённый хинт.
+   */
+  default InlayHint resolve(DocumentContext documentContext, InlayHint inlayHint) {
+    return inlayHint;
+  }
 }

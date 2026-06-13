@@ -632,6 +632,25 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
+  public CompletableFuture<InlayHint> resolveInlayHint(InlayHint unresolved) {
+    var maybeUri = inlayHintProvider.extractUri(unresolved);
+    if (maybeUri.isEmpty()) {
+      // Хинт без данных — резолвить нечем, возвращаем как есть.
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(maybeUri.get().toString());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> inlayHintProvider.resolveInlayHint(documentContext, unresolved)
+    );
+  }
+
+  @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     var textDocumentItem = params.getTextDocument();
     var uri = Absolute.uri(textDocumentItem.getUri());

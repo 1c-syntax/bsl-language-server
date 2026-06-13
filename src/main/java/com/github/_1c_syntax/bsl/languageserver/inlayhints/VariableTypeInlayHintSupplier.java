@@ -33,9 +33,12 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Objects;
@@ -55,6 +58,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
 
   private final TypeService typeService;
   private final LanguageServerConfiguration configuration;
+  private final JsonMapper jsonMapper;
 
   /**
    * Получение подсказок о выведенном типе переменных в присваиваниях.
@@ -100,7 +104,51 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     inlayHint.setLabel(": " + typeName);
     inlayHint.setPosition(namePosition);
     inlayHint.setPaddingRight(Boolean.TRUE);
+    // Tooltip (полное описание типа) строится лениво на inlayHint/resolve —
+    // в data кладём ссылку на тип, остальное (label/position/kind) жадно.
+    inlayHint.setData(new VariableTypeInlayHintData(getId(), documentContext.getUri(), inferredType.qualifiedName()));
     return inlayHint;
+  }
+
+  /**
+   * Дорасчёт tooltip хинта типа по ленивым данным {@link VariableTypeInlayHintData}.
+   * <p>
+   * Восстанавливает {@link TypeRef} по сохранённому имени и кладёт в tooltip
+   * полное описание типа (markdown). Если данных нет либо тип не восстановлен —
+   * хинт возвращается без изменений.
+   *
+   * @param documentContext Контекст документа, к которому относится хинт.
+   * @param inlayHint       Неразрешённый хинт с заполненным {@link InlayHint#getData()}.
+   * @return Разрешённый хинт с заполненным tooltip.
+   */
+  @Override
+  public InlayHint resolve(DocumentContext documentContext, InlayHint inlayHint) {
+    var data = extractData(inlayHint);
+    if (data == null) {
+      return inlayHint;
+    }
+
+    var typeRef = typeService.resolve(data.typeName(), documentContext.getFileType())
+      .orElse(new TypeRef(TypeRef.UNKNOWN.kind(), data.typeName()));
+
+    var displayName = typeService.displayName(typeRef, configuration.getLanguage());
+    var description = typeService.getDescription(typeRef, configuration.getLanguage(), documentContext.getFileType());
+
+    var markdown = description.isBlank() ? displayName : displayName + "\n\n" + description;
+    inlayHint.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+    return inlayHint;
+  }
+
+  private VariableTypeInlayHintData extractData(InlayHint inlayHint) {
+    var rawData = inlayHint.getData();
+    if (rawData == null) {
+      return null;
+    }
+    if (rawData instanceof VariableTypeInlayHintData data) {
+      return data;
+    }
+    // Клиент присылает data назад как JSON-объект — восстанавливаем round-trip'ом.
+    return jsonMapper.convertValue(rawData, VariableTypeInlayHintData.class);
   }
 
   /**
