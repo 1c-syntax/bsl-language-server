@@ -203,6 +203,33 @@ class EventHandlerInvalidSignatureDiagnosticTest
   }
 
   @Test
+  void quickFixHandlesDefaultValueWithNestedParens() {
+    // Параметр со значением по умолчанию, содержащим скобки: matchingRparenIndex
+    // должен учесть баланс LPAREN/RPAREN, а не остановиться на первой ).
+    var contract = MemberDescriptor.event("ПриЗаписи", "",
+      List.of(new SignatureDescriptor(List.of(
+        new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
+          TypeSet.EMPTY, false, BilingualString.EMPTY, "")
+      ), TypeSet.EMPTY, "")));
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПриЗаписи(Отказ, Лишний = Новый Структура("К","З"))
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    Assertions.assertThat(diagnostics).hasSize(1);
+
+    var fixes = getQuickFixes(diagnostics.get(0), documentContext);
+    Assertions.assertThat(fixes).hasSize(1);
+    var edit = fixes.get(0).getEdit().getChanges()
+      .get(documentContext.getUri().toString()).get(0);
+    Assertions.assertThat(edit.getNewText()).isEqualTo("Отказ");
+  }
+
+  @Test
   void quickFixDoesNothingForDiagnosticsOutsideMethod() {
     // Диагностика с произвольным range вне метода — quickfix не должен ничего
     // создавать. Используем существующую диагностику и подменяем range.
