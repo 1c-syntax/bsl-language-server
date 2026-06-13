@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.CodeAction;
@@ -69,21 +70,21 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * ({@code ОбработчикиСобытийФормы}, {@code ОбработчикиСобытийЭлементов*}),
    * проверяем по префиксу.
    */
-  private static final String OBJECT_TARGET_REGION = "ОбработчикиСобытий";
-  private static final String FORM_TARGET_REGION = "ОбработчикиСобытийФормы";
+  private static final String OBJECT_TARGET_REGION = Keywords.EVENT_HANDLERS_REGION.getRu();
+  private static final String FORM_TARGET_REGION = Keywords.FORM_EVENT_HANDLERS_REGION.getRu();
 
   private static final Set<String> OBJECT_EVENT_REGIONS = Set.of(
-    OBJECT_TARGET_REGION,
-    "EventHandlers"
+    Keywords.EVENT_HANDLERS_REGION.getRu(),
+    Keywords.EVENT_HANDLERS_REGION.getEn()
   );
 
   private static final Set<String> FORM_EVENT_REGION_PREFIXES = Set.of(
-    FORM_TARGET_REGION,
-    "ОбработчикиСобытийЭлементовШапкиФормы",
-    "ОбработчикиСобытийЭлементовТаблицыФормы",
-    "FormEventHandlers",
-    "FormHeaderItemsEventHandlers",
-    "FormTableItemsEventHandlers"
+    Keywords.FORM_EVENT_HANDLERS_REGION.getRu(),
+    Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getRu(),
+    Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getRu(),
+    Keywords.FORM_EVENT_HANDLERS_REGION.getEn(),
+    Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn(),
+    Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getEn()
   );
 
   private final EventContractsIndex eventContractsIndex;

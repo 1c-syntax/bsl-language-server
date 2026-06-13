@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import lombok.RequiredArgsConstructor;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -51,6 +52,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.UNUSED
   }
 )
+@RequiredArgsConstructor
 public class UnusedLocalMethodDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
@@ -85,14 +87,6 @@ public class UnusedLocalMethodDiagnostic extends AbstractDiagnostic {
     defaultValue = "" + CHECK_OBJECT_MODULE
   )
   private boolean checkObjectModule = CHECK_OBJECT_MODULE;
-
-  public UnusedLocalMethodDiagnostic(ReferenceIndex referenceIndex,
-                                     EventContractsIndex eventContractsIndex,
-                                     BslContextHolder bslContextHolder) {
-    this.referenceIndex = referenceIndex;
-    this.eventContractsIndex = eventContractsIndex;
-    this.bslContextHolder = bslContextHolder;
-  }
 
   @Override
   public void configure(Map<String, Object> configuration) {

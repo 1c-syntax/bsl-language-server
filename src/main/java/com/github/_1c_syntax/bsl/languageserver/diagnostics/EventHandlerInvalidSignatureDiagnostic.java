@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -151,18 +152,19 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
    * позиции, из контракта — для добавляемых) и возвращает {@link TextEdit}
    * с подменой блока {@code (...)} в сигнатуре метода.
    */
-  private static Optional<TextEdit> buildSignatureFix(DocumentContext documentContext,
-                                                      MethodSymbol method,
-                                                      MemberDescriptor contract) {
+  private Optional<TextEdit> buildSignatureFix(DocumentContext documentContext,
+                                                MethodSymbol method,
+                                                MemberDescriptor contract) {
     var contractParams = contract.signatures().get(0).parameters();
     var methodParams = method.getParameters();
     var targetSize = contractParams.size();
+    var scriptLanguage = documentContext.getScriptVariantLanguage();
     var names = new ArrayList<String>(targetSize);
     for (var i = 0; i < targetSize; i++) {
       if (i < methodParams.size() && !methodParams.get(i).getName().isBlank()) {
         names.add(methodParams.get(i).getName());
       } else {
-        names.add(pickParamName(contractParams.get(i), i));
+        names.add(pickParamName(contractParams.get(i), i, scriptLanguage));
       }
     }
     var replacement = String.join(", ", names);
@@ -170,16 +172,17 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
       .map(range -> new TextEdit(range, replacement));
   }
 
-  private static String pickParamName(ParameterDescriptor descriptor, int index) {
-    var ru = descriptor.bilingualName().ru();
-    if (!ru.isBlank()) {
-      return ru;
+  private String pickParamName(ParameterDescriptor descriptor, int index, Language language) {
+    var preferEn = language == Language.EN;
+    var first = preferEn ? descriptor.bilingualName().en() : descriptor.bilingualName().ru();
+    if (!first.isBlank()) {
+      return first;
     }
-    var en = descriptor.bilingualName().en();
-    if (!en.isBlank()) {
-      return en;
+    var second = preferEn ? descriptor.bilingualName().ru() : descriptor.bilingualName().en();
+    if (!second.isBlank()) {
+      return second;
     }
-    return "Параметр" + (index + 1);
+    return info.getResourceString("parameterFallbackName") + (index + 1);
   }
 
   /**

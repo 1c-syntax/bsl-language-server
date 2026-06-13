@@ -327,24 +327,12 @@ public class EventPublisherAspect {
    * ServerContext (глобальные события вроде Initialize, LSC).
    */
   private static @Nullable ServerContext extractServerContext(Object event) {
-    var fromPayload = extractFromPayloadEvent(event);
-    if (fromPayload != null) {
-      return fromPayload;
-    }
     var fromWorkspace = extractFromWorkspaceEvent(event);
     if (fromWorkspace != null) {
       return fromWorkspace;
     }
     if (event instanceof ApplicationEvent appEvent) {
       return extractFromApplicationEventSource(appEvent.getSource());
-    }
-    return null;
-  }
-
-  /** POJO-события с ServerContext в виде record-компонента. */
-  private static @Nullable ServerContext extractFromPayloadEvent(Object event) {
-    if (event instanceof ConfigurationTypesRegisteredEvent(ServerContext sc)) {
-      return sc;
     }
     return null;
   }

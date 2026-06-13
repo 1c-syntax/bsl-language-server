@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.events;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import org.springframework.context.ApplicationEvent;
+
+import java.io.Serial;
 
 /**
  * Публикуется однократно когда {@code ConfigurationTypesProvider} успешно
@@ -37,9 +40,18 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
  * </ul>
  * Отличается от {@code ServerContextPopulatedEvent}, который публикуется по
  * завершении полного обхода файлов workspace (cross-document готовность).
- * <p>
- * Не наследуется от {@code ApplicationEvent} намеренно — Spring 4.2+ умеет
- * публиковать любой POJO как событие через {@code publishEvent(Object)}.
  */
-public record ConfigurationTypesRegisteredEvent(ServerContext serverContext) {
+public class ConfigurationTypesRegisteredEvent extends ApplicationEvent {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
+  public ConfigurationTypesRegisteredEvent(ServerContext source) {
+    super(source);
+  }
+
+  @Override
+  public ServerContext getSource() {
+    return (ServerContext) super.getSource();
+  }
 }

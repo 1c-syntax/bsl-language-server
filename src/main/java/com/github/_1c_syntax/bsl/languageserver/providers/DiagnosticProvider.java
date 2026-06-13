@@ -173,7 +173,7 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
-    requestRefreshIfSupported(event.serverContext(), true);
+    requestRefreshIfSupported(event.getSource(), true);
   }
 
   private void requestRefreshIfSupported() {

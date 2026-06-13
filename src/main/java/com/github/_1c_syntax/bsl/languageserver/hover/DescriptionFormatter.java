@@ -158,7 +158,7 @@ public class DescriptionFormatter {
     var line = PARAMETER_TEMPLATE.formatted(name, types);
     var description = parameter.bilingualDescription().ru();
     if (!description.isBlank()) {
-      line = line + " — " + description;
+      line = line + " - " + description;
     }
     return line;
   }
