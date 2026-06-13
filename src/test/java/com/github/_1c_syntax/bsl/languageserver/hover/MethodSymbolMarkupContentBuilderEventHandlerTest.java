@@ -148,6 +148,64 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
     assertThat(content).doesNotContain("Обработчик события платформы");
   }
 
+  @Test
+  void hoverWithEmptySignaturesShowsNoParametersSection() {
+    // Контракт без signatures — секция параметров не выводится (ветка
+    // signatures.isEmpty() в getParametersSection(MemberDescriptor)).
+    var contract = MemberDescriptor.event(
+      "ПриЗаписи",
+      "Возникает при записи.",
+      List.of()
+    );
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписи").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .contains("Возникает при записи.")
+      .doesNotContain("**Параметры:**");
+  }
+
+  @Test
+  void hoverFallsBackToEnNameWhenRuBlank() {
+    // У параметра ru-имя пустое — должно использоваться en (ветка name.isBlank()
+    // в eventParameterToString).
+    var anonymous = new ParameterDescriptor(
+      BilingualString.of("", "Cancel"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")),
+      false,
+      BilingualString.EMPTY,
+      "");
+    var contract = MemberDescriptor.event(
+      "Handler",
+      "",
+      List.of(new SignatureDescriptor(List.of(anonymous), TypeSet.EMPTY, ""))
+    );
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура Handler(Cancel)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("Handler").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .contains("Cancel")
+      .contains("Булево");
+  }
+
   private Reference referenceTo(DocumentContext documentContext, MethodSymbol method) {
     var loc = new Location(documentContext.getUri().toString(), method.getSubNameRange());
     return Reference.of(documentContext.getSymbolTree().getModule(),

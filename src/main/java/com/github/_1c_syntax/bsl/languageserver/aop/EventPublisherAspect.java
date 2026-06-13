@@ -327,23 +327,30 @@ public class EventPublisherAspect {
    * ServerContext (глобальные события вроде Initialize, LSC).
    */
   private static @Nullable ServerContext extractServerContext(Object event) {
-    if (event instanceof ConfigurationTypesRegisteredEvent ctr) {
-      return ctr.serverContext();
+    var fromPayload = extractFromPayloadEvent(event);
+    if (fromPayload != null) {
+      return fromPayload;
     }
-    if (!(event instanceof ApplicationEvent appEvent)) {
-      return null;
+    var fromWorkspace = extractFromWorkspaceEvent(event);
+    if (fromWorkspace != null) {
+      return fromWorkspace;
     }
-    // События с source = ServerContext (DocumentAdded/Removed/Closed, Populated):
-    // ловим через instanceof ниже.
-    var src = appEvent.getSource();
-    if (src instanceof DocumentContext documentContext) {
-      return documentContext.getServerContext();
+    if (event instanceof ApplicationEvent appEvent) {
+      return extractFromApplicationEventSource(appEvent.getSource());
     }
-    if (src instanceof ServerContext serverContext) {
-      return serverContext;
+    return null;
+  }
+
+  /** POJO-события с ServerContext в виде record-компонента. */
+  private static @Nullable ServerContext extractFromPayloadEvent(Object event) {
+    if (event instanceof ConfigurationTypesRegisteredEvent(ServerContext sc)) {
+      return sc;
     }
-    // События workspace-жизненного цикла: source = ServerContextProvider, но они
-    // несут ServerContext в отдельном поле.
+    return null;
+  }
+
+  /** События workspace-жизненного цикла: source = ServerContextProvider, ServerContext в поле. */
+  private static @Nullable ServerContext extractFromWorkspaceEvent(Object event) {
     if (event instanceof WorkspaceAddedEvent addedWs) {
       return addedWs.getServerContext();
     }
@@ -352,6 +359,17 @@ public class EventPublisherAspect {
     }
     if (event instanceof OScriptLibraryIndexedEvent indexed) {
       return indexed.getServerContext();
+    }
+    return null;
+  }
+
+  /** События с source = ServerContext или DocumentContext (Populated, DocumentAdded/Removed/Closed). */
+  private static @Nullable ServerContext extractFromApplicationEventSource(Object src) {
+    if (src instanceof DocumentContext documentContext) {
+      return documentContext.getServerContext();
+    }
+    if (src instanceof ServerContext serverContext) {
+      return serverContext;
     }
     return null;
   }
