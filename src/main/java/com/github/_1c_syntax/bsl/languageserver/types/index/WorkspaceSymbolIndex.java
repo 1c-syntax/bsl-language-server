@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -61,7 +60,7 @@ import java.util.concurrent.ConcurrentMap;
  * собираются один раз на событии {@link DocumentContextContentChangedEvent} в лёгкие
  * неизменяемые записи {@link Entry} (имя, его lowercase-форма, {@link SymbolKind}, диапазон,
  * URI, теги и готовое имя контейнера). Запрос обслуживается из индекса с ранжированием по
- * релевантности и ограничением выдачи top-N через bounded priority queue размером {@code limit}.
+ * релевантности; выдача возвращается целиком, без усечения.
  * <p>
  * Для быстрого первого отсева записи разложены по корзинам по первой букве lowercase-имени
  * ({@code charBuckets}); записи с пустым именем хранятся отдельно ({@code emptyNameBucket}).
@@ -78,11 +77,6 @@ import java.util.concurrent.ConcurrentMap;
 @Component
 @WorkspaceScope
 public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableIndex {
-
-  /**
-   * Жёсткий потолок размера выдачи поиска по умолчанию.
-   */
-  public static final int MAX_RESULTS = 1000;
 
   /**
    * Частота проверки отмены запроса (раз в N просмотренных записей).
@@ -169,39 +163,33 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Найти символы рабочей области по запросу с ранжированием и ограничением выдачи.
+   * Найти символы рабочей области по запросу с ранжированием по релевантности.
    * <p>
    * Сопоставление регистронезависимое. Скоринг (меньше — релевантнее): точное совпадение,
    * затем совпадение по префиксу, затем непрерывная подстрока, затем подпоследовательность;
    * совпадения по подпоследовательности дополнительно штрафуются позицией первого символа.
    * При равном скоре раньше идёт более короткое имя, затем — более ранняя позиция в документе.
-   * Несовпавшие записи отбрасываются. Пустой запрос возвращает первые {@code limit} записей.
+   * Несовпавшие записи отбрасываются. Выдача возвращается целиком, без усечения: пустой запрос
+   * отдаёт все записи индекса, непустой — все совпадения, отсортированные по релевантности.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
    *
    * @param query         строка запроса пользователя; {@code null} трактуется как пустая строка
-   * @param limit         максимальный размер выдачи; не более {@link #MAX_RESULTS}
    * @param cancelChecker проверяющий отмену запроса
-   * @return ранжированный список найденных записей, не длиннее {@code limit}
+   * @return полный ранжированный список найденных записей
    */
-  public List<Entry> search(String query, int limit, CancelChecker cancelChecker) {
+  public List<Entry> search(String query, CancelChecker cancelChecker) {
     cancelChecker.checkCanceled();
-
-    var effectiveLimit = Math.min(Math.max(limit, 0), MAX_RESULTS);
-    if (effectiveLimit == 0) {
-      return List.of();
-    }
 
     var normalizedQuery = query == null ? "" : query;
     var lowerQuery = normalizedQuery.toLowerCase(Locale.ENGLISH);
 
     if (lowerQuery.isEmpty()) {
-      return collectFirst(effectiveLimit, cancelChecker);
+      return collectAll(cancelChecker);
     }
 
-    // top-N через bounded max-heap: на вершине — худший из удержанных кандидатов.
-    var heap = new PriorityQueue<Scored>(Comparator.reverseOrder());
+    var matches = new ArrayList<Scored>();
     var seen = 0;
 
     for (var bucket : charBuckets.values()) {
@@ -213,46 +201,32 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
         if (score < 0) {
           continue;
         }
-        offer(heap, new Scored(score, entry), effectiveLimit);
+        matches.add(new Scored(score, entry));
       }
     }
 
-    var ordered = new ArrayList<>(heap);
-    ordered.sort(Comparator.naturalOrder());
-    return ordered.stream().map(Scored::entry).toList();
+    matches.sort(Comparator.naturalOrder());
+    return matches.stream().map(Scored::entry).toList();
   }
 
   /**
-   * Собрать первые {@code limit} записей в детерминированном порядке (для пустого запроса).
+   * Собрать все записи индекса в детерминированном порядке (для пустого запроса).
    *
-   * @param limit         максимальный размер выдачи
    * @param cancelChecker проверяющий отмену запроса
-   * @return до {@code limit} записей
+   * @return все записи индекса
    */
-  private List<Entry> collectFirst(int limit, CancelChecker cancelChecker) {
-    var result = new ArrayList<Entry>(Math.min(limit, MAX_RESULTS));
+  private List<Entry> collectAll(CancelChecker cancelChecker) {
+    var result = new ArrayList<Entry>();
     var seen = 0;
     for (var bucket : charBuckets.values()) {
       for (var entry : bucket) {
         if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
           cancelChecker.checkCanceled();
         }
-        if (result.size() >= limit) {
-          return result;
-        }
         result.add(entry);
       }
     }
     return result;
-  }
-
-  private static void offer(PriorityQueue<Scored> heap, Scored candidate, int limit) {
-    if (heap.size() < limit) {
-      heap.offer(candidate);
-    } else if (candidate.compareTo(heap.peek()) < 0) {
-      heap.poll();
-      heap.offer(candidate);
-    }
   }
 
   private void index(DocumentContext documentContext) {
@@ -408,8 +382,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Кандидат поиска со своим скором.
    * <p>
    * Естественный порядок (от лучшего к худшему): меньший скор, затем более короткое имя,
-   * затем более ранняя позиция в документе. Используется как для bounded max-heap (через
-   * {@code reverseOrder}), так и для финальной сортировки выдачи.
+   * затем более ранняя позиция в документе. Используется для финальной сортировки выдачи.
    *
    * @param score скор совпадения (меньше — релевантнее)
    * @param entry запись индекса

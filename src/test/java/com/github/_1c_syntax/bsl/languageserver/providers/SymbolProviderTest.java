@@ -48,7 +48,6 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -163,7 +162,7 @@ class SymbolProviderTest {
   void getSymbolsEmptyQueryReturnsAllSymbols() {
 
     // given
-    // Пустой запрос трактуется как «все символы» (до лимита индекса).
+    // Пустой запрос трактуется как «все символы»: индекс возвращает всю выдачу без усечения.
     var params = new WorkspaceSymbolParams("");
 
     // when
@@ -211,7 +210,7 @@ class SymbolProviderTest {
     );
 
     var index = mock(WorkspaceSymbolIndex.class);
-    when(index.search(eq("Метод("), anyInt(), any())).thenReturn(List.of(entry));
+    when(index.search(eq("Метод("), any())).thenReturn(List.of(entry));
 
     var provider = new SymbolProvider(index);
     var params = new WorkspaceSymbolParams("Метод(");

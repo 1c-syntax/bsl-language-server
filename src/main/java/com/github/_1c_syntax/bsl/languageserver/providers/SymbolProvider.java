@@ -38,7 +38,7 @@ import java.util.Optional;
  * <p>
  * Обрабатывает запросы {@code workspace/symbol}, делегируя поиск инкрементальному
  * {@link WorkspaceSymbolIndex}: индекс хранит уже подготовленные записи символов и
- * возвращает ранжированный top-N, поэтому провайдер лишь маппит записи в
+ * возвращает полную ранжированную выдачу, поэтому провайдер лишь маппит записи в
  * {@link WorkspaceSymbol} без обхода всех документов.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_symbol">Workspace Symbols Request specification</a>
@@ -52,21 +52,21 @@ public class SymbolProvider {
   /**
    * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} с поддержкой отмены.
    * <p>
-   * Поиск делегируется {@link WorkspaceSymbolIndex#search(String, int, CancelChecker)}: совпадения
+   * Поиск делегируется {@link WorkspaceSymbolIndex#search(String, CancelChecker)}: совпадения
    * ранжируются по релевантности (точное совпадение, префикс, подстрока, подпоследовательность),
-   * а выдача усекается по скору до {@link WorkspaceSymbolIndex#MAX_RESULTS} — наиболее релевантные
-   * символы остаются сверху. Отмена проверяется индексом периодически в ходе поиска: если клиент
-   * отменил запрос, поиск прерывается исключением {@link java.util.concurrent.CancellationException}.
+   * наиболее релевантные символы остаются сверху, выдача возвращается целиком без усечения. Отмена
+   * проверяется индексом периодически в ходе поиска: если клиент отменил запрос, поиск прерывается
+   * исключением {@link java.util.concurrent.CancellationException}.
    *
    * @param params        Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса
    * @param cancelChecker Проверяющий отмену запроса
-   * @return Ранжированный список найденных символов рабочей области, не длиннее {@link WorkspaceSymbolIndex#MAX_RESULTS}
+   * @return Полный ранжированный список найденных символов рабочей области
    */
   public List<? extends WorkspaceSymbol> getSymbols(WorkspaceSymbolParams params, CancelChecker cancelChecker) {
     var queryString = Optional.ofNullable(params.getQuery())
       .orElse("");
 
-    return workspaceSymbolIndex.search(queryString, WorkspaceSymbolIndex.MAX_RESULTS, cancelChecker).stream()
+    return workspaceSymbolIndex.search(queryString, cancelChecker).stream()
       .map(SymbolProvider::createWorkspaceSymbol)
       .toList();
   }

@@ -60,11 +60,11 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
 
     // then — метод и модульная переменная попали в индекс
-    var methods = index.search("Тест", 10, NO_CANCEL);
+    var methods = index.search("Тест", NO_CANCEL);
     assertThat(methods)
       .anyMatch(entry -> entry.name().equals("Тест"));
 
-    var variables = index.search("МодульнаяПеременная", 10, NO_CANCEL);
+    var variables = index.search("МодульнаяПеременная", NO_CANCEL);
     assertThat(variables)
       .anyMatch(entry -> entry.name().equals("МодульнаяПеременная"));
   }
@@ -81,11 +81,11 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
 
     // then — непрерывная подстрока
-    assertThat(index.search("Заполнения", 10, NO_CANCEL))
+    assertThat(index.search("Заполнения", NO_CANCEL))
       .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
 
     // then — подпоследовательность (буквы по порядку, но не подряд)
-    assertThat(index.search("ОбрЗап", 10, NO_CANCEL))
+    assertThat(index.search("ОбрЗап", NO_CANCEL))
       .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
   }
 
@@ -103,7 +103,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
     // when
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("Тест", 10, NO_CANCEL);
+    var result = index.search("Тест", NO_CANCEL);
 
     // then — точное совпадение выше префикса, префикс выше внутренней подстроки
     var names = result.stream().map(WorkspaceSymbolIndex.Entry::name).toList();
@@ -112,25 +112,28 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void limitTruncatesByScoreKeepingMostRelevant() {
-    // given — точное совпадение и менее релевантная подпоследовательность
+  void returnsAllMatchesRankedByScore() {
+    // given — точное совпадение, совпадение по префиксу и подпоследовательность
     var documentContext = TestUtils.getDocumentContext("""
-      Процедура Альфа()
+      Процедура Дата()
       КонецПроцедуры
-      Процедура АкварельЛаванда()
+      Процедура ДатаНачала()
+      КонецПроцедуры
+      Процедура ДобавитьАтрибут()
       КонецПроцедуры
       """);
 
-    // when — лимит 1 должен оставить только самый релевантный (точное совпадение)
+    // when — все совпадения возвращаются без усечения, по убыванию релевантности
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("Альфа", 1, NO_CANCEL);
+    var result = index.search("Дата", NO_CANCEL);
 
-    // then
-    assertThat(result)
-      .hasSize(1)
-      .first()
-      .extracting(WorkspaceSymbolIndex.Entry::name)
-      .isEqualTo("Альфа");
+    // then — все три совпадения присутствуют, ранжированы: точное, затем префикс,
+    // затем подпоследовательность (порядок проверяется как подпоследовательность выдачи,
+    // т.к. индекс — общий бин на класс и может содержать символы соседних тестов)
+    var names = result.stream().map(WorkspaceSymbolIndex.Entry::name).toList();
+    assertThat(names)
+      .contains("Дата", "ДатаНачала", "ДобавитьАтрибут")
+      .containsSubsequence("Дата", "ДатаНачала", "ДобавитьАтрибут");
   }
 
   @Test
@@ -141,18 +144,18 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
       КонецПроцедуры
       """);
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    assertThat(index.search("УникальныйСимвол", 10, NO_CANCEL)).isNotEmpty();
+    assertThat(index.search("УникальныйСимвол", NO_CANCEL)).isNotEmpty();
 
     // when — событие жизненного цикла чистит индекс по URI
     eventPublisher.publishEvent(
       new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
 
     // then
-    assertThat(index.search("УникальныйСимвол", 10, NO_CANCEL)).isEmpty();
+    assertThat(index.search("УникальныйСимвол", NO_CANCEL)).isEmpty();
   }
 
   @Test
-  void emptyQueryReturnsUpToLimit() {
+  void emptyQueryReturnsAllIndexedSymbols() {
     // given
     var documentContext = TestUtils.getDocumentContext("""
       Процедура Первая()
@@ -163,12 +166,14 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
       КонецПроцедуры
       """);
 
-    // when
+    // when — пустой запрос возвращает все проиндексированные символы, без усечения
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("", 2, NO_CANCEL);
+    var result = index.search("", NO_CANCEL);
 
-    // then
-    assertThat(result).hasSize(2);
+    // then — символы этого документа присутствуют в полной выдаче пустого запроса
+    assertThat(result)
+      .extracting(WorkspaceSymbolIndex.Entry::name)
+      .contains("Первая", "Вторая", "Третья");
   }
 
   @Test
@@ -186,7 +191,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     };
 
     // when / then
-    assertThatThrownBy(() -> index.search("Символ", 10, cancelChecker))
+    assertThatThrownBy(() -> index.search("Символ", cancelChecker))
       .isInstanceOf(CancellationException.class);
   }
 }
