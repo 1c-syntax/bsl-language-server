@@ -201,6 +201,55 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
     assertThat(subtypes).isEmpty();
   }
 
+  @Test
+  void prepareReturnsInterfaceKindForInterface() {
+    // given — Плавающее объявлен через &Интерфейс.
+    var document = document("Плавающее.os");
+
+    // when
+    var items = provider.prepareTypeHierarchy(document, prepareParams(document));
+
+    // then — элемент иерархии помечен как интерфейс.
+    assertThat(items)
+      .hasSize(1)
+      .allMatch(item -> item.getName().equals("Плавающее"))
+      .allMatch(item -> item.getKind() == SymbolKind.Interface);
+  }
+
+  @Test
+  void supertypesMarkImplementedInterfaceWithInterfaceKind() {
+    // given — Собака реализует интерфейс Плавающее (&Реализует).
+    var document = document("Собака.os");
+
+    // when
+    var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
+
+    // then — интерфейс помечен как Interface, родитель-класс — как Class.
+    assertThat(supertypes)
+      .filteredOn(item -> item.getName().equals("Плавающее"))
+      .singleElement()
+      .matches(item -> item.getKind() == SymbolKind.Interface);
+    assertThat(supertypes)
+      .filteredOn(item -> item.getName().equals("Млекопитающее"))
+      .singleElement()
+      .matches(item -> item.getKind() == SymbolKind.Class);
+  }
+
+  @Test
+  void subtypesMarkImplementorWithClassKind() {
+    // given — интерфейс Плавающее реализован классом Собака.
+    var document = document("Плавающее.os");
+
+    // when
+    var subtypes = provider.subtypes(document, new TypeHierarchySubtypesParams(item(document)));
+
+    // then — реализатор остаётся классом.
+    assertThat(subtypes)
+      .singleElement()
+      .matches(item -> item.getName().equals("Собака"))
+      .matches(item -> item.getKind() == SymbolKind.Class);
+  }
+
   private DocumentContext document(String fileName) {
     var uri = uri(fileName);
     var documentContext = context.getDocument(uri);

@@ -154,9 +154,10 @@ public class TypeHierarchyProvider {
     // classNames здесь непустой.
     var primaryName = oScriptLibraryIndex.classNames(documentContext).getFirst();
 
+    var kind = typeRelations.isInterface(documentContext) ? SymbolKind.Interface : SymbolKind.Class;
     var item = new TypeHierarchyItem(
       primaryName,
-      SymbolKind.Class,
+      kind,
       documentContext.getUri().toString(),
       module.getRange(),
       typeRelations.classSelectionRange(documentContext)
