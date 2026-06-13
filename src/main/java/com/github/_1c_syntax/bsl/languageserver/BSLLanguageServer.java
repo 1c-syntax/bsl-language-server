@@ -356,7 +356,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static CompletionOptions getCompletionProvider() {
     var completionOptions = new CompletionOptions();
-    completionOptions.setResolveProvider(Boolean.FALSE);
+    completionOptions.setResolveProvider(Boolean.TRUE);
     completionOptions.setTriggerCharacters(List.of("."));
     return completionOptions;
   }

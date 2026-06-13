@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
@@ -48,6 +49,7 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemResolveSupportCapabilities;
 import org.eclipse.lsp4j.CompletionItemTag;
 import org.eclipse.lsp4j.CompletionItemTagSupportCapabilities;
 import org.eclipse.lsp4j.CompletionList;
@@ -60,6 +62,7 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +70,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -108,6 +112,7 @@ public final class CompletionProvider {
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final JsonMapper jsonMapper;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
   // прикрепления `editor.action.triggerParameterHints` к completion item.
@@ -121,6 +126,12 @@ public final class CompletionProvider {
   // Если да — documentation отдаётся как MarkupContent(MARKDOWN), иначе голой строкой
   // (plaintext) с вырезанной markdown-разметкой, чтобы клиент не показывал звёздочки буквально.
   private boolean markdownDocumentationSupport;
+
+  // Кэшируется на initialize. Объявил ли клиент в completionItem.resolveSupport свойство
+  // documentation — то есть готов лениво дотягивать описание через completionItem/resolve.
+  // Если да — для членов dot-completion documentation откладывается (см. buildMemberItem),
+  // иначе строится жадно, как раньше (клиент без resolve должен получить её сразу).
+  private boolean documentationResolveSupport;
 
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
@@ -139,6 +150,11 @@ public final class CompletionProvider {
     markdownDocumentationSupport = completionItem
       .map(CompletionItemCapabilities::getDocumentationFormat)
       .map(formats -> formats.contains(MarkupKind.MARKDOWN))
+      .orElse(Boolean.FALSE);
+    documentationResolveSupport = completionItem
+      .map(CompletionItemCapabilities::getResolveSupport)
+      .map(CompletionItemResolveSupportCapabilities::getProperties)
+      .map(properties -> properties.contains("documentation"))
       .orElse(Boolean.FALSE);
   }
 
@@ -299,6 +315,54 @@ public final class CompletionProvider {
     return new CompletionList(false, items);
   }
 
+  /**
+   * Разрешает отложенную документацию completion item ({@code completionItem/resolve}).
+   * <p>
+   * Если item пришёл без {@link CompletionItem#getData()} — резолвить нечем, item
+   * возвращается как есть. Иначе по data-ключу восстанавливается тип-владелец и член,
+   * после чего {@code documentation} собирается тем же способом, что был бы при жадной
+   * сборке. Поле {@code data} очищается для экономии трафика.
+   *
+   * @param unresolved completion item, пришедший от клиента на разрешение.
+   * @return тот же item с проставленной {@code documentation} и очищенным {@code data};
+   *         либо неизменённый item, если данных для резолва нет.
+   */
+  public CompletionItem resolveCompletionItem(CompletionItem unresolved) {
+    var data = extractData(unresolved);
+    if (data == null) {
+      return unresolved;
+    }
+    var ref = new TypeRef(data.getTypeKind(), data.getTypeQualifiedName());
+    typeService.getMembers(ref, data.getFileType(), data.getScriptVariant()).stream()
+      .filter(member -> member.name().equals(data.getMemberName()))
+      .findFirst()
+      .ifPresent(member -> applyDocumentation(unresolved, member, data.getScriptVariant()));
+    unresolved.setData(null);
+    return unresolved;
+  }
+
+  /**
+   * Извлекает {@link CompletionData} из {@link CompletionItem#getData()}.
+   * <p>
+   * При прямом серверном вызове data — уже объект {@link CompletionData}; после
+   * round-trip через клиента lsp4j отдаёт её как JSON (Map/JsonElement), поэтому
+   * нетипизированное значение десериализуется через {@link JsonMapper}.
+   *
+   * @param item completion item, из которого извлекаются данные.
+   * @return извлечённые данные либо {@code null}, если data отсутствует.
+   */
+  @Nullable
+  private CompletionData extractData(CompletionItem item) {
+    var rawData = item.getData();
+    if (rawData == null) {
+      return null;
+    }
+    if (rawData instanceof CompletionData completionData) {
+      return completionData;
+    }
+    return jsonMapper.readValue(rawData.toString(), CompletionData.class);
+  }
+
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {
     var dotInfo = dotCompletionInfo(documentContext, position);
     if (dotInfo == null) {
@@ -316,9 +380,15 @@ public final class CompletionProvider {
     // Имена декларированных полей — для приоритетной корзины sortText: пользовательские
     // ключи должны ранжироваться выше дефолтных членов того же типа.
     var localFieldNames = new HashSet<String>();
+    // Тип-владелец каждого члена — для отложенного восстановления документации в
+    // completionItem/resolve. Локальные поля (ключи структуры/колонки ТЗ)
+    // owner'а не получают: их описание пустое, резолвить нечего.
+    var owners = new LinkedHashMap<String, TypeRef>();
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
-        members.putIfAbsent(member.name(), member);
+        if (members.putIfAbsent(member.name(), member) == null) {
+          owners.put(member.name(), ref);
+        }
       }
       // Декларированные ключи «открытого» объекта данных (Структура из
       // Новый Структура("К1, К2"), ТЗ с описанными колонками из JsDoc).
@@ -345,7 +415,7 @@ public final class CompletionProvider {
       // зачёркнутыми).
       .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
       .toList();
-    var items = toCompletionItems(filtered, scriptVariant, target);
+    var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target);
     for (int i = 0; i < filtered.size(); i++) {
       var member = filtered.get(i);
       var bucket = localFieldNames.contains(member.name()) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
@@ -607,14 +677,20 @@ public final class CompletionProvider {
   }
 
   private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant, CompatibilityMode target) {
-    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
+    return buildMemberItem(member, null, FileType.BSL,
+      CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
   }
 
-  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members, Language scriptVariant,
+  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members,
+                                                 Map<String, TypeRef> owners,
+                                                 FileType fileType,
+                                                 Language scriptVariant,
                                                  CompatibilityMode target) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
-      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target));
+      var owner = owners.get(member.name());
+      items.add(buildMemberItem(member, owner, fileType,
+        CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target));
     }
     return items;
   }
@@ -632,6 +708,8 @@ public final class CompletionProvider {
    * {@code documentation} — VS Code показывал его дважды в подсказке.
    */
   private CompletionItem buildMemberItem(MemberDescriptor member,
+                                         @Nullable TypeRef owner,
+                                         FileType fileType,
                                          CompletionItemKind methodKind,
                                          CompletionItemKind propertyKind,
                                          Language scriptVariant,
@@ -652,7 +730,16 @@ public final class CompletionProvider {
         item.setDetail(detail);
       }
     }
-    applyDocumentation(item, member, scriptVariant);
+    // documentation тяжела для широких типов (Глобальный контекст, union типов):
+    // если клиент умеет lazy-resolve и член резолвим обратно по owner-типу —
+    // откладываем её в completionItem/resolve, оставляя в ответе лишь data-ключ.
+    // Иначе строим жадно (прежнее поведение).
+    if (documentationResolveSupport && owner != null) {
+      item.setData(new CompletionData(
+        owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
+    } else {
+      applyDocumentation(item, member, scriptVariant);
+    }
     markDeprecated(item, member, target);
     return item;
   }
