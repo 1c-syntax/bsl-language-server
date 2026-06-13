@@ -22,16 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Сборка LSP-команд навигации для линз (CodeLens) с учётом подключённого клиента.
@@ -67,19 +67,27 @@ public class NavigationCommandBuilder {
   /** Режим {@code editor.action.goToLocations}: поповер при нескольких целях. */
   private static final String MULTIPLE_PEEK = "peek";
 
-  /**
-   * Имена ({@link ClientInfo#getName()}, оно же {@code vscode.env.appName}) редакторов на базе
-   * VS Code, которые работают через VS Code extension API и ставят расширение {@code language-1c-bsl}
-   * с командами-обёртками навигации.
-   */
-  private static final Set<String> VS_CODE_LIKE_CLIENT_NAMES = Set.of(
-    "Visual Studio Code",
-    "Cursor",
-    "Antigravity",
-    "code-server"
-  );
-
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  /**
+   * Закэшированный признак клиента на базе VS Code. Вычисляется один раз при
+   * получении {@link LanguageServerInitializeRequestReceivedEvent}, чтобы не
+   * читать {@link ClientCapabilitiesHolder} на каждый запрос линзы.
+   */
+  private boolean vsCodeLikeClient;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Один раз определяет и кэширует тип подключённого клиента: в момент события
+   * {@link ClientCapabilitiesHolder} уже содержит {@code ClientInfo}.
+   *
+   * @param event Событие получения запроса инициализации.
+   */
+  @EventListener
+  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+    vsCodeLikeClient = clientCapabilitiesHolder.isVsCodeLikeClient();
+  }
 
   /**
    * Команда перехода к производителю(-ям): прыжок к единственной цели, поповер при нескольких.
@@ -119,9 +127,6 @@ public class NavigationCommandBuilder {
    * @return {@code true}, если клиент совместим с VS Code; иначе {@code false}.
    */
   private boolean isVsCodeLike() {
-    return clientCapabilitiesHolder.getClientInfo()
-      .map(ClientInfo::getName)
-      .filter(VS_CODE_LIKE_CLIENT_NAMES::contains)
-      .isPresent();
+    return vsCodeLikeClient;
   }
 }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -55,12 +56,19 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   @Autowired
   private ApplicationEventPublisher eventPublisher;
 
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
   @ParameterizedTest
   @CsvSource({
     "./src/test/resources/codelenses/AbstractRunTestCodeLensSupplier.os, unknown, false",
     "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, unknown, false",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Some Editor, false",
     "./src/test/resources/codelenses/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, false",
-    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, true"
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, true",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Cursor, true",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Antigravity, true",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, code-server, true"
   })
   void testIsApplicable(String filePath, String clientName, boolean expected) {
     // given
@@ -77,10 +85,11 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   private void initializeServer(String path, String clientName) {
     initServerContext(path);
 
+    var clientInfo = new ClientInfo(clientName, "1.0.0");
     var initializeParams = new InitializeParams();
-    initializeParams.setClientInfo(
-      new ClientInfo(clientName, "1.0.0")
-    );
+    initializeParams.setClientInfo(clientInfo);
+
+    clientCapabilitiesHolder.setClientInfo(clientInfo);
 
     var event = new LanguageServerInitializeRequestReceivedEvent(
       mock(LanguageServer.class),
@@ -92,8 +101,11 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   @TestConfiguration
   static class TestConfig {
     @Bean
-    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier(LanguageServerConfiguration configuration) {
-      return new AbstractRunTestsCodeLensSupplier<>(configuration) {
+    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier(
+      LanguageServerConfiguration configuration,
+      ClientCapabilitiesHolder clientCapabilitiesHolder
+    ) {
+      return new AbstractRunTestsCodeLensSupplier<>(configuration, clientCapabilitiesHolder) {
 
         @Override
         public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
