@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781289289524,
+  "lastUpdate": 1781328121832,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37045,6 +37045,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.624137398366092",
             "extra": "mean: 281.3888517220815 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "de128cb0658d25e67fbbe8d563b46740395c00b5",
+          "message": "Merge pull request #4051 from 1c-syntax/copilot/mcp-add-parameter-for-bsl-os\n\n[MCP] Add fileType parameter to type_info tool (BSL/OS)",
+          "timestamp": "2026-06-12T11:35:55+02:00",
+          "tree_id": "7b58e7eee8028e54f020c4be84a2039df687073b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/de128cb0658d25e67fbbe8d563b46740395c00b5"
+        },
+        "date": 1781328113980,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 281.1522972583771,
+            "unit": "sec",
+            "range": "stddev: 15.663451298185299",
+            "extra": "mean: 281.1522972583771 sec\nrounds: 3"
           }
         ]
       }
