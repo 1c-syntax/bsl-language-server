@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,14 +47,20 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class SymbolProviderTest {
+
+  private static final CancelChecker NO_CANCEL = () -> {
+    // no-op: проверка отмены не требуется в тестах поиска
+  };
 
   @Autowired
   private ServerContext context;
@@ -78,7 +85,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams();
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -119,7 +126,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -142,7 +149,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("НеУстар");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -161,7 +168,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams(".*");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -180,7 +187,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols).isEmpty();
@@ -215,12 +222,45 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
-    var symbols = provider.getSymbols(params);
+    var symbols = provider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
       .hasSize(1)
       .anyMatch(symbolInformation -> symbolInformation.getName().equals(symbolName));
+  }
+
+  @Test
+  void getSymbolsCancelledCheckerInterruptsSearch() {
+
+    // given
+    // Отменённый CancelChecker должен прервать обход документов исключением CancellationException.
+    var params = new WorkspaceSymbolParams();
+    CancelChecker cancelChecker = () -> {
+      throw new CancellationException();
+    };
+
+    // when / then
+    assertThatThrownBy(() -> symbolProvider.getSymbols(params, cancelChecker))
+      .isInstanceOf(CancellationException.class);
+  }
+
+  @Test
+  void getSymbolsNonCancelledCheckerReturnsFullResult() {
+
+    // given
+    // Не-отменённый CancelChecker не должен влиять на результат: возвращается полная выдача.
+    var params = new WorkspaceSymbolParams();
+    CancelChecker cancelChecker = () -> {
+      // not cancelled
+    };
+
+    // when
+    var symbols = symbolProvider.getSymbols(params, cancelChecker);
+
+    // then
+    assertThat(symbols)
+      .hasSizeGreaterThan(0);
   }
 
   /**

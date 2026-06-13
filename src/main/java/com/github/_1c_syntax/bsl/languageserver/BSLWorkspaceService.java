@@ -43,6 +43,7 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
@@ -80,9 +81,9 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
-    return CompletableFuture.supplyAsync(
-      () -> Either.forRight(symbolProvider.getSymbols(params)),
-      executor
+    return CompletableFutures.computeAsync(
+      executor,
+      cancelChecker -> Either.forRight(symbolProvider.getSymbols(params, cancelChecker))
     );
   }
 
