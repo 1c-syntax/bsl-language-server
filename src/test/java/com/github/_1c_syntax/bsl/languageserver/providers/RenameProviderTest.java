@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceEditCapabilities;
 import org.eclipse.lsp4j.WorkspaceEditChangeAnnotationSupportCapabilities;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -316,8 +317,8 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     assertThat(textDocumentEdit.getEdits())
       .hasSize(2)
       .allSatisfy(edit -> assertThat(edit.isLeft()).isTrue())
-      .extracting(edit -> edit.getLeft())
-      .noneMatch(edit -> edit instanceof AnnotatedTextEdit)
+      .extracting(Either::getLeft)
+      .noneMatch(AnnotatedTextEdit.class::isInstance)
       .contains(new TextEdit(Ranges.create(0, 8, 18), newName))
       .contains(new TextEdit(Ranges.create(6, 0, 10), newName));
   }
@@ -343,7 +344,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     var textDocumentEdit = (TextDocumentEdit) workspaceEdit.getDocumentChanges().get(0).getLeft();
     assertThat(textDocumentEdit.getEdits())
       .hasSize(2)
-      .extracting(edit -> edit.getLeft())
+      .extracting(Either::getLeft)
       .allSatisfy(edit -> {
         assertThat(edit).isInstanceOf(AnnotatedTextEdit.class);
         assertThat(((AnnotatedTextEdit) edit).getAnnotationId()).isEqualTo(annotationId);

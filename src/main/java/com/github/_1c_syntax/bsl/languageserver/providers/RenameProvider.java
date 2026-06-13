@@ -165,12 +165,12 @@ public final class RenameProvider {
 
     var resolvedAnnotationId = annotationId;
     List<Either<TextDocumentEdit, ResourceOperation>> documentChanges = changes.entrySet().stream()
-      .map(entry -> {
+      .map((Map.Entry<String, List<TextEdit>> entry) -> {
         var textDocument = new VersionedTextDocumentIdentifier(entry.getKey(), null);
         var edits = annotate(entry.getValue(), resolvedAnnotationId);
         return Either.<TextDocumentEdit, ResourceOperation>forLeft(new TextDocumentEdit(textDocument, edits));
       })
-      .collect(Collectors.toList());
+      .toList();
 
     workspaceEdit.setDocumentChanges(documentChanges);
     return workspaceEdit;
@@ -178,13 +178,13 @@ public final class RenameProvider {
 
   private static List<Either<TextEdit, SnippetTextEdit>> annotate(List<TextEdit> textEdits, String annotationId) {
     return textEdits.stream()
-      .map(textEdit -> {
+      .map((TextEdit textEdit) -> {
         TextEdit edit = annotationId.isEmpty()
           ? textEdit
           : new AnnotatedTextEdit(textEdit.getRange(), textEdit.getNewText(), annotationId);
         return Either.<TextEdit, SnippetTextEdit>forLeft(edit);
       })
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private static Reference referenceOf(SourceDefinedSymbol symbol) {
