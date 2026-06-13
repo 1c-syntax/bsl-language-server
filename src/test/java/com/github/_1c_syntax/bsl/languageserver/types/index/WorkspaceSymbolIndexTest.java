@@ -137,6 +137,30 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void prefixSearchViaTrieFindsAndRanksPrefixMatches() {
+    // given — несколько имён с общим префиксом и одно без него
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ПроверитьЗаполнение()
+      КонецПроцедуры
+      Процедура Очистить()
+      КонецПроцедуры
+      """);
+
+    // when — префиксный путь через trie.prefixMap
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Про", NO_CANCEL);
+
+    // then — найдены оба префиксных совпадения, имя без префикса отсутствует;
+    // при равном скоре раньше идёт более короткое имя
+    var names = result.stream().map(WorkspaceSymbolIndex.Entry::name).toList();
+    assertThat(names).contains("ПровестиДокумент", "ПроверитьЗаполнение");
+    assertThat(names).doesNotContain("Очистить");
+    assertThat(names.indexOf("ПровестиДокумент")).isLessThan(names.indexOf("ПроверитьЗаполнение"));
+  }
+
+  @Test
   void clearOnLifecycleEventRemovesDocumentSymbols() {
     // given
     var documentContext = TestUtils.getDocumentContext("""

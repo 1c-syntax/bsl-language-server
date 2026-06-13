@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
+import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
@@ -44,14 +45,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Инкрементальный индекс символов рабочей области для запросов {@code workspace/symbol}.
@@ -62,17 +65,20 @@ import java.util.concurrent.ConcurrentMap;
  * URI, теги и готовое имя контейнера). Запрос обслуживается из индекса с ранжированием по
  * релевантности; выдача возвращается целиком, без усечения.
  * <p>
- * Для быстрого первого отсева записи разложены по корзинам по первой букве lowercase-имени
- * ({@code charBuckets}); записи с пустым именем хранятся отдельно ({@code emptyNameBucket}).
- * Это избавляет от полного линейного скана всех символов для непустых запросов: достаточно
- * пройти корзины, чьи имена могут содержать первый символ запроса.
+ * Хранилище — {@link PatriciaTrie} по ключу = lowercase-имя символа; значение — список записей
+ * с этим именем (имена не уникальны). Дерево даёт {@link PatriciaTrie#prefixMap(Object)} —
+ * сублинейный префиксный поиск, на котором строится основной (самый частый) путь запроса.
+ * Подстрочные и fuzzy-совпадения (подпоследовательность) дерево по префиксу не покрывает,
+ * поэтому добираются проходом по остальным ключам.
  * <p>
  * Индекс наследует {@link AbstractDocumentLifecycleClearableIndex}: его {@code @EventListener}'ы
  * сбрасывают записи документа на изменение содержимого, освобождение данных, закрытие и удаление.
  * <p>
- * Потокобезопасность: хранилища — {@link ConcurrentHashMap}; записи неизменяемы. Поиск работает
- * с моментальными снимками корзин и не удерживает блокировок, поэтому индекс безопасно читать из
- * нескольких потоков, пока другой поток переиндексирует документ.
+ * Потокобезопасность: {@link PatriciaTrie} не потокобезопасен, поэтому доступ к нему защищён
+ * {@link ReadWriteLock}. Запросы ({@link #search(String, CancelChecker)}) держат read-lock,
+ * переиндексация и сброс ({@link #index(DocumentContext)}, {@link #clear(URI)}) — write-lock,
+ * так что чтение и запись не гоняются. Записи {@link Entry} неизменяемы и безопасно покидают
+ * блокировку в составе результата.
  */
 @Component
 @WorkspaceScope
@@ -89,17 +95,22 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   );
 
   /**
-   * Записи, сгруппированные по первой букве lowercase-имени.
+   * Дерево записей по ключу = lowercase-имя символа.
    * <p>
-   * Значение каждой корзины — неизменяемый снимок {@link List}, заменяемый целиком при
-   * переиндексации, поэтому читатели всегда видят согласованный список без блокировок.
+   * Несколько символов с одинаковым именем хранятся одним списком под общим ключом.
+   * Не потокобезопасен — любой доступ только под {@link #lock}.
    */
-  private final ConcurrentMap<Character, List<Entry>> charBuckets = new ConcurrentHashMap<>();
+  private final PatriciaTrie<List<Entry>> trie = new PatriciaTrie<>();
 
   /**
    * Записи, добавленные в индекс каждым URI — для точечного сброса по событию жизненного цикла.
    */
   private final ConcurrentMap<URI, List<Entry>> indexedByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Защита {@link #trie}: read-lock на запросах, write-lock на переиндексации и сбросе.
+   */
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   /**
    * Пересобрать записи документа на изменении его содержимого.
@@ -141,6 +152,9 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
 
   /**
    * Удалить записи индекса, относящиеся к данному URI документа.
+   * <p>
+   * Записи документа вычищаются из {@link #trie} под write-lock; ключи, оставшиеся без записей,
+   * удаляются из дерева, чтобы не копить пустые узлы.
    *
    * @param uri URI документа
    */
@@ -150,15 +164,16 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     if (removed == null || removed.isEmpty()) {
       return;
     }
-    var removedSet = Collections.newSetFromMap(new IdentityHashMap<Entry, Boolean>());
+    var removedSet = Collections.<Entry>newSetFromMap(new IdentityHashMap<>());
     removedSet.addAll(removed);
 
-    for (var entry : removed) {
-      var key = entry.lowerName().charAt(0);
-      charBuckets.computeIfPresent(key, (ignored, bucket) -> {
-        var filtered = withoutEntries(bucket, removedSet);
-        return filtered.isEmpty() ? null : filtered;
-      });
+    lock.writeLock().lock();
+    try {
+      for (var entry : removed) {
+        removeEntryFromKey(entry.lowerName(), removedSet);
+      }
+    } finally {
+      lock.writeLock().unlock();
     }
   }
 
@@ -171,6 +186,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * При равном скоре раньше идёт более короткое имя, затем — более ранняя позиция в документе.
    * Несовпавшие записи отбрасываются. Выдача возвращается целиком, без усечения: пустой запрос
    * отдаёт все записи индекса, непустой — все совпадения, отсортированные по релевантности.
+   * <p>
+   * Префиксная часть обслуживается сублинейно через {@link PatriciaTrie#prefixMap(Object)};
+   * подстрочные и fuzzy-совпадения (подпоследовательность) дерево по префиксу не покрывает,
+   * поэтому добираются проходом по остальным ключам.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
@@ -185,23 +204,55 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     var normalizedQuery = query == null ? "" : query;
     var lowerQuery = normalizedQuery.toLowerCase(Locale.ENGLISH);
 
-    if (lowerQuery.isEmpty()) {
-      return collectAll(cancelChecker);
+    lock.readLock().lock();
+    try {
+      if (lowerQuery.isEmpty()) {
+        return collectAll(cancelChecker);
+      }
+      return searchMatching(lowerQuery, cancelChecker);
+    } finally {
+      lock.readLock().unlock();
     }
+  }
 
+  /**
+   * Собрать совпадения непустого запроса: сначала сублинейный префиксный путь через дерево,
+   * затем добор подстрочных и fuzzy-совпадений проходом по остальным ключам.
+   *
+   * @param lowerQuery    lowercase-запрос (непустой)
+   * @param cancelChecker проверяющий отмену запроса
+   * @return ранжированный список совпадений без дублей
+   */
+  private List<Entry> searchMatching(String lowerQuery, CancelChecker cancelChecker) {
     var matches = new ArrayList<Scored>();
+    var matchedKeys = new HashSet<String>();
     var seen = 0;
 
-    for (var bucket : charBuckets.values()) {
-      for (var entry : bucket) {
+    // быстрый путь: префиксные совпадения сублинейно через дерево
+    for (var bucket : trie.prefixMap(lowerQuery).entrySet()) {
+      matchedKeys.add(bucket.getKey());
+      for (var entry : bucket.getValue()) {
         if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
           cancelChecker.checkCanceled();
         }
-        var score = score(entry.lowerName(), lowerQuery);
-        if (score < 0) {
-          continue;
+        matches.add(new Scored(entry.lowerName().equals(lowerQuery) ? 0 : 1, entry));
+      }
+    }
+
+    // добор: подстрока и подпоследовательность дерево по префиксу не ускоряет — общий проход
+    for (var bucket : trie.entrySet()) {
+      if (matchedKeys.contains(bucket.getKey())) {
+        continue;
+      }
+      var fuzzyScore = fuzzyScore(bucket.getKey(), lowerQuery);
+      if (fuzzyScore < 0) {
+        continue;
+      }
+      for (var entry : bucket.getValue()) {
+        if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
+          cancelChecker.checkCanceled();
         }
-        matches.add(new Scored(score, entry));
+        matches.add(new Scored(fuzzyScore, entry));
       }
     }
 
@@ -218,7 +269,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private List<Entry> collectAll(CancelChecker cancelChecker) {
     var result = new ArrayList<Entry>();
     var seen = 0;
-    for (var bucket : charBuckets.values()) {
+    for (var bucket : trie.values()) {
       for (var entry : bucket) {
         if ((++seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
           cancelChecker.checkCanceled();
@@ -248,9 +299,34 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
 
     indexedByUri.put(uri, List.copyOf(collected));
-    for (var entry : collected) {
-      var key = entry.lowerName().charAt(0);
-      charBuckets.merge(key, List.of(entry), WorkspaceSymbolIndex::concat);
+
+    lock.writeLock().lock();
+    try {
+      for (var entry : collected) {
+        trie.merge(entry.lowerName(), List.of(entry), WorkspaceSymbolIndex::concat);
+      }
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  /**
+   * Удалить из {@link #trie} записи с данным ключом, попавшие в {@code toRemove};
+   * пустой после фильтрации ключ удаляется целиком. Вызывается под write-lock.
+   *
+   * @param key      lowercase-имя (ключ дерева)
+   * @param toRemove удаляемые записи (по идентичности)
+   */
+  private void removeEntryFromKey(String key, Set<Entry> toRemove) {
+    var bucket = trie.get(key);
+    if (bucket == null) {
+      return;
+    }
+    var filtered = withoutEntries(bucket, toRemove);
+    if (filtered.isEmpty()) {
+      trie.remove(key);
+    } else {
+      trie.put(key, filtered);
     }
   }
 
@@ -289,22 +365,17 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Вычислить скор совпадения lowercase-имени с lowercase-запросом.
+   * Вычислить скор «не-префиксного» совпадения lowercase-имени с lowercase-запросом.
    * <p>
-   * Меньшее значение — релевантнее: {@code 0} — точное совпадение, {@code 1} — совпадение по
-   * префиксу, {@code 2} — непрерывная подстрока, {@code 3 + позиция} — подпоследовательность.
+   * Применяется только к ключам вне префиксного множества дерева (точное и префиксное
+   * совпадения там уже исключены). Меньшее значение — релевантнее: {@code 2} — непрерывная
+   * подстрока, {@code 3 + позиция} — подпоследовательность.
    *
    * @param lowerName  lowercase-имя символа
-   * @param lowerQuery lowercase-запрос (непустой)
-   * @return скор {@code >= 0}, либо {@code -1}, если совпадения нет
+   * @param lowerQuery lowercase-запрос (непустой, не префикс имени)
+   * @return скор {@code >= 2}, либо {@code -1}, если совпадения нет
    */
-  private static int score(String lowerName, String lowerQuery) {
-    if (lowerName.equals(lowerQuery)) {
-      return 0;
-    }
-    if (lowerName.startsWith(lowerQuery)) {
-      return 1;
-    }
+  private static int fuzzyScore(String lowerName, String lowerQuery) {
     if (lowerName.contains(lowerQuery)) {
       return 2;
     }
