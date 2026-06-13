@@ -1921,6 +1921,105 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .isNull();
   }
 
+  private void enableCommitCharactersSupport(boolean enabled) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setCommitCharactersSupport(enabled);
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent();
+  }
+
+  @Test
+  void methodMemberGetsOpenParenCommitCharacter() {
+    // given — клиент поддерживает commitCharactersSupport
+    enableCommitCharactersSupport(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then — метод фиксируется вставкой открывающей скобки
+    assertThat(add.getKind()).isEqualTo(CompletionItemKind.Method);
+    assertThat(add.getCommitCharacters()).containsExactly("(");
+  }
+
+  @Test
+  void propertyMemberGetsDotCommitCharacter() {
+    // given — клиент поддерживает commitCharactersSupport; ТЗ.Колонки — свойство
+    enableCommitCharactersSupport(true);
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-properties.os", context);
+
+    // when
+    var columns = dotCompletionItem(documentContext, new Position(1, 3), "Колонки");
+
+    // then — у свойства осмысленно дальнейшее обращение через точку
+    assertThat(columns.getKind()).isEqualTo(CompletionItemKind.Property);
+    assertThat(columns.getCommitCharacters()).containsExactly(".");
+  }
+
+  @Test
+  void localVariableGetsDotCommitCharacter() {
+    // given — клиент поддерживает commitCharactersSupport; локальная переменная
+    enableCommitCharactersSupport(true);
+    var content = """
+      Перем МояПеременная;
+
+      МояПерем""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, 8));
+
+    // when
+    var variable = completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "МояПеременная".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    // then
+    assertThat(variable.getKind()).isEqualTo(CompletionItemKind.Variable);
+    assertThat(variable.getCommitCharacters()).containsExactly(".");
+  }
+
+  @Test
+  void keywordHasNoCommitCharacters() {
+    // given — клиент поддерживает commitCharactersSupport
+    enableCommitCharactersSupport(true);
+    var documentContext = TestUtils.getDocumentContext("Если");
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 4));
+
+    // when
+    var keyword = completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> it.getKind() == CompletionItemKind.Keyword)
+      .findFirst()
+      .orElseThrow();
+
+    // then — ключевым словам commitCharacters не задаются
+    assertThat(keyword.getCommitCharacters()).isNull();
+  }
+
+  @Test
+  void methodMemberHasNoCommitCharactersWhenClientLacksSupport() {
+    // given — клиент не поддерживает commitCharactersSupport
+    enableCommitCharactersSupport(false);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then — без клиентской capability commitCharacters не задаются
+    assertThat(add.getCommitCharacters()).isNull();
+  }
+
   @Test
   void dotCompletionKeepsEagerDocumentationWhenClientLacksResolveSupport() {
     // given — клиент без resolveSupport (только markdown documentation)
