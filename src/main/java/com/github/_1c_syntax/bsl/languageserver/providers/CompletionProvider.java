@@ -141,6 +141,13 @@ public final class CompletionProvider {
   // с записью сигнатуры в плоский detail.
   private boolean labelDetailsSupport;
 
+  // Кэшируется на initialize. Поддерживает ли клиент completionItem.commitCharactersSupport —
+  // фиксацию пункта вводом «commit character». Если да — методам/функциям проставляем
+  // commitCharacters ["("] (вставка открывающей скобки фиксирует вызываемый),
+  // членам-объектам и переменным/модулям — ["."] (осмысленно дальнейшее обращение).
+  // Если клиент не поддерживает — commitCharacters не задаём вовсе.
+  private boolean commitCharactersSupport;
+
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
     var completionItem = clientCapabilitiesHolder.getCapabilities()
@@ -166,6 +173,9 @@ public final class CompletionProvider {
       .orElse(Boolean.FALSE);
     labelDetailsSupport = completionItem
       .map(CompletionItemCapabilities::getLabelDetailsSupport)
+      .orElse(Boolean.FALSE);
+    commitCharactersSupport = completionItem
+      .map(CompletionItemCapabilities::getCommitCharactersSupport)
       .orElse(Boolean.FALSE);
   }
 
@@ -537,6 +547,7 @@ public final class CompletionProvider {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
           applySortText(item, BUCKET_TYPE, false);
+          applyCommitCharacters(item);
           items.add(item);
         }
       }
@@ -560,6 +571,7 @@ public final class CompletionProvider {
       var item = new CompletionItem(name);
       item.setKind(completionKindForSynthetic(ctx.getSyntheticKind()));
       applySortText(item, BUCKET_GLOBAL, false);
+      applyCommitCharacters(item);
       items.add(item);
     }
 
@@ -590,6 +602,7 @@ public final class CompletionProvider {
           markDeprecatedItem(item);
         }
         applySortText(item, BUCKET_LOCAL, method.isDeprecated());
+        applyCommitCharacters(item);
         items.add(item);
       }
     }
@@ -600,6 +613,7 @@ public final class CompletionProvider {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
         applySortText(item, BUCKET_LOCAL, false);
+        applyCommitCharacters(item);
         items.add(item);
       }
     }
@@ -749,6 +763,7 @@ public final class CompletionProvider {
       applyDocumentation(item, member, scriptVariant);
     }
     markDeprecated(item, member, target);
+    applyCommitCharacters(item);
     return item;
   }
 
@@ -773,6 +788,36 @@ public final class CompletionProvider {
    */
   private static void applySortText(CompletionItem item, String bucket, boolean deprecated) {
     item.setSortText(bucket + (deprecated ? "1" : "0") + "_" + item.getLabel());
+  }
+
+  /**
+   * Проставляет {@code commitCharacters} пункту автодополнения по его
+   * {@link CompletionItemKind}, если клиент объявил поддержку
+   * {@code completionItem.commitCharactersSupport}. Commit character —
+   * символ, ввод которого фиксирует пункт и сразу вставляет его вместе с
+   * этим символом. Набор подбирается по смыслу пункта: вызываемые
+   * (метод/функция/конструктор) фиксируются открывающей скобкой
+   * {@code "("}, члены-объекты и переменные/модули — точкой {@code "."}
+   * (после фиксации осмысленно дальнейшее обращение к члену). Ключевым
+   * словам и прочим пунктам commit characters не задаются.
+   *
+   * @param item пункт автодополнения, которому проставляются commit characters.
+   */
+  private void applyCommitCharacters(CompletionItem item) {
+    if (!commitCharactersSupport) {
+      return;
+    }
+    var kind = item.getKind();
+    if (kind == null) {
+      return;
+    }
+    switch (kind) {
+      case Method, Function, Constructor -> item.setCommitCharacters(List.of("("));
+      case Field, Property, Variable, Module -> item.setCommitCharacters(List.of("."));
+      default -> {
+        // ключевые слова, классы и прочие пункты commit characters не получают
+      }
+    }
   }
 
   /**
