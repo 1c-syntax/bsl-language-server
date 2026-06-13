@@ -96,14 +96,15 @@ public class InlayHintProvider {
    * @return Разрешённый хинт.
    */
   public InlayHint resolveInlayHint(DocumentContext documentContext, InlayHint unresolved) {
-    var supplierId = extractSupplierId(unresolved);
-    if (supplierId == null) {
+    var maybeSupplierId = extractSupplierId(unresolved);
+    if (maybeSupplierId.isEmpty()) {
       return unresolved;
     }
+    var supplierId = maybeSupplierId.get();
 
-    var resolved = allInlayHintSuppliers.stream()
-      .collect(Collectors.toMap(InlayHintSupplier::getId, Function.identity()))
-      .getOrDefault(supplierId, null);
+    var supplierById = allInlayHintSuppliers.stream()
+      .collect(Collectors.toMap(InlayHintSupplier::getId, Function.identity()));
+    var resolved = supplierById.get(supplierId);
 
     if (resolved == null) {
       return unresolved;
@@ -122,25 +123,24 @@ public class InlayHintProvider {
    * @return URI документа из {@link InlayHint#getData()}; {@code empty}, если данных нет.
    */
   public Optional<URI> extractUri(InlayHint inlayHint) {
-    var uri = dataField(inlayHint, "uri");
-    return uri == null ? Optional.empty() : Optional.of(Absolute.uri(uri));
+    return dataField(inlayHint, "uri").map(Absolute::uri);
   }
 
-  private String extractSupplierId(InlayHint inlayHint) {
+  private Optional<String> extractSupplierId(InlayHint inlayHint) {
     return dataField(inlayHint, "supplierId");
   }
 
-  private String dataField(InlayHint inlayHint, String field) {
+  private Optional<String> dataField(InlayHint inlayHint, String field) {
     var rawData = inlayHint.getData();
     if (rawData == null) {
-      return null;
+      return Optional.empty();
     }
     // Клиент присылает data назад как JSON-объект (round-trip); in-process
     // (тесты, single-jvm клиент) — как исходный объект сапплаера. Конвертируем
     // через JsonMapper в карту единообразно для обоих случаев.
     Map<String, Object> dataMap = jsonMapper.convertValue(rawData, Map.class);
     var value = dataMap.get(field);
-    return value == null ? null : value.toString();
+    return value == null ? Optional.empty() : Optional.of(value.toString());
   }
 
   /**

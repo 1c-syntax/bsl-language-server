@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,5 +91,72 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
     assertThat(inlayHints)
       .noneSatisfy(inlayHint ->
         assertThat(inlayHint.getLabel().getLeft()).contains("Число"));
+  }
+
+  @Test
+  void testNoHintForMemberTargetAssignment() {
+
+    // given
+    // цель присваивания — обращение к члену объекта, а не простая переменная
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+      	Объект = Новый Структура();
+      	Объект.Поле = Новый Массив();
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    // присваивание «Объект.Поле = ...» — не простая переменная-цель, хинта для неё нет
+    assertThat(inlayHints)
+      .noneSatisfy(inlayHint ->
+        assertThat(inlayHint.getPosition().getLine()).isEqualTo(2));
+  }
+
+  @Test
+  void testNoHintWhenTypeIsNotInferred() {
+
+    // given
+    // тип правой части не выводится (вызов неизвестного метода)
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+      	Неизвестная = НеизвестныйМетод();
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    // тип не выведен (или Произвольный) — хинт не строится
+    assertThat(inlayHints).isEmpty();
+  }
+
+  @Test
+  void testNoHintWhenAssignmentIsOutsideRequestedRange() {
+
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    // запрашиваемый диапазон не покрывает присваивания (нулевая первая строка)
+    var emptyRange = new Range(new Position(0, 0), new Position(0, 0));
+    var params = new InlayHintParams(textDocumentIdentifier, emptyRange);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints).isEmpty();
   }
 }

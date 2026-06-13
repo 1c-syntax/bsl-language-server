@@ -41,8 +41,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * Поставщик подсказок о выведенном типе переменной.
@@ -72,30 +71,36 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     return Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_assignment).stream()
       .map(BSLParser.AssignmentContext.class::cast)
       .map(assignment -> toInlayHint(documentContext, assignment, range))
-      .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+      .flatMap(Optional::stream)
+      .toList();
   }
 
-  private InlayHint toInlayHint(DocumentContext documentContext, BSLParser.AssignmentContext assignment, Range range) {
-    var identifier = simpleTargetIdentifier(assignment);
-    if (identifier == null) {
-      return null;
+  private Optional<InlayHint> toInlayHint(
+    DocumentContext documentContext,
+    BSLParser.AssignmentContext assignment,
+    Range range
+  ) {
+    var maybeIdentifier = simpleTargetIdentifier(assignment);
+    if (maybeIdentifier.isEmpty()) {
+      return Optional.empty();
     }
+    var identifier = maybeIdentifier.get();
 
     var namePosition = Ranges.create(identifier, identifier).getEnd();
     if (!Ranges.containsPosition(range, namePosition)) {
-      return null;
+      return Optional.empty();
     }
 
     var expression = assignment.expression();
     if (expression == null || isTrivialLiteral(expression)) {
-      return null;
+      return Optional.empty();
     }
 
-    var inferredType = inferType(documentContext, expression);
-    if (inferredType == null) {
-      return null;
+    var maybeInferredType = inferType(documentContext, expression);
+    if (maybeInferredType.isEmpty()) {
+      return Optional.empty();
     }
+    var inferredType = maybeInferredType.get();
 
     var typeName = typeService.displayName(inferredType, configuration.getLanguage());
 
@@ -107,7 +112,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     // Tooltip (полное описание типа) строится лениво на inlayHint/resolve —
     // в data кладём ссылку на тип, остальное (label/position/kind) жадно.
     inlayHint.setData(new VariableTypeInlayHintData(getId(), documentContext.getUri(), inferredType.qualifiedName()));
-    return inlayHint;
+    return Optional.of(inlayHint);
   }
 
   /**
@@ -123,10 +128,11 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
    */
   @Override
   public InlayHint resolve(DocumentContext documentContext, InlayHint inlayHint) {
-    var data = extractData(inlayHint);
-    if (data == null) {
+    var maybeData = extractData(inlayHint);
+    if (maybeData.isEmpty()) {
       return inlayHint;
     }
+    var data = maybeData.get();
 
     var typeRef = typeService.resolve(data.typeName(), documentContext.getFileType())
       .orElse(new TypeRef(TypeRef.UNKNOWN.kind(), data.typeName()));
@@ -134,52 +140,64 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     var displayName = typeService.displayName(typeRef, configuration.getLanguage());
     var description = typeService.getDescription(typeRef, configuration.getLanguage(), documentContext.getFileType());
 
-    var markdown = description.isBlank() ? displayName : displayName + "\n\n" + description;
+    var markdown = description.isBlank() ? displayName : (displayName + "\n\n" + description);
     inlayHint.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
     return inlayHint;
   }
 
-  private VariableTypeInlayHintData extractData(InlayHint inlayHint) {
+  /**
+   * Восстановление ленивых данных хинта типа из {@link InlayHint#getData()}.
+   *
+   * @param inlayHint Неразрешённый хинт.
+   * @return Данные хинта, либо {@code empty}, если поле {@code data} пустое.
+   */
+  private Optional<VariableTypeInlayHintData> extractData(InlayHint inlayHint) {
     var rawData = inlayHint.getData();
     if (rawData == null) {
-      return null;
+      return Optional.empty();
     }
     if (rawData instanceof VariableTypeInlayHintData data) {
-      return data;
+      return Optional.of(data);
     }
     // Клиент присылает data назад как JSON-объект — восстанавливаем round-trip'ом.
-    return jsonMapper.convertValue(rawData, VariableTypeInlayHintData.class);
+    return Optional.of(jsonMapper.convertValue(rawData, VariableTypeInlayHintData.class));
   }
 
   /**
-   * Идентификатор простой переменной-цели присваивания ({@code Перем = ...}),
-   * либо {@code null}, если цель — обращение к члену/индексу ({@code Перем.Поле = ...}).
+   * Идентификатор простой переменной-цели присваивания ({@code Перем = ...}).
+   *
+   * @param assignment Контекст присваивания.
+   * @return Идентификатор простой переменной-цели, либо {@code empty}, если цель —
+   *   обращение к члену/индексу ({@code Перем.Поле = ...}).
    */
-  private static TerminalNode simpleTargetIdentifier(BSLParser.AssignmentContext assignment) {
+  private static Optional<TerminalNode> simpleTargetIdentifier(BSLParser.AssignmentContext assignment) {
     var lValue = assignment.lValue();
     if (lValue == null || lValue.IDENTIFIER() == null || lValue.acceptor() != null) {
-      return null;
+      return Optional.empty();
     }
-    return lValue.IDENTIFIER();
+    return Optional.of(lValue.IDENTIFIER());
   }
 
   /**
-   * Единственный выведенный тип выражения правой части присваивания, либо
-   * {@code null}, если тип не выведен, выведен как union из нескольких типов
-   * или тривиален ({@link TypeRef#ANY}/{@link TypeRef#UNKNOWN}).
+   * Единственный выведенный тип выражения правой части присваивания.
+   *
+   * @param documentContext Контекст документа.
+   * @param expression      Выражение правой части присваивания.
+   * @return Выведенный тип, либо {@code empty}, если тип не выведен, выведен как
+   *   union из нескольких типов или тривиален ({@link TypeRef#ANY}/{@link TypeRef#UNKNOWN}).
    */
-  private TypeRef inferType(DocumentContext documentContext, BSLParser.ExpressionContext expression) {
+  private Optional<TypeRef> inferType(DocumentContext documentContext, BSLParser.ExpressionContext expression) {
     var start = expression.getStart();
     var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
     var types = typeService.expressionTypesAt(documentContext, position);
     if (types.size() != 1) {
-      return null;
+      return Optional.empty();
     }
     var ref = types.refs().iterator().next();
     if (ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN)) {
-      return null;
+      return Optional.empty();
     }
-    return ref;
+    return Optional.of(ref);
   }
 
   /**
@@ -187,7 +205,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
    * {@code = Истина}): тип очевиден из записи, подсказка не нужна.
    */
   private static boolean isTrivialLiteral(BSLParser.ExpressionContext expression) {
-    if (expression == null || !expression.operation().isEmpty() || expression.member().size() != 1) {
+    if (!expression.operation().isEmpty() || expression.member().size() != 1) {
       return false;
     }
     var member = expression.member().getFirst();

@@ -41,6 +41,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -113,6 +114,66 @@ class InlayHintProviderTest {
     assertThat(inlayHints)
       .isNotEmpty()
       .contains(getTestHint());
+  }
+
+  @Test
+  void testResolveInlayHintWithoutDataReturnsUnchanged() {
+
+    // given
+    // у хинта нет data — извлечь идентификатор сапплаера нельзя
+    var unresolved = new InlayHint(new Position(0, 0), Either.forLeft("no data"));
+
+    // when
+    var resolved = provider.resolveInlayHint(documentContext, unresolved);
+
+    // then
+    assertThat(resolved).isSameAs(unresolved);
+    assertThat(resolved.getTooltip()).isNull();
+  }
+
+  @Test
+  void testResolveInlayHintWithUnknownSupplierReturnsUnchanged() {
+
+    // given
+    // data ссылается на несуществующий сапплаер
+    var unresolved = new InlayHint(new Position(0, 0), Either.forLeft("unknown supplier"));
+    unresolved.setData(Map.of("supplierId", "doesNotExistSupplier"));
+
+    // when
+    var resolved = provider.resolveInlayHint(documentContext, unresolved);
+
+    // then
+    assertThat(resolved).isSameAs(unresolved);
+    assertThat(resolved.getTooltip()).isNull();
+    // data сохранена — резолв сапплаером не выполнялся
+    assertThat(resolved.getData()).isNotNull();
+  }
+
+  @Test
+  void testExtractUriReturnsEmptyWhenNoData() {
+
+    // given
+    var inlayHint = new InlayHint(new Position(0, 0), Either.forLeft("no data"));
+
+    // when
+    var uri = provider.extractUri(inlayHint);
+
+    // then
+    assertThat(uri).isEmpty();
+  }
+
+  @Test
+  void testExtractUriReturnsUriFromData() {
+
+    // given
+    var inlayHint = new InlayHint(new Position(0, 0), Either.forLeft("with uri"));
+    inlayHint.setData(Map.of("uri", documentContext.getUri().toString()));
+
+    // when
+    var uri = provider.extractUri(inlayHint);
+
+    // then
+    assertThat(uri).contains(documentContext.getUri());
   }
 
   private static InlayHint getTestHint() {

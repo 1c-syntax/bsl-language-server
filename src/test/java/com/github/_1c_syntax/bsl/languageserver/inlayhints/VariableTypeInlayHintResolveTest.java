@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,5 +66,41 @@ class VariableTypeInlayHintResolveTest extends AbstractServerContextAwareTest {
     assertThat(resolved.getTooltip()).isNotNull();
     assertThat(resolved.getTooltip().getRight().getValue()).contains("Массив");
     assertThat(resolved.getData()).isNull();
+  }
+
+  @Test
+  void testResolveWithoutDataReturnsHintUnchanged() {
+
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    var hintWithoutData = new InlayHint();
+    hintWithoutData.setLabel(": Массив");
+
+    // when
+    var resolved = supplier.resolve(documentContext, hintWithoutData);
+
+    // then
+    // у хинта нет data — резолв возвращает его без tooltip
+    assertThat(resolved).isSameAs(hintWithoutData);
+    assertThat(resolved.getTooltip()).isNull();
+  }
+
+  @Test
+  void testResolveFallsBackToTypeNameForUnknownType() {
+
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    var hint = new InlayHint();
+    hint.setLabel(": НесуществующийТип");
+    hint.setData(new VariableTypeInlayHintData(
+      supplier.getId(), documentContext.getUri(), "НесуществующийТип"));
+
+    // when
+    var resolved = supplier.resolve(documentContext, hint);
+
+    // then
+    // тип не восстанавливается реестром — tooltip строится по сохранённому имени
+    assertThat(resolved.getTooltip()).isNotNull();
+    assertThat(resolved.getTooltip().getRight().getValue()).contains("НесуществующийТип");
   }
 }
