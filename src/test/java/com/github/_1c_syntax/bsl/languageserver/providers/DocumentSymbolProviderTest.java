@@ -75,6 +75,47 @@ class DocumentSymbolProviderTest {
   }
 
   /**
+   * Detail метода-функции содержит сигнатуру с именами параметров,
+   * необязательные параметры помечаются знаком {@code =}.
+   */
+  @Test
+  void testMethodDetailContainsParameterNames() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция Сложить(Первое, Второе = 0) Экспорт
+      КонецФункции""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then
+    assertThat(documentSymbols)
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      .hasSize(1)
+      .anyMatch(documentSymbol -> documentSymbol.getDetail().equals("(Первое, Второе?)"));
+  }
+
+  /**
+   * Detail метода без параметров равен пустым скобкам {@code ()}.
+   */
+  @Test
+  void testMethodWithoutParametersHasEmptyParenthesesDetail() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура БезПараметров()
+      КонецПроцедуры""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then
+    assertThat(documentSymbols)
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      .hasSize(1)
+      .allMatch(documentSymbol -> documentSymbol.getDetail().equals("()"));
+  }
+
+  /**
    * Рекурсивно разворачивает иерархию символов документа в плоский список,
    * включая всех вложенных потомков.
    *

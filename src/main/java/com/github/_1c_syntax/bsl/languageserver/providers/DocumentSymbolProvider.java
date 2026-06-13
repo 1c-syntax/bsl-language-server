@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -85,7 +87,24 @@ public final class DocumentSymbolProvider {
     documentSymbol.setTags(symbol.getTags());
     documentSymbol.setChildren(children);
 
+    if (symbol instanceof MethodSymbol methodSymbol) {
+      documentSymbol.setDetail(buildMethodDetail(methodSymbol));
+    }
+
     return documentSymbol;
+  }
+
+  private static String buildMethodDetail(MethodSymbol methodSymbol) {
+    return methodSymbol.getParameters().stream()
+      .map(DocumentSymbolProvider::parameterSignature)
+      .collect(Collectors.joining(", ", "(", ")"));
+  }
+
+  private static String parameterSignature(ParameterDefinition parameter) {
+    if (parameter.isOptional()) {
+      return parameter.getName() + "?";
+    }
+    return parameter.getName();
   }
 
   public static boolean isSupported(Symbol symbol) {
