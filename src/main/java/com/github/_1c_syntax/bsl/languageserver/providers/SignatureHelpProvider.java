@@ -139,12 +139,20 @@ public final class SignatureHelpProvider {
     int activeParameter,
     int serverActiveSignature
   ) {
-    int picked = retriggerPickedIndex(params.getContext(), signatures);
+    var context = params.getContext();
+    if (context == null || !context.isRetrigger()) {
+      return serverActiveSignature;
+    }
+    var previous = context.getActiveSignatureHelp();
+    if (previous == null) {
+      return serverActiveSignature;
+    }
+    int picked = retriggerPickedIndex(previous, signatures);
     if (picked < 0) {
       return serverActiveSignature;
     }
     var currentSignature = signatures.get(picked);
-    if (!matchesByLabel(params.getContext().getActiveSignatureHelp(), picked, currentSignature)) {
+    if (!matchesByLabel(previous, picked, currentSignature)) {
       return serverActiveSignature;
     }
     if (activeParameter >= currentSignature.getParameters().size()) {
@@ -157,19 +165,16 @@ public final class SignatureHelpProvider {
    * Определяет индекс сигнатуры, которую пользователь выбрал в предыдущем (retrigger) показе и
    * которая по индексу всё ещё попадает в заново построенный список сигнатур.
    *
-   * @param context    контекст запроса signature help (может быть {@code null})
+   * @param previous   signature help из предыдущего показа (выбор пользователя)
    * @param signatures заново построенные сигнатуры для текущей позиции
    * @return индекс выбранной пользователем сигнатуры, либо {@code -1}, если выбор неприменим
    */
-  private static int retriggerPickedIndex(SignatureHelpContext context, List<SignatureInformation> signatures) {
-    if (context == null || !context.isRetrigger()) {
+  private static int retriggerPickedIndex(SignatureHelp previous, List<SignatureInformation> signatures) {
+    var activeSignature = previous.getActiveSignature();
+    if (activeSignature == null) {
       return -1;
     }
-    var previous = context.getActiveSignatureHelp();
-    if (previous == null || previous.getActiveSignature() == null) {
-      return -1;
-    }
-    int picked = previous.getActiveSignature();
+    int picked = activeSignature;
     if (picked < 0 || picked >= signatures.size()) {
       return -1;
     }
@@ -180,7 +185,7 @@ public final class SignatureHelpProvider {
    * Проверяет, что метка сигнатуры из предыдущего показа по индексу {@code picked} совпадает с
    * меткой заново построенной сигнатуры (то есть пользовательский выбор всё ещё актуален).
    *
-   * @param previous         signature help из предыдущего показа (может быть {@code null})
+   * @param previous         signature help из предыдущего показа
    * @param picked           индекс выбранной пользователем сигнатуры
    * @param currentSignature заново построенная сигнатура по тому же индексу
    * @return {@code true}, если метки совпадают
@@ -188,9 +193,6 @@ public final class SignatureHelpProvider {
   private static boolean matchesByLabel(
     SignatureHelp previous, int picked, SignatureInformation currentSignature
   ) {
-    if (previous == null) {
-      return false;
-    }
     var previousSignatures = previous.getSignatures();
     if (previousSignatures == null || picked >= previousSignatures.size()) {
       return false;
