@@ -56,6 +56,7 @@ com.github._1c_syntax.bsl.languageserver.providers
 com.github._1c_syntax.bsl.languageserver.recognizer
 com.github._1c_syntax.bsl.languageserver.references
 com.github._1c_syntax.bsl.languageserver.references.model
+com.github._1c_syntax.bsl.languageserver.rename
 com.github._1c_syntax.bsl.languageserver.reporters
 com.github._1c_syntax.bsl.languageserver.reporters.data
 com.github._1c_syntax.bsl.languageserver.reporters.databind
