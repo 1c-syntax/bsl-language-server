@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.commands.ShowLocationCommandArguments;
+import com.github._1c_syntax.bsl.languageserver.commands.ShowLocationCommandSupplier;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.Location;
@@ -37,6 +39,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +53,13 @@ class NavigationCommandBuilderTest {
   @Mock
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
+  @Mock
+  private ShowLocationCommandSupplier showLocationCommandSupplier;
+
+  private NavigationCommandBuilder newBuilder() {
+    return new NavigationCommandBuilder(clientCapabilitiesHolder, showLocationCommandSupplier);
+  }
+
   private void connectClient(String clientName) {
     when(clientCapabilitiesHolder.getClientInfo())
       .thenReturn(Optional.of(new ClientInfo(clientName, "1.0.0")));
@@ -57,7 +69,7 @@ class NavigationCommandBuilderTest {
   void gotoCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
     connectClient("Cursor");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
     var targets = List.of(location(10));
 
     // when
@@ -73,7 +85,7 @@ class NavigationCommandBuilderTest {
   void gotoCommandForCodeServerUsesWrapperCommand() {
     // given: code-server — VS Code-совместимый клиент с расширением language-1c-bsl
     connectClient("code-server");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
 
     // when
     var command = builder.gotoCommand("title", URI_VALUE, POSITION, List.of(location(10)));
@@ -86,7 +98,7 @@ class NavigationCommandBuilderTest {
   void gotoCommandForOtherClientUsesBuiltinCommand() {
     // given
     connectClient("Neovim");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
     var targets = List.of(location(10));
 
     // when
@@ -100,7 +112,7 @@ class NavigationCommandBuilderTest {
   void gotoCommandForUnknownClientUsesBuiltinCommand() {
     // given
     when(clientCapabilitiesHolder.getClientInfo()).thenReturn(Optional.empty());
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
     var targets = List.of(location(10));
 
     // when
@@ -111,10 +123,64 @@ class NavigationCommandBuilderTest {
   }
 
   @Test
+  void gotoCommandForSingleTargetWithShowDocumentSupportUsesShowLocationCommand() {
+    // given: не-VS-Code-клиент, заявивший window/showDocument; одна цель перехода
+    connectClient("Neovim");
+    lenient().when(showLocationCommandSupplier.isShowDocumentSupported()).thenReturn(true);
+    lenient().when(showLocationCommandSupplier.getId()).thenReturn("showLocation");
+    lenient().when(showLocationCommandSupplier.createCommand(anyString(), any(ShowLocationCommandArguments.class)))
+      .thenCallRealMethod();
+    var builder = newBuilder();
+    var target = location(10);
+
+    // when
+    var command = builder.gotoCommand("title", URI_VALUE, POSITION, List.of(target));
+
+    // then: переход идёт серверной командой showLocation с аргументами целевой локации
+    assertThat(command.getCommand()).isEqualTo("showLocation");
+    assertThat(command.getArguments()).hasSize(1);
+    assertThat(command.getArguments().getFirst()).isInstanceOf(ShowLocationCommandArguments.class);
+    var arguments = (ShowLocationCommandArguments) command.getArguments().getFirst();
+    assertThat(arguments.getUri()).isEqualTo(Absolute.uri(target.getUri()));
+    assertThat(arguments.getRange()).isEqualTo(target.getRange());
+  }
+
+  @Test
+  void gotoCommandForSingleTargetWithoutShowDocumentSupportUsesBuiltinCommand() {
+    // given: не-VS-Code-клиент без поддержки window/showDocument
+    connectClient("Neovim");
+    lenient().when(showLocationCommandSupplier.isShowDocumentSupported()).thenReturn(false);
+    var builder = newBuilder();
+    var targets = List.of(location(10));
+
+    // when
+    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+
+    // then: остаётся прежний путь через встроенную команду редактора
+    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.BUILTIN_GOTO_COMMAND);
+    assertThat(command.getArguments()).containsExactly(URI_VALUE.toString(), POSITION, targets, "goto");
+  }
+
+  @Test
+  void gotoCommandForVsCodeLikeSingleTargetIgnoresShowLocationEvenWithSupport() {
+    // given: VS Code-клиент с поддержкой window/showDocument и одной целью
+    connectClient("Visual Studio Code");
+    lenient().when(showLocationCommandSupplier.isShowDocumentSupported()).thenReturn(true);
+    var builder = newBuilder();
+    var targets = List.of(location(10));
+
+    // when
+    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+
+    // then: для VS Code сохраняется команда-обёртка расширения
+    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_GOTO_COMMAND);
+  }
+
+  @Test
   void gotoCommandWithSeveralTargetsRequestsPeek() {
     // given
     connectClient("Visual Studio Code");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
     var targets = List.of(location(10), location(20));
 
     // when
@@ -128,7 +194,7 @@ class NavigationCommandBuilderTest {
   void referencesCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
     connectClient("Antigravity");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
     var locations = List.of(location(10), location(20));
 
     // when
@@ -143,7 +209,7 @@ class NavigationCommandBuilderTest {
   void referencesCommandForOtherClientUsesBuiltinCommand() {
     // given
     connectClient("Neovim");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = newBuilder();
     var locations = List.of(location(10));
 
     // when
