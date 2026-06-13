@@ -102,7 +102,7 @@ public final class DocumentSymbolProvider {
 
   private static String parameterSignature(ParameterDefinition parameter) {
     if (parameter.isOptional()) {
-      return parameter.getName() + " =";
+      return parameter.getName() + "?";
     }
     return parameter.getName();
   }

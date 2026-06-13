@@ -92,7 +92,7 @@ class DocumentSymbolProviderTest {
     assertThat(documentSymbols)
       .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
       .hasSize(1)
-      .anyMatch(documentSymbol -> documentSymbol.getDetail().equals("(Первое, Второе =)"));
+      .anyMatch(documentSymbol -> documentSymbol.getDetail().equals("(Первое, Второе?)"));
   }
 
   /**
