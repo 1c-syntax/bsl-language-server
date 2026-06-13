@@ -41,7 +41,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ShowLocationCommandSupplierTest {
 
@@ -59,6 +61,7 @@ class ShowLocationCommandSupplierTest {
     var capabilitiesHolder = capabilitiesHolderWithShowDocumentSupport(true);
 
     var supplier = new ShowLocationCommandSupplier(clientHolder, capabilitiesHolder);
+    supplier.handleInitializeEvent();
     var arguments = new ShowLocationCommandArguments(uri, supplier.getId(), range);
 
     // when
@@ -87,6 +90,7 @@ class ShowLocationCommandSupplierTest {
     var capabilitiesHolder = capabilitiesHolderWithShowDocumentSupport(false);
 
     var supplier = new ShowLocationCommandSupplier(clientHolder, capabilitiesHolder);
+    supplier.handleInitializeEvent();
     var arguments = new ShowLocationCommandArguments(uri, supplier.getId(), range);
 
     // when
@@ -97,16 +101,46 @@ class ShowLocationCommandSupplierTest {
     verify(languageClient, never()).showDocument(any(ShowDocumentParams.class));
   }
 
+  @Test
+  void shouldUseCachedSupportFlagAndNotReReadCapabilitiesOnExecute() {
+
+    // given
+    var languageClient = mock(LanguageClient.class);
+    var clientHolder = new LanguageClientHolder();
+    clientHolder.connect(languageClient);
+
+    var capabilitiesHolder = mock(ClientCapabilitiesHolder.class);
+    when(capabilitiesHolder.getCapabilities())
+      .thenReturn(Optional.of(clientCapabilitiesWithShowDocumentSupport(true)));
+
+    var supplier = new ShowLocationCommandSupplier(clientHolder, capabilitiesHolder);
+    supplier.handleInitializeEvent();
+    var arguments = new ShowLocationCommandArguments(uri, supplier.getId(), range);
+
+    // when
+    supplier.execute(arguments);
+    supplier.execute(arguments);
+
+    // then
+    // флаг прочитан из холдера один раз — на initialize, далее команда использует кэш
+    verify(capabilitiesHolder, times(1)).getCapabilities();
+    verify(languageClient, times(2)).showDocument(any(ShowDocumentParams.class));
+  }
+
   private static ClientCapabilitiesHolder capabilitiesHolderWithShowDocumentSupport(boolean support) {
+    var capabilitiesHolder = new ClientCapabilitiesHolder();
+    capabilitiesHolder.setCapabilities(clientCapabilitiesWithShowDocumentSupport(support));
+
+    return capabilitiesHolder;
+  }
+
+  private static ClientCapabilities clientCapabilitiesWithShowDocumentSupport(boolean support) {
     var window = new WindowClientCapabilities();
     window.setShowDocument(new ShowDocumentCapabilities(support));
 
     var clientCapabilities = new ClientCapabilities();
     clientCapabilities.setWindow(window);
 
-    var capabilitiesHolder = new ClientCapabilitiesHolder();
-    capabilitiesHolder.setCapabilities(clientCapabilities);
-
-    return capabilitiesHolder;
+    return clientCapabilities;
   }
 }

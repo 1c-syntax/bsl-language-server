@@ -23,11 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.commands;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ShowDocumentCapabilities;
 import org.eclipse.lsp4j.ShowDocumentParams;
 import org.eclipse.lsp4j.WindowClientCapabilities;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -50,6 +52,39 @@ public class ShowLocationCommandSupplier implements CommandSupplier<ShowLocation
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
+  // Кэшируется на initialize. Флаг поддержки клиентом возможности window.showDocument.
+  // Если клиент её не заявил, команда становится безопасным no-op.
+  private boolean showDocumentSupported;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентскую возможность {@code window.showDocument.support}, определяющую,
+   * способен ли клиент обработать инициированный сервером запрос {@code window/showDocument}.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    showDocumentSupported = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWindow)
+      .map(WindowClientCapabilities::getShowDocument)
+      .map(ShowDocumentCapabilities::isSupport)
+      .orElse(Boolean.FALSE);
+  }
+
+  /**
+   * Признак того, что подключённый клиент заявил поддержку {@code window/showDocument} и способен
+   * обработать инициированный сервером запрос открытия документа.
+   * <p>
+   * Значение кэшируется на {@link LanguageServerInitializeRequestReceivedEvent}; используется как
+   * самой командой, так и потребителями (например, навигационными линзами), решающими, можно ли
+   * перенаправить переход на серверную команду {@code showLocation}.
+   *
+   * @return {@code true}, если клиент поддерживает {@code window/showDocument}; иначе {@code false}.
+   */
+  public boolean isShowDocumentSupported() {
+    return showDocumentSupported;
+  }
+
   /**
    * Получение класса аргументов команды.
    *
@@ -70,7 +105,7 @@ public class ShowLocationCommandSupplier implements CommandSupplier<ShowLocation
    */
   @Override
   public Optional<Object> execute(ShowLocationCommandArguments arguments) {
-    if (!isShowDocumentSupported()) {
+    if (!showDocumentSupported) {
       return Optional.empty();
     }
 
@@ -81,13 +116,5 @@ public class ShowLocationCommandSupplier implements CommandSupplier<ShowLocation
     clientHolder.execIfConnected(client -> client.showDocument(params));
 
     return Optional.empty();
-  }
-
-  private boolean isShowDocumentSupported() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWindow)
-      .map(WindowClientCapabilities::getShowDocument)
-      .map(ShowDocumentCapabilities::isSupport)
-      .orElse(false);
   }
 }
