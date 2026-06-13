@@ -21,33 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.eclipse.lsp4j.WorkspaceEditCapabilities;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -71,36 +66,7 @@ public final class RenameProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final Resources resources;
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final RenameWorkspaceEditBuilder workspaceEditBuilder;
-
-  // Кэшируются на initialize. documentChanges — gate для построения WorkspaceEdit на
-  // documentChanges (List<TextDocumentEdit>) вместо legacy changes-map; changeAnnotationSupport —
-  // gate для аннотирования правок через ChangeAnnotation/AnnotatedTextEdit.
-  private boolean documentChangesSupport;
-  private boolean changeAnnotationSupport;
-
-  /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
-   * <p>
-   * Кэширует клиентские возможности {@code workspace.workspaceEdit.documentChanges} и
-   * {@code workspace.workspaceEdit.changeAnnotationSupport}, влияющие на формат результата
-   * переименования: при их отсутствии результат понижается до legacy changes-map без аннотаций.
-   */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
-  public void handleInitializeEvent() {
-    var workspaceEditCapabilities = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWorkspace)
-      .map(WorkspaceClientCapabilities::getWorkspaceEdit);
-
-    documentChangesSupport = workspaceEditCapabilities
-      .map(WorkspaceEditCapabilities::getDocumentChanges)
-      .orElse(Boolean.FALSE);
-
-    changeAnnotationSupport = workspaceEditCapabilities
-      .map(WorkspaceEditCapabilities::getChangeAnnotationSupport)
-      .isPresent();
-  }
 
   /**
    * Построить {@link WorkspaceEdit} с правками переименования символа.
@@ -137,9 +103,7 @@ public final class RenameProvider {
     return workspaceEditBuilder.build(
       changes,
       oldName,
-      params.getNewName(),
-      documentChangesSupport,
-      changeAnnotationSupport
+      params.getNewName()
     );
   }
 

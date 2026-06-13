@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -62,6 +63,9 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
   @Autowired
   private RenameProvider renameProvider;
 
+  @Autowired
+  private RenameWorkspaceEditBuilder workspaceEditBuilder;
+
   @MockitoSpyBean
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
@@ -78,7 +82,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
 
   /**
    * Настраивает заявленные клиентом возможности {@code workspace.workspaceEdit} и пересчитывает
-   * их кэш в провайдере через {@code handleInitializeEvent}.
+   * их кэш в сборщике через {@code handleInitializeEvent}.
    *
    * @param documentChanges         {@code true}, если клиент поддерживает documentChanges
    * @param changeAnnotationSupport {@code true}, если клиент поддерживает аннотации правок
@@ -96,7 +100,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     workspaceCapabilities.setWorkspaceEdit(workspaceEditCapabilities);
     capabilities.setWorkspace(workspaceCapabilities);
     when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
-    renameProvider.handleInitializeEvent();
+    workspaceEditBuilder.handleInitializeEvent();
   }
 
   @Test

@@ -19,19 +19,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.rename;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.AnnotatedTextEdit;
 import org.eclipse.lsp4j.ChangeAnnotation;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ResourceOperation;
 import org.eclipse.lsp4j.SnippetTextEdit;
 import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.WorkspaceEditCapabilities;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -52,6 +58,35 @@ import java.util.UUID;
 public class RenameWorkspaceEditBuilder {
 
   private final Resources resources;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируются на initialize. documentChangesSupport — gate для построения WorkspaceEdit на
+  // documentChanges (List<TextDocumentEdit>) вместо legacy changes-map; changeAnnotationSupport —
+  // gate для аннотирования правок через ChangeAnnotation/AnnotatedTextEdit.
+  private boolean documentChangesSupport;
+  private boolean changeAnnotationSupport;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентские возможности {@code workspace.workspaceEdit.documentChanges} и
+   * {@code workspace.workspaceEdit.changeAnnotationSupport}, влияющие на формат результата
+   * переименования: при их отсутствии результат понижается до legacy changes-map без аннотаций.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    var workspaceEditCapabilities = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getWorkspaceEdit);
+
+    documentChangesSupport = workspaceEditCapabilities
+      .map(WorkspaceEditCapabilities::getDocumentChanges)
+      .orElse(Boolean.FALSE);
+
+    changeAnnotationSupport = workspaceEditCapabilities
+      .map(WorkspaceEditCapabilities::getChangeAnnotationSupport)
+      .isPresent();
+  }
 
   /**
    * Построить {@link WorkspaceEdit} с правками переименования символа.
@@ -63,19 +98,15 @@ public class RenameWorkspaceEditBuilder {
    * {@link AnnotatedTextEdit} и связываются с {@link ChangeAnnotation}, описывающей переименование.
    * Иначе результат понижается до legacy {@code changes}-map для обратной совместимости.
    *
-   * @param changes                 Правки, сгруппированные по uri документа.
-   * @param oldName                 Прежнее имя символа, для текста аннотации.
-   * @param newName                 Новое имя символа, для текста аннотации.
-   * @param documentChangesSupport  {@code true}, если клиент поддерживает documentChanges.
-   * @param changeAnnotationSupport {@code true}, если клиент поддерживает аннотации правок.
+   * @param changes Правки, сгруппированные по uri документа.
+   * @param oldName Прежнее имя символа, для текста аннотации.
+   * @param newName Новое имя символа, для текста аннотации.
    * @return Изменения документов
    */
   public WorkspaceEdit build(
     Map<String, List<TextEdit>> changes,
     String oldName,
-    String newName,
-    boolean documentChangesSupport,
-    boolean changeAnnotationSupport
+    String newName
   ) {
     if (!documentChangesSupport) {
       return new WorkspaceEdit(changes);
