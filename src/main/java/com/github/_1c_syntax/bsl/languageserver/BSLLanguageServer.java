@@ -470,6 +470,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private static WorkspaceSymbolOptions getWorkspaceProvider() {
     var workspaceSymbolOptions = new WorkspaceSymbolOptions();
     workspaceSymbolOptions.setWorkDoneProgress(Boolean.FALSE);
+    workspaceSymbolOptions.setResolveProvider(Boolean.TRUE);
     return workspaceSymbolOptions;
   }
 

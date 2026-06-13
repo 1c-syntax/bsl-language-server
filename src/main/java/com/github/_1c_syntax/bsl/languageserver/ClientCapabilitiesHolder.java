@@ -28,6 +28,9 @@ import lombok.ToString;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.SymbolCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.WorkspaceSymbolResolveSupportCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -57,6 +60,13 @@ public class ClientCapabilitiesHolder {
     "Antigravity",
     "code-server"
   );
+
+  /**
+   * Имя свойства {@code workspace.symbol.resolveSupport.properties}, которым клиент по LSP 3.17
+   * заявляет готовность дорезолвливать точный диапазон символа рабочей области через
+   * запрос {@code workspaceSymbol/resolve}.
+   */
+  private static final String WORKSPACE_SYMBOL_LOCATION_RANGE_PROPERTY = "location.range";
 
   /**
    * Возможности клиента.
@@ -100,6 +110,27 @@ public class ClientCapabilitiesHolder {
     return getClientInfo()
       .map(ClientInfo::getName)
       .map(VS_CODE_LIKE_CLIENT_NAMES::contains)
+      .orElse(false);
+  }
+
+  /**
+   * Поддерживает ли подключённый (по данным {@code initialize}) клиент дорезолвливание
+   * символов рабочей области запросом {@code workspaceSymbol/resolve} (LSP 3.17).
+   * <p>
+   * Признак определяется по {@code workspace.symbol.resolveSupport}: клиент должен явно
+   * перечислить свойство {@code location.range}, означающее, что он готов получить символ
+   * с облегчённым местоположением (только {@code uri}) и дозапросить точный диапазон.
+   *
+   * @return {@code true}, если клиент заявил поддержку дорезолвливания диапазона символа;
+   *   {@code false}, если поддержка не заявлена или клиент о себе не сообщил.
+   */
+  public boolean isWorkspaceSymbolResolveSupported() {
+    return getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getSymbol)
+      .map(SymbolCapabilities::getResolveSupport)
+      .map(WorkspaceSymbolResolveSupportCapabilities::getProperties)
+      .map(properties -> properties.contains(WORKSPACE_SYMBOL_LOCATION_RANGE_PROPERTY))
       .orElse(false);
   }
 }

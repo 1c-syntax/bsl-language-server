@@ -23,9 +23,14 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
+import org.eclipse.lsp4j.SymbolCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.WorkspaceSymbolResolveSupportCapabilities;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -121,5 +126,61 @@ class ClientCapabilitiesHolderTest {
 
     // then
     assertThat(result).isFalse();
+  }
+
+  @Test
+  void isWorkspaceSymbolResolveSupportedIsTrueWhenLocationRangeDeclared() {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+    holder.setCapabilities(capabilitiesWithResolveProperties(List.of("location.range")));
+
+    // when
+    var result = holder.isWorkspaceSymbolResolveSupported();
+
+    // then
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void isWorkspaceSymbolResolveSupportedIsFalseWhenLocationRangeNotDeclared() {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+    holder.setCapabilities(capabilitiesWithResolveProperties(List.of("tags")));
+
+    // when
+    var result = holder.isWorkspaceSymbolResolveSupported();
+
+    // then
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void isWorkspaceSymbolResolveSupportedIsFalseWhenCapabilitiesAbsent() {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+
+    // when
+    var result = holder.isWorkspaceSymbolResolveSupported();
+
+    // then
+    assertThat(result).isFalse();
+  }
+
+  /**
+   * Собирает {@link ClientCapabilities} с заявленными свойствами
+   * {@code workspace.symbol.resolveSupport.properties}.
+   *
+   * @param properties перечень свойств, которые клиент готов дорезолвливать
+   * @return возможности клиента с заполненной секцией resolveSupport
+   */
+  private static ClientCapabilities capabilitiesWithResolveProperties(List<String> properties) {
+    var resolveSupport = new WorkspaceSymbolResolveSupportCapabilities(properties);
+    var symbolCapabilities = new SymbolCapabilities();
+    symbolCapabilities.setResolveSupport(resolveSupport);
+    var workspaceCapabilities = new WorkspaceClientCapabilities();
+    workspaceCapabilities.setSymbol(symbolCapabilities);
+    var capabilities = new ClientCapabilities();
+    capabilities.setWorkspace(workspaceCapabilities);
+    return capabilities;
   }
 }

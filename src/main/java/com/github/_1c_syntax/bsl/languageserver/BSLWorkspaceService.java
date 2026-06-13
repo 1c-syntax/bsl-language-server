@@ -88,6 +88,14 @@ public class BSLWorkspaceService implements WorkspaceService {
   }
 
   @Override
+  public CompletableFuture<WorkspaceSymbol> resolveWorkspaceSymbol(WorkspaceSymbol workspaceSymbol) {
+    return CompletableFuture.supplyAsync(
+      () -> symbolProvider.resolveSymbol(workspaceSymbol),
+      executor
+    );
+  }
+
+  @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
     // no-op: configuration is managed through .bsl-language-server.json files
   }

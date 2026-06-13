@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -37,6 +38,7 @@ import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
 import java.util.List;
@@ -89,7 +91,7 @@ class SymbolProviderScriptVariantTest {
     when(serverContextProvider.getAllContexts())
       .thenReturn(Map.of(URI.create("file:///workspace"), serverContext));
 
-    var symbolProvider = new SymbolProvider(serverContextProvider);
+    var symbolProvider = new SymbolProvider(serverContextProvider, mock(ClientCapabilitiesHolder.class), new JsonMapper());
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when

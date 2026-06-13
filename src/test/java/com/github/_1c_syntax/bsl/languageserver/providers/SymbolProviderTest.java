@@ -21,25 +21,34 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.utils.Absolute;
+import com.google.gson.Gson;
 import lombok.SneakyThrows;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolCapabilities;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.WorkspaceSymbolResolveSupportCapabilities;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.net.URI;
@@ -68,6 +77,8 @@ class SymbolProviderTest {
   private ServerContextProvider serverContextProvider;
   @Autowired
   private SymbolProvider symbolProvider;
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   @BeforeEach
   void before() {
@@ -76,6 +87,34 @@ class SymbolProviderTest {
     var workspaceFolder = new WorkspaceFolder(metadataPath.toURI().toString(), "test-workspace");
     var workspaceContext = serverContextProvider.addWorkspace(workspaceFolder);
     workspaceContext.populateContext();
+  }
+
+  @AfterEach
+  void after() {
+    // сбрасываем разделяемый holder и закэшированный признак между тестами
+    clientCapabilitiesHolder.setCapabilities(null);
+    symbolProvider.handleInitializeEvent(initializeEvent());
+  }
+
+  /**
+   * Включает поддержку дорезолвливания на разделяемом {@link ClientCapabilitiesHolder}
+   * и обновляет закэшированный в провайдере признак, как при получении initialize.
+   */
+  private void enableResolveSupport() {
+    var resolveSupport = new WorkspaceSymbolResolveSupportCapabilities(List.of("location.range"));
+    var symbolCapabilities = new SymbolCapabilities();
+    symbolCapabilities.setResolveSupport(resolveSupport);
+    var workspaceCapabilities = new WorkspaceClientCapabilities();
+    workspaceCapabilities.setSymbol(symbolCapabilities);
+    var capabilities = new ClientCapabilities();
+    capabilities.setWorkspace(workspaceCapabilities);
+
+    clientCapabilitiesHolder.setCapabilities(capabilities);
+    symbolProvider.handleInitializeEvent(initializeEvent());
+  }
+
+  private static LanguageServerInitializeRequestReceivedEvent initializeEvent() {
+    return new LanguageServerInitializeRequestReceivedEvent(mock(), null);
   }
 
   @Test
@@ -218,7 +257,7 @@ class SymbolProviderTest {
     var serverContextProvider = mock(ServerContextProvider.class);
     when(serverContextProvider.getAllContexts()).thenReturn(Map.of(symbolUri, serverContext));
 
-    var provider = new SymbolProvider(serverContextProvider);
+    var provider = new SymbolProvider(serverContextProvider, mock(ClientCapabilitiesHolder.class), new JsonMapper());
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
@@ -261,6 +300,93 @@ class SymbolProviderTest {
     // then
     assertThat(symbols)
       .hasSizeGreaterThan(0);
+  }
+
+  @Test
+  void getSymbolsWithoutResolveSupportReturnsFullLocation() {
+
+    // given
+    // клиент не заявил поддержку workspaceSymbol/resolve
+    var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
+
+    // when
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
+
+    // then
+    assertThat(symbols)
+      .isNotEmpty()
+      .allMatch(workspaceSymbol -> workspaceSymbol.getLocation().isLeft())
+      .allMatch(workspaceSymbol -> workspaceSymbol.getLocation().getLeft().getRange() != null)
+      .allMatch(workspaceSymbol -> workspaceSymbol.getData() == null);
+  }
+
+  @Test
+  void getSymbolsWithResolveSupportReturnsLightweightLocation() {
+
+    // given
+    enableResolveSupport();
+    var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
+
+    // when
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
+
+    // then
+    assertThat(symbols)
+      .isNotEmpty()
+      .allMatch(workspaceSymbol -> workspaceSymbol.getLocation().isRight())
+      .allMatch(workspaceSymbol -> workspaceSymbol.getLocation().getRight().getUri() != null)
+      .allMatch(workspaceSymbol -> workspaceSymbol.getData() != null);
+  }
+
+  @Test
+  void resolveSymbolRestoresFullRange() {
+
+    // given
+    // при поддержке resolve символ отдаётся облегчённым, точный диапазон достраивается отдельно
+    enableResolveSupport();
+    var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
+    var lightweightSymbol = symbolProvider.getSymbols(params, NO_CANCEL).stream()
+      .filter(workspaceSymbol -> uriContainsRight(workspaceSymbol, "ПервыйОбщийМодуль"))
+      .findFirst()
+      .orElseThrow();
+    var uri = lightweightSymbol.getLocation().getRight().getUri();
+
+    // when
+    var resolvedSymbol = symbolProvider.resolveSymbol(lightweightSymbol);
+
+    // then
+    assertThat(resolvedSymbol.getLocation().isLeft()).isTrue();
+    var location = resolvedSymbol.getLocation().getLeft();
+    assertThat(location.getUri()).isEqualTo(uri);
+    assertThat(location.getRange()).isNotNull();
+    assertThat(resolvedSymbol.getData()).isNull();
+  }
+
+  @Test
+  void resolveSymbolRestoresFullRangeFromSerializedData() {
+
+    // given
+    // клиент возвращает поле data сериализованным (JSON), как это происходит по протоколу
+    enableResolveSupport();
+    var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
+    var lightweightSymbol = symbolProvider.getSymbols(params, NO_CANCEL).stream()
+      .filter(workspaceSymbol -> uriContainsRight(workspaceSymbol, "ПервыйОбщийМодуль"))
+      .findFirst()
+      .orElseThrow();
+    lightweightSymbol.setData(new Gson().toJsonTree(lightweightSymbol.getData()));
+
+    // when
+    var resolvedSymbol = symbolProvider.resolveSymbol(lightweightSymbol);
+
+    // then
+    assertThat(resolvedSymbol.getLocation().isLeft()).isTrue();
+    assertThat(resolvedSymbol.getLocation().getLeft().getRange()).isNotNull();
+    assertThat(resolvedSymbol.getData()).isNull();
+  }
+
+  @SneakyThrows
+  private boolean uriContainsRight(WorkspaceSymbol workspaceSymbol, String name) {
+    return Path.of(new URI(workspaceSymbol.getLocation().getRight().getUri())).toString().contains(name);
   }
 
   /**
