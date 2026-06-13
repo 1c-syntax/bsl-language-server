@@ -114,6 +114,7 @@ class BSLLanguageServerTest {
       .isEqualTo(TextDocumentSyncKind.Incremental);
     assertThat(initialize.getCapabilities().getTypeHierarchyProvider()).isNotNull();
     assertThat(initialize.getCapabilities().getImplementationProvider()).isNotNull();
+    assertThat(initialize.getCapabilities().getLinkedEditingRangeProvider()).isNotNull();
   }
 
   @ParameterizedTest
