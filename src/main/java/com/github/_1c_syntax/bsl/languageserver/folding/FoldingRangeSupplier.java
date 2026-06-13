@@ -29,6 +29,11 @@ import java.util.List;
 /**
  * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
  * данными о областях сворачивания.
+ * <p>
+ * Сапплаер всегда задаёт осмысленный текст-заглушку свёрнутого блока через
+ * {@link FoldingRange#setCollapsedText(String)} там, где это уместно. Решение о том, передавать ли
+ * этот текст клиенту, принимает {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
+ * в зависимости от заявленных клиентом возможностей.
  */
 public interface FoldingRangeSupplier {
   /**
