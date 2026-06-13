@@ -88,6 +88,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
     @Override
     public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
       addRegionRange(ctx.ifBranch().IF_KEYWORD(), ctx.ENDIF_KEYWORD(), null);
+      addBranchRanges(ctx);
       return super.visitIfStatement(ctx);
     }
 
@@ -112,7 +113,51 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
     @Override
     public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
       addRegionRange(ctx.TRY_KEYWORD(), ctx.ENDTRY_KEYWORD(), null);
+      addBranchRange(ctx.EXCEPT_KEYWORD(), ctx.ENDTRY_KEYWORD());
       return super.visitTryStatement(ctx);
+    }
+
+    /**
+     * Добавить области сворачивания для каждой ветви ИначеЕсли и Иначе условного оператора.
+     * Граница ветви — от строки её ключевого слова до строки следующей ветви или КонецЕсли минус один.
+     *
+     * @param ctx контекст условного оператора Если...КонецЕсли
+     */
+    private void addBranchRanges(BSLParser.IfStatementContext ctx) {
+      var branchStarts = new ArrayList<TerminalNode>();
+      ctx.elsifBranch().forEach(branch -> branchStarts.add(branch.ELSIF_KEYWORD()));
+      var elseBranch = ctx.elseBranch();
+      if (elseBranch != null) {
+        branchStarts.add(elseBranch.ELSE_KEYWORD());
+      }
+      branchStarts.add(ctx.ENDIF_KEYWORD());
+
+      for (int i = 0; i < branchStarts.size() - 1; i++) {
+        addBranchRange(branchStarts.get(i), branchStarts.get(i + 1));
+      }
+    }
+
+    /**
+     * Добавить область сворачивания ветви — от строки её ключевого слова
+     * до строки замыкающего узла минус один.
+     *
+     * @param start ключевое слово начала ветви
+     * @param nextStart узел, следующий за телом ветви (следующая ветвь или закрывающее ключевое слово)
+     */
+    private void addBranchRange(@Nullable TerminalNode start, @Nullable TerminalNode nextStart) {
+      if (start == null || nextStart == null) {
+        return;
+      }
+
+      int startLine = start.getSymbol().getLine();
+      int stopLine = nextStart.getSymbol().getLine() - 1;
+
+      if (stopLine > startLine) {
+        var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
+        foldingRange.setKind(FoldingRangeKind.Region);
+
+        regionRanges.add(foldingRange);
+      }
     }
 
     private void addRegionRange(
