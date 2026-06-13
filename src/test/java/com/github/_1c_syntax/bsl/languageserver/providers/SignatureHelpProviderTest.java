@@ -530,12 +530,14 @@ class SignatureHelpProviderTest {
 
   @Test
   void retriggerKeepsUserSelectedSignatureWhenStillValid() {
-    // given — Разделить имеет 2 перегрузки: [separator] и [separator, encoding];
-    // курсор на первом параметре (после открывающей скобки), где сервер по arity
-    // выбрал бы 0-ю перегрузку, но пользователь стрелками выбрал 1-ю.
-    var content =
-      "ЧД = Новый ЧтениеДанных(\"path\");\n"
-        + "ЧД.Разделить(\"|\");\n";
+    // given — у метода Разделить две перегрузки: одна с разделителем и одна
+    // с разделителем и кодировкой; курсор на первом параметре (после открывающей
+    // скобки), где сервер по числу аргументов выбрал бы нулевую перегрузку,
+    // но пользователь стрелками выбрал первую.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
     var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
     var params = new SignatureHelpParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -559,9 +561,10 @@ class SignatureHelpProviderTest {
   void retriggerFallsBackToServerWhenUserSignatureInvalid() {
     // given — курсор на втором параметре (после первой запятой); пользователь ранее
     // выбрал 0-ю перегрузку с одним параметром, для которой второй параметр невалиден.
-    var content =
-      "ЧД = Новый ЧтениеДанных(\"path\");\n"
-        + "ЧД.Разделить(\"|\", \"UTF-8\");\n";
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|", "UTF-8");
+      """;
     var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
     var params = new SignatureHelpParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -584,9 +587,10 @@ class SignatureHelpProviderTest {
   @Test
   void nonRetriggerIgnoresProvidedContextSignature() {
     // given — тот же контекст с выбором 1, но без флага retrigger.
-    var content =
-      "ЧД = Новый ЧтениеДанных(\"path\");\n"
-        + "ЧД.Разделить(\"|\");\n";
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
     var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
     var params = new SignatureHelpParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -603,6 +607,114 @@ class SignatureHelpProviderTest {
     var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
 
     // then — контекст игнорируется, активная сигнатура по серверной логике (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithoutActiveSignatureHelpFallsBackToServer() {
+    // given — retrigger без присланного activeSignatureHelp в контексте.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — присланной сигнатуры нет, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithNullActiveSignatureFallsBackToServer() {
+    // given — retrigger с activeSignatureHelp, но без выбранной активной сигнатуры.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var activeHelp = new SignatureHelp();
+    activeHelp.setSignatures(previous.getSignatures());
+    activeHelp.setActiveSignature(null);
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    context.setActiveSignatureHelp(activeHelp);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — активная сигнатура не задана, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithActiveSignatureOutOfRangeFallsBackToServer() {
+    // given — присланный индекс активной сигнатуры за границами текущего списка.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var context = userPickedContext(previous, 99);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — индекс невалиден, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithDifferentLabelFallsBackToServer() {
+    // given — присланная по тому же индексу сигнатура имеет другую метку,
+    // значит пользовательский выбор более не актуален.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var activeHelp = new SignatureHelp();
+    var staleSignatures = previous.getSignatures().stream()
+      .map(SignatureHelpProviderTest::copySignatureInformation)
+      .toList();
+    staleSignatures.get(1).setLabel("OtherMethod(args)");
+    activeHelp.setSignatures(staleSignatures);
+    activeHelp.setActiveSignature(1);
+    activeHelp.setActiveParameter(previous.getActiveParameter());
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    context.setActiveSignatureHelp(activeHelp);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — метка не совпадает, используется серверная логика (0).
     assertThat(help.getActiveSignature()).isZero();
   }
 
