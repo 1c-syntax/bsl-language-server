@@ -1921,6 +1921,82 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .isNull();
   }
 
+  private CompletionItem noDotCompletionItem(
+    com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
+    Position position,
+    String label
+  ) {
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(position);
+    return completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> label.equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  @Test
+  void globalFunctionItemArrivesWithoutDocumentationButWithDataWhenResolveSupported() {
+    // given — клиент умеет лениво разрешать documentation
+    enableDocumentationResolveSupport(true);
+    var documentContext = TestUtils.getDocumentContext("Сооб");
+
+    // when
+    var message = noDotCompletionItem(documentContext, new Position(0, 4), "Сообщить");
+
+    // then — documentation отложена, но data приложена для resolve;
+    // жадно построенные поля (insertText) остаются
+    assertThat(message.getDocumentation())
+      .as("при поддержке resolveSupport documentation глобальной функции отдаётся лениво")
+      .isNull();
+    assertThat(message.getData())
+      .as("для отложенного resolve в item глобальной функции кладётся data-ключ")
+      .isNotNull();
+    assertThat(message.getInsertText()).isEqualTo("Сообщить(");
+  }
+
+  @Test
+  void resolveCompletionItemRestoresSameGlobalFunctionDocumentationAsEager() {
+    // given — то же описание, что было бы при жадной сборке (клиент без resolveSupport)
+    enableMarkdownDocumentation(true);
+    var eagerContext = TestUtils.getDocumentContext("Сооб");
+    var eager = noDotCompletionItem(eagerContext, new Position(0, 4), "Сообщить");
+    var expectedDoc = documentationText(eager);
+
+    enableDocumentationResolveSupport(true);
+    var lazyContext = TestUtils.getDocumentContext("Сооб");
+    var lazy = noDotCompletionItem(lazyContext, new Position(0, 4), "Сообщить");
+
+    // when — клиент запрашивает resolve этого item
+    var resolved = completionProvider.resolveCompletionItem(lazy);
+
+    // then — documentation восстановлена тем же контентом, что был бы жадным
+    assertThat(resolved.getDocumentation())
+      .as("resolve восстанавливает documentation глобальной функции")
+      .isNotNull();
+    assertThat(resolved.getDocumentation().getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(resolved.getDocumentation().getRight().getValue()).isEqualTo(expectedDoc);
+    assertThat(resolved.getData())
+      .as("после resolve data очищается для экономии трафика")
+      .isNull();
+  }
+
+  @Test
+  void globalFunctionKeepsEagerDocumentationWhenClientLacksResolveSupport() {
+    // given — клиент без resolveSupport (только markdown documentation)
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("Сооб");
+
+    // when
+    var message = noDotCompletionItem(documentContext, new Position(0, 4), "Сообщить");
+
+    // then — прежнее поведение: documentation приходит сразу, data не нужна
+    assertThat(message.getDocumentation())
+      .as("без resolveSupport documentation глобальной функции остаётся жадной")
+      .isNotNull();
+    assertThat(message.getData()).isNull();
+  }
+
   private void enableCommitCharactersSupport(boolean enabled) {
     var itemCaps = new CompletionItemCapabilities();
     itemCaps.setCommitCharactersSupport(enabled);

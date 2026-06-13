@@ -340,9 +340,11 @@ public final class CompletionProvider {
    * Разрешает отложенную документацию completion item ({@code completionItem/resolve}).
    * <p>
    * Если item пришёл без {@link CompletionItem#getData()} — резолвить нечем, item
-   * возвращается как есть. Иначе по data-ключу восстанавливается тип-владелец и член,
-   * после чего {@code documentation} собирается тем же способом, что был бы при жадной
-   * сборке. Поле {@code data} очищается для экономии трафика.
+   * возвращается как есть. Иначе по data-ключу восстанавливается источник описания:
+   * для глобальной функции — она сама по имени в глобальной области видимости, для
+   * члена типа — тип-владелец и член. После чего {@code documentation} собирается тем
+   * же способом, что был бы при жадной сборке. Поле {@code data} очищается для
+   * экономии трафика.
    *
    * @param unresolved completion item, пришедший от клиента на разрешение.
    * @return тот же item с проставленной {@code documentation} и очищенным {@code data};
@@ -353,13 +355,36 @@ public final class CompletionProvider {
     if (data == null) {
       return unresolved;
     }
-    var ref = new TypeRef(data.getTypeKind(), data.getTypeQualifiedName());
-    typeService.getMembers(ref, data.getFileType(), data.getScriptVariant()).stream()
-      .filter(member -> member.name().equals(data.getMemberName()))
-      .findFirst()
-      .ifPresent(member -> applyDocumentation(unresolved, member, data.getScriptVariant()));
+    var functionName = data.getFunctionName();
+    if (functionName != null) {
+      globalScopeProvider.findFunction(functionName, data.getFileType())
+        .ifPresent(function -> applyDocumentation(unresolved, function, data.getScriptVariant()));
+    } else {
+      resolveMemberDocumentation(unresolved, data);
+    }
     unresolved.setData(null);
     return unresolved;
+  }
+
+  /**
+   * Восстанавливает {@code documentation} члена типа по ключу {@link CompletionData}
+   * dot-варианта (тип-владелец + имя члена). Если ключ типа неполон — ничего не делает.
+   *
+   * @param unresolved completion item, которому проставляется документация.
+   * @param data       ключ восстановления члена типа.
+   */
+  private void resolveMemberDocumentation(CompletionItem unresolved, CompletionData data) {
+    var typeKind = data.getTypeKind();
+    var typeQualifiedName = data.getTypeQualifiedName();
+    var memberName = data.getMemberName();
+    if (typeKind == null || typeQualifiedName == null || memberName == null) {
+      return;
+    }
+    var ref = new TypeRef(typeKind, typeQualifiedName);
+    typeService.getMembers(ref, data.getFileType(), data.getScriptVariant()).stream()
+      .filter(member -> member.name().equals(memberName))
+      .findFirst()
+      .ifPresent(member -> applyDocumentation(unresolved, member, data.getScriptVariant()));
   }
 
   /**
@@ -586,7 +611,7 @@ public final class CompletionProvider {
       }
       var displayName = fn.displayName(scriptVariant);
       if (matches(displayName, prefix)) {
-        var item = toCompletionItem(fn, scriptVariant, target);
+        var item = toCompletionItem(fn, fileType, scriptVariant, target);
         applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
         items.add(item);
       }
@@ -701,9 +726,22 @@ public final class CompletionProvider {
     }
   }
 
-  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant, CompatibilityMode target) {
-    return buildMemberItem(member, null, FileType.BSL,
+  /**
+   * Сборка completion item глобальной функции (no-dot). Метки/виды/детали/вставка строятся
+   * жадно. {@code documentation} тяжела для глобального контекста, поэтому при поддержке
+   * клиентом lazy-resolve откладывается в {@code completionItem/resolve}: вместо текста в
+   * {@code data} кладётся ключ восстановления функции по имени (см. {@link CompletionData}),
+   * а жадно собранная documentation снимается. Клиент без resolveSupport получает её сразу.
+   */
+  private CompletionItem toCompletionItem(MemberDescriptor member, FileType fileType,
+                                          Language scriptVariant, CompatibilityMode target) {
+    var item = buildMemberItem(member, null, fileType,
       CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
+    if (documentationResolveSupport) {
+      item.setDocumentation((MarkupContent) null);
+      item.setData(CompletionData.forFunction(member.name(), fileType, scriptVariant));
+    }
+    return item;
   }
 
   private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members,
@@ -757,7 +795,7 @@ public final class CompletionProvider {
     // откладываем её в completionItem/resolve, оставляя в ответе лишь data-ключ.
     // Иначе строим жадно (прежнее поведение).
     if (documentationResolveSupport && owner != null) {
-      item.setData(new CompletionData(
+      item.setData(CompletionData.forMember(
         owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
     } else {
       applyDocumentation(item, member, scriptVariant);
