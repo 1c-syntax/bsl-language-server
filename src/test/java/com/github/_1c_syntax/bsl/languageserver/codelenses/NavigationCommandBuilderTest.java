@@ -22,10 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,6 +38,9 @@ import java.net.URI;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,19 +52,33 @@ class NavigationCommandBuilderTest {
   @Mock
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
-  private void connectVsCodeLikeClient() {
+  private NavigationCommandBuilder builderForVsCodeLikeClient() {
     when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(true);
+    return initializedBuilder();
   }
 
-  private void connectOtherClient() {
+  private NavigationCommandBuilder builderForOtherClient() {
     when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(false);
+    return initializedBuilder();
+  }
+
+  private NavigationCommandBuilder initializedBuilder() {
+    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    builder.handleInitializeEvent(initializeEvent());
+    return builder;
+  }
+
+  private static LanguageServerInitializeRequestReceivedEvent initializeEvent() {
+    return new LanguageServerInitializeRequestReceivedEvent(
+      mock(LanguageServer.class),
+      new InitializeParams()
+    );
   }
 
   @Test
   void gotoCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
-    connectVsCodeLikeClient();
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = builderForVsCodeLikeClient();
     var targets = List.of(location(10));
 
     // when
@@ -73,8 +93,7 @@ class NavigationCommandBuilderTest {
   @Test
   void gotoCommandForOtherClientUsesBuiltinCommand() {
     // given
-    connectOtherClient();
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = builderForOtherClient();
     var targets = List.of(location(10));
 
     // when
@@ -87,8 +106,7 @@ class NavigationCommandBuilderTest {
   @Test
   void gotoCommandWithSeveralTargetsRequestsPeek() {
     // given
-    connectVsCodeLikeClient();
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = builderForVsCodeLikeClient();
     var targets = List.of(location(10), location(20));
 
     // when
@@ -101,8 +119,7 @@ class NavigationCommandBuilderTest {
   @Test
   void referencesCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
-    connectVsCodeLikeClient();
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = builderForVsCodeLikeClient();
     var locations = List.of(location(10), location(20));
 
     // when
@@ -116,8 +133,7 @@ class NavigationCommandBuilderTest {
   @Test
   void referencesCommandForOtherClientUsesBuiltinCommand() {
     // given
-    connectOtherClient();
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var builder = builderForOtherClient();
     var locations = List.of(location(10));
 
     // when
@@ -125,6 +141,36 @@ class NavigationCommandBuilderTest {
 
     // then
     assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.BUILTIN_REFERENCES_COMMAND);
+  }
+
+  @Test
+  void clientTypeIsResolvedOnceOnInitializeEvent() {
+    // given
+    var builder = builderForVsCodeLikeClient();
+    var targets = List.of(location(10));
+
+    // when
+    builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    builder.referencesCommand("title", URI_VALUE, POSITION, targets);
+
+    // then
+    verify(clientCapabilitiesHolder, times(1)).isVsCodeLikeClient();
+  }
+
+  @Test
+  void clientTypeReflectsClientAfterInitializeEvent() {
+    // given
+    when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(true);
+    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+    var targets = List.of(location(10));
+
+    // when
+    builder.handleInitializeEvent(initializeEvent());
+    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+
+    // then
+    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_GOTO_COMMAND);
   }
 
   private static Location location(int line) {

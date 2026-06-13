@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -68,6 +70,26 @@ public class NavigationCommandBuilder {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   /**
+   * Закэшированный признак клиента на базе VS Code. Вычисляется один раз при
+   * получении {@link LanguageServerInitializeRequestReceivedEvent}, чтобы не
+   * читать {@link ClientCapabilitiesHolder} на каждый запрос линзы.
+   */
+  private boolean vsCodeLikeClient;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Один раз определяет и кэширует тип подключённого клиента: в момент события
+   * {@link ClientCapabilitiesHolder} уже содержит {@code ClientInfo}.
+   *
+   * @param event Событие получения запроса инициализации.
+   */
+  @EventListener
+  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+    vsCodeLikeClient = clientCapabilitiesHolder.isVsCodeLikeClient();
+  }
+
+  /**
    * Команда перехода к производителю(-ям): прыжок к единственной цели, поповер при нескольких.
    * Подходит прямой линзе «точка внедрения → производитель».
    *
@@ -105,6 +127,6 @@ public class NavigationCommandBuilder {
    * @return {@code true}, если клиент совместим с VS Code; иначе {@code false}.
    */
   private boolean isVsCodeLike() {
-    return clientCapabilitiesHolder.isVsCodeLikeClient();
+    return vsCodeLikeClient;
   }
 }
