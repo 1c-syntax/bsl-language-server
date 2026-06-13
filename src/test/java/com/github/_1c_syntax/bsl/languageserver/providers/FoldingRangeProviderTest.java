@@ -126,7 +126,25 @@ class FoldingRangeProviderTest {
     assertThat(foldingRanges)
       .filteredOn(foldingRange -> foldingRange.getStartLine() == 3 && foldingRange.getEndLine() == 26)
       .hasSize(1)
-      .allMatch(foldingRange -> foldingRange.getCollapsedText().contains("ИмяОбласти"));
+      .allMatch(foldingRange -> foldingRange.getCollapsedText().contains("Имя области"));
+  }
+
+  @Test
+  void testCollapsedTextForRegionSplitsNameIntoWords() {
+
+    // given
+    setCollapsedTextSupport(true);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/foldingRangeRegionName.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then
+    assertThat(foldingRanges)
+      .filteredOn(foldingRange -> foldingRange.getKind().equals(FoldingRangeKind.Region))
+      .extracting(FoldingRange::getCollapsedText)
+      .contains("Область Служебные процедуры и функции");
   }
 
   @Test
@@ -162,6 +180,10 @@ class FoldingRangeProviderTest {
       .allMatch(foldingRange -> foldingRange.getCollapsedText() == null);
   }
 
+  /**
+   * Подменяет заявленную клиентом поддержку {@code collapsedText} в {@link ClientCapabilitiesHolder}
+   * и пересчитывает её кэш в провайдере через {@code handleInitializeEvent}.
+   */
   private void setCollapsedTextSupport(boolean supported) {
     var foldingRangeSupportCapabilities = new FoldingRangeSupportCapabilities(supported);
     var foldingRangeCapabilities = new FoldingRangeCapabilities();
@@ -171,5 +193,6 @@ class FoldingRangeProviderTest {
     var clientCapabilities = new ClientCapabilities();
     clientCapabilities.setTextDocument(textDocumentClientCapabilities);
     when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(clientCapabilities));
+    foldingRangeProvider.handleInitializeEvent();
   }
 }

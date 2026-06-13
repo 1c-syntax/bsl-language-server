@@ -24,12 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Сапплаер областей сворачивания областей (<code>#Область ... #КонецОбласти</code>).
@@ -53,9 +56,26 @@ public class RegionFoldingRangeSupplier implements FoldingRangeSupplier {
       regionSymbol.getEndRange().getEnd().getLine()
     );
     foldingRange.setKind(FoldingRangeKind.Region);
-    foldingRange.setCollapsedText(regionKeyword + " " + regionSymbol.getName());
+    foldingRange.setCollapsedText(regionKeyword + " " + humanizeName(regionSymbol.getName()));
 
     return foldingRange;
+  }
+
+  /**
+   * Преобразовать CamelCase-идентификатор области в читаемую фразу: разбить на слова по границам
+   * заглавных букв и групп символов, первое слово оставить с заглавной буквы, остальные привести
+   * к нижнему регистру, объединив слова пробелами.
+   * <p>
+   * Например, {@code СлужебныеПроцедурыИФункции} превращается в {@code Служебные процедуры и функции}.
+   *
+   * @param name Имя области (CamelCase-идентификатор).
+   * @return Читаемая фраза из слов имени области, разделённых пробелами.
+   */
+  private static String humanizeName(String name) {
+    var words = StringUtils.splitByCharacterTypeCamelCase(name);
+    return IntStream.range(0, words.length)
+      .mapToObj(index -> index == 0 ? words[index] : words[index].toLowerCase(Locale.ROOT))
+      .collect(Collectors.joining(" "));
   }
 
 }

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -30,11 +31,11 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,27 @@ public final class FoldingRangeProvider {
 
   private final List<FoldingRangeSupplier> foldingRangeSuppliers;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируется на initialize. collapsedTextSupported — gate для текста-заглушки свёрнутого блока
+  // (textDocument.foldingRange.foldingRange.collapsedText, LSP 3.17). Если клиент не заявил
+  // поддержку, текст сбрасывается в null, чтобы клиент подставил собственную заглушку.
+  private boolean collapsedTextSupported;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентскую возможность {@code textDocument.foldingRange.foldingRange.collapsedText}
+   * (LSP 3.17), определяющую, отдавать ли клиенту текст-заглушку свёрнутого блока.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    collapsedTextSupported = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getFoldingRange)
+      .map(FoldingRangeCapabilities::getFoldingRange)
+      .map(FoldingRangeSupportCapabilities::getCollapsedText)
+      .orElse(Boolean.FALSE);
+  }
 
   /**
    * Получить список сворачиваемых областей в документе.
@@ -68,28 +90,11 @@ public final class FoldingRangeProvider {
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
 
-    if (!isCollapsedTextSupported(clientCapabilitiesHolder.getCapabilities())) {
+    if (!collapsedTextSupported) {
       foldingRanges.forEach(foldingRange -> foldingRange.setCollapsedText(null));
     }
 
     return foldingRanges;
-  }
-
-  /**
-   * Вычислить из сырых клиентских возможностей, поддерживает ли клиент свойство
-   * {@code collapsedText} у областей сворачивания
-   * (см. возможность {@code textDocument.foldingRange.foldingRange.collapsedText}, LSP 3.17).
-   *
-   * @param capabilities Заявленные клиентом возможности (могут отсутствовать).
-   * @return {@code true}, если клиент заявил поддержку {@code collapsedText}, иначе {@code false}.
-   */
-  private static boolean isCollapsedTextSupported(Optional<ClientCapabilities> capabilities) {
-    return capabilities
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getFoldingRange)
-      .map(FoldingRangeCapabilities::getFoldingRange)
-      .map(FoldingRangeSupportCapabilities::getCollapsedText)
-      .orElse(Boolean.FALSE);
   }
 
 }

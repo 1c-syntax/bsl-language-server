@@ -92,7 +92,7 @@ class FoldingRangeScriptVariantTest {
     // then
     assertThat(foldingRanges)
       .extracting(FoldingRange::getCollapsedText)
-      .filteredOn(text -> text != null && text.contains("ИмяОбласти"))
+      .filteredOn(text -> text != null && text.contains("Имя области"))
       .isNotEmpty()
       .allMatch(text -> text.startsWith("Область "));
   }
@@ -108,7 +108,7 @@ class FoldingRangeScriptVariantTest {
     // then
     assertThat(foldingRanges)
       .extracting(FoldingRange::getCollapsedText)
-      .filteredOn(text -> text != null && text.contains("ИмяОбласти"))
+      .filteredOn(text -> text != null && text.contains("Имя области"))
       .isNotEmpty()
       .allMatch(text -> text.startsWith("Region "));
   }
