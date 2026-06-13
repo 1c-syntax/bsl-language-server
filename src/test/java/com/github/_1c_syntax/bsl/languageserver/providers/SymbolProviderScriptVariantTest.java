@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.types.MdoReference;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -93,7 +94,9 @@ class SymbolProviderScriptVariantTest {
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, () -> {
+      // no-op: проверка отмены не требуется в тесте поиска
+    });
 
     // then
     assertThat(symbols)

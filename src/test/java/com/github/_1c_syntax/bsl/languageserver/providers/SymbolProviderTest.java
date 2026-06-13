@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +59,15 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class SymbolProviderTest {
+
+  private static final CancelChecker NO_CANCEL = () -> {
+    // no-op: проверка отмены не требуется в тестах поиска
+  };
+
+  /**
+   * Ожидаемый лимит выдачи {@code workspace/symbol}; зеркалит {@code SymbolProvider.MAX_RESULTS}.
+   */
+  private static final int MAX_RESULTS = 1000;
 
   @Autowired
   private ServerContext context;
@@ -81,7 +92,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams();
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -122,7 +133,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -145,7 +156,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("НеУстар");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -164,7 +175,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams(".*");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -183,7 +194,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols).isEmpty();
@@ -218,7 +229,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
-    var symbols = provider.getSymbols(params);
+    var symbols = provider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -237,7 +248,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("ГСП");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -256,7 +267,7 @@ class SymbolProviderTest {
     var params = new WorkspaceSymbolParams("гсп");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)
@@ -264,6 +275,45 @@ class SymbolProviderTest {
         symbolInformation.getName().equals("ГлобальнаяСервернаяПроцедура")
           && symbolInformation.getKind() == SymbolKind.Method
       );
+  }
+
+  @Test
+  void getSymbolsLimitsResultSizeForShortQuery() {
+
+    // given
+    // Запрос из одной буквы «a» по подпоследовательности совпадает с каждым символом, чьё имя
+    // содержит «a». Подаём заведомо больше символов, чем лимит выдачи, и ожидаем, что результат
+    // усечён ровно до лимита (короткое замыкание стрима до сборки).
+    var matchingSymbolsCount = MAX_RESULTS + 100;
+    var symbolUri = Absolute.uri("file:///module.bsl");
+
+    var symbols = IntStream.range(0, matchingSymbolsCount)
+      .mapToObj(index -> mockMethodSymbol("aMethod" + index))
+      .collect(Collectors.toList());
+
+    var symbolTree = mock(SymbolTree.class);
+    when(symbolTree.getChildrenFlat()).thenReturn(symbols);
+
+    var documentContext = mock(DocumentContext.class);
+    when(documentContext.getUri()).thenReturn(symbolUri);
+    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getMdObject()).thenReturn(Optional.empty());
+    symbols.forEach(symbol -> when(symbol.getOwner()).thenReturn(documentContext));
+
+    var serverContext = mock(ServerContext.class);
+    when(serverContext.getDocuments()).thenReturn(Map.of(symbolUri, documentContext));
+
+    var serverContextProvider = mock(ServerContextProvider.class);
+    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(symbolUri, serverContext));
+
+    var provider = new SymbolProvider(serverContextProvider);
+    var params = new WorkspaceSymbolParams("a");
+
+    // when
+    var result = provider.getSymbols(params, NO_CANCEL);
+
+    // then
+    assertThat(result).hasSize(MAX_RESULTS);
   }
 
   @Test
@@ -285,21 +335,18 @@ class SymbolProviderTest {
   void getSymbolsNonCancelledCheckerReturnsFullResult() {
 
     // given
-    // Не-отменённый CancelChecker не должен влиять на результат: выдача совпадает
-    // с перегрузкой без checker-а.
+    // Не-отменённый CancelChecker не должен влиять на результат: возвращается полная выдача.
     var params = new WorkspaceSymbolParams();
     CancelChecker cancelChecker = () -> {
       // not cancelled
     };
 
     // when
-    var symbolsWithChecker = symbolProvider.getSymbols(params, cancelChecker);
-    var symbolsWithoutChecker = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, cancelChecker);
 
     // then
-    assertThat(symbolsWithChecker)
-      .hasSizeGreaterThan(0)
-      .hasSameSizeAs(symbolsWithoutChecker);
+    assertThat(symbols)
+      .hasSizeGreaterThan(0);
   }
 
   /**

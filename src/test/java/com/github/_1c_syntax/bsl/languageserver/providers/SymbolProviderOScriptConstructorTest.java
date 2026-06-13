@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -34,7 +35,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Регресс на {@link SymbolProvider#getSymbols(WorkspaceSymbolParams)} и
+ * Регресс на {@link SymbolProvider#getSymbols(WorkspaceSymbolParams, CancelChecker)} и
  * {@link DocumentSymbolProvider#getDocumentSymbols}: до выделения
  * {@code ConstructorSymbol} в отдельный {@link SymbolKind#Constructor} фильтр
  * workspace symbol search поддерживал только {@link SymbolKind#Method}/{@link
@@ -60,7 +61,9 @@ class SymbolProviderOScriptConstructorTest extends AbstractServerContextAwareTes
     initServerContext(Path.of(FIXTURE_DIR).toAbsolutePath(), true);
 
     // when
-    var symbols = symbolProvider.getSymbols(new WorkspaceSymbolParams("ПриСозданииОбъекта"));
+    var symbols = symbolProvider.getSymbols(new WorkspaceSymbolParams("ПриСозданииОбъекта"), () -> {
+      // no-op: проверка отмены не требуется в тесте поиска
+    });
 
     // then
     assertThat(symbols)
