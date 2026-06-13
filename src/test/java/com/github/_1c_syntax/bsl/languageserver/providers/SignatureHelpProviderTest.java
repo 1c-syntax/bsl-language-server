@@ -529,6 +529,56 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void parameterInformationUsesOffsetLabelsPointingToOwnSubstring() {
+    // given — метод с параметрами одинакового типа (Строка), при котором подсветка
+    // по подстроке имени/типа была бы неоднозначной; офсеты должны указывать строго
+    // на собственную подстроку каждого параметра в label сигнатуры.
+    var content = """
+      // Описание.
+      //
+      // Параметры:
+      //  Строка - Строка
+      //  ИмяСтроки - Строка
+      //
+      Процедура М(Строка, ИмяСтроки) Экспорт
+      КонецПроцедуры
+
+      М(А, Б);
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[9].indexOf("М(") + "М(".length();
+    params.setPosition(new Position(9, col));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — у каждого параметра label задан офсетами (right), а не строкой (left),
+    // и подстрока label по этим офсетам совпадает с ожидаемым рендерингом параметра.
+    assertThat(help.getSignatures()).hasSize(1);
+    var sig = help.getSignatures().get(0);
+    var sigLabel = sig.getLabel();
+    assertThat(sig.getParameters()).hasSize(2);
+
+    var firstLabel = sig.getParameters().get(0).getLabel();
+    assertThat(firstLabel.isRight()).isTrue();
+    var firstRange = firstLabel.getRight();
+    assertThat(sigLabel.substring(firstRange.getFirst(), firstRange.getSecond()))
+      .isEqualTo("Строка: Строка");
+
+    var secondLabel = sig.getParameters().get(1).getLabel();
+    assertThat(secondLabel.isRight()).isTrue();
+    var secondRange = secondLabel.getRight();
+    assertThat(sigLabel.substring(secondRange.getFirst(), secondRange.getSecond()))
+      .isEqualTo("ИмяСтроки: Строка");
+
+    // офсеты непересекающиеся и идут по возрастанию — повторяющийся тип не сбивает подсветку.
+    assertThat(secondRange.getFirst()).isGreaterThanOrEqualTo(firstRange.getSecond());
+    assertThat(help.getActiveParameter()).isZero();
+  }
+
+  @Test
   void retriggerKeepsUserSelectedSignatureWhenStillValid() {
     // given — у метода Разделить две перегрузки: одна с разделителем и одна
     // с разделителем и кодировкой; курсор на первом параметре (после открывающей
