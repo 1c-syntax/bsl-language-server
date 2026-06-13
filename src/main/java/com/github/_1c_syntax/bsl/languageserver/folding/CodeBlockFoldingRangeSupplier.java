@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.folding;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.Getter;
@@ -43,7 +45,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    var codeBlockVisitor = new CodeBlockVisitor();
+    var codeBlockVisitor = new CodeBlockVisitor(documentContext.getScriptVariantLanguage());
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
@@ -53,12 +55,22 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
     @Getter
     private final List<FoldingRange> regionRanges = new ArrayList<>();
 
+    private final String procedureKeyword;
+    private final String functionKeyword;
+
+    CodeBlockVisitor(Language scriptVariantLanguage) {
+      procedureKeyword = Resources.getResourceString(
+        scriptVariantLanguage, CodeBlockFoldingRangeSupplier.class, "procedureKeyword");
+      functionKeyword = Resources.getResourceString(
+        scriptVariantLanguage, CodeBlockFoldingRangeSupplier.class, "functionKeyword");
+    }
+
     @Override
     public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
       addRegionRange(
         ctx.procDeclaration().PROCEDURE_KEYWORD(),
         ctx.ENDPROCEDURE_KEYWORD(),
-        collapsedTextForMethod("Процедура", ctx.procDeclaration().subName())
+        collapsedTextForMethod(procedureKeyword, ctx.procDeclaration().subName())
       );
       return super.visitProcedure(ctx);
     }
@@ -68,7 +80,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       addRegionRange(
         ctx.funcDeclaration().FUNCTION_KEYWORD(),
         ctx.ENDFUNCTION_KEYWORD(),
-        collapsedTextForMethod("Функция", ctx.funcDeclaration().subName())
+        collapsedTextForMethod(functionKeyword, ctx.funcDeclaration().subName())
       );
       return super.visitFunction(ctx);
     }

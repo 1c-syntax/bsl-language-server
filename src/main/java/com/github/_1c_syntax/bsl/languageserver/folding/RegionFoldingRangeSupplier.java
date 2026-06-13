@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
@@ -38,19 +39,21 @@ public class RegionFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
+    var regionKeyword = Resources.getResourceString(
+      documentContext.getScriptVariantLanguage(), RegionFoldingRangeSupplier.class, "regionKeyword");
     return documentContext.getSymbolTree().getRegionsFlat().stream()
-      .map(RegionFoldingRangeSupplier::toFoldingRange)
+      .map(regionSymbol -> toFoldingRange(regionSymbol, regionKeyword))
       .collect(Collectors.toList());
   }
 
-  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol) {
+  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol, String regionKeyword) {
 
     FoldingRange foldingRange = new FoldingRange(
       regionSymbol.getStartRange().getStart().getLine(),
       regionSymbol.getEndRange().getEnd().getLine()
     );
     foldingRange.setKind(FoldingRangeKind.Region);
-    foldingRange.setCollapsedText("Область " + regionSymbol.getName());
+    foldingRange.setCollapsedText(regionKeyword + " " + regionSymbol.getName());
 
     return foldingRange;
   }
