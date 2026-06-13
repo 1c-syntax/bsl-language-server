@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,7 +93,7 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
 
   @Test
   void skippedArgumentShowsDefaultValueHint() {
-    // given — реальный AST с пропущенным средним аргументом `СтрНайти("a",,"b")`;
+    // given — реальный AST вызова СтрНайти с пропущенным средним аргументом;
     // сигнатура содержит средний параметр со значением по умолчанию.
     when(documentContext.getAst()).thenReturn(new BSLTokenizer("СтрНайти(\"a\",,\"b\");\n").getAst());
 
@@ -118,7 +119,7 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
     // then — для пропущенного среднего аргумента показан хинт со значением по умолчанию.
     assertThat(hints)
       .extracting(InlayHint::getLabel)
-      .extracting(either -> either.getLeft())
+      .extracting(Either::getLeft)
       .contains("НачальнаяПозиция (1)");
   }
 

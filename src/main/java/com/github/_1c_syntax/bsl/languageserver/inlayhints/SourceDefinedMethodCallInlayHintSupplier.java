@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Поставщик подсказок о параметрах вызываемого метода.
@@ -89,12 +90,29 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
 
     var result = new ArrayList<InlayHint>();
     for (var reference : references) {
-      var doCall = doCallsByMethodNameRange.get(reference.selectionRange());
+      var doCall = doCallsByMethodNameRange.get(rangeKey(reference.selectionRange()));
       if (doCall != null) {
         result.addAll(toInlayHints(reference, doCall));
       }
     }
     return result;
+  }
+
+  /**
+   * Строковый ключ карты вызовов по диапазону имени метода.
+   * <p>
+   * Используется вместо {@link Range} из lsp4j, который не реализует
+   * {@link Comparable}: {@link String} реализует {@link Comparable} и не зависит
+   * от деталей {@link Range#hashCode()}, что устраняет риск деградации хэш-карты
+   * при коллизиях ключей.
+   *
+   * @param range диапазон имени метода/типа
+   * @return ключ вида {@code "startLine:startChar:endLine:endChar"}
+   */
+  private static String rangeKey(Range range) {
+    var start = range.getStart();
+    var end = range.getEnd();
+    return start.getLine() + ":" + start.getCharacter() + ":" + end.getLine() + ":" + end.getCharacter();
   }
 
   /**
@@ -105,37 +123,32 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
    * ссылки, что позволяет резолвить вызов по ссылке без повторного обхода AST.
    *
    * @param documentContext контекст документа, AST которого обходится
-   * @return карта «диапазон имени метода → узел вызова»; пустая, если AST отсутствует
+   * @return карта «ключ диапазона имени метода → узел вызова»; пустая, если вызовов нет
    */
-  private static Map<Range, BSLParser.DoCallContext> collectDoCallsByMethodNameRange(
+  private static Map<String, BSLParser.DoCallContext> collectDoCallsByMethodNameRange(
     DocumentContext documentContext
   ) {
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return Map.of();
-    }
     var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
-    var result = new HashMap<Range, BSLParser.DoCallContext>(doCalls.size());
+    Map<String, BSLParser.DoCallContext> result = HashMap.newHashMap(doCalls.size());
     for (var node : doCalls) {
       var doCall = (BSLParser.DoCallContext) node;
-      var methodNameRange = methodNameRange(doCall.getParent());
-      if (methodNameRange != null) {
-        result.putIfAbsent(methodNameRange, doCall);
-      }
+      methodNameRange(doCall.getParent())
+        .ifPresent(methodNameRange -> result.putIfAbsent(rangeKey(methodNameRange), doCall));
     }
     return result;
   }
 
   private List<InlayHint> toInlayHints(Reference reference, BSLParser.DoCallContext doCall) {
 
-    var methodSymbol = (MethodSymbol) reference.symbol();
-    var parameters = methodSymbol.getParameters();
-
     var callParamList = doCall.callParamList();
     if (callParamList == null) {
       return List.of();
     }
     var callParams = callParamList.callParam();
+
+    var methodSymbol = (MethodSymbol) reference.symbol();
+    var parameters = methodSymbol.getParameters();
 
     var hints = new ArrayList<InlayHint>();
     for (var i = 0; i < parameters.size(); i++) {
@@ -211,19 +224,24 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
    * именно его {@link ReferenceIndex} хранит в {@link Reference#selectionRange()}.
    *
    * @param doCallParent родительский узел вызова (methodCall, globalMethodCall или newExpression)
-   * @return диапазон имени метода/типа либо {@code null}, если узел не является вызовом метода
+   * @return диапазон имени метода/типа либо {@link Optional#empty()},
+   *   если узел не является вызовом метода
    */
-  private static Range methodNameRange(ParserRuleContext doCallParent) {
+  private static Optional<Range> methodNameRange(ParserRuleContext doCallParent) {
     if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
-      return Ranges.create(methodCallContext.methodName());
+      var methodName = methodCallContext.methodName();
+      return methodName == null ? Optional.empty() : Optional.of(Ranges.create(methodName));
     } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-      return Ranges.create(globalMethodCallContext.methodName());
+      var methodName = globalMethodCallContext.methodName();
+      return methodName == null ? Optional.empty() : Optional.of(Ranges.create(methodName));
     } else if (doCallParent instanceof BSLParser.NewExpressionContext newExpressionContext) {
       var typeName = newExpressionContext.typeName();
       if (typeName != null && typeName.IDENTIFIER() != null) {
-        return Ranges.create(typeName.IDENTIFIER());
+        return Optional.of(Ranges.create(typeName.IDENTIFIER()));
       }
+      return Optional.empty();
+    } else {
+      return Optional.empty();
     }
-    return null;
   }
 }

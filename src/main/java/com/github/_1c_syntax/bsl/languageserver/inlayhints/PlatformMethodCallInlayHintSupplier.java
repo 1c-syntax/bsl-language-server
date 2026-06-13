@@ -333,6 +333,8 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     } else if (!showParametersWithTheSameName()
       && shadowsName(passedValue, unit.name(), unit.descriptor())) {
       return;
+    } else {
+      // непустой довод, не дублирующий имя параметра — показываем обычный хинт ниже
     }
     var hint = new InlayHint();
     hint.setKind(InlayHintKind.Parameter);

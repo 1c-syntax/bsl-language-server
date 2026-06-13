@@ -180,6 +180,112 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
   }
 
   @Test
+  void testEmptyArgumentShowsDefaultValueHint() {
+
+    // given — вызов метода с единственным пустым доводом: парсер формирует один
+    // пустой callParam, и при включённом показе значений по умолчанию подсказка
+    // содержит имя параметра и его значение по умолчанию.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Внешняя()
+          Внутренняя();
+      КонецПроцедуры
+
+      Процедура Внутренняя(Знач Параметр = 1)
+      КонецПроцедуры
+      """);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var range = documentContext.getSymbolTree().getMethods().getFirst().getRange();
+    var params = new InlayHintParams(textDocumentIdentifier, range);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints)
+      .extracting(InlayHint::getLabel)
+      .extracting(Either::getLeft)
+      .containsExactly("Параметр (1)");
+  }
+
+  @Test
+  void testFewerArgumentsThanParametersStopAtLastPassedArgument() {
+
+    // given — аргументов меньше, чем параметров: обход прерывается на последнем
+    // переданном доводе, для отсутствующих доводов подсказки не формируются.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Внешняя()
+          Внутренняя(5);
+      КонецПроцедуры
+
+      Процедура Внутренняя(Знач Первый, Знач Второй, Знач Третий)
+      КонецПроцедуры
+      """);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var range = documentContext.getSymbolTree().getMethods().getFirst().getRange();
+    var params = new InlayHintParams(textDocumentIdentifier, range);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then — подсказка только для переданного первого довода.
+    assertThat(inlayHints)
+      .extracting(InlayHint::getLabel)
+      .extracting(Either::getLeft)
+      .containsExactly("Первый:");
+  }
+
+  @Test
+  void testRangeWithoutMethodCallsProducesNoHints() {
+
+    // given — диапазон не охватывает ни одного вызова метода: ссылок нет,
+    // поэтому возвращается пустой список.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Внешняя()
+          Перем ЛокальнаяПеременная;
+      КонецПроцедуры
+      """);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, new Range(new Position(0, 0), new Position(0, 0)));
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints).isEmpty();
+  }
+
+  @Test
+  void testSkippedArgumentShowsDefaultValueHint() {
+
+    // given — пропущенный первый аргумент при включённом показе значений по умолчанию:
+    // подсказка содержит имя параметра и его значение по умолчанию.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Внешняя()
+          Внутренняя(, 5);
+      КонецПроцедуры
+
+      Процедура Внутренняя(Знач Первый = 42, Знач Второй = 0)
+      КонецПроцедуры
+      """);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var range = documentContext.getSymbolTree().getMethods().getFirst().getRange();
+    var params = new InlayHintParams(textDocumentIdentifier, range);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints)
+      .extracting(InlayHint::getLabel)
+      .extracting(Either::getLeft)
+      .contains("Первый (42)");
+  }
+
+  @Test
   void testConstructorCallInlayHints() {
 
     // given
