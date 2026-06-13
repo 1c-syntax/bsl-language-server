@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -150,6 +151,28 @@ class BracketDocumentHighlightSupplierTest {
 
     // then
     assertThat(highlights).isEmpty();
+  }
+
+  @Test
+  void testHighlightKindIsText() {
+    // given
+    // Подсветка парных скобок — это подсветка парных лексем, а не чтение/запись переменной,
+    // поэтому kind должен быть Text.
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(4, 20);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    assertThat(highlights)
+      .extracting(DocumentHighlight::getKind)
+      .containsOnly(DocumentHighlightKind.Text);
   }
 
   private void assertHighlightRange(List<DocumentHighlight> highlights,

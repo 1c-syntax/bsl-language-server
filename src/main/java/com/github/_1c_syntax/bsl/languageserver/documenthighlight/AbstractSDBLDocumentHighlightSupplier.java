@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
@@ -88,7 +89,7 @@ public abstract class AbstractSDBLDocumentHighlightSupplier implements DocumentH
       return;
     }
     var range = Ranges.create(token);
-    highlights.add(new DocumentHighlight(range));
+    highlights.add(new DocumentHighlight(range, DocumentHighlightKind.Text));
   }
 
   /**

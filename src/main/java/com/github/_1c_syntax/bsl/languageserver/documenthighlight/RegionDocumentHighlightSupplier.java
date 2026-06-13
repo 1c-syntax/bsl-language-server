@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -74,10 +75,10 @@ public class RegionDocumentHighlightSupplier implements DocumentHighlightSupplie
     List<DocumentHighlight> highlights = new ArrayList<>();
     
     // Подсвечиваем начало региона
-    highlights.add(new DocumentHighlight(region.getStartRange()));
-    
+    highlights.add(new DocumentHighlight(region.getStartRange(), DocumentHighlightKind.Text));
+
     // Подсвечиваем конец региона
-    highlights.add(new DocumentHighlight(region.getEndRange()));
+    highlights.add(new DocumentHighlight(region.getEndRange(), DocumentHighlightKind.Text));
     
     return highlights;
   }
