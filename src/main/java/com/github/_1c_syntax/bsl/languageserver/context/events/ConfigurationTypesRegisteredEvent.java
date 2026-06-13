@@ -46,8 +46,14 @@ public final class ConfigurationTypesRegisteredEvent extends ApplicationEvent {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  public ConfigurationTypesRegisteredEvent(ServerContext source) {
+  private ConfigurationTypesRegisteredEvent(ServerContext source) {
     super(source);
+  }
+
+  /** Фабричный метод. Public-конструктор намеренно не предоставляется, чтобы класс
+   *  не воспринимался Spring/линтерами как кандидат на @Autowire. */
+  public static ConfigurationTypesRegisteredEvent of(ServerContext source) {
+    return new ConfigurationTypesRegisteredEvent(source);
   }
 
   @Override

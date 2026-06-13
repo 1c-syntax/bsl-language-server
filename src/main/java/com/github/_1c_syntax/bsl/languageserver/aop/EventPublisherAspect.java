@@ -153,7 +153,7 @@ public class EventPublisherAspect {
   public void configurationTypesRegistered(JoinPoint joinPoint, @Nullable ServerContext serverContext) {
     if (serverContext != null) {
       // tryRegister отдаёт non-null только при реальной регистрации, отсев no-op
-      publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
+      publishEvent(ConfigurationTypesRegisteredEvent.of(serverContext));
     }
   }
 
