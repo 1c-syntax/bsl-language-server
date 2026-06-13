@@ -25,8 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -71,7 +71,6 @@ import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -138,7 +137,6 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
-  private final ApplicationEventPublisher eventPublisher;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
@@ -154,30 +152,30 @@ public class ConfigurationTypesProvider {
    * generic'и по familyCore и без них пропускает специализации). Повторные
    * вызовы — no-op.
    */
-  public void tryRegister() {
+  public @Nullable ServerContext tryRegister() {
     if (registered.get()) {
-      return;
+      return null;
     }
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
-      return;
+      return null;
     }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext == null) {
-      return;
+      return null;
     }
     var configuration = serverContext.getConfiguration();
     if (configuration.isEmpty()) {
-      return;
+      return null;
     }
     if (!registered.compareAndSet(false, true)) {
-      return;
+      return null;
     }
     var children = configuration.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects", workspaceUri, children.size());
     register(children);
     serviceModuleEventRegistrar.register(children);
-    eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
+    return serverContext;
   }
 
   private void register(Iterable<MD> children) {

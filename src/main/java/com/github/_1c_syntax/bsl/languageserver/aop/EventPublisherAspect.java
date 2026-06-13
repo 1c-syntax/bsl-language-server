@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -143,6 +144,18 @@ public class EventPublisherAspect {
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
   public void serverContextPopulated(JoinPoint joinPoint, Collection<File> files) {
     publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
+  }
+
+  @AfterReturning(
+    pointcut = "Pointcuts.isConfigurationTypesProvider() && Pointcuts.isTryRegisterCall()",
+    returning = "serverContext"
+  )
+  public void configurationTypesRegistered(JoinPoint joinPoint, @Nullable ServerContext serverContext) {
+    // tryRegister возвращает ServerContext только при реальной регистрации;
+    // при null (повторный вызов, не та фаза, пустая конфигурация) событие не публикуем.
+    if (serverContext != null) {
+      publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
+    }
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isAddDocumentCall() && args(uri)")

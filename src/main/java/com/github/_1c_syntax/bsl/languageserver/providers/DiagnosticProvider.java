@@ -159,7 +159,21 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleServerContextPopulatedEvent(ServerContextPopulatedEvent event) {
-    requestRefreshIfSupported();
+    requestRefreshIfSupported(event.getSource(), false);
+  }
+
+  /**
+   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * <p>
+   * После регистрации конфигурационных типов diagnostic'и, опирающиеся на
+   * реестр типов (UnknownMember, EventHandler*, и т.п.), могут давать
+   * результат, отличный от того, что был вычислен до регистрации.
+   * Просим клиента перезапросить (pull) или push'им сами, если
+   * клиент не поддерживает refresh.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    requestRefreshIfSupported(event.getSource(), true);
   }
 
   private void requestRefreshIfSupported() {
@@ -172,29 +186,21 @@ public final class DiagnosticProvider {
   }
 
   /**
-   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * Запрашивает обновление диагностик у клиента. При поддержке клиентом
+   * pull-refresh — отправляет {@code workspace/diagnostic/refresh}.
+   * При отсутствии поддержки и {@code pushFallback=true} — инвалидирует
+   * закэшированные диагностики и push'ит свежие в открытые документы.
    * <p>
-   * После регистрации конфигурационных типов diagnostic'и, опирающиеся на
-   * реестр типов (UnknownMember, EventHandler*, и т.п.), могут давать
-   * результат, отличный от того, что был вычислен до регистрации. Поэтому:
-   * <ol>
-   *   <li>Инвалидируем закэшированные диагностики во всех документах
-   *       workspace — иначе клиент после refresh получит старый кэш.</li>
-   *   <li>Просим клиента перезапросить (pull) или push'им сами, если
-   *       клиент не поддерживает refresh.</li>
-   * </ol>
+   * {@code pushFallback=false} оставляет fallback на {@code AnalyzeProjectOnStart},
+   * чтобы не дублировать вычисление и публикацию.
    */
-  @EventListener
-  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
-    var serverContext = event.getSource();
-    serverContext.getDocuments().values().forEach(DocumentContext::clearDiagnostics);
-
+  private void requestRefreshIfSupported(ServerContext serverContext, boolean pushFallback) {
     if (clientSupportsRefresh) {
-      clientHolder.execIfConnected((LanguageClient languageClient) -> {
-        LOGGER.debug("Requesting diagnostic refresh from client after configuration types registered");
-        languageClient.refreshDiagnostics();
-      });
-    } else {
+      requestRefreshIfSupported();
+      return;
+    }
+    if (pushFallback) {
+      serverContext.getDocuments().values().forEach(DocumentContext::clearDiagnostics);
       pushDiagnosticsToOpenedDocuments(serverContext);
     }
   }

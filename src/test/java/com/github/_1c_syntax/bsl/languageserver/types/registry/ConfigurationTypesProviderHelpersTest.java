@@ -56,7 +56,6 @@ import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
 import com.github._1c_syntax.bsl.mdo.children.WebServiceOperationParameter;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -212,7 +211,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = Mockito.mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), Mockito.mock(ApplicationEventPublisher.class));
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
 
       provider.tryRegister();
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
@@ -250,7 +249,7 @@ class ConfigurationTypesProviderHelpersTest {
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), Mockito.mock(ApplicationEventPublisher.class));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
 
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
@@ -295,7 +294,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = Mockito.mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), Mockito.mock(ApplicationEventPublisher.class));
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
 
       provider.tryRegister();
 
@@ -349,7 +348,7 @@ class ConfigurationTypesProviderHelpersTest {
     var lsConfig = Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
     var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), Mockito.mock(ApplicationEventPublisher.class));
+    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
   }
 
   // === memberPlaceholderName ===
@@ -891,7 +890,7 @@ class ConfigurationTypesProviderHelpersTest {
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), Mockito.mock(ApplicationEventPublisher.class));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
       assertion.accept(registry, provider);
     } finally {
       WorkspaceContextHolder.clear();
