@@ -92,6 +92,19 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     completionProvider.handleInitializeEvent();
   }
 
+  private void enableLabelDetailsSupport(boolean enabled) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setLabelDetailsSupport(enabled);
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent();
+  }
+
   @Test
   void dotCompletionOnValueTableColumnsPropertyInCombinedScenario() {
     // Trailing-dot после `ТЗ1.Колонки.` плюс следующий statement в той же процедуре.
@@ -1203,6 +1216,90 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .as("без поддержки markdown документация отдаётся голой строкой (plaintext)")
       .isTrue();
     assertThat(doc.getLeft()).contains("Добавляет значение");
+  }
+
+  @Test
+  void methodSignatureGoesToLabelDetailsWhenClientSupportsLabelDetails() {
+    // given
+    // Клиент заявил completionItem.labelDetailsSupport: сигнатуру и тип возврата
+    // кладём в labelDetails (detail/description) и не дублируем в плоский detail.
+    enableLabelDetailsSupport(true);
+    languageServerConfiguration.setLanguage(Language.RU);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    CompletionItem count;
+    try {
+      count = dotCompletionItem(documentContext, new Position(1, 2), "Количество");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+
+    // then
+    var labelDetails = count.getLabelDetails();
+    assertThat(labelDetails)
+      .as("при поддержке labelDetailsSupport сигнатура кладётся в labelDetails")
+      .isNotNull();
+    assertThat(labelDetails.getDetail())
+      .as("labelDetails.detail — сигнатура «()»")
+      .isEqualTo("()");
+    assertThat(labelDetails.getDescription())
+      .as("labelDetails.description — возвращаемый тип")
+      .isEqualTo("Число");
+    assertThat(count.getDetail())
+      .as("плоский detail не дублирует сигнатуру, когда она ушла в labelDetails")
+      .isNull();
+  }
+
+  @Test
+  void propertyTypeGoesToLabelDetailsDescriptionWhenClientSupportsLabelDetails() {
+    // given
+    enableLabelDetailsSupport(true);
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-properties.os", context);
+
+    // when
+    var columns = dotCompletionItem(documentContext, new Position(1, 3), "Колонки");
+
+    // then
+    var labelDetails = columns.getLabelDetails();
+    assertThat(labelDetails)
+      .as("у свойства тип уходит в labelDetails.description")
+      .isNotNull();
+    assertThat(labelDetails.getDescription()).isNotBlank();
+    assertThat(labelDetails.getDetail())
+      .as("у свойства нет сигнатуры, поэтому labelDetails.detail не заполняется")
+      .isNull();
+    assertThat(columns.getDetail())
+      .as("плоский detail не дублирует тип, когда он ушёл в labelDetails")
+      .isNull();
+  }
+
+  @Test
+  void methodSignatureStaysInFlatDetailWhenClientLacksLabelDetails() {
+    // given
+    // Клиент без labelDetailsSupport — прежнее поведение: сигнатура в плоском detail,
+    // labelDetails не заполняется.
+    enableLabelDetailsSupport(false);
+    languageServerConfiguration.setLanguage(Language.RU);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    CompletionItem count;
+    try {
+      count = dotCompletionItem(documentContext, new Position(1, 2), "Количество");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+
+    // then
+    assertThat(count.getLabelDetails())
+      .as("без labelDetailsSupport labelDetails не заполняется")
+      .isNull();
+    assertThat(count.getDetail())
+      .as("без labelDetailsSupport сигнатура остаётся в плоском detail, как раньше")
+      .isEqualTo("(): Число");
   }
 
   @Test

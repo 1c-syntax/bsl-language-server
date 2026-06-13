@@ -210,6 +210,50 @@ class CallHierarchyProviderTest {
   }
 
   @Test
+  void testOutgoingCallsFromModuleEntryNode() {
+
+    // given
+    var methodItem = getCallHierarchyItem(secondFunctionDeclarationPosition);
+    var incomingParams = new CallHierarchyIncomingCallsParams(methodItem);
+    var moduleItem = provider.incomingCalls(documentContext, incomingParams).stream()
+      .map(CallHierarchyIncomingCall::getFrom)
+      .filter(item -> item.getKind().equals(SymbolKind.Module))
+      .findFirst()
+      .orElseThrow();
+    var params = new CallHierarchyOutgoingCallsParams(moduleItem);
+
+    // when
+    List<CallHierarchyOutgoingCall> outgoingCalls = provider.outgoingCalls(documentContext, params);
+
+    // then
+    assertThat(outgoingCalls)
+      .filteredOn(outgoingCall -> outgoingCall.getTo().getName().equals("ВтораяФункция"))
+      .flatExtracting(CallHierarchyOutgoingCall::getFromRanges)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void testIncomingCallsToModuleEntryNode() {
+
+    // given
+    var methodItem = getCallHierarchyItem(secondFunctionDeclarationPosition);
+    var incomingParams = new CallHierarchyIncomingCallsParams(methodItem);
+    var moduleItem = provider.incomingCalls(documentContext, incomingParams).stream()
+      .map(CallHierarchyIncomingCall::getFrom)
+      .filter(item -> item.getKind().equals(SymbolKind.Module))
+      .findFirst()
+      .orElseThrow();
+    var params = new CallHierarchyIncomingCallsParams(moduleItem);
+
+    // when
+    List<CallHierarchyIncomingCall> incomingCalls = provider.incomingCalls(documentContext, params);
+
+    // then
+    assertThat(incomingCalls).isEmpty();
+  }
+
+  @Test
   void testOutgoingCallsLocalMethodCall() {
 
     // given

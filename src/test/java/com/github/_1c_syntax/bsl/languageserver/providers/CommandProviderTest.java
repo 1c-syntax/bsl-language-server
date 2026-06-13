@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.DefaultCommandArguments;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class CommandProviderTest {
@@ -80,6 +84,36 @@ class CommandProviderTest {
     // then
     assertThat(result)
       .isEqualTo(1);
+  }
+
+  @Test
+  void executeCommandWithUnknownIdThrowsMethodNotFound() {
+    // given
+    var commandArguments = new DefaultCommandArguments(Absolute.uri("file:///fake-uri"), "unknownCommandId");
+
+    // when
+    var thrown = assertThatThrownBy(() -> commandProvider.executeCommand(commandArguments));
+
+    // then
+    thrown
+      .isInstanceOf(ResponseErrorException.class)
+      .extracting(error -> ((ResponseErrorException) error).getResponseError().getCode())
+      .isEqualTo(ResponseErrorCode.MethodNotFound.getValue());
+  }
+
+  @Test
+  void extractArgumentsWithEmptyArgumentsThrowsInvalidParams() {
+    // given
+    var params = new ExecuteCommandParams("Some command", List.of());
+
+    // when
+    var thrown = assertThatThrownBy(() -> commandProvider.extractArguments(params));
+
+    // then
+    thrown
+      .isInstanceOf(ResponseErrorException.class)
+      .extracting(error -> ((ResponseErrorException) error).getResponseError().getCode())
+      .isEqualTo(ResponseErrorCode.InvalidParams.getValue());
   }
 
   @TestConfiguration

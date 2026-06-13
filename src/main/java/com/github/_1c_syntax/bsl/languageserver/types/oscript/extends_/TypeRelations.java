@@ -137,6 +137,27 @@ public class TypeRelations {
   }
 
   /**
+   * Прямо реализуемые интерфейсы: документы интерфейсов, объявленных
+   * {@code documentContext} через {@code &Реализует}. Имя каждого интерфейса
+   * разрешается в документ каноническим путём системы типов; нерезолвящиеся
+   * и неинтерфейсные имена отбрасываются. Порядок объявления сохраняется,
+   * дубликаты по URI удаляются.
+   *
+   * @param documentContext документ-реализатор
+   * @return список документов реализуемых интерфейсов (возможно, пустой)
+   */
+  public List<DocumentContext> implementedInterfaces(DocumentContext documentContext) {
+    var serverContext = documentContext.getServerContext();
+    var result = new LinkedHashMap<URI, DocumentContext>();
+    for (var interfaceName : oScriptExtends.implementedInterfaceNames(documentContext)) {
+      resolveDocument(interfaceName, serverContext)
+        .filter(oScriptExtends::isInterface)
+        .ifPresent(interfaceDocument -> result.putIfAbsent(interfaceDocument.getUri(), interfaceDocument));
+    }
+    return List.copyOf(result.values());
+  }
+
+  /**
    * Прямые наследники: все {@code .os}-документы workspace, объявившие
    * {@code documentContext} своим родителем через {@code &Расширяет}.
    *

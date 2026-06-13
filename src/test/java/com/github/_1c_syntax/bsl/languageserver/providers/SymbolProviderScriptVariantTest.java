@@ -93,7 +93,9 @@ class SymbolProviderScriptVariantTest {
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when
-    var symbols = symbolProvider.getSymbols(params);
+    var symbols = symbolProvider.getSymbols(params, () -> {
+      // no-op: проверка отмены не требуется в тесте поиска
+    });
 
     // then
     assertThat(symbols)

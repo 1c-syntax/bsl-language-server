@@ -28,11 +28,17 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.CreateFilesParams;
+import org.eclipse.lsp4j.DeleteFilesParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.FileChangeType;
+import org.eclipse.lsp4j.FileCreate;
+import org.eclipse.lsp4j.FileDelete;
 import org.eclipse.lsp4j.FileEvent;
+import org.eclipse.lsp4j.FileRename;
+import org.eclipse.lsp4j.RenameFilesParams;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -570,6 +576,221 @@ class BSLWorkspaceServiceTest {
     } finally {
       applicationContext.removeApplicationListener(listener);
     }
+  }
+
+  @Test
+  void testDidCreateFiles_AddsDocument() throws IOException {
+    // given
+    var testFile = createTestFile("created_via_fileops.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+
+    var fileCreate = new FileCreate(uri.toString());
+    var params = new CreateFilesParams(List.of(fileCreate));
+
+    // when
+    workspaceService.didCreateFiles(params);
+    await().until(() -> workspaceServerContext().getDocument(uri) != null);
+
+    // then
+    var documentContext = workspaceServerContext().getDocument(uri);
+    assertThat(documentContext).isNotNull();
+    assertThat(workspaceServerContext().isDocumentOpened(documentContext)).isFalse();
+  }
+
+  /** Создание файла внутри excluded-каталога через didCreateFiles не добавляет его в контекст. */
+  @Test
+  void testDidCreateFiles_ExcludedPath() throws IOException {
+    // given
+    var workspaceUri = Absolute.uri(tempDir.toUri());
+    WorkspaceContextHolder.run(workspaceUri, () -> {
+      var wsCtx = workspaceServerContext();
+      wsCtx.setConfigurationRoot(tempDir);
+      wsCtx.getLanguageServerConfiguration().setExcludePaths(List.of(".git"));
+    });
+
+    var excludedDir = tempDir.resolve(".git").toFile();
+    assertThat(excludedDir.mkdirs()).isTrue();
+    var testFile = new File(excludedDir, "excluded_fileops.bsl");
+    FileUtils.copyFile(FIXTURE_BSL, testFile);
+    var uri = Absolute.uri(testFile.toURI());
+
+    var params = new CreateFilesParams(List.of(new FileCreate(uri.toString())));
+
+    // when
+    workspaceService.didCreateFiles(params);
+
+    // then
+    await()
+      .atMost(Duration.ofSeconds(2))
+      .during(Duration.ofMillis(300))
+      .until(() -> workspaceServerContext().getDocument(uri) == null);
+  }
+
+  @Test
+  void testDidDeleteFiles_RemovesDocument() throws IOException {
+    // given
+    var testFile = createTestFile("deleted_via_fileops.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+
+    var ctx = workspaceServerContext();
+    var documentContext = ctx.addDocument(uri);
+    ctx.rebuildDocument(documentContext);
+    ctx.tryClearDocument(documentContext);
+
+    assertThat(ctx.getDocument(uri)).isNotNull();
+
+    var params = new DeleteFilesParams(List.of(new FileDelete(uri.toString())));
+
+    // when
+    workspaceService.didDeleteFiles(params);
+    await().until(() -> workspaceServerContext().getDocument(uri) == null);
+
+    // then
+    assertThat(workspaceServerContext().getDocument(uri)).isNull();
+  }
+
+  /**
+   * При удалении каталога через didDeleteFiles присылается один URI каталога без вложенных файлов.
+   * Все документы внутри каталога должны быть выгружены, а каталог-«тёзка» — остаться.
+   */
+  @Test
+  void testDidDeleteFiles_Folder() throws IOException {
+    // given
+    var objectModule = createTestFile("Catalogs/Wares/Ext/ObjectModule.bsl");
+    var namesakeModule = createTestFile("Catalogs/WaresArchive/Ext/ObjectModule.bsl");
+
+    var objectModuleUri = Absolute.uri(objectModule.toURI());
+    var namesakeModuleUri = Absolute.uri(namesakeModule.toURI());
+
+    var ctx = workspaceServerContext();
+    for (var uri : List.of(objectModuleUri, namesakeModuleUri)) {
+      var documentContext = ctx.addDocument(uri);
+      ctx.rebuildDocument(documentContext);
+      ctx.tryClearDocument(documentContext);
+    }
+
+    var deletedFolder = tempDir.resolve("Catalogs").resolve("Wares").toFile();
+    FileUtils.deleteDirectory(deletedFolder);
+    var folderUri = Absolute.uri(deletedFolder.toURI());
+
+    var params = new DeleteFilesParams(List.of(new FileDelete(folderUri.toString())));
+
+    // when
+    workspaceService.didDeleteFiles(params);
+    await().until(() -> ctx.getDocument(objectModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(objectModuleUri)).isNull();
+    assertThat(ctx.getDocument(namesakeModuleUri)).isNotNull();
+  }
+
+  @Test
+  void testDidRenameFiles_MovesDocument() throws IOException {
+    // given
+    var oldFile = createTestFile("rename_old.bsl");
+    var oldUri = Absolute.uri(oldFile.toURI());
+
+    var ctx = workspaceServerContext();
+    var documentContext = ctx.addDocument(oldUri);
+    ctx.rebuildDocument(documentContext);
+    ctx.tryClearDocument(documentContext);
+
+    var newFile = tempDir.resolve("rename_new.bsl").toFile();
+    FileUtils.moveFile(oldFile, newFile);
+    var newUri = Absolute.uri(newFile.toURI());
+
+    var fileRename = new FileRename(oldUri.toString(), newUri.toString());
+    var params = new RenameFilesParams(List.of(fileRename));
+
+    // when
+    workspaceService.didRenameFiles(params);
+    await().until(() -> workspaceServerContext().getDocument(newUri) != null
+      && workspaceServerContext().getDocument(oldUri) == null);
+
+    // then
+    assertThat(workspaceServerContext().getDocument(oldUri)).isNull();
+    assertThat(workspaceServerContext().getDocument(newUri)).isNotNull();
+  }
+
+  /**
+   * Клиенты (VS Code) при создании каталога присылают одно событие с URI каталога без событий
+   * по вложенным файлам. Все BSL/OS-файлы внутри каталога должны быть добавлены в контекст.
+   */
+  @Test
+  void testDidCreateFiles_Folder() throws IOException {
+    // given
+    var objectModule = createTestFile("Catalogs/Items/Ext/ObjectModule.bsl");
+    var formModule = createTestFile("Catalogs/Items/Forms/ItemForm/Ext/Form/Module.bsl");
+
+    var objectModuleUri = Absolute.uri(objectModule.toURI());
+    var formModuleUri = Absolute.uri(formModule.toURI());
+
+    var ctx = workspaceServerContext();
+    assertThat(ctx.getDocument(objectModuleUri)).isNull();
+    assertThat(ctx.getDocument(formModuleUri)).isNull();
+
+    var createdFolder = tempDir.resolve("Catalogs").resolve("Items").toFile();
+    var folderUri = Absolute.uri(createdFolder.toURI());
+
+    var params = new CreateFilesParams(List.of(new FileCreate(folderUri.toString())));
+
+    // when
+    workspaceService.didCreateFiles(params);
+    await().until(() -> ctx.getDocument(objectModuleUri) != null && ctx.getDocument(formModuleUri) != null);
+
+    // then
+    assertThat(ctx.getDocument(objectModuleUri)).isNotNull();
+    assertThat(ctx.getDocument(formModuleUri)).isNotNull();
+  }
+
+  /**
+   * При переименовании каталога присылается один FileRename с URI каталога без вложенных файлов.
+   * Документы внутри каталога должны появиться в контексте по новым URI и исчезнуть по старым.
+   */
+  @Test
+  void testDidRenameFiles_Folder() throws IOException {
+    // given
+    var oldObjectModule = createTestFile("Catalogs/Orders/Ext/ObjectModule.bsl");
+    var oldFormModule = createTestFile("Catalogs/Orders/Forms/ItemForm/Ext/Form/Module.bsl");
+
+    var oldObjectModuleUri = Absolute.uri(oldObjectModule.toURI());
+    var oldFormModuleUri = Absolute.uri(oldFormModule.toURI());
+
+    var ctx = workspaceServerContext();
+    for (var uri : List.of(oldObjectModuleUri, oldFormModuleUri)) {
+      var documentContext = ctx.addDocument(uri);
+      ctx.rebuildDocument(documentContext);
+      ctx.tryClearDocument(documentContext);
+    }
+
+    var oldFolder = tempDir.resolve("Catalogs").resolve("Orders").toFile();
+    var newFolder = tempDir.resolve("Catalogs").resolve("Documents").toFile();
+    FileUtils.moveDirectory(oldFolder, newFolder);
+
+    var oldFolderUri = Absolute.uri(oldFolder.toURI());
+    var newFolderUri = Absolute.uri(newFolder.toURI());
+
+    var newObjectModuleUri = Absolute.uri(newFolder.toPath()
+      .resolve("Ext").resolve("ObjectModule.bsl").toUri());
+    var newFormModuleUri = Absolute.uri(newFolder.toPath()
+      .resolve("Forms").resolve("ItemForm").resolve("Ext").resolve("Form").resolve("Module.bsl").toUri());
+
+    var params = new RenameFilesParams(List.of(
+      new FileRename(oldFolderUri.toString(), newFolderUri.toString())
+    ));
+
+    // when
+    workspaceService.didRenameFiles(params);
+    await().until(() -> ctx.getDocument(newObjectModuleUri) != null
+      && ctx.getDocument(newFormModuleUri) != null
+      && ctx.getDocument(oldObjectModuleUri) == null
+      && ctx.getDocument(oldFormModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(oldObjectModuleUri)).isNull();
+    assertThat(ctx.getDocument(oldFormModuleUri)).isNull();
+    assertThat(ctx.getDocument(newObjectModuleUri)).isNotNull();
+    assertThat(ctx.getDocument(newFormModuleUri)).isNotNull();
   }
 
   private ServerContext workspaceServerContext() {

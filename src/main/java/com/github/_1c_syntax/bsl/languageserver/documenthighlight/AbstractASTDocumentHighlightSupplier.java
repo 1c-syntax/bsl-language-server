@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -50,6 +51,6 @@ public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHi
 
     var token = terminalNode.getSymbol();
     var range = Ranges.create(token);
-    highlights.add(new DocumentHighlight(range));
+    highlights.add(new DocumentHighlight(range, DocumentHighlightKind.Text));
   }
 }

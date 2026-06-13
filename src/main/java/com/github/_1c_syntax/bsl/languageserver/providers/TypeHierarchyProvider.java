@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Провайдер иерархии типов для OneScript-классов, использующих библиотеку
@@ -88,42 +89,53 @@ public class TypeHierarchyProvider {
   }
 
   /**
-   * Получить родительские классы (супертипы) элемента иерархии.
+   * Получить родительские классы (супертипы) элемента иерархии: родителя из
+   * {@code &Расширяет} (одиночное наследование) и интерфейсы, реализуемые через
+   * {@code &Реализует}. В список попадают только зарегистрированные library-классы.
    *
    * @param documentContext контекст документа, соответствующего элементу
    * @param params          параметры запроса
-   * @return список супертипов (обычно ноль или один — extends реализует
-   *         одиночное наследование)
+   * @return отсортированный список супертипов (родитель и реализуемые интерфейсы)
    */
   public List<TypeHierarchyItem> supertypes(
     DocumentContext documentContext,
     TypeHierarchySupertypesParams params
   ) {
-    return typeRelations.supertype(documentContext)
+    var result = Stream.concat(
+        typeRelations.supertype(documentContext).stream(),
+        typeRelations.implementedInterfaces(documentContext).stream()
+      )
       .filter(oScriptLibraryIndex::isLibraryClass)
       .map(this::toItem)
-      .map(List::of)
-      .orElseGet(Collections::emptyList);
+      .sorted(ITEM_COMPARATOR)
+      .toList();
+    return result;
   }
 
   /**
-   * Получить дочерние классы (подтипы) элемента иерархии — все {@code .os}-классы
-   * workspace, объявившие данный класс своим родителем через {@code &Расширяет}.
+   * Получить дочерние классы (подтипы) элемента иерархии: классы-наследники,
+   * объявившие данный класс родителем через {@code &Расширяет}, и — если элемент
+   * является интерфейсом — классы-реализаторы, объявившие его через {@code &Реализует}.
+   * В список попадают только зарегистрированные library-классы.
    *
    * @param documentContext контекст документа, соответствующего элементу
    * @param params          параметры запроса
-   * @return отсортированный список подтипов
+   * @return отсортированный список подтипов (наследники и реализаторы)
    */
   public List<TypeHierarchyItem> subtypes(
     DocumentContext documentContext,
     TypeHierarchySubtypesParams params
   ) {
-    var result = typeRelations.subtypes(documentContext).stream()
+    var result = Stream.concat(
+        typeRelations.subtypes(documentContext).stream(),
+        typeRelations.implementors(documentContext).stream()
+      )
       .filter(oScriptLibraryIndex::isLibraryClass)
+      .distinct()
       .map(this::toItem)
       .sorted(ITEM_COMPARATOR)
       .toList();
-    return result.isEmpty() ? Collections.emptyList() : result;
+    return result;
   }
 
   /**

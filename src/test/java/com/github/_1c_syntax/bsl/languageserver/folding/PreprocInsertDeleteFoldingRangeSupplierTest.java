@@ -19,43 +19,55 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.color;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.eclipse.lsp4j.Color;
-import org.eclipse.lsp4j.ColorInformation;
+import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatColorInformations;
-
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatFoldingRanges;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class ConstructorColorInformationSupplierTest {
+class PreprocInsertDeleteFoldingRangeSupplierTest {
 
   @Autowired
-  private ConstructorColorInformationSupplier supplier;
+  private PreprocInsertDeleteFoldingRangeSupplier supplier;
 
   @Test
-  void getColorInformation() {
+  void getFoldingRanges() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/color/ConstructorColorInformationSupplier.bsl");
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/folding/PreprocInsertDeleteFoldingRangeSupplier.bsl"
+    );
 
     // when
-    List<ColorInformation> colorInformation = supplier.getColorInformation(documentContext);
+    List<FoldingRange> foldingRanges = supplier.getFoldingRanges(documentContext);
 
     // then
-    assertThatColorInformations(colorInformation)
-      .hasSize(4)
-      .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(0, 4, 14))
-      .hasColorAndRange(new Color(0.00392156862745098, 0.00784313725490196, 0.011764705882352941, 1), Ranges.create(1, 4, 23))
-      .hasColorAndRange(new Color(0.00392156862745098, 0.00784313725490196, 0.011764705882352941, 1), Ranges.create(3, 4, 26))
-      .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(4, 4, 17))
+    assertThatFoldingRanges(foldingRanges)
+      .hasSize(2)
+      .hasKindAndRange(FoldingRangeKind.Region, 2, 5)
+      .hasKindAndRange(FoldingRangeKind.Region, 7, 10)
     ;
   }
 
+  @Test
+  void getFoldingRangesWithoutDirectives() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/folding/QueryPackageFoldingRangeSupplier.bsl"
+    );
+
+    // when
+    List<FoldingRange> foldingRanges = supplier.getFoldingRanges(documentContext);
+
+    // then
+    assertThat(foldingRanges).isEmpty();
+  }
 }

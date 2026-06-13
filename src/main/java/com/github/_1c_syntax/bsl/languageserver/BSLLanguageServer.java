@@ -38,8 +38,11 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
+import org.eclipse.lsp4j.CompletionItemOptions;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
+import org.eclipse.lsp4j.DidChangeWatchedFilesRegistrationOptions;
 import org.eclipse.lsp4j.ImplementationRegistrationOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
@@ -49,6 +52,12 @@ import org.eclipse.lsp4j.DocumentOnTypeFormattingOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
+import org.eclipse.lsp4j.FileOperationFilter;
+import org.eclipse.lsp4j.FileOperationOptions;
+import org.eclipse.lsp4j.FileOperationPattern;
+import org.eclipse.lsp4j.FileOperationPatternKind;
+import org.eclipse.lsp4j.FileOperationsServerCapabilities;
+import org.eclipse.lsp4j.FileSystemWatcher;
 import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
@@ -56,6 +65,8 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.ReferenceOptions;
+import org.eclipse.lsp4j.Registration;
+import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
@@ -70,6 +81,8 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.TypeHierarchyRegistrationOptions;
+import org.eclipse.lsp4j.WatchKind;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
@@ -109,6 +122,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final LanguageClientHolder languageClientHolder;
   private final ServerContextProvider serverContextProvider;
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerInfo serverInfo;
@@ -198,6 +212,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   @Override
   public void initialized(InitializedParams params) {
+    registerFileWatchers();
+
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.entrySet().stream()
@@ -217,6 +233,50 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
           LOGGER.error("Error populating workspace contexts", throwable);
         }
       });
+  }
+
+  /**
+   * Динамически регистрирует у клиента наблюдателей за файлами рабочей области.
+   * <p>
+   * Регистрация выполняется только если клиент заявил поддержку
+   * {@code workspace.didChangeWatchedFiles.dynamicRegistration}. Универсальные клиенты
+   * (neovim, helix и др.) без статической конфигурации наблюдателей сами ничего не присылают
+   * в {@code workspace/didChangeWatchedFiles}, из-за чего индекс устаревает при операциях
+   * вне редактора (git checkout, выгрузка из конфигуратора). Регистрируются наблюдатели на
+   * {@code **&#47;*.bsl} и {@code **&#47;*.os}; за конфигурационным файлом следит сам сервер
+   * (см. {@code ConfigurationFileSystemWatcher}), поэтому клиентский наблюдатель за ним не нужен.
+   * <p>
+   * Если клиент не заявил динамическую регистрацию или не подключён, метод ничего не делает.
+   */
+  private void registerFileWatchers() {
+    if (!hasDidChangeWatchedFilesDynamicRegistration()) {
+      return;
+    }
+
+    languageClientHolder.execIfConnected(client -> {
+      var watchKind = WatchKind.Create | WatchKind.Change | WatchKind.Delete;
+      var watchers = List.of(
+        new FileSystemWatcher(Either.forLeft("**/*.bsl"), watchKind),
+        new FileSystemWatcher(Either.forLeft("**/*.os"), watchKind)
+      );
+
+      var registrationOptions = new DidChangeWatchedFilesRegistrationOptions(watchers);
+      var registration = new Registration(
+        "bsl-language-server-watched-files",
+        "workspace/didChangeWatchedFiles",
+        registrationOptions
+      );
+
+      client.registerCapability(new RegistrationParams(List.of(registration)));
+    });
+  }
+
+  private boolean hasDidChangeWatchedFilesDynamicRegistration() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles)
+      .map(DidChangeWatchedFilesCapabilities::getDynamicRegistration)
+      .orElse(false);
   }
 
   @Override
@@ -358,6 +418,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var completionOptions = new CompletionOptions();
     completionOptions.setResolveProvider(Boolean.TRUE);
     completionOptions.setTriggerCharacters(List.of("."));
+    var completionItemOptions = new CompletionItemOptions();
+    completionItemOptions.setLabelDetailsSupport(Boolean.TRUE);
+    completionOptions.setCompletionItem(completionItemOptions);
     return completionOptions;
   }
 
@@ -490,7 +553,38 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     workspaceFoldersOptions.setChangeNotifications(Boolean.TRUE);
 
     workspaceCapabilities.setWorkspaceFolders(workspaceFoldersOptions);
+    workspaceCapabilities.setFileOperations(getFileOperationsCapabilities());
     return workspaceCapabilities;
+  }
+
+  /**
+   * Формирует возможности сервера по обработке файловых операций рабочей области
+   * ({@code didCreate}/{@code didRename}/{@code didDelete}). Фильтры покрывают BSL- и
+   * OneScript-файлы ({@code **&#47;*.bsl}, {@code **&#47;*.os}), а также каталоги, чтобы
+   * получать события переименования и удаления папок целиком.
+   *
+   * @return возможности сервера по файловым операциям
+   */
+  private static FileOperationsServerCapabilities getFileOperationsCapabilities() {
+    var fileOperations = new FileOperationsServerCapabilities();
+
+    var options = new FileOperationOptions(getFileOperationFilters());
+    fileOperations.setDidCreate(options);
+    fileOperations.setDidRename(options);
+    fileOperations.setDidDelete(options);
+
+    return fileOperations;
+  }
+
+  private static List<FileOperationFilter> getFileOperationFilters() {
+    var folderPattern = new FileOperationPattern("**/*");
+    folderPattern.setMatches(FileOperationPatternKind.Folder);
+
+    return List.of(
+      new FileOperationFilter(new FileOperationPattern("**/*.bsl")),
+      new FileOperationFilter(new FileOperationPattern("**/*.os")),
+      new FileOperationFilter(folderPattern)
+    );
   }
 
 }

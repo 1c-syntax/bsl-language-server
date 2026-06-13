@@ -49,6 +49,7 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemLabelDetails;
 import org.eclipse.lsp4j.CompletionItemResolveSupportCapabilities;
 import org.eclipse.lsp4j.CompletionItemTag;
 import org.eclipse.lsp4j.CompletionItemTagSupportCapabilities;
@@ -133,6 +134,13 @@ public final class CompletionProvider {
   // иначе строится жадно, как раньше (клиент без resolve должен получить её сразу).
   private boolean documentationResolveSupport;
 
+  // Кэшируется на initialize. Поддерживает ли клиент completionItem.labelDetailsSupport
+  // (LSP 3.17). Если да — сигнатура метода и возвращаемый тип / тип свойства кладутся в
+  // CompletionItemLabelDetails (detail/description) рядом с именем, а плоский detail не
+  // заполняется, чтобы клиент не показывал ту же сигнатуру дважды. Иначе — прежнее поведение
+  // с записью сигнатуры в плоский detail.
+  private boolean labelDetailsSupport;
+
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
     var completionItem = clientCapabilitiesHolder.getCapabilities()
@@ -155,6 +163,9 @@ public final class CompletionProvider {
       .map(CompletionItemCapabilities::getResolveSupport)
       .map(CompletionItemResolveSupportCapabilities::getProperties)
       .map(properties -> properties.contains("documentation"))
+      .orElse(Boolean.FALSE);
+    labelDetailsSupport = completionItem
+      .map(CompletionItemCapabilities::getLabelDetailsSupport)
       .orElse(Boolean.FALSE);
   }
 
@@ -700,8 +711,11 @@ public final class CompletionProvider {
    * <p>
    * Разделение полей по LSP-конвенции:
    * <ul>
-   *   <li>{@code detail} — техническая сводка: сигнатура {@code (param1, [optional])}
-   *       и возвращаемый тип для методов; имя типа для свойств. Никогда не дублирует описание.</li>
+   *   <li>сигнатура {@code (param1, optional?)} и возвращаемый тип для методов, имя типа для
+   *       свойств — техническая сводка. При поддержке клиентом {@code labelDetailsSupport}
+   *       (LSP 3.17) она кладётся в {@code labelDetails} (detail/description) рядом с именем,
+   *       иначе — в плоский {@code detail} (см. {@link #applyDetail}). Никогда не дублирует
+   *       описание.</li>
    *   <li>{@code documentation} — содержательное описание (с deprecation-блоком, если есть).</li>
    * </ul>
    * Раньше {@code purposeDescription} писалось одновременно в {@code detail} и в
@@ -719,16 +733,10 @@ public final class CompletionProvider {
     if (member.kind() == MemberKind.METHOD) {
       item.setKind(methodKind);
       applyCallableInsertText(item, displayName, memberHasParameters(member));
-      var detail = methodDetail(member, scriptVariant);
-      if (!detail.isBlank()) {
-        item.setDetail(detail);
-      }
+      applyMethodDetail(item, member, scriptVariant);
     } else {
       item.setKind(propertyKind);
-      var detail = propertyDetail(member, scriptVariant);
-      if (!detail.isBlank()) {
-        item.setDetail(detail);
-      }
+      applyPropertyDetail(item, member, scriptVariant);
     }
     // documentation тяжела для широких типов (Глобальный контекст, union типов):
     // если клиент умеет lazy-resolve и член резолвим обратно по owner-типу —
@@ -865,18 +873,91 @@ public final class CompletionProvider {
     return !signatures.get(0).parameters().isEmpty();
   }
 
-  private String methodDetail(MemberDescriptor member, Language scriptVariant) {
+  /**
+   * Заполняет детали пункта автодополнения для метода. При поддержке клиентом
+   * {@code completionItem.labelDetailsSupport} сигнатура «{@code (Пар1, Пар2?)}» кладётся в
+   * {@link CompletionItemLabelDetails#setDetail}, возвращаемый тип — в
+   * {@link CompletionItemLabelDetails#setDescription}, а плоский {@code detail} не заполняется,
+   * чтобы клиент не показывал сигнатуру дважды. Иначе сигнатура и тип возврата записываются в
+   * плоский {@code detail} строкой «{@code (Пар1, Пар2?): Тип}» (прежнее поведение). Несколько
+   * перегрузок передаются строкой-счётчиком вариантов синтаксиса.
+   *
+   * @param item          пункт автодополнения, которому проставляются детали.
+   * @param member        описатель члена-метода, из которого берутся сигнатуры.
+   * @param scriptVariant язык отображаемых имён параметров и типа возврата.
+   */
+  private void applyMethodDetail(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
     var signatures = member.signatures();
     if (signatures.size() > 1) {
-      return formatSignaturesCount(signatures.size(), scriptVariant);
+      var count = formatSignaturesCount(signatures.size(), scriptVariant);
+      applyDetail(item, count, "");
+      return;
     }
     if (signatures.isEmpty()) {
-      return "";
+      return;
     }
-    return formatSignature(signatures.get(0), scriptVariant);
+    var signature = signatures.get(0);
+    var paramList = formatParameterList(signature, scriptVariant);
+    var returnTypeName = formatTypeName(signature.returnType(), scriptVariant);
+    applyDetail(item, paramList, returnTypeName);
   }
 
-  private String formatSignature(SignatureDescriptor signature, Language scriptVariant) {
+  /**
+   * Заполняет детали пункта автодополнения для свойства. При поддержке клиентом
+   * {@code completionItem.labelDetailsSupport} имя типа члена кладётся в
+   * {@link CompletionItemLabelDetails#setDescription}, а плоский {@code detail} не заполняется.
+   * Иначе имя типа записывается в плоский {@code detail} (прежнее поведение).
+   *
+   * @param item          пункт автодополнения, которому проставляются детали.
+   * @param member        описатель члена-свойства, из которого берётся тип.
+   * @param scriptVariant язык отображаемого имени типа.
+   */
+  private void applyPropertyDetail(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
+    var typeName = formatTypeName(member.returnType(), scriptVariant);
+    applyDetail(item, "", typeName);
+  }
+
+  /**
+   * Раскладывает сигнатуру и тип по полям пункта автодополнения с учётом клиентских
+   * capabilities. При поддержке {@code completionItem.labelDetailsSupport} {@code signature}
+   * (например, «{@code (Пар1, Пар2?)}») идёт в {@link CompletionItemLabelDetails#setDetail}, а
+   * {@code type} — в {@link CompletionItemLabelDetails#setDescription}; плоский {@code detail}
+   * не трогается. Иначе оба склеиваются в плоский {@code detail} строкой
+   * «{@code signature: type}», а если signature пустая — записывается только {@code type}.
+   *
+   * @param item      пункт автодополнения, которому проставляются детали.
+   * @param signature сигнатура «{@code (...)}» либо строка-счётчик вариантов; может быть пустой.
+   * @param type      возвращаемый тип метода или тип свойства; может быть пустым.
+   */
+  private void applyDetail(CompletionItem item, String signature, String type) {
+    if (labelDetailsSupport) {
+      if (signature.isBlank() && type.isBlank()) {
+        return;
+      }
+      var labelDetails = new CompletionItemLabelDetails();
+      if (!signature.isBlank()) {
+        labelDetails.setDetail(signature);
+      }
+      if (!type.isBlank()) {
+        labelDetails.setDescription(type);
+      }
+      item.setLabelDetails(labelDetails);
+      return;
+    }
+    var sb = new StringBuilder(signature);
+    if (!type.isBlank()) {
+      if (sb.length() > 0) {
+        sb.append(": ");
+      }
+      sb.append(type);
+    }
+    if (sb.length() > 0) {
+      item.setDetail(sb.toString());
+    }
+  }
+
+  /** Сигнатура «{@code (Пар1, Пар2?)}» с пометкой «?» у необязательных параметров. */
+  private String formatParameterList(SignatureDescriptor signature, Language scriptVariant) {
     var sb = new StringBuilder();
     sb.append('(');
     var params = signature.parameters();
@@ -893,15 +974,7 @@ public final class CompletionProvider {
       }
     }
     sb.append(')');
-    var returnTypeName = formatTypeName(signature.returnType(), scriptVariant);
-    if (!returnTypeName.isEmpty()) {
-      sb.append(": ").append(returnTypeName);
-    }
     return sb.toString();
-  }
-
-  private String propertyDetail(MemberDescriptor member, Language scriptVariant) {
-    return formatTypeName(member.returnType(), scriptVariant);
   }
 
   /**

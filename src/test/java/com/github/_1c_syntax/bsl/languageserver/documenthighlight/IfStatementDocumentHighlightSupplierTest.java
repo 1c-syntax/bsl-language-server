@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -311,6 +312,28 @@ class IfStatementDocumentHighlightSupplierTest {
 
     assertHighlightRange(highlights, 3, 4, 3, 8);      // Если
     assertHighlightRange(highlights, 3, 16, 3, 21);    // Тогда
+  }
+
+  @Test
+  void testHighlightKindIsText() {
+    // given
+    // Подсветка парных ключевых слов конструкции Если/КонецЕсли — это не чтение/запись переменной,
+    // а подсветка парных лексем, поэтому kind должен быть Text.
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(3, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    assertThat(highlights)
+      .extracting(DocumentHighlight::getKind)
+      .containsOnly(DocumentHighlightKind.Text);
   }
 
   private void assertHighlightRange(List<DocumentHighlight> highlights,

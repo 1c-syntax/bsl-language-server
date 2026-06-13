@@ -25,7 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureHelpParams;
+import org.eclipse.lsp4j.SignatureHelpTriggerKind;
+import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -522,5 +526,215 @@ class SignatureHelpProviderTest {
     var paramDoc = sig.getParameters().get(0).getDocumentation();
     assertThat(paramDoc).isNotNull();
     assertThat(paramDoc.getLeft()).contains("первичный документ");
+  }
+
+  @Test
+  void retriggerKeepsUserSelectedSignatureWhenStillValid() {
+    // given — у метода Разделить две перегрузки: одна с разделителем и одна
+    // с разделителем и кодировкой; курсор на первом параметре (после открывающей
+    // скобки), где сервер по числу аргументов выбрал бы нулевую перегрузку,
+    // но пользователь стрелками выбрал первую.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var userPicked = userPickedContext(previous, 1);
+    params.setContext(userPicked);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — выбор пользователя (1) сохранён, активный параметр пересчитан (0).
+    assertThat(help.getSignatures()).hasSize(2);
+    assertThat(help.getActiveParameter()).isZero();
+    assertThat(help.getActiveSignature()).isEqualTo(1);
+  }
+
+  @Test
+  void retriggerFallsBackToServerWhenUserSignatureInvalid() {
+    // given — курсор на втором параметре (после первой запятой); пользователь ранее
+    // выбрал 0-ю перегрузку с одним параметром, для которой второй параметр невалиден.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|", "UTF-8");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("\"UTF-8\"");
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var userPicked = userPickedContext(previous, 0);
+    params.setContext(userPicked);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — 0-я перегрузка невалидна (один параметр), сервер пересчитывает на 1-ю.
+    assertThat(help.getSignatures()).hasSize(2);
+    assertThat(help.getActiveParameter()).isEqualTo(1);
+    assertThat(help.getActiveSignature()).isEqualTo(1);
+  }
+
+  @Test
+  void nonRetriggerIgnoresProvidedContextSignature() {
+    // given — тот же контекст с выбором 1, но без флага retrigger.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var context = userPickedContext(previous, 1);
+    context.setIsRetrigger(false);
+    context.setTriggerKind(SignatureHelpTriggerKind.TriggerCharacter);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — контекст игнорируется, активная сигнатура по серверной логике (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithoutActiveSignatureHelpFallsBackToServer() {
+    // given — retrigger без присланного activeSignatureHelp в контексте.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — присланной сигнатуры нет, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithNullActiveSignatureFallsBackToServer() {
+    // given — retrigger с activeSignatureHelp, но без выбранной активной сигнатуры.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var activeHelp = new SignatureHelp();
+    activeHelp.setSignatures(previous.getSignatures());
+    activeHelp.setActiveSignature(null);
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    context.setActiveSignatureHelp(activeHelp);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — активная сигнатура не задана, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithActiveSignatureOutOfRangeFallsBackToServer() {
+    // given — присланный индекс активной сигнатуры за границами текущего списка.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var context = userPickedContext(previous, 99);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — индекс невалиден, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  @Test
+  void retriggerWithDifferentLabelFallsBackToServer() {
+    // given — присланная по тому же индексу сигнатура имеет другую метку,
+    // значит пользовательский выбор более не актуален.
+    var content = """
+      ЧД = Новый ЧтениеДанных("path");
+      ЧД.Разделить("|");
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Разделить(") + "Разделить(".length();
+    params.setPosition(new Position(1, col));
+
+    var previous = signatureHelpProvider.getSignatureHelp(documentContext, params);
+    var activeHelp = new SignatureHelp();
+    var staleSignatures = previous.getSignatures().stream()
+      .map(SignatureHelpProviderTest::copySignatureInformation)
+      .toList();
+    staleSignatures.get(1).setLabel("OtherMethod(args)");
+    activeHelp.setSignatures(staleSignatures);
+    activeHelp.setActiveSignature(1);
+    activeHelp.setActiveParameter(previous.getActiveParameter());
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    context.setActiveSignatureHelp(activeHelp);
+    params.setContext(context);
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — метка не совпадает, используется серверная логика (0).
+    assertThat(help.getActiveSignature()).isZero();
+  }
+
+  private static SignatureHelpContext userPickedContext(SignatureHelp previous, int activeSignature) {
+    var activeHelp = new SignatureHelp();
+    activeHelp.setSignatures(previous.getSignatures().stream()
+      .map(SignatureHelpProviderTest::copySignatureInformation)
+      .toList());
+    activeHelp.setActiveSignature(activeSignature);
+    activeHelp.setActiveParameter(previous.getActiveParameter());
+    var context = new SignatureHelpContext(SignatureHelpTriggerKind.TriggerCharacter, true);
+    context.setActiveSignatureHelp(activeHelp);
+    return context;
+  }
+
+  private static SignatureInformation copySignatureInformation(SignatureInformation source) {
+    var copy = new SignatureInformation();
+    copy.setLabel(source.getLabel());
+    copy.setParameters(source.getParameters());
+    copy.setDocumentation(source.getDocumentation());
+    return copy;
   }
 }

@@ -27,25 +27,33 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.bsl.languageserver.utils.PathExclusionUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.CreateFilesParams;
+import org.eclipse.lsp4j.DeleteFilesParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.eclipse.lsp4j.RenameFilesParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
+import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.net.URI;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -73,9 +81,9 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
-    return CompletableFuture.supplyAsync(
-      () -> Either.forRight(symbolProvider.getSymbols(params)),
-      executor
+    return CompletableFutures.computeAsync(
+      executor,
+      cancelChecker -> Either.forRight(symbolProvider.getSymbols(params, cancelChecker))
     );
   }
 
@@ -90,27 +98,112 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         for (var fileEvent : params.getChanges()) {
           var uri = Absolute.uri(fileEvent.getUri());
-
-          serverContextProvider.getServerContext(uri).ifPresentOrElse(
-            context -> {
-              var workspaceUri = context.getWorkspaceUri();
-              if (workspaceUri == null) {
-                LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
-                return;
-              }
-              WorkspaceContextHolder.run(workspaceUri, () -> {
-                switch (fileEvent.getType()) {
-                  case Deleted -> handleDeletedFileEvent(uri);
-                  case Created -> handleCreatedFileEvent(uri);
-                  case Changed -> handleChangedFileEvent(uri);
-                }
-              });
-            },
-            () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
-          );
+          runInWorkspaceContext(uri, () -> {
+            switch (fileEvent.getType()) {
+              case Deleted -> handleDeletedFileEvent(uri);
+              case Created -> handleCreatedFileEvent(uri);
+              case Changed -> handleChangedFileEvent(uri);
+            }
+          });
         }
       },
       executor
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает уведомление {@code workspace/didCreateFiles}: для каждого URI добавляет
+   * документ(ы) в контекст сервера аналогично событию создания в
+   * {@code workspace/didChangeWatchedFiles}. Пути из {@code excludePaths} и открытые в редакторе
+   * документы учитываются так же, как в существующих обработчиках.
+   *
+   * @param params параметры уведомления о созданных файлах
+   */
+  @Override
+  public void didCreateFiles(CreateFilesParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        for (var file : params.getFiles()) {
+          var uri = Absolute.uri(file.getUri());
+          runInWorkspaceContext(uri, () -> handleCreatedFileEvent(uri));
+        }
+      },
+      executor
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает уведомление {@code workspace/didDeleteFiles}: для каждого URI удаляет
+   * документ(ы) из контекста сервера. Для каталога удаление выполняется по префиксу URI
+   * с границей {@code /} (переиспользуется логика обработки удаления каталога из
+   * {@code workspace/didChangeWatchedFiles}).
+   *
+   * @param params параметры уведомления об удалённых файлах
+   */
+  @Override
+  public void didDeleteFiles(DeleteFilesParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        for (var file : params.getFiles()) {
+          var uri = Absolute.uri(file.getUri());
+          runInWorkspaceContext(uri, () -> handleDeletedFileEvent(uri));
+        }
+      },
+      executor
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает уведомление {@code workspace/didRenameFiles}: каждое переименование
+   * выполняется атомарно как удаление документа(ов) по старому URI и создание по новому,
+   * включая переименование каталогов. Пути из {@code excludePaths} и открытые в редакторе
+   * документы учитываются так же, как в существующих обработчиках.
+   *
+   * @param params параметры уведомления о переименованных файлах
+   */
+  @Override
+  public void didRenameFiles(RenameFilesParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        for (var file : params.getFiles()) {
+          var oldUri = Absolute.uri(file.getOldUri());
+          var newUri = Absolute.uri(file.getNewUri());
+          runInWorkspaceContext(oldUri, () -> handleDeletedFileEvent(oldUri));
+          runInWorkspaceContext(newUri, () -> handleCreatedFileEvent(newUri));
+        }
+      },
+      executor
+    );
+  }
+
+  /**
+   * Выполняет действие над файлом в контексте его workspace.
+   * <p>
+   * Резолвит контекст сервера и устанавливает workspace-контекст на текущем треде
+   * (через {@link WorkspaceContextHolder}), чтобы workspace-scoped proxy beans корректно
+   * разрешались в {@code @EventListener}-методах. Если workspace для URI не найден,
+   * действие пропускается.
+   *
+   * @param uri    URI файла или каталога
+   * @param action действие, выполняемое в установленном workspace-контексте
+   */
+  private void runInWorkspaceContext(URI uri, Runnable action) {
+    serverContextProvider.getServerContext(uri).ifPresentOrElse(
+      context -> {
+        var workspaceUri = context.getWorkspaceUri();
+        if (workspaceUri == null) {
+          LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
+          return;
+        }
+        WorkspaceContextHolder.run(workspaceUri, action);
+      },
+      () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
     );
   }
 
@@ -225,6 +318,13 @@ public class BSLWorkspaceService implements WorkspaceService {
    */
   private void handleCreatedFileEvent(URI uri) {
     var context = getContextForDocument(uri);
+
+    var file = toFile(uri);
+    if (file != null && file.isDirectory()) {
+      handleCreatedFolderEvent(context, file);
+      return;
+    }
+
     if (isExcludedPath(context, uri)) {
       return;
     }
@@ -235,6 +335,60 @@ public class BSLWorkspaceService implements WorkspaceService {
       context.rebuildDocument(documentContext);
       context.tryClearDocument(documentContext);
     }
+  }
+
+  /**
+   * Обрабатывает событие создания каталога в файловой системе.
+   * <p>
+   * Клиенты (в т.ч. VS Code) при создании или переименовании каталога присылают одно событие
+   * с URI каталога без событий по вложенным файлам. Каталог рекурсивно обходится, и все найденные
+   * BSL/OS-файлы добавляются в контекст сервера. Поиск файлов и учёт {@code excludePaths}
+   * переиспользуют логику {@link BSLFiles#listBslFiles} — ту же,
+   * что применяется при первичном наполнении контекста в {@link ServerContext#populateContext()}.
+   *
+   * @param context контекст сервера
+   * @param folder  созданный каталог
+   */
+  private void handleCreatedFolderEvent(ServerContext context, File folder) {
+    var excludePaths = getExcludePaths(context);
+    var files = BSLFiles.listBslFiles(folder.toPath(), excludePaths);
+
+    for (var file : files) {
+      var fileUri = Absolute.uri(file.toURI());
+      var documentContext = context.addDocument(fileUri);
+
+      var isDocumentOpened = context.isDocumentOpened(documentContext);
+      if (!isDocumentOpened) {
+        context.rebuildDocument(documentContext);
+        context.tryClearDocument(documentContext);
+      }
+    }
+  }
+
+  /**
+   * Преобразует URI в {@link File}, если это файловый URI.
+   *
+   * @param uri URI файла или каталога
+   * @return {@link File} или {@code null}, если URI не указывает на путь в файловой системе
+   */
+  @Nullable
+  private static File toFile(URI uri) {
+    try {
+      return Paths.get(uri).toFile();
+    } catch (IllegalArgumentException | FileSystemNotFoundException e) {
+      LOGGER.debug("Не удалось преобразовать URI в путь файловой системы: {}", uri, e);
+      return null;
+    }
+  }
+
+  /**
+   * Возвращает список {@code excludePaths} из конфигурации workspace {@code context}.
+   *
+   * @param context контекст сервера
+   * @return список паттернов исключения
+   */
+  private static List<String> getExcludePaths(ServerContext context) {
+    return context.getLanguageServerConfiguration().getExcludePaths();
   }
 
   /**
