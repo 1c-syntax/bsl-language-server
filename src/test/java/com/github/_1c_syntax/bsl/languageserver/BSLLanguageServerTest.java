@@ -27,19 +27,27 @@ import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;
 import mockit.MockUp;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
+import org.eclipse.lsp4j.DidChangeWatchedFilesRegistrationOptions;
+import org.eclipse.lsp4j.FileSystemWatcher;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
+import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -53,6 +61,11 @@ import java.util.concurrent.ExecutionException;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -64,6 +77,9 @@ class BSLLanguageServerTest {
   @Autowired
   private GlobalLanguageServerConfiguration globalConfiguration;
 
+  @Autowired
+  private LanguageClientHolder languageClientHolder;
+
   @BeforeEach
   void setUp() {
     new MockUp<System>() {
@@ -72,6 +88,11 @@ class BSLLanguageServerTest {
         throw new RuntimeException(String.valueOf(value));
       }
     };
+  }
+
+  @AfterEach
+  void tearDown() {
+    languageClientHolder.connect(null);
   }
 
   @Test
@@ -163,6 +184,88 @@ class BSLLanguageServerTest {
     InitializedParams params = new InitializedParams();
     // then - should not throw
     server.initialized(params);
+  }
+
+  @Test
+  void initializedRegistersFileWatchersWhenDynamicRegistrationSupported() {
+    // given
+    var client = mock(LanguageClient.class);
+    when(client.registerCapability(any()))
+      .thenReturn(CompletableFuture.completedFuture(null));
+    languageClientHolder.connect(client);
+
+    var initParams = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    initParams.setWorkspaceFolders(List.of(workspaceFolder));
+
+    var capabilities = new ClientCapabilities();
+    var workspace = new WorkspaceClientCapabilities();
+    workspace.setDidChangeWatchedFiles(new DidChangeWatchedFilesCapabilities(true));
+    capabilities.setWorkspace(workspace);
+    initParams.setCapabilities(capabilities);
+
+    server.initialize(initParams);
+
+    // when
+    server.initialized(new InitializedParams());
+
+    // then
+    var captor = ArgumentCaptor.forClass(RegistrationParams.class);
+    verify(client).registerCapability(captor.capture());
+
+    var registrations = captor.getValue().getRegistrations();
+    assertThat(registrations).hasSize(1);
+
+    var registration = registrations.get(0);
+    assertThat(registration.getMethod()).isEqualTo("workspace/didChangeWatchedFiles");
+
+    var options = (DidChangeWatchedFilesRegistrationOptions) registration.getRegisterOptions();
+    assertThat(options.getWatchers())
+      .extracting(FileSystemWatcher::getGlobPattern)
+      .extracting(globPattern -> globPattern.getLeft())
+      .containsExactlyInAnyOrder("**/*.bsl", "**/*.os");
+  }
+
+  @Test
+  void initializedDoesNotRegisterFileWatchersWithoutDynamicRegistration() {
+    // given
+    var client = mock(LanguageClient.class);
+    languageClientHolder.connect(client);
+
+    var initParams = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    initParams.setWorkspaceFolders(List.of(workspaceFolder));
+    // no workspace.didChangeWatchedFiles.dynamicRegistration declared
+
+    server.initialize(initParams);
+
+    // when
+    server.initialized(new InitializedParams());
+
+    // then
+    verify(client, never()).registerCapability(any());
+  }
+
+  @Test
+  void initializeDeclaresFileOperationsCapabilities() throws ExecutionException, InterruptedException {
+    // given
+    var params = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    params.setWorkspaceFolders(List.of(workspaceFolder));
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    var fileOperations = initialize.getCapabilities().getWorkspace().getFileOperations();
+    assertThat(fileOperations).isNotNull();
+    assertThat(fileOperations.getDidCreate()).isNotNull();
+    assertThat(fileOperations.getDidRename()).isNotNull();
+    assertThat(fileOperations.getDidDelete()).isNotNull();
+
+    assertThat(fileOperations.getDidDelete().getFilters())
+      .extracting(filter -> filter.getPattern().getGlob())
+      .containsExactlyInAnyOrder("**/*.bsl", "**/*.os", "**/*");
   }
 
   @Test
