@@ -192,6 +192,18 @@ class EventHandlerResolverTest {
   }
 
   @Test
+  void mdoSpecificOwnerWithBlankNameReturnsEmpty() {
+    // mdoSpecificQualifiedName возвращает empty при пустом name MDO —
+    // строим реальный Catalog с пустым именем.
+    var catalog = com.github._1c_syntax.bsl.mdo.Catalog.builder().name("").build();
+    var doc = Mockito.mock(DocumentContext.class);
+    Mockito.when(doc.getModuleType()).thenReturn(ModuleType.ObjectModule);
+    Mockito.when(doc.getMdObject()).thenReturn(Optional.of(catalog));
+
+    assertThat(resolver.lookupContract(doc, "ПриЗаписи")).isEmpty();
+  }
+
+  @Test
   void mdoSpecificOwnerWithoutMdObjectReturnsEmpty() {
     // ObjectModule → ищем mdObject; если его нет — empty.
     var doc = Mockito.mock(DocumentContext.class);
