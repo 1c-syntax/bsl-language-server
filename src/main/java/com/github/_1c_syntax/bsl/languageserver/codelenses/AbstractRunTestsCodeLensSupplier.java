@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -66,7 +67,7 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
       .map(InitializeParams::getClientInfo)
       .map(ClientInfo::getName)
       .orElse("");
-    clientIsSupported = "Visual Studio Code".equals(clientName);
+    clientIsSupported = ClientCapabilitiesHolder.isVsCodeLikeClient(clientName);
   }
 
   /**

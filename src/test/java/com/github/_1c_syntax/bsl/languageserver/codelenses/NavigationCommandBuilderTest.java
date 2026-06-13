@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.utils.Absolute;
-import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -34,7 +33,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -48,15 +46,18 @@ class NavigationCommandBuilderTest {
   @Mock
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
-  private void connectClient(String clientName) {
-    when(clientCapabilitiesHolder.getClientInfo())
-      .thenReturn(Optional.of(new ClientInfo(clientName, "1.0.0")));
+  private void connectVsCodeLikeClient() {
+    when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(true);
+  }
+
+  private void connectOtherClient() {
+    when(clientCapabilitiesHolder.isVsCodeLikeClient()).thenReturn(false);
   }
 
   @Test
   void gotoCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
-    connectClient("Cursor");
+    connectVsCodeLikeClient();
     var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
     var targets = List.of(location(10));
 
@@ -70,36 +71,9 @@ class NavigationCommandBuilderTest {
   }
 
   @Test
-  void gotoCommandForCodeServerUsesWrapperCommand() {
-    // given: code-server — VS Code-совместимый клиент с расширением language-1c-bsl
-    connectClient("code-server");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
-
-    // when
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, List.of(location(10)));
-
-    // then
-    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_GOTO_COMMAND);
-  }
-
-  @Test
   void gotoCommandForOtherClientUsesBuiltinCommand() {
     // given
-    connectClient("Neovim");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
-    var targets = List.of(location(10));
-
-    // when
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
-
-    // then
-    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.BUILTIN_GOTO_COMMAND);
-  }
-
-  @Test
-  void gotoCommandForUnknownClientUsesBuiltinCommand() {
-    // given
-    when(clientCapabilitiesHolder.getClientInfo()).thenReturn(Optional.empty());
+    connectOtherClient();
     var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
     var targets = List.of(location(10));
 
@@ -113,7 +87,7 @@ class NavigationCommandBuilderTest {
   @Test
   void gotoCommandWithSeveralTargetsRequestsPeek() {
     // given
-    connectClient("Visual Studio Code");
+    connectVsCodeLikeClient();
     var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
     var targets = List.of(location(10), location(20));
 
@@ -127,7 +101,7 @@ class NavigationCommandBuilderTest {
   @Test
   void referencesCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
-    connectClient("Antigravity");
+    connectVsCodeLikeClient();
     var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
     var locations = List.of(location(10), location(20));
 
@@ -142,7 +116,7 @@ class NavigationCommandBuilderTest {
   @Test
   void referencesCommandForOtherClientUsesBuiltinCommand() {
     // given
-    connectClient("Neovim");
+    connectOtherClient();
     var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
     var locations = List.of(location(10));
 

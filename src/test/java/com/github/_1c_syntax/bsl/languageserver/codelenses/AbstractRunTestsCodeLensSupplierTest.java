@@ -59,8 +59,12 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   @CsvSource({
     "./src/test/resources/codelenses/AbstractRunTestCodeLensSupplier.os, unknown, false",
     "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, unknown, false",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Some Editor, false",
     "./src/test/resources/codelenses/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, false",
-    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, true"
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Visual Studio Code, true",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Cursor, true",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, Antigravity, true",
+    "./src/test/resources/codelenses/tests/AbstractRunTestCodeLensSupplier.os, code-server, true"
   })
   void testIsApplicable(String filePath, String clientName, boolean expected) {
     // given

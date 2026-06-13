@@ -32,6 +32,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Null-safe bridge для получения сведений о клиенте (возможности и информация о клиенте),
@@ -43,6 +44,19 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 public class ClientCapabilitiesHolder {
+
+  /**
+   * Канонический набор имён ({@link ClientInfo#getName()}, оно же {@code vscode.env.appName})
+   * редакторов на базе VS Code. Эти клиенты работают через VS Code extension API: ставят расширение
+   * {@code language-1c-bsl} с командами-обёртками навигации и поддерживают встроенные команды запуска
+   * и отладки тестов. Единый источник истины о «VS Code-совместимом клиенте» для всего сервера.
+   */
+  private static final Set<String> VS_CODE_LIKE_CLIENT_NAMES = Set.of(
+    "Visual Studio Code",
+    "Cursor",
+    "Antigravity",
+    "code-server"
+  );
 
   /**
    * Возможности клиента.
@@ -72,5 +86,32 @@ public class ClientCapabilitiesHolder {
    */
   public Optional<ClientInfo> getClientInfo() {
     return Optional.ofNullable(clientInfo);
+  }
+
+  /**
+   * Является ли подключённый (по данным {@code initialize}) клиент редактором на базе VS Code:
+   * сам VS Code, Cursor, Antigravity, code-server и т.п. Такие клиенты исполняют клиентские
+   * команды-обёртки расширения {@code language-1c-bsl} и поддерживают линзы запуска/отладки тестов.
+   *
+   * @return {@code true}, если имя подключённого клиента входит в канонический набор
+   *   VS Code-совместимых редакторов; {@code false}, если клиент иной или не сообщил о себе.
+   */
+  public boolean isVsCodeLikeClient() {
+    return getClientInfo()
+      .map(ClientInfo::getName)
+      .map(ClientCapabilitiesHolder::isVsCodeLikeClient)
+      .orElse(false);
+  }
+
+  /**
+   * Является ли редактор с указанным именем VS Code-совместимым по каноническому набору имён.
+   * Имя — это {@link ClientInfo#getName()} (оно же {@code vscode.env.appName}).
+   *
+   * @param clientName Имя клиента из {@link ClientInfo#getName()}.
+   * @return {@code true}, если имя входит в канонический набор VS Code-совместимых редакторов;
+   *   иначе {@code false}.
+   */
+  public static boolean isVsCodeLikeClient(String clientName) {
+    return VS_CODE_LIKE_CLIENT_NAMES.contains(clientName);
   }
 }
