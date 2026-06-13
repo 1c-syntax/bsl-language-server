@@ -73,6 +73,20 @@ public class SymbolProvider {
   );
 
   /**
+   * Максимальное число символов, возвращаемых в ответе на запрос {@code workspace/symbol}.
+   * <p>
+   * Сопоставление по подпоследовательности на коротком запросе (1-2 символа) совпадает почти
+   * с каждым методом проекта, поэтому на больших конфигурациях без ограничения собрались бы
+   * сотни тысяч элементов, чем захлебнулись бы и сервер, и клиент. Лимит применяется через
+   * {@code .limit(...)} в стриме до сборки результата: благодаря short-circuit обход документов
+   * прекращается сразу после набора лимита и не зависит от общего размера проекта.
+   * <p>
+   * Усечение допустимо: спецификация LSP считает {@code workspace/symbol} "расслабленным" поиском,
+   * клиент сам дофильтровывает и ранжирует выдачу, сужая запрос по мере набора текста.
+   */
+  private static final int MAX_RESULTS = 1000;
+
+  /**
    * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} с поддержкой отмены.
    * <p>
    * Отмена проверяется на границе каждого документа: если клиент отменил запрос
@@ -97,6 +111,7 @@ public class SymbolProvider {
       .flatMap(SymbolProvider::getSymbolEntries)
       .filter(symbolEntry -> matches(queryString, lowerCasedQuery, pattern, symbolEntry.symbol().getName()))
       .map(SymbolProvider::createWorkspaceSymbol)
+      .limit(MAX_RESULTS)
       .collect(Collectors.toList());
   }
 
