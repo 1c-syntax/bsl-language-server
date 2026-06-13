@@ -153,7 +153,7 @@ public class EventPublisherAspect {
   public void configurationTypesRegistered(JoinPoint joinPoint, @Nullable ServerContext serverContext) {
     if (serverContext != null) {
       // tryRegister отдаёт non-null только при реальной регистрации, отсев no-op
-      publishEvent(ConfigurationTypesRegisteredEvent.of(serverContext));
+      publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
     }
   }
 
@@ -242,7 +242,7 @@ public class EventPublisherAspect {
     ));
   }
 
-  private void publishEvent(ApplicationEvent event) {
+  private void publishEvent(Object event) {
     var contexts = snapshot.get();
     if (contexts.length == 0) {
       LOGGER.warn("Trying to send event in not active event publisher.");
@@ -285,7 +285,7 @@ public class EventPublisherAspect {
    * если владелец не определяется (тогда вызывающий рассылает во все контексты).
    */
   private static @Nullable ApplicationContext findOwningContext(
-    ApplicationContext[] contexts, ApplicationEvent event
+    ApplicationContext[] contexts, Object event
   ) {
     var serverContext = extractServerContext(event);
     if (serverContext != null) {
@@ -326,10 +326,16 @@ public class EventPublisherAspect {
    * routing по identity. {@code null} — у события нет привязки к конкретному
    * ServerContext (глобальные события вроде Initialize, LSC).
    */
-  private static @Nullable ServerContext extractServerContext(ApplicationEvent event) {
+  private static @Nullable ServerContext extractServerContext(Object event) {
+    if (event instanceof ConfigurationTypesRegisteredEvent ctr) {
+      return ctr.serverContext();
+    }
+    if (!(event instanceof ApplicationEvent appEvent)) {
+      return null;
+    }
     // События с source = ServerContext (DocumentAdded/Removed/Closed, Populated):
     // ловим через instanceof ниже.
-    var src = event.getSource();
+    var src = appEvent.getSource();
     if (src instanceof DocumentContext documentContext) {
       return documentContext.getServerContext();
     }
