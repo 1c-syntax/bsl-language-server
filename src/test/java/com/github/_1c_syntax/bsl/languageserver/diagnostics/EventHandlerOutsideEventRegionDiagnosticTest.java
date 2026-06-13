@@ -326,6 +326,26 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   }
 
   @Test
+  void quickFixSilentWhenContentEmpty() {
+    // Если contentList пустой (defensive ветка extractMethodText L197) — quickfix
+    // возвращает пустой список (L153).
+    var src = """
+      Процедура ПриЗаписи(Отказ) Экспорт
+      КонецПроцедуры
+      """;
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(STUB_CONTRACT));
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    Mockito.when(documentContext.getContentList()).thenReturn(new String[0]);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    Assertions.assertThat(diagnostics).isNotEmpty();
+
+    var fixes = getQuickFixes(diagnostics.get(0), documentContext);
+    Assertions.assertThat(fixes).isEmpty();
+  }
+
+  @Test
   void formModuleQuickFixInsertsFormTargetRegion() {
     // В модуле формы цельная область создаётся как ОбработчикиСобытийФормы
     // (FORM_TARGET_REGION) — ветка documentContext.getModuleType() == FormModule
