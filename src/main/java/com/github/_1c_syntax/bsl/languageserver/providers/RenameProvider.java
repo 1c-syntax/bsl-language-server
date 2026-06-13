@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
@@ -65,9 +66,16 @@ public final class RenameProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final Resources resources;
+  private final RenameWorkspaceEditBuilder workspaceEditBuilder;
 
   /**
-   * {@link WorkspaceEdit}
+   * Построить {@link WorkspaceEdit} с правками переименования символа.
+   * <p>
+   * Резолвит переименовываемый символ, собирает текстовые правки по всем его вхождениям и
+   * делегирует выбор формата результата в {@link RenameWorkspaceEditBuilder}: при поддержке
+   * клиентом {@code workspace.workspaceEdit.documentChanges} (и опционально
+   * {@code workspace.workspaceEdit.changeAnnotationSupport}) возвращаются {@code documentChanges}
+   * с аннотациями правок, иначе результат понижается до legacy {@code changes}-map.
    *
    * @param documentContext Контекст документа.
    * @param params          Параметры вызова.
@@ -91,7 +99,12 @@ public final class RenameProvider {
         .stream().map(RenameProvider::referenceOf)
     ).collect(Collectors.groupingBy(ref -> ref.uri().toString(), getTexEdits(params)));
 
-    return new WorkspaceEdit(changes);
+    var oldName = sourceDefinedSymbol.map(SourceDefinedSymbol::getName).orElse(params.getNewName());
+    return workspaceEditBuilder.build(
+      changes,
+      oldName,
+      params.getNewName()
+    );
   }
 
   private static Reference referenceOf(SourceDefinedSymbol symbol) {
