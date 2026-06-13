@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -287,5 +288,67 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       .findFirst()
       .orElseThrow();
     Assertions.assertThat(inserted).contains("Шапка комментария.");
+  }
+
+  @Test
+  void formModuleAcceptsFormEventRegionPrefix() {
+    // Для модуля формы область с префиксом из FORM_EVENT_REGION_PREFIXES
+    // считается валидной — диагностика не срабатывает (ветка startsWith).
+    // Несовпадающее имя области — диагностика срабатывает.
+    var src = """
+      #Область ОбработчикиСобытийЭлементовТаблицыФормыТовары
+
+      Процедура ТоварыПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+
+      #Область Прочее
+
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+      """;
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ТоварыПриИзменении")))
+      .thenReturn(Optional.of(STUB_CONTRACT));
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(Optional.of(STUB_CONTRACT));
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    Mockito.when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    // ТоварыПриИзменении в правильной области-префиксе → не срабатывает.
+    // ПриОткрытии в неподходящей области → срабатывает.
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getMessage())
+      .isInstanceOf(org.eclipse.lsp4j.jsonrpc.messages.Either.class);
+  }
+
+  @Test
+  void formModuleQuickFixInsertsFormTargetRegion() {
+    // В модуле формы цельная область создаётся как ОбработчикиСобытийФормы
+    // (FORM_TARGET_REGION) — ветка documentContext.getModuleType() == FormModule
+    // в quickfix.
+    var src = """
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+      """;
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(Optional.of(STUB_CONTRACT));
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    Mockito.when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    Assertions.assertThat(diagnostics).hasSize(1);
+
+    var fixes = getQuickFixes(diagnostics.get(0), documentContext);
+    var inserted = fixes.get(0).getEdit().getChanges()
+      .get(documentContext.getUri().toString()).stream()
+      .map(TextEdit::getNewText)
+      .filter(t -> t.contains("#Область"))
+      .findFirst()
+      .orElseThrow();
+    Assertions.assertThat(inserted).contains("#Область ОбработчикиСобытийФормы");
   }
 }

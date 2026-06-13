@@ -223,6 +223,39 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void dynamicVariableAtModuleScopeShownAsDynamicOfModule() {
+    // Переменная использована без объявления — kind = DYNAMIC, scope = модуль.
+    // Должна попасть в case DYNAMIC при symbol.getScope().getSymbolKind() == Module.
+    var documentContext = TestUtils.getDocumentContext("""
+      Х = 1;
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("Х", symbolTree.getModule()).orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
+
+    assertThat(content).contains("Динамическая переменная модуля");
+  }
+
+  @Test
+  void dynamicVariableInMethodShownAsDynamicOfMethod() {
+    // Переменная использована без объявления внутри метода — kind = DYNAMIC,
+    // scope = MethodSymbol. Покрывает ветку symbol.getScope().getSymbolKind() != Module.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+        Х = 1;
+      КонецПроцедуры
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var methodSymbol = symbolTree.getMethodSymbol("Тест").orElseThrow();
+    var varSymbol = symbolTree.getVariableSymbol("Х", methodSymbol).orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
+
+    assertThat(content).contains("Тест");
+  }
+
+  @Test
   void testInferredTypeShownInHover() {
     // given
     var documentContext = TestUtils.getDocumentContext("""
