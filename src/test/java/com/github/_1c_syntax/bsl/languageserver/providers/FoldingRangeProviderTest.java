@@ -21,9 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.FoldingRangeKind;
+import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,6 +43,14 @@ class FoldingRangeProviderTest {
 
   @Autowired
   private FoldingRangeProvider foldingRangeProvider;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @AfterEach
+  void afterEach() {
+    clientCapabilitiesHolder.setCapabilities(null);
+  }
 
   @Test
   void testFoldingRange() {
@@ -87,5 +101,66 @@ class FoldingRangeProviderTest {
 
     assertThat(foldingRanges).isEmpty();
 
+  }
+
+  @Test
+  void testCollapsedTextForRegionWhenSupported() {
+
+    // given
+    setCollapsedTextSupport(true);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then
+    assertThat(foldingRanges)
+      .filteredOn(foldingRange -> foldingRange.getStartLine() == 3 && foldingRange.getEndLine() == 26)
+      .hasSize(1)
+      .allMatch(foldingRange -> foldingRange.getCollapsedText().contains("ИмяОбласти"));
+  }
+
+  @Test
+  void testCollapsedTextForMethodWhenSupported() {
+
+    // given
+    setCollapsedTextSupport(true);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then
+    assertThat(foldingRanges)
+      .filteredOn(foldingRange -> foldingRange.getStartLine() == 11 && foldingRange.getEndLine() == 15)
+      .hasSize(1)
+      .allMatch(foldingRange -> foldingRange.getCollapsedText().contains("ИмяПроцедуры"));
+  }
+
+  @Test
+  void testCollapsedTextNotSetWhenNotSupported() {
+
+    // given
+    setCollapsedTextSupport(false);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then: границы диапазонов не меняются, текст-заглушка не выставляется
+    assertThat(foldingRanges).hasSize(11);
+    assertThat(foldingRanges)
+      .allMatch(foldingRange -> foldingRange.getCollapsedText() == null);
+  }
+
+  private void setCollapsedTextSupport(boolean supported) {
+    var foldingRangeSupportCapabilities = new FoldingRangeSupportCapabilities(supported);
+    var foldingRangeCapabilities = new FoldingRangeCapabilities();
+    foldingRangeCapabilities.setFoldingRange(foldingRangeSupportCapabilities);
+    var textDocumentClientCapabilities = new TextDocumentClientCapabilities();
+    textDocumentClientCapabilities.setFoldingRange(foldingRangeCapabilities);
+    var clientCapabilities = new ClientCapabilities();
+    clientCapabilities.setTextDocument(textDocumentClientCapabilities);
+    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
   }
 }

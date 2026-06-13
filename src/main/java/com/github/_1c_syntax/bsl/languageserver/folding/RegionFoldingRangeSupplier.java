@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.folding;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
@@ -34,22 +36,30 @@ import java.util.stream.Collectors;
  * Сапплаер областей сворачивания областей (<code>#Область ... #КонецОбласти</code>).
  */
 @Component
+@RequiredArgsConstructor
 public class RegionFoldingRangeSupplier implements FoldingRangeSupplier {
+
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
+    boolean collapsedTextSupported = clientCapabilitiesHolder.isFoldingRangeCollapsedTextSupported();
     return documentContext.getSymbolTree().getRegionsFlat().stream()
-      .map(RegionFoldingRangeSupplier::toFoldingRange)
+      .map(regionSymbol -> toFoldingRange(regionSymbol, collapsedTextSupported))
       .collect(Collectors.toList());
   }
 
-  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol) {
+  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol, boolean collapsedTextSupported) {
 
     FoldingRange foldingRange = new FoldingRange(
       regionSymbol.getStartRange().getStart().getLine(),
       regionSymbol.getEndRange().getEnd().getLine()
     );
     foldingRange.setKind(FoldingRangeKind.Region);
+
+    if (collapsedTextSupported) {
+      foldingRange.setCollapsedText("Область " + regionSymbol.getName());
+    }
 
     return foldingRange;
   }

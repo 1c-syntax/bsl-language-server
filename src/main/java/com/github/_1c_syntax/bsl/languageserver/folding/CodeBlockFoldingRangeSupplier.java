@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.folding;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.FoldingRange;
@@ -39,63 +41,82 @@ import java.util.List;
  * Сапплаер областей сворачивания блоков кода: методов, условий, циклов, попыток.
  */
 @Component
+@RequiredArgsConstructor
 public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
+
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    var codeBlockVisitor = new CodeBlockVisitor();
+    var collapsedTextSupported = clientCapabilitiesHolder.isFoldingRangeCollapsedTextSupported();
+    var codeBlockVisitor = new CodeBlockVisitor(collapsedTextSupported);
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
 
+  @RequiredArgsConstructor
   private static class CodeBlockVisitor extends BSLParserBaseVisitor<ParseTree> {
+
+    private final boolean collapsedTextSupported;
 
     @Getter
     private final List<FoldingRange> regionRanges = new ArrayList<>();
 
     @Override
     public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-      addRegionRange(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD());
+      addRegionRange(
+        ctx.procDeclaration().PROCEDURE_KEYWORD(),
+        ctx.ENDPROCEDURE_KEYWORD(),
+        collapsedTextForMethod("Процедура", ctx.procDeclaration().subName())
+      );
       return super.visitProcedure(ctx);
     }
 
     @Override
     public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-      addRegionRange(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD());
+      addRegionRange(
+        ctx.funcDeclaration().FUNCTION_KEYWORD(),
+        ctx.ENDFUNCTION_KEYWORD(),
+        collapsedTextForMethod("Функция", ctx.funcDeclaration().subName())
+      );
       return super.visitFunction(ctx);
     }
 
     @Override
     public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-      addRegionRange(ctx.ifBranch().IF_KEYWORD(), ctx.ENDIF_KEYWORD());
+      addRegionRange(ctx.ifBranch().IF_KEYWORD(), ctx.ENDIF_KEYWORD(), null);
       return super.visitIfStatement(ctx);
     }
 
     @Override
     public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-      addRegionRange(ctx.WHILE_KEYWORD(), ctx.ENDDO_KEYWORD());
+      addRegionRange(ctx.WHILE_KEYWORD(), ctx.ENDDO_KEYWORD(), null);
       return super.visitWhileStatement(ctx);
     }
 
     @Override
     public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
-      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD());
+      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD(), null);
       return super.visitForStatement(ctx);
     }
 
     @Override
     public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
-      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD());
+      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD(), null);
       return super.visitForEachStatement(ctx);
     }
 
     @Override
     public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
-      addRegionRange(ctx.TRY_KEYWORD(), ctx.ENDTRY_KEYWORD());
+      addRegionRange(ctx.TRY_KEYWORD(), ctx.ENDTRY_KEYWORD(), null);
       return super.visitTryStatement(ctx);
     }
 
-    private void addRegionRange(@Nullable TerminalNode start, @Nullable TerminalNode stop) {
+    private void addRegionRange(
+      @Nullable TerminalNode start,
+      @Nullable TerminalNode stop,
+      @Nullable String collapsedText
+    ) {
       if (start == null || stop == null) {
         return;
       }
@@ -107,8 +128,19 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
         var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind(FoldingRangeKind.Region);
 
+        if (collapsedText != null) {
+          foldingRange.setCollapsedText(collapsedText);
+        }
+
         regionRanges.add(foldingRange);
       }
+    }
+
+    private @Nullable String collapsedTextForMethod(String keyword, BSLParser.@Nullable SubNameContext subName) {
+      if (!collapsedTextSupported || subName == null) {
+        return null;
+      }
+      return keyword + " " + subName.getText() + "()";
     }
   }
 

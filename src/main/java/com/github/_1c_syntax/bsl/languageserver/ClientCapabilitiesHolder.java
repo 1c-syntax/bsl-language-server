@@ -27,7 +27,10 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
+import org.eclipse.lsp4j.FoldingRangeCapabilities;
+import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -72,5 +75,24 @@ public class ClientCapabilitiesHolder {
    */
   public Optional<ClientInfo> getClientInfo() {
     return Optional.ofNullable(clientInfo);
+  }
+
+  /**
+   * Проверить, поддерживает ли клиент свойство {@code collapsedText} у областей сворачивания
+   * (см. возможность {@code textDocument.foldingRange.foldingRange.collapsedText}, LSP 3.17).
+   * <p>
+   * Свойство позволяет серверу задавать осмысленный текст-заглушку свёрнутого блока вместо
+   * подстановки клиентом первой строки диапазона. Если клиент не заявил поддержку, сервер
+   * не должен выставлять {@link org.eclipse.lsp4j.FoldingRange#setCollapsedText(String)}.
+   *
+   * @return {@code true}, если клиент заявил поддержку {@code collapsedText}, иначе {@code false}.
+   */
+  public boolean isFoldingRangeCollapsedTextSupported() {
+    return getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getFoldingRange)
+      .map(FoldingRangeCapabilities::getFoldingRange)
+      .map(FoldingRangeSupportCapabilities::getCollapsedText)
+      .orElse(Boolean.FALSE);
   }
 }
