@@ -21,14 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.folding;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -38,46 +34,23 @@ import java.util.stream.Collectors;
  * Сапплаер областей сворачивания областей (<code>#Область ... #КонецОбласти</code>).
  */
 @Component
-@RequiredArgsConstructor
 public class RegionFoldingRangeSupplier implements FoldingRangeSupplier {
-
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-
-  // Кэшируется на initialize. Управляет выставлением collapsedText: при отсутствии заявленной
-  // клиентом поддержки текст-заглушка свёрнутого блока не передаётся.
-  private boolean collapsedTextSupported;
-
-  /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
-   * <p>
-   * Кэширует клиентскую возможность {@code textDocument.foldingRange.foldingRange.collapsedText}
-   * из сырых возможностей клиента, влияющую на наличие текста-заглушки у областей сворачивания.
-   */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
-  public void handleInitializeEvent() {
-    collapsedTextSupported = FoldingRangeSupplier.isCollapsedTextSupported(
-      clientCapabilitiesHolder.getCapabilities()
-    );
-  }
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getRegionsFlat().stream()
-      .map(regionSymbol -> toFoldingRange(regionSymbol, collapsedTextSupported))
+      .map(RegionFoldingRangeSupplier::toFoldingRange)
       .collect(Collectors.toList());
   }
 
-  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol, boolean collapsedTextSupported) {
+  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol) {
 
     FoldingRange foldingRange = new FoldingRange(
       regionSymbol.getStartRange().getStart().getLine(),
       regionSymbol.getEndRange().getEnd().getLine()
     );
     foldingRange.setKind(FoldingRangeKind.Region);
-
-    if (collapsedTextSupported) {
-      foldingRange.setCollapsedText("Область " + regionSymbol.getName());
-    }
+    foldingRange.setCollapsedText("Область " + regionSymbol.getName());
 
     return foldingRange;
   }

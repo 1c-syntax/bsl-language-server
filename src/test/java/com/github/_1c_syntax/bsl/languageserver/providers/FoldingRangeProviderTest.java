@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
-import com.github._1c_syntax.bsl.languageserver.folding.CodeBlockFoldingRangeSupplier;
-import com.github._1c_syntax.bsl.languageserver.folding.RegionFoldingRangeSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.FoldingRange;
@@ -49,12 +47,6 @@ class FoldingRangeProviderTest {
 
   @Autowired
   private FoldingRangeProvider foldingRangeProvider;
-
-  @Autowired
-  private CodeBlockFoldingRangeSupplier codeBlockFoldingRangeSupplier;
-
-  @Autowired
-  private RegionFoldingRangeSupplier regionFoldingRangeSupplier;
 
   @MockitoSpyBean
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -179,7 +171,5 @@ class FoldingRangeProviderTest {
     var clientCapabilities = new ClientCapabilities();
     clientCapabilities.setTextDocument(textDocumentClientCapabilities);
     when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(clientCapabilities));
-    codeBlockFoldingRangeSupplier.handleInitializeEvent();
-    regionFoldingRangeSupplier.handleInitializeEvent();
   }
 }

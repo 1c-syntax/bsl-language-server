@@ -21,19 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.folding;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -43,39 +39,16 @@ import java.util.List;
  * Сапплаер областей сворачивания блоков кода: методов, условий, циклов, попыток.
  */
 @Component
-@RequiredArgsConstructor
 public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
-
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-
-  // Кэшируется на initialize. Управляет выставлением collapsedText: при отсутствии заявленной
-  // клиентом поддержки текст-заглушка свёрнутого блока не передаётся.
-  private boolean collapsedTextSupported;
-
-  /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
-   * <p>
-   * Кэширует клиентскую возможность {@code textDocument.foldingRange.foldingRange.collapsedText}
-   * из сырых возможностей клиента, влияющую на наличие текста-заглушки у областей сворачивания.
-   */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
-  public void handleInitializeEvent() {
-    collapsedTextSupported = FoldingRangeSupplier.isCollapsedTextSupported(
-      clientCapabilitiesHolder.getCapabilities()
-    );
-  }
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    var codeBlockVisitor = new CodeBlockVisitor(collapsedTextSupported);
+    var codeBlockVisitor = new CodeBlockVisitor();
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
 
-  @RequiredArgsConstructor
   private static class CodeBlockVisitor extends BSLParserBaseVisitor<ParseTree> {
-
-    private final boolean collapsedTextSupported;
 
     @Getter
     private final List<FoldingRange> regionRanges = new ArrayList<>();
@@ -154,8 +127,8 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       }
     }
 
-    private @Nullable String collapsedTextForMethod(String keyword, BSLParser.@Nullable SubNameContext subName) {
-      if (!collapsedTextSupported || subName == null) {
+    private static @Nullable String collapsedTextForMethod(String keyword, BSLParser.@Nullable SubNameContext subName) {
+      if (subName == null) {
         return null;
       }
       return keyword + " " + subName.getText() + "()";
