@@ -120,6 +120,48 @@ class VariableSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerC
     assertThat(content).doesNotContain("Признак отказа от записи.");
   }
 
+  @Test
+  void parameterHoverEmptyContractSignaturesGivesNoDescription() {
+    // Contract с пустым signatures (parameterAt L318) — описание не добавляется.
+    var contract = MemberDescriptor.event("ПриЗаписи", "", List.of());
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПриЗаписи(СвойОтказ) Экспорт
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var content = paramHover(documentContext, "ПриЗаписи", "СвойОтказ");
+
+    assertThat(content).doesNotContain("Признак отказа от записи.");
+  }
+
+  @Test
+  void parameterHoverBeyondContractWithoutVariadicGivesNoDescription() {
+    // У метода больше параметров чем в contract, последний не variadic.
+    // parameterAt: index >= params.size() && !variadic → empty (L327).
+    var contract = MemberDescriptor.event("ПриЗаписи", "",
+      List.of(new SignatureDescriptor(List.of(
+        new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
+          TypeSet.EMPTY, false,
+          BilingualString.of("Признак отказа.", ""), "")
+      ), TypeSet.EMPTY, "")));
+    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПриЗаписи(Отказ, Лишний) Экспорт
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var content = paramHover(documentContext, "ПриЗаписи", "Лишний");
+
+    // На «Лишнем» описание из contract отсутствует — index за пределами параметров,
+    // последний параметр контракта не variadic.
+    assertThat(content).doesNotContain("Признак отказа.");
+  }
+
   private String paramHover(DocumentContext documentContext, String methodName, String paramName) {
     var symbolTree = documentContext.getSymbolTree();
     var method = symbolTree.getMethodSymbol(methodName).orElseThrow();
