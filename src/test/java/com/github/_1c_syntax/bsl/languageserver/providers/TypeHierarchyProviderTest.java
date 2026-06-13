@@ -116,8 +116,8 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
     var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
 
     assertThat(supertypes)
-      .hasSize(1)
-      .allMatch(item -> item.getName().equals("Млекопитающее"));
+      .extracting(TypeHierarchyItem::getName)
+      .contains("Млекопитающее");
   }
 
   @Test
@@ -127,6 +127,21 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
     var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
 
     assertThat(supertypes).isEmpty();
+  }
+
+  @Test
+  void supertypesIncludeImplementedInterfaces() {
+    // given — Собака наследует Млекопитающее (&Расширяет) и реализует
+    // интерфейс Плавающее (&Реализует).
+    var document = document("Собака.os");
+
+    // when
+    var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));
+
+    // then — в супертипах и родитель, и реализуемый интерфейс.
+    assertThat(supertypes)
+      .extracting(TypeHierarchyItem::getName)
+      .containsExactlyInAnyOrder("Млекопитающее", "Плавающее");
   }
 
   @Test
@@ -157,6 +172,32 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
 
     var subtypes = provider.subtypes(document, new TypeHierarchySubtypesParams(item(document)));
 
+    assertThat(subtypes).isEmpty();
+  }
+
+  @Test
+  void subtypesIncludeInterfaceImplementors() {
+    // given — интерфейс Плавающее реализован классом Собака (&Реализует).
+    var document = document("Плавающее.os");
+
+    // when
+    var subtypes = provider.subtypes(document, new TypeHierarchySubtypesParams(item(document)));
+
+    // then — реализатор интерфейса попадает в подтипы.
+    assertThat(subtypes)
+      .extracting(TypeHierarchyItem::getName)
+      .containsExactly("Собака");
+  }
+
+  @Test
+  void subtypesEmptyForInterfaceWithoutImplementors() {
+    // given — интерфейс Летающее без реализаторов.
+    var document = document("Летающее.os");
+
+    // when
+    var subtypes = provider.subtypes(document, new TypeHierarchySubtypesParams(item(document)));
+
+    // then
     assertThat(subtypes).isEmpty();
   }
 
