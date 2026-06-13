@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeActionTriggerKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -211,6 +212,91 @@ class DisableDiagnosticTriggeringSupplierTest {
 
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
+    assertThat(codeActions)
+      .hasSize(1)
+      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
+  }
+
+  @Test
+  void testAutomaticTriggerWithoutDiagnosticsReturnsNothing() {
+
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
+    );
+    configuration.setLanguage(Language.EN);
+
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setDiagnostics(List.of());
+    codeActionContext.setTriggerKind(CodeActionTriggerKind.Automatic);
+
+    CodeActionParams params = new CodeActionParams();
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions).isEmpty();
+  }
+
+  @Test
+  void testAutomaticTriggerWithDiagnosticsReturnsDisableInFile() {
+
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
+    );
+    configuration.setLanguage(Language.EN);
+
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setDiagnostics(documentContext.getDiagnostics());
+    codeActionContext.setTriggerKind(CodeActionTriggerKind.Automatic);
+
+    CodeActionParams params = new CodeActionParams();
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .isNotEmpty()
+      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
+  }
+
+  @Test
+  void testInvokedTriggerWithoutDiagnosticsReturnsDisableAllInFile() {
+
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
+    );
+    configuration.setLanguage(Language.EN);
+
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setDiagnostics(List.of());
+    codeActionContext.setTriggerKind(CodeActionTriggerKind.Invoked);
+
+    CodeActionParams params = new CodeActionParams();
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
+
+    // then
     assertThat(codeActions)
       .hasSize(1)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));

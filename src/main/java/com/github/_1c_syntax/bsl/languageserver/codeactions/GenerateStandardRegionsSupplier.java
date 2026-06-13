@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeActionTriggerKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -69,6 +70,13 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
    */
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
+
+    // Генерация областей предлагается только при явном вызове меню действий (Invoked либо устаревший
+    // клиент без triggerKind). При автоматическом вызове (лампочка при движении курсора) действие
+    // не предлагается, чтобы не замусоривать меню на каждой строке.
+    if (params.getContext().getTriggerKind() == CodeActionTriggerKind.Automatic) {
+      return Collections.emptyList();
+    }
 
     var moduleType = documentContext.getModuleType();
     var fileType = documentContext.getFileType();

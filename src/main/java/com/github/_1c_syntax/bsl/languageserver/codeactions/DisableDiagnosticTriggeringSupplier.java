@@ -30,6 +30,7 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeActionTriggerKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -78,7 +79,15 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
     List<CodeAction> result = new ArrayList<>();
 
-    if (!params.getContext().getDiagnostics().isEmpty()) {
+    var diagnosticsPresent = !params.getContext().getDiagnostics().isEmpty();
+
+    // При автоматическом вызове (лампочка при движении курсора) предлагаем действия
+    // только если в контексте есть диагностики, иначе меню действий замусоривается на каждой строке.
+    if (isAutomaticTrigger(params) && !diagnosticsPresent) {
+      return result;
+    }
+
+    if (diagnosticsPresent) {
       if (params.getRange().getStart() != null && params.getRange().getEnd() != null) {
         var selectedLineNumber = params.getRange().getEnd().getLine() + 1;
 
@@ -117,6 +126,10 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       )
     );
     return new ArrayList<>(result);
+  }
+
+  private static boolean isAutomaticTrigger(CodeActionParams params) {
+    return params.getContext().getTriggerKind() == CodeActionTriggerKind.Automatic;
   }
 
   private List<CodeAction> getDisableActionForLine(
