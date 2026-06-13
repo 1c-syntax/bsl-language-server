@@ -118,10 +118,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       if (stopLine > startLine) {
         var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind(FoldingRangeKind.Region);
-
-        if (collapsedText != null) {
-          foldingRange.setCollapsedText(collapsedText);
-        }
+        foldingRange.setCollapsedText(collapsedText);
 
         regionRanges.add(foldingRange);
       }
