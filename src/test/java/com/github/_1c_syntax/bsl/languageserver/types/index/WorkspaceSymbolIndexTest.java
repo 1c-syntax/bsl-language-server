@@ -162,6 +162,87 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void wordStartSearchFindsSymbolByMiddleWord() {
+    // given — символ со словом «Документ» в середине имени
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+
+    // when — запрос «Документ» — начало второго CamelCase-слова имени «ПровестиДокумент»,
+    // которое не является префиксом полного имени, но индексировано как word-start ключ
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Документ", NO_CANCEL);
+
+    // then — символ найден по началу слова из середины имени (через trie word-start, не сканом)
+    assertThat(result)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокумент"));
+  }
+
+  @Test
+  void wordStartMatchRanksAboveSubsequenceForSameQuery() {
+    // given — для одного запроса: word-start совпадение и подпоследовательность
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ДобавитьОбработчикКоманды()
+      КонецПроцедуры
+      """);
+
+    // when — запрос «Док»: «ПровестиДокумент» совпадает по началу слова «Документ»,
+    // «ДобавитьОбработчикКоманды» — как подпоследовательность Д..о..(бавитьобработчик)к
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Док", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но word-start идёт раньше подпоследовательности
+    assertThat(names)
+      .contains("ПровестиДокумент", "ДобавитьОбработчикКоманды")
+      .containsSubsequence("ПровестиДокумент", "ДобавитьОбработчикКоманды");
+  }
+
+  @Test
+  void wordStartMatchDoesNotDuplicateEntry() {
+    // given — имя, где запрос совпадает И с началом слова, И как подстрока полного имени
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Документ", NO_CANCEL);
+
+    // then — запись не дублируется, хотя лежит под несколькими ключами
+    var matches = result.stream().filter(entry -> entry.name().equals("ПровестиДокумент")).count();
+    assertThat(matches).isEqualTo(1L);
+  }
+
+  @Test
+  void clearRemovesSymbolFromAllWordStartKeys() {
+    // given — символ проиндексирован и по полному имени, и по началу слова
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура УникальноеПроведениеДокумента()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Документа", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+
+    // when — событие жизненного цикла чистит индекс по URI
+    eventPublisher.publishEvent(
+      new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
+
+    // then — символ исчез из ВСЕХ ключей: и по полному имени, и по началу слова из середины
+    assertThat(index.search("УникальноеПроведениеДокумента", NO_CANCEL))
+      .noneMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+    assertThat(index.search("Документа", NO_CANCEL))
+      .noneMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+    assertThat(index.search("Проведение", NO_CANCEL))
+      .noneMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+  }
+
+  @Test
   void clearOnLifecycleEventRemovesDocumentSymbols() {
     // given
     var documentContext = TestUtils.getDocumentContext("""

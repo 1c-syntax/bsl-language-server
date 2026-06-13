@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.apache.commons.collections4.trie.PatriciaTrie;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -42,10 +43,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,11 +64,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * URI, теги и готовое имя контейнера). Запрос обслуживается из индекса с ранжированием по
  * релевантности; выдача возвращается целиком, без усечения.
  * <p>
- * Хранилище — {@link PatriciaTrie} по ключу = lowercase-имя символа; значение — список записей
- * с этим именем (имена не уникальны). Дерево даёт {@link PatriciaTrie#prefixMap(Object)} —
- * сублинейный префиксный поиск, на котором строится основной (самый частый) путь запроса.
- * Подстрочные и fuzzy-совпадения (подпоследовательность) дерево по префиксу не покрывает,
- * поэтому добираются проходом по остальным ключам.
+ * Хранилище — {@link PatriciaTrie}; значение — список записей под ключом (имена не уникальны).
+ * Одна запись кладётся под НЕСКОЛЬКИМИ ключами: lowercase-суффиксы имени, начинающиеся с каждого
+ * CamelCase-слова (имена 1С — CamelCase: {@code ПровестиДокумент} = Провести + Документ). Так для
+ * {@code ПровестиДокумент} ключи — {@code провестидокумент} (полное имя) и {@code документ} (начало
+ * второго слова). Это даёт сублинейный префиксный поиск {@link PatriciaTrie#prefixMap(Object)} не
+ * только по началу полного имени, но и по началу любого слова: запрос {@code Док} находит
+ * {@code ПровестиДокумент} через дерево, а не сканом. Слова режутся
+ * {@link StringUtils#splitByCharacterTypeCamelCase(String)} (кириллица режется корректно).
+ * <p>
+ * Что покрывает префиксное дерево: префикс полного имени И префикс любого CamelCase-слова. Чего НЕ
+ * покрывает: произвольную подстроку ВНУТРИ слова (не с его начала) и подпоследовательность вразброс
+ * ({@code ПрвДок} → {@code ПровестиДокумент}) — они по-прежнему добираются полным проходом по ключам.
  * <p>
  * Индекс наследует {@link AbstractDocumentLifecycleClearableIndex}: его {@code @EventListener}'ы
  * сбрасывают записи документа на изменение содержимого, освобождение данных, закрытие и удаление.
@@ -92,20 +101,26 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private static final int SCORE_EXACT = 0;
 
   /**
-   * Скор совпадения имени по префиксу запроса.
+   * Скор совпадения полного имени по префиксу запроса.
    */
   private static final int SCORE_PREFIX = 1;
 
   /**
-   * Скор совпадения запроса как непрерывной подстроки имени.
+   * Скор совпадения по префиксу начала CamelCase-слова имени (запрос — префикс одного из слов,
+   * но не префикс полного имени). Например, запрос {@code Док} для имени {@code ПровестиДокумент}.
    */
-  private static final int SCORE_SUBSTRING = 2;
+  private static final int SCORE_WORD_PREFIX = 2;
+
+  /**
+   * Скор совпадения запроса как непрерывной подстроки имени (но не префикса слова).
+   */
+  private static final int SCORE_SUBSTRING = 3;
 
   /**
    * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
    * позиция первого совпавшего символа (более ранняя позиция — релевантнее).
    */
-  private static final int SCORE_SUBSEQUENCE = 3;
+  private static final int SCORE_SUBSEQUENCE = 4;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -113,15 +128,22 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   );
 
   /**
-   * Дерево записей по ключу = lowercase-имя символа.
+   * Дерево записей по ключам = lowercase-суффиксы имени от начала каждого CamelCase-слова.
    * <p>
-   * Несколько символов с одинаковым именем хранятся одним списком под общим ключом.
-   * Не потокобезопасен — любой доступ только под {@link #lock}.
+   * Одна запись присутствует под несколькими ключами (полное имя и начало каждого слова), поэтому
+   * при поиске нужен дедуп, а при сбросе — удаление по всем ключам записи. Несколько символов с
+   * одинаковым ключом хранятся одним списком. Не потокобезопасен — любой доступ только под
+   * {@link #lock}.
    */
   private final PatriciaTrie<List<Entry>> trie = new PatriciaTrie<>();
 
   /**
-   * Записи, добавленные в индекс каждым URI — для точечного сброса по событию жизненного цикла.
+   * Уникальные записи, добавленные в индекс каждым URI.
+   * <p>
+   * Служит двум целям: точечный сброс по URI на событии жизненного цикла и проход по уникальным
+   * записям для fuzzy-добора и пустого запроса (в дереве запись лежит под несколькими ключами, и
+   * обход дерева стоил бы кратно их числу). Меняется и читается под {@link #lock} согласованно с
+   * {@link #trie}.
    */
   private final ConcurrentMap<URI, List<Entry>> indexedByUri = new ConcurrentHashMap<>();
 
@@ -171,24 +193,29 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   /**
    * Удалить записи индекса, относящиеся к данному URI документа.
    * <p>
-   * Записи документа вычищаются из {@link #trie} под write-lock; ключи, оставшиеся без записей,
-   * удаляются из дерева, чтобы не копить пустые узлы.
+   * Каждая запись лежит под несколькими ключами (полное имя и начало каждого CamelCase-слова),
+   * поэтому удаляется из ВСЕХ своих ключей: их множество детерминированно пересчитывается из имени
+   * записи методом {@link #keysOf(String)} (обратная карта не нужна). И {@link #indexedByUri}, и
+   * {@link #trie} меняются под одним write-lock, чтобы search (read-lock), читающий обе структуры,
+   * не увидел запись удалённой из одной раньше другой; ключи, оставшиеся без записей, удаляются из
+   * дерева, чтобы не копить пустые узлы.
    *
    * @param uri URI документа
    */
   @Override
   public void clear(URI uri) {
-    var removed = indexedByUri.remove(uri);
-    if (removed == null || removed.isEmpty()) {
-      return;
-    }
-    var removedSet = Collections.<Entry>newSetFromMap(new IdentityHashMap<>());
-    removedSet.addAll(removed);
-
     lock.writeLock().lock();
     try {
+      var removed = indexedByUri.remove(uri);
+      if (removed == null || removed.isEmpty()) {
+        return;
+      }
+      var removedSet = Collections.<Entry>newSetFromMap(new IdentityHashMap<>());
+      removedSet.addAll(removed);
       for (var entry : removed) {
-        removeEntryFromKey(entry.lowerName(), removedSet);
+        for (var key : keysOf(entry.name())) {
+          removeEntryFromKey(key, removedSet);
+        }
       }
     } finally {
       lock.writeLock().unlock();
@@ -199,15 +226,17 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Найти символы рабочей области по запросу с ранжированием по релевантности.
    * <p>
    * Сопоставление регистронезависимое. Скоринг (меньше — релевантнее): точное совпадение,
-   * затем совпадение по префиксу, затем непрерывная подстрока, затем подпоследовательность;
-   * совпадения по подпоследовательности дополнительно штрафуются позицией первого символа.
-   * При равном скоре раньше идёт более короткое имя, затем — более ранняя позиция в документе.
-   * Несовпавшие записи отбрасываются. Выдача возвращается целиком, без усечения: пустой запрос
-   * отдаёт все записи индекса, непустой — все совпадения, отсортированные по релевантности.
+   * затем префикс полного имени, затем префикс начала CamelCase-слова (запрос — начало слова из
+   * середины имени), затем непрерывная подстрока, затем подпоследовательность; совпадения по
+   * подпоследовательности дополнительно штрафуются позицией первого символа. При равном скоре раньше
+   * идёт более короткое имя, затем — более ранняя позиция в документе. Несовпавшие записи
+   * отбрасываются. Выдача возвращается целиком, без усечения: пустой запрос отдаёт все записи
+   * индекса, непустой — все совпадения, отсортированные по релевантности.
    * <p>
-   * Префиксная часть обслуживается сублинейно через {@link PatriciaTrie#prefixMap(Object)};
-   * подстрочные и fuzzy-совпадения (подпоследовательность) дерево по префиксу не покрывает,
-   * поэтому добираются проходом по остальным ключам.
+   * Сублинейно через {@link PatriciaTrie#prefixMap(Object)} обслуживаются и префикс полного имени,
+   * и префикс начала любого слова (записи проиндексированы под суффиксами от начала каждого слова).
+   * Произвольную подстроку внутри слова и подпоследовательность вразброс дерево по префиксу не
+   * покрывает, поэтому они добираются проходом по ключам.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
@@ -233,83 +262,109 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Собрать совпадения непустого запроса: сначала сублинейный префиксный путь через дерево,
-   * затем добор подстрочных и fuzzy-совпадений проходом по остальным ключам.
+   * Собрать совпадения непустого запроса: сначала сублинейный префиксный путь через дерево
+   * (префикс полного имени И префикс начала любого CamelCase-слова), затем добор подстрочных и
+   * fuzzy-совпадений проходом по остальным ключам.
+   * <p>
+   * Одна запись присутствует под несколькими ключами и может совпасть по нескольким из них, поэтому
+   * результат дедуплицируется по идентичности записи с сохранением лучшего (наименьшего) скора.
    *
    * @param lowerQuery    lowercase-запрос (непустой)
    * @param cancelChecker проверяющий отмену запроса
    * @return ранжированный список совпадений без дублей
    */
   private List<Entry> searchMatching(String lowerQuery, CancelChecker cancelChecker) {
-    var matches = new ArrayList<Scored>();
-    var matchedKeys = new HashSet<String>();
+    Map<Entry, Integer> bestScore = new IdentityHashMap<>();
     var progress = new ScanProgress(cancelChecker);
 
-    collectPrefixMatches(lowerQuery, matches, matchedKeys, progress);
-    collectFuzzyMatches(lowerQuery, matches, matchedKeys, progress);
+    collectPrefixMatches(lowerQuery, bestScore, progress);
+    collectFuzzyMatches(lowerQuery, bestScore, progress);
 
+    var matches = new ArrayList<Scored>(bestScore.size());
+    for (var scored : bestScore.entrySet()) {
+      matches.add(new Scored(scored.getValue(), scored.getKey()));
+    }
     matches.sort(Comparator.naturalOrder());
     return matches.stream().map(Scored::entry).toList();
   }
 
   /**
    * Быстрый путь: префиксные совпадения сублинейно через {@link PatriciaTrie#prefixMap(Object)}.
-   * Точное совпадение получает {@link #SCORE_EXACT}, остальные префиксные — {@link #SCORE_PREFIX}.
-   * Просмотренные ключи добавляются в {@code matchedKeys}, чтобы добор их не пересчитывал.
+   * Поскольку записи проиндексированы под суффиксами от начала каждого CamelCase-слова, префиксный
+   * путь покрывает и совпадения по началу слова из середины имени. Скор записи определяется по
+   * совпавшему ключу: запрос == полное имя — {@link #SCORE_EXACT}; запрос — префикс полного имени —
+   * {@link #SCORE_PREFIX}; запрос — префикс ключа начала слова (не полного имени) —
+   * {@link #SCORE_WORD_PREFIX}. У записи берётся лучший (наименьший) скор по всем совпавшим ключам.
    *
-   * @param lowerQuery  lowercase-запрос (непустой)
-   * @param matches     накопитель кандидатов со скором
-   * @param matchedKeys накопитель уже учтённых ключей
-   * @param progress    счётчик прогресса для периодической проверки отмены
+   * @param lowerQuery lowercase-запрос (непустой)
+   * @param bestScore  накопитель лучшего скора на запись (по идентичности)
+   * @param progress   счётчик прогресса для периодической проверки отмены
    */
   private void collectPrefixMatches(
     String lowerQuery,
-    List<Scored> matches,
-    Set<String> matchedKeys,
+    Map<Entry, Integer> bestScore,
     ScanProgress progress
   ) {
     for (var bucket : trie.prefixMap(lowerQuery).entrySet()) {
-      matchedKeys.add(bucket.getKey());
-      var score = bucket.getKey().equals(lowerQuery) ? SCORE_EXACT : SCORE_PREFIX;
+      var key = bucket.getKey();
       for (var entry : bucket.getValue()) {
         progress.advance();
-        matches.add(new Scored(score, entry));
+        var score = prefixScore(key, lowerQuery, entry);
+        bestScore.merge(entry, score, Integer::min);
       }
     }
   }
 
   /**
-   * Добор подстрочных и fuzzy-совпадений: префиксное дерево их не ускоряет, поэтому идёт общий
-   * проход по ключам, не покрытым префиксным путём. Несовпавшие ключи отсеивает
-   * {@link #fuzzyScore(String, String)}.
+   * Скор префиксного совпадения записи по конкретному ключу дерева.
    *
-   * @param lowerQuery  lowercase-запрос (непустой)
-   * @param matches     накопитель кандидатов со скором
-   * @param matchedKeys ключи, уже учтённые префиксным путём
-   * @param progress    счётчик прогресса для периодической проверки отмены
+   * @param key        ключ дерева, начавшийся с запроса
+   * @param lowerQuery lowercase-запрос (непустой, префикс ключа)
+   * @param entry      запись под этим ключом
+   * @return {@link #SCORE_EXACT}, {@link #SCORE_PREFIX} или {@link #SCORE_WORD_PREFIX}
+   */
+  private static int prefixScore(String key, String lowerQuery, Entry entry) {
+    var isFullName = key.equals(entry.lowerName());
+    if (isFullName) {
+      return key.equals(lowerQuery) ? SCORE_EXACT : SCORE_PREFIX;
+    }
+    return SCORE_WORD_PREFIX;
+  }
+
+  /**
+   * Добор подстрочных и fuzzy-совпадений: префиксное дерево их не ускоряет, поэтому идёт проход по
+   * УНИКАЛЬНЫМ записям индекса (значения {@link #indexedByUri}), а не по ключам дерева. Это важно:
+   * запись лежит под несколькими ключами, и проход по {@code trie.entrySet()} стоил бы кратно числу
+   * ключей; проход по уникальным записям не зависит от их числа и стоит как до индексации по началам
+   * слов. Записи, уже найденные префиксным путём, не понижаются: {@code merge} с {@link Integer#min}
+   * оставит лучший скор. Несовпавшие имена отсеивает {@link #fuzzyScore(String, String)}.
+   *
+   * @param lowerQuery lowercase-запрос (непустой)
+   * @param bestScore  накопитель лучшего скора на запись (по идентичности)
+   * @param progress   счётчик прогресса для периодической проверки отмены
    */
   private void collectFuzzyMatches(
     String lowerQuery,
-    List<Scored> matches,
-    Set<String> matchedKeys,
+    Map<Entry, Integer> bestScore,
     ScanProgress progress
   ) {
-    for (var bucket : trie.entrySet()) {
-      var fuzzyScore = matchedKeys.contains(bucket.getKey())
-        ? -1
-        : fuzzyScore(bucket.getKey(), lowerQuery);
-      if (fuzzyScore < 0) {
-        continue;
-      }
-      for (var entry : bucket.getValue()) {
+    for (var entries : indexedByUri.values()) {
+      for (var entry : entries) {
         progress.advance();
-        matches.add(new Scored(fuzzyScore, entry));
+        var fuzzyScore = fuzzyScore(entry.lowerName(), lowerQuery);
+        if (fuzzyScore < 0) {
+          continue;
+        }
+        bestScore.merge(entry, fuzzyScore, Integer::min);
       }
     }
   }
 
   /**
-   * Собрать все записи индекса в детерминированном порядке (для пустого запроса).
+   * Собрать все записи индекса (для пустого запроса).
+   * <p>
+   * Проход идёт по УНИКАЛЬНЫМ записям ({@link #indexedByUri}), а не по ключам дерева: запись лежит
+   * под несколькими ключами, и обход дерева вернул бы дубли и стоил бы кратно числу ключей.
    *
    * @param cancelChecker проверяющий отмену запроса
    * @return все записи индекса
@@ -317,8 +372,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private List<Entry> collectAll(CancelChecker cancelChecker) {
     var result = new ArrayList<Entry>();
     var progress = new ScanProgress(cancelChecker);
-    for (var bucket : trie.values()) {
-      for (var entry : bucket) {
+    for (var entries : indexedByUri.values()) {
+      for (var entry : entries) {
         progress.advance();
         result.add(entry);
       }
@@ -344,16 +399,51 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       return;
     }
 
-    indexedByUri.put(uri, List.copyOf(collected));
+    var snapshot = List.copyOf(collected);
 
     lock.writeLock().lock();
     try {
-      for (var entry : collected) {
-        trie.merge(entry.lowerName(), List.of(entry), WorkspaceSymbolIndex::concat);
+      // indexedByUri и trie держатся согласованными под одним write-lock: search (read-lock)
+      // читает обе структуры (trie — префиксный путь, indexedByUri — fuzzy-добор и пустой запрос)
+      // и не должен увидеть запись в одной из них раньше другой.
+      indexedByUri.put(uri, snapshot);
+      for (var entry : snapshot) {
+        for (var key : keysOf(entry.name())) {
+          trie.merge(key, List.of(entry), WorkspaceSymbolIndex::concat);
+        }
       }
     } finally {
       lock.writeLock().unlock();
     }
+  }
+
+  /**
+   * Вычислить ключи дерева для имени символа: lowercase-суффиксы имени, начинающиеся с каждого
+   * CamelCase-слова.
+   * <p>
+   * Имя режется на слова {@link StringUtils#splitByCharacterTypeCamelCase(String)} (кириллица
+   * режется корректно), затем для каждой границы слова берётся суффикс ИСХОДНОГО имени от этой
+   * границы до конца и приводится к нижнему регистру. Первый ключ всегда равен полному lowercase-имени
+   * (граница первого слова — позиция 0). Берётся именно суффикс-от-начала-слова, а не изолированное
+   * слово: так префиксный поиск ловит и хвост из нескольких слов (запрос {@code ДокОтбора} для
+   * {@code ПровестиДокументОтбора} находится по ключу {@code документотбора}). Ключи дедуплицируются
+   * (имя из одного слова даёт единственный ключ).
+   *
+   * @param name исходное имя символа (непустое)
+   * @return упорядоченное множество ключей дерева без дублей (как минимум полное lowercase-имя)
+   */
+  private static Set<String> keysOf(String name) {
+    var keys = new LinkedHashSet<String>();
+    var lowerName = name.toLowerCase(Locale.ENGLISH);
+    keys.add(lowerName);
+    var offset = 0;
+    for (var word : StringUtils.splitByCharacterTypeCamelCase(name)) {
+      if (offset > 0) {
+        keys.add(lowerName.substring(offset));
+      }
+      offset += word.length();
+    }
+    return keys;
   }
 
   /**
@@ -413,12 +503,13 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   /**
    * Вычислить скор «не-префиксного» совпадения lowercase-имени с lowercase-запросом.
    * <p>
-   * Применяется только к ключам вне префиксного множества дерева (точное и префиксное
-   * совпадения там уже исключены). Меньшее значение — релевантнее: {@link #SCORE_SUBSTRING} —
-   * непрерывная подстрока, {@link #SCORE_SUBSEQUENCE}{@code  + позиция} — подпоследовательность.
+   * Префиксные совпадения (полного имени и начала слова) учитываются отдельно в префиксном пути и
+   * через {@code merge} с {@link Integer#min} не понижаются этим скором. Меньшее значение —
+   * релевантнее: {@link #SCORE_SUBSTRING} — непрерывная подстрока, {@link #SCORE_SUBSEQUENCE}{@code  + позиция} —
+   * подпоследовательность.
    *
    * @param lowerName  lowercase-имя символа
-   * @param lowerQuery lowercase-запрос (непустой, не префикс имени)
+   * @param lowerQuery lowercase-запрос (непустой)
    * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если совпадения нет
    */
   private static int fuzzyScore(String lowerName, String lowerQuery) {
