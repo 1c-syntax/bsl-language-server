@@ -26,10 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RaiseStatementContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Position;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -45,6 +47,12 @@ import java.util.Set;
   }
 )
 public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
+
+  private final TypeService typeService;
+
+  public BadExceptionCategoryDiagnostic(TypeService typeService) {
+    this.typeService = typeService;
+  }
 
   private static final Set<String> FORBIDDEN_CATEGORIES = Set.of(
     "всеошибки", "allerrors",
@@ -68,17 +76,16 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
       .map(BSLParser.CallParamListContext::callParam)
       .filter(params -> params.size() > 1)
       .map(params -> params.get(1))
-      .filter(this::isForbiddenCategoryParam)
+      .filter(this::isForbiddenCategorySyntax)
       .ifPresent(diagnosticStorage::addDiagnostic);
   }
 
-  private boolean isForbiddenCategoryParam(CallParamContext categoryParam) {
+  private boolean isForbiddenCategorySyntax(CallParamContext categoryParam) {
     return Optional.of(categoryParam)
       .map(CallParamContext::expression)
       .filter(expr -> !expr.member().isEmpty())
       .map(expr -> expr.member(0))
       .map(BSLParser.MemberContext::complexIdentifier)
-      .filter(this::isErrorCategoryQualifier)
       .filter(ci -> !ci.modifier().isEmpty())
       .map(ci -> ci.modifier().getLast())
       .map(BSLParser.ModifierContext::accessProperty)
@@ -88,10 +95,19 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private boolean isErrorCategoryQualifier(BSLParser.ComplexIdentifierContext ci) {
-    return Optional.ofNullable(ci.IDENTIFIER())
-      .map(id -> id.getText().toLowerCase(Locale.ROOT))
-      .filter(root -> root.equals("категорияошибки") || root.equals("errorcategory"))
-      .isPresent();
+  private boolean isSystemErrorCategory(CallParamContext param) {
+    try {
+      int line = param.getStop().getLine() - 1;
+      int character = param.getStop().getCharPositionInLine();
+      Position position = new Position(line, character);
+
+      return typeService.findMemberAt(documentContext, position)
+        .filter(member -> member.owner() != null)
+        .map(member -> member.owner().qualifiedName().toLowerCase(Locale.ROOT))
+        .filter(name -> name.equals("категорияошибки") || name.equals("errorcategory"))
+        .isPresent();
+    } catch (Exception e) {
+      return false;
+    }
   }
 }
