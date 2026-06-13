@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -102,11 +103,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private final ConcurrentMap<Character, List<Entry>> charBuckets = new ConcurrentHashMap<>();
 
   /**
-   * Записи с пустым именем (теоретический край) — обслуживаются только пустым запросом.
-   */
-  private volatile List<Entry> emptyNameBucket = List.of();
-
-  /**
    * Записи, добавленные в индекс каждым URI — для точечного сброса по событию жизненного цикла.
    */
   private final ConcurrentMap<URI, List<Entry>> indexedByUri = new ConcurrentHashMap<>();
@@ -129,6 +125,27 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * Сохранить записи документа при освобождении его вторичных данных.
+   * <p>
+   * Базовый обработчик сбрасывает индекс на {@link ServerContextDocumentClearedEvent} (batch-анализ
+   * выбрасывает AST после каждого файла). Записи этого индекса не ссылаются на AST или дерево
+   * символов — это автономные снимки (имя, kind, range, теги, containerName), которые остаются
+   * валидны и после освобождения вторичных данных. Поэтому обработчик переопределён в no-op: иначе
+   * массовое наполнение workspace очищало бы индекс сразу после индексации каждого документа, и
+   * глобальный поиск {@code workspace/symbol} не находил бы ничего до следующего инкрементального
+   * изменения. Актуальность записей при реальном изменении содержимого гарантирует
+   * {@link #handleContentChanged(DocumentContextContentChangedEvent)}, а закрытие и удаление
+   * документа по-прежнему чистят индекс через унаследованные обработчики.
+   *
+   * @param event событие освобождения вторичных данных документа
+   */
+  @EventListener
+  @Override
+  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
+    // no-op: записи автономны и должны пережить освобождение AST при batch-наполнении
+  }
+
+  /**
    * Удалить записи индекса, относящиеся к данному URI документа.
    *
    * @param uri URI документа
@@ -143,15 +160,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     removedSet.addAll(removed);
 
     for (var entry : removed) {
-      if (entry.lowerName().isEmpty()) {
-        emptyNameBucket = withoutEntries(emptyNameBucket, removedSet);
-      } else {
-        var key = entry.lowerName().charAt(0);
-        charBuckets.computeIfPresent(key, (ignored, bucket) -> {
-          var filtered = withoutEntries(bucket, removedSet);
-          return filtered.isEmpty() ? null : filtered;
-        });
-      }
+      var key = entry.lowerName().charAt(0);
+      charBuckets.computeIfPresent(key, (ignored, bucket) -> {
+        var filtered = withoutEntries(bucket, removedSet);
+        return filtered.isEmpty() ? null : filtered;
+      });
     }
   }
 
@@ -173,6 +186,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * @return ранжированный список найденных записей, не длиннее {@code limit}
    */
   public List<Entry> search(String query, int limit, CancelChecker cancelChecker) {
+    cancelChecker.checkCanceled();
+
     var effectiveLimit = Math.min(Math.max(limit, 0), MAX_RESULTS);
     if (effectiveLimit == 0) {
       return List.of();
@@ -247,7 +262,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     var scriptVariant = scriptVariantOf(documentContext);
     var collected = new ArrayList<Entry>();
     for (var symbol : documentContext.getSymbolTree().getChildrenFlat()) {
-      if (!isSupported(symbol)) {
+      // Безымянные символы не индексируются: для workspace/symbol они бесполезны.
+      if (!isSupported(symbol) || symbol.getName().isEmpty()) {
         continue;
       }
       collected.add(toEntry(uri, symbol, scriptVariant));
@@ -259,12 +275,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
 
     indexedByUri.put(uri, List.copyOf(collected));
     for (var entry : collected) {
-      if (entry.lowerName().isEmpty()) {
-        emptyNameBucket = append(emptyNameBucket, entry);
-      } else {
-        var key = entry.lowerName().charAt(0);
-        charBuckets.merge(key, List.of(entry), WorkspaceSymbolIndex::concat);
-      }
+      var key = entry.lowerName().charAt(0);
+      charBuckets.merge(key, List.of(entry), WorkspaceSymbolIndex::concat);
     }
   }
 
@@ -349,13 +361,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       }
     }
     return queryIndex == lowerQuery.length() ? firstMatch : -1;
-  }
-
-  private static List<Entry> append(List<Entry> base, Entry entry) {
-    var copy = new ArrayList<Entry>(base.size() + 1);
-    copy.addAll(base);
-    copy.add(entry);
-    return List.copyOf(copy);
   }
 
   private static List<Entry> concat(List<Entry> existing, List<Entry> added) {
