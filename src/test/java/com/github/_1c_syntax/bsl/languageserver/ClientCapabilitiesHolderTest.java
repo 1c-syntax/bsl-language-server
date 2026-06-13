@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,5 +81,45 @@ class ClientCapabilitiesHolderTest {
 
     // then
     assertThat(result).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Visual Studio Code", "Cursor", "Antigravity", "code-server"})
+  void isVsCodeLikeClientIsTrueForVsCodeLikeClients(String clientName) {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+    holder.setClientInfo(new ClientInfo(clientName, "1.0.0"));
+
+    // when
+    var result = holder.isVsCodeLikeClient();
+
+    // then
+    assertThat(result).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Neovim", "Some Editor"})
+  void isVsCodeLikeClientIsFalseForOtherClients(String clientName) {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+    holder.setClientInfo(new ClientInfo(clientName, "1.0.0"));
+
+    // when
+    var result = holder.isVsCodeLikeClient();
+
+    // then
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void isVsCodeLikeClientIsFalseWhenClientInfoIsAbsent() {
+    // given
+    var holder = new ClientCapabilitiesHolder();
+
+    // when
+    var result = holder.isVsCodeLikeClient();
+
+    // then
+    assertThat(result).isFalse();
   }
 }

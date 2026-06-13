@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -62,10 +63,11 @@ public class RunAllTestsCodeLensSupplier
 
   public RunAllTestsCodeLensSupplier(
     LanguageServerConfiguration configuration,
+    ClientCapabilitiesHolder clientCapabilitiesHolder,
     TestRunnerAdapter testRunnerAdapter,
     Resources resources
   ) {
-    super(configuration);
+    super(configuration, clientCapabilitiesHolder);
     this.testRunnerAdapter = testRunnerAdapter;
     this.resources = resources;
   }

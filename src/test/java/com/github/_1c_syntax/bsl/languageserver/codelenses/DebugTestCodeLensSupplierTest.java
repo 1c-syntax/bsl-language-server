@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -61,6 +62,9 @@ class DebugTestCodeLensSupplierTest {
 
   @Autowired
   private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   @BeforeEach
   void init() {
@@ -116,10 +120,11 @@ class DebugTestCodeLensSupplierTest {
   }
 
   private void initializeServer(String clientName) {
+    var clientInfo = new ClientInfo(clientName, "1.0.0");
     var initializeParams = new InitializeParams();
-    initializeParams.setClientInfo(
-      new ClientInfo(clientName, "1.0.0")
-    );
+    initializeParams.setClientInfo(clientInfo);
+
+    clientCapabilitiesHolder.setClientInfo(clientInfo);
 
     var event = new LanguageServerInitializeRequestReceivedEvent(
       mock(LanguageServer.class),

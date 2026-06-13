@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -52,6 +53,9 @@ class RunAllTestsCodeLensSupplierTest {
 
   @Autowired
   private ApplicationEventPublisher eventPublisher;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   @MockitoSpyBean
   private TestRunnerAdapter testRunnerAdapter;
@@ -108,10 +112,11 @@ class RunAllTestsCodeLensSupplierTest {
   }
 
   private void initializeServer(String clientName) {
+    var clientInfo = new ClientInfo(clientName, "1.0.0");
     var initializeParams = new InitializeParams();
-    initializeParams.setClientInfo(
-      new ClientInfo(clientName, "1.0.0")
-    );
+    initializeParams.setClientInfo(clientInfo);
+
+    clientCapabilitiesHolder.setClientInfo(clientInfo);
 
     var event = new LanguageServerInitializeRequestReceivedEvent(
       mock(LanguageServer.class),

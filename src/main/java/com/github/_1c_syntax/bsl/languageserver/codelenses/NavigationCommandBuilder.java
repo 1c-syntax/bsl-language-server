@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -106,9 +105,6 @@ public class NavigationCommandBuilder {
    * @return {@code true}, если клиент совместим с VS Code; иначе {@code false}.
    */
   private boolean isVsCodeLike() {
-    return clientCapabilitiesHolder.getClientInfo()
-      .map(ClientInfo::getName)
-      .map(VsCodeCompatibleClient::isVsCodeCompatible)
-      .orElse(false);
+    return clientCapabilitiesHolder.isVsCodeLikeClient();
   }
 }
