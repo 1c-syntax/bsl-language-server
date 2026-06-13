@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -40,14 +42,22 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.ParameterInformation;
+import org.eclipse.lsp4j.ParameterInformationCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpCapabilities;
 import org.eclipse.lsp4j.SignatureHelpContext;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.SignatureInformationCapabilities;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Tuple;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -77,6 +87,34 @@ public final class SignatureHelpProvider {
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
   private final LanguageServerConfiguration configuration;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируется на initialize. Поддерживает ли клиент labelOffsetSupport
+  // (textDocument.signatureHelp.signatureInformation.parameterInformation.labelOffsetSupport).
+  // Если да — ParameterInformation.label задаётся офсетами [start, end) в строке label сигнатуры.
+  // Если нет — label задаётся строкой-подстрокой параметра (LSP-офсеты — опциональная фича клиента).
+  private boolean labelOffsetSupport;
+
+  // Кэшируется на initialize. Поддерживает ли клиент markdown в documentation сигнатуры
+  // (textDocument.signatureHelp.signatureInformation.documentationFormat). Если да —
+  // documentation сигнатуры отдаётся как MarkupContent(MARKDOWN), иначе голой строкой (plaintext).
+  private boolean markdownDocumentationSupport;
+
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    var signatureInformation = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getSignatureHelp)
+      .map(SignatureHelpCapabilities::getSignatureInformation);
+    labelOffsetSupport = signatureInformation
+      .map(SignatureInformationCapabilities::getParameterInformation)
+      .map(ParameterInformationCapabilities::getLabelOffsetSupport)
+      .orElse(Boolean.FALSE);
+    markdownDocumentationSupport = signatureInformation
+      .map(SignatureInformationCapabilities::getDocumentationFormat)
+      .map(formats -> formats.contains(MarkupKind.MARKDOWN))
+      .orElse(Boolean.FALSE);
+  }
 
   /**
    * @return signature help для указанной позиции, либо пустой {@link SignatureHelp} если контекст
@@ -473,14 +511,34 @@ public final class SignatureHelpProvider {
     info.setParameters(paramInfos);
     var sigDesc = sig.displayDescription(lang);
     if (!sigDesc.isBlank()) {
-      info.setDocumentation(sigDesc);
+      setSignatureDocumentation(info, sigDesc);
     }
     return info;
   }
 
   /**
+   * Проставляет documentation сигнатуры с учётом клиентских capabilities. Если клиент
+   * объявил поддержку markdown в {@code signatureInformation.documentationFormat} —
+   * текст отдаётся как {@link MarkupContent} с {@link MarkupKind#MARKDOWN}, иначе голой
+   * строкой (plaintext). Сам текст описания не содержит markdown-разметки, поэтому
+   * дополнительной очистки для plaintext-клиента не требуется.
+   *
+   * @param info          сигнатура, которой проставляется документация.
+   * @param documentation текст описания сигнатуры.
+   */
+  private void setSignatureDocumentation(SignatureInformation info, String documentation) {
+    if (markdownDocumentationSupport) {
+      info.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, documentation));
+    } else {
+      info.setDocumentation(documentation);
+    }
+  }
+
+  /**
    * Дописать в {@code label} один параметр ({@code Имя: Тип? = Значение}) и вернуть
-   * соответствующий {@link ParameterInformation} с диапазоном подсветки.
+   * соответствующий {@link ParameterInformation}. Метка параметра задаётся офсетами
+   * {@code [start, end)} в строке label сигнатуры, если клиент объявил labelOffsetSupport;
+   * иначе — строкой-подстрокой того же диапазона (LSP-офсеты — опциональная фича клиента).
    * Необязательный параметр помечается «?»: знак приклеивается к типу
    * ({@code Имя: Тип?}), а при отсутствии типа — к имени ({@code Имя?}).
    */
@@ -501,7 +559,12 @@ public final class SignatureHelpProvider {
     }
     var end = label.length();
     var info = new ParameterInformation();
-    info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
+    if (labelOffsetSupport) {
+      info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
+    } else {
+      // Клиент без labelOffsetSupport: label — строка-подстрока соответствующего параметра.
+      info.setLabel(Either.forLeft(label.substring(start, end)));
+    }
     var pDesc = p.displayDescription(lang);
     if (!pDesc.isBlank()) {
       info.setDocumentation(pDesc);
