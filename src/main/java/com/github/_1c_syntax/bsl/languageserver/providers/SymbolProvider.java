@@ -21,20 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.types.MdoReference;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -42,149 +30,68 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Провайдер для поиска символов в рабочей области.
  * <p>
- * Обрабатывает запросы {@code workspace/symbol}.
+ * Обрабатывает запросы {@code workspace/symbol}, делегируя поиск инкрементальному
+ * {@link WorkspaceSymbolIndex}: индекс хранит уже подготовленные записи символов и
+ * возвращает ранжированный top-N, поэтому провайдер лишь маппит записи в
+ * {@link WorkspaceSymbol} без обхода всех документов.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_symbol">Workspace Symbols Request specification</a>
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SymbolProvider {
 
-  private final ServerContextProvider serverContextProvider;
-
-  private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
-    VariableKind.MODULE,
-    VariableKind.GLOBAL
-  );
+  private final WorkspaceSymbolIndex workspaceSymbolIndex;
 
   /**
    * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} с поддержкой отмены.
    * <p>
-   * Отмена проверяется на границе каждого документа: если клиент отменил запрос
-   * (например, прислав новый запрос при следующем нажатии клавиши), обход прерывается
-   * исключением {@link java.util.concurrent.CancellationException}.
+   * Поиск делегируется {@link WorkspaceSymbolIndex#search(String, int, CancelChecker)}: совпадения
+   * ранжируются по релевантности (точное совпадение, префикс, подстрока, подпоследовательность),
+   * а выдача усекается по скору до {@link WorkspaceSymbolIndex#MAX_RESULTS} — наиболее релевантные
+   * символы остаются сверху. Отмена проверяется индексом периодически в ходе поиска: если клиент
+   * отменил запрос, поиск прерывается исключением {@link java.util.concurrent.CancellationException}.
    *
    * @param params        Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса
-   * @param cancelChecker Проверяющий отмену запроса; вызывается на границе каждого документа
-   * @return Список найденных символов рабочей области
+   * @param cancelChecker Проверяющий отмену запроса
+   * @return Ранжированный список найденных символов рабочей области, не длиннее {@link WorkspaceSymbolIndex#MAX_RESULTS}
    */
   public List<? extends WorkspaceSymbol> getSymbols(WorkspaceSymbolParams params, CancelChecker cancelChecker) {
     var queryString = Optional.ofNullable(params.getQuery())
       .orElse("");
 
-    var pattern = compilePattern(queryString);
-
-    // Search for symbols in all workspace contexts
-    return serverContextProvider.getAllContexts().values().stream()
-      .flatMap(serverContext -> serverContext.getDocuments().values().stream())
-      .peek(documentContext -> cancelChecker.checkCanceled())
-      .flatMap(SymbolProvider::getSymbolEntries)
-      .filter(symbolEntry -> queryString.isEmpty() || pattern.matcher(symbolEntry.symbol().getName()).find())
+    return workspaceSymbolIndex.search(queryString, WorkspaceSymbolIndex.MAX_RESULTS, cancelChecker).stream()
       .map(SymbolProvider::createWorkspaceSymbol)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   /**
-   * Компилирует запрос {@code workspace/symbol} в шаблон для сопоставления имён символов.
+   * Строит {@link WorkspaceSymbol} из записи индекса.
    * <p>
-   * Запрос трактуется как регулярное выражение. Если оно невалидно, спецификация LSP допускает
-   * "расслабленную" обработку, поэтому вместо возврата пустого результата выполняется откат на
-   * буквальное сопоставление подстроки.
+   * Имя контейнера и теги уже вычислены на момент индексации, поэтому повторный обход дерева
+   * символов не требуется. Пустое имя контейнера трактуется как «контейнер отсутствует».
    *
-   * @param queryString строка запроса пользователя
-   * @return скомпилированный шаблон с флагами {@code CASE_INSENSITIVE} и {@code UNICODE_CASE}
+   * @param entry запись индекса символов рабочей области
+   * @return заполненный символ рабочей области
    */
-  private static Pattern compilePattern(String queryString) {
-    try {
-      return CaseInsensitivePattern.compile(queryString);
-    } catch (PatternSyntaxException e) {
-      LOGGER.debug(e.getMessage(), e);
-      return CaseInsensitivePattern.compile(Pattern.quote(queryString));
-    }
-  }
-
-  private static Stream<SymbolEntry> getSymbolEntries(DocumentContext documentContext) {
-    var scriptVariant = scriptVariantOf(documentContext);
-    return documentContext.getSymbolTree().getChildrenFlat().stream()
-      .filter(SymbolProvider::isSupported)
-      .map(symbol -> new SymbolEntry(documentContext.getUri(), symbol, scriptVariant));
-  }
-
-  private static boolean isSupported(Symbol symbol) {
-    var symbolKind = symbol.getSymbolKind();
-    return switch (symbolKind) {
-      case Method, Constructor -> true;
-      case Variable -> SUPPORTED_VARIABLE_KINDS.contains(((VariableSymbol) symbol).getKind());
-      default -> false;
-    };
-  }
-
-  private static WorkspaceSymbol createWorkspaceSymbol(SymbolEntry symbolEntry) {
-    var uri = symbolEntry.uri();
-    var symbol = symbolEntry.symbol();
-    var location = new Location(uri.toString(), symbol.getRange());
+  private static WorkspaceSymbol createWorkspaceSymbol(WorkspaceSymbolIndex.Entry entry) {
+    var location = new Location(entry.uri().toString(), entry.range());
 
     var workspaceSymbol = new WorkspaceSymbol();
-    workspaceSymbol.setName(symbol.getName());
-    workspaceSymbol.setKind(symbol.getSymbolKind());
+    workspaceSymbol.setName(entry.name());
+    workspaceSymbol.setKind(entry.kind());
     workspaceSymbol.setLocation(Either.forLeft(location));
-    workspaceSymbol.setTags(symbol.getTags());
-    getContainerName(symbol, symbolEntry.scriptVariant()).ifPresent(workspaceSymbol::setContainerName);
+    workspaceSymbol.setTags(entry.tags());
+    if (!entry.containerName().isEmpty()) {
+      workspaceSymbol.setContainerName(entry.containerName());
+    }
 
     return workspaceSymbol;
-  }
-
-  /**
-   * Формирует человекочитаемое имя контейнера символа на основе связанного объекта метаданных.
-   * <p>
-   * Представление ссылки на объект метаданных (например, {@code ОбщийМодуль.ПервыйОбщийМодуль}
-   * или {@code CommonModule.ПервыйОбщийМодуль}) берётся в варианте встроенного языка проекта,
-   * что позволяет различать одноимённые символы из разных объектов конфигурации.
-   *
-   * @param symbol        Символ, для которого формируется имя контейнера
-   * @param scriptVariant Вариант встроенного языка проекта, в котором формируется представление ссылки
-   * @return Имя контейнера, либо {@link Optional#empty()}, если документ не связан с объектом метаданных
-   */
-  private static Optional<String> getContainerName(SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
-    return symbol.getOwner().getMdObject()
-      .map(MD::getMdoReference)
-      .map(mdoReference -> mdoReference.getMdoRef(scriptVariant));
-  }
-
-  /**
-   * Определяет вариант встроенного языка проекта для формирования представления ссылок.
-   *
-   * @param documentContext Контекст документа, для которого определяется вариант языка
-   * @return Вариант встроенного языка проекта
-   */
-  private static ScriptVariant scriptVariantOf(DocumentContext documentContext) {
-    var language = documentContext.getScriptVariantLanguage();
-    return language == Language.EN
-      ? ScriptVariant.ENGLISH
-      : ScriptVariant.RUSSIAN;
-  }
-
-  /**
-   * Символ рабочей области вместе с разрешёнными атрибутами документа-источника.
-   *
-   * @param uri           Идентификатор документа, в котором определён символ
-   * @param symbol        Символ исходного кода
-   * @param scriptVariant Вариант встроенного языка проекта документа-источника
-   */
-  private record SymbolEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
   }
 }
