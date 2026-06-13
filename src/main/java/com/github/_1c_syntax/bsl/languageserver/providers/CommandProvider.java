@@ -23,9 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -45,6 +49,7 @@ public class CommandProvider {
 
   private final Map<String, CommandSupplier<CommandArguments>> commandSuppliersById;
   private final JsonMapper jsonMapper;
+  private final Resources resources;
 
   private final CodeLensProvider codeLensProvider;
   private final InlayHintProvider inlayHintProvider;
@@ -61,7 +66,8 @@ public class CommandProvider {
 
     var commandSupplier = commandSuppliersById.get(commandId);
     if (commandSupplier == null) {
-      throw new RuntimeException("Unknown command id: " + commandId);
+      var message = resources.getResourceString(getClass(), "unknownCommandId", commandId);
+      throw new ResponseErrorException(new ResponseError(ResponseErrorCode.MethodNotFound, message, null));
     }
 
     var result = commandSupplier
@@ -95,15 +101,16 @@ public class CommandProvider {
    * @param executeCommandParams Параметры запроса workspace/executeCommand.
    * @return Аргументы команды.
    *
-   * @throws RuntimeException Выбрасывает исключение, если параметры входящего запроса не содержат
-   * данных для вычисления аргументов команды.
+   * @throws ResponseErrorException Выбрасывает исключение с кодом {@link ResponseErrorCode#InvalidParams},
+   * если параметры входящего запроса не содержат данных для вычисления аргументов команды.
    */
   @SneakyThrows
   public CommandArguments extractArguments(ExecuteCommandParams executeCommandParams) {
     var rawArguments = executeCommandParams.getArguments();
 
     if (rawArguments.isEmpty()) {
-      throw new RuntimeException("Command arguments is empty");
+      var message = resources.getResourceString(getClass(), "emptyCommandArguments");
+      throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
     }
 
     var rawArgument = rawArguments.getFirst();
