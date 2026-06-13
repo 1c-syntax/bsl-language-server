@@ -110,7 +110,10 @@ class EventHandlerParameterTypeInferenceTest extends AbstractServerContextAwareT
 
     var types = inferencer.inferSymbol(lishniy);
 
-    assertThat(types.refs()).extracting(TypeRef::qualifiedName).doesNotContain("Булево");
+    // Если для лишнего параметра inference что-то вернул — это не Булево из contract.
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName)
+      .as("contract без variadic не покрывает лишний параметр — тип не должен быть Булево")
+      .isEmpty();
   }
 
   @Test
