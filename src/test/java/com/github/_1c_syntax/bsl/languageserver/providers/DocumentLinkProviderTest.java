@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.DocumentLink;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,5 +60,28 @@ class DocumentLinkProviderTest {
 
     // then
     assertThat(documentLinks).isNotEmpty();
+  }
+
+  @Test
+  void testProviderAggregatesSeeReferenceLinks() {
+    // given
+    var content = """
+      // См. ДругойМетод. http://example.com
+      Процедура Тест() Экспорт
+      КонецПроцедуры
+
+      Процедура ДругойМетод() Экспорт
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    // when
+    var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .extracting(DocumentLink::getTarget)
+      .anyMatch(target -> target.contains("#L"))
+      .contains("http://example.com");
   }
 }
