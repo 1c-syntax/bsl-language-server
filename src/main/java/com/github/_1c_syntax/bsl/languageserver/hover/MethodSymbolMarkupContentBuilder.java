@@ -70,13 +70,16 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     var deprecatedSection = descriptionFormatter.getDeprecatedSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, deprecatedSection);
 
-    // признак "обработчик события платформы" + платформенное описание события
-    eventContract.ifPresent(contract -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
-      descriptionFormatter.getEventHandlerSection(contract)));
-
-    // описание метода
-    var purposeSection = descriptionFormatter.getPurposeSection(symbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
+    // признак "обработчик события платформы" + платформенное описание события +
+    // пользовательское purpose из шапки метода (если метод — обработчик)
+    if (eventContract.isPresent()) {
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
+        descriptionFormatter.getEventHandlerSection(symbol, eventContract.get()));
+    } else {
+      // описание метода для обычного метода
+      var purposeSection = descriptionFormatter.getPurposeSection(symbol);
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
+    }
 
     // параметры: для обработчика — контракт события (имена/типы), иначе —
     // шапка-комментарий пользователя

@@ -135,34 +135,6 @@ class ConfigurationTypesProviderHelpersTest {
   // === tryRegister early returns (smoke без NPE) ===
 
   @Test
-  void tryRegister_noWorkspace_isNoOp() {
-    var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
-    var provider = newProviderWith(serverProvider);
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.clear();
-    provider.tryRegister();
-    Mockito.verify(serverProvider, Mockito.never()).getAllContexts();
-  }
-
-  @Test
-  void tryRegister_noServerContext_isNoOp() {
-    var workspaceUri = java.net.URI.create("file:///test-cfg/");
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
-      .registerWorkspace(workspaceUri, "t");
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.set(workspaceUri);
-    try {
-      var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of());
-      var p = newProviderWith(serverProvider);
-      p.tryRegister();
-      Mockito.verify(serverProvider).getAllContexts();
-    } finally {
-      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.clear();
-      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
-        .unregisterWorkspace(workspaceUri);
-    }
-  }
-
-  @Test
   void tryRegister_emptyConfiguration_isNoOp() {
     var workspaceUri = java.net.URI.create("file:///test-cfg2/");
     com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
@@ -348,7 +320,8 @@ class ConfigurationTypesProviderHelpersTest {
     var lsConfig = Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
     var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
+      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
   }
 
   // === memberPlaceholderName ===

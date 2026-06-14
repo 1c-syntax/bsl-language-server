@@ -129,24 +129,37 @@ public class DescriptionFormatter {
   }
 
   /**
-   * Секция «Параметры» для метода, который является обработчиком платформенного
-   * события. Имена и типы берутся из контракта события (bsl-context), а не из
-   * шапки-комментария пользователя — контракт авторитетен, шапка может
-   * устаревать или отсутствовать.
-   */
-  /**
    * Секция-шапка «Обработчик события платформы: {@code <имя>}» + платформенное
    * описание события из bsl-context. Используется hover-билдерами метода и
    * параметра, чтобы показать, что метод/переменная — обработчик платформенного
    * события.
    */
   public String getEventHandlerSection(MemberDescriptor event) {
+    return getEventHandlerSection(null, event);
+  }
+
+  /**
+   * Перегрузка с контекстным методом: к платформенному описанию события
+   * подмешивается пользовательское описание метода из шапки-комментария.
+   * Платформенное описание идёт первым, пользовательское — следом.
+   */
+  public String getEventHandlerSection(@org.jspecify.annotations.Nullable MethodSymbol method, MemberDescriptor event) {
     var sj = new StringJoiner("\n");
     sj.add("**" + getResourceString(EVENT_HANDLER_HEADER_KEY) + ":** `" + event.name() + "`");
-    var description = event.description();
-    if (!description.isBlank()) {
+    var platformDescription = event.description();
+    if (!platformDescription.isBlank()) {
       sj.add("");
-      sj.add(description);
+      sj.add(platformDescription);
+    }
+    if (method != null) {
+      var userPurpose = method.getDescription()
+        .map(MethodDescription::getPurposeDescription)
+        .filter(text -> !text.isBlank())
+        .orElse("");
+      if (!userPurpose.isBlank()) {
+        sj.add("");
+        sj.add(userPurpose);
+      }
     }
     return sj.toString();
   }
