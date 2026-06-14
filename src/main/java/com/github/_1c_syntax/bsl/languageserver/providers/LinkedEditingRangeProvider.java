@@ -64,12 +64,18 @@ public class LinkedEditingRangeProvider {
   /**
    * Регулярное выражение идентификатора 1С для клиента связанного редактирования.
    * <p>
-   * Соответствует правилу лексера BSL {@code IDENTIFIER : LETTER (LETTER | DIGIT)*},
-   * где {@code LETTER} — любая буква Unicode (в том числе кириллица) или подчёркивание,
-   * а {@code DIGIT} — десятичная цифра. Передаётся клиенту, чтобы тот сохранял группу
-   * связанного редактирования между перезапросами при наборе символов.
+   * Перечисляет диапазоны символов явно (латиница + кириллица, включая Ё/ё, цифры и
+   * подчёркивание, без ведущей цифры), а не через свойства Unicode {@code \p{L}} или {@code \w}.
+   * Это сознательное ограничение со стороны клиента: VS Code компилирует {@code wordPattern}
+   * провайдера в JS {@code RegExp} БЕЗ флага {@code u} (см.
+   * {@code editor/contrib/linkedEditing/browser/linkedEditing.ts}). Без флага {@code u}
+   * экранирование свойств {@code \p{L}} молча перестаёт работать для кириллицы: на первой же
+   * клавише VS Code выполняет {@code referenceValue.match(wordPattern)}, для кириллического
+   * текста совпадение не покрывает всю строку, клиент вызывает {@code clearRanges()} и группа
+   * связанного редактирования разрушается — вхождения 2..N перестают синхронизироваться.
+   * Явные диапазоны корректно работают в JS без флага {@code u} и сохраняют группу при наборе.
    */
-  private static final String IDENTIFIER_WORD_PATTERN = "[\\p{L}_][\\p{L}0-9_]*";
+  private static final String IDENTIFIER_WORD_PATTERN = "[A-Za-zА-Яа-яЁё_][A-Za-zА-Яа-яЁё0-9_]*";
 
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;

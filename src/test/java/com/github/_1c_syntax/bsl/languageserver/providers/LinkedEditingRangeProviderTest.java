@@ -111,6 +111,11 @@ class LinkedEditingRangeProviderTest extends AbstractServerContextAwareTest {
     assertThat(ranges).isNotNull();
     assertThat(ranges.getWordPattern()).isNotNull();
     assertThat("ЛокальнаяПеременная".matches(ranges.getWordPattern())).isTrue();
+    // wordPattern должен распознавать кириллический идентификатор с Ё/ё
+    assertThat("СчётчикЦикла".matches(ranges.getWordPattern())).isTrue();
+    // VS Code компилирует wordPattern без флага u, поэтому свойства Unicode \p{...}
+    // молча перестают работать для кириллицы — защищаемся от регресса к сломанной форме
+    assertThat(ranges.getWordPattern()).doesNotContain("\\p");
   }
 
   @Test
