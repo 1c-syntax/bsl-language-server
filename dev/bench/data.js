@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781409174969,
+  "lastUpdate": 1781419198512,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37138,6 +37138,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.693048338803315",
             "extra": "mean: 285.07700475056964 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "11e51774a8d4f09f7f7cf24e3d4b27715cae3606",
+          "message": "Merge pull request #4078 from 1c-syntax/claude/codeaction-triggerkind\n\nfix(CodeActionProvider): учитывать context.triggerKind при формировании быстрых действий",
+          "timestamp": "2026-06-13T08:29:04+02:00",
+          "tree_id": "3aca30dc7ff8f409d4eee18f4ea0a07a5ea18b37",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/11e51774a8d4f09f7f7cf24e3d4b27715cae3606"
+        },
+        "date": 1781419190858,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 285.5957141717275,
+            "unit": "sec",
+            "range": "stddev: 4.6269471902251915",
+            "extra": "mean: 285.5957141717275 sec\nrounds: 3"
           }
         ]
       }
