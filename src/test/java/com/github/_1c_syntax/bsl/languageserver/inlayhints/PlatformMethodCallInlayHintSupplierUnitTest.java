@@ -21,13 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
+import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +46,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
@@ -73,7 +87,66 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
     // when
     var hints = supplier.getInlayHints(documentContext, params);
 
-    // then — L96 return List.of().
+    // then — при отсутствии AST подсказок нет.
+    assertThat(hints).isEmpty();
+  }
+
+  @Test
+  void skippedArgumentShowsDefaultValueHint() {
+    // given — реальный AST вызова СтрНайти с пропущенным средним аргументом;
+    // сигнатура содержит средний параметр со значением по умолчанию.
+    when(documentContext.getAst()).thenReturn(new BSLTokenizer("СтрНайти(\"a\",,\"b\");\n").getAst());
+
+    var signature = SignatureDescriptor.of(List.of(
+      ParameterDescriptor.of("СтрокаПоиска"),
+      new ParameterDescriptor("НачальнаяПозиция", TypeSet.EMPTY, true, "", "1"),
+      ParameterDescriptor.of("Подстрока")
+    ));
+    var member = MemberDescriptor.method("СтрНайти", List.of(signature));
+    var typedMember = new TypeService.TypedMember(null, member, Ranges.create(0, 0, 8), 3);
+
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    when(configuration.getInlayHintOptions()).thenReturn(new InlayHintOptions());
+    when(typeService.memberAt(any(), any())).thenReturn(Optional.of(typedMember));
+    when(typeService.expressionTypesAt(any(), any())).thenReturn(TypeSet.EMPTY);
+
+    var params = new InlayHintParams();
+    params.setRange(new Range(new Position(0, 0), new Position(1, 0)));
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, params);
+
+    // then — для пропущенного среднего аргумента показан хинт со значением по умолчанию.
+    assertThat(hints)
+      .extracting(InlayHint::getLabel)
+      .extracting(Either::getLeft)
+      .contains("НачальнаяПозиция (1)");
+  }
+
+  @Test
+  void emptySingleArgumentDoesNotProduceHint() {
+    // given — `Сообщить()` парсится как один пустой callParam; это ноль фактических
+    // аргументов, а не пропущенный — хинт показывать нельзя.
+    when(documentContext.getAst()).thenReturn(new BSLTokenizer("Сообщить();\n").getAst());
+
+    var signature = SignatureDescriptor.of(List.of(
+      new ParameterDescriptor("ТекстСообщения", TypeSet.EMPTY, true, "", "Пустая строка")
+    ));
+    var member = MemberDescriptor.method("Сообщить", List.of(signature));
+    var typedMember = new TypeService.TypedMember(null, member, Ranges.create(0, 0, 8), 0);
+
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    when(configuration.getInlayHintOptions()).thenReturn(new InlayHintOptions());
+    when(typeService.memberAt(any(), any())).thenReturn(Optional.of(typedMember));
+    when(typeService.expressionTypesAt(any(), any())).thenReturn(TypeSet.EMPTY);
+
+    var params = new InlayHintParams();
+    params.setRange(new Range(new Position(0, 0), new Position(1, 0)));
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, params);
+
+    // then — ноль аргументов: хинтов нет.
     assertThat(hints).isEmpty();
   }
 }
