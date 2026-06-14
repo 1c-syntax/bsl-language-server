@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781453705807,
+  "lastUpdate": 1781461906842,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37262,6 +37262,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.091932949641098",
             "extra": "mean: 292.8885935942332 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fd8077b806589ce46ad8bc066d3af71cccd0dd34",
+          "message": "Merge pull request #4103 from 1c-syntax/claude/completion-resolve-globals\n\nfeat(CompletionProvider): отложенный resolve documentation для глобальных функций",
+          "timestamp": "2026-06-13T23:21:15+02:00",
+          "tree_id": "cc170f2f368b20caf67729e9fcbba3f2d6268d1e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fd8077b806589ce46ad8bc066d3af71cccd0dd34"
+        },
+        "date": 1781461896473,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 278.468990166982,
+            "unit": "sec",
+            "range": "stddev: 12.215350027594903",
+            "extra": "mean: 278.468990166982 sec\nrounds: 3"
           }
         ]
       }
