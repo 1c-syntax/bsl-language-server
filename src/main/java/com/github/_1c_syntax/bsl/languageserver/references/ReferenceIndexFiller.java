@@ -185,8 +185,19 @@ public class ReferenceIndexFiller {
       var methodName = ctx.methodName().getStart();
       var methodNameText = methodName.getText();
 
+      // Вызов в пределах того же документа: символ-определение уже доступен,
+      // поэтому берём его точный вид. Это важно для отдельного .os-файла вне
+      // библиотеки (ModuleType.UNKNOWN), методы которого по семантике OneScript —
+      // самостоятельные функции (SymbolKind.Function), что нельзя вывести только из moduleType.
       documentContext.getSymbolTree().getMethodSymbol(methodNameText)
-        .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
+        .ifPresent(methodSymbol -> index.addMethodCall(
+          documentContext.getUri(),
+          mdoRef,
+          moduleType,
+          methodNameText,
+          Ranges.create(methodName),
+          methodSymbol.getSymbolKind()
+        ));
 
       return super.visitGlobalMethodCall(ctx);
     }
@@ -410,14 +421,26 @@ public class ReferenceIndexFiller {
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
         if (!mdoRef.equals(documentContext.getMdoRef())) {
+          // Обработчик в другом модуле: ссылку под корректным типом модуля
+          // и видом символа вызываемого модуля регистрирует checkCall.
           checkCall(mdoRef, methodNameToken);
+          return;
         }
 
-        addMethodCall(
+        // Обработчик в текущем документе: символ-определение доступен,
+        // берём его точный вид, чтобы вид вызова совпал с видом определения
+        // (важно для отдельного .os-файла с ModuleType.UNKNOWN).
+        var handlerName = Strings.trimQuotes(methodName.getText());
+        var symbolKind = documentContext.getSymbolTree().getMethodSymbol(handlerName)
+          .map(SourceDefinedSymbol::getSymbolKind)
+          .orElse(SymbolKind.Method);
+        index.addMethodCall(
+          documentContext.getUri(),
           mdoRef,
           documentContext.getModuleType(),
-          Strings.trimQuotes(methodName.getText()),
-          Ranges.create(methodName)
+          handlerName,
+          Ranges.create(methodName),
+          symbolKind
         );
       });
     }

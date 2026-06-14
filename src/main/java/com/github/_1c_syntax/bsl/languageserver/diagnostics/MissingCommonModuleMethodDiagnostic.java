@@ -67,11 +67,18 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     }
     locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
       .filter(symbolOccurrence -> symbolOccurrence.occurrenceType() == OccurrenceType.REFERENCE)
-      .filter(symbolOccurrence -> symbolOccurrence.symbol().symbolKind() == SymbolKind.Method)
+      // Метод общего модуля — самостоятельная функция (SymbolKind.Function), но на случай
+      // прочих видов вызовов допускаем и SymbolKind.Method (см. ReferenceIndex#methodCallSymbolKind).
+      .filter(MissingCommonModuleMethodDiagnostic::isMethodCallOccurrence)
       .filter(symbolOccurrence -> symbolOccurrence.symbol().moduleType() == ModuleType.CommonModule)
       .map(this::getReferenceToMethodCall)
       .flatMap(Optional::stream)
       .forEach(this::fireIssue);
+  }
+
+  private static boolean isMethodCallOccurrence(SymbolOccurrence symbolOccurrence) {
+    var symbolKind = symbolOccurrence.symbol().symbolKind();
+    return symbolKind == SymbolKind.Method || symbolKind == SymbolKind.Function;
   }
 
   private Optional<CallData> getReferenceToMethodCall(SymbolOccurrence symbolOccurrence) {

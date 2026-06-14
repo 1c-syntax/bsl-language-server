@@ -90,7 +90,7 @@ public class ReferenceIndex {
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(scopeName)
-      .symbolKind(lookupSymbolKind(symbol))
+      .symbolKind(symbol.getSymbolKind())
       .symbolName(symbolName)
       .build();
 
@@ -102,21 +102,24 @@ public class ReferenceIndex {
   }
 
   /**
-   * Привести вид символа определения к виду, под которым в индексе хранятся вызовы.
+   * Вычислить вид символа вызываемого метода по типу модуля, в котором он определён.
    * <p>
-   * Вызовы методов индексируются под единым {@link SymbolKind#Method}
-   * (см. {@link #addMethodCall}). При этом символ-определение метода модуля без
-   * состояния (общий модуль BSL, модуль OneScript) сообщает {@link SymbolKind#Function}.
-   * Чтобы поиск ссылок на такой метод находил его вызовы, вид {@link SymbolKind#Function}
-   * приводится обратно к {@link SymbolKind#Method}. Прочие виды символов
-   * (переменные, конструкторы и т. п.) не меняются.
+   * Вызов индексируется под тем же {@link SymbolKind}, который сообщит символ-определение
+   * метода (см. {@code RegularMethodSymbol#getSymbolKind()}), чтобы поиск ссылок
+   * ({@link #getReferencesTo}) и переименование находили вызовы без приведения вида при поиске.
+   * Методы модулей без состояния — общих модулей BSL ({@link ModuleType#CommonModule}) и
+   * модулей OneScript ({@link ModuleType#OScriptModule}) — это самостоятельные функции, поэтому
+   * для них вид {@link SymbolKind#Function}. Методы классов OneScript
+   * ({@link ModuleType#OScriptClass}) и всех прочих модулей со состоянием —
+   * {@link SymbolKind#Method}.
    *
-   * @param symbol символ-определение, для которого ищутся ссылки
-   * @return вид символа для сопоставления с записями индекса: {@link SymbolKind#Method}
-   *   для методов модулей без состояния, иначе исходный {@link SourceDefinedSymbol#getSymbolKind()}
+   * @param moduleType тип модуля, которому принадлежит вызываемый метод
+   * @return {@link SymbolKind#Function} для методов модулей без состояния, иначе {@link SymbolKind#Method}
    */
-  private static SymbolKind lookupSymbolKind(SourceDefinedSymbol symbol) {
-    return symbol.getSymbolKind() == SymbolKind.Function ? SymbolKind.Method : symbol.getSymbolKind();
+  static SymbolKind methodCallSymbolKind(ModuleType moduleType) {
+    return moduleType == ModuleType.CommonModule || moduleType == ModuleType.OScriptModule
+      ? SymbolKind.Function
+      : SymbolKind.Method;
   }
 
   /**
@@ -166,6 +169,39 @@ public class ReferenceIndex {
   }
 
   /**
+   * Поиск ссылок на все вызовы методов в документе.
+   * <p>
+   * Вызовы методов индексируются под видом символа-определения метода: процедуры и
+   * функции модулей со состоянием — {@link SymbolKind#Method}, методы модулей без
+   * состояния (общие модули BSL, модули OneScript) — {@link SymbolKind#Function}
+   * (см. {@link #addMethodCall} и {@link #methodCallSymbolKind}). Метод скрывает это
+   * различие от потребителей, возвращая вызовы обоих видов, чтобы им не приходилось
+   * перечислять виды символов вручную.
+   *
+   * @param uri URI документа, в котором нужно найти вызовы методов.
+   * @return Список ссылок на вызовы методов (обоих видов: {@link SymbolKind#Method} и
+   *   {@link SymbolKind#Function}).
+   */
+  public List<Reference> getMethodCallReferencesFrom(URI uri) {
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .filter(ReferenceIndex::isMethodCallOccurrence)
+      .map(this::buildReference)
+      .flatMap(Optional::stream)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Проверить, что обращение к символу — это вызов метода (процедуры или функции).
+   *
+   * @param symbolOccurrence обращение к символу из индекса
+   * @return {@code true}, если вид символа — {@link SymbolKind#Method} или {@link SymbolKind#Function}
+   */
+  static boolean isMethodCallOccurrence(SymbolOccurrence symbolOccurrence) {
+    var symbolKind = symbolOccurrence.symbol().symbolKind();
+    return symbolKind == SymbolKind.Method || symbolKind == SymbolKind.Function;
+  }
+
+  /**
    * Поиск ссылок на символы в символе.
    *
    * @param symbol Символ, в котором нужно найти ссылки на другие символы.
@@ -192,6 +228,10 @@ public class ReferenceIndex {
 
   /**
    * Добавить вызов метода в индекс.
+   * <p>
+   * Вид символа вызова вычисляется из {@code moduleType} ({@link #methodCallSymbolKind}),
+   * чтобы он совпадал с видом символа-определения и поиск ссылок находил вызов без
+   * приведения вида при поиске.
    *
    * @param uri        URI документа, откуда произошел вызов.
    * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
@@ -200,13 +240,39 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+    addMethodCall(uri, mdoRef, moduleType, symbolName, range, methodCallSymbolKind(moduleType));
+  }
+
+  /**
+   * Добавить вызов метода в индекс с явно заданным видом символа.
+   * <p>
+   * Используется, когда вызывающая сторона уже располагает символом-определением
+   * вызываемого метода и знает его точный {@link SymbolKind} (например, при вызове
+   * метода в пределах того же документа). Это покрывает случаи, когда вид нельзя
+   * однозначно вывести из одного лишь {@code moduleType} — в частности, отдельный
+   * {@code .os}-файл вне библиотеки имеет {@link ModuleType#UNKNOWN}, но по семантике
+   * OneScript его методы являются самостоятельными функциями ({@link SymbolKind#Function}).
+   *
+   * @param uri        URI документа, откуда произошел вызов.
+   * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
+   * @param symbolName Имя символа, к которому происходит обращение.
+   * @param range      Диапазон, в котором происходит обращение к символу.
+   * @param symbolKind Вид символа вызываемого метода, совпадающий с видом его символа-определения.
+   */
+  public void addMethodCall(URI uri,
+                            String mdoRef,
+                            ModuleType moduleType,
+                            String symbolName,
+                            Range range,
+                            SymbolKind symbolKind) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
-      .symbolKind(SymbolKind.Method)
+      .symbolKind(symbolKind)
       .symbolName(symbolNameCanonical)
       .build()
       .intern();

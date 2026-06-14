@@ -32,7 +32,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
@@ -119,7 +118,7 @@ public class PlatformMemberMethodCallSemanticTokensSupplier
 
   private Set<Position> collectSourceDefinedCallSites(DocumentContext documentContext) {
     var positions = new HashSet<Position>();
-    for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
+    for (var reference : referenceIndex.getMethodCallReferencesFrom(documentContext.getUri())) {
       positions.add(reference.selectionRange().getStart());
     }
     return positions;
