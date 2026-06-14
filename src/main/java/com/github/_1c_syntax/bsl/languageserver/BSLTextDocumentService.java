@@ -88,6 +88,7 @@ import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentLinkParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangesFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.FoldingRange;
@@ -398,6 +399,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> formatProvider.getRangeFormatting(params, documentContext)
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<? extends TextEdit>> rangesFormatting(DocumentRangesFormattingParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> formatProvider.getRangesFormatting(params, documentContext)
     );
   }
 

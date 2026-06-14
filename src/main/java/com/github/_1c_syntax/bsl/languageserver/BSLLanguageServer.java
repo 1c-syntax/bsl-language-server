@@ -391,6 +391,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private static DocumentRangeFormattingOptions getDocumentRangeFormattingProvider() {
     var documentRangeFormattingOptions = new DocumentRangeFormattingOptions();
     documentRangeFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
+    documentRangeFormattingOptions.setRangesSupport(Boolean.TRUE);
     return documentRangeFormattingOptions;
   }
 
