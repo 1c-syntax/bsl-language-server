@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
@@ -43,6 +44,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -263,6 +265,7 @@ public final class MethodSymbolComputer
     return RegularMethodSymbol.builder()
       .name(name)
       .owner(documentContext)
+      .symbolKind(methodSymbolKind())
       .range(range)
       .subNameRange(subNameRange)
       .function(function)
@@ -274,6 +277,33 @@ public final class MethodSymbolComputer
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)
       .build();
+  }
+
+  /**
+   * Определить вид символа обычного метода в зависимости от модуля.
+   * <p>
+   * Метод модуля без состояния (модуль OneScript либо общий модуль BSL) — это
+   * самостоятельная функция, а не член объекта со состоянием, поэтому отдаётся как
+   * {@link SymbolKind#Function}. Методы модулей со состоянием (объект, менеджер,
+   * форма и т. п.) остаются {@link SymbolKind#Method}.
+   *
+   * @return {@link SymbolKind#Function} для методов модулей без состояния,
+   *   иначе {@link SymbolKind#Method}
+   */
+  private SymbolKind methodSymbolKind() {
+    return isStatelessModule() ? SymbolKind.Function : SymbolKind.Method;
+  }
+
+  /**
+   * Проверить, что модуль не хранит состояние: модуль OneScript либо общий модуль BSL.
+   * <p>
+   * Методы таких модулей — самостоятельные функции, а не члены объекта со состоянием.
+   *
+   * @return {@code true}, если модуль не хранит состояние
+   */
+  private boolean isStatelessModule() {
+    return documentContext.getFileType() == FileType.OS
+      || documentContext.getModuleType() == ModuleType.CommonModule;
   }
 
   /**

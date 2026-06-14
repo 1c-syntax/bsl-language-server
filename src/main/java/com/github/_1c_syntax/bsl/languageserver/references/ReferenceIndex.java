@@ -90,7 +90,7 @@ public class ReferenceIndex {
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(scopeName)
-      .symbolKind(symbol.getSymbolKind())
+      .symbolKind(lookupSymbolKind(symbol))
       .symbolName(symbolName)
       .build();
 
@@ -99,6 +99,24 @@ public class ReferenceIndex {
       .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Привести вид символа определения к виду, под которым в индексе хранятся вызовы.
+   * <p>
+   * Вызовы методов индексируются под единым {@link SymbolKind#Method}
+   * (см. {@link #addMethodCall}). При этом символ-определение метода модуля без
+   * состояния (общий модуль BSL, модуль OneScript) сообщает {@link SymbolKind#Function}.
+   * Чтобы поиск ссылок на такой метод находил его вызовы, вид {@link SymbolKind#Function}
+   * приводится обратно к {@link SymbolKind#Method}. Прочие виды символов
+   * (переменные, конструкторы и т. п.) не меняются.
+   *
+   * @param symbol символ-определение, для которого ищутся ссылки
+   * @return вид символа для сопоставления с записями индекса: {@link SymbolKind#Method}
+   *   для методов модулей без состояния, иначе исходный {@link SourceDefinedSymbol#getSymbolKind()}
+   */
+  private static SymbolKind lookupSymbolKind(SourceDefinedSymbol symbol) {
+    return symbol.getSymbolKind() == SymbolKind.Function ? SymbolKind.Method : symbol.getSymbolKind();
   }
 
   /**

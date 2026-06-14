@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
@@ -31,15 +32,35 @@ import org.eclipse.lsp4j.SymbolKind;
  * модуле BSL. Конструкторы OneScript-классов представлены отдельным
  * {@link ConstructorSymbol}, чтобы их можно было различать в symbol tree,
  * hover'е и go-to-definition. Общая структура полей — в {@link AbstractMethodSymbol}.
+ * <p>
+ * В LSP нет отдельного {@link SymbolKind} для процедур, поэтому процедуры и
+ * функции BSL исторически представлены как {@link SymbolKind#Method}. Но методы
+ * модулей без состояния — модулей OneScript и общих модулей BSL — это
+ * самостоятельные функции, а не члены объекта со состоянием, поэтому для них
+ * корректнее {@link SymbolKind#Function}. Конкретный вид вычисляется при
+ * построении символа в
+ * {@link com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer}
+ * (там доступен {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext}
+ * с типом файла и типом модуля) и сохраняется в {@link #symbolKind}, чтобы вид
+ * был единым для всех потребителей (структура документа, индекс рабочей области,
+ * автодополнение и т. п.).
  */
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public final class RegularMethodSymbol extends AbstractMethodSymbol {
 
+  /**
+   * Вид символа метода: {@link SymbolKind#Function} для методов модулей без
+   * состояния (модули OneScript и общие модули BSL), иначе
+   * {@link SymbolKind#Method}. Значение по умолчанию — {@link SymbolKind#Method}.
+   */
+  @Builder.Default
+  private final SymbolKind symbolKind = SymbolKind.Method;
+
   @Override
   public SymbolKind getSymbolKind() {
-    return SymbolKind.Method;
+    return symbolKind;
   }
 
   @Override

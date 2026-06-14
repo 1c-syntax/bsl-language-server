@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -32,11 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -704,14 +701,13 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     clear(uri);
 
     var scriptVariant = scriptVariantOf(documentContext);
-    var statelessModule = isStatelessModule(documentContext);
     var collected = new ArrayList<Entry>();
     for (var symbol : documentContext.getSymbolTree().getChildrenFlat()) {
       // Безымянные символы не индексируются: для workspace/symbol они бесполезны.
       if (!isSupported(symbol) || symbol.getName().isEmpty()) {
         continue;
       }
-      collected.add(toEntry(uri, symbol, scriptVariant, statelessModule));
+      collected.add(toEntry(uri, symbol, scriptVariant));
     }
 
     if (collected.isEmpty()) {
@@ -785,63 +781,24 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  private static Entry toEntry(
-    URI uri,
-    SourceDefinedSymbol symbol,
-    ScriptVariant scriptVariant,
-    boolean statelessModule
-  ) {
+  private static Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
     var name = symbol.getName();
     var containerName = getContainerName(symbol, scriptVariant).orElse("");
     return new Entry(
       uri,
       name,
       name.toLowerCase(Locale.ENGLISH),
-      symbolKind(symbol, statelessModule),
+      symbol.getSymbolKind(),
       symbol.getRange(),
       List.copyOf(symbol.getTags()),
       containerName
     );
   }
 
-  /**
-   * Определить вид символа для записи индекса рабочей области.
-   * <p>
-   * Метод модуля без состояния (модуль OneScript либо общий модуль BSL) индексируется как
-   * {@link SymbolKind#Function}: его методы — самостоятельные функции, а не члены объекта.
-   * Методы модулей со состоянием (объект, менеджер, форма и т. п.) остаются
-   * {@link SymbolKind#Method}, конструкторы и все прочие символы — без изменений.
-   *
-   * @param symbol          индексируемый символ
-   * @param statelessModule {@code true}, если модуль символа не хранит состояние
-   * @return вид символа: {@link SymbolKind#Function} для методов модулей без состояния,
-   *   иначе исходный {@link SourceDefinedSymbol#getSymbolKind()}
-   */
-  private static SymbolKind symbolKind(SourceDefinedSymbol symbol, boolean statelessModule) {
-    var symbolKind = symbol.getSymbolKind();
-    if (statelessModule && symbolKind == SymbolKind.Method) {
-      return SymbolKind.Function;
-    }
-    return symbolKind;
-  }
-
-  /**
-   * Проверить, что модуль не хранит состояние: модуль OneScript либо общий модуль BSL.
-   * <p>
-   * Методы таких модулей — самостоятельные функции, а не члены объекта со состоянием,
-   * поэтому индексируются как {@link SymbolKind#Function}.
-   *
-   * @param documentContext контекст документа модуля
-   * @return {@code true}, если модуль не хранит состояние
-   */
-  private static boolean isStatelessModule(DocumentContext documentContext) {
-    return documentContext.getFileType() == FileType.OS
-      || documentContext.getModuleType() == ModuleType.CommonModule;
-  }
-
   private static boolean isSupported(Symbol symbol) {
     return switch (symbol.getSymbolKind()) {
-      case Method, Constructor -> true;
+      // Function — методы модулей без состояния (общие модули BSL, модули OneScript)
+      case Method, Function, Constructor -> true;
       case Variable -> SUPPORTED_VARIABLE_KINDS.contains(((VariableSymbol) symbol).getKind());
       default -> false;
     };
