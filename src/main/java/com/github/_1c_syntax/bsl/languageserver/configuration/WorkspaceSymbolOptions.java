@@ -34,7 +34,10 @@ import lombok.NoArgsConstructor;
 public class WorkspaceSymbolOptions {
 
   /**
-   * Режим синхронного fuzzy-поиска для клиентов без потоковой выдачи частичных результатов.
+   * Включает синхронный блокирующий fuzzy-скан (по подстроке/подпоследовательности), дописываемый
+   * в ответ на {@code workspace/symbol}, для клиентов, НЕ поддерживающих потоковую выдачу частичных
+   * результатов; по умолчанию {@code false}. В потоковом режиме fuzzy-хвост досылается всегда,
+   * независимо от этого флага.
    */
-  private WorkspaceSymbolFuzzySearch fuzzySearch = WorkspaceSymbolFuzzySearch.DEFAULT;
+  private boolean syncFuzzySearch = false;
 }

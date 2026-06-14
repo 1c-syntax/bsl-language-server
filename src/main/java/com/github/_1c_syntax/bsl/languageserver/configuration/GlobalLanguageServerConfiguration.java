@@ -154,7 +154,7 @@ public class GlobalLanguageServerConfiguration {
     this.sendErrors = SendErrorsMode.DEFAULT;
     this.traceLog = null;
     this.capabilities.getTextDocumentSync().setChange(TextDocumentSyncCapabilityOptions.DEFAULT_CHANGE);
-    this.workspaceSymbol.setFuzzySearch(WorkspaceSymbolFuzzySearch.DEFAULT);
+    this.workspaceSymbol.setSyncFuzzySearch(false);
     this.configurationFile = null;
     // Событие публикуется через EventPublisherAspect
   }
@@ -170,7 +170,7 @@ public class GlobalLanguageServerConfiguration {
       this.sendErrors = loaded.sendErrors;
       this.traceLog = loaded.traceLog;
       this.capabilities.getTextDocumentSync().setChange(loaded.capabilities.getTextDocumentSync().getChange());
-      this.workspaceSymbol.setFuzzySearch(loaded.workspaceSymbol.getFuzzySearch());
+      this.workspaceSymbol.setSyncFuzzySearch(loaded.workspaceSymbol.isSyncFuzzySearch());
     } catch (IOException e) {
       LOGGER.error("Can't deserialize global configuration file", e);
     }

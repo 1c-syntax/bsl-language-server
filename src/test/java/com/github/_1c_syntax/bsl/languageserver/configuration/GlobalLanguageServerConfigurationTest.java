@@ -142,7 +142,7 @@ class GlobalLanguageServerConfigurationTest {
   }
 
   @Test
-  void onApplicationReady_workspaceSymbolMissing_usesDefaultFuzzySearch() throws Exception {
+  void onApplicationReady_workspaceSymbolMissing_usesDefaultSyncFuzzySearch() throws Exception {
     // given
     var configuration = createConfiguration(
       tempDir.resolve("non-existent-cwd.json").toString(),
@@ -152,19 +152,18 @@ class GlobalLanguageServerConfigurationTest {
     // when
     configuration.onApplicationReady();
 
-    // then — fuzzySearch по умолчанию OFF
-    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
-      .isEqualTo(WorkspaceSymbolFuzzySearch.OFF);
+    // then — syncFuzzySearch по умолчанию false
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isFalse();
   }
 
   @Test
-  void onApplicationReady_workspaceSymbolPresent_loadsFuzzySearch() throws Exception {
+  void onApplicationReady_workspaceSymbolPresent_loadsSyncFuzzySearch() throws Exception {
     // given
     var cwdConfig = tempDir.resolve("cwd-config.json");
     Files.writeString(cwdConfig, """
       {
         "workspaceSymbol": {
-          "fuzzySearch": "synchronous"
+          "syncFuzzySearch": true
         }
       }
       """);
@@ -178,18 +177,17 @@ class GlobalLanguageServerConfigurationTest {
     configuration.onApplicationReady();
 
     // then
-    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
-      .isEqualTo(WorkspaceSymbolFuzzySearch.SYNCHRONOUS);
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isTrue();
   }
 
   @Test
-  void reset_restoresDefaultFuzzySearch() throws Exception {
-    // given — загружена конфигурация с synchronous
+  void reset_restoresDefaultSyncFuzzySearch() throws Exception {
+    // given — загружена конфигурация с syncFuzzySearch = true
     var cwdConfig = tempDir.resolve("cwd-config.json");
     Files.writeString(cwdConfig, """
       {
         "workspaceSymbol": {
-          "fuzzySearch": "synchronous"
+          "syncFuzzySearch": true
         }
       }
       """);
@@ -198,15 +196,13 @@ class GlobalLanguageServerConfigurationTest {
       tempDir.resolve("non-existent-global.json").toString()
     );
     configuration.onApplicationReady();
-    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
-      .isEqualTo(WorkspaceSymbolFuzzySearch.SYNCHRONOUS);
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isTrue();
 
     // when
     configuration.reset();
 
-    // then — fuzzySearch вернулся к OFF
-    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
-      .isEqualTo(WorkspaceSymbolFuzzySearch.OFF);
+    // then — syncFuzzySearch вернулся к false
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isFalse();
   }
 
   private static GlobalLanguageServerConfiguration createConfiguration(

@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.WorkspaceSymbolFuzzySearch;
 import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import lombok.RequiredArgsConstructor;
@@ -57,11 +56,10 @@ import java.util.Set;
  * потоково чанками через {@code $/progress} (с проверкой отмены между чанками), а синхронный ответ
  * возвращается ПУСТЫМ, чтобы не дублировать уже отправленные прогрессом чанки.
  * <p>
- * Без токена частичных результатов поведение определяется глобальной настройкой
- * {@code workspaceSymbol.fuzzySearch}: при значении {@link WorkspaceSymbolFuzzySearch#SYNCHRONOUS}
- * к древесной выдаче синхронно дописывается результат блокирующего fuzzy-скана; при значении
- * {@link WorkspaceSymbolFuzzySearch#OFF} (по умолчанию) ответом служит только древесная выдача —
- * медленный скан НЕ запускается.
+ * Без токена частичных результатов поведение определяется булевым флагом
+ * {@code workspaceSymbol.syncFuzzySearch}: при значении {@code true} к древесной выдаче синхронно
+ * дописывается результат блокирующего fuzzy-скана; при значении {@code false} (по умолчанию) ответом
+ * служит только древесная выдача — медленный скан НЕ запускается.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_symbol">Workspace Symbols Request specification</a>
  */
@@ -97,10 +95,9 @@ public class SymbolProvider {
    * {@link java.util.concurrent.CancellationException}.
    * <p>
    * Если токена нет (либо запрос пуст, либо клиент не подключён), потоковая выдача невозможна. Тогда
-   * поведение определяется глобальной настройкой {@code workspaceSymbol.fuzzySearch}: при
-   * {@link WorkspaceSymbolFuzzySearch#SYNCHRONOUS} к древесной выдаче синхронно дописывается результат
-   * блокирующего fuzzy-скана; при {@link WorkspaceSymbolFuzzySearch#OFF} (по умолчанию) возвращается
-   * только древесная выдача, медленный скан не выполняется.
+   * поведение определяется булевым флагом {@code workspaceSymbol.syncFuzzySearch}: при {@code true}
+   * к древесной выдаче синхронно дописывается результат блокирующего fuzzy-скана; при {@code false}
+   * (по умолчанию) возвращается только древесная выдача, медленный скан не выполняется.
    *
    * @param params        Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса и токен
    *                      частичного результата
@@ -127,7 +124,7 @@ public class SymbolProvider {
       return List.of();
     }
 
-    if (globalConfiguration.getWorkspaceSymbol().getFuzzySearch() == WorkspaceSymbolFuzzySearch.SYNCHRONOUS
+    if (globalConfiguration.getWorkspaceSymbol().isSyncFuzzySearch()
       && !queryString.isEmpty()) {
       // Клиент без потоковой выдачи: блокирующий fuzzy-скан дописывается в синхронный ответ.
       var tail = workspaceSymbolIndex.searchFuzzyTail(queryString, identitySetOf(fast), cancelChecker);
@@ -137,7 +134,7 @@ public class SymbolProvider {
       return result;
     }
 
-    // fuzzySearch == OFF (по умолчанию): только древесная выдача, медленный fuzzy-скан не запускаем.
+    // syncFuzzySearch == false (по умолчанию): только древесная выдача, медленный fuzzy-скан не запускаем.
     return fast.stream()
       .map(SymbolProvider::createWorkspaceSymbol)
       .toList();

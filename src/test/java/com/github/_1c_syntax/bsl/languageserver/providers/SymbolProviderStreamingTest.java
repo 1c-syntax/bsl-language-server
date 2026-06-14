@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.WorkspaceSymbolFuzzySearch;
 import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.utils.Absolute;
@@ -215,10 +214,10 @@ class SymbolProviderStreamingTest {
   }
 
   @Test
-  void appendsFuzzyTailSynchronouslyWhenNoTokenAndFuzzySearchSynchronous() {
+  void appendsFuzzyTailSynchronouslyWhenNoTokenAndSyncFuzzySearchEnabled() {
 
     // given — нет токена, но включён синхронный fuzzy-поиск
-    globalConfiguration.getWorkspaceSymbol().setFuzzySearch(WorkspaceSymbolFuzzySearch.SYNCHRONOUS);
+    globalConfiguration.getWorkspaceSymbol().setSyncFuzzySearch(true);
     when(index.search(eq("док"), any())).thenReturn(List.of(fastEntry));
     when(index.searchFuzzyTail(eq("док"), anySet(), any())).thenReturn(List.of(tailEntry));
     connectClient();
@@ -236,9 +235,9 @@ class SymbolProviderStreamingTest {
   }
 
   @Test
-  void returnsFastSymbolsOnlyWhenNoTokenAndFuzzySearchOff() {
+  void returnsFastSymbolsOnlyWhenNoTokenAndSyncFuzzySearchDisabled() {
 
-    // given — нет токена, fuzzy-поиск по умолчанию OFF
+    // given — нет токена, синхронный fuzzy-поиск по умолчанию выключен (false)
     when(index.search(eq("док"), any())).thenReturn(List.of(fastEntry));
     connectClient();
     var params = new WorkspaceSymbolParams("док");
