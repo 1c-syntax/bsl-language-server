@@ -33,7 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Ручной бенчмарк поиска {@link WorkspaceSymbolIndex} на реальных конфигурациях.
@@ -74,19 +73,6 @@ class WorkspaceSymbolIndexBenchmarkTest {
     "Документ", // слово из середины имени — ключевой кейс word-start trie
     "ПрвДок",  // подпоследовательность
     "ОбработкаПроведения" // редкий длинный префикс
-  );
-
-  /**
-   * Запросы для изолированного сравнения subsequence-перечисления (плоский скан vs trie-обход).
-   * Однобуквенный «П» — самый тяжёлый случай (огромное поддерево), «ПрвДок» — ключевая
-   * подпоследовательность варианта 2, длинный запрос проверяет эффект отсечения.
-   */
-  private static final List<String> SUBSEQUENCE_QUERIES = List.of(
-    "П",
-    "Пров",
-    "Документ",
-    "ПрвДок",
-    "ОбработкаПроведения"
   );
 
   @Autowired
@@ -131,78 +117,6 @@ class WorkspaceSymbolIndexBenchmarkTest {
     for (var query : QUERIES) {
       benchmarkQuery(query);
     }
-
-    // when / then — изолированный замер subsequence-перечисления: плоский скан (до) vs trie-обход (после)
-    benchmarkSubsequenceEnumeration();
-  }
-
-  /**
-   * Сравнить латентность ПЕРЕЧИСЛЕНИЯ subsequence-кандидатов двумя способами над одними и теми же
-   * записями индекса: плоский скан всех имён ({@code до}) и рекурсивный обход
-   * {@link SubsequenceCharTrie} с отсечением ({@code после}). Сортировка результата исключена —
-   * меряется только сам перебор кандидатов, где и состоит выигрыш варианта 2.
-   */
-  private void benchmarkSubsequenceEnumeration() {
-    var entries = index.search("", NO_CANCEL);
-    var trie = new SubsequenceCharTrie();
-    for (var entry : entries) {
-      trie.add(entry.lowerName(), entry);
-    }
-
-    for (var query : SUBSEQUENCE_QUERIES) {
-      var lowerQuery = query.toLowerCase(Locale.ENGLISH);
-
-      for (var i = 0; i < WARMUP_ITERATIONS; i++) {
-        countFlatScan(entries, lowerQuery);
-        countTrie(trie, lowerQuery);
-      }
-
-      var matches = countTrie(trie, lowerQuery);
-
-      var flatNs = new ArrayList<Long>(ITERATIONS);
-      var trieNs = new ArrayList<Long>(ITERATIONS);
-      for (var i = 0; i < ITERATIONS; i++) {
-        var t0 = System.nanoTime();
-        countFlatScan(entries, lowerQuery);
-        flatNs.add(System.nanoTime() - t0);
-
-        var t1 = System.nanoTime();
-        countTrie(trie, lowerQuery);
-        trieNs.add(System.nanoTime() - t1);
-      }
-
-      LOGGER.info("subseq-enum query=\"{}\" кандидатов={} плоский_скан_медиана={} ms trie_медиана={} ms",
-        query,
-        matches,
-        String.format("%.3f", median(flatNs) / 1_000_000.0),
-        String.format("%.3f", median(trieNs) / 1_000_000.0));
-    }
-  }
-
-  private static int countFlatScan(List<Entry> entries, String lowerQuery) {
-    var count = 0;
-    for (var entry : entries) {
-      if (isSubsequence(lowerQuery, entry.lowerName())) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  private static int countTrie(SubsequenceCharTrie trie, String lowerQuery) {
-    var counter = new int[1];
-    trie.forEachSubsequenceMatch(lowerQuery, entry -> counter[0]++);
-    return counter[0];
-  }
-
-  private static boolean isSubsequence(String query, String name) {
-    var queryIndex = 0;
-    for (var i = 0; i < name.length() && queryIndex < query.length(); i++) {
-      if (name.charAt(i) == query.charAt(queryIndex)) {
-        queryIndex++;
-      }
-    }
-    return queryIndex == query.length();
   }
 
   private void benchmarkQuery(String query) {
