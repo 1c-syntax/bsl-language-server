@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781381691412,
+  "lastUpdate": 1781409174969,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37107,6 +37107,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.44558349826978",
             "extra": "mean: 273.68152983983356 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0a9409cf2cd00b41e20165edb48d5bd4ccba3259",
+          "message": "Merge pull request #4079 from 1c-syntax/claude/callhierarchy-module-node\n\nfix(CallHierarchyProvider): раскрывать узел кода модуля в иерархии вызовов",
+          "timestamp": "2026-06-13T08:27:13+02:00",
+          "tree_id": "8f05e747f2dc2c6990b61fdaaba0a9a4c7e43fad",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0a9409cf2cd00b41e20165edb48d5bd4ccba3259"
+        },
+        "date": 1781409166910,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 285.07700475056964,
+            "unit": "sec",
+            "range": "stddev: 6.693048338803315",
+            "extra": "mean: 285.07700475056964 sec\nrounds: 3"
           }
         ]
       }
