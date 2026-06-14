@@ -29,9 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.hover.DescriptionFormatter;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
@@ -43,7 +41,6 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -72,60 +69,66 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
-    return referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
+    var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
       .filter(reference -> Ranges.containsPosition(range, reference.selectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
-      .map(this::toInlayHints)
-      .flatMap(Collection::stream)
       .toList();
+    if (references.isEmpty()) {
+      return List.of();
+    }
+
+    // Один обход AST документа на все ссылки: индекс сопоставляет каждый вызов с
+    // диапазоном имени метода (тем же, что хранится в reference.selectionRange()),
+    // чтобы дальше резолвить вызов по ссылке за O(1) вместо обхода AST на каждую ссылку.
+    var doCallRangeIndex = DoCallRangeIndex.of(documentContext);
+
+    var result = new ArrayList<InlayHint>();
+    for (var reference : references) {
+      doCallRangeIndex.doCallFor(reference)
+        .ifPresent(doCall -> result.addAll(toInlayHints(reference, doCall)));
+    }
+    return result;
   }
 
-  private List<InlayHint> toInlayHints(Reference reference) {
+  private List<InlayHint> toInlayHints(Reference reference, BSLParser.DoCallContext doCall) {
+
+    var callParamList = doCall.callParamList();
+    if (callParamList == null) {
+      return List.of();
+    }
+    var callParams = callParamList.callParam();
 
     var methodSymbol = (MethodSymbol) reference.symbol();
     var parameters = methodSymbol.getParameters();
 
-    var ast = reference.from().getOwner().getAst();
-    var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
+    var hints = new ArrayList<InlayHint>();
+    for (var i = 0; i < parameters.size(); i++) {
 
-    return doCalls.stream()
-      .map(BSLParser.DoCallContext.class::cast)
-      .filter(doCall -> isRightMethod(doCall.getParent(), reference))
-      .map(BSLParser.DoCallContext::callParamList)
-      .map(BSLParser.CallParamListContext::callParam)
-      .map((List<? extends BSLParser.CallParamContext> callParams) -> {
-        var hints = new ArrayList<InlayHint>();
-        for (var i = 0; i < parameters.size(); i++) {
+      // todo: show all parameters (in config)?
+      if (callParams.size() < i + 1) {
+        break;
+      }
 
-          // todo: show all parameters (in config)?
-          if (callParams.size() < i + 1) {
-            break;
-          }
+      var parameter = parameters.get(i);
+      var callParam = callParams.get(i);
 
-          var parameter = parameters.get(i);
-          var callParam = callParams.get(i);
+      var passedValue = callParam.getText();
 
-          var passedValue = callParam.getText();
+      if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
+        continue;
+      }
 
-          if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
-            continue;
-          }
+      var inlayHint = new InlayHint();
+      inlayHint.setKind(InlayHintKind.Parameter);
 
-          var inlayHint = new InlayHint();
-          inlayHint.setKind(InlayHintKind.Parameter);
+      setLabelAndPadding(inlayHint, parameter, passedValue, reference);
+      setPosition(inlayHint, callParam);
+      setTooltip(inlayHint, parameter);
 
-          setLabelAndPadding(inlayHint, parameter, passedValue, reference);
-          setPosition(inlayHint, callParam);
-          setTooltip(inlayHint, parameter);
+      hints.add(inlayHint);
+    }
 
-          hints.add(inlayHint);
-        }
-
-        return hints;
-      })
-      .flatMap(Collection::stream)
-      .toList();
-
+    return hints;
   }
 
   private void setLabelAndPadding(
@@ -164,23 +167,5 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
     var markdown = descriptionFormatter.parameterToString(parameter);
     var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
     inlayHint.setTooltip(tooltip);
-  }
-
-
-  private static boolean isRightMethod(ParserRuleContext doCallParent, Reference reference) {
-    var selectionRange = reference.selectionRange();
-
-    if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
-      return selectionRange.equals(Ranges.create(methodCallContext.methodName()));
-    } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-      return selectionRange.equals(Ranges.create(globalMethodCallContext.methodName()));
-    } else if (doCallParent instanceof BSLParser.NewExpressionContext newExpressionContext) {
-      var typeName = newExpressionContext.typeName();
-      return typeName != null
-        && typeName.IDENTIFIER() != null
-        && selectionRange.equals(Ranges.create(typeName.IDENTIFIER()));
-    } else {
-      return false;
-    }
   }
 }
