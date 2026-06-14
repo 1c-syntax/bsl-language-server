@@ -21,22 +21,31 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintCapabilities;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.InlayHintResolveSupportCapabilities;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -49,13 +58,67 @@ import java.util.Optional;
  * выводится и нетривиален (не {@code Произвольный}/{@code any} и не очевиден
  * из литерала), показывает подсказку {@link InlayHintKind#Type} сразу после
  * имени переменной — например {@code Контрагент: Массив = Новый Массив()}.
+ * <p>
+ * Метка хинта рендерится единственной частью {@link InlayHintLabelPart}: когда
+ * выведенный тип объявлен в исходниках рабочей области (общий модуль, модуль
+ * менеджера объекта конфигурации, класс/модуль OneScript), к части привязывается
+ * ссылка ({@link InlayHintLabelPart#setLocation}) на объявление типа — клик по
+ * подсказке выполняет переход к модулю/классу. Платформенные и примитивные типы
+ * ({@code Массив}, {@code Строка}, …) объявляющего исходник-символа не имеют —
+ * для них метка остаётся без ссылки.
+ * <p>
+ * Построение ссылки учитывает {@code inlayHint.resolveSupport} клиента так же, как
+ * {@link SourceDefinedMethodCallInlayHintSupplier}: если клиент объявил отложенное
+ * разрешение свойства {@code label.location}, ссылка откладывается на
+ * {@code inlayHint/resolve} (в data кладутся координаты объявления типа), иначе
+ * проставляется жадно.
  */
 @Component
-@RequiredArgsConstructor
 public class VariableTypeInlayHintSupplier implements InlayHintSupplier<VariableTypeInlayHintData> {
+
+  /**
+   * Имя свойства {@code label.location} в {@code inlayHint.resolveSupport}:
+   * объявив его, клиент сообщает о готовности дотягивать ссылку части метки
+   * лениво через {@code inlayHint/resolve}.
+   */
+  private static final String LABEL_LOCATION_PROPERTY = "label.location";
 
   private final TypeService typeService;
   private final LanguageServerConfiguration configuration;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируется на initialize. Объявил ли клиент в inlayHint.resolveSupport свойство
+  // label.location — то есть готов лениво дотягивать ссылку части метки через
+  // inlayHint/resolve. Если да — Location откладывается на резолв, иначе жадно.
+  private boolean labelLocationResolveSupport;
+
+  public VariableTypeInlayHintSupplier(
+    TypeService typeService,
+    LanguageServerConfiguration configuration,
+    ClientCapabilitiesHolder clientCapabilitiesHolder
+  ) {
+    this.typeService = typeService;
+    this.configuration = configuration;
+    this.clientCapabilitiesHolder = clientCapabilitiesHolder;
+  }
+
+  /**
+   * Кэширует на инициализации флаг поддержки клиентом отложенного разрешения
+   * свойства {@code label.location} в {@code inlayHint.resolveSupport}.
+   * <p>
+   * Вызывается по событию {@link LanguageServerInitializeRequestReceivedEvent}
+   * (а также из тестов для пересчёта флага после подмены возможностей клиента).
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    labelLocationResolveSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getInlayHint)
+      .map(InlayHintCapabilities::getResolveSupport)
+      .map(InlayHintResolveSupportCapabilities::getProperties)
+      .map(properties -> properties.contains(LABEL_LOCATION_PROPERTY))
+      .orElse(Boolean.FALSE);
+  }
 
   /**
    * {@inheritDoc}
@@ -115,26 +178,81 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
 
     var inlayHint = new InlayHint();
     inlayHint.setKind(InlayHintKind.Type);
-    inlayHint.setLabel(": " + typeName);
     inlayHint.setPosition(namePosition);
     inlayHint.setPaddingRight(Boolean.TRUE);
-    // Tooltip (полное описание типа) строится лениво на inlayHint/resolve —
-    // в data кладём ссылку на тип, остальное (label/position/kind) жадно.
-    inlayHint.setData(new VariableTypeInlayHintData(documentContext.getUri(), getId(), inferredType.qualifiedName()));
+
+    var labelPart = new InlayHintLabelPart(": " + typeName);
+    inlayHint.setLabel(List.of(labelPart));
+
+    var declaration = typeService.definingSymbol(inferredType, documentContext).orElse(null);
+    if (declaration == null) {
+      // Платформенный/примитивный тип — объявляющего исходник-символа нет,
+      // часть метки остаётся без ссылки. Tooltip всё равно дорассчитывается лениво,
+      // поэтому data несёт только имя типа, без координат объявления.
+      inlayHint.setData(noLocationData(documentContext, inferredType));
+      return Optional.of(inlayHint);
+    }
+
+    var targetUri = declaration.getOwner().getUri().toString();
+    var targetRange = declaration.getSelectionRange();
+    if (labelLocationResolveSupport) {
+      // Ссылка строится лениво на inlayHint/resolve — в data кладём координаты
+      // объявления типа, остальное (label/position/kind) жадно.
+      inlayHint.setData(locationData(documentContext, inferredType, targetUri, targetRange));
+    } else {
+      labelPart.setLocation(new Location(targetUri, targetRange));
+      // Tooltip всё равно дорассчитывается лениво — data несёт имя типа без координат.
+      inlayHint.setData(noLocationData(documentContext, inferredType));
+    }
     return Optional.of(inlayHint);
   }
 
+  private VariableTypeInlayHintData noLocationData(DocumentContext documentContext, TypeRef inferredType) {
+    return new VariableTypeInlayHintData(
+      documentContext.getUri(),
+      getId(),
+      inferredType.qualifiedName(),
+      "",
+      VariableTypeInlayHintData.NO_LOCATION,
+      VariableTypeInlayHintData.NO_LOCATION,
+      VariableTypeInlayHintData.NO_LOCATION,
+      VariableTypeInlayHintData.NO_LOCATION
+    );
+  }
+
+  private VariableTypeInlayHintData locationData(
+    DocumentContext documentContext,
+    TypeRef inferredType,
+    String targetUri,
+    Range targetRange
+  ) {
+    return new VariableTypeInlayHintData(
+      documentContext.getUri(),
+      getId(),
+      inferredType.qualifiedName(),
+      targetUri,
+      targetRange.getStart().getLine(),
+      targetRange.getStart().getCharacter(),
+      targetRange.getEnd().getLine(),
+      targetRange.getEnd().getCharacter()
+    );
+  }
+
   /**
-   * Дорасчёт tooltip хинта типа по ленивым данным {@link VariableTypeInlayHintData}.
+   * Дорасчёт tooltip и (при наличии) ссылки части метки хинта типа по ленивым
+   * данным {@link VariableTypeInlayHintData}.
    * <p>
    * Восстанавливает {@link TypeRef} по сохранённому имени и кладёт в tooltip
    * полное описание типа (markdown). Если тип не восстановлен — tooltip строится
-   * по сохранённому имени.
+   * по сохранённому имени. Если в данных есть координаты объявления типа
+   * ({@link VariableTypeInlayHintData#hasLocation()}) — собирает {@link Location}
+   * и проставляет её единственной части метки хинта (ленивое разрешение
+   * {@code label.location}); если метка хинта пуста — ссылка не проставляется.
    *
    * @param documentContext Контекст документа, к которому относится хинт.
    * @param unresolved      Неразрешённый хинт с заполненным {@link InlayHint#getData()}.
    * @param data            Десериализованные данные хинта.
-   * @return Разрешённый хинт с заполненным tooltip.
+   * @return Разрешённый хинт с заполненным tooltip и (при наличии) ссылкой части метки.
    */
   @Override
   public InlayHint resolve(
@@ -150,7 +268,22 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
 
     var markdown = description.isBlank() ? displayName : (displayName + "\n\n" + description);
     unresolved.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+
+    if (data.hasLocation()) {
+      resolveLabelLocation(unresolved, data);
+    }
     return unresolved;
+  }
+
+  private static void resolveLabelLocation(InlayHint unresolved, VariableTypeInlayHintData data) {
+    var label = unresolved.getLabel();
+    if (label == null || !label.isRight() || label.getRight().isEmpty()) {
+      return;
+    }
+    var range = Ranges.create(
+      data.getStartLine(), data.getStartCharacter(), data.getEndLine(), data.getEndCharacter()
+    );
+    label.getRight().getFirst().setLocation(new Location(data.getTargetUri(), range));
   }
 
   /**
