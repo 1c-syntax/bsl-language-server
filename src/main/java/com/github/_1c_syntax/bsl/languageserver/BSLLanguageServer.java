@@ -385,8 +385,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private static DocumentRangeFormattingOptions getDocumentRangeFormattingProvider() {
     var documentRangeFormattingOptions = new DocumentRangeFormattingOptions();
     documentRangeFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
-    // LSP 3.18: сообщаем клиенту о поддержке textDocument/rangesFormatting
-    // (форматирование нескольких диапазонов за один запрос).
     documentRangeFormattingOptions.setRangesSupport(Boolean.TRUE);
     return documentRangeFormattingOptions;
   }
