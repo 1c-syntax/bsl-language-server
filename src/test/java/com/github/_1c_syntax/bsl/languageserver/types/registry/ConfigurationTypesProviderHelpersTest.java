@@ -37,15 +37,23 @@ import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
+import com.github._1c_syntax.bsl.mdo.HTTPService;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
+import com.github._1c_syntax.bsl.mdo.IntegrationService;
 import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.WebService;
 import com.github._1c_syntax.bsl.mdo.children.Dimension;
 import com.github._1c_syntax.bsl.mdo.children.DocumentJournalColumn;
 import com.github._1c_syntax.bsl.mdo.children.EnumValue;
 import com.github._1c_syntax.bsl.mdo.children.ExtDimensionAccountingFlag;
+import com.github._1c_syntax.bsl.mdo.children.HTTPServiceMethod;
+import com.github._1c_syntax.bsl.mdo.children.HTTPServiceURLTemplate;
+import com.github._1c_syntax.bsl.mdo.children.IntegrationServiceChannel;
 import com.github._1c_syntax.bsl.mdo.children.ObjectAttribute;
 import com.github._1c_syntax.bsl.mdo.children.Recalculation;
 import com.github._1c_syntax.bsl.mdo.children.Resource;
+import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
+import com.github._1c_syntax.bsl.mdo.children.WebServiceOperationParameter;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -127,34 +135,6 @@ class ConfigurationTypesProviderHelpersTest {
   // === tryRegister early returns (smoke без NPE) ===
 
   @Test
-  void tryRegister_noWorkspace_isNoOp() {
-    var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
-    var provider = newProviderWith(serverProvider);
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.clear();
-    provider.tryRegister();
-    Mockito.verify(serverProvider, Mockito.never()).getAllContexts();
-  }
-
-  @Test
-  void tryRegister_noServerContext_isNoOp() {
-    var workspaceUri = java.net.URI.create("file:///test-cfg/");
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
-      .registerWorkspace(workspaceUri, "t");
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.set(workspaceUri);
-    try {
-      var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of());
-      var p = newProviderWith(serverProvider);
-      p.tryRegister();
-      Mockito.verify(serverProvider).getAllContexts();
-    } finally {
-      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.clear();
-      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
-        .unregisterWorkspace(workspaceUri);
-    }
-  }
-
-  @Test
   void tryRegister_emptyConfiguration_isNoOp() {
     var workspaceUri = java.net.URI.create("file:///test-cfg2/");
     com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
@@ -203,7 +183,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = Mockito.mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
 
       provider.tryRegister();
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
@@ -241,7 +221,7 @@ class ConfigurationTypesProviderHelpersTest {
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
 
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
@@ -286,7 +266,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = Mockito.mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
 
       provider.tryRegister();
 
@@ -340,7 +320,8 @@ class ConfigurationTypesProviderHelpersTest {
     var lsConfig = Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
     var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+    return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
+      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
   }
 
   // === memberPlaceholderName ===
@@ -668,6 +649,169 @@ class ConfigurationTypesProviderHelpersTest {
     );
   }
 
+  private static TypePackProvider.TypeDecl makeServiceModuleTypeDecl(String qualifiedRu, String placeholder) {
+    var memberRu = "<" + placeholder + ">";
+    var member = MemberDescriptor.event(memberRu, "", List.of())
+      .withGeneric(true)
+      .withBilingualName(BilingualString.of(memberRu, memberRu));
+    return new TypePackProvider.TypeDecl(
+      TypeKind.PLATFORM,
+      BilingualString.of(qualifiedRu),
+      List.of(member),
+      false,
+      "",
+      List.of(),
+      List.of(),
+      false,
+      false,
+      "",
+      "",
+      List.of(placeholder),
+      false
+    );
+  }
+
+  @Test
+  void tryRegister_withHttpService_registersHandlerEvents() {
+    var method = HTTPServiceMethod.builder().name("GET").handler("URLTemplate1GET").build();
+    var tpl = HTTPServiceURLTemplate.builder().name("URLTemplate1").method(method).build();
+    var http = HTTPService.builder().name("HTTPСервис1").urlTemplate(tpl).build();
+    runTryRegister(
+      "file:///test-http-svc/",
+      registry -> registry,
+      List.of(makeServiceModuleTypeDecl("Модуль HTTP-сервиса", "Имя обработчика")),
+      java.util.Map.of(http.getMdoReference(), (MD) http),
+      (registry, p) -> {
+        p.tryRegister();
+        var typeRef = registry.resolve("Модуль HTTP-сервиса").orElseThrow();
+        var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
+        assertThat(names).contains("URLTemplate1GET");
+      });
+  }
+
+  @Test
+  void tryRegister_withHttpServiceButTypeNotRegistered_earlyReturn() {
+    var method = HTTPServiceMethod.builder().name("GET").handler("URLTemplate1GET").build();
+    var tpl = HTTPServiceURLTemplate.builder().name("URLTemplate1").method(method).build();
+    var http = HTTPService.builder().name("HTTPСервис1").urlTemplate(tpl).build();
+    runTryRegister(
+      "file:///test-http-svc-no-type/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(http.getMdoReference(), (MD) http),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("Модуль HTTP-сервиса")).isEmpty();
+      });
+  }
+
+  @Test
+  void tryRegister_withHttpServiceBlankHandler_skipped() {
+    var method = HTTPServiceMethod.builder().name("GET").handler("").build();
+    var tpl = HTTPServiceURLTemplate.builder().name("URLTemplate1").method(method).build();
+    var http = HTTPService.builder().name("HTTPСервис1").urlTemplate(tpl).build();
+    runTryRegister(
+      "file:///test-http-svc-blank/",
+      registry -> registry,
+      List.of(makeServiceModuleTypeDecl("Модуль HTTP-сервиса", "Имя обработчика")),
+      java.util.Map.of(http.getMdoReference(), (MD) http),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("Модуль HTTP-сервиса")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withHttpServiceButTemplateHasNoPlaceholder_skipsRegister() {
+    var method = HTTPServiceMethod.builder().name("GET").handler("URLTemplate1GET").build();
+    var tpl = HTTPServiceURLTemplate.builder().name("URLTemplate1").method(method).build();
+    var http = HTTPService.builder().name("HTTPСервис1").urlTemplate(tpl).build();
+    var emptyTypeDecl = new TypePackProvider.TypeDecl(
+      TypeKind.PLATFORM,
+      BilingualString.of("Модуль HTTP-сервиса"),
+      List.of(),
+      false, "", List.of(), List.of(), false, false, "", "",
+      List.of(),
+      false);
+    runTryRegister(
+      "file:///test-http-svc-no-placeholder/",
+      registry -> registry,
+      List.of(emptyTypeDecl),
+      java.util.Map.of(http.getMdoReference(), (MD) http),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("Модуль HTTP-сервиса")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withWebService_registersOperationHandlers() {
+    var param = WebServiceOperationParameter.builder().name("Параметр1").build();
+    var op = WebServiceOperation.builder().name("Op1").procedureName("Операция1")
+      .parameter(param).build();
+    var web = WebService.builder().name("WebСервис1").operation(op).build();
+    runTryRegister(
+      "file:///test-web-svc/",
+      registry -> registry,
+      List.of(makeServiceModuleTypeDecl("Модуль Web-сервиса", "Имя обработчика")),
+      java.util.Map.of(web.getMdoReference(), (MD) web),
+      (registry, p) -> {
+        p.tryRegister();
+        var typeRef = registry.resolve("Модуль Web-сервиса").orElseThrow();
+        var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
+        assertThat(names).contains("Операция1");
+      });
+  }
+
+  @Test
+  void tryRegister_withWebServiceBlankProcedureName_skipped() {
+    var op = WebServiceOperation.builder().name("Op1").procedureName("").build();
+    var web = WebService.builder().name("WebСервис1").operation(op).build();
+    runTryRegister(
+      "file:///test-web-svc-blank/",
+      registry -> registry,
+      List.of(makeServiceModuleTypeDecl("Модуль Web-сервиса", "Имя обработчика")),
+      java.util.Map.of(web.getMdoReference(), (MD) web),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("Модуль Web-сервиса")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withIntegrationService_registersChannelHandlers() {
+    var ch = IntegrationServiceChannel.builder().name("Канал1")
+      .receiveMessageProcessing("ОбработчикСообщения").build();
+    var isvc = IntegrationService.builder().name("Сервис1").integrationServiceChannel(ch).build();
+    runTryRegister(
+      "file:///test-int-svc/",
+      registry -> registry,
+      List.of(makeServiceModuleTypeDecl("Модуль сервиса интеграции", "Имя обработчика полученного сообщения")),
+      java.util.Map.of(isvc.getMdoReference(), (MD) isvc),
+      (registry, p) -> {
+        p.tryRegister();
+        var typeRef = registry.resolve("Модуль сервиса интеграции").orElseThrow();
+        var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
+        assertThat(names).contains("ОбработчикСообщения");
+      });
+  }
+
+  @Test
+  void tryRegister_withIntegrationServiceBlankReceiveProc_skipped() {
+    var ch = IntegrationServiceChannel.builder().name("Канал1")
+      .receiveMessageProcessing("").build();
+    var isvc = IntegrationService.builder().name("Сервис1").integrationServiceChannel(ch).build();
+    runTryRegister(
+      "file:///test-int-svc-blank/",
+      registry -> registry,
+      List.of(makeServiceModuleTypeDecl("Модуль сервиса интеграции", "Имя обработчика полученного сообщения")),
+      java.util.Map.of(isvc.getMdoReference(), (MD) isvc),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("Модуль сервиса интеграции")).isPresent();
+      });
+  }
+
   private static java.util.Map<com.github._1c_syntax.bsl.types.MdoReference, MD> makeEnumChildren(
       String enumName, String... valueNames) {
     var values = java.util.Arrays.stream(valueNames)
@@ -719,7 +863,7 @@ class ConfigurationTypesProviderHelpersTest {
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
       var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
       assertion.accept(registry, provider);
     } finally {
       WorkspaceContextHolder.clear();

@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +68,7 @@ public final class DiagnosticProvider {
 
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final ServerContextProvider serverContextProvider;
 
   private boolean clientSupportsRefresh;
 
@@ -142,7 +146,16 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
-    requestRefreshIfSupported();
+    // LSC локальна для workspace, в момент публикации события WorkspaceContextHolder
+    // указывает на нужный — берём только его serverContext.
+    var workspaceUri = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      return;
+    }
+    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (serverContext != null) {
+      refreshDiagnostics(serverContext);
+    }
   }
 
   /**
@@ -157,16 +170,41 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleServerContextPopulatedEvent(ServerContextPopulatedEvent event) {
-    requestRefreshIfSupported();
+    refreshDiagnostics(event.getSource());
   }
 
-  private void requestRefreshIfSupported() {
+  /**
+   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * <p>
+   * После регистрации конфигурационных типов diagnostic'и, опирающиеся на
+   * реестр типов (UnknownMember, EventHandler*, и т.п.), могут давать
+   * результат, отличный от того, что был вычислен до регистрации.
+   * Просим клиента перезапросить (pull) или push'им сами, если
+   * клиент не поддерживает refresh.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    refreshDiagnostics(event.getSource());
+  }
+
+  /**
+   * Обновляет диагностики у клиента. При поддержке клиентом pull-refresh —
+   * отправляет {@code workspace/diagnostic/refresh}. Иначе чистит кэш и push'ит
+   * свежие диагностики у открытых документов: закрытые не используются клиентом
+   * прямо сейчас, а {@code AnalyzeProjectOnStart} их обработает отдельно.
+   */
+  private void refreshDiagnostics(ServerContext serverContext) {
     if (clientSupportsRefresh) {
       clientHolder.execIfConnected((LanguageClient languageClient) -> {
         LOGGER.debug("Requesting diagnostic refresh from client");
         languageClient.refreshDiagnostics();
       });
+      return;
     }
+    var opened = serverContext.getOpenedDocuments();
+    opened.forEach(DocumentContext::clearDiagnostics);
+    LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
+    opened.forEach(this::computeAndPublishDiagnostics);
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {

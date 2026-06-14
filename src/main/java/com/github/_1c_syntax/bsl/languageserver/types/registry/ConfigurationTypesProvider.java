@@ -25,12 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
@@ -46,6 +49,12 @@ import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
+import com.github._1c_syntax.bsl.mdo.HTTPService;
+import com.github._1c_syntax.bsl.mdo.IntegrationService;
+import com.github._1c_syntax.bsl.mdo.WebService;
+import com.github._1c_syntax.bsl.mdo.children.HTTPServiceMethod;
+import com.github._1c_syntax.bsl.mdo.children.IntegrationServiceChannel;
+import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
 import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -73,6 +82,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Регистрирует {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
@@ -126,40 +136,43 @@ public class ConfigurationTypesProvider {
   private final LanguageServerConfiguration configuration;
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
+  private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   @EventListener
-  public void handleEvent(DocumentContextContentChangedEvent event) {
+  public void handleEvent(ServerContextPopulatedEvent event) {
     tryRegister();
   }
 
   /**
-   * Идемпотентная регистрация. Вызывается при первом изменении документа после
-   * загрузки конфигурации; повторные вызовы — no-op.
+   * Идемпотентная регистрация. Вызывается при заполнении ServerContext (после
+   * того как платформенные generic-типы загружены через {@code BslContextPlatformTypesProvider}
+   * — это критично для {@code registerFamilySpecializations}, который ищет
+   * generic'и по familyCore и без них пропускает специализации). Повторные
+   * вызовы — no-op.
    */
-  public void tryRegister() {
+  public @Nullable ServerContext tryRegister() {
     if (registered.get()) {
-      return;
+      return null;
     }
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
-      return;
+      return null;
     }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null) {
-      return;
-    }
-    var configuration = serverContext.getConfiguration();
-    if (configuration.isEmpty()) {
-      return;
+    if (serverContext == null || serverContext.getConfiguration().isEmpty()) {
+      return null;
     }
     if (!registered.compareAndSet(false, true)) {
-      return;
+      return null;
     }
-    var children = configuration.getChildrenByMdoRef().values();
-    LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects", workspaceUri, children.size());
+    var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
+    LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
+      workspaceUri, children.size());
     register(children);
+    serviceModuleEventRegistrar.register(children);
+    return serverContext;
   }
 
   private void register(Iterable<MD> children) {

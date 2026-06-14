@@ -48,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -91,10 +92,16 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     var location = descriptionFormatter.getLocation(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, location);
 
-    // описание переменной
-    symbol.getDescription()
-      .map(VariableDescription::getPurposeDescription)
-      .ifPresent(description -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder, description));
+    // описание параметра из контракта события (для обработчиков платформенных
+    // событий) — приоритетнее doc-комментария, который может устаревать
+    var eventParamDescription = descriptionFormatter.getEventHandlerParameterDescription(symbol);
+    if (eventParamDescription != null && !eventParamDescription.isBlank()) {
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventParamDescription);
+    } else {
+      symbol.getDescription()
+        .map(VariableDescription::getPurposeDescription)
+        .ifPresent(description -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder, description));
+    }
 
     symbol.getDescription()
       .flatMap(VariableDescription::getTrailingDescription)

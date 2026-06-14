@@ -81,7 +81,8 @@ class VariableSymbolStructureRenderTest {
 
   @BeforeEach
   void setUp() {
-    builder = new VariableSymbolMarkupContentBuilder(configuration, descriptionFormatter, resources, typeService);
+    builder = new VariableSymbolMarkupContentBuilder(
+      configuration, descriptionFormatter, resources, typeService);
 
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))

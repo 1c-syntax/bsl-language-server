@@ -455,6 +455,9 @@ public final class CompletionProvider {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var filtered = members.values().stream()
       .filter(m -> matches(m.displayName(scriptVariant), prefix))
+      // События платформы — обработчики, программист их не вызывает; в
+      // автодополнении только мешают (это callback-точки в модулях).
+      .filter(m -> m.kind() != MemberKind.EVENT)
       // Член, недоступный в целевой версии платформы (sinceVersion новее target),
       // в автодополнении предлагать не нужно — его вызов помечает
       // UnavailableMemberCall. Устаревшие при этом остаются (показываются

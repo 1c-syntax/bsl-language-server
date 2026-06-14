@@ -230,6 +230,22 @@ public class Pointcuts {
   }
 
   /**
+   * Это обращение к классу {@code ConfigurationTypesProvider}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationTypesProvider)")
+  public void isConfigurationTypesProvider() {
+    // no-op
+  }
+
+  /**
+   * Это вызов метода tryRegister.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* tryRegister(..))")
+  public void isTryRegisterCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов публичного метода.
    */
   @Pointcut("execution(public * com.github._1c_syntax.bsl.languageserver..*(..))")

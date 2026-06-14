@@ -55,8 +55,16 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
 
   @Test
   void test() {
-    List<Diagnostic> diagnostics = getDiagnostics();
+    var dc = spy(TestUtils.getDocumentContext(readFixture()));
+    when(dc.getModuleType()).thenReturn(ModuleType.CommonModule);
+    List<Diagnostic> diagnostics = getDiagnostics(dc);
     checkByDefault(diagnostics);
+  }
+
+  @SneakyThrows
+  private static String readFixture() {
+    return FileUtils.readFileToString(
+      Path.of(PATH_TO_MODULE_CONTENT).toFile(), StandardCharsets.UTF_8);
   }
 
   private static void checkByDefault(List<Diagnostic> diagnostics) {
@@ -82,8 +90,11 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
     configuration.put("attachableMethodPrefixes", "ПодключаемаяМоя_");
     diagnosticInstance.configure(configuration);
 
+    var dc = spy(TestUtils.getDocumentContext(readFixture()));
+    when(dc.getModuleType()).thenReturn(ModuleType.CommonModule);
+
     // when
-    List<Diagnostic> diagnostics = getDiagnostics();
+    List<Diagnostic> diagnostics = getDiagnostics(dc);
 
     // then
     assertThat(diagnostics).hasSize(3);

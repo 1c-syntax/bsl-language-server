@@ -23,9 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +38,9 @@ import java.util.StringJoiner;
 @Component
 @RequiredArgsConstructor
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
+
   private final DescriptionFormatter descriptionFormatter;
+  private final EventContractsIndex eventContractsIndex;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -53,6 +56,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // примеры
     // варианты вызова
 
+    var eventContract = eventContractsIndex.getContract(symbol.getOwner(), symbol.getName());
+
     // сигнатура
     var signature = descriptionFormatter.getSignature(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
@@ -65,12 +70,22 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     var deprecatedSection = descriptionFormatter.getDeprecatedSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, deprecatedSection);
 
-    // описание метода
-    var purposeSection = descriptionFormatter.getPurposeSection(symbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
+    // признак "обработчик события платформы" + платформенное описание события +
+    // пользовательское purpose из шапки метода (если метод — обработчик)
+    if (eventContract.isPresent()) {
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
+        descriptionFormatter.getEventHandlerSection(symbol, eventContract.get()));
+    } else {
+      // описание метода для обычного метода
+      var purposeSection = descriptionFormatter.getPurposeSection(symbol);
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
+    }
 
-    // параметры
-    var parametersSection = descriptionFormatter.getParametersSection(symbol);
+    // параметры: для обработчика — контракт события (имена/типы), иначе —
+    // шапка-комментарий пользователя
+    var parametersSection = eventContract.isPresent()
+      ? descriptionFormatter.getParametersSection(symbol, eventContract.get())
+      : descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 
     // возвращаемое значение
@@ -90,10 +105,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
 
-
   @Override
   public Class<? extends Symbol> getSymbolClass() {
     return MethodSymbol.class;
   }
-
 }

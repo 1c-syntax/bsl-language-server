@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.context.api.LanguageKeywordCategory;
 import com.github._1c_syntax.bsl.context.api.ContextConstructor;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextConstructor;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextEnum;
+import com.github._1c_syntax.bsl.context.platform.PlatformContextEvent;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextCollection;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextEnumValue;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextMethod;
@@ -183,6 +184,102 @@ class BslContextPlatformTypesProviderTest {
     assertThat(addMember.matches("OtherName")).isFalse();
     assertThat(addMember.displayName(Language.EN)).isEqualTo("Add");
     assertThat(addMember.displayName(Language.RU)).isEqualTo("Добавить");
+  }
+
+  @Test
+  void platformTypePublishesEventsAsEventMembers() {
+    // Платформенное событие типа (например, Форма.ПриОткрытии) публикуется как
+    // член kind=EVENT: имя двуязычно, параметры из сигнатуры, returnType пустой
+    // (handler-контракт без возврата).
+    var booleanType = primitive("Булево", "Boolean");
+
+    var refusalParam = PlatformContextSignatureParameter.builder()
+      .name(new ContextName("Отказ", "Cancel"))
+      .isRequired(true)
+      .rawTypes(List.of("Булево"))
+      .description("Признак отказа от открытия формы.")
+      .build();
+    var onOpenSig = PlatformContextMethodSignature.builder()
+      .name(new ContextName("", ""))
+      .parameters(new ArrayList<>(List.of((ContextSignatureParameter) refusalParam)))
+      .description("")
+      .build();
+    var onOpenEvent = PlatformContextEvent.builder()
+      .name(new ContextName("ПриОткрытии", "OnOpen"))
+      .signatures(new ArrayList<>(List.of((ContextMethodSignature) onOpenSig)))
+      .description("Возникает при открытии формы.")
+      .availabilities(List.of())
+      .build();
+
+    var formType = PlatformContextType.builder()
+      .name(new ContextName("Форма", "Form"))
+      .methods(Collections.emptyList())
+      .properties(Collections.emptyList())
+      .events(new ArrayList<>(List.of((com.github._1c_syntax.bsl.context.api.ContextEvent) onOpenEvent)))
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var provider = providerOf(formType, booleanType);
+    var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+    var decl = types.stream()
+      .filter(t -> "Форма".equals(t.qualifiedName()))
+      .findFirst().orElseThrow();
+
+    assertThat(decl.members()).hasSize(1);
+    var event = decl.members().iterator().next();
+    assertThat(event.kind()).isEqualTo(MemberKind.EVENT);
+    assertThat(event.name()).isEqualTo("ПриОткрытии");
+    assertThat(event.bilingualName().ru()).isEqualTo("ПриОткрытии");
+    assertThat(event.bilingualName().en()).isEqualTo("OnOpen");
+    assertThat(event.description()).isEqualTo("Возникает при открытии формы.");
+    // У события нет returnType — handler без возврата.
+    assertThat(event.returnTypes().refs()).isEmpty();
+    // Сигнатура хранит только параметры.
+    assertThat(event.signatures()).hasSize(1);
+    assertThat(event.signatures().get(0).parameters()).hasSize(1);
+    var param = event.signatures().get(0).parameters().get(0);
+    assertThat(param.name()).isEqualTo("Отказ");
+  }
+
+  @Test
+  void platformTypeMembersOrderIsPropertiesMethodsEvents() {
+    // Порядок публикации членов фиксирован: сначала properties, затем methods,
+    // потом events. Это упрощает детерминированность ассертов в других тестах.
+    var someProperty = PlatformContextProperty.builder()
+      .name(new ContextName("Имя", "Name"))
+      .rawTypes(List.of())
+      .description("")
+      .availabilities(List.of())
+      .build();
+    var someMethod = PlatformContextMethod.builder()
+      .name(new ContextName("Метод", "Method"))
+      .description("")
+      .availabilities(List.of())
+      .rawReturnValues(List.of())
+      .signatures(new ArrayList<>())
+      .build();
+    var someEvent = PlatformContextEvent.builder()
+      .name(new ContextName("Событие", "Event"))
+      .signatures(new ArrayList<>())
+      .description("")
+      .availabilities(List.of())
+      .build();
+
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(new ArrayList<>(List.of(someProperty)))
+      .methods(new ArrayList<>(List.of(someMethod)))
+      .events(new ArrayList<>(List.of((com.github._1c_syntax.bsl.context.api.ContextEvent) someEvent)))
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(type)))
+      .getTypes().iterator().next();
+    var members = List.copyOf(decl.members());
+    assertThat(members).extracting(m -> m.kind())
+      .containsExactly(MemberKind.PROPERTY, MemberKind.METHOD, MemberKind.EVENT);
   }
 
   @Test
