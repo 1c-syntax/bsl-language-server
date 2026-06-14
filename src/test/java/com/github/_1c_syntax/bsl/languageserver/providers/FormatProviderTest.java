@@ -31,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangesFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -95,6 +96,51 @@ class FormatProviderTest {
 
     TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
+  }
+
+  @Test
+  void testRangesFormat() throws IOException {
+    // given: два независимых диапазона в одном запросе rangesFormatting (LSP 3.18).
+    // Эталоном для каждого диапазона служит результат одиночного rangeFormatting того же
+    // диапазона: rangesFormatting обязан форматировать каждый диапазон независимо и теми же
+    // протокольными опциями.
+    var options = new FormattingOptions(4, true);
+    Range firstRange = Ranges.create(4, 0, 10, 0);
+    Range secondRange = Ranges.create(12, 0, 23, 0);
+
+    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(getTextDocumentIdentifier().getUri()),
+      fileContent
+    );
+
+    var firstSingle = new DocumentRangeFormattingParams();
+    firstSingle.setTextDocument(getTextDocumentIdentifier());
+    firstSingle.setRange(firstRange);
+    firstSingle.setOptions(options);
+    String expectedFirstRange = formatProvider.getRangeFormatting(firstSingle, documentContext)
+      .getFirst().getNewText();
+
+    var secondSingle = new DocumentRangeFormattingParams();
+    secondSingle.setTextDocument(getTextDocumentIdentifier());
+    secondSingle.setRange(secondRange);
+    secondSingle.setOptions(options);
+    String expectedSecondRange = formatProvider.getRangeFormatting(secondSingle, documentContext)
+      .getFirst().getNewText();
+
+    var params = new DocumentRangesFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setRanges(List.of(firstRange, secondRange));
+    params.setOptions(options);
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getRangesFormatting(params, documentContext);
+
+    // then: по одной правке на каждый диапазон, и каждый отформатирован независимо
+    assertThat(textEdits).hasSize(2);
+    assertThat(textEdits.get(0).getNewText()).isEqualTo(expectedFirstRange);
+    assertThat(textEdits.get(1).getNewText()).isEqualTo(expectedSecondRange);
   }
 
   @Test

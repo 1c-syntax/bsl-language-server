@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangesFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -57,10 +58,12 @@ import java.util.stream.Collectors;
 /**
  * Провайдер для форматирования исходного кода.
  * <p>
- * Обрабатывает запросы {@code textDocument/formatting} и {@code textDocument/rangeFormatting}.
+ * Обрабатывает запросы {@code textDocument/formatting}, {@code textDocument/rangeFormatting} и
+ * {@code textDocument/rangesFormatting}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting">Document Formatting Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">Document Range Formatting Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangesFormatting">Document Ranges Formatting Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting">Document On Type Formatting Request specification</a>
  */
 @Component
@@ -339,8 +342,40 @@ public final class FormatProvider {
     DocumentRangeFormattingParams params,
     DocumentContext documentContext
   ) {
-    Position start = params.getRange().getStart();
-    Position end = params.getRange().getEnd();
+    return getRangeFormatting(params.getRange(), params.getOptions(), documentContext);
+  }
+
+  /**
+   * Возвращает правки форматирования сразу для нескольких диапазонов документа.
+   * <p>
+   * Обрабатывает запрос {@code textDocument/rangesFormatting} (LSP 3.18): каждый диапазон из
+   * {@link DocumentRangesFormattingParams#getRanges()} форматируется независимо тем же алгоритмом,
+   * что и одиночный {@code textDocument/rangeFormatting}, с одними и теми же протокольными
+   * {@link FormattingOptions}. Правки от всех диапазонов объединяются в общий список.
+   *
+   * @param params          параметры запроса rangesFormatting с набором диапазонов и опциями
+   * @param documentContext контекст текущего документа
+   * @return объединённый список правок по всем переданным диапазонам; пустой, если форматировать
+   * нечего
+   */
+  public List<TextEdit> getRangesFormatting(
+    DocumentRangesFormattingParams params,
+    DocumentContext documentContext
+  ) {
+    var options = params.getOptions();
+    return params.getRanges().stream()
+      .map(range -> getRangeFormatting(range, options, documentContext))
+      .flatMap(List::stream)
+      .collect(Collectors.toList());
+  }
+
+  private List<TextEdit> getRangeFormatting(
+    Range range,
+    FormattingOptions options,
+    DocumentContext documentContext
+  ) {
+    Position start = range.getStart();
+    Position end = range.getEnd();
     int startLine = start.getLine() + 1;
     int startCharacter = start.getCharacter();
     int endLine = end.getLine() + 1;
@@ -356,7 +391,7 @@ public final class FormatProvider {
       .collect(Collectors.toList());
 
     return getTextEdits(
-      tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
+      tokens, documentContext.getScriptVariantLocale(), range, startCharacter, options);
   }
 
   @EventListener
