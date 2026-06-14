@@ -38,6 +38,13 @@ import org.springframework.stereotype.Component;
 public class NewNameValidator {
 
   /**
+   * Ожидаемое число токенов при лексическом разборе допустимого идентификатора: сам
+   * токен-идентификатор плюс служебный токен конца потока ({@code EOF}), который токенизатор
+   * BSL всегда добавляет в конец.
+   */
+  private static final int IDENTIFIER_WITH_EOF_TOKEN_COUNT = 2;
+
+  /**
    * Проверяет, является ли переданное имя допустимым идентификатором BSL.
    * <p>
    * Имя должно быть непустым и при лексическом разборе давать ровно один токен-идентификатор,
@@ -55,7 +62,7 @@ public class NewNameValidator {
 
     var tokens = new BSLTokenizer(newName).getTokens();
 
-    return tokens.size() == 2
+    return tokens.size() == IDENTIFIER_WITH_EOF_TOKEN_COUNT
       && tokens.get(0).getType() == BSLLexer.IDENTIFIER
       && newName.equals(tokens.get(0).getText());
   }

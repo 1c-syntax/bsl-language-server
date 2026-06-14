@@ -27,14 +27,13 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.rename.NewNameValidator;
 import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
+import com.github._1c_syntax.bsl.languageserver.rename.SymbolDefinitionReferenceFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
 import org.eclipse.lsp4j.PrepareRenameResult;
 import org.eclipse.lsp4j.Range;
@@ -76,6 +75,7 @@ public final class RenameProvider {
   private final Resources resources;
   private final RenameWorkspaceEditBuilder workspaceEditBuilder;
   private final NewNameValidator newNameValidator;
+  private final SymbolDefinitionReferenceFactory symbolDefinitionReferenceFactory;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   // Кэшируется на initialize. Признак поддержки клиентом
@@ -131,7 +131,7 @@ public final class RenameProvider {
         .map(referenceIndex::getReferencesTo)
         .flatMap(Collection::stream),
       sourceDefinedSymbol
-        .stream().map(RenameProvider::referenceOf)
+        .stream().map(symbolDefinitionReferenceFactory::referenceOf)
     ).collect(Collectors.groupingBy(ref -> ref.uri().toString(), getTexEdits(params)));
 
     var oldName = sourceDefinedSymbol.map(SourceDefinedSymbol::getName).orElse(params.getNewName());
@@ -139,15 +139,6 @@ public final class RenameProvider {
       changes,
       oldName,
       params.getNewName()
-    );
-  }
-
-  private static Reference referenceOf(SourceDefinedSymbol symbol) {
-    return Reference.of(
-      symbol,
-      symbol,
-      new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange()),
-      OccurrenceType.DEFINITION
     );
   }
 
