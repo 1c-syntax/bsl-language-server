@@ -29,10 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.rename.NewNameValidator;
 import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Location;
@@ -77,6 +76,7 @@ public final class RenameProvider {
   private final ReferenceIndex referenceIndex;
   private final Resources resources;
   private final RenameWorkspaceEditBuilder workspaceEditBuilder;
+  private final NewNameValidator newNameValidator;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   // Кэшируется на initialize. Признак поддержки клиентом
@@ -236,22 +236,10 @@ public final class RenameProvider {
   }
 
   private void checkNewName(@Nullable String newName) {
-    if (!isValidIdentifier(newName)) {
+    if (!newNameValidator.isValidIdentifier(newName)) {
       var message = resources.getResourceString(getClass(), "invalidNewName", newName);
       throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
     }
-  }
-
-  private static boolean isValidIdentifier(@Nullable String newName) {
-    if (newName == null || newName.isEmpty()) {
-      return false;
-    }
-
-    var tokens = new BSLTokenizer(newName).getTokens();
-
-    return tokens.size() == 2
-      && tokens.get(0).getType() == BSLLexer.IDENTIFIER
-      && newName.equals(tokens.get(0).getText());
   }
 
 }
