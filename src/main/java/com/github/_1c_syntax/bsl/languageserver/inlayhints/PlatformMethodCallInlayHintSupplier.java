@@ -73,7 +73,8 @@ import java.util.List;
  * MemberDescriptor с непустым sourceSymbol.
  */
 @Component
-public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlayHintSupplier {
+public class PlatformMethodCallInlayHintSupplier
+  extends AbstractMethodCallInlayHintSupplier<DefaultInlayHintData> {
 
   private final TypeService typeService;
   private final Resources resources;
@@ -86,6 +87,20 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     super(configuration);
     this.typeService = typeService;
     this.resources = resources;
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Платформенные методы не имеют исходного расположения, поэтому хинты не несут
+   * ссылок и ничего не откладывают на резолв — используется дефолтный дата-класс
+   * {@link DefaultInlayHintData}.
+   *
+   * @return Класс {@link DefaultInlayHintData}.
+   */
+  @Override
+  public Class<DefaultInlayHintData> getInlayHintDataClass() {
+    return DefaultInlayHintData.class;
   }
 
   private Language currentLanguage() {

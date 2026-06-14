@@ -41,8 +41,12 @@ import java.util.Map;
  * {@code inlayHint.parameters.methodCall}; для совместимости с конфигами,
  * написанными до объединения, читается также legacy-ключ
  * {@code sourceDefinedMethodCall}.
+ *
+ * @param <T> Конкретный тип данных хинта; зависит от того, откладывает ли
+ *            наследник построение полей на резолв.
  */
-public abstract class AbstractMethodCallInlayHintSupplier implements InlayHintSupplier<DefaultInlayHintData> {
+public abstract class AbstractMethodCallInlayHintSupplier<T extends InlayHintData>
+  implements InlayHintSupplier<T> {
 
   private static final List<String> CONFIG_KEYS = List.of(
     "methodCall",
@@ -56,17 +60,6 @@ public abstract class AbstractMethodCallInlayHintSupplier implements InlayHintSu
 
   protected AbstractMethodCallInlayHintSupplier(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
-  }
-
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Подсказки имён параметров не откладывают построение полей на резолв, поэтому
-   * используется дефолтный дата-класс {@link DefaultInlayHintData}.
-   */
-  @Override
-  public Class<DefaultInlayHintData> getInlayHintDataClass() {
-    return DefaultInlayHintData.class;
   }
 
   protected boolean showParametersWithTheSameName() {
