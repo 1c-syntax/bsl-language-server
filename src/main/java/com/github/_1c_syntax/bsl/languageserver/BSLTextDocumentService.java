@@ -870,9 +870,15 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     var documentContext = maybeDocument.get();
 
-    return withFreshDocumentContext(
+    return withFreshDocumentContextNullable(
       documentContext,
-      () -> Either3.forFirst(renameProvider.getPrepareRename(documentContext, params))
+      () -> {
+        var prepareRenameResult = renameProvider.getPrepareRename(documentContext, params);
+        if (prepareRenameResult == null) {
+          return null;
+        }
+        return Either3.<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>forSecond(prepareRenameResult);
+      }
     );
   }
 

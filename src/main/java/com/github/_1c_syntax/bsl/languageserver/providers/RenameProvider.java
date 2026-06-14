@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -32,10 +34,14 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.PrepareRenameResult;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
@@ -43,11 +49,13 @@ import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,6 +75,47 @@ public final class RenameProvider {
   private final ReferenceIndex referenceIndex;
   private final Resources resources;
   private final RenameWorkspaceEditBuilder workspaceEditBuilder;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируется на initialize. Признак поддержки клиентом
+  // textDocument.rename.prepareSupportDefaultBehavior: клиент способен откатиться к поведению
+  // по умолчанию (выделение идентификатора под курсором), если сервер на prepareRename вернёт
+  // PrepareRenameDefaultBehavior вместо явного диапазона. Сервер всегда возвращает явный
+  // PrepareRenameResult с placeholder, поэтому флаг кэшируется для совместимости и не меняет
+  // ответ — клиенты с этой возможностью получают тот же корректный результат.
+  private boolean prepareSupportDefaultBehavior;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентскую возможность {@code textDocument.rename.prepareSupportDefaultBehavior},
+   * сообщающую, что клиент умеет откатываться к поведению переименования по умолчанию. Чтение
+   * выполняется один раз на инициализацию, чтобы не обращаться к возможностям клиента на каждый
+   * запрос {@code textDocument/prepareRename}.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    prepareSupportDefaultBehavior = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getRename)
+      .map(RenameCapabilities::getPrepareSupportDefaultBehavior)
+      .isPresent();
+  }
+
+  /**
+   * Сообщает, заявил ли подключённый клиент возможность
+   * {@code textDocument.rename.prepareSupportDefaultBehavior}, то есть умеет ли он откатываться
+   * к поведению переименования по умолчанию.
+   * <p>
+   * Значение кэшируется на этапе инициализации сервера (см. {@link #handleInitializeEvent()}).
+   * Сервер всегда возвращает явный {@link PrepareRenameResult} с диапазоном и {@code placeholder},
+   * поэтому данный признак не меняет формат ответа и служит для совместимости и диагностики.
+   *
+   * @return {@code true}, если клиент заявил поддержку отката к поведению по умолчанию.
+   */
+  public boolean isPrepareSupportDefaultBehavior() {
+    return prepareSupportDefaultBehavior;
+  }
 
   /**
    * Построить {@link WorkspaceEdit} с правками переименования символа.
@@ -117,18 +166,34 @@ public final class RenameProvider {
   }
 
   /**
-   * {@link Range}
+   * Подготовить переименование символа под курсором.
+   * <p>
+   * Резолвит ссылку под курсором и, если соответствующий символ можно переименовать текстовой
+   * правкой (см. {@link #isRenameable(Reference)}), возвращает {@link PrepareRenameResult} с
+   * диапазоном выделения ссылки ({@code range}) и текущим именем символа ({@code placeholder}).
+   * Имя в {@code placeholder} позволяет клиенту предзаполнить поле ввода реальным идентификатором,
+   * а не произвольным текстом под курсором. Если символ не переименовываем или ссылка не
+   * резолвится, возвращается {@code null}, и клиент отклоняет подготовку переименования.
    *
    * @param documentContext Контекст документа.
    * @param params          Параметры вызова.
-   * @return Range
+   * @return {@link PrepareRenameResult} с диапазоном и именем символа при возможности
+   *         переименования либо {@code null}, если символ переименовать нельзя.
    */
-  public @Nullable Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
+  public @Nullable PrepareRenameResult getPrepareRename(
+    DocumentContext documentContext,
+    TextDocumentPositionParams params
+  ) {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
       .filter(RenameProvider::isRenameable)
-      .map(Reference::selectionRange)
+      .flatMap(RenameProvider::toPrepareRenameResult)
       .orElse(null);
+  }
+
+  private static Optional<PrepareRenameResult> toPrepareRenameResult(Reference reference) {
+    return reference.getSourceDefinedSymbol()
+      .map(symbol -> new PrepareRenameResult(reference.selectionRange(), symbol.getName()));
   }
 
   /**
