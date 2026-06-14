@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -69,6 +70,7 @@ import org.eclipse.lsp4j.PositionEncodingKind;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.Registration;
 import org.eclipse.lsp4j.RegistrationParams;
+import org.eclipse.lsp4j.RelativePattern;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
@@ -95,6 +97,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -120,6 +123,13 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
+  /**
+   * Glob-шаблоны файлов рабочей области, за изменениями которых наблюдает клиент.
+   * Относительны корню workspace folder (используются как с глобальным glob,
+   * так и в составе {@link RelativePattern}).
+   */
+  private static final List<String> WATCHED_FILE_PATTERNS = List.of("**/*.bsl", "**/*.os");
+
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
@@ -133,6 +143,37 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ExecutorService populateContextExecutor;
 
   private boolean shutdownWasCalled;
+
+  // Кэшируются на initialize. Гейтят регистрацию клиентских наблюдателей за файлами в initialized():
+  // dynamicRegistration — без неё динамическая регистрация workspace/didChangeWatchedFiles запрещена;
+  // relativePatternSupport — выбор между RelativePattern и глобальным glob-шаблоном.
+  private boolean didChangeWatchedFilesDynamicRegistration;
+  private boolean didChangeWatchedFilesRelativePatternSupport;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентские возможности {@code workspace.didChangeWatchedFiles.dynamicRegistration} и
+   * {@code workspace.didChangeWatchedFiles.relativePatternSupport}, чтобы при последующей регистрации
+   * наблюдателей за файлами в {@link #initialized(InitializedParams)} не перечитывать
+   * {@link ClientCapabilities} на каждый вызов. Событие приходит после обработки {@code initialize}
+   * (когда возможности уже сохранены в {@link ClientCapabilitiesHolder}) и до {@code initialized},
+   * поэтому к моменту регистрации флаги уже актуальны.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    var didChangeWatchedFiles = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles);
+
+    didChangeWatchedFilesDynamicRegistration = didChangeWatchedFiles
+      .map(DidChangeWatchedFilesCapabilities::getDynamicRegistration)
+      .orElse(Boolean.FALSE);
+
+    didChangeWatchedFilesRelativePatternSupport = didChangeWatchedFiles
+      .map(DidChangeWatchedFilesCapabilities::getRelativePatternSupport)
+      .orElse(Boolean.FALSE);
+  }
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -254,6 +295,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * {@code **&#47;*.bsl} и {@code **&#47;*.os}; за конфигурационным файлом следит сам сервер
    * (см. {@code ConfigurationFileSystemWatcher}), поэтому клиентский наблюдатель за ним не нужен.
    * <p>
+   * Если клиент заявил поддержку
+   * {@code workspace.didChangeWatchedFiles.relativePatternSupport}, наблюдатели регистрируются
+   * через {@link RelativePattern} с привязкой к корню каждой workspace folder — это сужает
+   * область наблюдения до конкретных папок и исключает лишние срабатывания между корнями.
+   * Иначе используется один глобальный glob-шаблон (поведение по умолчанию), что сохраняет
+   * совместимость с клиентами без поддержки относительных шаблонов.
+   * <p>
    * Если клиент не заявил динамическую регистрацию или не подключён, метод ничего не делает.
    */
   private void registerFileWatchers() {
@@ -263,10 +311,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     languageClientHolder.execIfConnected(client -> {
       var watchKind = WatchKind.Create | WatchKind.Change | WatchKind.Delete;
-      var watchers = List.of(
-        new FileSystemWatcher(Either.forLeft("**/*.bsl"), watchKind),
-        new FileSystemWatcher(Either.forLeft("**/*.os"), watchKind)
-      );
+      var watchers = buildFileSystemWatchers(watchKind);
 
       var registrationOptions = new DidChangeWatchedFilesRegistrationOptions(watchers);
       var registration = new Registration(
@@ -279,12 +324,42 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     });
   }
 
+  /**
+   * Строит список наблюдателей за файлами рабочей области.
+   * <p>
+   * Если клиент поддерживает относительные шаблоны и серверу известны корни workspace folder,
+   * для каждой пары «корень × шаблон» создаётся отдельный наблюдатель с {@link RelativePattern}.
+   * Иначе для каждого шаблона создаётся один наблюдатель с глобальным glob-шаблоном.
+   *
+   * @param watchKind битовая маска отслеживаемых событий
+   *                  ({@link WatchKind#Create}, {@link WatchKind#Change}, {@link WatchKind#Delete})
+   * @return список наблюдателей за файлами для регистрации у клиента
+   */
+  private List<FileSystemWatcher> buildFileSystemWatchers(int watchKind) {
+    var workspaceRoots = serverContextProvider.getAllContexts().keySet();
+
+    if (!hasDidChangeWatchedFilesRelativePatternSupport() || workspaceRoots.isEmpty()) {
+      return WATCHED_FILE_PATTERNS.stream()
+        .map(pattern -> new FileSystemWatcher(Either.<String, RelativePattern>forLeft(pattern), watchKind))
+        .toList();
+    }
+
+    return workspaceRoots.stream()
+      .flatMap(root -> WATCHED_FILE_PATTERNS.stream()
+        .map(pattern -> {
+          var baseUri = Either.<WorkspaceFolder, String>forRight(root.toString());
+          var relativePattern = new RelativePattern(baseUri, pattern);
+          return new FileSystemWatcher(Either.<String, RelativePattern>forRight(relativePattern), watchKind);
+        }))
+      .toList();
+  }
+
   private boolean hasDidChangeWatchedFilesDynamicRegistration() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWorkspace)
-      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles)
-      .map(DidChangeWatchedFilesCapabilities::getDynamicRegistration)
-      .orElse(false);
+    return didChangeWatchedFilesDynamicRegistration;
+  }
+
+  private boolean hasDidChangeWatchedFilesRelativePatternSupport() {
+    return didChangeWatchedFilesRelativePatternSupport;
   }
 
   @Override
