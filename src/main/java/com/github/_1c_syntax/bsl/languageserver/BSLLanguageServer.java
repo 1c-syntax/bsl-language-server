@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -94,6 +95,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -139,6 +141,37 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ExecutorService populateContextExecutor;
 
   private boolean shutdownWasCalled;
+
+  // Кэшируются на initialize. Гейтят регистрацию клиентских наблюдателей за файлами в initialized():
+  // dynamicRegistration — без неё динамическая регистрация workspace/didChangeWatchedFiles запрещена;
+  // relativePatternSupport — выбор между RelativePattern и глобальным glob-шаблоном.
+  private boolean didChangeWatchedFilesDynamicRegistration;
+  private boolean didChangeWatchedFilesRelativePatternSupport;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентские возможности {@code workspace.didChangeWatchedFiles.dynamicRegistration} и
+   * {@code workspace.didChangeWatchedFiles.relativePatternSupport}, чтобы при последующей регистрации
+   * наблюдателей за файлами в {@link #initialized(InitializedParams)} не перечитывать
+   * {@link ClientCapabilities} на каждый вызов. Событие приходит после обработки {@code initialize}
+   * (когда возможности уже сохранены в {@link ClientCapabilitiesHolder}) и до {@code initialized},
+   * поэтому к моменту регистрации флаги уже актуальны.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    var didChangeWatchedFiles = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles);
+
+    didChangeWatchedFilesDynamicRegistration = didChangeWatchedFiles
+      .map(DidChangeWatchedFilesCapabilities::getDynamicRegistration)
+      .orElse(Boolean.FALSE);
+
+    didChangeWatchedFilesRelativePatternSupport = didChangeWatchedFiles
+      .map(DidChangeWatchedFilesCapabilities::getRelativePatternSupport)
+      .orElse(Boolean.FALSE);
+  }
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -314,19 +347,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   private boolean hasDidChangeWatchedFilesDynamicRegistration() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWorkspace)
-      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles)
-      .map(DidChangeWatchedFilesCapabilities::getDynamicRegistration)
-      .orElse(false);
+    return didChangeWatchedFilesDynamicRegistration;
   }
 
   private boolean hasDidChangeWatchedFilesRelativePatternSupport() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWorkspace)
-      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles)
-      .map(DidChangeWatchedFilesCapabilities::getRelativePatternSupport)
-      .orElse(false);
+    return didChangeWatchedFilesRelativePatternSupport;
   }
 
   @Override
