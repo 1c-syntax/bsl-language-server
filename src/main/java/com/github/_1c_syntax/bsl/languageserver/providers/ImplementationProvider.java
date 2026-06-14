@@ -21,15 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.ImplementationCapabilities;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -60,57 +69,139 @@ import java.util.List;
 public class ImplementationProvider {
 
   private final TypeRelations typeRelations;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
-  // Результаты — по одной локации на класс/метод-реализатор, поэтому URI
+  // Результаты — по одной связи на класс/метод-реализатор, поэтому targetUri
   // уникален: сортировки по нему достаточно для детерминированного порядка.
-  private final Comparator<Location> locationComparator = Comparator.comparing(Location::getUri);
+  private final Comparator<LocationLink> linkComparator = Comparator.comparing(LocationLink::getTargetUri);
+
+  // Кэшируется на initialize. linkSupport — gate для ответа LocationLink[] на запрос
+  // textDocument/implementation. Если клиент не заявил поддержку, ответ понижается до Location[].
+  private boolean linkSupport;
 
   /**
-   * Найти реализации интерфейса, представленного текущим документом.
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентскую возможность {@code textDocument.implementation.linkSupport},
+   * влияющую на формат ответа навигации: при её отсутствии ответ {@link LocationLink}
+   * понижается до {@link Location}.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    linkSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getImplementation)
+      .map(ImplementationCapabilities::getLinkSupport)
+      .orElse(Boolean.FALSE);
+  }
+
+  /**
+   * Найти реализации интерфейса, представленного текущим документом, в формате,
+   * согласованном с клиентскими возможностями.
+   * <p>
+   * По спецификации LSP 3.14+ ответ типа {@link LocationLink} допустим, только если
+   * клиент заявил {@code textDocument.implementation.linkSupport}. При наличии поддержки
+   * возвращается правая сторона ({@link LocationLink}) с диапазоном-источником под
+   * курсором ({@code originSelectionRange}) и диапазонами цели; иначе результат
+   * понижается до левой стороны ({@link Location}) с {@code targetUri} и
+   * {@code targetSelectionRange} каждой связи.
    *
    * @param documentContext контекст документа (ожидается файл-интерфейс)
    * @param params          параметры запроса (позиция курсора)
-   * @return локации реализующих методов/классов; пустой список, если документ
+   * @return {@link Either} со списком {@link LocationLink} при поддержке связей либо
+   *         со списком {@link Location} при её отсутствии; пустой список, если документ
    *         не является интерфейсом
    */
-  public List<Location> getImplementations(DocumentContext documentContext, ImplementationParams params) {
+  public Either<List<? extends Location>, List<? extends LocationLink>> getImplementations(
+    DocumentContext documentContext,
+    ImplementationParams params
+  ) {
+    var links = findLocationLinks(documentContext, params);
+
+    if (linkSupport) {
+      return Either.forRight(links);
+    }
+
+    List<Location> locations = links.stream()
+      .map(link -> new Location(link.getTargetUri(), link.getTargetSelectionRange()))
+      .toList();
+    return Either.forLeft(locations);
+  }
+
+  private List<LocationLink> findLocationLinks(DocumentContext documentContext, ImplementationParams params) {
     if (documentContext.getFileType() != FileType.OS
       || !typeRelations.isInterface(documentContext)) {
       return Collections.emptyList();
     }
 
-    var methodName = methodNameAt(documentContext, params);
+    var interfaceMethod = exportMethodAt(documentContext, params);
 
-    var result = new ArrayList<Location>();
+    var result = new ArrayList<LocationLink>();
     for (var implementor : typeRelations.implementors(documentContext)) {
-      if (methodName != null) {
-        implementor.getSymbolTree().getMethodSymbol(methodName)
+      if (interfaceMethod != null) {
+        // originSelectionRange — диапазон идентификатора метода интерфейса под курсором.
+        var originSelectionRange = interfaceMethod.getSelectionRange();
+        implementor.getSymbolTree().getMethodSymbol(interfaceMethod.getName())
           .filter(MethodSymbol::isExport)
-          .ifPresent(method -> result.add(location(implementor, method.getSelectionRange())));
+          .ifPresent(method -> result.add(
+            link(implementor, method.getRange(), method.getSelectionRange(), originSelectionRange)));
       } else {
-        result.add(location(implementor, typeRelations.classSelectionRange(implementor)));
+        var classSelectionRange = typeRelations.classSelectionRange(implementor);
+        result.add(classLink(implementor, classRange(implementor), classSelectionRange));
       }
     }
-    result.sort(locationComparator);
+    result.sort(linkComparator);
     return result;
   }
 
   /**
-   * Имя экспортного метода интерфейса под курсором (для перехода к одноимённым
+   * Экспортный метод интерфейса под курсором (для перехода к одноимённым
    * реализациям), либо {@code null}, если курсор не на экспортном методе (тогда
    * переход — к самим реализующим классам). Конструктор {@code ПриСозданииОбъекта}
    * по соглашению не экспортный, поэтому отсекается фильтром экспортности
    * (а у реализаций — фильтром {@code isExport} при поиске одноимённого метода).
    */
-  private static @Nullable String methodNameAt(DocumentContext documentContext, ImplementationParams params) {
+  private static @Nullable MethodSymbol exportMethodAt(DocumentContext documentContext, ImplementationParams params) {
     var symbol = documentContext.getSymbolTree().getSymbolAtPosition(params.getPosition());
     if (symbol instanceof MethodSymbol method && method.isExport()) {
-      return method.getName();
+      return method;
     }
     return null;
   }
 
-  private static Location location(DocumentContext documentContext, Range range) {
-    return new Location(documentContext.getUri().toString(), range);
+  private static Range classRange(DocumentContext documentContext) {
+    var moduleRange = documentContext.getSymbolTree().getModule().getRange();
+    return moduleRange != null ? moduleRange : Ranges.create(0, 0, 0, 0);
+  }
+
+  private static LocationLink link(
+    DocumentContext documentContext,
+    Range targetRange,
+    Range targetSelectionRange,
+    Range originSelectionRange
+  ) {
+    return new LocationLink(
+      documentContext.getUri().toString(),
+      targetRange,
+      targetSelectionRange,
+      originSelectionRange
+    );
+  }
+
+  /**
+   * Связь на класс-реализатор без диапазона-источника: при переходе из тела
+   * интерфейса (а не с конкретного метода) под курсором нет идентификатора,
+   * поэтому {@code originSelectionRange} не задаётся.
+   */
+  private static LocationLink classLink(
+    DocumentContext documentContext,
+    Range targetRange,
+    Range targetSelectionRange
+  ) {
+    var locationLink = new LocationLink();
+    locationLink.setTargetUri(documentContext.getUri().toString());
+    locationLink.setTargetRange(targetRange);
+    locationLink.setTargetSelectionRange(targetSelectionRange);
+    return locationLink;
   }
 }
