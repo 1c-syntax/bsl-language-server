@@ -646,14 +646,37 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void testRenamePrepare() {
+  void testRenamePrepareForOpenedFileDelegatesToProvider() throws Exception {
+    // given - открытый документ; курсор стоит на имени процедуры "ИмяПроцедуры",
+    // которое можно переименовать текстовой правкой
+    doOpen();
     var params = new PrepareRenameParams();
     params.setTextDocument(getTextDocumentIdentifier());
     params.setPosition(new Position(0, 16));
 
-    var result = textDocumentService.prepareRename(params);
+    // when - сервис делегирует подготовку провайдеру и возвращает его результат
+    var result = textDocumentService.prepareRename(params).get();
 
+    // then - получаем PrepareRenameResult с диапазоном имени и placeholder'ом
     assertThat(result).isNotNull();
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 10, 22));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("ИмяПроцедуры");
+  }
+
+  @Test
+  void testRenamePrepareUnknownFileReturnsNull() throws Exception {
+    // given - документ не открыт, поэтому в индексе его нет
+    var params = new PrepareRenameParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setPosition(new Position(0, 16));
+
+    // when
+    var result = textDocumentService.prepareRename(params).get();
+
+    // then - для неизвестного документа сервис возвращает null
+    assertThat(result).isNull();
   }
 
   @Test

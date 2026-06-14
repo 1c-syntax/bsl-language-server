@@ -905,7 +905,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either3.forFirst(renameProvider.getPrepareRename(documentContext, params))
+      () -> renameProvider.getPrepareRename(documentContext, params)
     );
   }
 

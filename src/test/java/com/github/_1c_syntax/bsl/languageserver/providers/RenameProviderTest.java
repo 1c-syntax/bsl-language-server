@@ -31,7 +31,10 @@ import org.eclipse.lsp4j.AnnotatedTextEdit;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.PrepareSupportDefaultBehavior;
+import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
@@ -75,6 +78,10 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
   @BeforeEach
   void prepareServerContext() {
     initServerContextOnce(Path.of(PATH_TO_METADATA));
+    // Сбрасываем кэш prepareSupportDefaultBehavior в провайдере (spy-бин общий между тестами),
+    // чтобы по умолчанию ответ prepareRename содержал явный PrepareRenameResult.
+    setClientRenamePrepareSupportDefaultBehavior(false);
+    renameProvider.handleInitializeEvent();
     // По умолчанию клиент не заявляет documentChanges, поэтому существующие тесты получают
     // legacy changes-map; отдельные тесты включают documentChanges и аннотации правок.
     setClientWorkspaceEditCapabilities(false, false);
@@ -260,10 +267,11 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     params.setPosition(new Position(1, 5));
 
     // when
-    var range = renameProvider.getPrepareRename(documentContext, params);
+    var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(range).isNull();
+    assertThat(result.isSecond()).isFalse();
+    assertThat(result.getFirst()).isNull();
   }
 
   @Test
@@ -274,10 +282,11 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     params.setPosition(new Position(0, 3));
 
     // when
-    var range = renameProvider.getPrepareRename(documentContext, params);
+    var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(range).isNull();
+    assertThat(result.isSecond()).isFalse();
+    assertThat(result.getFirst()).isNull();
 
   }
 
@@ -289,11 +298,50 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     params.setPosition(new Position(0, 14));
 
     // when
-    var range = renameProvider.getPrepareRename(documentContext, params);
+    var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(range).isEqualTo(Ranges.create(0, 8, 18));
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 8, 18));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("ИмяФункции");
 
+  }
+
+  @Test
+  void testPrepareRenameLocalVariableReturnsPlaceholder() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(1, 10));
+
+    // when
+    var result = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(1, 4, 14));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("Переменная");
+  }
+
+  @Test
+  void testPrepareRenameParamReturnsPlaceholder() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(0, 25));
+
+    // when
+    var result = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 24, 26));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("П1");
   }
 
   @Test
@@ -375,6 +423,88 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
       .hasSize(2)
       .contains(new TextEdit(Ranges.create(0, 8, 18), newName))
       .contains(new TextEdit(Ranges.create(6, 0, 10), newName));
+  }
+
+  @Test
+  void testPrepareRenameReturnsDefaultBehaviorWhenClientSupportsIt() {
+    // given
+    // клиент заявил prepareSupportDefaultBehavior, курсор на переименовываемом методе
+    setClientRenamePrepareSupportDefaultBehavior(true);
+    renameProvider.handleInitializeEvent();
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(0, 14));
+
+    // when
+    var result = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    // сервер отдаёт компактный ответ-«поведение по умолчанию», клиент сам выделит идентификатор
+    assertThat(result.isThird()).isTrue();
+    assertThat(result.getThird().isDefaultBehavior()).isTrue();
+  }
+
+  @Test
+  void testPrepareRenameReturnsPlaceholderWhenClientLacksDefaultBehavior() {
+    // given
+    // клиент не заявил prepareSupportDefaultBehavior, курсор на переименовываемом методе
+    setClientRenamePrepareSupportDefaultBehavior(false);
+    renameProvider.handleInitializeEvent();
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(0, 14));
+
+    // when
+    var result = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    // для старого клиента сервер сам формирует диапазон и placeholder
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 8, 18));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("ИмяФункции");
+  }
+
+  @Test
+  void testPrepareRenameRejectsNonRenameableWhenClientSupportsDefaultBehavior() {
+    // given
+    // клиент заявил prepareSupportDefaultBehavior, курсор на имени общего модуля (не переименовываем)
+    setClientRenamePrepareSupportDefaultBehavior(true);
+    renameProvider.handleInitializeEvent();
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(1, 5));
+
+    // when
+    var result = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    // проверка переименовываемости выполняется на сервере независимо от возможностей клиента
+    assertThat(result.isThird()).isFalse();
+    assertThat(result.isSecond()).isFalse();
+    assertThat(result.getFirst()).isNull();
+  }
+
+  /**
+   * Настраивает заявленную клиентом возможность
+   * {@code textDocument.rename.prepareSupportDefaultBehavior}.
+   *
+   * @param prepareSupportDefaultBehavior {@code true}, если клиент сообщает о поддержке отката
+   *                                      к поведению переименования по умолчанию
+   */
+  private void setClientRenamePrepareSupportDefaultBehavior(boolean prepareSupportDefaultBehavior) {
+    var capabilities = new ClientCapabilities();
+    var textDocumentCapabilities = new TextDocumentClientCapabilities();
+    var renameCapabilities = new RenameCapabilities();
+    if (prepareSupportDefaultBehavior) {
+      renameCapabilities.setPrepareSupportDefaultBehavior(PrepareSupportDefaultBehavior.Identifier);
+    }
+    textDocumentCapabilities.setRename(renameCapabilities);
+    capabilities.setTextDocument(textDocumentCapabilities);
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
   }
 
 }

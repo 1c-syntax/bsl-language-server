@@ -21,28 +21,35 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.rename.NewNameValidator;
 import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
+import com.github._1c_syntax.bsl.languageserver.rename.SymbolDefinitionReferenceFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
+import org.eclipse.lsp4j.PrepareRenameResult;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -67,6 +74,34 @@ public final class RenameProvider {
   private final ReferenceIndex referenceIndex;
   private final Resources resources;
   private final RenameWorkspaceEditBuilder workspaceEditBuilder;
+  private final NewNameValidator newNameValidator;
+  private final SymbolDefinitionReferenceFactory symbolDefinitionReferenceFactory;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируется на initialize. Признак поддержки клиентом
+  // textDocument.rename.prepareSupportDefaultBehavior: клиент способен сам вычислить диапазон
+  // переименования (идентификатор под курсором) и использовать его как placeholder, если сервер
+  // на prepareRename вернёт PrepareRenameDefaultBehavior вместо явного PrepareRenameResult.
+  // Для таких клиентов сервер отдаёт компактный ответ-«поведение по умолчанию», иначе —
+  // явный PrepareRenameResult с диапазоном и placeholder (для старых клиентов).
+  private boolean prepareSupportDefaultBehavior;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Кэширует клиентскую возможность {@code textDocument.rename.prepareSupportDefaultBehavior},
+   * сообщающую, что клиент умеет вычислять поведение переименования по умолчанию. Чтение
+   * выполняется один раз на инициализацию, чтобы не обращаться к возможностям клиента на каждый
+   * запрос {@code textDocument/prepareRename}.
+   */
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
+    prepareSupportDefaultBehavior = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getRename)
+      .map(RenameCapabilities::getPrepareSupportDefaultBehavior)
+      .isPresent();
+  }
 
   /**
    * Построить {@link WorkspaceEdit} с правками переименования символа.
@@ -96,7 +131,7 @@ public final class RenameProvider {
         .map(referenceIndex::getReferencesTo)
         .flatMap(Collection::stream),
       sourceDefinedSymbol
-        .stream().map(RenameProvider::referenceOf)
+        .stream().map(symbolDefinitionReferenceFactory::referenceOf)
     ).collect(Collectors.groupingBy(ref -> ref.uri().toString(), getTexEdits(params)));
 
     var oldName = sourceDefinedSymbol.map(SourceDefinedSymbol::getName).orElse(params.getNewName());
@@ -107,28 +142,65 @@ public final class RenameProvider {
     );
   }
 
-  private static Reference referenceOf(SourceDefinedSymbol symbol) {
-    return Reference.of(
-      symbol,
-      symbol,
-      new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange()),
-      OccurrenceType.DEFINITION
-    );
-  }
-
   /**
-   * {@link Range}
+   * Подготовить переименование символа под курсором для ответа на {@code textDocument/prepareRename}.
+   * <p>
+   * Резолвит ссылку под курсором и, если соответствующий символ можно переименовать текстовой
+   * правкой (см. {@link #isRenameable(Reference)}), формирует ответ в зависимости от заявленных
+   * клиентом возможностей:
+   * <ul>
+   *   <li>если клиент заявил {@code textDocument.rename.prepareSupportDefaultBehavior}
+   *   (см. {@link #handleInitializeEvent()}), возвращается {@link PrepareRenameDefaultBehavior}
+   *   с {@code defaultBehavior == true} — серверу не нужно вычислять диапазон, клиент сам выделит
+   *   идентификатор под курсором и использует его как {@code placeholder}; для идентификатора BSL
+   *   или OneScript под курсором это совпадает с именем символа, поэтому UX идентичен, а ответ
+   *   сервера компактен;</li>
+   *   <li>иначе возвращается явный {@link PrepareRenameResult} с диапазоном выделения ссылки
+   *   ({@code range}) и текущим именем символа ({@code placeholder}) — для клиентов, не умеющих
+   *   откатываться к поведению по умолчанию.</li>
+   * </ul>
+   * Если символ не переименовываем или ссылка не резолвится, возвращается {@link Either3} без
+   * значения (отказ) в обоих режимах, и клиент отклоняет подготовку переименования. Проверка
+   * переименовываемости выполняется на сервере независимо от возможностей клиента.
+   * <p>
+   * Формирование итоговой формы ответа (в том числе случай отказа) выполняется здесь, чтобы
+   * сервисный слой оставался тонким делегатом.
    *
    * @param documentContext Контекст документа.
    * @param params          Параметры вызова.
-   * @return Range
+   * @return {@link Either3} с {@link PrepareRenameDefaultBehavior} (если клиент умеет поведение по
+   *         умолчанию) либо {@link PrepareRenameResult} (диапазон и имя символа) при возможности
+   *         переименования, либо {@link Either3} без значения, если символ переименовать нельзя.
    */
-  public @Nullable Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
+  public Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> getPrepareRename(
+    DocumentContext documentContext,
+    TextDocumentPositionParams params
+  ) {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
       .filter(RenameProvider::isRenameable)
-      .map(Reference::selectionRange)
-      .orElse(null);
+      .map(this::toPrepareRenameResponse)
+      .orElseGet(RenameProvider::rejectPrepareRename);
+  }
+
+  private Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> toPrepareRenameResponse(
+    Reference reference
+  ) {
+    if (prepareSupportDefaultBehavior) {
+      return Either3.forThird(new PrepareRenameDefaultBehavior(true));
+    }
+    return reference.getSourceDefinedSymbol()
+      .<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>>map(symbol ->
+        Either3.forSecond(new PrepareRenameResult(reference.selectionRange(), symbol.getName())))
+      .orElseGet(RenameProvider::rejectPrepareRename);
+  }
+
+  private static Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> rejectPrepareRename() {
+    // Отказ от переименования: ответ без значимого диапазона. Сохраняем прежнее поведение,
+    // при котором сервис отдавал Either3.forFirst поверх отсутствующего диапазона.
+    @Nullable
+    Range noRange = null;
+    return Either3.forFirst(noRange);
   }
 
   /**
@@ -156,22 +228,10 @@ public final class RenameProvider {
   }
 
   private void checkNewName(@Nullable String newName) {
-    if (!isValidIdentifier(newName)) {
+    if (!newNameValidator.isValidIdentifier(newName)) {
       var message = resources.getResourceString(getClass(), "invalidNewName", newName);
       throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
     }
-  }
-
-  private static boolean isValidIdentifier(@Nullable String newName) {
-    if (newName == null || newName.isEmpty()) {
-      return false;
-    }
-
-    var tokens = new BSLTokenizer(newName).getTokens();
-
-    return tokens.size() == 2
-      && tokens.get(0).getType() == BSLLexer.IDENTIFIER
-      && newName.equals(tokens.get(0).getText());
   }
 
 }
