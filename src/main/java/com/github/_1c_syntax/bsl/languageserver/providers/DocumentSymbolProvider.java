@@ -22,12 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
@@ -74,7 +76,7 @@ public final class DocumentSymbolProvider {
   private static DocumentSymbol toDocumentSymbol(SourceDefinedSymbol symbol) {
     var documentSymbol = new DocumentSymbol(
       symbol.getName(),
-      symbol.getSymbolKind(),
+      symbolKind(symbol),
       symbol.getRange(),
       symbol.getSelectionRange()
     );
@@ -113,5 +115,39 @@ public final class DocumentSymbolProvider {
       return supportedVariableKinds.contains(((VariableSymbol) symbol).getKind());
     }
     return true;
+  }
+
+  /**
+   * Определить вид символа для ответа на запрос структуры документа.
+   * <p>
+   * Метод модуля без состояния (модуль OneScript либо общий модуль BSL) отдаётся как
+   * {@link SymbolKind#Function}: его методы — самостоятельные функции, а не члены объекта.
+   * Методы модулей со состоянием (объект, менеджер, форма и т. п.) остаются
+   * {@link SymbolKind#Method}, конструкторы и все прочие символы — без изменений.
+   *
+   * @param symbol символ структуры документа
+   * @return вид символа: {@link SymbolKind#Function} для методов модулей без состояния,
+   *   иначе исходный {@link Symbol#getSymbolKind()}
+   */
+  private static SymbolKind symbolKind(SourceDefinedSymbol symbol) {
+    var symbolKind = symbol.getSymbolKind();
+    if (symbolKind == SymbolKind.Method && isStatelessModule(symbol.getOwner())) {
+      return SymbolKind.Function;
+    }
+    return symbolKind;
+  }
+
+  /**
+   * Проверить, что модуль не хранит состояние: модуль OneScript либо общий модуль BSL.
+   * <p>
+   * Методы таких модулей — самостоятельные функции, а не члены объекта со состоянием,
+   * поэтому отображаются как {@link SymbolKind#Function}.
+   *
+   * @param documentContext контекст документа модуля
+   * @return {@code true}, если модуль не хранит состояние
+   */
+  private static boolean isStatelessModule(DocumentContext documentContext) {
+    return documentContext.getFileType() == FileType.OS
+      || documentContext.getModuleType() == ModuleType.CommonModule;
   }
 }

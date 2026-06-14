@@ -21,22 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-class DocumentSymbolProviderTest {
+class DocumentSymbolProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private DocumentSymbolProvider documentSymbolProvider;
@@ -113,6 +114,79 @@ class DocumentSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
       .hasSize(1)
       .allMatch(documentSymbol -> documentSymbol.getDetail().equals("()"));
+  }
+
+  /**
+   * Методы общего модуля (BSL) — это функции без состояния, не члены объекта,
+   * поэтому в структуре документа они отдаются как {@link SymbolKind#Function}.
+   */
+  @Test
+  void testCommonModuleMethodsReportedAsFunction() {
+    // given — общий модуль конфигурации (модуль без состояния)
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
+    context.getConfiguration();
+    var documentContext = context
+      .getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
+      .orElseThrow();
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then — все методы общего модуля отдаются как Function, ни один не остаётся Method
+    var allSymbols = flatten(documentSymbols);
+    assertThat(allSymbols)
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("НеУстаревшаяПроцедура")
+        && documentSymbol.getKind() == SymbolKind.Function)
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("НеУстаревшаяФункция")
+        && documentSymbol.getKind() == SymbolKind.Function)
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method);
+  }
+
+  /**
+   * Методы модуля объекта (BSL) — члены объекта со состоянием,
+   * поэтому в структуре документа они остаются {@link SymbolKind#Method}.
+   */
+  @Test
+  void testObjectModuleMethodsStayMethod() {
+    // given — модуль объекта справочника (модуль со состоянием)
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
+    context.getConfiguration();
+    var documentContext = context
+      .getDocument("Catalog.Справочник1", ModuleType.ObjectModule)
+      .orElseThrow();
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then — метод модуля объекта остаётся Method, не превращается в Function
+    var allSymbols = flatten(documentSymbols);
+    assertThat(allSymbols)
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("Тест")
+        && documentSymbol.getKind() == SymbolKind.Method)
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Function);
+  }
+
+  /**
+   * Методы модуля OneScript — функции без состояния,
+   * поэтому в структуре документа они отдаются как {@link SymbolKind#Function}.
+   */
+  @Test
+  void testOneScriptModuleMethodsReportedAsFunction() {
+    // given — модуль OneScript (.os, модуль без состояния)
+    var documentContext = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      """
+        Процедура Тест() Экспорт
+        КонецПроцедуры""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then — метод модуля OneScript отдаётся как Function
+    assertThat(flatten(documentSymbols))
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("Тест")
+        && documentSymbol.getKind() == SymbolKind.Function)
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method);
   }
 
   /**
