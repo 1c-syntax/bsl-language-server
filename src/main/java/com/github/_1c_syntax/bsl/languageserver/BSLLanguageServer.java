@@ -67,6 +67,7 @@ import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.Registration;
 import org.eclipse.lsp4j.RegistrationParams;
+import org.eclipse.lsp4j.RelativePattern;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
@@ -117,6 +118,13 @@ import java.util.concurrent.ExecutorService;
 @Component
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
+
+  /**
+   * Glob-шаблоны файлов рабочей области, за изменениями которых наблюдает клиент.
+   * Относительны корню workspace folder (используются как с глобальным glob,
+   * так и в составе {@link RelativePattern}).
+   */
+  private static final List<String> WATCHED_FILE_PATTERNS = List.of("**/*.bsl", "**/*.os");
 
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
@@ -246,6 +254,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * {@code **&#47;*.bsl} и {@code **&#47;*.os}; за конфигурационным файлом следит сам сервер
    * (см. {@code ConfigurationFileSystemWatcher}), поэтому клиентский наблюдатель за ним не нужен.
    * <p>
+   * Если клиент заявил поддержку
+   * {@code workspace.didChangeWatchedFiles.relativePatternSupport}, наблюдатели регистрируются
+   * через {@link RelativePattern} с привязкой к корню каждой workspace folder — это сужает
+   * область наблюдения до конкретных папок и исключает лишние срабатывания между корнями.
+   * Иначе используется один глобальный glob-шаблон (поведение по умолчанию), что сохраняет
+   * совместимость с клиентами без поддержки относительных шаблонов.
+   * <p>
    * Если клиент не заявил динамическую регистрацию или не подключён, метод ничего не делает.
    */
   private void registerFileWatchers() {
@@ -255,10 +270,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     languageClientHolder.execIfConnected(client -> {
       var watchKind = WatchKind.Create | WatchKind.Change | WatchKind.Delete;
-      var watchers = List.of(
-        new FileSystemWatcher(Either.forLeft("**/*.bsl"), watchKind),
-        new FileSystemWatcher(Either.forLeft("**/*.os"), watchKind)
-      );
+      var watchers = buildFileSystemWatchers(watchKind);
 
       var registrationOptions = new DidChangeWatchedFilesRegistrationOptions(watchers);
       var registration = new Registration(
@@ -271,11 +283,49 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     });
   }
 
+  /**
+   * Строит список наблюдателей за файлами рабочей области.
+   * <p>
+   * Если клиент поддерживает относительные шаблоны и серверу известны корни workspace folder,
+   * для каждой пары «корень × шаблон» создаётся отдельный наблюдатель с {@link RelativePattern}.
+   * Иначе для каждого шаблона создаётся один наблюдатель с глобальным glob-шаблоном.
+   *
+   * @param watchKind битовая маска отслеживаемых событий
+   *                  ({@link WatchKind#Create}, {@link WatchKind#Change}, {@link WatchKind#Delete})
+   * @return список наблюдателей за файлами для регистрации у клиента
+   */
+  private List<FileSystemWatcher> buildFileSystemWatchers(int watchKind) {
+    var workspaceRoots = serverContextProvider.getAllContexts().keySet();
+
+    if (!hasDidChangeWatchedFilesRelativePatternSupport() || workspaceRoots.isEmpty()) {
+      return WATCHED_FILE_PATTERNS.stream()
+        .map(pattern -> new FileSystemWatcher(Either.<String, RelativePattern>forLeft(pattern), watchKind))
+        .toList();
+    }
+
+    return workspaceRoots.stream()
+      .flatMap(root -> WATCHED_FILE_PATTERNS.stream()
+        .map(pattern -> {
+          var baseUri = Either.<WorkspaceFolder, String>forRight(root.toString());
+          var relativePattern = new RelativePattern(baseUri, pattern);
+          return new FileSystemWatcher(Either.<String, RelativePattern>forRight(relativePattern), watchKind);
+        }))
+      .toList();
+  }
+
   private boolean hasDidChangeWatchedFilesDynamicRegistration() {
     return clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)
       .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles)
       .map(DidChangeWatchedFilesCapabilities::getDynamicRegistration)
+      .orElse(false);
+  }
+
+  private boolean hasDidChangeWatchedFilesRelativePatternSupport() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getDidChangeWatchedFiles)
+      .map(DidChangeWatchedFilesCapabilities::getRelativePatternSupport)
       .orElse(false);
   }
 

@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.RegistrationParams;
+import org.eclipse.lsp4j.RelativePattern;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -60,6 +61,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -221,6 +223,96 @@ class BSLLanguageServerTest {
 
     var options = (DidChangeWatchedFilesRegistrationOptions) registration.getRegisterOptions();
     assertThat(options.getWatchers())
+      .extracting(FileSystemWatcher::getGlobPattern)
+      .extracting(globPattern -> globPattern.getLeft())
+      .containsExactlyInAnyOrder("**/*.bsl", "**/*.os");
+  }
+
+  @Test
+  void initializedRegistersRelativePatternWatchersPerWorkspaceFolder(@TempDir Path firstRoot, @TempDir Path secondRoot) {
+    // given
+    var client = mock(LanguageClient.class);
+    when(client.registerCapability(any()))
+      .thenReturn(CompletableFuture.completedFuture(null));
+    languageClientHolder.connect(client);
+
+    var firstFolderUri = Absolute.uri(firstRoot.toUri()).toString();
+    var secondFolderUri = Absolute.uri(secondRoot.toUri()).toString();
+
+    var initParams = new InitializeParams();
+    initParams.setWorkspaceFolders(List.of(
+      new WorkspaceFolder(firstFolderUri, "first"),
+      new WorkspaceFolder(secondFolderUri, "second")
+    ));
+
+    var capabilities = new ClientCapabilities();
+    var workspace = new WorkspaceClientCapabilities();
+    var watchedFiles = new DidChangeWatchedFilesCapabilities(true);
+    watchedFiles.setRelativePatternSupport(true);
+    workspace.setDidChangeWatchedFiles(watchedFiles);
+    capabilities.setWorkspace(workspace);
+    initParams.setCapabilities(capabilities);
+
+    server.initialize(initParams);
+
+    // when
+    server.initialized(new InitializedParams());
+
+    // then
+    var captor = ArgumentCaptor.forClass(RegistrationParams.class);
+    verify(client).registerCapability(captor.capture());
+
+    var registrations = captor.getValue().getRegistrations();
+    assertThat(registrations).hasSize(1);
+
+    var options = (DidChangeWatchedFilesRegistrationOptions) registrations.get(0).getRegisterOptions();
+    assertThat(options.getWatchers())
+      .allSatisfy(watcher -> assertThat(watcher.getGlobPattern().isRight()).isTrue())
+      .extracting(FileSystemWatcher::getGlobPattern)
+      .extracting(globPattern -> {
+        RelativePattern relativePattern = globPattern.getRight();
+        return tuple(relativePattern.getBaseUri().getRight(), relativePattern.getPattern());
+      })
+      .containsExactlyInAnyOrder(
+        tuple(firstFolderUri, "**/*.bsl"),
+        tuple(firstFolderUri, "**/*.os"),
+        tuple(secondFolderUri, "**/*.bsl"),
+        tuple(secondFolderUri, "**/*.os")
+      );
+  }
+
+  @Test
+  void initializedFallsBackToGlobalGlobWithoutRelativePatternSupport() {
+    // given
+    var client = mock(LanguageClient.class);
+    when(client.registerCapability(any()))
+      .thenReturn(CompletableFuture.completedFuture(null));
+    languageClientHolder.connect(client);
+
+    var initParams = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    initParams.setWorkspaceFolders(List.of(workspaceFolder));
+
+    var capabilities = new ClientCapabilities();
+    var workspace = new WorkspaceClientCapabilities();
+    // dynamicRegistration declared, but relativePatternSupport is absent
+    workspace.setDidChangeWatchedFiles(new DidChangeWatchedFilesCapabilities(true));
+    capabilities.setWorkspace(workspace);
+    initParams.setCapabilities(capabilities);
+
+    server.initialize(initParams);
+
+    // when
+    server.initialized(new InitializedParams());
+
+    // then
+    var captor = ArgumentCaptor.forClass(RegistrationParams.class);
+    verify(client).registerCapability(captor.capture());
+
+    var options = (DidChangeWatchedFilesRegistrationOptions)
+      captor.getValue().getRegistrations().get(0).getRegisterOptions();
+    assertThat(options.getWatchers())
+      .allSatisfy(watcher -> assertThat(watcher.getGlobPattern().isLeft()).isTrue())
       .extracting(FileSystemWatcher::getGlobPattern)
       .extracting(globPattern -> globPattern.getLeft())
       .containsExactlyInAnyOrder("**/*.bsl", "**/*.os");
