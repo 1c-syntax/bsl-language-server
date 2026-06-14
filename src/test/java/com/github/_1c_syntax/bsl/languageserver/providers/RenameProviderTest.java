@@ -78,6 +78,10 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
   @BeforeEach
   void prepareServerContext() {
     initServerContextOnce(Path.of(PATH_TO_METADATA));
+    // Сбрасываем кэш prepareSupportDefaultBehavior в провайдере (spy-бин общий между тестами),
+    // чтобы по умолчанию ответ prepareRename содержал явный PrepareRenameResult.
+    setClientRenamePrepareSupportDefaultBehavior(false);
+    renameProvider.handleInitializeEvent();
     // По умолчанию клиент не заявляет documentChanges, поэтому существующие тесты получают
     // legacy changes-map; отдельные тесты включают documentChanges и аннотации правок.
     setClientWorkspaceEditCapabilities(false, false);
@@ -422,27 +426,66 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void testPrepareSupportDefaultBehaviorCachedWhenDeclared() {
+  void testPrepareRenameReturnsDefaultBehaviorWhenClientSupportsIt() {
     // given
+    // клиент заявил prepareSupportDefaultBehavior, курсор на переименовываемом методе
     setClientRenamePrepareSupportDefaultBehavior(true);
+    renameProvider.handleInitializeEvent();
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(0, 14));
 
     // when
-    renameProvider.handleInitializeEvent();
+    var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(renameProvider.isPrepareSupportDefaultBehavior()).isTrue();
+    // сервер отдаёт компактный ответ-«поведение по умолчанию», клиент сам выделит идентификатор
+    assertThat(result.isThird()).isTrue();
+    assertThat(result.getThird().isDefaultBehavior()).isTrue();
   }
 
   @Test
-  void testPrepareSupportDefaultBehaviorCachedWhenAbsent() {
+  void testPrepareRenameReturnsPlaceholderWhenClientLacksDefaultBehavior() {
     // given
+    // клиент не заявил prepareSupportDefaultBehavior, курсор на переименовываемом методе
     setClientRenamePrepareSupportDefaultBehavior(false);
+    renameProvider.handleInitializeEvent();
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(0, 14));
 
     // when
-    renameProvider.handleInitializeEvent();
+    var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(renameProvider.isPrepareSupportDefaultBehavior()).isFalse();
+    // для старого клиента сервер сам формирует диапазон и placeholder
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 8, 18));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("ИмяФункции");
+  }
+
+  @Test
+  void testPrepareRenameRejectsNonRenameableWhenClientSupportsDefaultBehavior() {
+    // given
+    // клиент заявил prepareSupportDefaultBehavior, курсор на имени общего модуля (не переименовываем)
+    setClientRenamePrepareSupportDefaultBehavior(true);
+    renameProvider.handleInitializeEvent();
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+
+    var params = new PrepareRenameParams();
+    params.setPosition(new Position(1, 5));
+
+    // when
+    var result = renameProvider.getPrepareRename(documentContext, params);
+
+    // then
+    // проверка переименовываемости выполняется на сервере независимо от возможностей клиента
+    assertThat(result.isThird()).isFalse();
+    assertThat(result.isSecond()).isFalse();
+    assertThat(result.getFirst()).isNull();
   }
 
   /**

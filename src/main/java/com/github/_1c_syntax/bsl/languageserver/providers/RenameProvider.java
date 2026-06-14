@@ -56,7 +56,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -80,18 +79,18 @@ public final class RenameProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   // Кэшируется на initialize. Признак поддержки клиентом
-  // textDocument.rename.prepareSupportDefaultBehavior: клиент способен откатиться к поведению
-  // по умолчанию (выделение идентификатора под курсором), если сервер на prepareRename вернёт
-  // PrepareRenameDefaultBehavior вместо явного диапазона. Сервер всегда возвращает явный
-  // PrepareRenameResult с placeholder, поэтому флаг кэшируется для совместимости и не меняет
-  // ответ — клиенты с этой возможностью получают тот же корректный результат.
+  // textDocument.rename.prepareSupportDefaultBehavior: клиент способен сам вычислить диапазон
+  // переименования (идентификатор под курсором) и использовать его как placeholder, если сервер
+  // на prepareRename вернёт PrepareRenameDefaultBehavior вместо явного PrepareRenameResult.
+  // Для таких клиентов сервер отдаёт компактный ответ-«поведение по умолчанию», иначе —
+  // явный PrepareRenameResult с диапазоном и placeholder (для старых клиентов).
   private boolean prepareSupportDefaultBehavior;
 
   /**
    * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
    * <p>
    * Кэширует клиентскую возможность {@code textDocument.rename.prepareSupportDefaultBehavior},
-   * сообщающую, что клиент умеет откатываться к поведению переименования по умолчанию. Чтение
+   * сообщающую, что клиент умеет вычислять поведение переименования по умолчанию. Чтение
    * выполняется один раз на инициализацию, чтобы не обращаться к возможностям клиента на каждый
    * запрос {@code textDocument/prepareRename}.
    */
@@ -102,21 +101,6 @@ public final class RenameProvider {
       .map(TextDocumentClientCapabilities::getRename)
       .map(RenameCapabilities::getPrepareSupportDefaultBehavior)
       .isPresent();
-  }
-
-  /**
-   * Сообщает, заявил ли подключённый клиент возможность
-   * {@code textDocument.rename.prepareSupportDefaultBehavior}, то есть умеет ли он откатываться
-   * к поведению переименования по умолчанию.
-   * <p>
-   * Значение кэшируется на этапе инициализации сервера (см. {@link #handleInitializeEvent()}).
-   * Сервер всегда возвращает явный {@link PrepareRenameResult} с диапазоном и {@code placeholder},
-   * поэтому данный признак не меняет формат ответа и служит для совместимости и диагностики.
-   *
-   * @return {@code true}, если клиент заявил поддержку отката к поведению по умолчанию.
-   */
-  public boolean isPrepareSupportDefaultBehavior() {
-    return prepareSupportDefaultBehavior;
   }
 
   /**
@@ -171,20 +155,31 @@ public final class RenameProvider {
    * Подготовить переименование символа под курсором для ответа на {@code textDocument/prepareRename}.
    * <p>
    * Резолвит ссылку под курсором и, если соответствующий символ можно переименовать текстовой
-   * правкой (см. {@link #isRenameable(Reference)}), возвращает {@link Either3} c
-   * {@link PrepareRenameResult}, содержащим диапазон выделения ссылки ({@code range}) и текущее имя
-   * символа ({@code placeholder}). Имя в {@code placeholder} позволяет клиенту предзаполнить поле
-   * ввода реальным идентификатором, а не произвольным текстом под курсором. Если символ не
-   * переименовываем или ссылка не резолвится, возвращается {@link Either3} без значения (отказ),
-   * и клиент отклоняет подготовку переименования.
+   * правкой (см. {@link #isRenameable(Reference)}), формирует ответ в зависимости от заявленных
+   * клиентом возможностей:
+   * <ul>
+   *   <li>если клиент заявил {@code textDocument.rename.prepareSupportDefaultBehavior}
+   *   (см. {@link #handleInitializeEvent()}), возвращается {@link PrepareRenameDefaultBehavior}
+   *   с {@code defaultBehavior == true} — серверу не нужно вычислять диапазон, клиент сам выделит
+   *   идентификатор под курсором и использует его как {@code placeholder}; для идентификатора BSL
+   *   или OneScript под курсором это совпадает с именем символа, поэтому UX идентичен, а ответ
+   *   сервера компактен;</li>
+   *   <li>иначе возвращается явный {@link PrepareRenameResult} с диапазоном выделения ссылки
+   *   ({@code range}) и текущим именем символа ({@code placeholder}) — для клиентов, не умеющих
+   *   откатываться к поведению по умолчанию.</li>
+   * </ul>
+   * Если символ не переименовываем или ссылка не резолвится, возвращается {@link Either3} без
+   * значения (отказ) в обоих режимах, и клиент отклоняет подготовку переименования. Проверка
+   * переименовываемости выполняется на сервере независимо от возможностей клиента.
    * <p>
    * Формирование итоговой формы ответа (в том числе случай отказа) выполняется здесь, чтобы
    * сервисный слой оставался тонким делегатом.
    *
    * @param documentContext Контекст документа.
    * @param params          Параметры вызова.
-   * @return {@link Either3} с {@link PrepareRenameResult} (диапазон и имя символа) при возможности
-   *         переименования либо {@link Either3} без значения, если символ переименовать нельзя.
+   * @return {@link Either3} с {@link PrepareRenameDefaultBehavior} (если клиент умеет поведение по
+   *         умолчанию) либо {@link PrepareRenameResult} (диапазон и имя символа) при возможности
+   *         переименования, либо {@link Either3} без значения, если символ переименовать нельзя.
    */
   public Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> getPrepareRename(
     DocumentContext documentContext,
@@ -193,8 +188,19 @@ public final class RenameProvider {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
       .filter(RenameProvider::isRenameable)
-      .flatMap(RenameProvider::toPrepareRenameResult)
-      .<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>>map(Either3::forSecond)
+      .map(this::toPrepareRenameResponse)
+      .orElseGet(RenameProvider::rejectPrepareRename);
+  }
+
+  private Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> toPrepareRenameResponse(
+    Reference reference
+  ) {
+    if (prepareSupportDefaultBehavior) {
+      return Either3.forThird(new PrepareRenameDefaultBehavior(true));
+    }
+    return reference.getSourceDefinedSymbol()
+      .<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>>map(symbol ->
+        Either3.forSecond(new PrepareRenameResult(reference.selectionRange(), symbol.getName())))
       .orElseGet(RenameProvider::rejectPrepareRename);
   }
 
@@ -204,11 +210,6 @@ public final class RenameProvider {
     @Nullable
     Range noRange = null;
     return Either3.forFirst(noRange);
-  }
-
-  private static Optional<PrepareRenameResult> toPrepareRenameResult(Reference reference) {
-    return reference.getSourceDefinedSymbol()
-      .map(symbol -> new PrepareRenameResult(reference.selectionRange(), symbol.getName()));
   }
 
   /**
