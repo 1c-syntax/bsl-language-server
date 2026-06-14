@@ -21,26 +21,38 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Провайдер для поиска символов в рабочей области.
  * <p>
  * Обрабатывает запросы {@code workspace/symbol}, делегируя поиск инкрементальному
- * {@link WorkspaceSymbolIndex}: индекс хранит уже подготовленные записи символов и
- * возвращает полную ранжированную выдачу, поэтому провайдер лишь маппит записи в
- * {@link WorkspaceSymbol} без обхода всех документов.
+ * {@link WorkspaceSymbolIndex}: индекс хранит уже подготовленные записи символов, поэтому провайдер
+ * лишь маппит записи в {@link WorkspaceSymbol} без обхода всех документов.
+ * <p>
+ * Быстрая древесная выдача ({@link WorkspaceSymbolIndex#search(String, CancelChecker)}) отдаётся
+ * мгновенно. Если клиент поддерживает частичные результаты (прислал
+ * {@link WorkspaceSymbolParams#getPartialResultToken()}), нижнеранжированный «грязный» fuzzy-хвост
+ * (подстрока внутри слова и подпоследовательность вразброс,
+ * {@link WorkspaceSymbolIndex#searchFuzzyTail(String, Set, CancelChecker)}) досылается потоково через
+ * {@code $/progress}, а синхронный ответ возвращается ПУСТЫМ, чтобы не дублировать уже отправленные
+ * прогрессом чанки. Без токена ответом служит только древесная выдача — медленный скан НЕ запускается.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_symbol">Workspace Symbols Request specification</a>
  */
@@ -48,29 +60,91 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SymbolProvider {
 
+  /**
+   * Размер чанка fuzzy-хвоста, досылаемого одним уведомлением {@code $/progress}.
+   */
+  private static final int TAIL_BATCH_SIZE = 200;
+
   private final WorkspaceSymbolIndex workspaceSymbolIndex;
+  private final LanguageClientHolder clientHolder;
 
   /**
-   * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} с поддержкой отмены.
+   * Выполняет поиск символов рабочей области по запросу {@code workspace/symbol} с поддержкой отмены
+   * и потоковой выдачи частичных результатов.
    * <p>
-   * Поиск делегируется {@link WorkspaceSymbolIndex#search(String, CancelChecker)}: совпадения
-   * ранжируются по релевантности (точное совпадение, префикс полного имени, префикс начала
-   * CamelCase-слова, многословное camel-hump совпадение), наиболее релевантные символы остаются
-   * сверху, выдача возвращается целиком без усечения. Отмена
-   * проверяется индексом периодически в ходе поиска: если клиент отменил запрос, поиск прерывается
-   * исключением {@link java.util.concurrent.CancellationException}.
+   * Сначала из {@link WorkspaceSymbolIndex#search(String, CancelChecker)} берётся быстрая древесная
+   * выдача (точное совпадение, префикс полного имени, многословное camel-hump совпадение, префикс
+   * начала слова), ранжированная по релевантности. Если клиент НЕ прислал
+   * {@link WorkspaceSymbolParams#getPartialResultToken()}, либо запрос пуст, либо клиент не подключён,
+   * эта выдача возвращается синхронным ответом, а медленный fuzzy-скан не выполняется (поведение без
+   * изменений).
+   * <p>
+   * Если токен есть (и запрос непуст, и клиент подключён), включается потоковая выдача: быстрый чанк
+   * уходит {@code $/progress} ПЕРВЫМ (порядок прибытия чанков сохраняет ранжирование — клиент
+   * дописывает их в порядке прихода и не пересортировывает), затем
+   * {@link WorkspaceSymbolIndex#searchFuzzyTail(String, Set, CancelChecker)} (с быстрой выдачей в
+   * качестве exclude) досылается чанками по {@link #TAIL_BATCH_SIZE}. Синхронный ответ при этом ПУСТ:
+   * клиент конкатенирует прогресс-чанки, и повторная отдача того же набора в ответе привела бы к
+   * дублям. Отмена проверяется индексом периодически и между чанками; при отмене бросается
+   * {@link java.util.concurrent.CancellationException}.
    *
-   * @param params        Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса
+   * @param params        Параметры запроса {@code workspace/symbol}, в т.ч. строка запроса и токен
+   *                      частичного результата
    * @param cancelChecker Проверяющий отмену запроса
-   * @return Полный ранжированный список найденных символов рабочей области
+   * @return Полный список при древесном пути; ПУСТОЙ список при потоковой выдаче (символы ушли в
+   *         {@code $/progress})
    */
   public List<? extends WorkspaceSymbol> getSymbols(WorkspaceSymbolParams params, CancelChecker cancelChecker) {
     var queryString = Optional.ofNullable(params.getQuery())
       .orElse("");
 
-    return workspaceSymbolIndex.search(queryString, cancelChecker).stream()
+    var fast = workspaceSymbolIndex.search(queryString, cancelChecker);
+    var fastSymbols = fast.stream()
       .map(SymbolProvider::createWorkspaceSymbol)
       .toList();
+
+    var token = params.getPartialResultToken();
+    if (token == null || queryString.isEmpty() || !clientHolder.isConnected()) {
+      // Клиент не поддерживает частичные результаты (нет токена), либо пустой запрос/нет клиента:
+      // отдаём только быструю древесную выдачу, медленный fuzzy-скан не запускаем.
+      return fastSymbols;
+    }
+
+    // Быстрый чанк уходит первым: ранг сохраняется порядком прибытия прогресс-чанков.
+    streamChunk(token, fastSymbols);
+
+    Set<Entry> fastSet = Collections.newSetFromMap(new IdentityHashMap<>());
+    fastSet.addAll(fast);
+    var tail = workspaceSymbolIndex.searchFuzzyTail(queryString, fastSet, cancelChecker);
+
+    for (var from = 0; from < tail.size(); from += TAIL_BATCH_SIZE) {
+      cancelChecker.checkCanceled();
+      var batch = tail.subList(from, Math.min(from + TAIL_BATCH_SIZE, tail.size())).stream()
+        .map(SymbolProvider::createWorkspaceSymbol)
+        .toList();
+      streamChunk(token, batch);
+    }
+
+    // Клиент прислал partialResultToken, поэтому конкатенирует чанки $/progress. Повторная отдача
+    // всего набора в синхронном ответе привела бы к дублям, поэтому ответ пуст.
+    return List.of();
+  }
+
+  /**
+   * Отправить чанк символов клиенту как частичный результат через {@code $/progress}.
+   * <p>
+   * Пустые чанки пропускаются. Значением прогресса служит список символов
+   * ({@code Either.forRight(chunk)}); уведомление уходит только подключённому клиенту.
+   *
+   * @param token токен частичного результата из параметров запроса
+   * @param chunk чанк символов рабочей области для отправки
+   */
+  private void streamChunk(Either<String, Integer> token, List<? extends WorkspaceSymbol> chunk) {
+    if (chunk.isEmpty()) {
+      return;
+    }
+    var progressParams = new ProgressParams(token, Either.forRight((Object) chunk));
+    clientHolder.execIfConnected(languageClient -> languageClient.notifyProgress(progressParams));
   }
 
   /**

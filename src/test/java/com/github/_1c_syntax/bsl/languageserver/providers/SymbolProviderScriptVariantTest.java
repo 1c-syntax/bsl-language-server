@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
@@ -91,7 +92,8 @@ class SymbolProviderScriptVariantTest {
     var index = new WorkspaceSymbolIndex();
     index.handleContentChanged(new DocumentContextContentChangedEvent(documentContext));
 
-    var symbolProvider = new SymbolProvider(index);
+    // запрос без partialResultToken: клиент не используется, древесная выдача отдаётся синхронно
+    var symbolProvider = new SymbolProvider(index, mock(LanguageClientHolder.class));
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when

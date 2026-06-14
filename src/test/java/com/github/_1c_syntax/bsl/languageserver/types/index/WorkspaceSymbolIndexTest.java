@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -393,6 +396,108 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThat(result)
       .extracting(Entry::name)
       .contains("Первая", "Вторая", "Третья");
+  }
+
+  @Test
+  void searchFuzzyTailFindsMiddleOfWordSubstringThatTrieMisses() {
+    // given — символ со словом «Документ»; «кумен» — середина слова, не начало
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — trie не находит подстроку в середине слова, fuzzy-хвост находит её
+    var trieResult = index.search("кумен", NO_CANCEL);
+    var fuzzyResult = index.searchFuzzyTail("кумен", emptyExclude(), NO_CANCEL);
+
+    // then — древесный поиск пуст по этому запросу (lock-in сохраняется), fuzzy-хвост возвращает символ
+    assertThat(trieResult)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокумент"));
+    assertThat(fuzzyResult)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокумент"));
+  }
+
+  @Test
+  void searchFuzzyTailRanksSubstringBeforeSubsequence() {
+    // given — для «кумен»: «ПровестиДокумент» содержит непрерывную подстроку «кумен» (До-кумен-т),
+    // а «КрасныйУзелМаленький» совпадает лишь как разбросанная подпоследовательность к-у-м-е-н
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура КрасныйУзелМаленький()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when
+    var fuzzyResult = index.searchFuzzyTail("кумен", emptyExclude(), NO_CANCEL);
+    var names = fuzzyResult.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но подстрочное совпадение идёт раньше подпоследовательностного
+    assertThat(names)
+      .contains("ПровестиДокумент", "КрасныйУзелМаленький")
+      .containsSubsequence("ПровестиДокумент", "КрасныйУзелМаленький");
+  }
+
+  @Test
+  void searchFuzzyTailFindsScatteredSubsequence() {
+    // given — символ, где запрос совпадает лишь как разбросанная подпоследовательность
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокументОтбора()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — «првдкотб»: буквы встречаются по порядку, но не подряд и не с начала слов
+    var trieResult = index.search("првдкотб", NO_CANCEL);
+    var fuzzyResult = index.searchFuzzyTail("првдкотб", emptyExclude(), NO_CANCEL);
+
+    // then — trie не находит, fuzzy-хвост возвращает как подпоследовательность
+    assertThat(trieResult)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+    assertThat(fuzzyResult)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+  }
+
+  @Test
+  void searchFuzzyTailExcludesEntriesFromExcludeSet() {
+    // given — символ, который находится и trie (как начало слова), и fuzzy-хвостом
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — «Документ» trie находит как начало слова; передаём его результат как exclude
+    var trieResult = index.search("Документ", NO_CANCEL);
+    Set<Entry> exclude = Collections.newSetFromMap(new IdentityHashMap<>());
+    exclude.addAll(trieResult);
+    var fuzzyResult = index.searchFuzzyTail("Документ", exclude, NO_CANCEL);
+
+    // then — записи из exclude не возвращаются fuzzy-хвостом (нет дублей с быстрым путём)
+    assertThat(fuzzyResult)
+      .doesNotContainAnyElementsOf(exclude);
+  }
+
+  @Test
+  void searchFuzzyTailEmptyQueryReturnsEmpty() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первая()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — пустой запрос: fuzzy-хвост не нужен (полная выдача — это путь пустого запроса search)
+    var fuzzyResult = index.searchFuzzyTail("", emptyExclude(), NO_CANCEL);
+
+    // then
+    assertThat(fuzzyResult).isEmpty();
+  }
+
+  private static Set<Entry> emptyExclude() {
+    return Collections.newSetFromMap(new IdentityHashMap<>());
   }
 
   @Test

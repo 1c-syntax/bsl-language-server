@@ -89,11 +89,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * слова из середины имени ({@link #SCORE_WORD_PREFIX}) → многословное совпадение не по порядку
  * ({@link #SCORE_MULTI_WORD_UNORDERED}).
  * <p>
- * Поиск идёт ИСКЛЮЧИТЕЛЬНО по дереву — линейного скана по всем записям нет ни в одном пути поиска.
- * Произвольная подстрока ВНУТРИ слова (не с его начала) и подпоследовательность вразброс намеренно
- * НЕ поддерживаются: запрос находит запись только как префикс полного имени, как префикс начала
- * любого CamelCase-слова или как многословное пересечение по фрагментам. Полное совпадение имени —
- * максимальный ранг, совпадения по подсловам — ранг ниже.
+ * Быстрый путь {@link #search(String, CancelChecker)} идёт ИСКЛЮЧИТЕЛЬНО по дереву — линейного скана
+ * по всем записям в нём нет ни в одном пути. Произвольная подстрока ВНУТРИ слова (не с его начала) и
+ * подпоследовательность вразброс в {@code search} НЕ участвуют: запрос находит запись только как
+ * префикс полного имени, как префикс начала любого CamelCase-слова или как многословное пересечение
+ * по фрагментам. Полное совпадение имени — максимальный ранг, совпадения по подсловам — ранг ниже.
+ * <p>
+ * «Грязный» fuzzy-хвост (непрерывная подстрока внутри слова и разбросанная подпоследовательность)
+ * вынесен в ОТДЕЛЬНЫЙ метод {@link #searchFuzzyTail(String, Set, CancelChecker)}. Это медленный
+ * линейный путь по снимку уникальных записей, предназначенный для потоковой дослыки
+ * нижнеранжированных результатов через partial result progress; в синхронный ответ {@code search}
+ * он НЕ входит.
  * <p>
  * Индекс наследует {@link AbstractDocumentLifecycleClearableIndex}: его {@code @EventListener}'ы
  * сбрасывают записи документа на изменение содержимого, освобождение данных, закрытие и удаление.
@@ -145,6 +151,21 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * совпадают со словами не по порядку). Например, запрос {@code ПрДок} для {@code ДокументПровести}.
    */
   private static final int SCORE_MULTI_WORD_UNORDERED = 4;
+
+  /**
+   * Скор совпадения запроса как непрерывной подстроки имени (но не префикса слова). Относится к
+   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Set, CancelChecker)}), а не к древесному
+   * {@link #search(String, CancelChecker)}.
+   */
+  private static final int SCORE_SUBSTRING = 5;
+
+  /**
+   * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
+   * позиция первого совпавшего символа (более ранняя позиция — релевантнее). Относится к
+   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Set, CancelChecker)}), а не к древесному
+   * {@link #search(String, CancelChecker)}.
+   */
+  private static final int SCORE_SUBSEQUENCE = 6;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -260,8 +281,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Поиск идёт ИСКЛЮЧИТЕЛЬНО по дереву через {@link PatriciaTrie#prefixMap(Object)}, без линейного
    * скана записей: сублинейно обслуживаются и префикс полного имени, и префикс начала любого слова
    * (записи проиндексированы под суффиксами от начала каждого слова), а многословный (≥2
-   * CamelCase-фрагмента) запрос — сублинейным пересечением множеств записей по фрагментам.
-   * Произвольная подстрока внутри слова и подпоследовательность вразброс намеренно НЕ поддерживаются.
+   * CamelCase-фрагмента) запрос — сублинейным пересечением множеств записей по фрагментам. Это быстрый
+   * путь. Произвольная подстрока внутри слова и подпоследовательность вразброс сюда НЕ входят: они
+   * доступны отдельно через {@link #searchFuzzyTail(String, Set, CancelChecker)} для потоковой выдачи
+   * через partial result progress и в синхронный ответ {@code search} не попадают.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
@@ -322,6 +345,120 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
     matches.sort(Comparator.naturalOrder());
     return matches.stream().map(Scored::entry).toList();
+  }
+
+  /**
+   * Найти «грязный» fuzzy-хвост выдачи: совпадения по непрерывной подстроке ВНУТРИ слова и по
+   * разбросанной подпоследовательности, которых нет в древесном {@link #search(String, CancelChecker)}.
+   * <p>
+   * Метод намеренно отделён от {@code search}: это медленный линейный путь, предназначенный для
+   * потоковой дослыки нижнеранжированных результатов через partial result progress, а не для
+   * синхронного ответа. Возвращаются только записи, которых НЕТ в {@code exclude} (сравнение по
+   * идентичности), отсортированные тем же {@link Scored}-порядком: подстрочные
+   * ({@link #SCORE_SUBSTRING}) выше подпоследовательностных ({@link #SCORE_SUBSEQUENCE}{@code  + позиция}),
+   * при равном скоре раньше более короткое имя, затем более ранняя позиция. Пустой запрос даёт пустой
+   * список (полная выдача — это путь пустого запроса {@code search}, fuzzy там не нужен).
+   * <p>
+   * Потокобезопасность: под read-lock снимается СНИМОК уникальных записей ({@link #indexedByUri}),
+   * затем блокировка отпускается, и скоринг/фильтрация идут вне блокировки (записи {@link Entry}
+   * неизменяемы). Отмена проверяется периодически в ходе скана; при отмене бросается
+   * {@link java.util.concurrent.CancellationException}.
+   *
+   * @param query         строка запроса пользователя; пустая строка даёт пустой результат
+   * @param exclude       записи, уже отданные быстрым путём, исключаемые из хвоста (по идентичности)
+   * @param cancelChecker проверяющий отмену запроса
+   * @return ранжированный список fuzzy-совпадений, не пересекающийся с {@code exclude}
+   */
+  public List<Entry> searchFuzzyTail(String query, Set<Entry> exclude, CancelChecker cancelChecker) {
+    cancelChecker.checkCanceled();
+
+    var lowerQuery = query.toLowerCase(Locale.ENGLISH);
+    if (lowerQuery.isEmpty()) {
+      return List.of();
+    }
+
+    var snapshot = snapshotEntries();
+
+    var progress = new ScanProgress(cancelChecker);
+    var matches = new ArrayList<Scored>();
+    for (var entry : snapshot) {
+      progress.advance();
+      if (exclude.contains(entry)) {
+        continue;
+      }
+      var fuzzyScore = fuzzyScore(entry.lowerName(), lowerQuery);
+      if (fuzzyScore < 0) {
+        continue;
+      }
+      matches.add(new Scored(fuzzyScore, entry));
+    }
+    matches.sort(Comparator.naturalOrder());
+    return matches.stream().map(Scored::entry).toList();
+  }
+
+  /**
+   * Снять под read-lock снимок всех уникальных записей индекса, чтобы дальнейший скан шёл вне
+   * блокировки.
+   * <p>
+   * Записи {@link Entry} неизменяемы, поэтому скоринг по снимку после отпускания блокировки
+   * безопасен и не держит read-lock на всё время медленного линейного прохода.
+   *
+   * @return новый список всех уникальных записей индекса на момент вызова
+   */
+  private List<Entry> snapshotEntries() {
+    lock.readLock().lock();
+    try {
+      var snapshot = new ArrayList<Entry>();
+      for (var entries : indexedByUri.values()) {
+        snapshot.addAll(entries);
+      }
+      return snapshot;
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
+  /**
+   * Вычислить скор «не-префиксного» fuzzy-совпадения lowercase-имени с lowercase-запросом.
+   * <p>
+   * Меньшее значение — релевантнее: {@link #SCORE_SUBSTRING} — непрерывная подстрока,
+   * {@link #SCORE_SUBSEQUENCE}{@code  + позиция первого совпавшего символа} — подпоследовательность.
+   *
+   * @param lowerName  lowercase-имя символа
+   * @param lowerQuery lowercase-запрос (непустой)
+   * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если совпадения нет
+   */
+  private static int fuzzyScore(String lowerName, String lowerQuery) {
+    if (lowerName.contains(lowerQuery)) {
+      return SCORE_SUBSTRING;
+    }
+    var firstMatch = subsequenceFirstIndex(lowerName, lowerQuery);
+    if (firstMatch >= 0) {
+      return SCORE_SUBSEQUENCE + firstMatch;
+    }
+    return -1;
+  }
+
+  /**
+   * Проверить, что {@code lowerQuery} — подпоследовательность {@code lowerName}, и вернуть индекс
+   * символа имени, на котором совпал первый символ запроса.
+   *
+   * @param lowerName  lowercase-имя символа
+   * @param lowerQuery lowercase-запрос (непустой)
+   * @return индекс первого совпавшего символа, либо {@code -1}, если не подпоследовательность
+   */
+  private static int subsequenceFirstIndex(String lowerName, String lowerQuery) {
+    var firstMatch = -1;
+    var queryIndex = 0;
+    for (var nameIndex = 0; nameIndex < lowerName.length() && queryIndex < lowerQuery.length(); nameIndex++) {
+      if (lowerName.charAt(nameIndex) == lowerQuery.charAt(queryIndex)) {
+        if (queryIndex == 0) {
+          firstMatch = nameIndex;
+        }
+        queryIndex++;
+      }
+    }
+    return queryIndex == lowerQuery.length() ? firstMatch : -1;
   }
 
   /**
