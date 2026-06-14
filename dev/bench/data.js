@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781437358128,
+  "lastUpdate": 1781453705807,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37231,6 +37231,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.28339020846798",
             "extra": "mean: 283.7115403016408 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ea917c399554ac8cbb3e7057913194f6118782d",
+          "message": "Merge pull request #4099 from 1c-syntax/claude/rename-documentchanges\n\nfeat(RenameProvider): WorkspaceEdit на documentChanges и ChangeAnnotation",
+          "timestamp": "2026-06-13T18:11:57+02:00",
+          "tree_id": "4391a59154af566ea43a137cfe1d2d29fac1b570",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8ea917c399554ac8cbb3e7057913194f6118782d"
+        },
+        "date": 1781453697684,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 292.8885935942332,
+            "unit": "sec",
+            "range": "stddev: 14.091932949641098",
+            "extra": "mean: 292.8885935942332 sec\nrounds: 3"
           }
         ]
       }
