@@ -30,9 +30,11 @@ import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.DidChangeWatchedFilesCapabilities;
 import org.eclipse.lsp4j.DidChangeWatchedFilesRegistrationOptions;
 import org.eclipse.lsp4j.FileSystemWatcher;
+import org.eclipse.lsp4j.GeneralClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
+import org.eclipse.lsp4j.PositionEncodingKind;
 import org.eclipse.lsp4j.RegistrationParams;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -145,6 +147,45 @@ class BSLLanguageServerTest {
     } finally {
       globalConfiguration.reset();
     }
+  }
+
+  @Test
+  void initializeDeclaresUtf16PositionEncoding() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    params.setWorkspaceFolders(List.of(workspaceFolder));
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getPositionEncoding())
+      .isEqualTo(PositionEncodingKind.UTF16);
+  }
+
+  @Test
+  void initializeDeclaresUtf16PositionEncodingWhenClientNegotiatesIt()
+    throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    params.setWorkspaceFolders(List.of(workspaceFolder));
+
+    var clientCapabilities = new ClientCapabilities();
+    var general = new GeneralClientCapabilities();
+    general.setPositionEncodings(List.of(PositionEncodingKind.UTF16));
+    clientCapabilities.setGeneral(general);
+    params.setCapabilities(clientCapabilities);
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getPositionEncoding())
+      .isEqualTo(PositionEncodingKind.UTF16);
   }
 
   @Test

@@ -64,6 +64,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.InlayHintRegistrationOptions;
+import org.eclipse.lsp4j.PositionEncodingKind;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.Registration;
 import org.eclipse.lsp4j.RegistrationParams;
@@ -141,6 +142,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     setConfigurationRoot(params);
 
     var capabilities = new ServerCapabilities();
+    // Сервер работает только с UTF-16 (кодировка позиций по умолчанию в LSP).
+    // Явно объявляем её в ответе на initialize: по спецификации LSP 3.17 сервер выбирает
+    // одну из поддерживаемых клиентом кодировок (general.positionEncodings) и эхоит её здесь.
+    // Поддерживается только UTF-16, поэтому всегда декларируем именно её.
+    capabilities.setPositionEncoding(PositionEncodingKind.UTF16);
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
     capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
