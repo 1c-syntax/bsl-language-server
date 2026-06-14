@@ -74,6 +74,46 @@ class LinkedEditingRangeProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void testLocalVariableWhenCaretRightAfterIdentifier() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    // курсор сразу ПОСЛЕ объявления локальной переменной "ЛокальнаяПеременная" (на её конце),
+    // воспроизводит дребезг VS Code при наборе символов во время переименования
+    var params = new LinkedEditingRangeParams();
+    params.setPosition(new Position(4, 23));
+
+    // when
+    var ranges = linkedEditingRangeProvider.getLinkedEditingRanges(documentContext, params);
+
+    // then
+    assertThat(ranges).isNotNull();
+    assertThat(ranges.getRanges())
+      .containsExactlyInAnyOrder(
+        Ranges.create(4, 4, 23),
+        Ranges.create(5, 4, 23),
+        Ranges.create(5, 26, 45),
+        Ranges.create(6, 26, 45)
+      );
+  }
+
+  @Test
+  void testWordPatternIsProvided() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    // курсор на объявлении локальной переменной "ЛокальнаяПеременная"
+    var params = new LinkedEditingRangeParams();
+    params.setPosition(new Position(4, 8));
+
+    // when
+    var ranges = linkedEditingRangeProvider.getLinkedEditingRanges(documentContext, params);
+
+    // then
+    assertThat(ranges).isNotNull();
+    assertThat(ranges.getWordPattern()).isNotNull();
+    assertThat("ЛокальнаяПеременная".matches(ranges.getWordPattern())).isTrue();
+  }
+
+  @Test
   void testParameter() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
