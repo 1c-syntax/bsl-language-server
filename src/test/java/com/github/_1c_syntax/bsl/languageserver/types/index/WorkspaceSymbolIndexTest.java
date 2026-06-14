@@ -274,6 +274,30 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void inOrderMultiWordMatchRanksAboveSingleWordPrefix() {
+    // given — для одного запроса: многословное in-order совпадение и префикс начала одиночного слова.
+    // «ПровестиДокумент»: слова Провести+Документ; «ОбработкаПрдЗначение»: слово «Прд» в середине,
+    // других слов на «д» нет, поэтому многословным оно не совпадёт — только как префикс слова.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ОбработкаПрдЗначение()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрД» (пр, д): «ПровестиДокумент» — многословное in-order (пр→Провести, д→Документ),
+    // «ОбработкаПрдЗначение» — префикс начала одиночного слова «Прд»
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрД", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но многословное in-order совпадение идёт выше префикса одиночного слова
+    assertThat(names)
+      .contains("ПровестиДокумент", "ОбработкаПрдЗначение")
+      .containsSubsequence("ПровестиДокумент", "ОбработкаПрдЗначение");
+  }
+
+  @Test
   void outOfOrderMultiWordMatchIsStillReturned() {
     // given — имя, где фрагменты совпадают со словами не по порядку запроса
     var documentContext = TestUtils.getDocumentContext("""
