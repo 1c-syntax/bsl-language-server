@@ -90,6 +90,45 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void findsScatteredSubsequenceMatch() {
+    // given — символ, где запрос совпадает только как разбросанная подпоследовательность
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокументОтбора()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрвДокОтб»: П-ро-в, Док, Отб встречаются по порядку, но не подряд и не с начала слов
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрвДокОтб", NO_CANCEL);
+
+    // then — найден как подпоследовательность
+    assertThat(result)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+  }
+
+  @Test
+  void subsequenceKeepsLongMatchDropsShortName() {
+    // given — длинное имя-надпоследовательность и короткое, которое запрос перерасти не может
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокументОтбора()
+      КонецПроцедуры
+      Процедура Док()
+      КонецПроцедуры
+      """);
+
+    // when — запрос длиннее «Док», поэтому «Док» не может быть надпоследовательностью запроса,
+    // а длинное имя — может
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("првдокотб", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — длинное найдено, короткое не попадает в выдачу
+    assertThat(names)
+      .contains("ПровестиДокументОтбора")
+      .doesNotContain("Док");
+  }
+
+  @Test
   void ranksExactAndPrefixMatchesAboveSubstring() {
     // given — три символа с общей подстрокой «Тест»
     var documentContext = TestUtils.getDocumentContext("""
