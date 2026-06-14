@@ -1762,6 +1762,16 @@
 <td style="text-align: left;">Text document sync strategy advertised to the client. Supported values: <code>Incremental</code> <em>(default)</em>, <code>Full</code>, <code>None</code>. Changing this value requires restarting BSL Language Server so the new capability is sent to clients.</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>workspaceSymbol</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Settings for the <code>workspace/symbol</code> search.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>syncFuzzySearch</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Enables a synchronous blocking fuzzy (substring/subsequence) scan appended to the response for clients that do not support partial-result streaming. Supported values: <code>true</code>, <code>false</code> <em>(default)</em>. Use <code>true</code> for clients without partial-result streaming (VS Code currently does not support it). In partial/streaming mode the fuzzy tail is always sent regardless of this setting.</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>useDevSite</code></td>
 <td style="text-align: center;"><code>Boolean</code></td>
 <td style="text-align: left;">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
