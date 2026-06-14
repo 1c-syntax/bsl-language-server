@@ -269,6 +269,14 @@
          <lastmod>2026-06-14</lastmod>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/EventHandlerInvalidSignature/</loc>
+         <lastmod>2026-06-14</lastmod>
+    </url>
+    <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/EventHandlerOutsideEventRegion/</loc>
+         <lastmod>2026-06-14</lastmod>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/ExcessiveAutoTestCheck/</loc>
          <lastmod>2026-06-14</lastmod>
     </url>
