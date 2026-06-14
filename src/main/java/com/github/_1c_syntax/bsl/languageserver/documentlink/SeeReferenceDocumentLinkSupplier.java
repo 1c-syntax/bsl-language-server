@@ -22,7 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.documentlink;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
@@ -35,15 +36,17 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Сапплаер для формирования кликабельных ссылок «См.» (англ. «See»)
- * в описаниях методов.
+ * в описаниях символов.
  * <p>
- * В doc-комментарии метода BSL допускается ссылка вида {@code // См. ДругойМетод}
- * (на метод того же модуля) либо {@code // См. ОбщийМодуль.Метод} (на экспортный
- * метод общего модуля). Сапплаер находит такие ссылки, разрешает их в местоположение
- * целевого метода и формирует {@link DocumentLink} над текстом ссылки.
+ * В doc-комментарии символа BSL (метода либо переменной) допускается ссылка вида
+ * {@code // См. ДругойМетод} (на метод того же модуля) либо {@code // См. ОбщийМодуль.Метод}
+ * (на экспортный метод общего модуля). Сапплаер находит такие ссылки в описаниях
+ * всех символов модуля, разрешает их в местоположение целевого метода и формирует
+ * {@link DocumentLink} над текстом ссылки.
  * <p>
  * Ссылки, которые не удалось разрешить в существующий метод, пропускаются —
  * висячие (битые) ссылки не создаются.
@@ -57,13 +60,17 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
     var documentLinks = new ArrayList<DocumentLink>();
 
-    for (MethodSymbol method : documentContext.getSymbolTree().getMethods()) {
-      method.getDescription().ifPresent(description ->
+    var symbolTree = documentContext.getSymbolTree();
+    Stream.<Describable>concat(
+      symbolTree.getMethods().stream(),
+      symbolTree.getVariables().stream()
+    ).forEach(describable ->
+      describable.getDescription().ifPresent(description ->
         description.getLinks().forEach(link ->
           addLinkIfResolvable(documentContext, link, documentLinks)
         )
-      );
-    }
+      )
+    );
 
     return documentLinks;
   }
@@ -88,6 +95,14 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
 
   /**
    * Разрешает текст ссылки «См.» в местоположение целевого метода.
+   * <p>
+   * Ссылка «См.» приходит из текста doc-комментария — это голая строка имени,
+   * а не позиция в AST и не {@code Reference}. На текущей ветке {@code TypeService}
+   * умеет резолвить только по позиции/{@code Reference} ({@code memberAt},
+   * {@code typesAt(Reference)}) или возвращать {@code TypeRef} по имени
+   * ({@code resolve(name, fileType)}), но не источниковый символ/{@code Location}
+   * по имени. Поэтому имя метода резолвится напрямую через дерево символов модуля,
+   * а имя общего модуля — штатной идиомой {@code findCommonModule → getDocument}.
    *
    * @param documentContext контекст документа, в котором встретилась ссылка
    * @param reference       текст ссылки: {@code ИмяМетода} или {@code ОбщийМодуль.Метод}
@@ -111,7 +126,7 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
   ) {
     return documentContext.getSymbolTree()
       .getMethodSymbol(methodName)
-      .map(SeeReferenceDocumentLinkSupplier::methodLocation);
+      .map(SeeReferenceDocumentLinkSupplier::symbolLocation);
   }
 
   private static Optional<Location> resolveCommonModuleMethod(
@@ -131,11 +146,11 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
         documentContext.getServerContext().getDocument(mdoRef, ModuleType.CommonModule)
       )
       .flatMap(commonModuleDocument -> commonModuleDocument.getSymbolTree().getMethodSymbol(methodName))
-      .map(SeeReferenceDocumentLinkSupplier::methodLocation);
+      .map(SeeReferenceDocumentLinkSupplier::symbolLocation);
   }
 
-  private static Location methodLocation(MethodSymbol method) {
-    return new Location(method.getOwner().getUri().toString(), method.getSelectionRange());
+  private static Location symbolLocation(SourceDefinedSymbol symbol) {
+    return new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange());
   }
 
   private static String locationToTarget(Location location) {

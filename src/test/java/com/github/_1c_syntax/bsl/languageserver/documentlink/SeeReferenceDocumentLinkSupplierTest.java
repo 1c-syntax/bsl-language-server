@@ -94,6 +94,33 @@ class SeeReferenceDocumentLinkSupplierTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void testVariableDescriptionReferenceProducesLink() {
+    // given
+    var content = """
+      // См. ДругойМетод.
+      Перем ОписаннаяПеременная;
+
+      Процедура ДругойМетод() Экспорт
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+    var targetMethod = documentContext.getSymbolTree().getMethodSymbol("ДругойМетод").orElseThrow();
+
+    // when
+    var documentLinks = supplier.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .hasSize(1)
+      .first()
+      .satisfies(documentLink -> {
+        assertThat(documentLink.getRange()).isEqualTo(Ranges.create(0, 7, 18));
+        assertThat(documentLink.getTarget())
+          .isEqualTo(targetTarget(documentContext.getUri().toString(), targetMethod.getSelectionRange()));
+      });
+  }
+
+  @Test
   void testUnresolvedReferenceProducesNothing() {
     // given
     var content = """
