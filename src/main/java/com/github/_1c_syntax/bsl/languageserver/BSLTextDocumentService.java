@@ -47,6 +47,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ImplementationProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.LinkedEditingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
@@ -102,6 +103,8 @@ import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LinkedEditingRangeParams;
+import org.eclipse.lsp4j.LinkedEditingRanges;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
 import org.eclipse.lsp4j.PrepareRenameParams;
@@ -184,6 +187,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final SemanticTokensProvider semanticTokensProvider;
   private final SignatureHelpProvider signatureHelpProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
+  private final LinkedEditingRangeProvider linkedEditingRangeProvider;
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("textDocumentServiceExecutor")
@@ -261,6 +265,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> documentHighlightProvider.getDocumentHighlight(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<@Nullable LinkedEditingRanges> linkedEditingRange(LinkedEditingRangeParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContextNullable(
+      documentContext,
+      () -> linkedEditingRangeProvider.getLinkedEditingRanges(documentContext, params)
     );
   }
 

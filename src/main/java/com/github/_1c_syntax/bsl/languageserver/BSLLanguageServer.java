@@ -64,6 +64,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.InlayHintRegistrationOptions;
+import org.eclipse.lsp4j.LinkedEditingRangeRegistrationOptions;
 import org.eclipse.lsp4j.PositionEncodingKind;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.Registration;
@@ -169,6 +170,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
     capabilities.setRenameProvider(getRenameProvider(params));
+    capabilities.setLinkedEditingRangeProvider(getLinkedEditingRangeProvider());
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
     capabilities.setDiagnosticProvider(getDiagnosticProvider());
@@ -472,6 +474,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var typeHierarchyRegistrationOptions = new TypeHierarchyRegistrationOptions();
     typeHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
     return typeHierarchyRegistrationOptions;
+  }
+
+  private static LinkedEditingRangeRegistrationOptions getLinkedEditingRangeProvider() {
+    var linkedEditingRangeRegistrationOptions = new LinkedEditingRangeRegistrationOptions();
+    linkedEditingRangeRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return linkedEditingRangeRegistrationOptions;
   }
 
   private static WorkspaceSymbolOptions getWorkspaceProvider() {

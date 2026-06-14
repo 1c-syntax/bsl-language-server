@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.LinkedEditingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
@@ -61,6 +62,8 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.LinkedEditingRangeParams;
+import org.eclipse.lsp4j.LinkedEditingRanges;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -137,6 +140,8 @@ class BSLTextDocumentServiceTest {
   private HoverProvider hoverProvider;
   @MockitoSpyBean
   private DefinitionProvider definitionProvider;
+  @MockitoSpyBean
+  private LinkedEditingRangeProvider linkedEditingRangeProvider;
 
   @BeforeEach
   void setUp() {
@@ -840,6 +845,40 @@ class BSLTextDocumentServiceTest {
     assertThat(result.isRight()).isTrue();
     assertThat(result.getRight()).hasSize(1);
     assertThat(result.getRight().get(0)).isEqualTo(locationLink);
+  }
+
+  @Test
+  void linkedEditingRangeUnknownFile() throws Exception {
+    // given - документ не открыт через didOpen, поэтому он неизвестен сервису
+    var params = new LinkedEditingRangeParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.linkedEditingRange(params).get();
+
+    // then - для неизвестного документа сервис возвращает null, не дергая провайдер
+    assertThat(result).isNull();
+    verify(linkedEditingRangeProvider, never()).getLinkedEditingRanges(any(), any());
+  }
+
+  @Test
+  void linkedEditingRangeDelegatesToProvider() throws Exception {
+    // given - открытый документ; сервис лишь делегирует запрос провайдеру
+    var textDocumentItem = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(textDocumentItem));
+
+    var expected = new LinkedEditingRanges(List.of(
+      Ranges.create(0, 0, 0, 10),
+      Ranges.create(1, 4, 1, 14)
+    ));
+    doReturn(expected).when(linkedEditingRangeProvider).getLinkedEditingRanges(any(), any());
+
+    // when
+    var params = new LinkedEditingRangeParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.linkedEditingRange(params).get();
+
+    // then - сервис прозрачно возвращает результат провайдера
+    assertThat(result).isSameAs(expected);
+    verify(linkedEditingRangeProvider).getLinkedEditingRanges(any(), any());
   }
 
   @Test
