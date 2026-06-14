@@ -21,16 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -40,7 +43,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -49,6 +51,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class SymbolProviderScriptVariantTest {
+
+  private static final org.eclipse.lsp4j.jsonrpc.CancelChecker NO_CANCEL = () -> {
+    // no-op: проверка отмены не требуется в тесте поиска
+  };
 
   private static Stream<Arguments> scriptVariantCases() {
     return Stream.of(
@@ -66,7 +72,7 @@ class SymbolProviderScriptVariantTest {
     var mdObject = mock(MD.class);
     when(mdObject.getMdoReference()).thenReturn(mdoReference);
 
-    var documentUri = URI.create("file:///FirstCommonModule/Module.bsl");
+    var documentUri = Absolute.uri(URI.create("file:///FirstCommonModule/Module.bsl"));
     var documentContext = mock(DocumentContext.class);
     when(documentContext.getUri()).thenReturn(documentUri);
     when(documentContext.getScriptVariantLanguage()).thenReturn(scriptVariantLanguage);
@@ -76,26 +82,27 @@ class SymbolProviderScriptVariantTest {
     when(symbol.getName()).thenReturn("НеУстаревшаяПроцедура");
     when(symbol.getSymbolKind()).thenReturn(SymbolKind.Method);
     when(symbol.getRange()).thenReturn(Ranges.create(0, 0, 0, 0));
+    when(symbol.getTags()).thenReturn(List.of());
     when(symbol.getOwner()).thenReturn(documentContext);
 
     var symbolTree = mock(SymbolTree.class);
     when(symbolTree.getChildrenFlat()).thenReturn(List.of(symbol));
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
 
-    var serverContext = mock(ServerContext.class);
-    when(serverContext.getDocuments()).thenReturn(Map.of(documentUri, documentContext));
+    // имя контейнера вычисляется индексом на момент индексации в варианте языка проекта
+    var index = new WorkspaceSymbolIndex();
+    index.handleContentChanged(new DocumentContextContentChangedEvent(documentContext));
 
-    var serverContextProvider = mock(ServerContextProvider.class);
-    when(serverContextProvider.getAllContexts())
-      .thenReturn(Map.of(URI.create("file:///workspace"), serverContext));
-
-    var symbolProvider = new SymbolProvider(serverContextProvider);
+    // запрос без partialResultToken: клиент не используется, древесная выдача отдаётся синхронно
+    var symbolProvider = new SymbolProvider(
+      index,
+      mock(LanguageClientHolder.class),
+      new GlobalLanguageServerConfiguration()
+    );
     var params = new WorkspaceSymbolParams("НеУстаревшаяПроцедура");
 
     // when
-    var symbols = symbolProvider.getSymbols(params, () -> {
-      // no-op: проверка отмены не требуется в тесте поиска
-    });
+    var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
 
     // then
     assertThat(symbols)

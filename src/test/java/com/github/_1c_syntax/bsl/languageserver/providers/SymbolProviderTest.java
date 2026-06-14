@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
+import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
@@ -45,13 +45,13 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -162,10 +162,11 @@ class SymbolProviderTest {
   }
 
   @Test
-  void getSymbolsQueryStringAllSymbols() {
+  void getSymbolsEmptyQueryReturnsAllSymbols() {
 
     // given
-    var params = new WorkspaceSymbolParams(".*");
+    // Пустой запрос трактуется как «все символы»: индекс возвращает всю выдачу без усечения.
+    var params = new WorkspaceSymbolParams("");
 
     // when
     var symbols = symbolProvider.getSymbols(params, NO_CANCEL);
@@ -177,13 +178,13 @@ class SymbolProviderTest {
   }
 
   @Test
-  void getSymbolsQueryStringErrorRegex() {
+  void getSymbolsQueryStringNoMatch() {
 
     // given
-    // Запрос «Метод(» невалиден как регулярное выражение (незакрытая группа),
-    // поэтому обрабатывается как буквальная подстрока. В фикстурах нет символов,
-    // имя которых содержит литерал «Метод(», поэтому ожидаем пустой результат,
-    // но без исключения и без отбрасывания валидных совпадений.
+    // Поиск ведётся буквальным префиксным сопоставлением по дереву (префикс полного имени
+    // или начала CamelCase-слова), а не регулярным выражением. В фикстурах нет символов, чьё
+    // имя или слово начинается с «Метод(», поэтому результат пуст — без исключения и без
+    // ложных совпадений.
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
@@ -194,31 +195,32 @@ class SymbolProviderTest {
   }
 
   @Test
-  void getSymbolsQueryWithRegexSpecialCharsFallsBackToLiteralMatch() {
+  void getSymbolsMapsIndexEntryWithSpecialChars() {
 
     // given
-    // Имя символа содержит литерал «(», а сам запрос невалиден как регулярное выражение.
-    // До исправления такой запрос приводил к PatternSyntaxException и пустому результату.
+    // Имя символа содержит литерал «(»; индекс сопоставляет его буквально, без regex.
+    // Провайдер должен корректно отобразить запись индекса в WorkspaceSymbol.
     var symbolName = "Метод(Параметр";
     var symbolUri = Absolute.uri("file:///module.bsl");
-    var symbol = mockMethodSymbol(symbolName);
+    var entry = new Entry(
+      symbolUri,
+      symbolName,
+      symbolName.toLowerCase(),
+      SymbolKind.Method,
+      new Range(),
+      List.of(),
+      ""
+    );
 
-    var symbolTree = mock(SymbolTree.class);
-    when(symbolTree.getChildrenFlat()).thenReturn(List.of(symbol));
+    var index = mock(WorkspaceSymbolIndex.class);
+    when(index.search(eq("Метод("), any())).thenReturn(List.of(entry));
 
-    var documentContext = mock(DocumentContext.class);
-    when(documentContext.getUri()).thenReturn(symbolUri);
-    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
-    when(documentContext.getMdObject()).thenReturn(Optional.empty());
-    when(symbol.getOwner()).thenReturn(documentContext);
-
-    var serverContext = mock(ServerContext.class);
-    when(serverContext.getDocuments()).thenReturn(Map.of(symbolUri, documentContext));
-
-    var serverContextProvider = mock(ServerContextProvider.class);
-    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(symbolUri, serverContext));
-
-    var provider = new SymbolProvider(serverContextProvider);
+    // без partialResultToken провайдер возвращает только древесную выдачу, клиент не нужен
+    var provider = new SymbolProvider(
+      index,
+      mock(LanguageClientHolder.class),
+      new GlobalLanguageServerConfiguration()
+    );
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when
@@ -261,21 +263,6 @@ class SymbolProviderTest {
     // then
     assertThat(symbols)
       .hasSizeGreaterThan(0);
-  }
-
-  /**
-   * Создаёт mock символа-метода с заданным именем для проверки сопоставления имён.
-   *
-   * @param name имя символа, возвращаемое методом {@link SourceDefinedSymbol#getName()}
-   * @return настроенный mock {@link SourceDefinedSymbol} с типом {@link SymbolKind#Method}
-   */
-  private static SourceDefinedSymbol mockMethodSymbol(String name) {
-    var symbol = mock(SourceDefinedSymbol.class);
-    when(symbol.getName()).thenReturn(name);
-    when(symbol.getSymbolKind()).thenReturn(SymbolKind.Method);
-    when(symbol.getRange()).thenReturn(new Range(new Position(0, 0), new Position(0, 0)));
-    when(symbol.getTags()).thenReturn(List.of());
-    return symbol;
   }
 
 }

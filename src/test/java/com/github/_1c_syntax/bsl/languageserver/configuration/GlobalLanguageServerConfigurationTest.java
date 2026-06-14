@@ -141,6 +141,70 @@ class GlobalLanguageServerConfigurationTest {
       .isEqualTo(TextDocumentSyncKind.Incremental);
   }
 
+  @Test
+  void onApplicationReady_workspaceSymbolMissing_usesDefaultSyncFuzzySearch() throws Exception {
+    // given
+    var configuration = createConfiguration(
+      tempDir.resolve("non-existent-cwd.json").toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then — syncFuzzySearch по умолчанию false
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isFalse();
+  }
+
+  @Test
+  void onApplicationReady_workspaceSymbolPresent_loadsSyncFuzzySearch() throws Exception {
+    // given
+    var cwdConfig = tempDir.resolve("cwd-config.json");
+    Files.writeString(cwdConfig, """
+      {
+        "workspaceSymbol": {
+          "syncFuzzySearch": true
+        }
+      }
+      """);
+
+    var configuration = createConfiguration(
+      cwdConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isTrue();
+  }
+
+  @Test
+  void reset_restoresDefaultSyncFuzzySearch() throws Exception {
+    // given — загружена конфигурация с syncFuzzySearch = true
+    var cwdConfig = tempDir.resolve("cwd-config.json");
+    Files.writeString(cwdConfig, """
+      {
+        "workspaceSymbol": {
+          "syncFuzzySearch": true
+        }
+      }
+      """);
+    var configuration = createConfiguration(
+      cwdConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+    configuration.onApplicationReady();
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isTrue();
+
+    // when
+    configuration.reset();
+
+    // then — syncFuzzySearch вернулся к false
+    assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isFalse();
+  }
+
   private static GlobalLanguageServerConfiguration createConfiguration(
     String configurationFilePath,
     String globalConfigPath

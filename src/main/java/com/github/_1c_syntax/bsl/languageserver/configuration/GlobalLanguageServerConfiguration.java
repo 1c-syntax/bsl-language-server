@@ -86,6 +86,13 @@ public class GlobalLanguageServerConfiguration {
   private CapabilitiesOptions capabilities = new CapabilitiesOptions();
 
   /**
+   * Настройки поиска символов рабочей области ({@code workspace/symbol}),
+   * в т.ч. режим синхронного fuzzy-поиска.
+   */
+  @Setter(AccessLevel.NONE)
+  private WorkspaceSymbolOptions workspaceSymbol = new WorkspaceSymbolOptions();
+
+  /**
    * Файл, из которого была загружена текущая конфигурация.
    */
   @JsonIgnore
@@ -147,6 +154,7 @@ public class GlobalLanguageServerConfiguration {
     this.sendErrors = SendErrorsMode.DEFAULT;
     this.traceLog = null;
     this.capabilities.getTextDocumentSync().setChange(TextDocumentSyncCapabilityOptions.DEFAULT_CHANGE);
+    this.workspaceSymbol.setSyncFuzzySearch(false);
     this.configurationFile = null;
     // Событие публикуется через EventPublisherAspect
   }
@@ -162,6 +170,7 @@ public class GlobalLanguageServerConfiguration {
       this.sendErrors = loaded.sendErrors;
       this.traceLog = loaded.traceLog;
       this.capabilities.getTextDocumentSync().setChange(loaded.capabilities.getTextDocumentSync().getChange());
+      this.workspaceSymbol.setSyncFuzzySearch(loaded.workspaceSymbol.isSyncFuzzySearch());
     } catch (IOException e) {
       LOGGER.error("Can't deserialize global configuration file", e);
     }

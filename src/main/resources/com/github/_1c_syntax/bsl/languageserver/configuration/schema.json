@@ -1147,6 +1147,19 @@
                 }
             }
         },
+        "workspaceSymbol": {
+            "$id": "#/properties/workspaceSymbol",
+            "type": "object",
+            "title": "Workspace symbol search configuration.",
+            "properties": {
+                "syncFuzzySearch": {
+                    "$id": "#/properties/workspaceSymbol/syncFuzzySearch",
+                    "type": "boolean",
+                    "title": "Append a synchronous blocking fuzzy scan to the workspace/symbol response for clients without partial-result streaming.",
+                    "default": false
+                }
+            }
+        },
         "useDevSite": {
             "$id": "#/properties/useDevSite",
             "type": "boolean",
