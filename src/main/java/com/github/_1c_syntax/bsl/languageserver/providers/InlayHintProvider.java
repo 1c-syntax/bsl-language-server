@@ -26,20 +26,25 @@ import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure.InlayHintsConfiguration;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.InlayHintWorkspaceCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -52,10 +57,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InlayHintProvider {
 
-  private final Collection<InlayHintSupplier> allInlayHintSuppliers;
+  private final Map<String, InlayHintSupplier<InlayHintData>> inlayHintSuppliersById;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder clientHolder;
   private final LanguageServerConfiguration configuration;
+  private final JsonMapper jsonMapper;
 
   /**
    * Получить список inlay hints в документе.
@@ -67,11 +73,59 @@ public class InlayHintProvider {
   public List<InlayHint> getInlayHint(DocumentContext documentContext, InlayHintParams params) {
     var parameters = configuration.getInlayHintOptions().getParameters();
 
-    return allInlayHintSuppliers.stream()
+    return inlayHintSuppliersById.values().stream()
       .filter(supplier -> InlayHintsConfiguration.supplierIsEnabled(supplier.getId(), parameters))
       .map(supplier -> supplier.getInlayHints(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Разрешить хинт ({@code inlayHint/resolve}) — дорассчитать его «тяжёлые»
+   * поля (tooltip и т.п.).
+   * <p>
+   * По идентификатору сапплаера из данных хинта находит сапплаер-владельца и
+   * делегирует ему {@link InlayHintSupplier#resolve}. После разрешения поле
+   * {@link InlayHint#getData()} очищается для экономии трафика.
+   *
+   * @param documentContext Контекст документа, к которому относится хинт.
+   * @param unresolved      Неразрешённый хинт.
+   * @param data            Данные хинта.
+   * @return Разрешённый хинт.
+   */
+  public InlayHint resolveInlayHint(DocumentContext documentContext, InlayHint unresolved, InlayHintData data) {
+    var supplier = inlayHintSuppliersById.get(data.getId());
+    if (supplier == null) {
+      return unresolved;
+    }
+    var resolved = supplier.resolve(documentContext, unresolved, data);
+    resolved.setData(null);
+    return resolved;
+  }
+
+  /**
+   * Извлечь данные хинта из хинта.
+   * <p>
+   * Возвращает объект данных типа, с которым был зарегистрирован
+   * сапплаер хинта (параметр-тип класса сапплаера).
+   *
+   * @param inlayHint Хинт, из которого необходимо извлечь данные.
+   * @return Извлечённые данные хинта либо {@code null}, если хинт пришёл без поля
+   *         {@link InlayHint#getData()} — резолвить такой хинт нечем.
+   */
+  @SneakyThrows
+  public @Nullable InlayHintData extractData(InlayHint inlayHint) {
+    var rawData = inlayHint.getData();
+
+    if (rawData == null) {
+      return null;
+    }
+
+    if (rawData instanceof InlayHintData data) {
+      return data;
+    }
+
+    return jsonMapper.readValue(rawData.toString(), InlayHintData.class);
   }
 
   /**

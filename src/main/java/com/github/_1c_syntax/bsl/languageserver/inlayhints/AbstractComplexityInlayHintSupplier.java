@@ -45,9 +45,20 @@ import java.util.stream.Collectors;
  * <p>
  * По умолчанию подсказки отключены. Для включения нужно вызвать метод {@link #toggleHints(URI, String)}.
  */
-public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSupplier {
+public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSupplier<DefaultInlayHintData> {
 
   private final Map<URI, Set<String>> enabledMethods = new HashMap<>();
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Подсказки сложности не откладывают построение полей на резолв, поэтому
+   * используется дефолтный дата-класс {@link DefaultInlayHintData}.
+   */
+  @Override
+  public Class<DefaultInlayHintData> getInlayHintDataClass() {
+    return DefaultInlayHintData.class;
+  }
 
   /**
    * Получение подсказок о местах увеличения сложности метода.

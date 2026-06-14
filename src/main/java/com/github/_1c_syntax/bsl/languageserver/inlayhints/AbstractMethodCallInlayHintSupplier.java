@@ -42,7 +42,7 @@ import java.util.Map;
  * написанными до объединения, читается также legacy-ключ
  * {@code sourceDefinedMethodCall}.
  */
-public abstract class AbstractMethodCallInlayHintSupplier implements InlayHintSupplier {
+public abstract class AbstractMethodCallInlayHintSupplier implements InlayHintSupplier<DefaultInlayHintData> {
 
   private static final List<String> CONFIG_KEYS = List.of(
     "methodCall",
@@ -56,6 +56,17 @@ public abstract class AbstractMethodCallInlayHintSupplier implements InlayHintSu
 
   protected AbstractMethodCallInlayHintSupplier(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Подсказки имён параметров не откладывают построение полей на резолв, поэтому
+   * используется дефолтный дата-класс {@link DefaultInlayHintData}.
+   */
+  @Override
+  public Class<DefaultInlayHintData> getInlayHintDataClass() {
+    return DefaultInlayHintData.class;
   }
 
   protected boolean showParametersWithTheSameName() {
