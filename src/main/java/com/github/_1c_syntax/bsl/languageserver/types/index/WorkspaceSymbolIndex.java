@@ -73,10 +73,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * {@code ПровестиДокумент} через дерево, а не сканом. Слова режутся
  * {@link StringUtils#splitByCharacterTypeCamelCase(String)} (кириллица режется корректно).
  * <p>
- * Что покрывает префиксное дерево: префикс полного имени И префикс любого CamelCase-слова. Чего НЕ
- * покрывает: произвольную подстроку ВНУТРИ слова (не с его начала) и подпоследовательность вразброс
- * ({@code ПрвДок} → {@code ПровестиДокумент}) — они по-прежнему добираются проходом по уникальным
- * записям (см. {@link #collectFuzzyMatches}).
+ * Что покрывает префиксное дерево: префикс полного имени И префикс любого CamelCase-слова.
+ * <p>
+ * Многословные (camel-hump) запросы обслуживаются сублинейно без полного скана. Запрос режется на
+ * CamelCase-фрагменты ({@code ПрДок} → {@code пр},{@code док}); для каждого фрагмента из дерева
+ * берётся множество записей по {@link PatriciaTrie#prefixMap(Object)}, и множества пересекаются
+ * (запись должна иметь слово, начинающееся с КАЖДОГО фрагмента). Пересечение начинается с самого
+ * мелкого множества, чтобы оставаться дешёвым. Среди выживших записей те, у которых фрагменты
+ * назначаются словам строго по возрастанию (порядок фрагментов = порядок слов), ранжируются выше
+ * ({@link #SCORE_MULTI_WORD_IN_ORDER}), чем «не по порядку» ({@link #SCORE_MULTI_WORD_UNORDERED});
+ * совпадения не по порядку не отфильтровываются, лишь понижаются в приоритете.
+ * <p>
+ * Однословные запросы (включая нижний регистр одним токеном) идут прежним путём: префиксный путь
+ * через дерево плюс добор подстрочных и fuzzy-совпадений проходом по уникальным записям
+ * (см. {@link #collectFuzzyMatches}). Чего НЕ покрывает дерево: произвольную подстроку ВНУТРИ слова
+ * (не с его начала) и подпоследовательность вразброс ({@code ПрвДок} → {@code ПровестиДокумент}) для
+ * однословного запроса — они добираются проходом. Для многословного запроса добор подпоследовательностью
+ * со «съеденными» буквами внутри слова намеренно НЕ делается (это не цель быстрого пути).
  * <p>
  * Индекс наследует {@link AbstractDocumentLifecycleClearableIndex}: его {@code @EventListener}'ы
  * сбрасывают записи документа на изменение содержимого, освобождение данных, закрытие и удаление.
@@ -113,15 +126,29 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private static final int SCORE_WORD_PREFIX = 2;
 
   /**
+   * Скор многословного camel-hump совпадения, где каждый фрагмент запроса — префикс отдельного
+   * CamelCase-слова имени, и фрагменты назначаются словам строго по возрастанию индексов (порядок
+   * фрагментов совпадает с порядком слов). Например, запрос {@code ПрДок} для {@code ПровестиДокумент}.
+   */
+  private static final int SCORE_MULTI_WORD_IN_ORDER = 3;
+
+  /**
+   * Скор многословного camel-hump совпадения, где каждый фрагмент запроса — префикс отдельного
+   * CamelCase-слова имени, но строго возрастающего по порядку назначения добиться нельзя (фрагменты
+   * совпадают со словами не по порядку). Например, запрос {@code ПрДок} для {@code ДокументПровести}.
+   */
+  private static final int SCORE_MULTI_WORD_UNORDERED = 4;
+
+  /**
    * Скор совпадения запроса как непрерывной подстроки имени (но не префикса слова).
    */
-  private static final int SCORE_SUBSTRING = 3;
+  private static final int SCORE_SUBSTRING = 5;
 
   /**
    * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
    * позиция первого совпавшего символа (более ранняя позиция — релевантнее).
    */
-  private static final int SCORE_SUBSEQUENCE = 4;
+  private static final int SCORE_SUBSEQUENCE = 6;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -228,16 +255,19 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Сопоставление регистронезависимое. Скоринг (меньше — релевантнее): точное совпадение,
    * затем префикс полного имени, затем префикс начала CamelCase-слова (запрос — начало слова из
-   * середины имени), затем непрерывная подстрока, затем подпоследовательность; совпадения по
-   * подпоследовательности дополнительно штрафуются позицией первого символа. При равном скоре раньше
-   * идёт более короткое имя, затем — более ранняя позиция в документе. Несовпавшие записи
-   * отбрасываются. Выдача возвращается целиком, без усечения: пустой запрос отдаёт все записи
-   * индекса, непустой — все совпадения, отсортированные по релевантности.
+   * середины имени), затем многословное camel-hump совпадение по порядку, затем оно же не по порядку,
+   * затем непрерывная подстрока, затем подпоследовательность; совпадения по подпоследовательности
+   * дополнительно штрафуются позицией первого символа. При равном скоре раньше идёт более короткое
+   * имя, затем — более ранняя позиция в документе. Несовпавшие записи отбрасываются. Выдача
+   * возвращается целиком, без усечения: пустой запрос отдаёт все записи индекса, непустой — все
+   * совпадения, отсортированные по релевантности.
    * <p>
    * Сублинейно через {@link PatriciaTrie#prefixMap(Object)} обслуживаются и префикс полного имени,
    * и префикс начала любого слова (записи проиндексированы под суффиксами от начала каждого слова).
-   * Произвольную подстроку внутри слова и подпоследовательность вразброс дерево по префиксу не
-   * покрывает, поэтому они добираются проходом по уникальным записям.
+   * Многословный (≥2 CamelCase-фрагмента) запрос обслуживается сублинейным пересечением множеств
+   * записей по фрагментам, без полного скана. Для однословного запроса произвольную подстроку внутри
+   * слова и подпоследовательность вразброс дерево по префиксу не покрывает, поэтому они добираются
+   * проходом по уникальным записям.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
@@ -256,30 +286,41 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if (lowerQuery.isEmpty()) {
         return collectAll(cancelChecker);
       }
-      return searchMatching(lowerQuery, cancelChecker);
+      return searchMatching(query, lowerQuery, cancelChecker);
     } finally {
       lock.readLock().unlock();
     }
   }
 
   /**
-   * Собрать совпадения непустого запроса: сначала сублинейный префиксный путь через дерево
-   * (префикс полного имени И префикс начала любого CamelCase-слова), затем добор подстрочных и
-   * fuzzy-совпадений проходом по уникальным записям.
+   * Собрать совпадения непустого запроса с ранжированием.
+   * <p>
+   * Запрос режется на CamelCase-фрагменты. Однословный запрос (один фрагмент) идёт прежним путём:
+   * сублинейный префиксный путь через дерево плюс добор подстрочных и fuzzy-совпадений проходом по
+   * уникальным записям. Многословный запрос (≥2 фрагментов) идёт быстрым путём: префиксный путь
+   * (ловит непрерывный случай, когда запрос — реальный префикс имени) плюс сублинейное пересечение
+   * множеств записей по фрагментам — БЕЗ полного fuzzy-скана.
    * <p>
    * Одна запись присутствует под несколькими ключами и может совпасть по нескольким из них, поэтому
    * результат дедуплицируется по идентичности записи с сохранением лучшего (наименьшего) скора.
    *
+   * @param query         исходный запрос пользователя (с регистром, для CamelCase-разбиения)
    * @param lowerQuery    lowercase-запрос (непустой)
    * @param cancelChecker проверяющий отмену запроса
    * @return ранжированный список совпадений без дублей
    */
-  private List<Entry> searchMatching(String lowerQuery, CancelChecker cancelChecker) {
+  private List<Entry> searchMatching(String query, String lowerQuery, CancelChecker cancelChecker) {
     Map<Entry, Integer> bestScore = new IdentityHashMap<>();
     var progress = new ScanProgress(cancelChecker);
 
+    var fragments = queryFragments(query);
+
     collectPrefixMatches(lowerQuery, bestScore, progress);
-    collectFuzzyMatches(lowerQuery, bestScore, progress);
+    if (fragments.size() >= 2) {
+      collectMultiWordMatches(fragments, bestScore, progress);
+    } else {
+      collectFuzzyMatches(lowerQuery, bestScore, progress);
+    }
 
     var matches = new ArrayList<Scored>(bestScore.size());
     for (var scored : bestScore.entrySet()) {
@@ -287,6 +328,153 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
     matches.sort(Comparator.naturalOrder());
     return matches.stream().map(Scored::entry).toList();
+  }
+
+  /**
+   * Разбить запрос на CamelCase-фрагменты для многословного быстрого пути.
+   * <p>
+   * Берётся ИСХОДНЫЙ запрос (с регистром, иначе CamelCase-границы потеряются) и режется
+   * {@link StringUtils#splitByCharacterTypeCamelCase(String)}; оставляются только фрагменты,
+   * начинающиеся с буквы или цифры (отбрасываются разделители вроде пробелов и знаков препинания),
+   * каждый приводится к нижнему регистру. Например, {@code ПрДок} → [{@code пр}, {@code док}];
+   * {@code получитьСсылку} → [{@code получить}, {@code ссылку}]; {@code документ} (одно слово,
+   * нижний регистр) → [{@code документ}].
+   *
+   * @param query исходный запрос пользователя (непустой, с регистром)
+   * @return список lowercase-фрагментов в порядке следования в запросе
+   */
+  private static List<String> queryFragments(String query) {
+    var fragments = new ArrayList<String>();
+    for (var fragment : StringUtils.splitByCharacterTypeCamelCase(query)) {
+      if (!fragment.isEmpty() && Character.isLetterOrDigit(fragment.charAt(0))) {
+        fragments.add(fragment.toLowerCase(Locale.ENGLISH));
+      }
+    }
+    return fragments;
+  }
+
+  /**
+   * Быстрый многословный путь: пересечение множеств записей по каждому фрагменту через
+   * {@link PatriciaTrie#prefixMap(Object)}. Запись попадает в результат, только если у неё есть слово,
+   * начинающееся с КАЖДОГО фрагмента (запись присутствует в дереве под суффиксом от начала каждого
+   * своего слова). Пересечение начинается с самого мелкого множества фрагментов, чтобы оставаться
+   * дешёвым. Каждой выжившей записи назначается скор по порядку фрагментов
+   * ({@link #SCORE_MULTI_WORD_IN_ORDER} либо {@link #SCORE_MULTI_WORD_UNORDERED}) и сливается в
+   * накопитель через {@link Integer#min}, чтобы не понизить запись, уже найденную как непрерывный
+   * префикс. Полный fuzzy-скан в этом пути не выполняется.
+   *
+   * @param fragments lowercase-фрагменты запроса (≥2)
+   * @param bestScore накопитель лучшего скора на запись (по идентичности)
+   * @param progress  счётчик прогресса для периодической проверки отмены
+   */
+  private void collectMultiWordMatches(
+    List<String> fragments,
+    Map<Entry, Integer> bestScore,
+    ScanProgress progress
+  ) {
+    var perFragment = new ArrayList<Set<Entry>>(fragments.size());
+    for (var fragment : fragments) {
+      var entries = entriesByPrefix(fragment, progress);
+      if (entries.isEmpty()) {
+        // нет слова под этот фрагмент — пересечение заведомо пусто
+        return;
+      }
+      perFragment.add(entries);
+    }
+
+    var intersection = intersect(perFragment, progress);
+    for (var entry : intersection) {
+      progress.advance();
+      var score = inOrder(entry, fragments) ? SCORE_MULTI_WORD_IN_ORDER : SCORE_MULTI_WORD_UNORDERED;
+      bestScore.merge(entry, score, Integer::min);
+    }
+  }
+
+  /**
+   * Собрать множество записей, у которых есть CamelCase-слово, начинающееся с данного фрагмента.
+   * <p>
+   * Берутся все бакеты дерева по {@link PatriciaTrie#prefixMap(Object)} (ключи — суффиксы имени от
+   * начала каждого слова), их записи объединяются по идентичности.
+   *
+   * @param fragment lowercase-фрагмент запроса
+   * @param progress счётчик прогресса для периодической проверки отмены
+   * @return множество записей (по идентичности), у которых слово начинается с фрагмента
+   */
+  private Set<Entry> entriesByPrefix(String fragment, ScanProgress progress) {
+    Set<Entry> entries = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (var bucket : trie.prefixMap(fragment).values()) {
+      for (var entry : bucket) {
+        progress.advance();
+        entries.add(entry);
+      }
+    }
+    return entries;
+  }
+
+  /**
+   * Пересечь множества записей по фрагментам, начиная с самого мелкого, чтобы перебор был дешёвым.
+   *
+   * @param perFragment непустой список непустых множеств записей (по идентичности), по одному на фрагмент
+   * @param progress    счётчик прогресса для периодической проверки отмены
+   * @return множество записей, присутствующих во всех множествах (по идентичности)
+   */
+  private static Set<Entry> intersect(List<Set<Entry>> perFragment, ScanProgress progress) {
+    var smallest = perFragment.get(0);
+    for (var candidate : perFragment) {
+      if (candidate.size() < smallest.size()) {
+        smallest = candidate;
+      }
+    }
+    Set<Entry> result = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (var entry : smallest) {
+      progress.advance();
+      var inAll = true;
+      for (var set : perFragment) {
+        if (!set.contains(entry)) {
+          inAll = false;
+          break;
+        }
+      }
+      if (inAll) {
+        result.add(entry);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Проверить, что фрагменты запроса назначаются словам имени строго по возрастанию индексов
+   * (порядок фрагментов совпадает с порядком слов).
+   * <p>
+   * Имя режется на lowercase-слова тем же сплиттером. Фрагменты идут слева направо; для каждого
+   * жадно берётся слово с наименьшим индексом строго больше предыдущего назначенного, начинающееся
+   * с фрагмента. Если всем фрагментам нашлось строго возрастающее назначение — порядок соблюдён.
+   *
+   * @param entry     запись-кандидат (уже прошла пересечение, каждый фрагмент совпадает с каким-то словом)
+   * @param fragments lowercase-фрагменты запроса (≥2)
+   * @return {@code true}, если фрагменты назначаются словам строго по возрастанию; иначе {@code false}
+   */
+  private static boolean inOrder(Entry entry, List<String> fragments) {
+    var rawWords = StringUtils.splitByCharacterTypeCamelCase(entry.name());
+    var words = new String[rawWords.length];
+    for (var i = 0; i < rawWords.length; i++) {
+      words[i] = rawWords[i].toLowerCase(Locale.ENGLISH);
+    }
+    var previousWordIndex = -1;
+    for (var fragment : fragments) {
+      var assigned = -1;
+      for (var wordIndex = previousWordIndex + 1; wordIndex < words.length; wordIndex++) {
+        if (words[wordIndex].startsWith(fragment)) {
+          assigned = wordIndex;
+          break;
+        }
+      }
+      if (assigned < 0) {
+        return false;
+      }
+      previousWordIndex = assigned;
+    }
+    return true;
   }
 
   /**

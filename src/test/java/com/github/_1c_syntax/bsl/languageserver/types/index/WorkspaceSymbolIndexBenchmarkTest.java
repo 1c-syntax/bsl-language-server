@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,13 +67,25 @@ class WorkspaceSymbolIndexBenchmarkTest {
     // no-op: отмена в бенчмарке не нужна
   };
 
-  private static final List<String> QUERIES = List.of(
+  /**
+   * Однословные запросы — прежний путь (префикс + полный fuzzy-скан для не-префиксных).
+   */
+  private static final List<String> SINGLE_FRAGMENT_QUERIES = List.of(
     "",        // пустой — вся выдача
     "П",       // одна буква
     "Пров",    // короткий префикс
     "Документ", // слово из середины имени — ключевой кейс word-start trie
-    "ПрвДок",  // подпоследовательность
+    "првдок",  // один токен в нижнем регистре — подпоследовательность через скан
     "ОбработкаПроведения" // редкий длинный префикс
+  );
+
+  /**
+   * Многословные camel-hump запросы — быстрый путь варианта 3 (пересечение по фрагментам, без скана).
+   */
+  private static final List<String> MULTI_FRAGMENT_QUERIES = List.of(
+    "ПрДок",   // 2 фрагмента-аббревиатуры
+    "ПолСсыл", // 2 фрагмента-аббревиатуры
+    "ПолучитьСсылкуОбъекта" // реалистичный 3-словный запрос
   );
 
   @Autowired
@@ -86,6 +99,11 @@ class WorkspaceSymbolIndexBenchmarkTest {
     // given — корпуса берём из окружения, чтобы абсолютные пути не лежали в исходниках
     var corpusA = System.getenv(CORPUS_A_ENV);
     var corpusB = System.getenv(CORPUS_B_ENV);
+
+    // если ни один корпус не задан — пропускаем чисто, чтобы прогон не падал
+    Assumptions.assumeTrue(
+      (corpusA != null && !corpusA.isBlank()) || (corpusB != null && !corpusB.isBlank()),
+      "ни один корпус не задан (" + CORPUS_A_ENV + "/" + CORPUS_B_ENV + "), бенчмарк пропущен");
 
     // when / then — каждый заданный корпус прогоняется отдельно
     if (corpusA != null && !corpusA.isBlank()) {
@@ -113,8 +131,15 @@ class WorkspaceSymbolIndexBenchmarkTest {
     LOGGER.info("корпус {}: populate={} ms, проиндексировано символов={}",
       label, String.format("%.0f", populateMs), indexedSymbols);
 
-    // when / then — для каждого запроса прогрев + замер полного search
-    for (var query : QUERIES) {
+    // when / then — однословные запросы (прежний путь со сканом для не-префиксных)
+    LOGGER.info("корпус {}: однословные запросы (прежний путь)", label);
+    for (var query : SINGLE_FRAGMENT_QUERIES) {
+      benchmarkQuery(query);
+    }
+
+    // when / then — многословные camel-hump запросы (быстрый путь варианта 3, пересечение без скана)
+    LOGGER.info("корпус {}: многословные camel-hump запросы (вариант 3, без полного скана)", label);
+    for (var query : MULTI_FRAGMENT_QUERIES) {
       benchmarkQuery(query);
     }
   }
@@ -136,13 +161,23 @@ class WorkspaceSymbolIndexBenchmarkTest {
 
     var averageMs = average(samplesNs) / 1_000_000.0;
     var medianMs = median(samplesNs) / 1_000_000.0;
+    var p95Ms = percentile(samplesNs, 95) / 1_000_000.0;
 
-    LOGGER.info("query=\"{}\" совпадений={} среднее={} ms медиана={} ms ({} итераций)",
+    LOGGER.info("query=\"{}\" совпадений={} среднее={} ms медиана={} ms p95={} ms ({} итераций)",
       query,
       resultSize,
       String.format("%.3f", averageMs),
       String.format("%.3f", medianMs),
+      String.format("%.3f", p95Ms),
       ITERATIONS);
+  }
+
+  private static double percentile(List<Long> samplesNs, int percentile) {
+    var sorted = new ArrayList<>(samplesNs);
+    sorted.sort(Long::compareTo);
+    var rank = (int) Math.ceil(percentile / 100.0 * sorted.size()) - 1;
+    var index = Math.max(0, Math.min(sorted.size() - 1, rank));
+    return sorted.get(index);
   }
 
   private static double average(List<Long> samplesNs) {

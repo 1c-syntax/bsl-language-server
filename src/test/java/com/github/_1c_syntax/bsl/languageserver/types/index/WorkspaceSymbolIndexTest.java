@@ -84,7 +84,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThat(index.search("Заполнения", NO_CANCEL))
       .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
 
-    // then — подпоследовательность (буквы по порядку, но не подряд)
+    // then — многословный camel-hump: «Обр» — начало «Обработка», «Зап» — начало «Заполнения»
     assertThat(index.search("ОбрЗап", NO_CANCEL))
       .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
   }
@@ -97,11 +97,11 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
       КонецПроцедуры
       """);
 
-    // when — «ПрвДокОтб»: П-ро-в, Док, Отб встречаются по порядку, но не подряд и не с начала слов
+    // when — «првдкотб» (один фрагмент): буквы встречаются по порядку, но не подряд и не с начала слов
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("ПрвДокОтб", NO_CANCEL);
+    var result = index.search("првдкотб", NO_CANCEL);
 
-    // then — найден как подпоследовательность
+    // then — найден как подпоследовательность (однословный путь добирает скан)
     assertThat(result)
       .anyMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
   }
@@ -238,6 +238,61 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThat(names)
       .contains("ПровестиДокумент", "ДобавитьОбработчикКоманды")
       .containsSubsequence("ПровестиДокумент", "ДобавитьОбработчикКоманды");
+  }
+
+  @Test
+  void multiWordCamelHumpFindsSymbolViaTrieIntersection() {
+    // given — имя из двух CamelCase-слов
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрДок»: фрагменты «пр»,«док» пересекаются по словам через trie, без полного скана
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрДок", NO_CANCEL);
+
+    // then — символ найден как многословное совпадение
+    assertThat(result)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокумент"));
+  }
+
+  @Test
+  void inOrderMultiWordMatchRanksAboveUnordered() {
+    // given — два имени из тех же слов в разном порядке
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ДокументПровести()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрДок» (пр, док): для «ПровестиДокумент» — по порядку, для «ДокументПровести» — нет
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрДок", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но совпадение по порядку идёт раньше совпадения не по порядку
+    assertThat(names)
+      .contains("ПровестиДокумент", "ДокументПровести")
+      .containsSubsequence("ПровестиДокумент", "ДокументПровести");
+  }
+
+  @Test
+  void outOfOrderMultiWordMatchIsStillReturned() {
+    // given — имя, где фрагменты совпадают со словами не по порядку запроса
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ДокументПровести()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрДок»: «пр» — начало «Провести» (2-е слово), «док» — начало «Документ» (1-е слово)
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрДок", NO_CANCEL);
+
+    // then — несмотря на нарушенный порядок, запись возвращается (не отфильтровывается)
+    assertThat(result)
+      .anyMatch(entry -> entry.name().equals("ДокументПровести"));
   }
 
   @Test
