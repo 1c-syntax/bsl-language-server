@@ -128,4 +128,29 @@ class MethodSymbolKindTest extends AbstractServerContextAwareTest {
     // then
     assertThat(constructor.getSymbolKind()).isEqualTo(SymbolKind.Constructor);
   }
+
+  /**
+   * Обычный (не конструктор) метод OneScript-класса — член инстанцируемого объекта
+   * со состоянием, поэтому символ метода остаётся {@link SymbolKind#Method}, а не
+   * {@link SymbolKind#Function}.
+   */
+  @Test
+  void oneScriptClassMethodHasMethodKind() {
+    // given — OneScript-класс (модуль со состоянием) с функцией Echo
+    var fixtureDir = Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath();
+    var classFile = fixtureDir
+      .resolve("oscript_modules/internal-classes-lib/src/Классы/PublicEntity.os")
+      .toString();
+    initServerContext(fixtureDir, true);
+    var documentContext = TestUtils.getDocumentContextFromFile(classFile, context);
+
+    // when
+    var method = documentContext.getSymbolTree()
+      .getMethodSymbol("Echo")
+      .orElseThrow();
+
+    // then
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.OScriptClass);
+    assertThat(method.getSymbolKind()).isEqualTo(SymbolKind.Method);
+  }
 }

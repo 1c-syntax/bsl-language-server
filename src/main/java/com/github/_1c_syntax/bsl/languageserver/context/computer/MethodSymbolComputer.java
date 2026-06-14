@@ -265,7 +265,7 @@ public final class MethodSymbolComputer
     return RegularMethodSymbol.builder()
       .name(name)
       .owner(documentContext)
-      .symbolKind(methodSymbolKind())
+      .standaloneFunction(isStatelessModule())
       .range(range)
       .subNameRange(subNameRange)
       .function(function)
@@ -280,30 +280,31 @@ public final class MethodSymbolComputer
   }
 
   /**
-   * Определить вид символа обычного метода в зависимости от модуля.
+   * Проверить, что модуль не хранит состояние: модуль OneScript
+   * (любой {@code .os}-файл, не являющийся классом) либо общий модуль BSL
+   * ({@link ModuleType#CommonModule}).
    * <p>
-   * Метод модуля без состояния (модуль OneScript либо общий модуль BSL) — это
-   * самостоятельная функция, а не член объекта со состоянием, поэтому отдаётся как
-   * {@link SymbolKind#Function}. Методы модулей со состоянием (объект, менеджер,
-   * форма и т. п.) остаются {@link SymbolKind#Method}.
-   *
-   * @return {@link SymbolKind#Function} для методов модулей без состояния,
-   *   иначе {@link SymbolKind#Method}
-   */
-  private SymbolKind methodSymbolKind() {
-    return isStatelessModule() ? SymbolKind.Function : SymbolKind.Method;
-  }
-
-  /**
-   * Проверить, что модуль не хранит состояние: модуль OneScript либо общий модуль BSL.
-   * <p>
-   * Методы таких модулей — самостоятельные функции, а не члены объекта со состоянием.
+   * Методы таких модулей — самостоятельные функции, а не члены объекта со
+   * состоянием, поэтому для них корректнее {@link SymbolKind#Function}.
+   * Класс OneScript ({@link ModuleType#OScriptClass}) — это инстанцируемый
+   * объект со своим состоянием, поэтому его методы остаются
+   * {@link SymbolKind#Method}. Класс от модуля среди {@code .os}-файлов
+   * различается через {@link DocumentContext#getModuleType()}: тип
+   * {@link ModuleType#OScriptClass}/{@link ModuleType#OScriptModule} для файлов
+   * OneScript-библиотек наполняется
+   * {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleTypeResolver}.
+   * Отдельный {@code .os}-файл вне библиотеки имеет {@link ModuleType#UNKNOWN},
+   * но по семантике OneScript это скрипт-модуль, а не класс, поэтому он также
+   * считается модулем без состояния.
    *
    * @return {@code true}, если модуль не хранит состояние
    */
   private boolean isStatelessModule() {
+    if (documentContext.getModuleType() == ModuleType.CommonModule) {
+      return true;
+    }
     return documentContext.getFileType() == FileType.OS
-      || documentContext.getModuleType() == ModuleType.CommonModule;
+      && documentContext.getModuleType() != ModuleType.OScriptClass;
   }
 
   /**
