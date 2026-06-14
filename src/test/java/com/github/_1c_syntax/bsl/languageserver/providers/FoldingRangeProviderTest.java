@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
@@ -53,12 +54,12 @@ class FoldingRangeProviderTest {
 
   @BeforeEach
   void beforeEach() {
-    setCollapsedTextSupport(false);
+    setCapabilities(false, null);
   }
 
   @AfterEach
   void afterEach() {
-    setCollapsedTextSupport(false);
+    setCapabilities(false, null);
   }
 
   @Test
@@ -116,7 +117,7 @@ class FoldingRangeProviderTest {
   void testCollapsedTextForRegionWhenSupported() {
 
     // given
-    setCollapsedTextSupport(true);
+    setCapabilities(true, null);
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
     // when
@@ -133,7 +134,7 @@ class FoldingRangeProviderTest {
   void testCollapsedTextForRegionSplitsNameIntoWords() {
 
     // given
-    setCollapsedTextSupport(true);
+    setCapabilities(true, null);
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/providers/foldingRangeRegionName.bsl");
 
@@ -151,7 +152,7 @@ class FoldingRangeProviderTest {
   void testCollapsedTextForMethodWhenSupported() {
 
     // given
-    setCollapsedTextSupport(true);
+    setCapabilities(true, null);
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
     // when
@@ -168,7 +169,7 @@ class FoldingRangeProviderTest {
   void testCollapsedTextNotSetWhenNotSupported() {
 
     // given
-    setCollapsedTextSupport(false);
+    setCapabilities(false, null);
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
     // when
@@ -180,14 +181,69 @@ class FoldingRangeProviderTest {
       .allMatch(foldingRange -> foldingRange.getCollapsedText() == null);
   }
 
+  @Test
+  void testRangeLimitTruncatesToPrioritizedRanges() {
+
+    // given: клиент ограничивает число областей значением меньше, чем их вычислено (13)
+    setCapabilities(false, 3);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then: возвращено ровно rangeLimit областей, и это самые крупные (внешние/верхнеуровневые)
+    assertThat(foldingRanges).hasSize(3);
+    assertThat(foldingRanges)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 3 && foldingRange.getEndLine() == 26)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 5 && foldingRange.getEndLine() == 19)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 7 && foldingRange.getEndLine() == 17);
+
+    // and: мелкие вложенные области отброшены первыми
+    assertThat(foldingRanges)
+      .noneMatch(foldingRange -> foldingRange.getStartLine() == 12 && foldingRange.getEndLine() == 14);
+  }
+
+  @Test
+  void testRangeLimitNotAppliedWhenAbsent() {
+
+    // given: клиент не заявил лимит
+    setCapabilities(false, null);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then: возвращены все области без изменений
+    assertThat(foldingRanges).hasSize(13);
+  }
+
+  @Test
+  void testRangeLimitNotAppliedWhenListWithinLimit() {
+
+    // given: лимит больше числа вычисленных областей
+    setCapabilities(false, 100);
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
+
+    // then: возвращены все области без изменений
+    assertThat(foldingRanges).hasSize(13);
+  }
+
   /**
-   * Подменяет заявленную клиентом поддержку {@code collapsedText} в {@link ClientCapabilitiesHolder}
-   * и пересчитывает её кэш в провайдере через {@code handleInitializeEvent}.
+   * Подменяет заявленные клиентом возможности секции {@code textDocument.foldingRange}
+   * в {@link ClientCapabilitiesHolder} и пересчитывает их кэш в провайдере
+   * через {@code handleInitializeEvent}.
+   *
+   * @param collapsedTextSupported поддержка возможности {@code foldingRange.collapsedText}
+   * @param rangeLimit             значение {@code rangeLimit} ({@code null} — лимит не заявлен)
    */
-  private void setCollapsedTextSupport(boolean supported) {
-    var foldingRangeSupportCapabilities = new FoldingRangeSupportCapabilities(supported);
+  private void setCapabilities(boolean collapsedTextSupported, @Nullable Integer rangeLimit) {
+    var foldingRangeSupportCapabilities = new FoldingRangeSupportCapabilities(collapsedTextSupported);
     var foldingRangeCapabilities = new FoldingRangeCapabilities();
     foldingRangeCapabilities.setFoldingRange(foldingRangeSupportCapabilities);
+    foldingRangeCapabilities.setRangeLimit(rangeLimit);
     var textDocumentClientCapabilities = new TextDocumentClientCapabilities();
     textDocumentClientCapabilities.setFoldingRange(foldingRangeCapabilities);
     var clientCapabilities = new ClientCapabilities();
