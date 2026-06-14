@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -67,6 +68,7 @@ public final class DiagnosticProvider {
 
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final ServerContextProvider serverContextProvider;
 
   private boolean clientSupportsRefresh;
 
@@ -144,7 +146,7 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
-    requestRefreshIfSupported();
+    serverContextProvider.getAllContexts().values().forEach(this::refreshDiagnostics);
   }
 
   /**
@@ -159,7 +161,7 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleServerContextPopulatedEvent(ServerContextPopulatedEvent event) {
-    requestRefreshIfSupported(event.getSource(), false);
+    refreshDiagnostics(event.getSource());
   }
 
   /**
@@ -173,45 +175,25 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
-    requestRefreshIfSupported(event.getSource(), true);
+    refreshDiagnostics(event.getSource());
   }
 
-  private void requestRefreshIfSupported() {
+  /**
+   * Обновляет диагностики у клиента. При поддержке клиентом pull-refresh —
+   * отправляет {@code workspace/diagnostic/refresh}. Иначе чистит кэш и push'ит
+   * свежие диагностики у открытых документов: закрытые не используются клиентом
+   * прямо сейчас, а {@code AnalyzeProjectOnStart} их обработает отдельно.
+   */
+  private void refreshDiagnostics(ServerContext serverContext) {
     if (clientSupportsRefresh) {
       clientHolder.execIfConnected((LanguageClient languageClient) -> {
         LOGGER.debug("Requesting diagnostic refresh from client");
         languageClient.refreshDiagnostics();
       });
-    }
-  }
-
-  /**
-   * Запрашивает обновление диагностик у клиента. При поддержке клиентом
-   * pull-refresh — отправляет {@code workspace/diagnostic/refresh}.
-   * При отсутствии поддержки и {@code pushFallback=true} — инвалидирует
-   * закэшированные диагностики и push'ит свежие в открытые документы.
-   * <p>
-   * {@code pushFallback=false} оставляет fallback на {@code AnalyzeProjectOnStart},
-   * чтобы не дублировать вычисление и публикацию.
-   */
-  private void requestRefreshIfSupported(ServerContext serverContext, boolean pushFallback) {
-    if (clientSupportsRefresh) {
-      requestRefreshIfSupported();
       return;
     }
-    if (pushFallback) {
-      // Чистим кэш только у открытых документов — закрытые не используются клиентом
-      // прямо сейчас, а AnalyzeProjectOnStart их recomputes на следующем
-      // ServerContextPopulatedEvent.
-      var opened = serverContext.getOpenedDocuments();
-      opened.forEach(DocumentContext::clearDiagnostics);
-      LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
-      opened.forEach(this::computeAndPublishDiagnostics);
-    }
-  }
-
-  private void pushDiagnosticsToOpenedDocuments(ServerContext serverContext) {
     var opened = serverContext.getOpenedDocuments();
+    opened.forEach(DocumentContext::clearDiagnostics);
     LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
     opened.forEach(this::computeAndPublishDiagnostics);
   }

@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -41,11 +39,8 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
-  private static final String EVENT_HANDLER_HEADER_KEY = "eventHandlerHeader";
-
   private final DescriptionFormatter descriptionFormatter;
   private final EventContractsIndex eventContractsIndex;
-  private final Resources resources;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -77,7 +72,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
     // признак "обработчик события платформы" + платформенное описание события
     eventContract.ifPresent(contract -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
-      buildEventHandlerSection(contract, resources.getResourceString(getClass(), EVENT_HANDLER_HEADER_KEY))));
+      descriptionFormatter.getEventHandlerSection(contract)));
 
     // описание метода
     var purposeSection = descriptionFormatter.getPurposeSection(symbol);
@@ -86,7 +81,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // параметры: для обработчика — контракт события (имена/типы), иначе —
     // шапка-комментарий пользователя
     var parametersSection = eventContract.isPresent()
-      ? descriptionFormatter.getParametersSection(eventContract.get())
+      ? descriptionFormatter.getParametersSection(symbol, eventContract.get())
       : descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 
@@ -107,25 +102,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
 
-
   @Override
   public Class<? extends Symbol> getSymbolClass() {
     return MethodSymbol.class;
   }
-
-  /**
-   * Секция-шапка «&lt;header&gt;: &lt;имя&gt;» + описание события из bsl-context.
-   * Заголовок локализован через ресурсы класса.
-   */
-  private static String buildEventHandlerSection(MemberDescriptor event, String header) {
-    var sj = new StringJoiner("\n");
-    sj.add("**" + header + ":** `" + event.name() + "`");
-    var description = event.description();
-    if (!description.isBlank()) {
-      sj.add("");
-      sj.add(description);
-    }
-    return sj.toString();
-  }
-
 }

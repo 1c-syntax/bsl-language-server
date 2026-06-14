@@ -25,7 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -60,10 +62,12 @@ public class DescriptionFormatter {
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
   private static final String DEPRECATED_FLAG_KEY = "deprecatedFlag";
+  private static final String EVENT_HANDLER_HEADER_KEY = "eventHandlerHeader";
   private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
 
   private final Resources resources;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final EventContractsIndex eventContractsIndex;
 
   public void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
     if (!newContent.isEmpty()) {
@@ -130,7 +134,34 @@ public class DescriptionFormatter {
    * шапки-комментария пользователя — контракт авторитетен, шапка может
    * устаревать или отсутствовать.
    */
+  /**
+   * Секция-шапка «Обработчик события платформы: {@code <имя>}» + платформенное
+   * описание события из bsl-context. Используется hover-билдерами метода и
+   * параметра, чтобы показать, что метод/переменная — обработчик платформенного
+   * события.
+   */
+  public String getEventHandlerSection(MemberDescriptor event) {
+    var sj = new StringJoiner("\n");
+    sj.add("**" + getResourceString(EVENT_HANDLER_HEADER_KEY) + ":** `" + event.name() + "`");
+    var description = event.description();
+    if (!description.isBlank()) {
+      sj.add("");
+      sj.add(description);
+    }
+    return sj.toString();
+  }
+
   public String getParametersSection(MemberDescriptor eventContract) {
+    return getParametersSection(null, eventContract);
+  }
+
+  /**
+   * Перегрузка с контекстным методом: к описанию параметра из контракта
+   * подмешивается пользовательское описание из шапки-комментария метода
+   * (если оно есть). Платформенное описание идёт первым, затем пользовательское
+   * под отдельным префиксом.
+   */
+  public String getParametersSection(MethodSymbol method, MemberDescriptor eventContract) {
     if (eventContract.signatures().isEmpty()) {
       return "";
     }
@@ -138,8 +169,11 @@ public class DescriptionFormatter {
     if (parameters.isEmpty()) {
       return "";
     }
+    var userDescriptions = userParameterDescriptions(method);
     var result = new StringJoiner("  \n");
-    parameters.forEach(p -> result.add(eventParameterToString(p)));
+    for (var i = 0; i < parameters.size(); i++) {
+      result.add(eventParameterToString(parameters.get(i), userDescriptions, i, method));
+    }
     var parametersSection = new StringJoiner("\n");
     parametersSection.add("**" + getResourceString(PARAMETERS_KEY) + ":**");
     parametersSection.add("");
@@ -147,20 +181,126 @@ public class DescriptionFormatter {
     return parametersSection.toString();
   }
 
-  private static String eventParameterToString(ParameterDescriptor parameter) {
-    var name = parameter.bilingualName().ru();
-    if (name.isBlank()) {
-      name = parameter.bilingualName().en();
+  /** Имя параметра обработчика по позиции в шапке-комментарии метода (для подмешивания user-описания). */
+  private static Map<Integer, String> userParameterDescriptions(@org.jspecify.annotations.Nullable MethodSymbol method) {
+    if (method == null) {
+      return Map.of();
     }
+    var descriptionOpt = method.getDescription();
+    if (descriptionOpt.isEmpty()) {
+      return Map.of();
+    }
+    var docParameters = descriptionOpt.get().getParameters();
+    if (docParameters.isEmpty()) {
+      return Map.of();
+    }
+    var byPosition = new HashMap<Integer, String>();
+    var methodParameters = method.getParameters();
+    for (var i = 0; i < methodParameters.size(); i++) {
+      var paramName = methodParameters.get(i).getName();
+      for (var docParam : docParameters) {
+        if (paramName.equalsIgnoreCase(docParam.name())) {
+          var purpose = docParam.types().stream()
+            .map(TypeDescription::description)
+            .filter(text -> text != null && !text.isBlank())
+            .findFirst()
+            .orElse("");
+          if (!purpose.isBlank()) {
+            byPosition.put(i, purpose);
+          }
+          break;
+        }
+      }
+    }
+    return byPosition;
+  }
+
+  private String eventParameterToString(
+    ParameterDescriptor parameter, Map<Integer, String> userDescriptions, int index,
+    @org.jspecify.annotations.Nullable MethodSymbol method
+  ) {
+    var name = pickName(parameter, method, index);
     var types = parameter.types().refs().stream()
       .map(TypeRef::qualifiedName)
       .collect(Collectors.joining(" | "));
     var line = PARAMETER_TEMPLATE.formatted(name, types);
-    var description = parameter.bilingualDescription().ru();
-    if (!description.isBlank()) {
-      line = line + " - " + description;
+    var contractDescription = parameter.bilingualDescription().ru();
+    var userDescription = userDescriptions.getOrDefault(index, "");
+    if (!contractDescription.isBlank() && !userDescription.isBlank()) {
+      line = line + " — " + contractDescription + " / " + userDescription;
+    } else if (!contractDescription.isBlank()) {
+      line = line + " — " + contractDescription;
+    } else if (!userDescription.isBlank()) {
+      line = line + " — " + userDescription;
     }
     return line;
+  }
+
+  private static String pickName(
+    ParameterDescriptor parameter, @org.jspecify.annotations.Nullable MethodSymbol method, int index
+  ) {
+    if (method != null && index < method.getParameters().size()) {
+      var fromCode = method.getParameters().get(index).getName();
+      if (!fromCode.isBlank()) {
+        return fromCode;
+      }
+    }
+    var ru = parameter.bilingualName().ru();
+    if (!ru.isBlank()) {
+      return ru;
+    }
+    return parameter.bilingualName().en();
+  }
+
+  /**
+   * Описание параметра-обработчика платформенного события из контракта
+   * (bsl-context): сопоставление <b>по позиции</b> — имена параметров обработчика
+   * задаёт пользователь, в коде они могут не совпадать с именами в контракте.
+   * При выходе за длину контракта возвращаем пусто, если последний параметр
+   * контракта не variadic.
+   */
+  public String getEventHandlerParameterDescription(VariableSymbol symbol) {
+    if (symbol.getKind() != VariableKind.PARAMETER
+      || !(symbol.getScope() instanceof MethodSymbol method)) {
+      return "";
+    }
+    var contractOpt = eventContractsIndex.getContract(method.getOwner(), method.getName());
+    if (contractOpt.isEmpty()) {
+      return "";
+    }
+    var paramIndex = indexOfParameter(method, symbol.getName());
+    if (paramIndex < 0) {
+      return "";
+    }
+    return parameterAt(contractOpt.get(), paramIndex)
+      .map(p -> p.bilingualDescription().ru())
+      .orElse("");
+  }
+
+  private static int indexOfParameter(MethodSymbol method, String name) {
+    var params = method.getParameters();
+    for (var i = 0; i < params.size(); i++) {
+      if (params.get(i).getName().equalsIgnoreCase(name)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private static java.util.Optional<ParameterDescriptor> parameterAt(MemberDescriptor contract, int index) {
+    if (contract.signatures().isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    var params = contract.signatures().get(0).parameters();
+    if (params.isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    var idx = index < params.size() ? index : (params.size() - 1);
+    var p = params.get(idx);
+    if (index >= params.size() && !p.variadic()) {
+      return java.util.Optional.empty();
+    }
+    return java.util.Optional.of(p);
   }
 
   public String getReturnedValueSection(MethodSymbol methodSymbol) {

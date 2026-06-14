@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -76,8 +75,6 @@ class VariableSymbolStructureRenderTest {
   @Mock
   private TypeService typeService;
   @Mock
-  private EventContractsIndex eventContractsIndex;
-  @Mock
   private VariableSymbol symbol;
 
   private VariableSymbolMarkupContentBuilder builder;
@@ -85,7 +82,7 @@ class VariableSymbolStructureRenderTest {
   @BeforeEach
   void setUp() {
     builder = new VariableSymbolMarkupContentBuilder(
-      configuration, descriptionFormatter, resources, typeService, eventContractsIndex);
+      configuration, descriptionFormatter, resources, typeService);
 
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))

@@ -29,9 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -68,7 +65,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
   private final TypeService typeService;
-  private final EventContractsIndex eventContractsIndex;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -98,8 +94,8 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
 
     // описание параметра из контракта события (для обработчиков платформенных
     // событий) — приоритетнее doc-комментария, который может устаревать
-    var eventParamDescription = eventHandlerParameterDescription(symbol);
-    if (!eventParamDescription.isBlank()) {
+    var eventParamDescription = descriptionFormatter.getEventHandlerParameterDescription(symbol);
+    if (eventParamDescription != null && !eventParamDescription.isBlank()) {
       descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventParamDescription);
     } else {
       symbol.getDescription()
@@ -276,57 +272,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    * @param children    вложенные ключи (имя в нижнем регистре → описание).
    */
   private record DocField(String name, String typeLabel, String description, Map<String, DocField> children) {
-  }
-
-  /**
-   * Описание параметра из контракта платформенного события (bsl-context):
-   * сопоставление <b>по позиции</b> — имена параметров обработчика задаёт
-   * пользователь, в коде они могут не совпадать с именами в контракте.
-   * При выходе за длину контракта возвращаем пусто, если последний параметр
-   * контракта не variadic (хвост переменной арности).
-   */
-  private String eventHandlerParameterDescription(VariableSymbol symbol) {
-    if (symbol.getKind() != VariableKind.PARAMETER
-      || !(symbol.getScope() instanceof MethodSymbol method)) {
-      return "";
-    }
-    var contractOpt = eventContractsIndex.getContract(method.getOwner(), method.getName());
-    if (contractOpt.isEmpty()) {
-      return "";
-    }
-    var paramIndex = indexOfParameter(method, symbol.getName());
-    if (paramIndex < 0) {
-      return "";
-    }
-    return parameterAt(contractOpt.get(), paramIndex)
-      .map(p -> p.bilingualDescription().ru())
-      .orElse("");
-  }
-
-  private static int indexOfParameter(MethodSymbol method, String name) {
-    var params = method.getParameters();
-    for (var i = 0; i < params.size(); i++) {
-      if (params.get(i).getName().equalsIgnoreCase(name)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static Optional<ParameterDescriptor> parameterAt(MemberDescriptor contract, int index) {
-    if (contract.signatures().isEmpty()) {
-      return Optional.empty();
-    }
-    var params = contract.signatures().get(0).parameters();
-    if (params.isEmpty()) {
-      return Optional.empty();
-    }
-    var idx = index < params.size() ? index : (params.size() - 1);
-    var p = params.get(idx);
-    if (index >= params.size() && !p.variadic()) {
-      return Optional.empty();
-    }
-    return Optional.of(p);
   }
 
   /** Описания ключей из doc-комментария параметра (для PARAMETER-переменной). */
