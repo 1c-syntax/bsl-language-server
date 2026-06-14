@@ -40,6 +40,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -96,7 +97,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * по фрагментам. Полное совпадение имени — максимальный ранг, совпадения по подсловам — ранг ниже.
  * <p>
  * «Грязный» fuzzy-хвост (непрерывная подстрока внутри слова и разбросанная подпоследовательность)
- * вынесен в ОТДЕЛЬНЫЙ метод {@link #searchFuzzyTail(String, Set, CancelChecker)}. Это медленный
+ * вынесен в ОТДЕЛЬНЫЙ метод {@link #searchFuzzyTail(String, Collection, CancelChecker)}. Это медленный
  * линейный путь по снимку уникальных записей, предназначенный для потоковой дослыки
  * нижнеранжированных результатов через partial result progress; в синхронный ответ {@code search}
  * он НЕ входит.
@@ -118,6 +119,12 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Частота проверки отмены запроса (раз в N просмотренных записей).
    */
   private static final int CANCEL_CHECK_INTERVAL = 1024;
+
+  /**
+   * Минимальное число CamelCase-фрагментов запроса, при котором включается многословный
+   * (camel-hump) путь поиска через пересечение множеств записей по фрагментам.
+   */
+  private static final int MIN_MULTI_WORD_FRAGMENTS = 2;
 
   /**
    * Скор точного совпадения имени с запросом (наиболее релевантно).
@@ -154,7 +161,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
 
   /**
    * Скор совпадения запроса как непрерывной подстроки имени (но не префикса слова). Относится к
-   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Set, CancelChecker)}), а не к древесному
+   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Collection, CancelChecker)}), а не к древесному
    * {@link #search(String, CancelChecker)}.
    */
   private static final int SCORE_SUBSTRING = 5;
@@ -162,7 +169,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   /**
    * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
    * позиция первого совпавшего символа (более ранняя позиция — релевантнее). Относится к
-   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Set, CancelChecker)}), а не к древесному
+   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Collection, CancelChecker)}), а не к древесному
    * {@link #search(String, CancelChecker)}.
    */
   private static final int SCORE_SUBSEQUENCE = 6;
@@ -283,7 +290,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * (записи проиндексированы под суффиксами от начала каждого слова), а многословный (≥2
    * CamelCase-фрагмента) запрос — сублинейным пересечением множеств записей по фрагментам. Это быстрый
    * путь. Произвольная подстрока внутри слова и подпоследовательность вразброс сюда НЕ входят: они
-   * доступны отдельно через {@link #searchFuzzyTail(String, Set, CancelChecker)} для потоковой выдачи
+   * доступны отдельно через {@link #searchFuzzyTail(String, Collection, CancelChecker)} для потоковой выдачи
    * через partial result progress и в синхронный ответ {@code search} не попадают.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
@@ -335,7 +342,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     var fragments = queryFragments(query);
 
     collectPrefixMatches(lowerQuery, bestScore, progress);
-    if (fragments.size() >= 2) {
+    if (fragments.size() >= MIN_MULTI_WORD_FRAGMENTS) {
       collectMultiWordMatches(fragments, bestScore, progress);
     }
 
@@ -369,7 +376,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * @param cancelChecker проверяющий отмену запроса
    * @return ранжированный список fuzzy-совпадений, не пересекающийся с {@code exclude}
    */
-  public List<Entry> searchFuzzyTail(String query, Set<Entry> exclude, CancelChecker cancelChecker) {
+  public List<Entry> searchFuzzyTail(String query, Collection<Entry> exclude, CancelChecker cancelChecker) {
     cancelChecker.checkCanceled();
 
     var lowerQuery = query.toLowerCase(Locale.ENGLISH);
@@ -383,17 +390,34 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     var matches = new ArrayList<Scored>();
     for (var entry : snapshot) {
       progress.advance();
-      if (exclude.contains(entry)) {
-        continue;
+      var fuzzyScore = fuzzyTailScore(entry, lowerQuery, exclude);
+      if (fuzzyScore >= 0) {
+        matches.add(new Scored(fuzzyScore, entry));
       }
-      var fuzzyScore = fuzzyScore(entry.lowerName(), lowerQuery);
-      if (fuzzyScore < 0) {
-        continue;
-      }
-      matches.add(new Scored(fuzzyScore, entry));
     }
     matches.sort(Comparator.naturalOrder());
     return matches.stream().map(Scored::entry).toList();
+  }
+
+  /**
+   * Вычислить скор записи для fuzzy-хвоста, учитывая исключение уже отданных быстрым путём записей.
+   * <p>
+   * Запись, присутствующая в {@code exclude} (сравнение по идентичности), отбрасывается ({@code -1}),
+   * иначе возвращается её fuzzy-скор {@link #fuzzyScore(String, String)} (тоже {@code -1}, если
+   * совпадения нет). Выделено из цикла
+   * {@link #searchFuzzyTail(String, Collection, CancelChecker)}, чтобы условия отбора не приходилось
+   * выражать множественными {@code continue}.
+   *
+   * @param entry      запись-кандидат
+   * @param lowerQuery lowercase-запрос (непустой)
+   * @param exclude    записи, уже отданные быстрым путём (сравнение по идентичности)
+   * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если запись исключена или не совпала
+   */
+  private static int fuzzyTailScore(Entry entry, String lowerQuery, Collection<Entry> exclude) {
+    if (exclude.contains(entry)) {
+      return -1;
+    }
+    return fuzzyScore(entry.lowerName(), lowerQuery);
   }
 
   /**

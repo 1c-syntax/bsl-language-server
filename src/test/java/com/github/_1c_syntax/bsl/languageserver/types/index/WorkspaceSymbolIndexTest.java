@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -198,22 +200,38 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThat(names.indexOf("ПровестиДокумент")).isLessThan(names.indexOf("ПроверитьЗаполнение"));
   }
 
-  @Test
-  void wordStartSearchFindsSymbolByMiddleWord() {
-    // given — символ со словом «Документ» в середине имени
+  /**
+   * Один символ должен находиться по разным формам древесного запроса: по началу CamelCase-слова из
+   * середины имени, по многословному camel-hump совпадению и по многословному совпадению не по
+   * порядку слов. Во всех случаях запись возвращается через дерево, без линейного скана.
+   *
+   * @param procedureName имя индексируемой процедуры
+   * @param query         поисковый запрос
+   * @param expectedName  имя символа, который должен быть найден
+   */
+  @ParameterizedTest
+  @CsvSource({
+    // начало CamelCase-слова «Документ» из середины имени (trie word-start, не скан)
+    "ПровестиДокумент, Документ, ПровестиДокумент",
+    // многословный camel-hump: «пр»,«док» пересекаются по словам через trie
+    "ПровестиДокумент, ПрДок, ПровестиДокумент",
+    // многословное совпадение не по порядку слов: запись всё равно возвращается
+    "ДокументПровести, ПрДок, ДокументПровести"
+  })
+  void findsSymbolViaTrieQueryForms(String procedureName, String query, String expectedName) {
+    // given — символ с заданным CamelCase-именем
     var documentContext = TestUtils.getDocumentContext("""
-      Процедура ПровестиДокумент()
+      Процедура %s()
       КонецПроцедуры
-      """);
+      """.formatted(procedureName));
 
-    // when — запрос «Документ» — начало второго CamelCase-слова имени «ПровестиДокумент»,
-    // которое не является префиксом полного имени, но индексировано как word-start ключ
+    // when — поиск по древесной форме запроса (word-start или многословное пересечение)
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("Документ", NO_CANCEL);
+    var result = index.search(query, NO_CANCEL);
 
-    // then — символ найден по началу слова из середины имени (через trie word-start, не сканом)
+    // then — символ найден через дерево, без линейного скана
     assertThat(result)
-      .anyMatch(entry -> entry.name().equals("ПровестиДокумент"));
+      .anyMatch(entry -> entry.name().equals(expectedName));
   }
 
   @Test
@@ -236,23 +254,6 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThat(names)
       .contains("ДокументПолучить", "ПровестиДокумент")
       .containsSubsequence("ДокументПолучить", "ПровестиДокумент");
-  }
-
-  @Test
-  void multiWordCamelHumpFindsSymbolViaTrieIntersection() {
-    // given — имя из двух CamelCase-слов
-    var documentContext = TestUtils.getDocumentContext("""
-      Процедура ПровестиДокумент()
-      КонецПроцедуры
-      """);
-
-    // when — «ПрДок»: фрагменты «пр»,«док» пересекаются по словам через trie, без полного скана
-    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("ПрДок", NO_CANCEL);
-
-    // then — символ найден как многословное совпадение
-    assertThat(result)
-      .anyMatch(entry -> entry.name().equals("ПровестиДокумент"));
   }
 
   @Test
@@ -298,23 +299,6 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThat(names)
       .contains("ПровестиДокумент", "ОбработкаПрдЗначение")
       .containsSubsequence("ПровестиДокумент", "ОбработкаПрдЗначение");
-  }
-
-  @Test
-  void outOfOrderMultiWordMatchIsStillReturned() {
-    // given — имя, где фрагменты совпадают со словами не по порядку запроса
-    var documentContext = TestUtils.getDocumentContext("""
-      Процедура ДокументПровести()
-      КонецПроцедуры
-      """);
-
-    // when — «ПрДок»: «пр» — начало «Провести» (2-е слово), «док» — начало «Документ» (1-е слово)
-    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("ПрДок", NO_CANCEL);
-
-    // then — несмотря на нарушенный порядок, запись возвращается (не отфильтровывается)
-    assertThat(result)
-      .anyMatch(entry -> entry.name().equals("ДокументПровести"));
   }
 
   @Test
@@ -462,21 +446,28 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
   @Test
   void searchFuzzyTailExcludesEntriesFromExcludeSet() {
-    // given — символ, который находится и trie (как начало слова), и fuzzy-хвостом
+    // given — «ПровестиДокумент» trie находит по началу слова «Документ»; «ОбработкаНеокумента»
+    // содержит подстроку «окумен» лишь в середине слова, поэтому в trie по «Документ» не попадает
     var documentContext = TestUtils.getDocumentContext("""
       Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ОбработкаНеокумента()
       КонецПроцедуры
       """);
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
 
-    // when — «Документ» trie находит как начало слова; передаём его результат как exclude
+    // when — «окумен» (середина слова): fuzzy-хвост находит оба символа по подстроке;
+    // в exclude кладём результат trie по «Документ» — туда попадает только «ПровестиДокумент»
     var trieResult = index.search("Документ", NO_CANCEL);
     Set<Entry> exclude = Collections.newSetFromMap(new IdentityHashMap<>());
     exclude.addAll(trieResult);
-    var fuzzyResult = index.searchFuzzyTail("Документ", exclude, NO_CANCEL);
+    var fuzzyResult = index.searchFuzzyTail("окумен", exclude, NO_CANCEL);
 
-    // then — записи из exclude не возвращаются fuzzy-хвостом (нет дублей с быстрым путём)
+    // then — fuzzy-хвост вернул не пустой результат, исключив записи из exclude,
+    // но сохранив прочие fuzzy-совпадения (нет дублей с быстрым путём, но хвост не пуст)
     assertThat(fuzzyResult)
+      .isNotEmpty()
+      .anyMatch(entry -> entry.name().equals("ОбработкаНеокумента"))
       .doesNotContainAnyElementsOf(exclude);
   }
 
