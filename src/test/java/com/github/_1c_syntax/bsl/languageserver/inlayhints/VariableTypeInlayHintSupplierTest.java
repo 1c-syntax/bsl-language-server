@@ -67,9 +67,41 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
         assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft(": Массив"));
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Type);
         assertThat(inlayHint.getPaddingRight()).isTrue();
-        // позиция — сразу после имени переменной «Контрагент» (строка 1, длина имени)
-        assertThat(inlayHint.getPosition().getLine()).isEqualTo(1);
+        // позиция — сразу после имени переменной «Контрагент» (строка 2, длина имени)
+        assertThat(inlayHint.getPosition().getLine()).isEqualTo(2);
         assertThat(inlayHint.getPosition().getCharacter()).isEqualTo("\tКонтрагент".length());
+      });
+  }
+
+  @Test
+  void testNoHintForNewExpressionAssignment() {
+
+    // given
+    // правая часть — конструктор «Новый Массив()»: тип очевиден из записи «Новый Тип»
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+      	Контрагент = Новый Массив();
+      	Источник = Новый Массив();
+      	Копия = Источник;
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    // присваивания «Новый Массив()» хинта не дают, а «Копия = Источник» — даёт
+    assertThat(inlayHints)
+      .hasSize(1)
+      .first()
+      .satisfies(inlayHint -> {
+        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft(": Массив"));
+        // строка «Копия = Источник» (0-based) — третья строка тела процедуры
+        assertThat(inlayHint.getPosition().getLine()).isEqualTo(3);
       });
   }
 

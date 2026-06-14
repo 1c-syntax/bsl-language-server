@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +48,8 @@ public class JsonMapperConfiguration {
   @Bean
   JsonMapperBuilderCustomizer jacksonCustomizer(
     Collection<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers,
-    Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers
+    Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers,
+    Collection<InlayHintSupplier<? extends InlayHintData>> inlayHintSuppliers
   ) {
 
     var namedTypes = new ArrayList<NamedType>();
@@ -56,12 +59,20 @@ public class JsonMapperConfiguration {
     commandSuppliers.stream()
       .map(JsonMapperConfiguration::toNamedType)
       .collect(Collectors.toCollection(() -> namedTypes));
+    inlayHintSuppliers.stream()
+      .filter(inlayHintSupplier -> inlayHintSupplier.getInlayHintDataClass() != null)
+      .map(JsonMapperConfiguration::toNamedType)
+      .collect(Collectors.toCollection(() -> namedTypes));
 
     return builder -> namedTypes.forEach(builder::registerSubtypes);
   }
 
   private static NamedType toNamedType(CodeLensSupplier<? extends CodeLensData> codeLensSupplier) {
     return new NamedType(codeLensSupplier.getCodeLensDataClass(), codeLensSupplier.getId());
+  }
+
+  private static NamedType toNamedType(InlayHintSupplier<? extends InlayHintData> inlayHintSupplier) {
+    return new NamedType(inlayHintSupplier.getInlayHintDataClass(), inlayHintSupplier.getId());
   }
 
   private static NamedType toNamedType(CommandSupplier<? extends CommandArguments> commandSupplier) {

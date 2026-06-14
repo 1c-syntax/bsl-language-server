@@ -31,13 +31,23 @@ import java.util.List;
 /**
  * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider}
  * данными о доступных в документе inlay hints.
+ * <p>
+ * Для хранения промежуточных данных между созданием и разрешением хинта необходимо использовать
+ * поле {@link InlayHint#setData(Object)}, заполняя его объектом класса
+ * {@link InlayHintSupplier#getInlayHintDataClass()}.
+ * <p>
+ * Конкретный сапплаер может расширить состав данных, хранимых в хинте, доопределив дата-класс,
+ * наследующий {@link InlayHintData}, и указав его тип в качестве типа-параметра класса.
+ *
+ * @param <T> Конкретный тип для данных хинта.
  */
-public interface InlayHintSupplier {
+public interface InlayHintSupplier<T extends InlayHintData> {
 
   String INLAY_HINT_SUPPLIER = "InlayHintSupplier";
 
   /**
-   * Идентификатор сапплаера.
+   * Идентификатор сапплаера. Если хинт содержит поле {@link InlayHint#getData()},
+   * идентификатор в данных хинта должен совпадать с данным идентификатором.
    *
    * @return Идентификатор сапплаера.
    */
@@ -61,6 +71,16 @@ public interface InlayHintSupplier {
   List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params);
 
   /**
+   * Получить класс для хранения данных хинта.
+   * <p>
+   * При создании не-разрешённого хинта поле {@link InlayHint#setData(Object)}
+   * должно заполняться объектом данного класса.
+   *
+   * @return Конкретный класс для хранения данных хинта.
+   */
+  Class<T> getInlayHintDataClass();
+
+  /**
    * Дорассчитать «тяжёлые» поля хинта (tooltip и т.п.) при обработке
    * {@code inlayHint/resolve}.
    * <p>
@@ -70,10 +90,11 @@ public interface InlayHintSupplier {
    * переопределить метод и восстановить отложенные поля по этим данным.
    *
    * @param documentContext Контекст документа, к которому относится хинт.
-   * @param inlayHint       Неразрешённый хинт (с заполненным {@link InlayHint#getData()}).
+   * @param unresolved      Неразрешённый хинт (с заполненным {@link InlayHint#getData()}).
+   * @param data            Десериализованные данные хинта.
    * @return Разрешённый хинт.
    */
-  default InlayHint resolve(DocumentContext documentContext, InlayHint inlayHint) {
-    return inlayHint;
+  default InlayHint resolve(DocumentContext documentContext, InlayHint unresolved, T data) {
+    return unresolved;
   }
 }

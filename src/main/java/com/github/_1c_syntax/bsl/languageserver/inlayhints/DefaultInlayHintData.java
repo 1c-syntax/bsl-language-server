@@ -29,18 +29,12 @@ import lombok.experimental.NonFinal;
 import java.net.URI;
 
 /**
- * Данные хинта типа переменной для отложенного построения tooltip через
- * {@code inlayHint/resolve}. Кладётся в {@code InlayHint.data} при жадном
- * расчёте хинтов и восстанавливается JSON round-trip'ом на резолве.
- * <p>
- * Поле {@code typeName} — каноническое имя выведенного типа для восстановления
- * описания.
+ * DTO для хранения промежуточных данных inlay hint между созданием хинта и его разрешением.
  */
 @Value
 @NonFinal
-public class VariableTypeInlayHintData implements InlayHintData {
+public class DefaultInlayHintData implements InlayHintData {
   @JsonAdapter(URITypeAdapter.class)
   URI uri;
   String id;
-  String typeName;
 }

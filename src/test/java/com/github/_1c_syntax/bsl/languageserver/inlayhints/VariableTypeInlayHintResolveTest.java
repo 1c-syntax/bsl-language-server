@@ -60,7 +60,8 @@ class VariableTypeInlayHintResolveTest extends AbstractServerContextAwareTest {
     assertThat(unresolved.getData()).isNotNull();
 
     // when: резолвим
-    var resolved = provider.resolveInlayHint(documentContext, unresolved);
+    var data = provider.extractData(unresolved);
+    var resolved = provider.resolveInlayHint(documentContext, unresolved, data);
 
     // then: tooltip заполнен описанием типа, data очищена
     assertThat(resolved.getTooltip()).isNotNull();
@@ -69,20 +70,18 @@ class VariableTypeInlayHintResolveTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void testResolveWithoutDataReturnsHintUnchanged() {
+  void testResolveWithoutDataReturnsNullExtractedData() {
 
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
     var hintWithoutData = new InlayHint();
     hintWithoutData.setLabel(": Массив");
 
     // when
-    var resolved = supplier.resolve(documentContext, hintWithoutData);
+    var data = provider.extractData(hintWithoutData);
 
     // then
-    // у хинта нет data — резолв возвращает его без tooltip
-    assertThat(resolved).isSameAs(hintWithoutData);
-    assertThat(resolved.getTooltip()).isNull();
+    // у хинта нет data — извлекать нечего, резолв не выполняется
+    assertThat(data).isNull();
   }
 
   @Test
@@ -92,11 +91,11 @@ class VariableTypeInlayHintResolveTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
     var hint = new InlayHint();
     hint.setLabel(": НесуществующийТип");
-    hint.setData(new VariableTypeInlayHintData(
-      supplier.getId(), documentContext.getUri(), "НесуществующийТип"));
+    var data = new VariableTypeInlayHintData(
+      documentContext.getUri(), supplier.getId(), "НесуществующийТип");
 
     // when
-    var resolved = supplier.resolve(documentContext, hint);
+    var resolved = supplier.resolve(documentContext, hint, data);
 
     // then
     // тип не восстанавливается реестром — tooltip строится по сохранённому имени

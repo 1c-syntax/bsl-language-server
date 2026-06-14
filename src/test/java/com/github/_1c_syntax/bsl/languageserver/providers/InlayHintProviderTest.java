@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.CognitiveComplexityInlayHintSupplier;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.DefaultInlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -41,7 +42,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -117,63 +117,47 @@ class InlayHintProviderTest {
   }
 
   @Test
-  void testResolveInlayHintWithoutDataReturnsUnchanged() {
-
-    // given
-    // у хинта нет data — извлечь идентификатор сапплаера нельзя
-    var unresolved = new InlayHint(new Position(0, 0), Either.forLeft("no data"));
-
-    // when
-    var resolved = provider.resolveInlayHint(documentContext, unresolved);
-
-    // then
-    assertThat(resolved).isSameAs(unresolved);
-    assertThat(resolved.getTooltip()).isNull();
-  }
-
-  @Test
   void testResolveInlayHintWithUnknownSupplierReturnsUnchanged() {
 
     // given
     // data ссылается на несуществующий сапплаер
     var unresolved = new InlayHint(new Position(0, 0), Either.forLeft("unknown supplier"));
-    unresolved.setData(Map.of("supplierId", "doesNotExistSupplier"));
+    var data = new DefaultInlayHintData(documentContext.getUri(), "doesNotExistSupplier");
 
     // when
-    var resolved = provider.resolveInlayHint(documentContext, unresolved);
+    var resolved = provider.resolveInlayHint(documentContext, unresolved, data);
 
     // then
     assertThat(resolved).isSameAs(unresolved);
     assertThat(resolved.getTooltip()).isNull();
-    // data сохранена — резолв сапплаером не выполнялся
-    assertThat(resolved.getData()).isNotNull();
   }
 
   @Test
-  void testExtractUriReturnsEmptyWhenNoData() {
+  void testExtractDataReturnsNullWhenNoData() {
 
     // given
     var inlayHint = new InlayHint(new Position(0, 0), Either.forLeft("no data"));
 
     // when
-    var uri = provider.extractUri(inlayHint);
+    var data = provider.extractData(inlayHint);
 
     // then
-    assertThat(uri).isEmpty();
+    assertThat(data).isNull();
   }
 
   @Test
-  void testExtractUriReturnsUriFromData() {
+  void testExtractDataReturnsUriFromData() {
 
     // given
     var inlayHint = new InlayHint(new Position(0, 0), Either.forLeft("with uri"));
-    inlayHint.setData(Map.of("uri", documentContext.getUri().toString()));
+    inlayHint.setData(new DefaultInlayHintData(documentContext.getUri(), "someSupplier"));
 
     // when
-    var uri = provider.extractUri(inlayHint);
+    var data = provider.extractData(inlayHint);
 
     // then
-    assertThat(uri).contains(documentContext.getUri());
+    assertThat(data).isNotNull();
+    assertThat(data.getUri()).isEqualTo(documentContext.getUri());
   }
 
   private static InlayHint getTestHint() {
@@ -183,16 +167,21 @@ class InlayHintProviderTest {
   @TestConfiguration
   static class Configuration {
     @Bean
-    InlayHintSupplier inlayHintSupplier() {
+    InlayHintSupplier<DefaultInlayHintData> inlayHintSupplier() {
       return new TestInlayHintSupplier();
     }
   }
 
-  static class TestInlayHintSupplier implements InlayHintSupplier {
+  static class TestInlayHintSupplier implements InlayHintSupplier<DefaultInlayHintData> {
     @Override
     public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
       var inlayHint = getTestHint();
       return List.of(inlayHint);
+    }
+
+    @Override
+    public Class<DefaultInlayHintData> getInlayHintDataClass() {
+      return DefaultInlayHintData.class;
     }
   }
 

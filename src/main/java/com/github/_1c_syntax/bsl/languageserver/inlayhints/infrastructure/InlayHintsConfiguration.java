@@ -21,10 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 
+import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
+import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Spring-конфигурация для определения бинов
@@ -32,6 +38,22 @@ import java.util.Map;
  */
 @Configuration
 public class InlayHintsConfiguration {
+
+  /**
+   * Получить список сапплаеров inlay hints в разрезе их идентификаторов.
+   *
+   * @param inlayHintSuppliers Плоский список сапплаеров.
+   * @return Список сапплаеров inlay hints в разрезе их идентификаторов.
+   */
+  @Bean
+  @SuppressWarnings("unchecked")
+  public Map<String, InlayHintSupplier<InlayHintData>> inlayHintSuppliersById(
+    Collection<InlayHintSupplier<? extends InlayHintData>> inlayHintSuppliers
+  ) {
+    return inlayHintSuppliers.stream()
+      .map(inlayHintSupplier -> (InlayHintSupplier<InlayHintData>) inlayHintSupplier)
+      .collect(Collectors.toMap(InlayHintSupplier::getId, Function.identity()));
+  }
 
   /**
    * Проверить, включён ли сапплаер по его id.

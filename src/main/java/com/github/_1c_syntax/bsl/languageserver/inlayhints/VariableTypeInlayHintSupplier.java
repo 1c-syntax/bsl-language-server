@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,11 +52,21 @@ import java.util.Optional;
  */
 @Component
 @RequiredArgsConstructor
-public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
+public class VariableTypeInlayHintSupplier implements InlayHintSupplier<VariableTypeInlayHintData> {
 
   private final TypeService typeService;
   private final LanguageServerConfiguration configuration;
-  private final JsonMapper jsonMapper;
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Хинт типа откладывает построение tooltip на резолв, поэтому использует
+   * собственный дата-класс {@link VariableTypeInlayHintData}.
+   */
+  @Override
+  public Class<VariableTypeInlayHintData> getInlayHintDataClass() {
+    return VariableTypeInlayHintData.class;
+  }
 
   /**
    * Получение подсказок о выведенном типе переменных в присваиваниях.
@@ -86,13 +95,13 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     }
     var identifier = maybeIdentifier.get();
 
-    var namePosition = Ranges.create(identifier, identifier).getEnd();
+    var namePosition = Ranges.create(identifier).getEnd();
     if (!Ranges.containsPosition(range, namePosition)) {
       return Optional.empty();
     }
 
     var expression = assignment.expression();
-    if (expression == null || isTrivialLiteral(expression)) {
+    if (expression == null || isTrivialLiteral(expression) || isNewExpression(expression)) {
       return Optional.empty();
     }
 
@@ -111,7 +120,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     inlayHint.setPaddingRight(Boolean.TRUE);
     // Tooltip (полное описание типа) строится лениво на inlayHint/resolve —
     // в data кладём ссылку на тип, остальное (label/position/kind) жадно.
-    inlayHint.setData(new VariableTypeInlayHintData(getId(), documentContext.getUri(), inferredType.qualifiedName()));
+    inlayHint.setData(new VariableTypeInlayHintData(documentContext.getUri(), getId(), inferredType.qualifiedName()));
     return Optional.of(inlayHint);
   }
 
@@ -119,48 +128,29 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
    * Дорасчёт tooltip хинта типа по ленивым данным {@link VariableTypeInlayHintData}.
    * <p>
    * Восстанавливает {@link TypeRef} по сохранённому имени и кладёт в tooltip
-   * полное описание типа (markdown). Если данных нет либо тип не восстановлен —
-   * хинт возвращается без изменений.
+   * полное описание типа (markdown). Если тип не восстановлен — tooltip строится
+   * по сохранённому имени.
    *
    * @param documentContext Контекст документа, к которому относится хинт.
-   * @param inlayHint       Неразрешённый хинт с заполненным {@link InlayHint#getData()}.
+   * @param unresolved      Неразрешённый хинт с заполненным {@link InlayHint#getData()}.
+   * @param data            Десериализованные данные хинта.
    * @return Разрешённый хинт с заполненным tooltip.
    */
   @Override
-  public InlayHint resolve(DocumentContext documentContext, InlayHint inlayHint) {
-    var maybeData = extractData(inlayHint);
-    if (maybeData.isEmpty()) {
-      return inlayHint;
-    }
-    var data = maybeData.get();
-
-    var typeRef = typeService.resolve(data.typeName(), documentContext.getFileType())
-      .orElse(new TypeRef(TypeRef.UNKNOWN.kind(), data.typeName()));
+  public InlayHint resolve(
+    DocumentContext documentContext,
+    InlayHint unresolved,
+    VariableTypeInlayHintData data
+  ) {
+    var typeRef = typeService.resolve(data.getTypeName(), documentContext.getFileType())
+      .orElse(new TypeRef(TypeRef.UNKNOWN.kind(), data.getTypeName()));
 
     var displayName = typeService.displayName(typeRef, configuration.getLanguage());
     var description = typeService.getDescription(typeRef, configuration.getLanguage(), documentContext.getFileType());
 
     var markdown = description.isBlank() ? displayName : (displayName + "\n\n" + description);
-    inlayHint.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
-    return inlayHint;
-  }
-
-  /**
-   * Восстановление ленивых данных хинта типа из {@link InlayHint#getData()}.
-   *
-   * @param inlayHint Неразрешённый хинт.
-   * @return Данные хинта, либо {@code empty}, если поле {@code data} пустое.
-   */
-  private Optional<VariableTypeInlayHintData> extractData(InlayHint inlayHint) {
-    var rawData = inlayHint.getData();
-    if (rawData == null) {
-      return Optional.empty();
-    }
-    if (rawData instanceof VariableTypeInlayHintData data) {
-      return Optional.of(data);
-    }
-    // Клиент присылает data назад как JSON-объект — восстанавливаем round-trip'ом.
-    return Optional.of(jsonMapper.convertValue(rawData, VariableTypeInlayHintData.class));
+    unresolved.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+    return unresolved;
   }
 
   /**
@@ -210,5 +200,24 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier {
     }
     var member = expression.member().getFirst();
     return member.constValue() != null;
+  }
+
+  /**
+   * Правая часть — конструктор {@code Новый Тип(...)} без дальнейших обращений:
+   * тип очевиден из самой записи {@code Новый Тип}, подсказка не нужна.
+   * <p>
+   * Путь в грамматике: {@code expression → member → complexIdentifier →
+   * newExpression}. Проверяется единственный член без операций и без
+   * модификаторов ({@code .Поле}, {@code [...]}, {@code (...)} после конструктора),
+   * чтобы не скрывать хинт для случаев вида {@code Новый Массив().Найти(...)}.
+   */
+  private static boolean isNewExpression(BSLParser.ExpressionContext expression) {
+    if (!expression.operation().isEmpty() || expression.member().size() != 1) {
+      return false;
+    }
+    var complexIdentifier = expression.member().getFirst().complexIdentifier();
+    return complexIdentifier != null
+      && complexIdentifier.newExpression() != null
+      && complexIdentifier.modifier().isEmpty();
   }
 }
