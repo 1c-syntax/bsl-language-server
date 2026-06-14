@@ -75,7 +75,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Что покрывает префиксное дерево: префикс полного имени И префикс любого CamelCase-слова.
  * <p>
- * Многословные (camel-hump) запросы обслуживаются сублинейно без полного скана. Запрос режется на
+ * Многословные (camel-hump) запросы обслуживаются сублинейно. Запрос режется на
  * CamelCase-фрагменты ({@code ПрДок} → {@code пр},{@code док}); для каждого фрагмента из дерева
  * берётся множество записей по {@link PatriciaTrie#prefixMap(Object)}, и множества пересекаются
  * (запись должна иметь слово, начинающееся с КАЖДОГО фрагмента). Пересечение начинается с самого
@@ -84,12 +84,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * ({@link #SCORE_MULTI_WORD_IN_ORDER}), чем «не по порядку» ({@link #SCORE_MULTI_WORD_UNORDERED});
  * совпадения не по порядку не отфильтровываются, лишь понижаются в приоритете.
  * <p>
- * Однословные запросы (включая нижний регистр одним токеном) идут прежним путём: префиксный путь
- * через дерево плюс добор подстрочных и fuzzy-совпадений проходом по уникальным записям
- * (см. {@link #collectFuzzyMatches}). Чего НЕ покрывает дерево: произвольную подстроку ВНУТРИ слова
- * (не с его начала) и подпоследовательность вразброс ({@code ПрвДок} → {@code ПровестиДокумент}) для
- * однословного запроса — они добираются проходом. Для многословного запроса добор подпоследовательностью
- * со «съеденными» буквами внутри слова намеренно НЕ делается (это не цель быстрого пути).
+ * Поиск идёт ИСКЛЮЧИТЕЛЬНО по дереву — линейного скана по всем записям нет ни в одном пути поиска.
+ * Произвольная подстрока ВНУТРИ слова (не с его начала) и подпоследовательность вразброс намеренно
+ * НЕ поддерживаются: запрос находит запись только как префикс полного имени, как префикс начала
+ * любого CamelCase-слова или как многословное пересечение по фрагментам. Полное совпадение имени —
+ * максимальный ранг, совпадения по подсловам — ранг ниже.
  * <p>
  * Индекс наследует {@link AbstractDocumentLifecycleClearableIndex}: его {@code @EventListener}'ы
  * сбрасывают записи документа на изменение содержимого, освобождение данных, закрытие и удаление.
@@ -139,17 +138,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    */
   private static final int SCORE_MULTI_WORD_UNORDERED = 4;
 
-  /**
-   * Скор совпадения запроса как непрерывной подстроки имени (но не префикса слова).
-   */
-  private static final int SCORE_SUBSTRING = 5;
-
-  /**
-   * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
-   * позиция первого совпавшего символа (более ранняя позиция — релевантнее).
-   */
-  private static final int SCORE_SUBSEQUENCE = 6;
-
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
     VariableKind.GLOBAL
@@ -168,10 +156,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   /**
    * Уникальные записи, добавленные в индекс каждым URI.
    * <p>
-   * Служит двум целям: точечный сброс по URI на событии жизненного цикла и проход по уникальным
-   * записям для fuzzy-добора и пустого запроса (в дереве запись лежит под несколькими ключами, и
-   * обход дерева стоил бы кратно их числу). Меняется и читается под {@link #lock} согласованно с
-   * {@link #trie}.
+   * Поиск идёт только по дереву и эту карту не сканирует. Служит двум целям: точечный сброс по URI
+   * на событии жизненного цикла и полная выдача на пустой запрос (в дереве запись лежит под
+   * несколькими ключами, и обход дерева вернул бы дубли и стоил бы кратно их числу). Меняется и
+   * читается под {@link #lock} согласованно с {@link #trie}.
    */
   private final ConcurrentMap<URI, List<Entry>> indexedByUri = new ConcurrentHashMap<>();
 
@@ -255,19 +243,16 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Сопоставление регистронезависимое. Скоринг (меньше — релевантнее): точное совпадение,
    * затем префикс полного имени, затем префикс начала CamelCase-слова (запрос — начало слова из
-   * середины имени), затем многословное camel-hump совпадение по порядку, затем оно же не по порядку,
-   * затем непрерывная подстрока, затем подпоследовательность; совпадения по подпоследовательности
-   * дополнительно штрафуются позицией первого символа. При равном скоре раньше идёт более короткое
-   * имя, затем — более ранняя позиция в документе. Несовпавшие записи отбрасываются. Выдача
-   * возвращается целиком, без усечения: пустой запрос отдаёт все записи индекса, непустой — все
-   * совпадения, отсортированные по релевантности.
+   * середины имени), затем многословное camel-hump совпадение по порядку, затем оно же не по порядку.
+   * При равном скоре раньше идёт более короткое имя, затем — более ранняя позиция в документе.
+   * Несовпавшие записи отбрасываются. Выдача возвращается целиком, без усечения: пустой запрос отдаёт
+   * все записи индекса, непустой — все совпадения, отсортированные по релевантности.
    * <p>
-   * Сублинейно через {@link PatriciaTrie#prefixMap(Object)} обслуживаются и префикс полного имени,
-   * и префикс начала любого слова (записи проиндексированы под суффиксами от начала каждого слова).
-   * Многословный (≥2 CamelCase-фрагмента) запрос обслуживается сублинейным пересечением множеств
-   * записей по фрагментам, без полного скана. Для однословного запроса произвольную подстроку внутри
-   * слова и подпоследовательность вразброс дерево по префиксу не покрывает, поэтому они добираются
-   * проходом по уникальным записям.
+   * Поиск идёт ИСКЛЮЧИТЕЛЬНО по дереву через {@link PatriciaTrie#prefixMap(Object)}, без линейного
+   * скана записей: сублинейно обслуживаются и префикс полного имени, и префикс начала любого слова
+   * (записи проиндексированы под суффиксами от начала каждого слова), а многословный (≥2
+   * CamelCase-фрагмента) запрос — сублинейным пересечением множеств записей по фрагментам.
+   * Произвольная подстрока внутри слова и подпоследовательность вразброс намеренно НЕ поддерживаются.
    * <p>
    * Отмена проверяется периодически в ходе сканирования; при отмене бросается
    * {@link java.util.concurrent.CancellationException}.
@@ -293,13 +278,15 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Собрать совпадения непустого запроса с ранжированием.
+   * Собрать совпадения непустого запроса с ранжированием — исключительно по дереву, без линейного
+   * скана.
    * <p>
-   * Запрос режется на CamelCase-фрагменты. Однословный запрос (один фрагмент) идёт прежним путём:
-   * сублинейный префиксный путь через дерево плюс добор подстрочных и fuzzy-совпадений проходом по
-   * уникальным записям. Многословный запрос (≥2 фрагментов) идёт быстрым путём: префиксный путь
-   * (ловит непрерывный случай, когда запрос — реальный префикс имени) плюс сублинейное пересечение
-   * множеств записей по фрагментам — БЕЗ полного fuzzy-скана.
+   * Всегда выполняется сублинейный префиксный путь через {@link PatriciaTrie#prefixMap(Object)}: он
+   * покрывает и префикс полного имени, и префикс начала любого CamelCase-слова (записи
+   * проиндексированы под суффиксами от начала каждого слова), поэтому однословный запрос полностью
+   * обслуживается им одним. Если запрос режется на ≥2 CamelCase-фрагмента, дополнительно выполняется
+   * сублинейное пересечение множеств записей по фрагментам. Произвольная подстрока внутри слова и
+   * подпоследовательность вразброс намеренно НЕ поддерживаются.
    * <p>
    * Одна запись присутствует под несколькими ключами и может совпасть по нескольким из них, поэтому
    * результат дедуплицируется по идентичности записи с сохранением лучшего (наименьшего) скора.
@@ -318,8 +305,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     collectPrefixMatches(lowerQuery, bestScore, progress);
     if (fragments.size() >= 2) {
       collectMultiWordMatches(fragments, bestScore, progress);
-    } else {
-      collectFuzzyMatches(lowerQuery, bestScore, progress);
     }
 
     var matches = new ArrayList<Scored>(bestScore.size());
@@ -361,7 +346,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * дешёвым. Каждой выжившей записи назначается скор по порядку фрагментов
    * ({@link #SCORE_MULTI_WORD_IN_ORDER} либо {@link #SCORE_MULTI_WORD_UNORDERED}) и сливается в
    * накопитель через {@link Integer#min}, чтобы не понизить запись, уже найденную как непрерывный
-   * префикс. Полный fuzzy-скан в этом пути не выполняется.
+   * префикс. Линейный скан в этом пути не выполняется.
    *
    * @param fragments lowercase-фрагменты запроса (≥2)
    * @param bestScore накопитель лучшего скора на запись (по идентичности)
@@ -521,35 +506,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Добор подстрочных и fuzzy-совпадений: префиксное дерево их не ускоряет, поэтому идёт проход по
-   * УНИКАЛЬНЫМ записям индекса (значения {@link #indexedByUri}), а не по ключам дерева. Это важно:
-   * запись лежит под несколькими ключами, и проход по {@code trie.entrySet()} стоил бы кратно числу
-   * ключей; проход по уникальным записям не зависит от их числа и стоит как до индексации по началам
-   * слов. Записи, уже найденные префиксным путём, не понижаются: {@code merge} с {@link Integer#min}
-   * оставит лучший скор. Несовпавшие имена отсеивает {@link #fuzzyScore(String, String)}.
-   *
-   * @param lowerQuery lowercase-запрос (непустой)
-   * @param bestScore  накопитель лучшего скора на запись (по идентичности)
-   * @param progress   счётчик прогресса для периодической проверки отмены
-   */
-  private void collectFuzzyMatches(
-    String lowerQuery,
-    Map<Entry, Integer> bestScore,
-    ScanProgress progress
-  ) {
-    for (var entries : indexedByUri.values()) {
-      for (var entry : entries) {
-        progress.advance();
-        var fuzzyScore = fuzzyScore(entry.lowerName(), lowerQuery);
-        if (fuzzyScore < 0) {
-          continue;
-        }
-        bestScore.merge(entry, fuzzyScore, Integer::min);
-      }
-    }
-  }
-
-  /**
    * Собрать все записи индекса (для пустого запроса).
    * <p>
    * Проход идёт по УНИКАЛЬНЫМ записям ({@link #indexedByUri}), а не по ключам дерева: запись лежит
@@ -593,7 +549,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     lock.writeLock().lock();
     try {
       // indexedByUri и trie держатся согласованными под одним write-lock: search (read-lock)
-      // читает обе структуры (trie — префиксный путь, indexedByUri — fuzzy-добор и пустой запрос)
+      // читает обе структуры (trie — весь поиск, indexedByUri — полная выдача на пустой запрос)
       // и не должен увидеть запись в одной из них раньше другой.
       indexedByUri.put(uri, snapshot);
       for (var entry : snapshot) {
@@ -687,51 +643,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     return documentContext.getScriptVariantLanguage() == Language.EN
       ? ScriptVariant.ENGLISH
       : ScriptVariant.RUSSIAN;
-  }
-
-  /**
-   * Вычислить скор «не-префиксного» совпадения lowercase-имени с lowercase-запросом.
-   * <p>
-   * Префиксные совпадения (полного имени и начала слова) учитываются отдельно в префиксном пути и
-   * через {@code merge} с {@link Integer#min} не понижаются этим скором. Меньшее значение —
-   * релевантнее: {@link #SCORE_SUBSTRING} — непрерывная подстрока, {@link #SCORE_SUBSEQUENCE}{@code  + позиция} —
-   * подпоследовательность.
-   *
-   * @param lowerName  lowercase-имя символа
-   * @param lowerQuery lowercase-запрос (непустой)
-   * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если совпадения нет
-   */
-  private static int fuzzyScore(String lowerName, String lowerQuery) {
-    if (lowerName.contains(lowerQuery)) {
-      return SCORE_SUBSTRING;
-    }
-    var firstMatch = subsequenceFirstIndex(lowerName, lowerQuery);
-    if (firstMatch >= 0) {
-      return SCORE_SUBSEQUENCE + firstMatch;
-    }
-    return -1;
-  }
-
-  /**
-   * Проверить, что {@code lowerQuery} — подпоследовательность {@code lowerName}, и вернуть индекс
-   * символа имени, на котором совпал первый символ запроса.
-   *
-   * @param lowerName  lowercase-имя символа
-   * @param lowerQuery lowercase-запрос
-   * @return индекс первого совпавшего символа, либо {@code -1}, если не подпоследовательность
-   */
-  private static int subsequenceFirstIndex(String lowerName, String lowerQuery) {
-    var firstMatch = -1;
-    var queryIndex = 0;
-    for (var nameIndex = 0; nameIndex < lowerName.length() && queryIndex < lowerQuery.length(); nameIndex++) {
-      if (lowerName.charAt(nameIndex) == lowerQuery.charAt(queryIndex)) {
-        if (queryIndex == 0) {
-          firstMatch = nameIndex;
-        }
-        queryIndex++;
-      }
-    }
-    return queryIndex == lowerQuery.length() ? firstMatch : -1;
   }
 
   private static List<Entry> concat(List<Entry> existing, List<Entry> added) {

@@ -70,7 +70,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void findsSymbolBySubstringAndSubsequence() {
+  void findsSymbolByWordStartAndMultiWord() {
     // given
     var documentContext = TestUtils.getDocumentContext("""
       Процедура ОбработкаЗаполнения()
@@ -80,7 +80,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     // when
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
 
-    // then — непрерывная подстрока
+    // then — начало CamelCase-слова «Заполнения» (через trie word-start, не сканом)
     assertThat(index.search("Заполнения", NO_CANCEL))
       .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
 
@@ -90,8 +90,8 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void findsScatteredSubsequenceMatch() {
-    // given — символ, где запрос совпадает только как разбросанная подпоследовательность
+  void doesNotFindArbitrarySubsequenceMatch() {
+    // given — символ, где запрос совпадает лишь как разбросанная подпоследовательность
     var documentContext = TestUtils.getDocumentContext("""
       Процедура ПровестиДокументОтбора()
       КонецПроцедуры
@@ -101,36 +101,31 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
     var result = index.search("првдкотб", NO_CANCEL);
 
-    // then — найден как подпоследовательность (однословный путь добирает скан)
+    // then — подпоследовательность вразброс намеренно НЕ поддерживается: ничего не найдено
     assertThat(result)
-      .anyMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+      .noneMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
   }
 
   @Test
-  void subsequenceKeepsLongMatchDropsShortName() {
-    // given — длинное имя-надпоследовательность и короткое, которое запрос перерасти не может
+  void doesNotFindMiddleOfWordSubstring() {
+    // given — символ со словом «Документ»; «кумен» — середина слова, не начало
     var documentContext = TestUtils.getDocumentContext("""
-      Процедура ПровестиДокументОтбора()
-      КонецПроцедуры
-      Процедура Док()
+      Процедура ПровестиДокумент()
       КонецПроцедуры
       """);
 
-    // when — запрос длиннее «Док», поэтому «Док» не может быть надпоследовательностью запроса,
-    // а длинное имя — может
+    // when — «кумен» не является ни префиксом полного имени, ни началом какого-либо слова
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    var result = index.search("првдокотб", NO_CANCEL);
-    var names = result.stream().map(Entry::name).toList();
+    var result = index.search("кумен", NO_CANCEL);
 
-    // then — длинное найдено, короткое не попадает в выдачу
-    assertThat(names)
-      .contains("ПровестиДокументОтбора")
-      .doesNotContain("Док");
+    // then — произвольная подстрока ВНУТРИ слова намеренно НЕ поддерживается: ничего не найдено
+    assertThat(result)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокумент"));
   }
 
   @Test
-  void ranksExactAndPrefixMatchesAboveSubstring() {
-    // given — три символа с общей подстрокой «Тест»
+  void ranksExactAndPrefixMatchesAboveWordStart() {
+    // given — три символа: точное имя, префикс полного имени, начало слова из середины имени
     var documentContext = TestUtils.getDocumentContext("""
       Процедура Тест()
       КонецПроцедуры
@@ -144,7 +139,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
     var result = index.search("Тест", NO_CANCEL);
 
-    // then — точное совпадение выше префикса, префикс выше внутренней подстроки
+    // then — точное совпадение выше префикса полного имени, префикс выше начала слова из середины
     var names = result.stream().map(Entry::name).toList();
     assertThat(names.indexOf("Тест")).isLessThan(names.indexOf("ТестДанных"));
     assertThat(names.indexOf("ТестДанных")).isLessThan(names.indexOf("ПерезаписьТеста"));
@@ -152,13 +147,13 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
   @Test
   void returnsAllMatchesRankedByScore() {
-    // given — точное совпадение, совпадение по префиксу и подпоследовательность
+    // given — точное совпадение, совпадение по префиксу и совпадение по началу слова из середины
     var documentContext = TestUtils.getDocumentContext("""
       Процедура Дата()
       КонецПроцедуры
       Процедура ДатаНачала()
       КонецПроцедуры
-      Процедура ДобавитьАтрибут()
+      Процедура НачалоДатаОтчёта()
       КонецПроцедуры
       """);
 
@@ -166,13 +161,13 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
     var result = index.search("Дата", NO_CANCEL);
 
-    // then — все три совпадения присутствуют, ранжированы: точное, затем префикс,
-    // затем подпоследовательность (порядок проверяется как подпоследовательность выдачи,
+    // then — все три совпадения присутствуют, ранжированы: точное, затем префикс полного имени,
+    // затем начало слова из середины (порядок проверяется как подпоследовательность выдачи,
     // т.к. индекс — общий бин на класс и может содержать символы соседних тестов)
     var names = result.stream().map(Entry::name).toList();
     assertThat(names)
-      .contains("Дата", "ДатаНачала", "ДобавитьАтрибут")
-      .containsSubsequence("Дата", "ДатаНачала", "ДобавитьАтрибут");
+      .contains("Дата", "ДатаНачала", "НачалоДатаОтчёта")
+      .containsSubsequence("Дата", "ДатаНачала", "НачалоДатаОтчёта");
   }
 
   @Test
@@ -219,25 +214,25 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void wordStartMatchRanksAboveSubsequenceForSameQuery() {
-    // given — для одного запроса: word-start совпадение и подпоследовательность
+  void fullNamePrefixRanksAboveWordStartForSameQuery() {
+    // given — для одного запроса: префикс полного имени и начало слова из середины имени
     var documentContext = TestUtils.getDocumentContext("""
-      Процедура ПровестиДокумент()
+      Процедура ДокументПолучить()
       КонецПроцедуры
-      Процедура ДобавитьОбработчикКоманды()
+      Процедура ПровестиДокумент()
       КонецПроцедуры
       """);
 
-    // when — запрос «Док»: «ПровестиДокумент» совпадает по началу слова «Документ»,
-    // «ДобавитьОбработчикКоманды» — как подпоследовательность Д..о..(бавитьобработчик)к
+    // when — запрос «Док»: «ДокументПолучить» совпадает как префикс полного имени,
+    // «ПровестиДокумент» — как начало слова «Документ» из середины имени
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
     var result = index.search("Док", NO_CANCEL);
     var names = result.stream().map(Entry::name).toList();
 
-    // then — оба найдены, но word-start идёт раньше подпоследовательности
+    // then — оба найдены, но префикс полного имени идёт раньше начала слова из середины
     assertThat(names)
-      .contains("ПровестиДокумент", "ДобавитьОбработчикКоманды")
-      .containsSubsequence("ПровестиДокумент", "ДобавитьОбработчикКоманды");
+      .contains("ДокументПолучить", "ПровестиДокумент")
+      .containsSubsequence("ДокументПолучить", "ПровестиДокумент");
   }
 
   @Test
@@ -297,7 +292,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
   @Test
   void wordStartMatchDoesNotDuplicateEntry() {
-    // given — имя, где запрос совпадает И с началом слова, И как подстрока полного имени
+    // given — имя, которое лежит в дереве под несколькими ключами (полное имя и начало слова)
     var documentContext = TestUtils.getDocumentContext("""
       Процедура ПровестиДокумент()
       КонецПроцедуры
