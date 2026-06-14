@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
@@ -215,7 +216,11 @@ class SymbolProviderTest {
     when(index.search(eq("Метод("), any())).thenReturn(List.of(entry));
 
     // без partialResultToken провайдер возвращает только древесную выдачу, клиент не нужен
-    var provider = new SymbolProvider(index, mock(LanguageClientHolder.class));
+    var provider = new SymbolProvider(
+      index,
+      mock(LanguageClientHolder.class),
+      new GlobalLanguageServerConfiguration()
+    );
     var params = new WorkspaceSymbolParams("Метод(");
 
     // when

@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.WorkspaceSymbolFuzzySearch;
 import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.utils.Absolute;
@@ -39,9 +41,13 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,6 +74,7 @@ class SymbolProviderStreamingTest {
   private WorkspaceSymbolIndex index;
   private LanguageClientHolder clientHolder;
   private LanguageClient client;
+  private GlobalLanguageServerConfiguration globalConfiguration;
   private SymbolProvider provider;
 
   private final Entry fastEntry = entry("ПровестиДокумент");
@@ -78,7 +85,8 @@ class SymbolProviderStreamingTest {
     index = mock(WorkspaceSymbolIndex.class);
     clientHolder = mock(LanguageClientHolder.class);
     client = mock(LanguageClient.class);
-    provider = new SymbolProvider(index, clientHolder);
+    globalConfiguration = new GlobalLanguageServerConfiguration();
+    provider = new SymbolProvider(index, clientHolder, globalConfiguration);
   }
 
   @Test
@@ -148,6 +156,102 @@ class SymbolProviderStreamingTest {
       .containsExactly("ПровестиДокумент");
     verify(client, never()).notifyProgress(any());
     verify(index, never()).searchFuzzyTail(any(), anySet(), any());
+  }
+
+  @Test
+  void streamsFastSetInBatchesCheckingCancellationWhenTokenPresent() {
+
+    // given — быстрый набор крупнее размера чанка (200), клиент прислал partialResultToken
+    var fastEntries = IntStream.range(0, 450)
+      .mapToObj(i -> entry("Документ" + i))
+      .toList();
+    when(index.search(eq("док"), any())).thenReturn(fastEntries);
+    when(index.searchFuzzyTail(eq("док"), anySet(), any())).thenReturn(List.of(tailEntry));
+    connectClient();
+    var params = new WorkspaceSymbolParams("док");
+    params.setPartialResultToken(Either.forLeft("token-1"));
+    var cancelChecks = new AtomicInteger();
+    CancelChecker countingChecker = cancelChecks::incrementAndGet;
+
+    // when
+    var result = provider.getSymbols(params, countingChecker);
+
+    // then — синхронный ответ пуст, быстрый набор ушёл несколькими прогресс-чанками (450 / 200 = 3)
+    assertThat(result).isEmpty();
+    var captor = ArgumentCaptor.forClass(ProgressParams.class);
+    verify(client, atLeastOnce()).notifyProgress(captor.capture());
+    var fastChunkCount = captor.getAllValues().stream()
+      .filter(progress -> symbolNames(progress).stream().anyMatch(name -> name.startsWith("Документ")))
+      .count();
+    assertThat(fastChunkCount).isGreaterThan(1);
+
+    // then — отмена проверялась перед чанками
+    assertThat(cancelChecks.get()).isPositive();
+  }
+
+  @Test
+  void stopsStreamingFastSetWhenCancelledBetweenBatches() {
+
+    // given — отмена срабатывает между чанками быстрого набора
+    var fastEntries = IntStream.range(0, 450)
+      .mapToObj(i -> entry("Документ" + i))
+      .toList();
+    when(index.search(eq("док"), any())).thenReturn(fastEntries);
+    connectClient();
+    var params = new WorkspaceSymbolParams("док");
+    params.setPartialResultToken(Either.forLeft("token-1"));
+    var calls = new AtomicInteger();
+    CancelChecker cancelAfterFirstBatch = () -> {
+      if (calls.getAndIncrement() >= 1) {
+        throw new CancellationException();
+      }
+    };
+
+    // when / then
+    assertThatThrownBy(() -> provider.getSymbols(params, cancelAfterFirstBatch))
+      .isInstanceOf(CancellationException.class);
+    // fuzzy-хвост не запрашивался: отмена прервала уже потоковую выдачу быстрого набора
+    verify(index, never()).searchFuzzyTail(any(), anySet(), any());
+  }
+
+  @Test
+  void appendsFuzzyTailSynchronouslyWhenNoTokenAndFuzzySearchSynchronous() {
+
+    // given — нет токена, но включён синхронный fuzzy-поиск
+    globalConfiguration.getWorkspaceSymbol().setFuzzySearch(WorkspaceSymbolFuzzySearch.SYNCHRONOUS);
+    when(index.search(eq("док"), any())).thenReturn(List.of(fastEntry));
+    when(index.searchFuzzyTail(eq("док"), anySet(), any())).thenReturn(List.of(tailEntry));
+    connectClient();
+    var params = new WorkspaceSymbolParams("док");
+
+    // when
+    var result = provider.getSymbols(params, NO_CANCEL);
+
+    // then — ответ = быстрый набор ++ fuzzy-хвост, прогресс не шлётся
+    assertThat(result)
+      .extracting(WorkspaceSymbol::getName)
+      .containsExactly("ПровестиДокумент", "КонецМенюДокумент");
+    verify(index).searchFuzzyTail(eq("док"), anySet(), any());
+    verify(client, never()).notifyProgress(any());
+  }
+
+  @Test
+  void returnsFastSymbolsOnlyWhenNoTokenAndFuzzySearchOff() {
+
+    // given — нет токена, fuzzy-поиск по умолчанию OFF
+    when(index.search(eq("док"), any())).thenReturn(List.of(fastEntry));
+    connectClient();
+    var params = new WorkspaceSymbolParams("док");
+
+    // when
+    var result = provider.getSymbols(params, NO_CANCEL);
+
+    // then — только быстрая выдача, fuzzy-скан не выполняется, прогресс не шлётся
+    assertThat(result)
+      .extracting(WorkspaceSymbol::getName)
+      .containsExactly("ПровестиДокумент");
+    verify(index, never()).searchFuzzyTail(any(), anySet(), any());
+    verify(client, never()).notifyProgress(any());
   }
 
   @SuppressWarnings("unchecked")

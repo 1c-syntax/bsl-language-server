@@ -1144,6 +1144,29 @@
                 }
             }
         },
+        "workspaceSymbol": {
+            "$id": "#/properties/workspaceSymbol",
+            "type": "object",
+            "title": "Workspace symbol search configuration.",
+            "properties": {
+                "fuzzySearch": {
+                    "$id": "#/properties/workspaceSymbol/fuzzySearch",
+                    "type": "string",
+                    "oneOf": [
+                        {
+                            "const": "off",
+                            "description": "Only fast tree search"
+                        },
+                        {
+                            "const": "synchronous",
+                            "description": "Also run blocking fuzzy scan; covers clients without partial-result streaming"
+                        }
+                    ],
+                    "default": "off",
+                    "title": "Synchronous fuzzy workspace/symbol search mode."
+                }
+            }
+        },
         "useDevSite": {
             "$id": "#/properties/useDevSite",
             "type": "boolean",

@@ -141,6 +141,74 @@ class GlobalLanguageServerConfigurationTest {
       .isEqualTo(TextDocumentSyncKind.Incremental);
   }
 
+  @Test
+  void onApplicationReady_workspaceSymbolMissing_usesDefaultFuzzySearch() throws Exception {
+    // given
+    var configuration = createConfiguration(
+      tempDir.resolve("non-existent-cwd.json").toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then — fuzzySearch по умолчанию OFF
+    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
+      .isEqualTo(WorkspaceSymbolFuzzySearch.OFF);
+  }
+
+  @Test
+  void onApplicationReady_workspaceSymbolPresent_loadsFuzzySearch() throws Exception {
+    // given
+    var cwdConfig = tempDir.resolve("cwd-config.json");
+    Files.writeString(cwdConfig, """
+      {
+        "workspaceSymbol": {
+          "fuzzySearch": "synchronous"
+        }
+      }
+      """);
+
+    var configuration = createConfiguration(
+      cwdConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then
+    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
+      .isEqualTo(WorkspaceSymbolFuzzySearch.SYNCHRONOUS);
+  }
+
+  @Test
+  void reset_restoresDefaultFuzzySearch() throws Exception {
+    // given — загружена конфигурация с synchronous
+    var cwdConfig = tempDir.resolve("cwd-config.json");
+    Files.writeString(cwdConfig, """
+      {
+        "workspaceSymbol": {
+          "fuzzySearch": "synchronous"
+        }
+      }
+      """);
+    var configuration = createConfiguration(
+      cwdConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+    configuration.onApplicationReady();
+    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
+      .isEqualTo(WorkspaceSymbolFuzzySearch.SYNCHRONOUS);
+
+    // when
+    configuration.reset();
+
+    // then — fuzzySearch вернулся к OFF
+    assertThat(configuration.getWorkspaceSymbol().getFuzzySearch())
+      .isEqualTo(WorkspaceSymbolFuzzySearch.OFF);
+  }
+
   private static GlobalLanguageServerConfiguration createConfiguration(
     String configurationFilePath,
     String globalConfigPath
