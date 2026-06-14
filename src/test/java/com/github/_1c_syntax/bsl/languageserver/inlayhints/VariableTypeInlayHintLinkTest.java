@@ -21,23 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
-import org.eclipse.lsp4j.InlayHintCapabilities;
 import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.InlayHintParams;
-import org.eclipse.lsp4j.InlayHintResolveSupportCapabilities;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,8 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Проверяет, что хинт выведенного типа становится кликабельным — часть метки
  * ссылается на объявление типа в исходниках (модуль менеджера объекта
- * конфигурации), а у платформенных типов ссылки нет. Покрывает жадный и ленивый
- * (через {@code inlayHint/resolve}) пути построения ссылки.
+ * конфигурации). Объявление типа известно на этапе построения хинта, поэтому
+ * ссылка проставляется жадно.
  */
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class VariableTypeInlayHintLinkTest extends AbstractServerContextAwareTest {
@@ -58,31 +49,6 @@ class VariableTypeInlayHintLinkTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private VariableTypeInlayHintSupplier supplier;
-
-  @Autowired
-  private ClientCapabilitiesHolder clientCapabilitiesHolder;
-
-  @Autowired
-  private InlayHintProvider provider;
-
-  @AfterEach
-  void resetClientCapabilities() {
-    clientCapabilitiesHolder.setCapabilities(null);
-    supplier.handleInitializeEvent();
-  }
-
-  private void enableLabelLocationResolveSupport() {
-    var inlayHintCapabilities = new InlayHintCapabilities();
-    inlayHintCapabilities.setResolveSupport(
-      new InlayHintResolveSupportCapabilities(List.of("label.location"))
-    );
-    var textDocumentCapabilities = new TextDocumentClientCapabilities();
-    textDocumentCapabilities.setInlayHint(inlayHintCapabilities);
-    var capabilities = new ClientCapabilities();
-    capabilities.setTextDocument(textDocumentCapabilities);
-    clientCapabilitiesHolder.setCapabilities(capabilities);
-    supplier.handleInitializeEvent();
-  }
 
   private InlayHint singleHintForManagerVariable() {
     // прогреваем ManagerModule, чтобы провайдер зарегистрировал тип менеджера и
@@ -103,7 +69,6 @@ class VariableTypeInlayHintLinkTest extends AbstractServerContextAwareTest {
   void testManagerTypeHintLinksToManagerModuleEagerly() {
 
     // given
-    // клиент не объявил resolveSupport для label.location — ссылка жадная.
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
 
@@ -111,41 +76,10 @@ class VariableTypeInlayHintLinkTest extends AbstractServerContextAwareTest {
     var inlayHint = singleHintForManagerVariable();
 
     // then
-    // часть метки ссылается на модуль менеджера справочника, data — без координат.
+    // часть метки жадно ссылается на модуль менеджера справочника.
     InlayHintLabelPart labelPart = inlayHint.getLabel().getRight().getFirst();
     assertThat(labelPart.getValue()).isEqualTo(": СправочникМенеджер.СправочникСМенеджером");
     assertThat(labelPart.getLocation()).isNotNull();
     assertThat(labelPart.getLocation().getUri()).contains("ManagerModule.bsl");
-  }
-
-  @Test
-  void testManagerTypeHintLinkIsResolvedLazilyWhenClientSupportsResolve() {
-
-    // given
-    // клиент объявил resolveSupport для label.location — ссылка ленивая.
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-    enableLabelLocationResolveSupport();
-
-    // when
-    var unresolved = singleHintForManagerVariable();
-
-    // then
-    // жадно ссылки нет, но data несёт координаты объявления типа.
-    assertThat(unresolved.getLabel().getRight().getFirst().getLocation()).isNull();
-    assertThat(unresolved.getData()).isNotNull();
-
-    // when
-    // резолвим через провайдер (round-trip данных хинта).
-    var documentContext = TestUtils.getDocumentContextFromFile(CALLER_PATH);
-    var data = provider.extractData(unresolved);
-    var resolved = provider.resolveInlayHint(documentContext, unresolved, data);
-
-    // then
-    // ссылка части метки заполнена объявлением типа, data очищена.
-    InlayHintLabelPart resolvedPart = resolved.getLabel().getRight().getFirst();
-    assertThat(resolvedPart.getLocation()).isNotNull();
-    assertThat(resolvedPart.getLocation().getUri()).contains("ManagerModule.bsl");
-    assertThat(resolved.getData()).isNull();
   }
 }

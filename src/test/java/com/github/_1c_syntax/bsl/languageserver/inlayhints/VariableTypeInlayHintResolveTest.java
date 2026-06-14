@@ -92,9 +92,7 @@ class VariableTypeInlayHintResolveTest extends AbstractServerContextAwareTest {
     var hint = new InlayHint();
     hint.setLabel(": НесуществующийТип");
     var data = new VariableTypeInlayHintData(
-      documentContext.getUri(), supplier.getId(), "НесуществующийТип", "",
-      VariableTypeInlayHintData.NO_LOCATION, VariableTypeInlayHintData.NO_LOCATION,
-      VariableTypeInlayHintData.NO_LOCATION, VariableTypeInlayHintData.NO_LOCATION);
+      documentContext.getUri(), supplier.getId(), "НесуществующийТип");
 
     // when
     var resolved = supplier.resolve(documentContext, hint, data);

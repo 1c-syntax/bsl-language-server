@@ -29,41 +29,20 @@ import lombok.experimental.NonFinal;
 import java.net.URI;
 
 /**
- * Данные хинта типа переменной для отложенного построения tooltip и ссылки
- * части метки через {@code inlayHint/resolve}. Кладётся в {@code InlayHint.data}
- * при жадном расчёте хинтов и восстанавливается JSON round-trip'ом на резолве.
+ * Данные хинта типа переменной для отложенного построения tooltip через
+ * {@code inlayHint/resolve}. Кладётся в {@code InlayHint.data} при жадном
+ * расчёте хинтов и восстанавливается JSON round-trip'ом на резолве.
  * <p>
  * Поле {@code typeName} — каноническое имя выведенного типа для восстановления
- * описания (tooltip). Поля {@code targetUri} и четвёрка
- * {@code startLine}/{@code startCharacter}/{@code endLine}/{@code endCharacter} —
- * координаты объявления типа в исходнике (общий модуль, модуль менеджера объекта,
- * класс/модуль OneScript) для ленивого построения ссылки части метки. Если у типа
- * нет объявляющего исходник-символа (платформенный/примитивный тип), {@code targetUri}
- * пуст, а координаты равны {@code -1} — ссылка не строится.
+ * описания (tooltip). Ссылка части метки на объявление типа проставляется жадно
+ * при построении хинта и в данных не хранится.
  */
 @Value
 @NonFinal
 public class VariableTypeInlayHintData implements InlayHintData {
 
-  /** Координата-заполнитель для хинта без ссылки на объявление типа. */
-  public static final int NO_LOCATION = -1;
-
   @JsonAdapter(URITypeAdapter.class)
   URI uri;
   String id;
   String typeName;
-  String targetUri;
-  int startLine;
-  int startCharacter;
-  int endLine;
-  int endCharacter;
-
-  /**
-   * Есть ли у хинта координаты объявления типа для построения ссылки части метки.
-   *
-   * @return {@code true}, если {@code targetUri} непуст — координаты заполнены.
-   */
-  public boolean hasLocation() {
-    return !targetUri.isBlank();
-  }
 }

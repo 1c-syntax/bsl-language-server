@@ -21,27 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
-import org.eclipse.lsp4j.InlayHintCapabilities;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.InlayHintParams;
-import org.eclipse.lsp4j.InlayHintResolveSupportCapabilities;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -68,31 +61,6 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
   @Autowired
   private OScriptLibraryIndex oScriptLibraryIndex;
-
-  @Autowired
-  private ClientCapabilitiesHolder clientCapabilitiesHolder;
-
-  @Autowired
-  private InlayHintProvider provider;
-
-  @AfterEach
-  void resetClientCapabilities() {
-    clientCapabilitiesHolder.setCapabilities(null);
-    supplier.handleInitializeEvent();
-  }
-
-  private void enableLabelLocationResolveSupport() {
-    var inlayHintCapabilities = new InlayHintCapabilities();
-    inlayHintCapabilities.setResolveSupport(
-      new InlayHintResolveSupportCapabilities(List.of("label.location"))
-    );
-    var textDocumentCapabilities = new TextDocumentClientCapabilities();
-    textDocumentCapabilities.setInlayHint(inlayHintCapabilities);
-    var capabilities = new ClientCapabilities();
-    capabilities.setTextDocument(textDocumentCapabilities);
-    clientCapabilitiesHolder.setCapabilities(capabilities);
-    supplier.handleInitializeEvent();
-  }
 
   private static String labelValue(InlayHint inlayHint) {
     return inlayHint.getLabel().getRight().getFirst().getValue();
@@ -352,8 +320,8 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
   @Test
   void testHintLabelPartLinksToParameterDeclarationEagerly() {
 
-    // given — клиент не объявил resolveSupport для label.location, поэтому ссылка
-    // на объявление параметра проставляется жадно (без inlayHint/resolve).
+    // given — объявление параметра известно на этапе построения хинта, поэтому
+    // ссылка проставляется жадно, а хинт не несёт data (резолв не нужен).
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
     var symbolTree = documentContext.getSymbolTree();
     var changeHealth = symbolTree.getMethods().stream()
@@ -381,46 +349,6 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
         assertThat(labelPart.getLocation().getRange()).isEqualTo(playersHealthParameter.getRange());
         assertThat(inlayHint.getData()).isNull();
       });
-  }
-
-  @Test
-  void testHintLabelPartLocationIsResolvedLazilyWhenClientSupportsResolve() {
-
-    // given — клиент объявил resolveSupport для label.location: ссылка строится
-    // лениво на inlayHint/resolve, а жадно несётся только data.
-    enableLabelLocationResolveSupport();
-
-    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    var symbolTree = documentContext.getSymbolTree();
-    var changeHealth = symbolTree.getMethods().stream()
-      .filter(method -> "ChangeHealth".equalsIgnoreCase(method.getName()))
-      .findFirst()
-      .orElseThrow();
-    var playersHealthParameter = changeHealth.getParameters().get(1);
-
-    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-    var range = symbolTree.getMethods().getFirst().getRange();
-    var params = new InlayHintParams(textDocumentIdentifier, range);
-
-    var unresolved = supplier.getInlayHints(documentContext, params).stream()
-      .filter(inlayHint -> "PlayersHealth:".equals(labelValue(inlayHint)))
-      .findFirst()
-      .orElseThrow();
-
-    // then — жадно построенный хинт несёт data, но часть метки ещё без ссылки.
-    assertThat(unresolved.getLabel().getRight().getFirst().getLocation()).isNull();
-    assertThat(unresolved.getData()).isNotNull();
-
-    // when — резолвим через провайдер (round-trip данных хинта).
-    var data = provider.extractData(unresolved);
-    var resolved = provider.resolveInlayHint(documentContext, unresolved, data);
-
-    // then — ссылка части метки заполнена диапазоном объявления параметра, data очищена.
-    InlayHintLabelPart resolvedPart = resolved.getLabel().getRight().getFirst();
-    assertThat(resolvedPart.getLocation()).isNotNull();
-    assertThat(resolvedPart.getLocation().getUri()).isEqualTo(documentContext.getUri().toString());
-    assertThat(resolvedPart.getLocation().getRange()).isEqualTo(playersHealthParameter.getRange());
-    assertThat(resolved.getData()).isNull();
   }
 
 }
