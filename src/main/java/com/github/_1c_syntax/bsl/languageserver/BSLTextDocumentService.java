@@ -291,7 +291,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either.forLeft(implementationProvider.getImplementations(documentContext, params))
+      () -> implementationProvider.getImplementations(documentContext, params)
     );
   }
 

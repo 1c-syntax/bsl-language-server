@@ -63,7 +63,8 @@ class ImplementationAbstractClassTest extends AbstractServerContextAwareTest {
     var interfaceDoc = document("ИнтерфейсХранилища.os");
     var params = params(interfaceDoc, new Position(0, 0));
 
-    var implementations = provider.getImplementations(interfaceDoc, params);
+    // По умолчанию клиент не заявил linkSupport → провайдер отдаёт Location[].
+    var implementations = provider.getImplementations(interfaceDoc, params).getLeft();
 
     // Прямой реализатор (абстрактный родитель) и транзитивный (конкретный наследник).
     assertThat(implementations)
@@ -76,7 +77,8 @@ class ImplementationAbstractClassTest extends AbstractServerContextAwareTest {
     var interfaceDoc = document("ИнтерфейсХранилища.os");
     var params = params(interfaceDoc, methodPosition(interfaceDoc, "Сохранить"));
 
-    var implementations = provider.getImplementations(interfaceDoc, params);
+    // По умолчанию клиент не заявил linkSupport → провайдер отдаёт Location[].
+    var implementations = provider.getImplementations(interfaceDoc, params).getLeft();
 
     // Метод фактически реализован только в конкретном наследнике; абстрактный
     // родитель метод не определяет, поэтому в результат не попадает.

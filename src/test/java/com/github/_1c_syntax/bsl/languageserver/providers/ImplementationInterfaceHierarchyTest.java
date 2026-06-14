@@ -63,7 +63,8 @@ class ImplementationInterfaceHierarchyTest extends AbstractServerContextAwareTes
     var interfaceDoc = document("БазовыйИнтерфейс.os");
     var params = params(interfaceDoc, new Position(0, 0));
 
-    var implementations = provider.getImplementations(interfaceDoc, params);
+    // По умолчанию клиент не заявил linkSupport → провайдер отдаёт Location[].
+    var implementations = provider.getImplementations(interfaceDoc, params).getLeft();
 
     // Прямая реализация базового интерфейса и реализация производного интерфейса
     // (производный &Расширяет базовый — значит его реализатор реализует и базовый).
@@ -77,7 +78,8 @@ class ImplementationInterfaceHierarchyTest extends AbstractServerContextAwareTes
     var interfaceDoc = document("ПроизводныйИнтерфейс.os");
     var params = params(interfaceDoc, new Position(0, 0));
 
-    var implementations = provider.getImplementations(interfaceDoc, params);
+    // По умолчанию клиент не заявил linkSupport → провайдер отдаёт Location[].
+    var implementations = provider.getImplementations(interfaceDoc, params).getLeft();
 
     // Реализатор только базового интерфейса не является реализатором производного.
     assertThat(implementations)
@@ -90,7 +92,8 @@ class ImplementationInterfaceHierarchyTest extends AbstractServerContextAwareTes
     var interfaceDoc = document("БазовыйИнтерфейс.os");
     var params = params(interfaceDoc, methodPosition(interfaceDoc, "БазовыйМетод"));
 
-    var implementations = provider.getImplementations(interfaceDoc, params);
+    // По умолчанию клиент не заявил linkSupport → провайдер отдаёт Location[].
+    var implementations = provider.getImplementations(interfaceDoc, params).getLeft();
 
     // Метод БазовыйМетод реализован в обоих классах.
     assertThat(implementations)
