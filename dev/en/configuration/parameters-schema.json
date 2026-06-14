@@ -48,6 +48,16 @@
             "title": "Assignment to a read-only property",
             "$id": "#/definitions/AssignToReadOnlyProperty"
         },
+        "BadExceptionCategory": {
+            "description": "Bad exception category",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Bad exception category",
+            "$id": "#/definitions/BadExceptionCategory"
+        },
         "BadWords": {
             "description": "Prohibited words",
             "default": false,
