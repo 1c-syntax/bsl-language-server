@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781427222301,
+  "lastUpdate": 1781437358128,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37200,6 +37200,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 15.537108914846307",
             "extra": "mean: 286.0483937263489 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f56356d7af2e227a323826d38b38c6dde7878de1",
+          "message": "Merge pull request #4092 from 1c-syntax/claude/foldingrange-collapsedtext\n\nfeat(foldingRange): осмысленный collapsedText для областей и методов",
+          "timestamp": "2026-06-13T15:34:56+02:00",
+          "tree_id": "cbcc12064491bf0f1b29990c80066e31f7208be0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f56356d7af2e227a323826d38b38c6dde7878de1"
+        },
+        "date": 1781437349019,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 283.7115403016408,
+            "unit": "sec",
+            "range": "stddev: 4.28339020846798",
+            "extra": "mean: 283.7115403016408 sec\nrounds: 3"
           }
         ]
       }
