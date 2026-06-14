@@ -34,11 +34,13 @@ import java.net.URI;
  * расчёте хинтов и восстанавливается JSON round-trip'ом на резолве.
  * <p>
  * Поле {@code typeName} — каноническое имя выведенного типа для восстановления
- * описания.
+ * описания (tooltip). Ссылка части метки на объявление типа проставляется жадно
+ * при построении хинта и в данных не хранится.
  */
 @Value
 @NonFinal
 public class VariableTypeInlayHintData implements InlayHintData {
+
   @JsonAdapter(URITypeAdapter.class)
   URI uri;
   String id;

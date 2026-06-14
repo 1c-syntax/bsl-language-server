@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -61,6 +62,10 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
   @Autowired
   private OScriptLibraryIndex oScriptLibraryIndex;
 
+  private static String labelValue(InlayHint inlayHint) {
+    return inlayHint.getLabel().getRight().getFirst().getValue();
+  }
+
   @Test
   void testDefaultInlayHints() {
 
@@ -79,7 +84,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
     assertThat(inlayHints)
       .hasSize(2)
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("PlayersHealth:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("PlayersHealth:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
         assertThat(inlayHint.getPosition()).isEqualTo(new Position(3, 23));
         assertThat(inlayHint.getPaddingRight()).isTrue();
@@ -87,7 +92,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
         assertThat(inlayHint.getTooltip().getRight().getValue()).isEqualTo("* **PlayersHealth**: ");
       })
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Amount:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("Amount:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
         assertThat(inlayHint.getPosition()).isEqualTo(new Position(3, 32));
         assertThat(inlayHint.getPaddingRight()).isTrue();
@@ -120,7 +125,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
     assertThat(inlayHints)
       .hasSize(3)
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Player:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("Player:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
         assertThat(inlayHint.getPosition()).isEqualTo(new Position(3, 14));
         assertThat(inlayHint.getPaddingRight()).isTrue();
@@ -128,7 +133,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
         assertThat(inlayHint.getTooltip().getRight().getValue()).isEqualTo("* **Player**: ");
       })
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("PlayersHealth:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("PlayersHealth:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
         assertThat(inlayHint.getPosition()).isEqualTo(new Position(3, 23));
         assertThat(inlayHint.getPaddingRight()).isTrue();
@@ -136,7 +141,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
         assertThat(inlayHint.getTooltip().getRight().getValue()).isEqualTo("* **PlayersHealth**: ");
       })
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Amount:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("Amount:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
         assertThat(inlayHint.getPosition()).isEqualTo(new Position(3, 32));
         assertThat(inlayHint.getPaddingRight()).isTrue();
@@ -167,9 +172,9 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
     // then — каждый из восьми вызовов ChangeHealth(...) даёт по две подсказки
     // (PlayersHealth и Amount), а позиции подсказок уникальны (вызовы не схлопнулись).
     var changeHealthHints = inlayHints.stream()
-      .filter(hint -> hint.getLabel().isLeft())
+      .filter(hint -> hint.getLabel().isRight())
       .filter(hint -> {
-        var label = hint.getLabel().getLeft();
+        var label = labelValue(hint);
         return "PlayersHealth:".equals(label) || "Amount:".equals(label);
       })
       .toList();
@@ -203,8 +208,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // then
     assertThat(inlayHints)
-      .extracting(InlayHint::getLabel)
-      .extracting(Either::getLeft)
+      .extracting(SourceDefinedMethodCallInlayHintSupplierTest::labelValue)
       .containsExactly("Параметр (1)");
   }
 
@@ -231,8 +235,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // then — подсказка только для переданного первого довода.
     assertThat(inlayHints)
-      .extracting(InlayHint::getLabel)
-      .extracting(Either::getLeft)
+      .extracting(SourceDefinedMethodCallInlayHintSupplierTest::labelValue)
       .containsExactly("Первый:");
   }
 
@@ -280,8 +283,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // then
     assertThat(inlayHints)
-      .extracting(InlayHint::getLabel)
-      .extracting(Either::getLeft)
+      .extracting(SourceDefinedMethodCallInlayHintSupplierTest::labelValue)
       .contains("Первый (42)");
   }
 
@@ -305,15 +307,48 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
     assertThat(inlayHints)
       .hasSize(2)
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Имя:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("Имя:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
       })
       .anySatisfy(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Значение:"));
+        assertThat(labelValue(inlayHint)).isEqualTo("Значение:");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
       })
     ;
   }
 
+  @Test
+  void testHintLabelPartLinksToParameterDeclarationEagerly() {
+
+    // given — объявление параметра известно на этапе построения хинта, поэтому
+    // ссылка проставляется жадно, а хинт не несёт data (резолв не нужен).
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    var symbolTree = documentContext.getSymbolTree();
+    var changeHealth = symbolTree.getMethods().stream()
+      .filter(method -> "ChangeHealth".equalsIgnoreCase(method.getName()))
+      .findFirst()
+      .orElseThrow();
+    var playersHealthParameter = changeHealth.getParameters().get(1);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var range = symbolTree.getMethods().getFirst().getRange();
+    var params = new InlayHintParams(textDocumentIdentifier, range);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then — у части метки PlayersHealth ссылка указывает на диапазон объявления
+    // параметра в сигнатуре вызываемого метода, а data не заполнена.
+    assertThat(inlayHints)
+      .filteredOn(inlayHint -> "PlayersHealth:".equals(labelValue(inlayHint)))
+      .singleElement()
+      .satisfies(inlayHint -> {
+        InlayHintLabelPart labelPart = inlayHint.getLabel().getRight().getFirst();
+        assertThat(labelPart.getLocation()).isNotNull();
+        assertThat(labelPart.getLocation().getUri()).isEqualTo(documentContext.getUri().toString());
+        assertThat(labelPart.getLocation().getRange()).isEqualTo(playersHealthParameter.getRange());
+        assertThat(inlayHint.getData()).isNull();
+      });
+  }
 
 }

@@ -33,7 +33,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
@@ -45,9 +47,21 @@ import java.util.List;
 
 /**
  * Поставщик подсказок о параметрах вызываемого метода.
+ * <p>
+ * Метка хинта рендерится не голой строкой, а единственной частью
+ * {@link InlayHintLabelPart}, к которой привязывается ссылка
+ * ({@link InlayHintLabelPart#setLocation}) на объявление соответствующего
+ * параметра в сигнатуре вызываемого source-defined метода. Клик по подсказке
+ * выполняет переход к объявлению параметра.
+ * <p>
+ * Объявление параметра уже известно на этапе построения хинта (метод
+ * вызова разрешён по индексу ссылок), поэтому ссылка проставляется жадно — без
+ * отложенного {@code inlayHint/resolve}. «Тяжёлых» полей, требующих ленивого
+ * разрешения, у хинта нет, поэтому он не несёт {@code data}.
  */
 @Component
-public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCallInlayHintSupplier {
+public class SourceDefinedMethodCallInlayHintSupplier
+  extends AbstractMethodCallInlayHintSupplier<DefaultInlayHintData> {
 
   // TODO: высчитать позицию хинта относительно последнего параметра.
   private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
@@ -65,6 +79,18 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
     this.descriptionFormatter = descriptionFormatter;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Хинт имени параметра проставляет ссылку части метки жадно и не откладывает
+   * полей на резолв — используется дефолтный дата-класс {@link DefaultInlayHintData}.
+   *
+   * @return Класс {@link DefaultInlayHintData}.
+   */
+  @Override
+  public Class<DefaultInlayHintData> getInlayHintDataClass() {
+    return DefaultInlayHintData.class;
+  }
 
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
@@ -90,7 +116,10 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
     return result;
   }
 
-  private List<InlayHint> toInlayHints(Reference reference, BSLParser.DoCallContext doCall) {
+  private List<InlayHint> toInlayHints(
+    Reference reference,
+    BSLParser.DoCallContext doCall
+  ) {
 
     var callParamList = doCall.callParamList();
     if (callParamList == null) {
@@ -100,6 +129,7 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
 
     var methodSymbol = (MethodSymbol) reference.symbol();
     var parameters = methodSymbol.getParameters();
+    var targetUri = methodSymbol.getOwner().getUri().toString();
 
     var hints = new ArrayList<InlayHint>();
     for (var i = 0; i < parameters.size(); i++) {
@@ -121,7 +151,7 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
       var inlayHint = new InlayHint();
       inlayHint.setKind(InlayHintKind.Parameter);
 
-      setLabelAndPadding(inlayHint, parameter, passedValue, reference);
+      setLabelAndPadding(inlayHint, parameter, passedValue, targetUri);
       setPosition(inlayHint, callParam);
       setTooltip(inlayHint, parameter);
 
@@ -135,7 +165,7 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
     InlayHint inlayHint,
     ParameterDefinition parameter,
     String passedValue,
-    Reference reference
+    String targetUri
   ) {
 
     var defaultValue = parameter.getDefaultValue();
@@ -155,7 +185,11 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
       inlayHint.setPaddingRight(Boolean.TRUE);
     }
 
-    inlayHint.setLabel(labelBuilder.toString());
+    var labelPart = new InlayHintLabelPart(labelBuilder.toString());
+    // Объявление параметра уже разрешено — ссылка проставляется жадно.
+    labelPart.setLocation(new Location(targetUri, parameter.getRange()));
+
+    inlayHint.setLabel(List.of(labelPart));
   }
 
   private static void setPosition(InlayHint inlayHint, BSLParser.CallParamContext callParam) {

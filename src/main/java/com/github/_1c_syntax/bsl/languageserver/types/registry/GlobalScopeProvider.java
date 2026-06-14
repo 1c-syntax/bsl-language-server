@@ -114,6 +114,14 @@ public class GlobalScopeProvider {
    */
   private final Map<URI, TypeRef> moduleTypeByUri = new ConcurrentHashMap<>();
   /**
+   * Обратный индекс к {@link #moduleTypeByUri}: тип-значение модуля → URI документа,
+   * объявившего этот тип. Заполняется синхронно вместе с {@link #moduleTypeByUri}
+   * (см. {@link #indexModuleType}/{@link #removeModuleType}). Используется навигацией
+   * по типу к объявившему модулю (общий модуль, модуль менеджера объекта,
+   * library-модуль OneScript) — у потребителя на руках {@link TypeRef}, а не URI.
+   */
+  private final Map<TypeRef, URI> uriByModuleType = new ConcurrentHashMap<>();
+  /**
    * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
    * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
    * Поддерживается no-dot completion: пользователь печатает {@code Докум} —
@@ -648,14 +656,23 @@ public class GlobalScopeProvider {
    * же URI перезаписывает тип (корректно отражает переименование модуля).
    */
   public void indexModuleType(URI uri, TypeRef ref) {
-    moduleTypeByUri.put(uri, ref);
+    var previous = moduleTypeByUri.put(uri, ref);
+    if (previous != null && !previous.equals(ref)) {
+      // Тип модуля сменился (переименование): чистим устаревшую обратную запись,
+      // только если она всё ещё указывает на этот же URI.
+      uriByModuleType.remove(previous, uri);
+    }
+    uriByModuleType.put(ref, uri);
   }
 
   /**
    * Снять связь URI→тип (при удалении документа/дерегистрации library-модуля).
    */
   public void removeModuleType(URI uri) {
-    moduleTypeByUri.remove(uri);
+    var ref = moduleTypeByUri.remove(uri);
+    if (ref != null) {
+      uriByModuleType.remove(ref, uri);
+    }
   }
 
   /**
@@ -664,6 +681,20 @@ public class GlobalScopeProvider {
    */
   public Optional<TypeRef> moduleTypeByUri(URI uri) {
     return Optional.ofNullable(moduleTypeByUri.get(uri));
+  }
+
+  /**
+   * URI документа-модуля, объявившего тип, по самому типу — обратная операция к
+   * {@link #moduleTypeByUri(URI)}. Используется навигацией по выведенному типу к
+   * объявившему его модулю (общий модуль, модуль менеджера объекта конфигурации,
+   * library-модуль OneScript).
+   *
+   * @param ref тип-значение модуля.
+   * @return URI документа, объявившего тип, либо {@code empty}, если тип не модульный
+   *   (не зарегистрирован через {@link #indexModuleType}).
+   */
+  public Optional<URI> moduleUriByType(TypeRef ref) {
+    return Optional.ofNullable(uriByModuleType.get(ref));
   }
 
 

@@ -28,11 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
@@ -49,13 +50,33 @@ import java.util.Optional;
  * выводится и нетривиален (не {@code Произвольный}/{@code any} и не очевиден
  * из литерала), показывает подсказку {@link InlayHintKind#Type} сразу после
  * имени переменной — например {@code Контрагент: Массив = Новый Массив()}.
+ * <p>
+ * Метка хинта рендерится единственной частью {@link InlayHintLabelPart}: когда
+ * выведенный тип объявлен в исходниках рабочей области (общий модуль, модуль
+ * менеджера объекта конфигурации, класс/модуль OneScript), к части привязывается
+ * ссылка ({@link InlayHintLabelPart#setLocation}) на объявление типа — клик по
+ * подсказке выполняет переход к модулю/классу. Объявление типа уже известно на
+ * этапе построения хинта, поэтому ссылка проставляется жадно. Платформенные и
+ * примитивные типы ({@code Массив}, {@code Строка}, …) объявляющего
+ * исходник-символа не имеют — для них метка остаётся без ссылки.
+ * <p>
+ * Tooltip (полное описание типа, markdown) строится лениво на
+ * {@code inlayHint/resolve}: в {@code data} кладётся имя типа, по которому на
+ * резолве восстанавливается описание.
  */
 @Component
-@RequiredArgsConstructor
 public class VariableTypeInlayHintSupplier implements InlayHintSupplier<VariableTypeInlayHintData> {
 
   private final TypeService typeService;
   private final LanguageServerConfiguration configuration;
+
+  public VariableTypeInlayHintSupplier(
+    TypeService typeService,
+    LanguageServerConfiguration configuration
+  ) {
+    this.typeService = typeService;
+    this.configuration = configuration;
+  }
 
   /**
    * {@inheritDoc}
@@ -115,12 +136,25 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
 
     var inlayHint = new InlayHint();
     inlayHint.setKind(InlayHintKind.Type);
-    inlayHint.setLabel(": " + typeName);
     inlayHint.setPosition(namePosition);
     inlayHint.setPaddingRight(Boolean.TRUE);
-    // Tooltip (полное описание типа) строится лениво на inlayHint/resolve —
-    // в data кладём ссылку на тип, остальное (label/position/kind) жадно.
-    inlayHint.setData(new VariableTypeInlayHintData(documentContext.getUri(), getId(), inferredType.qualifiedName()));
+
+    var labelPart = new InlayHintLabelPart(": " + typeName);
+    inlayHint.setLabel(List.of(labelPart));
+
+    // Tooltip (полное описание типа) дорассчитывается лениво на inlayHint/resolve —
+    // в data кладём только имя типа, по которому восстанавливается описание.
+    inlayHint.setData(new VariableTypeInlayHintData(
+      documentContext.getUri(), getId(), inferredType.qualifiedName()
+    ));
+
+    // Объявление типа (если есть) уже известно — ссылка части метки проставляется
+    // жадно. Платформенные/примитивные типы исходник-символа не имеют — без ссылки.
+    typeService.definingSymbol(inferredType, documentContext).ifPresent(declaration -> {
+      var targetUri = declaration.getOwner().getUri().toString();
+      labelPart.setLocation(new Location(targetUri, declaration.getSelectionRange()));
+    });
+
     return Optional.of(inlayHint);
   }
 
@@ -129,7 +163,8 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
    * <p>
    * Восстанавливает {@link TypeRef} по сохранённому имени и кладёт в tooltip
    * полное описание типа (markdown). Если тип не восстановлен — tooltip строится
-   * по сохранённому имени.
+   * по сохранённому имени. Ссылка части метки построена жадно при создании хинта
+   * и на резолве не трогается.
    *
    * @param documentContext Контекст документа, к которому относится хинт.
    * @param unresolved      Неразрешённый хинт с заполненным {@link InlayHint#getData()}.
@@ -150,6 +185,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
 
     var markdown = description.isBlank() ? displayName : (displayName + "\n\n" + description);
     unresolved.setTooltip(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+
     return unresolved;
   }
 

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -33,8 +34,10 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPos
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
@@ -245,6 +248,53 @@ public class TypeService {
    */
   public String displayName(TypeRef typeRef, Language language) {
     return typeRegistry.displayName(typeRef, language);
+  }
+
+  /**
+   * Символ-источник, объявивший тип, если такой есть в исходниках рабочей области.
+   * <p>
+   * Покрывает типы, у которых есть объявляющий их модуль/класс:
+   * <ul>
+   *   <li>{@link TypeKind#USER} — пользовательские типы OneScript (классы и модули):
+   *       объявление хранится в самом {@link UserType#getDeclaration()};</li>
+   *   <li>{@link TypeKind#CONFIGURATION} — общие модули и модули менеджеров объектов
+   *       конфигурации: документ-модуль находится обратным индексом
+   *       {@link GlobalScopeProvider#moduleUriByType(TypeRef)}, а его символ —
+   *       {@code getSymbolTree().getModule()}.</li>
+   * </ul>
+   * Для платформенных/примитивных типов ({@link TypeKind#PLATFORM},
+   * {@link TypeKind#PRIMITIVE}) и служебных {@code Unknown}/{@code Any}
+   * объявляющего исходник-символа нет — возвращается {@code empty}.
+   *
+   * @param typeRef           тип, чей объявляющий символ нужен.
+   * @param requestingContext контекст документа-потребителя; через него находится
+   *                          {@code ServerContext} для резолва документа-модуля по URI.
+   * @return объявляющий символ типа, либо {@code empty}, если у типа нет
+   *   объявляющего символа в исходниках (платформенный/примитивный тип) или
+   *   документ-модуль больше не загружен.
+   */
+  public Optional<SourceDefinedSymbol> definingSymbol(TypeRef typeRef, DocumentContext requestingContext) {
+    return switch (typeRef.kind()) {
+      case USER -> userTypeDeclaration(typeRef);
+      case CONFIGURATION -> configurationModuleSymbol(typeRef, requestingContext);
+      default -> Optional.empty();
+    };
+  }
+
+  private Optional<SourceDefinedSymbol> userTypeDeclaration(TypeRef typeRef) {
+    if (typeRegistry.get(typeRef) instanceof UserType userType) {
+      return userType.getDeclaration();
+    }
+    return Optional.empty();
+  }
+
+  private Optional<SourceDefinedSymbol> configurationModuleSymbol(
+    TypeRef typeRef,
+    DocumentContext requestingContext
+  ) {
+    return globalScopeProvider.moduleUriByType(typeRef)
+      .map(uri -> requestingContext.getServerContext().getDocument(uri))
+      .<SourceDefinedSymbol>map(documentContext -> documentContext.getSymbolTree().getModule());
   }
 
   /**

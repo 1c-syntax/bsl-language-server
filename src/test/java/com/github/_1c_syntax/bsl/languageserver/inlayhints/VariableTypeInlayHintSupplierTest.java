@@ -29,7 +29,6 @@ import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,6 +44,10 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private VariableTypeInlayHintSupplier supplier;
+
+  private static String labelValue(InlayHint inlayHint) {
+    return inlayHint.getLabel().getRight().getFirst().getValue();
+  }
 
   @Test
   void testInferredTypeHintIsProducedForAssignment() {
@@ -64,12 +67,14 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
       .hasSize(1)
       .first()
       .satisfies(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft(": Массив"));
+        assertThat(labelValue(inlayHint)).isEqualTo(": Массив");
         assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Type);
         assertThat(inlayHint.getPaddingRight()).isTrue();
         // позиция — сразу после имени переменной «Контрагент» (строка 2, длина имени)
         assertThat(inlayHint.getPosition().getLine()).isEqualTo(2);
         assertThat(inlayHint.getPosition().getCharacter()).isEqualTo("\tКонтрагент".length());
+        // Массив — платформенный тип без объявляющего исходник-символа: ссылки нет
+        assertThat(inlayHint.getLabel().getRight().getFirst().getLocation()).isNull();
       });
   }
 
@@ -99,7 +104,7 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
       .hasSize(1)
       .first()
       .satisfies(inlayHint -> {
-        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft(": Массив"));
+        assertThat(labelValue(inlayHint)).isEqualTo(": Массив");
         // строка «Копия = Источник» (0-based) — третья строка тела процедуры
         assertThat(inlayHint.getPosition().getLine()).isEqualTo(3);
       });
@@ -122,7 +127,7 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
     // присваивание «Простая = 1» тривиально (тип очевиден из литерала) — хинта нет
     assertThat(inlayHints)
       .noneSatisfy(inlayHint ->
-        assertThat(inlayHint.getLabel().getLeft()).contains("Число"));
+        assertThat(labelValue(inlayHint)).contains("Число"));
   }
 
   @Test
