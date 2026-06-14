@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
 import org.eclipse.lsp4j.PrepareRenameResult;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.RenameCapabilities;
@@ -46,6 +47,7 @@ import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
@@ -166,21 +168,25 @@ public final class RenameProvider {
   }
 
   /**
-   * Подготовить переименование символа под курсором.
+   * Подготовить переименование символа под курсором для ответа на {@code textDocument/prepareRename}.
    * <p>
    * Резолвит ссылку под курсором и, если соответствующий символ можно переименовать текстовой
-   * правкой (см. {@link #isRenameable(Reference)}), возвращает {@link PrepareRenameResult} с
-   * диапазоном выделения ссылки ({@code range}) и текущим именем символа ({@code placeholder}).
-   * Имя в {@code placeholder} позволяет клиенту предзаполнить поле ввода реальным идентификатором,
-   * а не произвольным текстом под курсором. Если символ не переименовываем или ссылка не
-   * резолвится, возвращается {@code null}, и клиент отклоняет подготовку переименования.
+   * правкой (см. {@link #isRenameable(Reference)}), возвращает {@link Either3} c
+   * {@link PrepareRenameResult}, содержащим диапазон выделения ссылки ({@code range}) и текущее имя
+   * символа ({@code placeholder}). Имя в {@code placeholder} позволяет клиенту предзаполнить поле
+   * ввода реальным идентификатором, а не произвольным текстом под курсором. Если символ не
+   * переименовываем или ссылка не резолвится, возвращается {@link Either3} без значения (отказ),
+   * и клиент отклоняет подготовку переименования.
+   * <p>
+   * Формирование итоговой формы ответа (в том числе случай отказа) выполняется здесь, чтобы
+   * сервисный слой оставался тонким делегатом.
    *
    * @param documentContext Контекст документа.
    * @param params          Параметры вызова.
-   * @return {@link PrepareRenameResult} с диапазоном и именем символа при возможности
-   *         переименования либо {@code null}, если символ переименовать нельзя.
+   * @return {@link Either3} с {@link PrepareRenameResult} (диапазон и имя символа) при возможности
+   *         переименования либо {@link Either3} без значения, если символ переименовать нельзя.
    */
-  public @Nullable PrepareRenameResult getPrepareRename(
+  public Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> getPrepareRename(
     DocumentContext documentContext,
     TextDocumentPositionParams params
   ) {
@@ -188,7 +194,16 @@ public final class RenameProvider {
       .filter(Reference::isSourceDefinedSymbolReference)
       .filter(RenameProvider::isRenameable)
       .flatMap(RenameProvider::toPrepareRenameResult)
-      .orElse(null);
+      .<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>>map(Either3::forSecond)
+      .orElseGet(RenameProvider::rejectPrepareRename);
+  }
+
+  private static Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> rejectPrepareRename() {
+    // Отказ от переименования: ответ без значимого диапазона. Сохраняем прежнее поведение,
+    // при котором сервис отдавал Either3.forFirst поверх отсутствующего диапазона.
+    @Nullable
+    Range noRange = null;
+    return Either3.forFirst(noRange);
   }
 
   private static Optional<PrepareRenameResult> toPrepareRenameResult(Reference reference) {

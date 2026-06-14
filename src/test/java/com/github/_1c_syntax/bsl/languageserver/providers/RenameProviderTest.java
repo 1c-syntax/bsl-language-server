@@ -266,7 +266,8 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(result).isNull();
+    assertThat(result.isSecond()).isFalse();
+    assertThat(result.getFirst()).isNull();
   }
 
   @Test
@@ -280,7 +281,8 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(result).isNull();
+    assertThat(result.isSecond()).isFalse();
+    assertThat(result.getFirst()).isNull();
 
   }
 
@@ -295,9 +297,10 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(result).isNotNull();
-    assertThat(result.getRange()).isEqualTo(Ranges.create(0, 8, 18));
-    assertThat(result.getPlaceholder()).isEqualTo("ИмяФункции");
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 8, 18));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("ИмяФункции");
 
   }
 
@@ -313,9 +316,10 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(result).isNotNull();
-    assertThat(result.getRange()).isEqualTo(Ranges.create(1, 4, 14));
-    assertThat(result.getPlaceholder()).isEqualTo("Переменная");
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(1, 4, 14));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("Переменная");
   }
 
   @Test
@@ -330,9 +334,10 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
     var result = renameProvider.getPrepareRename(documentContext, params);
 
     // then
-    assertThat(result).isNotNull();
-    assertThat(result.getRange()).isEqualTo(Ranges.create(0, 24, 26));
-    assertThat(result.getPlaceholder()).isEqualTo("П1");
+    assertThat(result.isSecond()).isTrue();
+    var prepareRenameResult = result.getSecond();
+    assertThat(prepareRenameResult.getRange()).isEqualTo(Ranges.create(0, 24, 26));
+    assertThat(prepareRenameResult.getPlaceholder()).isEqualTo("П1");
   }
 
   @Test
