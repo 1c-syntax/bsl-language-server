@@ -55,7 +55,7 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
     // given: переменная из вызова функции с JsDoc-возвратом Структура.
     var dc = realDoc();
     var content = dc.getContent();
-    var afterDot = content.indexOf("Свойства.", content.indexOf("X = Свойства.")) + "Свойства.".length();
+    var afterDot = requireOffset(content, "X = Свойства.") + "X = Свойства.".length();
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(positionAtOffset(content, afterDot));
@@ -80,7 +80,7 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
     // given: позиция на переменной-структуре.
     var dc = realDoc();
     var content = dc.getContent();
-    var varOffset = content.indexOf("Свойства = НовыеСвойстваПодписи()") + 1;
+    var varOffset = requireOffset(content, "Свойства = НовыеСвойстваПодписи()") + 1;
     var params = new HoverParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(positionAtOffset(content, varOffset));
@@ -103,7 +103,7 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
     // given: позиция на имени поля в "X = Свойства.Подпись".
     var dc = realDoc();
     var content = dc.getContent();
-    var dotField = content.indexOf(".Подпись") + 1;
+    var dotField = requireOffset(content, ".Подпись") + 1;
     var params = new HoverParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(positionAtOffset(content, dotField));
@@ -122,7 +122,7 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
     // given: автокомплит после точки по переменной-структуре.
     var dc = realDoc();
     var content = dc.getContent();
-    var afterDot = content.indexOf("Свойства.", content.indexOf("X = Свойства.")) + "Свойства.".length();
+    var afterDot = requireOffset(content, "X = Свойства.") + "X = Свойства.".length();
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(positionAtOffset(content, afterDot));
@@ -144,6 +144,12 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
   private DocumentContext realDoc() {
     return TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/RealSignaturePropertiesReturn.bsl");
+  }
+
+  private static int requireOffset(String content, String marker) {
+    int offset = content.indexOf(marker);
+    assertThat(offset).as("маркер '%s' должен быть в фикстуре", marker).isGreaterThanOrEqualTo(0);
+    return offset;
   }
 
   private static Position positionAtOffset(String content, int offset) {

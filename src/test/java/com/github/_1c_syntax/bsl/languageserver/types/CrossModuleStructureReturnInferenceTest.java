@@ -70,6 +70,7 @@ class CrossModuleStructureReturnInferenceTest extends AbstractServerContextAware
     DocumentContext dc, String marker, int offsetInMarker) {
     var content = dc.getContent();
     int markerStart = content.indexOf(marker);
+    assertThat(markerStart).as("маркер '%s' должен быть в фикстуре", marker).isGreaterThanOrEqualTo(0);
     int targetOffset = markerStart + offsetInMarker;
     int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
     int line = content.substring(0, targetOffset).split("\n").length - 1;
