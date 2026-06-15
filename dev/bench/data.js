@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781511004355,
+  "lastUpdate": 1781529584736,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37355,6 +37355,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4397716704847543",
             "extra": "mean: 278.925101518631 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ad9f548086ab6ffd9c070a774e48234102c9b8cd",
+          "message": "Merge pull request #4109 from 1c-syntax/claude/implementation-locationlink\n\nfeat(ImplementationProvider): LocationLink/linkSupport для textDocument/implementation",
+          "timestamp": "2026-06-14T14:10:50+02:00",
+          "tree_id": "659efef614020411e9b9981fc70741125437002b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ad9f548086ab6ffd9c070a774e48234102c9b8cd"
+        },
+        "date": 1781529575511,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 282.67854793866474,
+            "unit": "sec",
+            "range": "stddev: 11.112196939083509",
+            "extra": "mean: 282.67854793866474 sec\nrounds: 3"
           }
         ]
       }
