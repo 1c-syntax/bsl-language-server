@@ -163,6 +163,29 @@ Commands:
 }
 ```
 
+<a id="binary"></a>
+
+## Запуск бинарной сборки и настройка JVM
+
+Помимо jar-файла в [релизах](https://github.com/1c-syntax/bsl-language-server/releases) публикуются бинарные сборки в виде архивов `bsl-language-server_<os>.zip`, собранные через `jpackage` (со встроенной средой Java). Для них предусмотрены скрипты-обёртки:
+
+* `bin/bsl-language-server.sh` — для Linux;
+* `Contents/MacOS/bsl-language-server.sh` — для macOS;
+* `bsl-language-server.cmd` — для Windows.
+
+Скрипты позволяют переопределить параметры JVM (например, предел памяти `-Xmx`) через переменную окружения `BSL_LANGUAGE_SERVER_OPTS`, не редактируя файл конфигурации внутри сборки. Заданное значение имеет приоритет над встроенным по умолчанию `-Xmx4g`:
+
+```sh
+# Linux/macOS
+BSL_LANGUAGE_SERVER_OPTS="-Xmx8g" ./bin/bsl-language-server.sh
+```
+
+```bat
+rem Windows
+set BSL_LANGUAGE_SERVER_OPTS=-Xmx8g
+bsl-language-server.cmd
+```
+
 <a id="websocket"></a>
 
 ## Запуск в режиме websocket

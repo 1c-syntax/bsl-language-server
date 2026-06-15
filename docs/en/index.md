@@ -163,6 +163,29 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 }
 ```
 
+<a id="binary"></a>
+
+## Running the binary distribution and tuning the JVM
+
+Besides the jar file, the [releases](https://github.com/1c-syntax/bsl-language-server/releases) provide binary distributions as `bsl-language-server_<os>.zip` archives built with `jpackage` (with a bundled Java runtime). They ship with wrapper scripts:
+
+* `bin/bsl-language-server.sh` — for Linux;
+* `Contents/MacOS/bsl-language-server.sh` — for macOS;
+* `bsl-language-server.cmd` — for Windows.
+
+The scripts allow overriding JVM options (for example, the memory limit `-Xmx`) via the `BSL_LANGUAGE_SERVER_OPTS` environment variable, without editing the configuration file inside the distribution. The provided value takes precedence over the built-in `-Xmx4g` default:
+
+```sh
+# Linux/macOS
+BSL_LANGUAGE_SERVER_OPTS="-Xmx8g" ./bin/bsl-language-server.sh
+```
+
+```bat
+rem Windows
+set BSL_LANGUAGE_SERVER_OPTS=-Xmx8g
+bsl-language-server.cmd
+```
+
 <a id="websocket"></a>
 
 ## Run in websocket mode
