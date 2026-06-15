@@ -869,6 +869,34 @@ class BSLTextDocumentServiceTest {
     }
   }
 
+  @Test
+  void resolveCompletionItem_returnsItemAsIsWhenNoData() throws Exception {
+    // given — item без data (резолвить нечем)
+    var item = new CompletionItem("Сообщить");
+
+    // when
+    var result = textDocumentService.resolveCompletionItem(item).get();
+
+    // then — item возвращается как есть, провайдер не вызывается
+    assertThat(result).isSameAs(item);
+    verify(completionProvider, never()).resolveCompletionItem(any(), any());
+  }
+
+  @Test
+  void resolveCompletionItem_returnsItemAsIsForUnknownDocument() throws Exception {
+    // given — data ссылается на документ, которого нет в индексе
+    var unknownUri = Absolute.uri(new File("./src/test/resources/__no_such_document__.bsl"));
+    var item = new CompletionItem("Сообщить");
+    item.setData(CompletionData.forFunction(unknownUri, "Сообщить", FileType.BSL, Language.RU));
+
+    // when
+    var result = textDocumentService.resolveCompletionItem(item).get();
+
+    // then — без документа резолвить негде, item возвращается как есть
+    assertThat(result).isSameAs(item);
+    verify(completionProvider, never()).resolveCompletionItem(any(), any());
+  }
+
   // Tests for unknown file handling (dryRun - no didOpen before call)
 
   @Test
