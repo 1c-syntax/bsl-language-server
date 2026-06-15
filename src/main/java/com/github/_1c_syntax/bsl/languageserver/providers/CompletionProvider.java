@@ -65,6 +65,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -339,22 +340,21 @@ public final class CompletionProvider {
   /**
    * Разрешает отложенную документацию completion item ({@code completionItem/resolve}).
    * <p>
-   * Если item пришёл без {@link CompletionItem#getData()} — резолвить нечем, item
-   * возвращается как есть. Иначе по data-ключу восстанавливается источник описания:
-   * для глобальной функции — она сама по имени в глобальной области видимости, для
-   * члена типа — тип-владелец и член. После чего {@code documentation} собирается тем
-   * же способом, что был бы при жадной сборке. Поле {@code data} очищается для
-   * экономии трафика.
+   * По data-ключу восстанавливается источник описания: для глобальной функции — она
+   * сама по имени в глобальной области видимости, для члена типа — тип-владелец и член.
+   * После чего {@code documentation} собирается тем же способом, что был бы при жадной
+   * сборке. Поле {@code data} очищается для экономии трафика.
+   * <p>
+   * И {@code globalScopeProvider}, и {@code typeService} — workspace-scoped бины, поэтому
+   * вызывающий обязан установить workspace-контекст текущего документа перед вызовом
+   * (см. {@link #extractData(CompletionItem)} для получения {@code uri} документа).
    *
    * @param unresolved completion item, пришедший от клиента на разрешение.
-   * @return тот же item с проставленной {@code documentation} и очищенным {@code data};
-   *         либо неизменённый item, если данных для резолва нет.
+   * @param data       ключ восстановления документации, извлечённый из item
+   *                   через {@link #extractData(CompletionItem)}.
+   * @return тот же item с проставленной {@code documentation} и очищенным {@code data}.
    */
-  public CompletionItem resolveCompletionItem(CompletionItem unresolved) {
-    var data = extractData(unresolved);
-    if (data == null) {
-      return unresolved;
-    }
+  public CompletionItem resolveCompletionItem(CompletionItem unresolved, CompletionData data) {
     var functionName = data.getFunctionName();
     if (functionName != null) {
       globalScopeProvider.findFunction(functionName, data.getFileType())
@@ -398,7 +398,7 @@ public final class CompletionProvider {
    * @return извлечённые данные либо {@code null}, если data отсутствует.
    */
   @Nullable
-  private CompletionData extractData(CompletionItem item) {
+  public CompletionData extractData(CompletionItem item) {
     var rawData = item.getData();
     if (rawData == null) {
       return null;
@@ -464,7 +464,7 @@ public final class CompletionProvider {
       // зачёркнутыми).
       .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
       .toList();
-    var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target);
+    var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
     for (int i = 0; i < filtered.size(); i++) {
       var member = filtered.get(i);
       var bucket = localFieldNames.contains(member.name()) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
@@ -614,7 +614,7 @@ public final class CompletionProvider {
       }
       var displayName = fn.displayName(scriptVariant);
       if (matches(displayName, prefix)) {
-        var item = toCompletionItem(fn, fileType, scriptVariant, target);
+        var item = toCompletionItem(fn, fileType, scriptVariant, target, documentContext.getUri());
         applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
         items.add(item);
       }
@@ -737,11 +737,11 @@ public final class CompletionProvider {
    * функции по имени (см. {@link CompletionData}). Клиент без resolveSupport получает её сразу.
    */
   private CompletionItem toCompletionItem(MemberDescriptor member, FileType fileType,
-                                          Language scriptVariant, CompatibilityMode target) {
+                                          Language scriptVariant, CompatibilityMode target, URI uri) {
     var item = buildMemberItem(member, documentationResolveSupport,
       CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
     if (documentationResolveSupport) {
-      item.setData(CompletionData.forFunction(member.name(), fileType, scriptVariant));
+      item.setData(CompletionData.forFunction(member.name(), fileType, scriptVariant, uri));
     }
     return item;
   }
@@ -750,7 +750,8 @@ public final class CompletionProvider {
                                                  Map<String, TypeRef> owners,
                                                  FileType fileType,
                                                  Language scriptVariant,
-                                                 CompatibilityMode target) {
+                                                 CompatibilityMode target,
+                                                 URI uri) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
       var owner = owners.get(member.name());
@@ -761,7 +762,7 @@ public final class CompletionProvider {
         CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target);
       if (deferDocumentation) {
         item.setData(CompletionData.forMember(
-          owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
+          owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant, uri));
       }
       items.add(item);
     }

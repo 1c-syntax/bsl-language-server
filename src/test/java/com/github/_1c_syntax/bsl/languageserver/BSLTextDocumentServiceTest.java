@@ -21,11 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
@@ -43,6 +47,7 @@ import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.ColorPresentationParams;
+import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
@@ -142,6 +147,8 @@ class BSLTextDocumentServiceTest {
   private DefinitionProvider definitionProvider;
   @MockitoSpyBean
   private LinkedEditingRangeProvider linkedEditingRangeProvider;
+  @MockitoSpyBean
+  private CompletionProvider completionProvider;
 
   @BeforeEach
   void setUp() {
@@ -814,6 +821,47 @@ class BSLTextDocumentServiceTest {
       assertThat(capturedUri.get())
         .as("WorkspaceContextHolder must be set on text-document-service worker thread")
         .isNotNull();
+    } finally {
+      if (savedContext != null) {
+        WorkspaceContextHolder.set(savedContext);
+      }
+    }
+  }
+
+  /**
+   * Регрессионный тест ScopeNotActiveException из Sentry: {@code completionItem/resolve}
+   * приходит без позиции и текстового документа, а {@code resolveCompletionItem} обращается
+   * к workspace-scoped {@code typeService}/{@code globalScopeProvider}. Без установки
+   * workspace-контекста по {@code data.uri} резолв падал с
+   * {@code ScopeNotActiveException: Scope 'workspace' is not active for the current thread}.
+   */
+  @Test
+  void resolveCompletionItem_setsWorkspaceContextForWorkspaceScopedBeans() throws Exception {
+    // given — открытый документ и ленивый completion item с data-ключом, указывающим на него
+    doOpen();
+    var item = new CompletionItem("Сообщить");
+    item.setData(CompletionData.forFunction(
+      "Сообщить", FileType.BSL, Language.RU, Absolute.uri(getTestFile())));
+
+    var capturedUri = new AtomicReference<URI>();
+    doAnswer(invocation -> {
+      capturedUri.set(WorkspaceContextHolder.get());
+      return invocation.getArgument(0);
+    }).when(completionProvider).resolveCompletionItem(any(), any());
+
+    // simulate LSP4J handler thread: no workspace context on calling thread
+    var savedContext = WorkspaceContextHolder.get();
+    WorkspaceContextHolder.clear();
+    try {
+      // when
+      textDocumentService.resolveCompletionItem(item).get();
+
+      // then — workspace-контекст установлен на воркере перед обращением к scoped-бинам
+      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      assertThat(capturedUri.get())
+        .as("WorkspaceContextHolder must be set before resolveCompletionItem touches workspace-scoped beans")
+        .isNotNull()
+        .isEqualTo(expectedWorkspaceUri);
     } finally {
       if (savedContext != null) {
         WorkspaceContextHolder.set(savedContext);

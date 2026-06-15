@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -1908,7 +1909,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var lazy = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
 
     // when — клиент запрашивает resolve этого item
-    var resolved = completionProvider.resolveCompletionItem(lazy);
+    var resolved = resolve(lazy);
 
     // then — documentation восстановлена тем же контентом, что был бы жадным
     assertThat(resolved.getDocumentation())
@@ -1919,6 +1920,11 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     assertThat(resolved.getData())
       .as("после resolve data очищается для экономии трафика")
       .isNull();
+  }
+
+  private CompletionItem resolve(CompletionItem item) {
+    var data = completionProvider.extractData(item);
+    return completionProvider.resolveCompletionItem(item, Objects.requireNonNull(data));
   }
 
   private CompletionItem noDotCompletionItem(
@@ -1968,7 +1974,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var lazy = noDotCompletionItem(lazyContext, new Position(0, 4), "Сообщить");
 
     // when — клиент запрашивает resolve этого item
-    var resolved = completionProvider.resolveCompletionItem(lazy);
+    var resolved = resolve(lazy);
 
     // then — documentation восстановлена тем же контентом, что был бы жадным
     assertThat(resolved.getDocumentation())
