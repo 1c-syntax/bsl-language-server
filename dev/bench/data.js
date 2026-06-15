@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781560811964,
+  "lastUpdate": 1781564983479,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37448,6 +37448,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 5.443698861953347",
             "extra": "mean: 281.08632532755536 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "e73f20f297c2c4af379970ab42f479a7d234f27b",
+          "message": "fix(types): не падать NPE на X.Вставить() без аргументов\n\nПри выводе типов «открытой» структуры инференсер сканирует все вызовы\nX.Вставить(...) в области видимости. Незавершённый вызов с пустыми\nскобками (X.Вставить()) даёт callParam без expression, из-за чего\nextractStringLiteralText получал null и валил signatureHelp/inference\nNullPointerException-ом.\n\nКлючевое выражение теперь извлекается через Optional.ofNullable(...).map,\nтак что отсутствующий аргумент просто пропускает вызов. Тот же гард для\nвторого аргумента Колонки.Добавить(...).\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-06-15T11:57:42+02:00",
+          "tree_id": "8985aedc29080d8f5d4d3fb995f5c7fd712d6f2e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e73f20f297c2c4af379970ab42f479a7d234f27b"
+        },
+        "date": 1781564974553,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 282.82702891031903,
+            "unit": "sec",
+            "range": "stddev: 22.360336262259224",
+            "extra": "mean: 282.82702891031903 sec\nrounds: 3"
           }
         ]
       }
