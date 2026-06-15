@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781529584736,
+  "lastUpdate": 1781537741504,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37386,6 +37386,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.112196939083509",
             "extra": "mean: 282.67854793866474 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cdd2606604d3a54d9447d2ca73fdbbe7b516f5ac",
+          "message": "Merge pull request #4090 from 1c-syntax/claude/linked-editing-range\n\nfeat(LinkedEditingRange): связанное редактирование локальных символов",
+          "timestamp": "2026-06-14T17:32:05+02:00",
+          "tree_id": "5be210cc8fca060775cf8eae27d2d1f8abd11480",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cdd2606604d3a54d9447d2ca73fdbbe7b516f5ac"
+        },
+        "date": 1781537733622,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 290.2714289029439,
+            "unit": "sec",
+            "range": "stddev: 7.866804787908991",
+            "extra": "mean: 290.2714289029439 sec\nrounds: 3"
           }
         ]
       }
