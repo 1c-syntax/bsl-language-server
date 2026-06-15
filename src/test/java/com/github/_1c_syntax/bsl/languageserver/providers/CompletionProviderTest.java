@@ -2017,7 +2017,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void methodMemberGetsOpenParenCommitCharacter() {
+  void methodMemberGetsNoCommitCharacterBecauseInsertTextAddsParen() {
     // given — клиент поддерживает commitCharactersSupport
     enableCommitCharactersSupport(true);
     var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
@@ -2025,9 +2025,13 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // when
     var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
 
-    // then — метод фиксируется вставкой открывающей скобки
+    // then — методу commit character "(" НЕ задаётся: его insertText уже вставляет
+    // открывающую скобку (`Добавить(` без snippetSupport либо `Добавить($0)` с ним),
+    // а commit character добавился бы после текста и продублировал её (`Добавить((`),
+    // сломав signatureHelp.
     assertThat(add.getKind()).isEqualTo(CompletionItemKind.Method);
-    assertThat(add.getCommitCharacters()).containsExactly("(");
+    assertThat(add.getInsertText()).startsWith("Добавить(");
+    assertThat(add.getCommitCharacters()).isNull();
   }
 
   @Test

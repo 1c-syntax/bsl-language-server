@@ -846,11 +846,14 @@ public final class CompletionProvider {
    * {@link CompletionItemKind}, если клиент объявил поддержку
    * {@code completionItem.commitCharactersSupport}. Commit character —
    * символ, ввод которого фиксирует пункт и сразу вставляет его вместе с
-   * этим символом. Набор подбирается по смыслу пункта: вызываемые
-   * (метод/функция/конструктор) фиксируются открывающей скобкой
-   * {@code "("}, члены-объекты и переменные/модули — точкой {@code "."}
-   * (после фиксации осмысленно дальнейшее обращение к члену). Ключевым
-   * словам и прочим пунктам commit characters не задаются.
+   * этим символом. Набор подбирается по смыслу пункта: члены-объекты и
+   * переменные/модули фиксируются точкой {@code "."} (после фиксации осмысленно
+   * дальнейшее обращение к члену). Вызываемым (метод/функция/конструктор)
+   * commit characters НЕ задаются: их {@code insertText} уже вставляет открывающую
+   * скобку (см. {@link #applyCallableInsertText}), а commit character по спецификации
+   * LSP добавляется после текста пункта — символ {@code "("} продублировал бы скобку
+   * ({@code Имя((}) и сломал signatureHelp. Ключевым словам и прочим пунктам commit
+   * characters также не задаются.
    *
    * @param item пункт автодополнения, которому проставляются commit characters.
    */
@@ -863,10 +866,14 @@ public final class CompletionProvider {
       return;
     }
     switch (kind) {
-      case Method, Function, Constructor -> item.setCommitCharacters(List.of("("));
+      // Вызываемым (метод/функция/конструктор) commit character "(" НЕ задаётся: их
+      // insertText уже вставляет открывающую скобку (`Имя($0)` / `Имя(` / `Имя()`, см.
+      // applyCallableInsertText), а commit character по спецификации LSP добавляется ПОСЛЕ
+      // текста пункта. Получилась бы дублирующая скобка `Имя((` со сломанным signatureHelp.
       case Field, Property, Variable, Module -> item.setCommitCharacters(List.of("."));
       default -> {
-        // ключевые слова, классы и прочие пункты commit characters не получают
+        // методы/функции/конструкторы (скобку даёт insertText), ключевые слова, классы
+        // и прочие пункты commit characters не получают
       }
     }
   }
