@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.apache.commons.collections4.trie.PatriciaTrie;
@@ -105,14 +104,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Индекс наследует {@link AbstractDocumentLifecycleClearableIndex}: его {@code @EventListener}'ы
  * сбрасывают записи документа на изменение содержимого, освобождение данных, закрытие и удаление.
  * <p>
+ * Бин — обычный синглтон (НЕ {@code @WorkspaceScope}): {@code workspace/symbol} по протоколу LSP —
+ * кросс-воркспейсный запрос, поэтому единый индекс хранит символы документов всех рабочих областей
+ * и отдаёт их одним ранжированным списком. Записи ключуются по URI документа ({@link Entry#uri()}),
+ * а жизненный цикл держится на per-document событиях (в т.ч. {@code ServerContextDocumentRemovedEvent},
+ * который рассылается и при удалении рабочей области), так что закрытие/удаление области штатно
+ * вычищает её документы из индекса без отдельного per-workspace teardown'а. Индекс самодостаточен:
+ * не обращается ни к одному {@code @WorkspaceScope}-бину, поэтому workspace-контекст потока ему не нужен.
+ * <p>
  * Потокобезопасность: {@link PatriciaTrie} не потокобезопасен, поэтому доступ к нему защищён
  * {@link ReadWriteLock}. Запросы ({@link #search(String, CancelChecker)}) держат read-lock,
  * переиндексация и сброс ({@link #index(DocumentContext)}, {@link #clear(URI)}) — write-lock,
- * так что чтение и запись не гоняются. Записи {@link Entry} неизменяемы и безопасно покидают
- * блокировку в составе результата.
+ * так что чтение и запись не гоняются (в т.ч. при конкурентной индексации из populate-пулов разных
+ * рабочих областей). Записи {@link Entry} неизменяемы и безопасно покидают блокировку в составе результата.
  */
 @Component
-@WorkspaceScope
 public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableIndex {
 
   /**
