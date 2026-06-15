@@ -741,7 +741,7 @@ public final class CompletionProvider {
     var item = buildMemberItem(member, documentationResolveSupport,
       CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
     if (documentationResolveSupport) {
-      item.setData(CompletionData.forFunction(member.name(), fileType, scriptVariant, uri));
+      item.setData(CompletionData.forFunction(uri, member.name(), fileType, scriptVariant));
     }
     return item;
   }
@@ -762,7 +762,7 @@ public final class CompletionProvider {
         CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target);
       if (deferDocumentation) {
         item.setData(CompletionData.forMember(
-          owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant, uri));
+          uri, owner.kind(), owner.qualifiedName(), member.name(), fileType, scriptVariant));
       }
       items.add(item);
     }

@@ -841,7 +841,7 @@ class BSLTextDocumentServiceTest {
     doOpen();
     var item = new CompletionItem("Сообщить");
     item.setData(CompletionData.forFunction(
-      "Сообщить", FileType.BSL, Language.RU, Absolute.uri(getTestFile())));
+      Absolute.uri(getTestFile()), "Сообщить", FileType.BSL, Language.RU));
 
     var capturedUri = new AtomicReference<URI>();
     doAnswer(invocation -> {

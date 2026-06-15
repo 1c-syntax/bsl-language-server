@@ -60,6 +60,16 @@ import java.net.URI;
 public class CompletionData {
 
   /**
+   * URI документа, в контексте которого item был построен.
+   * <p>
+   * Нужен для {@code completionItem/resolve}: запрос приходит без позиции и без
+   * текстового документа, а {@code typeService}/{@code globalScopeProvider} —
+   * workspace-scoped бины. По этому URI восстанавливается документ и его
+   * workspace, чтобы установить workspace-контекст перед резолвом documentation.
+   */
+  private URI uri;
+
+  /**
    * Вид типа-владельца члена (часть идентичности {@link com.github._1c_syntax.bsl.languageserver.types.model.TypeRef}).
    * {@code null} для варианта глобальной функции.
    */
@@ -99,41 +109,31 @@ public class CompletionData {
   private String functionName;
 
   /**
-   * URI документа, в контексте которого item был построен.
-   * <p>
-   * Нужен для {@code completionItem/resolve}: запрос приходит без позиции и без
-   * текстового документа, а {@code typeService}/{@code globalScopeProvider} —
-   * workspace-scoped бины. По этому URI восстанавливается документ и его
-   * workspace, чтобы установить workspace-контекст перед резолвом documentation.
-   */
-  private URI uri;
-
-  /**
    * Создаёт ключ восстановления документации члена типа (dot-completion).
    *
+   * @param uri               URI документа, в контексте которого построен item.
    * @param typeKind          вид типа-владельца члена.
    * @param typeQualifiedName каноническое полное имя типа-владельца.
    * @param memberName        имя члена (метода/свойства).
    * @param fileType          тип файла-потребителя (BSL/OS).
    * @param scriptVariant     локаль скрипта (ru/en).
-   * @param uri               URI документа, в контексте которого построен item.
    * @return ключ восстановления члена типа.
    */
-  public static CompletionData forMember(TypeKind typeKind, String typeQualifiedName, String memberName,
-                                         FileType fileType, Language scriptVariant, URI uri) {
-    return new CompletionData(typeKind, typeQualifiedName, memberName, fileType, scriptVariant, null, uri);
+  public static CompletionData forMember(URI uri, TypeKind typeKind, String typeQualifiedName, String memberName,
+                                         FileType fileType, Language scriptVariant) {
+    return new CompletionData(uri, typeKind, typeQualifiedName, memberName, fileType, scriptVariant, null);
   }
 
   /**
    * Создаёт ключ восстановления документации глобальной функции (no-dot completion).
    *
+   * @param uri           URI документа, в контексте которого построен item.
    * @param functionName  имя глобальной функции.
    * @param fileType      тип файла-потребителя (BSL/OS).
    * @param scriptVariant локаль скрипта (ru/en).
-   * @param uri           URI документа, в контексте которого построен item.
    * @return ключ восстановления глобальной функции.
    */
-  public static CompletionData forFunction(String functionName, FileType fileType, Language scriptVariant, URI uri) {
-    return new CompletionData(null, null, null, fileType, scriptVariant, functionName, uri);
+  public static CompletionData forFunction(URI uri, String functionName, FileType fileType, Language scriptVariant) {
+    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName);
   }
 }
