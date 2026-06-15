@@ -33,6 +33,8 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
@@ -144,5 +146,26 @@ class SentryScopeConfigurerTest {
     assertThat(capturedEvent.get()).isNotNull();
     assertThat(capturedEvent.get().getTags()).containsEntry("client.name", "UNKNOWN");
     assertThat(capturedEvent.get().getTags()).containsEntry("client.version", "UNKNOWN");
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "1.0.0,        production",
+    "1.2.34,       production",
+    "1.0.0-rc.2,   pre-release",
+    "1.0.0-rc2,    pre-release",
+    "1.0.0-ra.1,   pre-release",
+    "1.0.0-ra1,    pre-release",
+    "develop-1234, develop",
+    "develop-1234-DIRTY-abcdef, feature",
+    "1.0.0-alpha,  feature",
+    "feature-foo,  feature"
+  })
+  void testResolveEnvironment(String version, String expectedEnvironment) {
+    // when
+    var environment = SentryScopeConfigurer.resolveEnvironment(version);
+
+    // then
+    assertThat(environment).isEqualTo(expectedEnvironment);
   }
 }
