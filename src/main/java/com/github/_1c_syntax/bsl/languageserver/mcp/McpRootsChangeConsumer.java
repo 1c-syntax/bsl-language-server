@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import com.github._1c_syntax.utils.Absolute;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema.Root;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -100,7 +100,7 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
 
   private static @Nullable Path toPath(Root root) {
     try {
-      return Path.of(URI.create(root.uri()));
+      return Absolute.path(Absolute.uri(root.uri()));
     } catch (RuntimeException e) {
       LOGGER.warn("Skipping unsupported MCP root uri `{}`", root.uri(), e);
       return null;
