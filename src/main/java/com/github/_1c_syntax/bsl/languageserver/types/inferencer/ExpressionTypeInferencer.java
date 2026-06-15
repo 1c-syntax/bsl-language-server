@@ -666,6 +666,21 @@ public class ExpressionTypeInferencer {
         if (!member.matches(memberName)) {
           continue;
         }
+        // Для метода проектного модуля (в т.ч. вызванного межмодульно как
+        // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
+        // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
+        // несёт лишь головной ref, поэтому без этого поля структуры терялись.
+        if (expectedKind == MemberKind.METHOD) {
+          var declaredReturn = member.getSourceSymbol()
+            .filter(MethodSymbol.class::isInstance)
+            .map(MethodSymbol.class::cast)
+            .map(symbolTypeIndex::getDeclaredReturnTypes)
+            .filter(declared -> !declared.isEmpty());
+          if (declaredReturn.isPresent()) {
+            result = result.union(declaredReturn.get());
+            continue;
+          }
+        }
         // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
         for (var ref : member.returnTypes().refs()) {
           if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
