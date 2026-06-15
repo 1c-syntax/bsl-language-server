@@ -1,6 +1,6 @@
 # Event handler signature mismatch (EventHandlerInvalidSignature)
 
-<!-- Auto-generated metadata above, do not edit -->
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 The signature of a platform-event handler method does not match the event contract: parameter count diverges. If the platform invokes the handler with N parameters but fewer are declared, the runtime either errors out or silently drops the parameter.
