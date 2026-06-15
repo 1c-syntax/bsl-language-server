@@ -172,6 +172,9 @@ public record TypeSet(
    * без текстового описания (рантайм-ключи: {@code Структура.Вставить(...)},
    * колонки ТЗ, литеральный {@code Новый Структура("К1,К2")}).
    *
+   * @param ref   тип-владелец поля (добавляется в набор, если отсутствует)
+   * @param name  имя поля
+   * @param types типы значения поля
    * @return новый {@link TypeSet} с дополненным {@code localFields[ref][name]}.
    */
   public TypeSet withField(TypeRef ref, String name, TypeSet types) {
@@ -182,6 +185,10 @@ public record TypeSet(
    * Прикрепить к указанному {@code ref} одно поле «открытого» объекта данных
    * с текстовым описанием (поля из doc-комментария: {@code * Поле - Тип - текст}).
    *
+   * @param ref         тип-владелец поля (добавляется в набор, если отсутствует)
+   * @param name        имя поля
+   * @param types       типы значения поля
+   * @param description текстовое описание поля (может быть пустым)
    * @return новый {@link TypeSet} с дополненным {@code localFields[ref][name]}.
    */
   public TypeSet withField(TypeRef ref, String name, TypeSet types, String description) {
