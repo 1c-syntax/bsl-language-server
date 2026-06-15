@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781537741504,
+  "lastUpdate": 1781560811964,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37417,6 +37417,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.866804787908991",
             "extra": "mean: 290.2714289029439 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a58819bdfa406cf5cd845c3b431ab9a8a19b7e43",
+          "message": "Merge pull request #4120 from 1c-syntax/claude/completion-resolve-workspace-scope\n\nfix(completion): установить workspace-контекст при completionItem/resolve",
+          "timestamp": "2026-06-15T11:46:27+02:00",
+          "tree_id": "0befca1ec3186319c3ce375e45328b9993ecbaa9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a58819bdfa406cf5cd845c3b431ab9a8a19b7e43"
+        },
+        "date": 1781560802211,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 281.08632532755536,
+            "unit": "sec",
+            "range": "stddev: 5.443698861953347",
+            "extra": "mean: 281.08632532755536 sec\nrounds: 3"
           }
         ]
       }
