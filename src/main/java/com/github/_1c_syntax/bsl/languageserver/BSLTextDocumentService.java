@@ -235,7 +235,23 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
-    return CompletableFuture.completedFuture(completionProvider.resolveCompletionItem(unresolved));
+    var data = completionProvider.extractData(unresolved);
+    if (data == null) {
+      // item без data — резолвить нечем, возвращаем как есть.
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(data.getUri().toString());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    var documentContext = maybeDocument.get();
+
+    // resolveCompletionItem обращается к workspace-scoped typeService/globalScopeProvider,
+    // поэтому резолв должен выполняться в workspace-контексте документа.
+    return withFreshDocumentContext(
+      documentContext,
+      () -> completionProvider.resolveCompletionItem(unresolved, data)
+    );
   }
 
   @Override
