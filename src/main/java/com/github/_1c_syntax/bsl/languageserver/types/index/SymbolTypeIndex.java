@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -280,10 +281,24 @@ public class SymbolTypeIndex {
     for (var field : fields) {
       var fieldTypes = resolveTypes(field.types());
       if (!fieldTypes.isEmpty()) {
-        result = result.withField(headRef, field.name(), fieldTypes);
+        result = result.withField(headRef, field.name(), fieldTypes, fieldDescription(field));
       }
     }
     return result;
+  }
+
+  /**
+   * Текстовое описание поля из doc-комментария: первое непустое описание среди
+   * типов поля ({@code * Поле - Тип - текст}). У самого {@link TypeDescription}
+   * поля описания нет — оно лежит на типах поля.
+   */
+  private static String fieldDescription(ParameterDescription field) {
+    return field.types().stream()
+      .map(TypeDescription::description)
+      .filter(text -> text != null && !text.isBlank())
+      .findFirst()
+      .map(String::strip)
+      .orElse("");
   }
 
   private Optional<TypeRef> resolveOne(String name) {

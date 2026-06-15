@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -178,9 +179,15 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     for (var entry : collectFields(types).entrySet()) {
       var key = entry.getKey();
       rendered.add(key.toLowerCase(Locale.ROOT));
-      var fieldTypes = entry.getValue();
+      var field = entry.getValue();
+      var fieldTypes = field.types();
       var info = doc.get(key.toLowerCase(Locale.ROOT));
-      out.add(fieldBullet(pad, key, fieldTypeLabel(fieldTypes, lang), info == null ? "" : info.description()));
+      // Описание: приоритет у doc-комментария (для параметров), иначе — описание
+      // поля из модели типов (для локальной переменной из возврата функции).
+      var description = info != null && !info.description().isBlank()
+        ? info.description()
+        : cleanupKeyDescription(field.description());
+      out.add(fieldBullet(pad, key, fieldTypeLabel(fieldTypes, lang), description));
       collectFieldBullets(out, fieldTypes, lang, indent + 1, info == null ? Map.of() : info.children());
     }
     // Ключи, описанные в doc-комментарии, но не выведенные инференсером.
@@ -198,17 +205,17 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    * для коллекций без собственных полей — поля типа-элемента (колонки строки
    * ТаблицыЗначений). Имена дедуплицируются (union-типы), значения объединяются.
    */
-  private static Map<String, TypeSet> collectFields(TypeSet types) {
-    var fields = new LinkedHashMap<String, TypeSet>();
+  private static Map<String, LocalField> collectFields(TypeSet types) {
+    var fields = new LinkedHashMap<String, LocalField>();
     for (var ref : types.refs()) {
       var localFields = types.getLocalFields(ref);
       if (localFields.isEmpty()) {
         var elementTypes = types.getElementTypes(ref);
         for (var elemRef : elementTypes.refs()) {
-          elementTypes.getLocalFields(elemRef).forEach((name, value) -> fields.merge(name, value, TypeSet::union));
+          elementTypes.getLocalFields(elemRef).forEach((name, value) -> fields.merge(name, value, LocalField::merge));
         }
       } else {
-        localFields.forEach((name, value) -> fields.merge(name, value, TypeSet::union));
+        localFields.forEach((name, value) -> fields.merge(name, value, LocalField::merge));
       }
     }
     return fields;

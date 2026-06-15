@@ -610,7 +610,7 @@ public class ExpressionTypeInferencer {
     for (var ref : leftTypes.refs()) {
       var fields = leftTypes.getLocalFields(ref);
       for (var entry : fields.entrySet()) {
-        merged.merge(entry.getKey(), entry.getValue(), TypeSet::union);
+        merged.merge(entry.getKey(), entry.getValue().types(), TypeSet::union);
       }
     }
     return merged;
@@ -644,7 +644,7 @@ public class ExpressionTypeInferencer {
         var fields = leftTypes.getLocalFields(leftType);
         for (var entry : fields.entrySet()) {
           if (entry.getKey().equalsIgnoreCase(memberName)) {
-            fromLocalFields = fromLocalFields.union(entry.getValue());
+            fromLocalFields = fromLocalFields.union(entry.getValue().types());
           }
         }
       }
@@ -665,6 +665,21 @@ public class ExpressionTypeInferencer {
         }
         if (!member.matches(memberName)) {
           continue;
+        }
+        // Для метода проектного модуля (в т.ч. вызванного межмодульно как
+        // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
+        // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
+        // несёт лишь головной ref, поэтому без этого поля структуры терялись.
+        if (expectedKind == MemberKind.METHOD) {
+          var declaredReturn = member.getSourceSymbol()
+            .filter(MethodSymbol.class::isInstance)
+            .map(MethodSymbol.class::cast)
+            .map(symbolTypeIndex::getDeclaredReturnTypes)
+            .filter(declared -> !declared.isEmpty());
+          if (declaredReturn.isPresent()) {
+            result = result.union(declaredReturn.get());
+            continue;
+          }
         }
         // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
         for (var ref : member.returnTypes().refs()) {
@@ -690,7 +705,8 @@ public class ExpressionTypeInferencer {
     }
     var enriched = TypeSet.of(ret);
     for (var entry : elementSet.getLocalFields(ret).entrySet()) {
-      enriched = enriched.withField(ret, entry.getKey(), entry.getValue());
+      var field = entry.getValue();
+      enriched = enriched.withField(ret, entry.getKey(), field.types(), field.description());
     }
     return enriched;
   }

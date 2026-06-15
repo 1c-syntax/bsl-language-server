@@ -53,12 +53,16 @@ import java.util.Set;
  * @param refs         набор ссылок на типы, образующих union
  * @param elementTypes типы элементов коллекций, ключ — ссылка на тип-коллекцию
  * @param localFields  поля «открытого» объекта данных, ключ — ссылка на тип-объект,
- *                     значение — типы полей по их именам
+ *                     значение — {@link LocalField} (типы + описание) по именам полей
+ * <p>
+ * Инвариант: {@code TypeSet} НЕ используется как ключ hash-коллекции
+ * (везде в кэшах — значение), поэтому описание поля в составе
+ * {@link LocalField} безопасно участвует в {@code equals/hashCode}.
  */
 public record TypeSet(
   Set<TypeRef> refs,
   Map<TypeRef, TypeSet> elementTypes,
-  Map<TypeRef, Map<String, TypeSet>> localFields
+  Map<TypeRef, Map<String, LocalField>> localFields
 ) {
 
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
@@ -71,7 +75,7 @@ public record TypeSet(
     if (localFields == null || localFields.isEmpty()) {
       localFields = Collections.emptyMap();
     } else {
-      var copy = new LinkedHashMap<TypeRef, Map<String, TypeSet>>();
+      var copy = new LinkedHashMap<TypeRef, Map<String, LocalField>>();
       for (var entry : localFields.entrySet()) {
         copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
       }
@@ -124,14 +128,14 @@ public record TypeSet(
       mergedElements.merge(entry.getKey(), entry.getValue(), TypeSet::union);
     }
 
-    var mergedFields = new LinkedHashMap<TypeRef, Map<String, TypeSet>>();
+    var mergedFields = new LinkedHashMap<TypeRef, Map<String, LocalField>>();
     for (var entry : this.localFields.entrySet()) {
       mergedFields.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
     }
     for (var entry : other.localFields.entrySet()) {
       var existing = mergedFields.computeIfAbsent(entry.getKey(), k -> new LinkedHashMap<>());
       for (var fieldEntry : entry.getValue().entrySet()) {
-        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), TypeSet::union);
+        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), LocalField::merge);
       }
     }
 
@@ -164,21 +168,40 @@ public record TypeSet(
   }
 
   /**
-   * Прикрепить к указанному {@code ref} одно поле «открытого» объекта данных.
+   * Прикрепить к указанному {@code ref} одно поле «открытого» объекта данных
+   * без текстового описания (рантайм-ключи: {@code Структура.Вставить(...)},
+   * колонки ТЗ, литеральный {@code Новый Структура("К1,К2")}).
    *
+   * @param ref   тип-владелец поля (добавляется в набор, если отсутствует)
+   * @param name  имя поля
+   * @param types типы значения поля
    * @return новый {@link TypeSet} с дополненным {@code localFields[ref][name]}.
    */
   public TypeSet withField(TypeRef ref, String name, TypeSet types) {
+    return withField(ref, name, types, "");
+  }
+
+  /**
+   * Прикрепить к указанному {@code ref} одно поле «открытого» объекта данных
+   * с текстовым описанием (поля из doc-комментария: {@code * Поле - Тип - текст}).
+   *
+   * @param ref         тип-владелец поля (добавляется в набор, если отсутствует)
+   * @param name        имя поля
+   * @param types       типы значения поля
+   * @param description текстовое описание поля (может быть пустым)
+   * @return новый {@link TypeSet} с дополненным {@code localFields[ref][name]}.
+   */
+  public TypeSet withField(TypeRef ref, String name, TypeSet types, String description) {
     Objects.requireNonNull(ref, "ref");
     Objects.requireNonNull(name, "name");
     Objects.requireNonNull(types, "types");
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
-    var merged = new LinkedHashMap<TypeRef, Map<String, TypeSet>>();
+    var merged = new LinkedHashMap<TypeRef, Map<String, LocalField>>();
     for (var entry : this.localFields.entrySet()) {
       merged.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
     }
     var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
-    bucket.merge(name, types, TypeSet::union);
+    bucket.merge(name, new LocalField(types, description), LocalField::merge);
     return new TypeSet(newRefs, this.elementTypes, merged);
   }
 
@@ -205,7 +228,7 @@ public record TypeSet(
    * @return поля «открытого» объекта для указанного {@code ref}, либо пустую
    *         мапу.
    */
-  public Map<String, TypeSet> getLocalFields(TypeRef ref) {
+  public Map<String, LocalField> getLocalFields(TypeRef ref) {
     return localFields.getOrDefault(ref, Collections.emptyMap());
   }
 
@@ -219,7 +242,7 @@ public record TypeSet(
     for (var fields : localFields.values()) {
       for (var entry : fields.entrySet()) {
         if (entry.getKey().toLowerCase(Locale.ROOT).equals(lookup)) {
-          acc = acc.union(entry.getValue());
+          acc = acc.union(entry.getValue().types());
         }
       }
     }

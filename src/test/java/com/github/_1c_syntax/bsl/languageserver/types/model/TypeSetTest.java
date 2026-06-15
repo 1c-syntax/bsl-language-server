@@ -144,6 +144,41 @@ class TypeSetTest {
   }
 
   @Test
+  void withFieldWithoutDescriptionHasEmptyDescription() {
+    // given / when
+    var ts = TypeSet.of(STRUCTURE).withField(STRUCTURE, "Имя", TypeSet.of(STRING));
+
+    // then
+    assertThat(ts.getLocalFields(STRUCTURE).get("Имя").description()).isEmpty();
+    assertThat(ts.getLocalFields(STRUCTURE).get("Имя").types().refs()).containsExactly(STRING);
+  }
+
+  @Test
+  void withFieldCarriesDescription() {
+    // given / when
+    var ts = TypeSet.of(STRUCTURE).withField(STRUCTURE, "Имя", TypeSet.of(STRING), "имя пользователя");
+
+    // then
+    assertThat(ts.getLocalFields(STRUCTURE).get("Имя").description()).isEqualTo("имя пользователя");
+  }
+
+  @Test
+  void unionMergesFieldDescriptionsPreferringFirstNonBlank() {
+    // given: одно и то же поле с описанием и без.
+    var described = TypeSet.of(STRUCTURE).withField(STRUCTURE, "K", TypeSet.of(NUMBER), "описание K");
+    var undescribed = TypeSet.of(STRUCTURE).withField(STRUCTURE, "K", TypeSet.of(STRING));
+
+    // when: непустое описание выигрывает независимо от порядка.
+    var leftFirst = described.union(undescribed);
+    var rightFirst = undescribed.union(described);
+
+    // then: типы объединены, описание — непустое.
+    assertThat(leftFirst.getLocalFields(STRUCTURE).get("K").description()).isEqualTo("описание K");
+    assertThat(rightFirst.getLocalFields(STRUCTURE).get("K").description()).isEqualTo("описание K");
+    assertThat(leftFirst.getFieldTypes("K").refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+  }
+
+  @Test
   void withFieldAddsRefIfMissing() {
     // given / when
     var ts = TypeSet.EMPTY.withField(STRUCTURE, "X", TypeSet.of(NUMBER));
