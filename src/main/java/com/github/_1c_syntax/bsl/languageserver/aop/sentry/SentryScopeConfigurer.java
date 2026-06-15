@@ -105,12 +105,23 @@ public class SentryScopeConfigurer {
   }
 
   private String getEnvironment() {
-    String version = serverInfo.getVersion();
+    return resolveEnvironment(serverInfo.getVersion());
+  }
+
+  /**
+   * Сопоставляет строку версии сервера со значением environment для Sentry.
+   *
+   * @param version Строка версии сервера, например {@code 1.0.0}, {@code 1.0.0-rc.2} или
+   *                {@code develop-1234}
+   * @return Имя окружения Sentry: {@code production}, {@code pre-release}, {@code develop} или
+   *         {@code feature}
+   */
+  static String resolveEnvironment(String version) {
     String environment;
 
     if (version.matches("\\d+\\.\\d+\\.\\d+")) {
       environment = "production";
-    } else if (version.matches("\\d+\\.\\d+\\.\\d+-r[ca]\\d+")) {
+    } else if (version.matches("\\d+\\.\\d+\\.\\d+-r[ca]\\.?\\d+")) {
       environment = "pre-release";
     } else if (version.startsWith("develop-") && !version.contains("-DIRTY-")) {
       environment = "develop";
