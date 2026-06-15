@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.FileRename;
 import org.eclipse.lsp4j.RenameFilesParams;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
+import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -576,6 +577,47 @@ class BSLWorkspaceServiceTest {
     } finally {
       applicationContext.removeApplicationListener(listener);
     }
+  }
+
+  /**
+   * Регрессия на ScopeNotActiveException из issue #4123: запрос {@code workspace/symbol}
+   * выполняется на потоке {@code workspaceServiceExecutor}, а JSON-RPC диспетчер не устанавливает
+   * workspace-контекст вызывающего потока. Раньше {@code workspaceSymbolIndex} был {@code @WorkspaceScope}
+   * и без контекста не резолвился ({@code ScopeNotActiveException: Scope 'workspace' is not active}).
+   * После де-скопинга индекс — обычный синглтон, поэтому запрос обслуживается с любого потока без
+   * установленного workspace-контекста.
+   */
+  @Test
+  void symbol_worksFromThreadWithoutWorkspaceContext() throws Exception {
+    // given
+    var workspaceUri = Absolute.uri(tempDir.toUri());
+    var testFile = tempDir.resolve("symbol_index_module.bsl").toFile();
+    FileUtils.writeStringToFile(
+      testFile,
+      "Процедура ТестоваяПроцедураПоискаСимволов() КонецПроцедуры",
+      StandardCharsets.UTF_8
+    );
+    var uri = Absolute.uri(testFile.toURI());
+
+    // Наполняем индекс: rebuildDocument синхронно публикует DocumentContextContentChangedEvent.
+    WorkspaceContextHolder.run(workspaceUri, () -> {
+      var ctx = workspaceServerContext();
+      var documentContext = ctx.addDocument(uri);
+      ctx.rebuildDocument(documentContext);
+    });
+
+    // Воспроизводим прод-условие: вызывающий поток (JSON-RPC диспетчер) без workspace-контекста.
+    WorkspaceContextHolder.clear();
+
+    var params = new WorkspaceSymbolParams("ТестоваяПроцедураПоискаСимволов");
+
+    // when
+    var symbols = workspaceService.symbol(params).get().getRight();
+
+    // then
+    assertThat(symbols)
+      .as("workspace/symbol должен обслуживаться с потока без workspace-контекста (индекс — синглтон)")
+      .anyMatch(symbol -> symbol.getName().equals("ТестоваяПроцедураПоискаСимволов"));
   }
 
   @Test
