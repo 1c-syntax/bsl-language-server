@@ -428,7 +428,8 @@ public final class CompletionProvider {
     var localFieldNames = new HashSet<String>();
     // Тип-владелец каждого члена — для отложенного восстановления документации в
     // completionItem/resolve. Локальные поля (ключи структуры/колонки ТЗ)
-    // owner'а не получают: их описание пустое, резолвить нечего.
+    // owner'а не получают: их описание (если есть, из JsDoc) лежит прямо в
+    // MemberDescriptor и documentation строится сразу (eager), резолвить нечего.
     var owners = new LinkedHashMap<String, TypeRef>();
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
@@ -443,9 +444,10 @@ public final class CompletionProvider {
       var localFields = typeSet.getLocalFields(ref);
       for (var entry : localFields.entrySet()) {
         var fieldName = entry.getKey();
-        var fieldTypes = entry.getValue();
-        var fieldRef = fieldTypes.refs().stream().findFirst().orElse(null);
-        if (members.putIfAbsent(fieldName, MemberDescriptor.property(fieldName, fieldRef, "")) == null) {
+        var field = entry.getValue();
+        var fieldRef = field.types().refs().stream().findFirst().orElse(null);
+        if (members.putIfAbsent(fieldName,
+          MemberDescriptor.property(fieldName, fieldRef, field.description())) == null) {
           localFieldNames.add(fieldName);
         }
       }

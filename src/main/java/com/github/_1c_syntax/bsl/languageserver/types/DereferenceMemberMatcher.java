@@ -155,9 +155,10 @@ public class DereferenceMemberMatcher {
       if (!entry.getKey().equalsIgnoreCase(ctx.memberName())) {
         continue;
       }
-      var fieldRef = entry.getValue().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+      var field = entry.getValue();
+      var fieldRef = field.types().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
       sink.add(new TypedMember(owner,
-        MemberDescriptor.property(entry.getKey(), fieldRef, ""),
+        MemberDescriptor.property(entry.getKey(), fieldRef, field.description()),
         ctx.range(), ctx.argCount(), ctx.argTypes()));
     }
   }

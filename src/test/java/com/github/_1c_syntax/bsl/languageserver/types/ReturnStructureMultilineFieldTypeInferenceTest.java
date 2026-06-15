@@ -65,7 +65,7 @@ class ReturnStructureMultilineFieldTypeInferenceTest extends AbstractServerConte
       .contains("Подпись", "Комментарий", "ДатаПодписи");
 
     // у поля с многострочным составным типом сохранены оба типа.
-    assertThat(types.getLocalFields(structureRef).get("Подпись").refs())
+    assertThat(types.getLocalFields(structureRef).get("Подпись").types().refs())
       .extracting(TypeRef::qualifiedName)
       .contains("ДвоичныеДанные", "Строка");
   }

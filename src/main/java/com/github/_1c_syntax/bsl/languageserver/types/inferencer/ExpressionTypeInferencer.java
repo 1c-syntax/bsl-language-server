@@ -610,7 +610,7 @@ public class ExpressionTypeInferencer {
     for (var ref : leftTypes.refs()) {
       var fields = leftTypes.getLocalFields(ref);
       for (var entry : fields.entrySet()) {
-        merged.merge(entry.getKey(), entry.getValue(), TypeSet::union);
+        merged.merge(entry.getKey(), entry.getValue().types(), TypeSet::union);
       }
     }
     return merged;
@@ -644,7 +644,7 @@ public class ExpressionTypeInferencer {
         var fields = leftTypes.getLocalFields(leftType);
         for (var entry : fields.entrySet()) {
           if (entry.getKey().equalsIgnoreCase(memberName)) {
-            fromLocalFields = fromLocalFields.union(entry.getValue());
+            fromLocalFields = fromLocalFields.union(entry.getValue().types());
           }
         }
       }
@@ -705,7 +705,8 @@ public class ExpressionTypeInferencer {
     }
     var enriched = TypeSet.of(ret);
     for (var entry : elementSet.getLocalFields(ret).entrySet()) {
-      enriched = enriched.withField(ret, entry.getKey(), entry.getValue());
+      var field = entry.getValue();
+      enriched = enriched.withField(ret, entry.getKey(), field.types(), field.description());
     }
     return enriched;
   }

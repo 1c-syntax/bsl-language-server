@@ -52,19 +52,20 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
 
   @Test
   void completionAfterDotExposesAllStructureFields() {
+    // given: переменная из вызова функции с JsDoc-возвратом Структура.
     var dc = realDoc();
     var content = dc.getContent();
     var afterDot = content.indexOf("Свойства.", content.indexOf("X = Свойства.")) + "Свойства.".length();
-    var position = positionAtOffset(content, afterDot);
-
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
-    params.setPosition(position);
+    params.setPosition(positionAtOffset(content, afterDot));
 
+    // when: автокомплит после точки.
     var labels = completionProvider.getCompletion(dc, params).getItems().stream()
       .map(CompletionItem::getLabel)
       .toList();
 
+    // then: предлагаются все поля структуры.
     assertThat(labels).contains(
       "Подпись",
       "Комментарий",
@@ -76,22 +77,68 @@ class RealReturnStructureCompletionTest extends AbstractServerContextAwareTest {
 
   @Test
   void hoverOnVariableExposesStructureFields() {
+    // given: позиция на переменной-структуре.
     var dc = realDoc();
     var content = dc.getContent();
     var varOffset = content.indexOf("Свойства = НовыеСвойстваПодписи()") + 1;
-    var position = positionAtOffset(content, varOffset);
-
     var params = new HoverParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
-    params.setPosition(position);
+    params.setPosition(positionAtOffset(content, varOffset));
 
+    // when: hover по переменной.
     var hoverText = hoverProvider.getHover(dc, params)
       .map(hover -> hover.getContents().getRight().getValue())
       .orElse("");
 
+    // then: поля и их текстовые описания из JsDoc возврата функции.
     assertThat(hoverText)
       .contains("ОписаниеСертификата")
-      .contains("РезультатПроверкиПодписиПоМЧД");
+      .contains("РезультатПроверкиПодписиПоМЧД")
+      .contains("комментарий, если он был введен при подписании")
+      .contains("результат подписания");
+  }
+
+  @Test
+  void hoverOnFieldExposesFieldDescription() {
+    // given: позиция на имени поля в "X = Свойства.Подпись".
+    var dc = realDoc();
+    var content = dc.getContent();
+    var dotField = content.indexOf(".Подпись") + 1;
+    var params = new HoverParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(positionAtOffset(content, dotField));
+
+    // when: hover по полю.
+    var hoverText = hoverProvider.getHover(dc, params)
+      .map(hover -> hover.getContents().getRight().getValue())
+      .orElse("");
+
+    // then: показывается описание поля.
+    assertThat(hoverText).contains("результат подписания");
+  }
+
+  @Test
+  void completionItemCarriesFieldDescription() {
+    // given: автокомплит после точки по переменной-структуре.
+    var dc = realDoc();
+    var content = dc.getContent();
+    var afterDot = content.indexOf("Свойства.", content.indexOf("X = Свойства.")) + "Свойства.".length();
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(positionAtOffset(content, afterDot));
+
+    // when: берём элемент поля "Комментарий".
+    var commentItem = completionProvider.getCompletion(dc, params).getItems().stream()
+      .filter(item -> "Комментарий".equals(item.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    // then: его documentation содержит описание поля из JsDoc.
+    var documentation = commentItem.getDocumentation();
+    var docText = documentation.isRight()
+      ? documentation.getRight().getValue()
+      : documentation.getLeft();
+    assertThat(docText).contains("комментарий, если он был введен при подписании");
   }
 
   private DocumentContext realDoc() {
