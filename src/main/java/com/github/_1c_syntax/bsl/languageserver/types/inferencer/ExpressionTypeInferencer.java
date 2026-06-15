@@ -77,6 +77,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -920,7 +921,9 @@ public class ExpressionTypeInferencer {
     if (params == null) {
       return null;
     }
-    var keyName = extractStringLiteralText(params.get(0).expression());
+    var keyName = Optional.ofNullable(params.get(0).expression())
+      .map(ExpressionTypeInferencer::extractStringLiteralText)
+      .orElse(null);
     if (keyName == null || keyName.isBlank()) {
       return null;
     }
@@ -1010,7 +1013,9 @@ public class ExpressionTypeInferencer {
     if (params == null) {
       return null;
     }
-    var keyName = extractStringLiteralText(params.get(0).expression());
+    var keyName = Optional.ofNullable(params.get(0).expression())
+      .map(ExpressionTypeInferencer::extractStringLiteralText)
+      .orElse(null);
     if (keyName == null || keyName.isBlank()) {
       return null;
     }
@@ -1018,7 +1023,8 @@ public class ExpressionTypeInferencer {
     // через инференсер; если в нём есть ОписаниеТипов-ref, забираем его elementTypes
     // (туда applyTypeDescriptionConstructorTypes складывает имена типов из первого аргумента
     // конструктора). Любое другое выражение даст пустой набор — колонка останется Неопределено.
-    var columnTypes = params.size() >= 2 ? extractColumnTypes(params.get(1).expression(), ctx) : TypeSet.EMPTY;
+    var valueExpr = params.size() >= 2 ? params.get(1).expression() : null;
+    var columnTypes = valueExpr == null ? TypeSet.EMPTY : extractColumnTypes(valueExpr, ctx);
     return new KeyedTypes(keyName.trim(), columnTypes.isEmpty() ? TypeSet.of(UNDEFINED) : columnTypes);
   }
 

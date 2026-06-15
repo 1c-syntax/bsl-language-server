@@ -73,6 +73,21 @@ class StructureInsertFieldsInferenceTest extends AbstractServerContextAwareTest 
       .containsExactly("Неопределено");
   }
 
+  @Test
+  void structureInsertWithEmptyParensDoesNotThrow() {
+    // given: в области видимости есть незавершённый вызов Параметры.Вставить() без аргументов.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/StructureInsertFields.bsl");
+
+    // when: выводим типы поля структуры, накопленные через корректные Вставить(...).
+    var nameTypes = inferAtMarker(documentContext, "X = Параметры.Имя", "X = Параметры.".length() + 1);
+
+    // then: пустые скобки не приводят к NPE, корректные поля по-прежнему типизируются.
+    assertThat(nameTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+  }
+
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     int markerStart = content.indexOf(marker);
