@@ -191,6 +191,52 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
   }
 
   @Test
+  void testStandardAttributeColoredAsDefaultLibrary() {
+    // given — типизированный объект справочника; обращение к стандартному
+    // реквизиту Наименование (часть платформенной объектной модели).
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      // Параметры:
+      //  Объект - СправочникОбъект.Справочник1
+      Процедура Тест(Объект)
+          А = Объект.Наименование;
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — стандартный реквизит подсвечивается как Property + DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(3, 15, 12, SemanticTokenTypes.Property,
+        Set.of(SemanticTokenModifiers.DefaultLibrary), "Наименование")
+    ));
+  }
+
+  @Test
+  void testOwnAttributeColoredAsPlainProperty() {
+    // given — типизированный объект справочника; обращение к собственному
+    // реквизиту Реквизит1, заведённому разработчиком конфигурации.
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      // Параметры:
+      //  Объект - СправочникОбъект.Справочник1
+      Процедура Тест(Объект)
+          А = Объект.Реквизит1;
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — собственный реквизит — просто Property, без DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(3, 15, 9, SemanticTokenTypes.Property,
+        Set.of(), "Реквизит1")
+    ));
+  }
+
+  @Test
   void testGlobalChainInCallStatementSkipped() {
     // given — глобальная цепочка в statement-позиции (callStatement): база — Справочники.
     initServerContext(PATH_TO_METADATA);
