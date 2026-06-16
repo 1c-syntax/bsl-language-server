@@ -128,6 +128,11 @@ public class OScriptModuleMembersProvider {
     var module = documentContext.getSymbolTree().getModule();
     var ref = typeRegistry.registerUserType(qualifiedName, module, FileType.OS);
 
+    // Признак обходимой коллекции (&Обходимое) выставляется при каждой
+    // регистрации, а не только при первой: так добавление/удаление аннотации
+    // подхватывается hot-reload без ре-регистрации типа.
+    typeRegistry.setUserTypeIterable(ref, oScriptExtends.isIterable(documentContext));
+
     if (firstTimeForName) {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), FileType.OS);
       if (libraryEntry != null) {
