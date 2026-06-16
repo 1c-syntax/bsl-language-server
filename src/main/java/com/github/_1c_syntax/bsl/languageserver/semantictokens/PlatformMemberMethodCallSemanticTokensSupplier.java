@@ -70,6 +70,9 @@ public class PlatformMemberMethodCallSemanticTokensSupplier
     SemanticTokenModifiers.Async
   };
 
+  private static final String[] ASYNC_MODIFIERS = {SemanticTokenModifiers.Async};
+  private static final String[] NO_MODIFIERS = new String[0];
+
   private final ReferenceIndex referenceIndex;
 
   public PlatformMemberMethodCallSemanticTokensSupplier(TypeService typeService,
@@ -114,7 +117,14 @@ public class PlatformMemberMethodCallSemanticTokensSupplier
   }
 
   static String[] modifiers(MemberDescriptor descriptor) {
-    return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
+    // DefaultLibrary — только для членов стандартной библиотеки/платформы.
+    // Через accessCall сюда сейчас попадают лишь методы платформенных типов
+    // (вызовы методов общих модулей красит MethodCallSemanticTokensSupplier и
+    // здесь они пропускаются), но флаг учитываем симметрично с property-сапплаером.
+    if (descriptor.standardLibrary()) {
+      return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
+    }
+    return descriptor.async() ? ASYNC_MODIFIERS : NO_MODIFIERS;
   }
 
   private Set<Position> collectSourceDefinedCallSites(DocumentContext documentContext) {

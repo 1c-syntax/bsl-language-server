@@ -97,10 +97,18 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
   @Override
   protected void emit(List<SemanticTokenEntry> entries, DocumentContext documentContext, Range range) {
     // Для accessProperty memberAt возвращает только свойство (метод — только для
-    // accessCall), поэтому достаточно проверки наличия члена.
-    if (typeService.memberAt(documentContext, range.getStart()).isPresent()) {
-      helper.addRange(entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS);
-    }
+    // accessCall). Модификатор DefaultLibrary вешаем лишь на члены стандартной
+    // библиотеки/платформы (свойства платформенных типов, стандартные реквизиты);
+    // собственные и общие реквизиты конфигурации — просто Property.
+    typeService.memberAt(documentContext, range.getStart())
+      .map(TypeService.TypedMember::descriptor)
+      .ifPresent(descriptor -> {
+        if (descriptor.standardLibrary()) {
+          helper.addRange(entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS);
+        } else {
+          helper.addRange(entries, range, SemanticTokenTypes.Property);
+        }
+      });
   }
 
   /**

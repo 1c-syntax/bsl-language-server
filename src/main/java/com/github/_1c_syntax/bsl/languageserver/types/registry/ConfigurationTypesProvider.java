@@ -520,7 +520,8 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerMemberSource(collRef, columnSource, FileType.BSL);
       }
 
-      tsMembers.add(MemberDescriptor.property(tsName, collRef));
+      // Табличная часть — метаданные конфигурации, не платформенный API → не defaultLibrary.
+      tsMembers.add(MemberDescriptor.property(tsName, collRef).withStandardLibrary(false));
     }
     if (!tsMembers.isEmpty()) {
       var immutableTs = List.copyOf(tsMembers);
@@ -829,6 +830,9 @@ public class ConfigurationTypesProvider {
       if (!meta.isEmpty()) {
         descriptor = descriptor.withMetadata(meta);
       }
+      // Стандартные реквизиты (Наименование/Код/Ссылка/…) — часть платформенной
+      // объектной модели → defaultLibrary; собственные реквизиты конфигурации — нет.
+      descriptor = descriptor.withStandardLibrary(attribute instanceof StandardAttribute);
       result.add(descriptor);
     }
     return result;
@@ -934,13 +938,16 @@ public class ConfigurationTypesProvider {
         continue;
       }
       var returnTypes = resolveCommonAttributeReturnTypes(ca);
+      MemberDescriptor descriptor;
       if (returnTypes.isEmpty()) {
-        result.add(MemberDescriptor.property(attrName));
+        descriptor = MemberDescriptor.property(attrName);
       } else if (returnTypes.size() == 1) {
-        result.add(MemberDescriptor.property(attrName, returnTypes.refs().iterator().next()));
+        descriptor = MemberDescriptor.property(attrName, returnTypes.refs().iterator().next());
       } else {
-        result.add(MemberDescriptor.property(attrName, returnTypes, ""));
+        descriptor = MemberDescriptor.property(attrName, returnTypes, "");
       }
+      // Общие реквизиты — метаданные конфигурации, не платформенный API → не defaultLibrary.
+      result.add(descriptor.withStandardLibrary(false));
     }
     return result;
   }

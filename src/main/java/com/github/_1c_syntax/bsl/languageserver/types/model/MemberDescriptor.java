@@ -50,6 +50,12 @@ import java.util.Optional;
  * @param generic              признак «слотового» члена generic-типа платформы
  * @param metadata             платформенные метаданные
  * @param async                асинхронный метод (await-стиль, суффикс Асинх/Async)
+ * @param standardLibrary      признак «член стандартной библиотеки/платформы»: член
+ *                             платформенного типа либо стандартный реквизит объекта
+ *                             конфигурации (Наименование/Код/Ссылка/…). Для собственных
+ *                             и общих реквизитов конфигурации — {@code false}. Управляет
+ *                             модификатором {@code defaultLibrary} семантических токенов;
+ *                             по умолчанию (compat-конструкторы) {@code true}
  */
 public record MemberDescriptor(
   BilingualString bilingualName,
@@ -60,7 +66,8 @@ public record MemberDescriptor(
   @Nullable Symbol sourceSymbol,
   boolean generic,
   PlatformMetadata metadata,
-  boolean async
+  boolean async,
+  boolean standardLibrary
 ) {
 
   public MemberDescriptor {
@@ -79,12 +86,20 @@ public record MemberDescriptor(
     }
   }
 
-  /** Compat-конструктор без {@code async} (async = false). */
+  /** Compat-конструктор без {@code standardLibrary} (standardLibrary = true). */
+  public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
+                          TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
+                          boolean generic, PlatformMetadata metadata, boolean async) {
+    this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
+      generic, metadata, async, true);
+  }
+
+  /** Compat-конструктор без {@code async} (async = false, standardLibrary = true). */
   public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
                           TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata) {
     this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
-      generic, metadata, false);
+      generic, metadata, false, true);
   }
 
   /** Compat-конструктор: одноязычные {@code name}/{@code description}. */
@@ -178,37 +193,51 @@ public record MemberDescriptor(
   /** Копия дескриптора с прикреплённым символом-источником. */
   public MemberDescriptor withSourceSymbol(Symbol symbol) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, symbol, generic, metadata, async);
+      signatures, symbol, generic, metadata, async, standardLibrary);
   }
 
   /** Копия дескриптора с заменёнными метаданными платформы. */
   public MemberDescriptor withMetadata(PlatformMetadata newMetadata) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, sourceSymbol, generic, newMetadata, async);
+      signatures, sourceSymbol, generic, newMetadata, async, standardLibrary);
   }
 
   /** Копия дескриптора с заполненным двуязычным именем (ru + en). */
   public MemberDescriptor withBilingualName(BilingualString newName) {
     return new MemberDescriptor(newName,
-      kind, bilingualDescription, returnTypes, signatures, sourceSymbol, generic, metadata, async);
+      kind, bilingualDescription, returnTypes, signatures, sourceSymbol, generic, metadata, async,
+      standardLibrary);
   }
 
   /** Копия дескриптора с заполненным двуязычным описанием (ru + en). */
   public MemberDescriptor withBilingualDescription(BilingualString newDescription) {
     return new MemberDescriptor(bilingualName, kind, newDescription,
-      returnTypes, signatures, sourceSymbol, generic, metadata, async);
+      returnTypes, signatures, sourceSymbol, generic, metadata, async, standardLibrary);
   }
 
   /** Копия дескриптора с признаком асинхронности. */
   public MemberDescriptor withAsync(boolean newAsync) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, sourceSymbol, generic, metadata, newAsync);
+      signatures, sourceSymbol, generic, metadata, newAsync, standardLibrary);
+  }
+
+  /**
+   * Копия дескриптора с признаком принадлежности к стандартной библиотеке/платформе.
+   * Для собственных и общих реквизитов конфигурации выставляется {@code false}, чтобы
+   * семантические токены не вешали на них модификатор {@code defaultLibrary}.
+   */
+  public MemberDescriptor withStandardLibrary(boolean newStandardLibrary) {
+    if (this.standardLibrary == newStandardLibrary) {
+      return this;
+    }
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      signatures, sourceSymbol, generic, metadata, async, newStandardLibrary);
   }
 
   /** Копия дескриптора с подменёнными сигнатурами. */
   public MemberDescriptor withSignatures(List<SignatureDescriptor> newSignatures) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      newSignatures, sourceSymbol, generic, metadata, async);
+      newSignatures, sourceSymbol, generic, metadata, async, standardLibrary);
   }
 
   /** Копия дескриптора с признаком generic (placeholder в имени). */
@@ -217,7 +246,7 @@ public record MemberDescriptor(
       return this;
     }
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, sourceSymbol, newGeneric, metadata, async);
+      signatures, sourceSymbol, newGeneric, metadata, async, standardLibrary);
   }
 
   /** Compat shortcut для двуязычных имён ru/en строками. */
@@ -260,7 +289,7 @@ public record MemberDescriptor(
       return this;
     }
     return new MemberDescriptor(bilingualName, kind, bilingualDescription,
-      newReturnTypes, newSignatures, sourceSymbol, generic, metadata, async);
+      newReturnTypes, newSignatures, sourceSymbol, generic, metadata, async, standardLibrary);
   }
 
   /**
