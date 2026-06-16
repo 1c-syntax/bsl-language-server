@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781583161657,
+  "lastUpdate": 1781589592994,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37603,6 +37603,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.773781431675257",
             "extra": "mean: 281.1998037497203 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "460c56d5dfcf04276f5b502203f62020209b6b0e",
+          "message": "Merge pull request #4127 from 1c-syntax/fix/completion-commit-paren-duplication\n\nfix(completion): не дублировать скобку — убрать commit character \"(\" у вызываемых",
+          "timestamp": "2026-06-16T00:10:40+02:00",
+          "tree_id": "fad898640280c3d3d983bd507ad8852fc2377cbc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/460c56d5dfcf04276f5b502203f62020209b6b0e"
+        },
+        "date": 1781589582284,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 290.12983679771423,
+            "unit": "sec",
+            "range": "stddev: 10.059042358468762",
+            "extra": "mean: 290.12983679771423 sec\nrounds: 3"
           }
         ]
       }
