@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Path;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -72,6 +73,39 @@ class McpRootsChangeConsumerTest {
     consumer.accept(null, List.of(root("src/test/resources/cli")));
 
     verify(bootstrap, times(2)).index(any(Path.class));
+  }
+
+  @Test
+  void normalizesWindowsStyleFileUriBeforeRegistration() {
+    // Claude Code 2.1.178 на Windows шлёт roots вида `file://D:\path\with\backslashes`
+    // (буква диска как «host» + backslash в path). Absolute.uri такое не разбирает —
+    // нормализуем до RFC 8089 file:///D:/path до передачи в Absolute.
+    var path = Absolute.path("src/test/resources/cli");
+    var driveLetter = path.getRoot().toString().substring(0, 2); // "D:"
+    var withoutRoot = path.subpath(0, path.getNameCount()).toString(); // backslashes на Windows
+    var brokenUri = "file://" + driveLetter + "\\" + withoutRoot;
+
+    consumer.accept(null, List.of(new Root(brokenUri, "broken")));
+
+    verify(bootstrap).index(path);
+  }
+
+  @Test
+  void normalizeWindowsFileUriRewritesDriveLetterAsHost() {
+    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("file://D:\\git\\1C\\upp\\src\\cf"))
+      .isEqualTo("file:///D:/git/1C/upp/src/cf");
+  }
+
+  @Test
+  void normalizeWindowsFileUriKeepsRfcCompliantValueUntouched() {
+    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("file:///D:/git/1C/upp/src/cf"))
+      .isEqualTo("file:///D:/git/1C/upp/src/cf");
+  }
+
+  @Test
+  void normalizeWindowsFileUriIgnoresNonFileSchemes() {
+    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("https://example.com/path"))
+      .isEqualTo("https://example.com/path");
   }
 
   @Test

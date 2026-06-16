@@ -31,6 +31,9 @@ final class McpToolParams {
   static final String LINE = "Zero-based line number of the symbol.";
   static final String CHARACTER = "Zero-based character offset within the line.";
   static final String TYPE_NAME = "1C/BSL type name in Russian or English (e.g. `Массив` / `Array`).";
+  static final String LANGUAGE = "Language for names and descriptions: `RU` (default) or `EN`.";
+  static final String GLOBAL_MEMBER_NAME = "Global function, property or enum name in Russian or English "
+    + "(e.g. `Сообщить` / `Message`, `Метаданные` / `Metadata`).";
 
   private McpToolParams() {
   }

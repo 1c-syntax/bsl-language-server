@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeSignatureDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -44,10 +45,10 @@ import java.util.List;
 
 /**
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
- * методы и свойства с сигнатурами и типами — из системы типов {@link TypeService}.
+ * методы, свойства, события, конструкторы — из системы типов {@link TypeService}.
  * <p>
  * Тип ищется в реестре первого зарегистрированного рабочего пространства (платформенные типы общие
- * для всех пространств). Имена и описания — на русском, как в платформе 1С.
+ * для всех пространств). Имена и описания — по запрошенной локали (по умолчанию русский).
  */
 @Component
 @Profile("mcp")
@@ -68,20 +69,28 @@ public class TypeInfoTool {
    * @param description Описание типа; {@code null}, если отсутствует.
    * @param properties Свойства типа.
    * @param methods Методы типа.
+   * @param events События типа (для платформенных типов с событиями).
+   * @param constructors Сигнатуры конструкторов ({@code Новый ...}); пустой список, если конструкторов нет.
+   * @param definedAt URI исходного файла-объявления (для конфигурационных и пользовательских типов);
+   *   {@code null} для платформенных/примитивных типов.
    */
   public record Result(
     String name,
     String kind,
     @Nullable String description,
     List<TypeMemberDto> properties,
-    List<TypeMemberDto> methods
+    List<TypeMemberDto> methods,
+    List<TypeMemberDto> events,
+    List<TypeSignatureDto> constructors,
+    @Nullable String definedAt
   ) {
   }
 
   @McpTool(
     name = "type_info",
-    description = "Look up a 1C/BSL type by name (e.g. `Массив`/`Array`) and return its properties and "
-      + "methods with signatures, parameters and return types.",
+    description = "Look up a 1C/BSL type by name (e.g. `Массив`/`Array`) and return its properties, "
+      + "methods, events and constructors with signatures, parameters, return types and platform "
+      + "metadata (since/deprecated versions, execution contexts, examples, see-also).",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
     // (here — nullable description/defaultValue). Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false)
@@ -89,31 +98,45 @@ public class TypeInfoTool {
     @McpToolParam(required = true, description = McpToolParams.TYPE_NAME)
     String typeName,
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
-    FileType fileType
+    FileType fileType,
+    @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
+    @Nullable Language language
   ) {
+    var effectiveLanguage = language == null ? Language.RU : language;
     try (var ignored = WorkspaceContextHolder.forUri(anyWorkspaceUri())) {
       var typeRef = typeService.resolve(typeName, fileType)
         .orElseThrow(() -> new IllegalArgumentException("Type is not found: " + typeName));
 
-      var members = typeService.getMembers(typeRef, fileType);
-      var properties = membersOfKind(members, MemberKind.PROPERTY);
-      var methods = membersOfKind(members, MemberKind.METHOD);
+      var members = typeService.getMembers(typeRef, fileType, effectiveLanguage);
+      var properties = membersOfKind(members, MemberKind.PROPERTY, effectiveLanguage);
+      var methods = membersOfKind(members, MemberKind.METHOD, effectiveLanguage);
+      var events = membersOfKind(members, MemberKind.EVENT, effectiveLanguage);
 
-      var description = typeService.getDescription(typeRef, Language.RU, fileType);
+      var constructors = typeService.getConstructors(typeRef, fileType).stream()
+        .map(signature -> TypeSignatureDto.from(signature, effectiveLanguage))
+        .toList();
+
+      var description = typeService.getDescription(typeRef, effectiveLanguage, fileType);
+      var definedAt = typeService.definingUri(typeRef).map(URI::toString).orElse(null);
       return new Result(
         typeRef.qualifiedName(),
         typeRef.kind().name(),
         description == null || description.isBlank() ? null : description,
         properties,
-        methods
+        methods,
+        events,
+        constructors,
+        definedAt
       );
     }
   }
 
-  private static List<TypeMemberDto> membersOfKind(Collection<MemberDescriptor> members, MemberKind kind) {
+  private static List<TypeMemberDto> membersOfKind(
+    Collection<MemberDescriptor> members, MemberKind kind, Language language
+  ) {
     return members.stream()
       .filter(member -> !member.generic() && member.kind() == kind)
-      .map(member -> TypeMemberDto.from(member, Language.RU))
+      .map(member -> TypeMemberDto.from(member, language))
       .sorted(BY_NAME)
       .toList();
   }

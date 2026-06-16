@@ -30,33 +30,41 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 /**
- * Член типа — метод или свойство.
+ * Член типа — метод, свойство или событие.
  *
  * @param name Имя члена.
- * @param kind Вид члена: {@code METHOD} или {@code PROPERTY}.
+ * @param kind Вид члена: {@code METHOD}, {@code PROPERTY} или {@code EVENT}.
  * @param types Типы значения свойства или возвращаемого значения метода (полные имена).
  * @param description Описание; {@code null}, если отсутствует.
- * @param signatures Сигнатуры (для метода); для свойства — пустой список.
+ * @param signatures Сигнатуры (для метода/события); для свойства — пустой список.
+ * @param async Признак асинхронного метода ({@code Асинх}/{@code Async}); для свойств всегда {@code false}.
+ * @param metadata Платформенная метаинформация (версии, контексты, примеры и т.п.);
+ *   {@code null}, если метаинформация отсутствует.
  */
 public record TypeMemberDto(
   String name,
   String kind,
   List<String> types,
   @Nullable String description,
-  List<TypeSignatureDto> signatures
+  List<TypeSignatureDto> signatures,
+  boolean async,
+  @Nullable TypeMemberMetadataDto metadata
 ) {
 
   public static TypeMemberDto from(MemberDescriptor member, Language language) {
-    var signatures = member.kind() == MemberKind.METHOD
-      ? member.signatures().stream().map(signature -> TypeSignatureDto.from(signature, language)).toList()
-      : List.<TypeSignatureDto>of();
+    var signatures = member.kind() == MemberKind.PROPERTY
+      ? List.<TypeSignatureDto>of()
+      : member.signatures().stream().map(signature -> TypeSignatureDto.from(signature, language)).toList();
     var description = member.displayDescription(language);
+    var metadata = TypeMemberMetadataDto.from(member.metadata(), language);
     return new TypeMemberDto(
       member.displayName(language),
       member.kind().name(),
       member.returnTypes().refs().stream().map(TypeRef::qualifiedName).sorted().toList(),
       description == null || description.isBlank() ? null : description,
-      signatures
+      signatures,
+      member.async(),
+      metadata.isEmpty() ? null : metadata
     );
   }
 }

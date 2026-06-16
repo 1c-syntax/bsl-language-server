@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.AnalyzeFileTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DocumentSymbolsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
@@ -85,6 +87,8 @@ class McpToolsTest {
   private TypeInfoTool typeInfoTool;
   @Autowired
   private TypeAtPositionTool typeAtPositionTool;
+  @Autowired
+  private GlobalMemberInfoTool globalMemberInfoTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
 
@@ -155,7 +159,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -163,7 +167,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesWithOsFileType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.OS);
+    var result = typeInfoTool.typeInfo("Массив", FileType.OS, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -171,8 +175,75 @@ class McpToolsTest {
 
   @Test
   void typeInfoThrowsForUnknownType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL, null))
       .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void typeInfoReturnsConstructorsForPlatformClass() {
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null);
+
+    assertThat(result.constructors()).isNotEmpty();
+    assertThat(result.constructors().get(0).parameters()).isNotNull();
+  }
+
+  @Test
+  void typeInfoExposesEventsListEvenIfEmpty() {
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null);
+
+    assertThat(result.events()).isNotNull();
+    // У стандартных коллекций событий нет — но поле всегда присутствует.
+    assertThat(result.events()).allSatisfy(event -> assertThat(event.kind()).isEqualTo("EVENT"));
+  }
+
+  @Test
+  void typeInfoAcceptsExplicitLanguageParameter() {
+    var ru = typeInfoTool.typeInfo("Массив", FileType.BSL, Language.RU);
+    var en = typeInfoTool.typeInfo("Массив", FileType.BSL, Language.EN);
+
+    assertThat(ru.methods()).isNotEmpty();
+    assertThat(en.methods()).isNotEmpty();
+    // В обоих локалях имя типа корректное (хоть оно может быть только в одной локали).
+    assertThat(ru.name()).isNotBlank();
+    assertThat(en.name()).isNotBlank();
+  }
+
+  @Test
+  void typeInfoReturnsNullDefinedAtForPlatformType() {
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null);
+
+    assertThat(result.definedAt()).isNull();
+  }
+
+  @Test
+  void globalMemberInfoResolvesPlatformFunction() {
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null);
+
+    assertThat(result.kind()).isEqualTo("FUNCTION");
+    assertThat(result.member().kind()).isEqualTo("METHOD");
+    assertThat(result.member().name()).isEqualTo("Сообщить");
+    assertThat(result.member().signatures()).isNotNull();
+  }
+
+  @Test
+  void globalMemberInfoResolvesByEnglishAlias() {
+    var result = globalMemberInfoTool.globalMemberInfo("Message", FileType.BSL, null);
+
+    assertThat(result.kind()).isEqualTo("FUNCTION");
+    assertThat(result.member().kind()).isEqualTo("METHOD");
+  }
+
+  @Test
+  void globalMemberInfoThrowsForUnknownName() {
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, null))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void globalMemberInfoAcceptsOscriptFileType() {
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, null);
+
+    assertThat(result.kind()).isEqualTo("FUNCTION");
   }
 
   @Test
