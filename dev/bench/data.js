@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781572947186,
+  "lastUpdate": 1781578356658,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37541,6 +37541,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.578844218438501",
             "extra": "mean: 290.0865595340729 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "543db08dee735fdc1ee4b745f31c9d1f1cbca871",
+          "message": "Merge pull request #4124 from 1c-syntax/fix/sentry-prerelease-environment-rc-dot\n\nfix(sentry): распознавать pre-release версии с точкой в rc.N",
+          "timestamp": "2026-06-15T18:05:29+02:00",
+          "tree_id": "90cec07a1c5ece457fa343c8bbeb1dc21aacd8eb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/543db08dee735fdc1ee4b745f31c9d1f1cbca871"
+        },
+        "date": 1781578338624,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 298.022997935613,
+            "unit": "sec",
+            "range": "stddev: 5.5628044695354975",
+            "extra": "mean: 298.022997935613 sec\nrounds: 3"
           }
         ]
       }
