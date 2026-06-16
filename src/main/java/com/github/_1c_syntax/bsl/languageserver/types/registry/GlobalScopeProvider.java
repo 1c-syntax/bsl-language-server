@@ -1048,7 +1048,8 @@ public class GlobalScopeProvider {
       var signatures = readSignatures(
         (List<Map<String, Object>>) entry.get("signatures"), returnType
       );
-      var descriptor = MemberDescriptor.method(name, description, signatures);
+      var descriptor = MemberDescriptor.method(name, description, signatures)
+        .withStandardLibrary(true);
       // Двуязычные имена: опциональные `nameRu` и `nameEn`. Если не заданы —
       // дескриптор остаётся с пустыми {@code nameRu}/{@code nameEn} (и
       // {@code displayName} падает на {@code name}).

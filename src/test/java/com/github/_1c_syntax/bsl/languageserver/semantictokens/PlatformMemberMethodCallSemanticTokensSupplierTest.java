@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Set;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(SemanticTokensTestHelper.class)
@@ -109,9 +110,81 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
   }
 
   @Test
+  void testManagerModuleExportMethodNotColoredAsDefaultLibrary() {
+    // given — типизированный менеджер справочника; вызов экспортного метода,
+    // объявленного в модуле менеджера конфигурации (не платформенный API).
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      // Параметры:
+      //  Менеджер - СправочникМенеджер.Справочник1
+      Процедура Тест(Менеджер)
+          Менеджер.ТестЭкспортная();
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — метод модуля менеджера — обычный Method без DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(3, 13, 14, SemanticTokenTypes.Method, Set.of(), "ТестЭкспортная")
+    ));
+  }
+
+  @Test
+  void testPlatformManagerMethodKeepsDefaultLibrary() {
+    // given — типизированный менеджер справочника; вызов платформенного метода
+    // менеджера (НайтиПоКоду — часть платформенного API, не код конфигурации).
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      // Параметры:
+      //  Менеджер - СправочникМенеджер.Справочник1
+      Процедура Тест(Менеджер)
+          Менеджер.НайтиПоКоду("");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — платформенный метод менеджера сохраняет DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(3, 13, 11, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.DefaultLibrary), "НайтиПоКоду")
+    ));
+  }
+
+  @Test
+  void testModifiersForConfigurationDescriptor() {
+    // given — член конфигурации (standardLibrary = false по умолчанию).
+    var configMethod = MemberDescriptor.method("МетодМодуля");
+
+    // when
+    var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(configMethod);
+
+    // then — без DefaultLibrary.
+    assertThat(mods).isEmpty();
+  }
+
+  @Test
+  void testModifiersForAsyncConfigurationDescriptor() {
+    // given — асинхронный член конфигурации (standardLibrary = false по умолчанию).
+    var configMethod = MemberDescriptor.method("МетодМодуляАсинх")
+      .withAsync(true);
+
+    // when
+    var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(configMethod);
+
+    // then — только Async, без DefaultLibrary.
+    assertThat(mods).containsExactly(SemanticTokenModifiers.Async);
+  }
+
+  @Test
   void testModifiersForAsyncDescriptor() {
-    // given
-    var asyncMethod = MemberDescriptor.method("ИнициализироватьАсинх").withAsync(true);
+    // given — async-метод платформы (standardLibrary заявлен явно).
+    var asyncMethod = MemberDescriptor.method("ИнициализироватьАсинх")
+      .withAsync(true)
+      .withStandardLibrary(true);
 
     // when
     var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(asyncMethod);
@@ -122,8 +195,8 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
 
   @Test
   void testModifiersForRegularDescriptor() {
-    // given
-    var regularMethod = MemberDescriptor.method("Добавить");
+    // given — обычный метод платформы (standardLibrary заявлен явно).
+    var regularMethod = MemberDescriptor.method("Добавить").withStandardLibrary(true);
 
     // when
     var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(regularMethod);

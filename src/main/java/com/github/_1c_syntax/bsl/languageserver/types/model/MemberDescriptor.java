@@ -52,10 +52,10 @@ import java.util.Optional;
  * @param async                асинхронный метод (await-стиль, суффикс Асинх/Async)
  * @param standardLibrary      признак «член стандартной библиотеки/платформы»: член
  *                             платформенного типа либо стандартный реквизит объекта
- *                             конфигурации (Наименование/Код/Ссылка/…). Для собственных
- *                             и общих реквизитов конфигурации — {@code false}. Управляет
- *                             модификатором {@code defaultLibrary} семантических токенов;
- *                             по умолчанию (compat-конструкторы) {@code true}
+ *                             конфигурации (Наименование/Код/Ссылка/…). По умолчанию
+ *                             {@code false} — платформенность заявляется явно; члены
+ *                             конфигурации (собственные/общие реквизиты, методы модулей)
+ *                             остаются {@code false}
  */
 public record MemberDescriptor(
   BilingualString bilingualName,
@@ -86,20 +86,20 @@ public record MemberDescriptor(
     }
   }
 
-  /** Compat-конструктор без {@code standardLibrary} (standardLibrary = true). */
+  /** Compat-конструктор без {@code standardLibrary} (standardLibrary = false). */
   public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
                           TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata, boolean async) {
     this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
-      generic, metadata, async, true);
+      generic, metadata, async, false);
   }
 
-  /** Compat-конструктор без {@code async} (async = false, standardLibrary = true). */
+  /** Compat-конструктор без {@code async} (async = false, standardLibrary = false). */
   public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
                           TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata) {
     this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
-      generic, metadata, false, true);
+      generic, metadata, false, false);
   }
 
   /** Compat-конструктор: одноязычные {@code name}/{@code description}. */
@@ -223,8 +223,8 @@ public record MemberDescriptor(
 
   /**
    * Копия дескриптора с признаком принадлежности к стандартной библиотеке/платформе.
-   * Для собственных и общих реквизитов конфигурации выставляется {@code false}, чтобы
-   * семантические токены не вешали на них модификатор {@code defaultLibrary}.
+   * Платформенные источники выставляют {@code true}; члены конфигурации
+   * (собственные/общие реквизиты, методы модулей) остаются {@code false}.
    */
   public MemberDescriptor withStandardLibrary(boolean newStandardLibrary) {
     if (this.standardLibrary == newStandardLibrary) {
@@ -371,11 +371,12 @@ public record MemberDescriptor(
   /**
    * Событие платформенного типа (например, {@code Форма.ПриОткрытии}). У события
    * есть сигнатура параметров (handler-контракт), но возвращаемого типа нет.
+   * События — всегда часть платформы, поэтому {@code standardLibrary = true}.
    */
   public static MemberDescriptor event(String name, String description,
                                        List<SignatureDescriptor> signatures) {
     return new MemberDescriptor(name, MemberKind.EVENT, description, TypeSet.EMPTY, signatures,
-      null, false, PlatformMetadata.EMPTY);
+      null, false, PlatformMetadata.EMPTY).withStandardLibrary(true);
   }
 
   private static TypeSet typesOf(TypeRef ref) {

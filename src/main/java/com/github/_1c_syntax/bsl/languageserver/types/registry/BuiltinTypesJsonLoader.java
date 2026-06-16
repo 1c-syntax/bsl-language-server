@@ -205,7 +205,7 @@ public class BuiltinTypesJsonLoader {
       if (kind == MemberKind.METHOD && Boolean.TRUE.equals(m.get("async"))) {
         descriptor = descriptor.withAsync(true);
       }
-      members.add(descriptor);
+      members.add(descriptor.withStandardLibrary(true));
     }
     return members;
   }
