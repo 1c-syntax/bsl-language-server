@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -40,6 +41,8 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +70,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -628,6 +632,8 @@ public final class CompletionProvider {
         var item = new CompletionItem(method.getName());
         item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
+        applySourceMethodDetail(item, method);
+        applySourceMethodDocumentation(item, method);
         if (method.isDeprecated()) {
           markDeprecatedItem(item);
         }
@@ -934,10 +940,7 @@ public final class CompletionProvider {
         // первый вариант может быть беспараметровым, а следующий — принимать аргументы
         // (например, Новый HTTPЗапрос() и (Адрес, Заголовки)).
         ctorHasParameters = ctors.size() > 1 || !ctors.get(0).parameters().isEmpty();
-        var paramList = ctors.get(0).parameters().stream()
-          .map(p -> p.displayName(scriptVariant))
-          .collect(java.util.stream.Collectors.joining(", "));
-        item.setDetail("(" + paramList + ")");
+        applyConstructorDetail(item, ctors, scriptVariant);
       }
       var desc = typeService.getDescription(ref, scriptVariant, fileType);
       if (!desc.isEmpty()) {
@@ -946,6 +949,27 @@ public final class CompletionProvider {
     }
     applyCallableInsertText(item, className, ctorHasParameters);
     return item;
+  }
+
+  /**
+   * Детали конструктора в позиции после {@code Новый}: сигнатура «{@code (Пар1, Пар2?)}» единственной
+   * перегрузки либо счётчик вариантов при нескольких перегрузках — теми же
+   * {@link #applyDetail(CompletionItem, String, String)} / {@link #formatParameterList} /
+   * {@link #formatSignaturesCount}, что и {@link #applyMethodDetail} для методов, чтобы конструкторы
+   * и платформенные методы выглядели одинаково (в т.ч. {@code labelDetails} при поддержке клиентом).
+   * Тип возврата не показываем: результат конструктора — сам класс, дублирующий label.
+   *
+   * @param item          пункт автодополнения класса.
+   * @param constructors  сигнатуры конструкторов класса (одна или несколько перегрузок).
+   * @param scriptVariant язык отображаемых имён параметров.
+   */
+  private void applyConstructorDetail(CompletionItem item, List<SignatureDescriptor> constructors,
+                                      Language scriptVariant) {
+    if (constructors.size() > 1) {
+      applyDetail(item, formatSignaturesCount(constructors.size(), scriptVariant), "");
+      return;
+    }
+    applyDetail(item, formatParameterList(constructors.get(0), scriptVariant), "");
   }
 
   private void applyCallableInsertText(CompletionItem item, String name, boolean hasParameters) {
@@ -1078,6 +1102,96 @@ public final class CompletionProvider {
     }
     sb.append(')');
     return sb.toString();
+  }
+
+  /**
+   * Заполняет детали пункта автодополнения для локального (source-defined) метода: сигнатуру
+   * «{@code (Пар1, Пар2?)}» и — для функций с задокументированным типом возврата — имя типа,
+   * уложенные тем же {@link #applyDetail(CompletionItem, String, String)}, что и для платформенных
+   * методов ({@link #applyMethodDetail}). Благодаря этому пользовательские и платформенные методы
+   * выглядят в автодополнении одинаково.
+   *
+   * @param item   пункт автодополнения локального метода.
+   * @param method символ локального метода (процедуры/функции) текущего документа.
+   */
+  private void applySourceMethodDetail(CompletionItem item, MethodSymbol method) {
+    var paramList = formatSourceParameterList(method);
+    var returnTypeName = method.isFunction() ? sourceReturnTypeName(method) : "";
+    applyDetail(item, paramList, returnTypeName);
+  }
+
+  /**
+   * Сигнатура «{@code (Пар1, Пар2?)}» по параметрам локального метода: имя параметра, необязательные
+   * (с значением по умолчанию) помечаются «{@code ?}». Зеркалит {@link #formatParameterList} для
+   * платформенных методов, отличаясь лишь источником данных
+   * ({@link com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition}).
+   *
+   * @param method символ локального метода.
+   * @return строка сигнатуры в круглых скобках.
+   */
+  private static String formatSourceParameterList(MethodSymbol method) {
+    var sb = new StringBuilder();
+    sb.append('(');
+    var params = method.getParameters();
+    for (int i = 0; i < params.size(); i++) {
+      if (i > 0) {
+        sb.append(", ");
+      }
+      var parameter = params.get(i);
+      sb.append(parameter.getName());
+      if (parameter.isOptional()) {
+        // Необязательный параметр помечаем «?» после имени: ИмяПараметра?.
+        sb.append('?');
+      }
+    }
+    sb.append(')');
+    return sb.toString();
+  }
+
+  /**
+   * Имя типа возвращаемого значения локальной функции из её doc-comment'а
+   * ({@code Возвращаемое значение:}). Несколько типов объединяются через «{@code  | }» (как в hover);
+   * если тип не задокументирован — пустая строка (BSL не типизирован, иного источника нет).
+   *
+   * @param method символ локальной функции.
+   * @return имя типа возврата либо пустая строка.
+   */
+  private static String sourceReturnTypeName(MethodSymbol method) {
+    return method.getDescription()
+      .map(MethodDescription::getReturnedValue)
+      .map(types -> types.stream()
+        .map(TypeDescription::name)
+        .flatMap(name -> Arrays.stream(name.split(",")))
+        .map(String::trim)
+        .filter(name -> !name.isEmpty())
+        .collect(Collectors.joining(" | ")))
+      .orElse("");
+  }
+
+  /**
+   * Документация пункта автодополнения для локального метода из его doc-comment'а: назначение и,
+   * если метод устарел, причина устаревания (сам факт устаревания клиенту передаёт LSP-тег, см.
+   * {@link #markDeprecatedItem}). Зеркалит {@link #applyDocumentation} для source-символов.
+   *
+   * @param item   пункт автодополнения локального метода.
+   * @param method символ локального метода.
+   */
+  private void applySourceMethodDocumentation(CompletionItem item, MethodSymbol method) {
+    method.getDescription().ifPresent(description -> {
+      var sb = new StringBuilder();
+      if (description.isDeprecated() && !description.getDeprecationInfo().isBlank()) {
+        sb.append(description.getDeprecationInfo());
+        if (!description.getPurposeDescription().isBlank()) {
+          sb.append("\n\n");
+        }
+      }
+      if (!description.getPurposeDescription().isBlank()) {
+        sb.append(description.getPurposeDescription());
+      }
+      if (sb.length() > 0) {
+        setDocumentation(item, sb.toString());
+      }
+    });
   }
 
   /**

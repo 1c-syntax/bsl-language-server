@@ -249,6 +249,162 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void newCompletionConstructorSignatureMatchesPlatformMethodFormat() {
+    // given: конструктор после `Новый` должен форматировать сигнатуру так же, как метод:
+    // необязательный параметр со знаком «?». У Массив один конструктор с необязательным
+    // КоличествоЭлементов.
+    var documentContext = TestUtils.getDocumentContext("А = Новый Масс");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "А = Новый Масс".length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "Массив".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Массив должен попасть в completion после `Новый`"));
+
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Class);
+    assertThat(item.getDetail())
+      .as("необязательный параметр конструктора помечается «?», как у методов")
+      .isEqualTo("(КоличествоЭлементов?)");
+  }
+
+  @Test
+  void newCompletionConstructorOverloadsShownAsCountLikePlatformMethod() {
+    // given: несколько перегрузок конструктора показываются счётчиком вариантов,
+    // как у платформенных методов с несколькими сигнатурами. У Структура — 2 конструктора.
+    var documentContext = TestUtils.getDocumentContext("С = Новый Структ");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "С = Новый Структ".length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "Структура".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Структура должна попасть в completion после `Новый`"));
+
+    assertThat(item.getDetail())
+      .as("несколько перегрузок конструктора — счётчиком вариантов, а не параметрами первой")
+      .contains("2")
+      .doesNotContain("ФиксированнаяСтруктура");
+  }
+
+  @Test
+  void newCompletionConstructorUsesLabelDetailsWhenClientSupportsThem() {
+    // given: при поддержке клиентом labelDetails (LSP 3.17) сигнатура конструктора уходит
+    // в labelDetails.detail (а не в плоский detail), как у платформенных методов.
+    enableLabelDetailsSupport(true);
+    var documentContext = TestUtils.getDocumentContext("А = Новый Масс");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "А = Новый Масс".length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "Массив".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Массив должен попасть в completion после `Новый`"));
+
+    assertThat(item.getLabelDetails())
+      .as("сигнатура конструктора кладётся в labelDetails при поддержке клиентом")
+      .isNotNull();
+    assertThat(item.getLabelDetails().getDetail()).isEqualTo("(КоличествоЭлементов?)");
+    assertThat(item.getDetail())
+      .as("плоский detail не дублируется при labelDetails")
+      .isNull();
+  }
+
+  @Test
+  void dotCompletionCommonModuleMethodHasSignatureAndDocumentationLikePlatform() {
+    // given: метод общего модуля (source-defined) в dot-completion должен иметь
+    // сигнатуру, тип возврата и документацию так же, как платформенные методы.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleMidCallCompletion.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `\tОбщегоНазначения.ОбщийМодуль("Имя");` — позиция сразу после первой точки
+    params.setPosition(new Position(1, 18));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "ЗначениеВМассиве".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("метод общего модуля должен попасть в dot-completion"));
+
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Method);
+    assertThat(item.getDetail())
+      .as("сигнатура и тип возврата метода общего модуля — как у платформенного")
+      .isEqualTo("(Значение): Массив");
+    assertThat(documentationText(item))
+      .as("документация метода общего модуля берётся из doc-comment")
+      .contains("Создает массив");
+  }
+
+  @Test
+  void noDotCompletionLocalMethodHasSignatureAndDocumentationLikePlatform() {
+    // given: локальная функция с обязательным и необязательным параметрами и doc-comment'ом
+    // (назначение + тип возврата). Её completion-item должен выглядеть как платформенный метод:
+    // сигнатура «(Имя, Приветствие?)» + тип возврата в detail и документация из doc-comment.
+    var content = """
+      // Возвращает приветствие.
+      //
+      // Возвращаемое значение:
+      //   - Строка - текст приветствия.
+      //
+      Функция СформироватьПриветствие(Имя, Приветствие = "Привет") Экспорт
+      Возврат Приветствие;
+      КонецФункции
+
+      Процедура Тест()
+      Сформи
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `Сформи` (line 10, 0-based), позиция сразу после префикса
+    params.setPosition(new Position(10, 6));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "СформироватьПриветствие".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("локальная функция должна попасть в no-dot completion"));
+
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Function);
+    assertThat(item.getDetail())
+      .as("сигнатура и тип возврата локального метода — как у платформенного")
+      .isEqualTo("(Имя, Приветствие?): Строка");
+    assertThat(documentationText(item))
+      .as("документация локального метода берётся из doc-comment")
+      .contains("Возвращает приветствие");
+  }
+
+  @Test
   void testNoDotCompletionReturnsGlobals() {
     var content = "Сооб";
     var documentContext = TestUtils.getDocumentContext(content);
