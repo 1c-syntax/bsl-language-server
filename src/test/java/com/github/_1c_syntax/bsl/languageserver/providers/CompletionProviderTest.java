@@ -249,6 +249,38 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionCommonModuleMethodHasSignatureAndDocumentationLikePlatform() {
+    // given: метод общего модуля (source-defined) в dot-completion должен иметь
+    // сигнатуру, тип возврата и документацию так же, как платформенные методы.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleMidCallCompletion.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `\tОбщегоНазначения.ОбщийМодуль("Имя");` — позиция сразу после первой точки
+    params.setPosition(new Position(1, 18));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "ЗначениеВМассиве".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("метод общего модуля должен попасть в dot-completion"));
+
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Method);
+    assertThat(item.getDetail())
+      .as("сигнатура и тип возврата метода общего модуля — как у платформенного")
+      .isEqualTo("(Значение): Массив");
+    assertThat(documentationText(item))
+      .as("документация метода общего модуля берётся из doc-comment")
+      .contains("Создает массив");
+  }
+
+  @Test
   void noDotCompletionLocalMethodHasSignatureAndDocumentationLikePlatform() {
     // given: локальная функция с обязательным и необязательным параметрами и doc-comment'ом
     // (назначение + тип возврата). Её completion-item должен выглядеть как платформенный метод:
