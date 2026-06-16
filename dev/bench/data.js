@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781564983479,
+  "lastUpdate": 1781569221653,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37479,6 +37479,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 22.360336262259224",
             "extra": "mean: 282.82702891031903 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7b5e8de15e29df1a596eccfb05fa6fa24b57c312",
+          "message": "Merge pull request #4119 from 1c-syntax/claude/mcp-roots-absolute-uri\n\nfix(mcp): нормализовать root-uri через Absolute.uri",
+          "timestamp": "2026-06-15T11:58:43+02:00",
+          "tree_id": "fc7c1b2b798d3d176b16648ca839b7181d89efea",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7b5e8de15e29df1a596eccfb05fa6fa24b57c312"
+        },
+        "date": 1781569212952,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.7238294283549,
+            "unit": "sec",
+            "range": "stddev: 10.594588465094253",
+            "extra": "mean: 284.7238294283549 sec\nrounds: 3"
           }
         ]
       }
