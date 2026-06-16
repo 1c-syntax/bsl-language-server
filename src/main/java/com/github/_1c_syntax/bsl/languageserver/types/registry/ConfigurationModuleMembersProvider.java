@@ -188,12 +188,12 @@ public class ConfigurationModuleMembersProvider {
       .map(d -> resolveReturnType(d.getReturnedValue()))
       .orElse(TypeRef.UNKNOWN);
     var signature = new SignatureDescriptor(params, returnType, description);
-    // Методы модулей конфигурации (общие/менеджеры/объекты) — не платформенный
-    // API, поэтому семантические токены не должны вешать на них defaultLibrary.
+    // Методы модулей конфигурации (общие/менеджеры/объекты) — не платформенный API,
+    // поэтому standardLibrary остаётся false (по умолчанию) и семантические токены
+    // не вешают на них defaultLibrary.
     return MemberDescriptor
       .method(method.getName(), description, List.of(signature))
-      .withSourceSymbol(method)
-      .withStandardLibrary(false);
+      .withSourceSymbol(method);
   }
 
   /**

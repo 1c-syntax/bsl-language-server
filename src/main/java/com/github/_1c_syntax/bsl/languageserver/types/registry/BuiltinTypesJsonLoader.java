@@ -205,7 +205,8 @@ public class BuiltinTypesJsonLoader {
       if (kind == MemberKind.METHOD && Boolean.TRUE.equals(m.get("async"))) {
         descriptor = descriptor.withAsync(true);
       }
-      members.add(descriptor);
+      // Члены builtin-platform-types.json — платформенный API → standardLibrary = true.
+      members.add(descriptor.withStandardLibrary(true));
     }
     return members;
   }

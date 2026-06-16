@@ -132,9 +132,32 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
   }
 
   @Test
+  void testPlatformManagerMethodKeepsDefaultLibrary() {
+    // given — типизированный менеджер справочника; вызов платформенного метода
+    // менеджера (НайтиПоКоду — часть платформенного API, не код конфигурации).
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      // Параметры:
+      //  Менеджер - СправочникМенеджер.Справочник1
+      Процедура Тест(Менеджер)
+          Менеджер.НайтиПоКоду("");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — платформенный метод менеджера сохраняет DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(3, 13, 11, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.DefaultLibrary), "НайтиПоКоду")
+    ));
+  }
+
+  @Test
   void testModifiersForConfigurationDescriptor() {
-    // given — член конфигурации (standardLibrary = false).
-    var configMethod = MemberDescriptor.method("МетодМодуля").withStandardLibrary(false);
+    // given — член конфигурации (standardLibrary = false по умолчанию).
+    var configMethod = MemberDescriptor.method("МетодМодуля");
 
     // when
     var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(configMethod);
@@ -145,9 +168,8 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
 
   @Test
   void testModifiersForAsyncConfigurationDescriptor() {
-    // given — асинхронный член конфигурации (standardLibrary = false, async = true).
+    // given — асинхронный член конфигурации (standardLibrary = false по умолчанию).
     var configMethod = MemberDescriptor.method("МетодМодуляАсинх")
-      .withStandardLibrary(false)
       .withAsync(true);
 
     // when
@@ -159,8 +181,10 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
 
   @Test
   void testModifiersForAsyncDescriptor() {
-    // given
-    var asyncMethod = MemberDescriptor.method("ИнициализироватьАсинх").withAsync(true);
+    // given — async-метод платформы (standardLibrary заявлен явно).
+    var asyncMethod = MemberDescriptor.method("ИнициализироватьАсинх")
+      .withAsync(true)
+      .withStandardLibrary(true);
 
     // when
     var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(asyncMethod);
@@ -171,8 +195,8 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
 
   @Test
   void testModifiersForRegularDescriptor() {
-    // given
-    var regularMethod = MemberDescriptor.method("Добавить");
+    // given — обычный метод платформы (standardLibrary заявлен явно).
+    var regularMethod = MemberDescriptor.method("Добавить").withStandardLibrary(true);
 
     // when
     var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(regularMethod);

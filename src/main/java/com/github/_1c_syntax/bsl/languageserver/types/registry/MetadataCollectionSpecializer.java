@@ -724,7 +724,8 @@ public class MetadataCollectionSpecializer {
       null,
       false,
       template.metadata(),
-      false
+      false,
+      template.standardLibrary()
     );
   }
 
@@ -748,7 +749,8 @@ public class MetadataCollectionSpecializer {
       template.sourceSymbol(),
       false,
       template.metadata(),
-      template.async()
+      template.async(),
+      template.standardLibrary()
     );
   }
 

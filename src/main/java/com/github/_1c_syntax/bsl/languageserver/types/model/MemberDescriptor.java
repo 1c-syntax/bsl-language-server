@@ -52,10 +52,11 @@ import java.util.Optional;
  * @param async                асинхронный метод (await-стиль, суффикс Асинх/Async)
  * @param standardLibrary      признак «член стандартной библиотеки/платформы»: член
  *                             платформенного типа либо стандартный реквизит объекта
- *                             конфигурации (Наименование/Код/Ссылка/…). Для собственных
- *                             и общих реквизитов конфигурации — {@code false}. Управляет
- *                             модификатором {@code defaultLibrary} семантических токенов;
- *                             по умолчанию (compat-конструкторы) {@code true}
+ *                             конфигурации (Наименование/Код/Ссылка/…). Управляет
+ *                             модификатором {@code defaultLibrary} семантических токенов.
+ *                             По умолчанию {@code false} — платформенность нужно
+ *                             заявлять явно; для членов конфигурации (собственные/общие
+ *                             реквизиты, методы модулей) остаётся {@code false}
  */
 public record MemberDescriptor(
   BilingualString bilingualName,
@@ -86,20 +87,20 @@ public record MemberDescriptor(
     }
   }
 
-  /** Compat-конструктор без {@code standardLibrary} (standardLibrary = true). */
+  /** Compat-конструктор без {@code standardLibrary} (standardLibrary = false). */
   public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
                           TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata, boolean async) {
     this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
-      generic, metadata, async, true);
+      generic, metadata, async, false);
   }
 
-  /** Compat-конструктор без {@code async} (async = false, standardLibrary = true). */
+  /** Compat-конструктор без {@code async} (async = false, standardLibrary = false). */
   public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
                           TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata) {
     this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
-      generic, metadata, false, true);
+      generic, metadata, false, false);
   }
 
   /** Compat-конструктор: одноязычные {@code name}/{@code description}. */

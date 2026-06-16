@@ -105,10 +105,10 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then — Имя подсвечивается как Property+DefaultLibrary.
+    // then — Имя подсвечивается как Property, но без DefaultLibrary: ключ
+    // структуры задан разработчиком, это не платформенный API.
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(2, 12, 3, SemanticTokenTypes.Property,
-        Set.of(SemanticTokenModifiers.DefaultLibrary), "Имя")
+      new ExpectedToken(2, 12, 3, SemanticTokenTypes.Property, Set.of(), "Имя")
     ));
   }
 

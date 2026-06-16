@@ -302,7 +302,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return descriptor.withMetadata(metadataOf(property))
       .withBilingualName(bilingualName(property.name()))
       .withBilingualDescription(BilingualString.of(
-        safe(property.description()), safe(enLookup.apply(property).description())));
+        safe(property.description()), safe(enLookup.apply(property).description())))
+      .withStandardLibrary(true);
   }
 
   private static String safe(@Nullable String s) {
@@ -329,7 +330,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       false,
       metadataOf(method, enLookup),
       method.isAsync()
-    );
+    ).withStandardLibrary(true);
   }
 
   /** Преобразует {@link ContextName} в {@link BilingualString}. */
@@ -362,7 +363,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       event.isGeneric(),
       metadataOf(event),
       false
-    );
+    ).withStandardLibrary(true);
   }
 
 
@@ -378,7 +379,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return descriptor.withMetadata(metadataOf(value))
       .withBilingualName(bilingualName(value.name()))
       .withBilingualDescription(BilingualString.of(
-        safe(value.description()), safe(enLookup.apply(value).description())));
+        safe(value.description()), safe(enLookup.apply(value).description())))
+      .withStandardLibrary(true);
   }
 
   /**
