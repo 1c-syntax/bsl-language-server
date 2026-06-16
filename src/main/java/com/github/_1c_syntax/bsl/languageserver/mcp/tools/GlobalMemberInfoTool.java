@@ -23,9 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -39,9 +38,7 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * MCP-инструмент {@code global_member_info}: по имени глобального члена 1С/BSL
@@ -52,13 +49,18 @@ import java.util.Optional;
  * перечисление. Для функций отдаётся полный {@link TypeMemberDto} с сигнатурами и
  * платформенной метаинформацией; для свойств/перечислений — упрощённый дескриптор
  * с типом значения и описанием.
+ * <p>
+ * Резолв выполняется в workspace'е, указанном клиентом через параметр {@code root}; если
+ * параметр не задан — в любом зарегистрированном (это нормально для платформенных имён,
+ * но для конфигурационных и OneScript-проектов результат может зависеть от выбора
+ * workspace, поэтому при нескольких roots лучше адресовать явно).
  */
 @Component
 @Profile("mcp")
 @RequiredArgsConstructor
 public class GlobalMemberInfoTool {
 
-  private final ServerContextProvider serverContextProvider;
+  private final McpWorkspaceResolver workspaceResolver;
   private final GlobalScopeProvider globalScopeProvider;
 
   /**
@@ -89,10 +91,12 @@ public class GlobalMemberInfoTool {
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
-    @Nullable Language language
+    @Nullable Language language,
+    @McpToolParam(required = false, description = McpToolParams.ROOT)
+    @Nullable String root
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
-    try (var ignored = WorkspaceContextHolder.forUri(anyWorkspaceUri())) {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
       var function = globalScopeProvider.findFunction(name, fileType);
       if (function.isPresent()) {
         return functionResult(function.get(), effectiveLanguage);
@@ -142,13 +146,5 @@ public class GlobalMemberInfoTool {
       null
     );
     return new Result(canonicalName, kind, member);
-  }
-
-  private URI anyWorkspaceUri() {
-    return serverContextProvider.getAllContexts().values().stream()
-      .findFirst()
-      .map(ServerContext::getWorkspaceUri)
-      .orElseThrow(() -> new IllegalArgumentException(
-        "No registered workspace. Open a workspace via MCP roots first."));
   }
 }

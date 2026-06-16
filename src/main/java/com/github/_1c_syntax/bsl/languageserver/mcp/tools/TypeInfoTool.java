@@ -23,9 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeSignatureDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -47,8 +46,11 @@ import java.util.List;
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
  * методы, свойства, события, конструкторы — из системы типов {@link TypeService}.
  * <p>
- * Тип ищется в реестре первого зарегистрированного рабочего пространства (платформенные типы общие
- * для всех пространств). Имена и описания — по запрошенной локали (по умолчанию русский).
+ * Тип ищется в реестре workspace'а, указанного клиентом через параметр {@code root}; если параметр
+ * не задан — в любом зарегистрированном (это нормально для платформенных имён, но для
+ * конфигурационных и OneScript-проектов результат может зависеть от выбора workspace, поэтому при
+ * нескольких roots лучше адресовать явно). Имена и описания — по запрошенной локали (по умолчанию
+ * русский).
  */
 @Component
 @Profile("mcp")
@@ -58,7 +60,7 @@ public class TypeInfoTool {
   private static final Comparator<TypeMemberDto> BY_NAME =
     Comparator.comparing(TypeMemberDto::name, String.CASE_INSENSITIVE_ORDER);
 
-  private final ServerContextProvider serverContextProvider;
+  private final McpWorkspaceResolver workspaceResolver;
   private final TypeService typeService;
 
   /**
@@ -100,10 +102,12 @@ public class TypeInfoTool {
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
-    @Nullable Language language
+    @Nullable Language language,
+    @McpToolParam(required = false, description = McpToolParams.ROOT)
+    @Nullable String root
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
-    try (var ignored = WorkspaceContextHolder.forUri(anyWorkspaceUri())) {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
       var typeRef = typeService.resolve(typeName, fileType)
         .orElseThrow(() -> new IllegalArgumentException("Type is not found: " + typeName));
 
@@ -139,13 +143,5 @@ public class TypeInfoTool {
       .map(member -> TypeMemberDto.from(member, language))
       .sorted(BY_NAME)
       .toList();
-  }
-
-  private URI anyWorkspaceUri() {
-    return serverContextProvider.getAllContexts().values().stream()
-      .findFirst()
-      .map(ServerContext::getWorkspaceUri)
-      .orElseThrow(() -> new IllegalArgumentException(
-        "No registered workspace. Open a workspace via MCP roots first."));
   }
 }
