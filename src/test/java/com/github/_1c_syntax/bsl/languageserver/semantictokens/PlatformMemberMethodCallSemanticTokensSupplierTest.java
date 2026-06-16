@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Set;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(SemanticTokensTestHelper.class)
@@ -106,6 +107,54 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
 
     // then — никаких токенов для accessProperty.
     assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void testManagerModuleExportMethodNotColoredAsDefaultLibrary() {
+    // given — типизированный менеджер справочника; вызов экспортного метода,
+    // объявленного в модуле менеджера конфигурации (не платформенный API).
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      // Параметры:
+      //  Менеджер - СправочникМенеджер.Справочник1
+      Процедура Тест(Менеджер)
+          Менеджер.ТестЭкспортная();
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — метод модуля менеджера — обычный Method без DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(3, 13, 14, SemanticTokenTypes.Method, Set.of(), "ТестЭкспортная")
+    ));
+  }
+
+  @Test
+  void testModifiersForConfigurationDescriptor() {
+    // given — член конфигурации (standardLibrary = false).
+    var configMethod = MemberDescriptor.method("МетодМодуля").withStandardLibrary(false);
+
+    // when
+    var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(configMethod);
+
+    // then — без DefaultLibrary.
+    assertThat(mods).isEmpty();
+  }
+
+  @Test
+  void testModifiersForAsyncConfigurationDescriptor() {
+    // given — асинхронный член конфигурации (standardLibrary = false, async = true).
+    var configMethod = MemberDescriptor.method("МетодМодуляАсинх")
+      .withStandardLibrary(false)
+      .withAsync(true);
+
+    // when
+    var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(configMethod);
+
+    // then — только Async, без DefaultLibrary.
+    assertThat(mods).containsExactly(SemanticTokenModifiers.Async);
   }
 
   @Test
