@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781618775451,
+  "lastUpdate": 1781642210451,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37696,6 +37696,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.946230463799616",
             "extra": "mean: 286.52477407455444 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e9bcb3586a5d87eb7918b4f44cea53f5fa0929a2",
+          "message": "Merge pull request #4132 from 1c-syntax/worktree-issue-3996-semantic-tokens-defaultlibrary\n\nfeat(semantictokens): не красить собственные реквизиты конфигурации как defaultLibrary",
+          "timestamp": "2026-06-16T19:06:08+02:00",
+          "tree_id": "25cbad031286fdd62a3d98452e606f62a7d5da0b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e9bcb3586a5d87eb7918b4f44cea53f5fa0929a2"
+        },
+        "date": 1781642200623,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.8103702068329,
+            "unit": "sec",
+            "range": "stddev: 2.9608440327458583",
+            "extra": "mean: 289.8103702068329 sec\nrounds: 3"
           }
         ]
       }
