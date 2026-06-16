@@ -188,21 +188,25 @@ public final class DiagnosticProvider {
   }
 
   /**
-   * Обновляет диагностики у клиента. При поддержке клиентом pull-refresh —
-   * отправляет {@code workspace/diagnostic/refresh}. Иначе чистит кэш и push'ит
-   * свежие диагностики у открытых документов: закрытые не используются клиентом
-   * прямо сейчас, а {@code AnalyzeProjectOnStart} их обработает отдельно.
+   * Обновляет диагностики у клиента. Сначала чистит закэшированные диагностики у открытых
+   * документов: иначе при следующем {@code textDocument/diagnostic} (pull-режим) или
+   * {@code documentContext::getDiagnostics} (push) клиент получит закэшированное значение,
+   * вычисленное на ещё неполном контексте. Дальше — при поддержке клиентом pull-refresh
+   * отправляется {@code workspace/diagnostic/refresh}; иначе свежие диагностики push'атся
+   * самим сервером. Закрытые документы не трогаем — клиенту они сейчас не нужны,
+   * {@code AnalyzeProjectOnStart} их обработает отдельно.
    */
   private void refreshDiagnostics(ServerContext serverContext) {
+    var opened = serverContext.getOpenedDocuments();
+    opened.forEach(DocumentContext::clearDiagnostics);
     if (clientSupportsRefresh) {
       clientHolder.execIfConnected((LanguageClient languageClient) -> {
-        LOGGER.debug("Requesting diagnostic refresh from client");
+        LOGGER.debug("Requesting diagnostic refresh from client ({} opened documents cleared)",
+          opened.size());
         languageClient.refreshDiagnostics();
       });
       return;
     }
-    var opened = serverContext.getOpenedDocuments();
-    opened.forEach(DocumentContext::clearDiagnostics);
     LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
     opened.forEach(this::computeAndPublishDiagnostics);
   }
