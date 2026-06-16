@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781644254161,
+  "lastUpdate": 1781650582064,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37758,6 +37758,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.112891343873726",
             "extra": "mean: 280.4030925432841 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6c985d8b8cd93f1edb1197ae42da22c0ede3e5ed",
+          "message": "Merge pull request #4137 from 1c-syntax/claude/event-contract-index-memory-lgil5p\n\nfix(types): не удерживать DocumentContext в кэше контрактов событий",
+          "timestamp": "2026-06-16T21:00:44+02:00",
+          "tree_id": "ae4192728559cbcfa769c35677f431c429a656ed",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6c985d8b8cd93f1edb1197ae42da22c0ede3e5ed"
+        },
+        "date": 1781650573053,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 287.7536877791087,
+            "unit": "sec",
+            "range": "stddev: 14.665690978032627",
+            "extra": "mean: 287.7536877791087 sec\nrounds: 3"
           }
         ]
       }
