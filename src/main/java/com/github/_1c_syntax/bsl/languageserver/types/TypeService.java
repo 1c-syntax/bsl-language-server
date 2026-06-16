@@ -117,15 +117,6 @@ public class TypeService {
    * @return тип охватывающего выражения; {@link TypeSet#EMPTY}, если не выводится.
    */
   public TypeSet expressionTypesAt(DocumentContext documentContext, Position position) {
-    // Инференсер читает глобальный скоуп из GlobalScopeProvider (findGlobalEntry,
-    // moduleTypeByUri), который наполняется как побочный эффект @PostConstruct
-    // bootstrap() workspace-scoped TypeRegistry (registerPack →
-    // globalScopeProvider.registerGlobalProperty/registerPlatformClass). Чтение
-    // GlobalScopeProvider сам этот bootstrap не триггерит, поэтому первый в скоупе
-    // вывод по глобальному символу увидел бы пустой скоуп. Дёргаем TypeRegistry,
-    // чтобы материализовать bean и прогнать bootstrap; resolve("") — самый дешёвый
-    // вызов: на пустом имени сразу возвращает empty.
-    typeRegistry.resolve("");
     return ExpressionAtPosition.findExpressionTree(documentContext, position)
       .map(expression -> inferencer.infer(expression, documentContext))
       .orElse(TypeSet.EMPTY);
@@ -397,10 +388,6 @@ public class TypeService {
    */
   private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
-    // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
-    // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
-    typeRegistry.resolve(bareName);
-
     var fileType = documentContext.getFileType();
     var globalFn = globalScopeProvider.findFunction(bareName, fileType);
     if (globalFn.isPresent()) {

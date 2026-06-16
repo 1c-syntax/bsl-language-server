@@ -49,6 +49,7 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -265,11 +266,50 @@ public class GlobalScopeProvider {
   private final AtomicBoolean globalsPublished = new AtomicBoolean(false);
 
   /**
+   * Лениво материализует workspace-scoped {@link TypeRegistry}, чей
+   * {@code @PostConstruct bootstrap()} push-моделью наполняет этот провайдер
+   * платформенным глобальным скоупом (имена классов для {@code Новый} с ролью
+   * {@link GlobalSymbolScope.Role#TYPE_NAME}, системные перечисления, глобальные
+   * свойства — через {@code registerAsPlatformClass}/{@code registerAsGlobalProperty}).
+   * {@link ObjectProvider} (а не прямая ссылка) разрывает конструкторный цикл
+   * {@code TypeRegistry → GlobalScopeProvider}: реестр зависит от провайдера в
+   * конструкторе, а провайдер дёргает реестр лишь в момент первого чтения. В
+   * чистых unit-тестах, конструирующих провайдер напрямую (без Spring-контекста),
+   * не инжектится и остаётся {@code null} — bootstrap там не нужен.
+   */
+  @Autowired(required = false)
+  private @Nullable ObjectProvider<TypeRegistry> typeRegistryProvider;
+
+  private final AtomicBoolean bootstrapped = new AtomicBoolean(false);
+
+  /**
+   * Гарантирует, что workspace-scoped {@link TypeRegistry} материализован в
+   * текущем scope — а значит его {@code bootstrap()} уже наполнил этот провайдер
+   * платформенным глобальным скоупом. Вызывается в начале read-методов, читающих
+   * {@link #globalSymbolScope}, чтобы первый же в свежем scope запрос по
+   * глобальному символу не увидел пустой скоуп (issue #3994). Идемпотентно
+   * (CAS-гард); в unit-тестах без Spring-контекста — no-op. Bootstrap пишет в
+   * провайдер только через {@code register*}-методы (read-методы не зовёт), так
+   * что рекурсии нет.
+   */
+  private void ensureBootstrapped() {
+    if (typeRegistryProvider != null && bootstrapped.compareAndSet(false, true)) {
+      // Важно вызвать МЕТОД, а не ограничиться getObject(): TypeRegistry —
+      // workspace-scoped proxy, его target (и @PostConstruct bootstrap, который
+      // наполняет этот провайдер) создаётся лениво при первом обращении к методу
+      // прокси. ensureInitialized() — явная самодокументированная точка
+      // материализации.
+      typeRegistryProvider.getObject().ensureInitialized();
+    }
+  }
+
+  /**
    * Поиск symbol'а в глобальной области (globals + library entries) в разрезе
    * указанного языка. Дополнительных проверок видимости нет: запись в разрезе
    * существует ровно тогда, когда имя зарегистрировано для этого языка.
    */
   public Optional<Symbol> findGlobal(String name, FileType fileType) {
+    ensureBootstrapped();
     ensureGlobalsPublished();
     return globalSymbolScope.findEntry(name, fileType).map(GlobalSymbolScope.Entry::symbol);
   }
@@ -536,6 +576,7 @@ public class GlobalScopeProvider {
    * @return синтетические символы глобальных контекстов.
    */
   public List<SyntheticSymbol> getGlobalContexts(FileType fileType) {
+    ensureBootstrapped();
     ensureGlobalsPublished();
     return globalSymbolScope.streamSymbols(fileType)
       .filter(SyntheticSymbol.class::isInstance)

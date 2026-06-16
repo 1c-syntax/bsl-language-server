@@ -192,6 +192,20 @@ public class TypeRegistry {
    */
   private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
 
+  /**
+   * Явная точка материализации workspace-scoped реестра. Тело пустое: значим
+   * сам факт вызова метода на scoped-proxy — он создаёт target и прогоняет
+   * {@code @PostConstruct} {@link #bootstrap()}, который push-моделью наполняет
+   * {@link GlobalScopeProvider} платформенным глобальным скоупом. Вызывается из
+   * {@code GlobalScopeProvider.ensureBootstrapped()}, чтобы первое в свежем
+   * workspace-scope чтение глобального скоупа не увидело пустой реестр
+   * (issue #3994). Заменяет прежний неявный {@code typeRegistry.resolve("")}
+   * у потребителей.
+   */
+  public void ensureInitialized() {
+    // no-op: материализация происходит за счёт самого вызова метода на proxy
+  }
+
   @PostConstruct
   void bootstrap() {
     if (platformProviders == null) {

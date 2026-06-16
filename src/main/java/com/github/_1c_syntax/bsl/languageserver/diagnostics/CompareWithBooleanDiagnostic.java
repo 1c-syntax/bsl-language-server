@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -60,7 +59,6 @@ public class CompareWithBooleanDiagnostic extends AbstractExpressionTreeDiagnost
   private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
 
   private final ExpressionTypeInferencer expressionTypeInferencer;
-  private final TypeRegistry typeRegistry;
 
   /**
    * Проверяет бинарную операцию на избыточное сравнение с булевой константой.
@@ -132,9 +130,6 @@ public class CompareWithBooleanDiagnostic extends AbstractExpressionTreeDiagnost
    * @return {@code true}, если тип операнда однозначно {@code Булево}
    */
   private boolean isBoolean(BslExpression expression) {
-    // Материализуем workspace-scoped TypeRegistry (bootstrap глобального скоупа),
-    // прежде чем выводить тип выражения. См. TypeService#expressionTypesAt.
-    typeRegistry.resolve("");
     var types = expressionTypeInferencer.infer(expression, documentContext);
     return types.size() == 1 && types.refs().contains(BOOLEAN);
   }
