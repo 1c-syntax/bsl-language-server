@@ -249,6 +249,86 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void newCompletionConstructorSignatureMatchesPlatformMethodFormat() {
+    // given: конструктор после `Новый` должен форматировать сигнатуру так же, как метод:
+    // необязательный параметр со знаком «?». У Массив один конструктор с необязательным
+    // КоличествоЭлементов.
+    var documentContext = TestUtils.getDocumentContext("А = Новый Масс");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "А = Новый Масс".length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "Массив".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Массив должен попасть в completion после `Новый`"));
+
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Class);
+    assertThat(item.getDetail())
+      .as("необязательный параметр конструктора помечается «?», как у методов")
+      .isEqualTo("(КоличествоЭлементов?)");
+  }
+
+  @Test
+  void newCompletionConstructorOverloadsShownAsCountLikePlatformMethod() {
+    // given: несколько перегрузок конструктора показываются счётчиком вариантов,
+    // как у платформенных методов с несколькими сигнатурами. У Структура — 2 конструктора.
+    var documentContext = TestUtils.getDocumentContext("С = Новый Структ");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "С = Новый Структ".length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "Структура".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Структура должна попасть в completion после `Новый`"));
+
+    assertThat(item.getDetail())
+      .as("несколько перегрузок конструктора — счётчиком вариантов, а не параметрами первой")
+      .contains("2")
+      .doesNotContain("ФиксированнаяСтруктура");
+  }
+
+  @Test
+  void newCompletionConstructorUsesLabelDetailsWhenClientSupportsThem() {
+    // given: при поддержке клиентом labelDetails (LSP 3.17) сигнатура конструктора уходит
+    // в labelDetails.detail (а не в плоский detail), как у платформенных методов.
+    enableLabelDetailsSupport(true);
+    var documentContext = TestUtils.getDocumentContext("А = Новый Масс");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "А = Новый Масс".length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "Массив".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Массив должен попасть в completion после `Новый`"));
+
+    assertThat(item.getLabelDetails())
+      .as("сигнатура конструктора кладётся в labelDetails при поддержке клиентом")
+      .isNotNull();
+    assertThat(item.getLabelDetails().getDetail()).isEqualTo("(КоличествоЭлементов?)");
+    assertThat(item.getDetail())
+      .as("плоский detail не дублируется при labelDetails")
+      .isNull();
+  }
+
+  @Test
   void dotCompletionCommonModuleMethodHasSignatureAndDocumentationLikePlatform() {
     // given: метод общего модуля (source-defined) в dot-completion должен иметь
     // сигнатуру, тип возврата и документацию так же, как платформенные методы.

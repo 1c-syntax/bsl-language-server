@@ -940,10 +940,7 @@ public final class CompletionProvider {
         // первый вариант может быть беспараметровым, а следующий — принимать аргументы
         // (например, Новый HTTPЗапрос() и (Адрес, Заголовки)).
         ctorHasParameters = ctors.size() > 1 || !ctors.get(0).parameters().isEmpty();
-        var paramList = ctors.get(0).parameters().stream()
-          .map(p -> p.displayName(scriptVariant))
-          .collect(java.util.stream.Collectors.joining(", "));
-        item.setDetail("(" + paramList + ")");
+        applyConstructorDetail(item, ctors, scriptVariant);
       }
       var desc = typeService.getDescription(ref, scriptVariant, fileType);
       if (!desc.isEmpty()) {
@@ -952,6 +949,27 @@ public final class CompletionProvider {
     }
     applyCallableInsertText(item, className, ctorHasParameters);
     return item;
+  }
+
+  /**
+   * Детали конструктора в позиции после {@code Новый}: сигнатура «{@code (Пар1, Пар2?)}» единственной
+   * перегрузки либо счётчик вариантов при нескольких перегрузках — теми же
+   * {@link #applyDetail(CompletionItem, String, String)} / {@link #formatParameterList} /
+   * {@link #formatSignaturesCount}, что и {@link #applyMethodDetail} для методов, чтобы конструкторы
+   * и платформенные методы выглядели одинаково (в т.ч. {@code labelDetails} при поддержке клиентом).
+   * Тип возврата не показываем: результат конструктора — сам класс, дублирующий label.
+   *
+   * @param item          пункт автодополнения класса.
+   * @param constructors  сигнатуры конструкторов класса (одна или несколько перегрузок).
+   * @param scriptVariant язык отображаемых имён параметров.
+   */
+  private void applyConstructorDetail(CompletionItem item, List<SignatureDescriptor> constructors,
+                                      Language scriptVariant) {
+    if (constructors.size() > 1) {
+      applyDetail(item, formatSignaturesCount(constructors.size(), scriptVariant), "");
+      return;
+    }
+    applyDetail(item, formatParameterList(constructors.get(0), scriptVariant), "");
   }
 
   private void applyCallableInsertText(CompletionItem item, String name, boolean hasParameters) {
