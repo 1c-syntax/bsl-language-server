@@ -249,6 +249,50 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionLocalMethodHasSignatureAndDocumentationLikePlatform() {
+    // given: локальная функция с обязательным и необязательным параметрами и doc-comment'ом
+    // (назначение + тип возврата). Её completion-item должен выглядеть как платформенный метод:
+    // сигнатура «(Имя, Приветствие?)» + тип возврата в detail и документация из doc-comment.
+    var content = """
+      // Возвращает приветствие.
+      //
+      // Возвращаемое значение:
+      //   - Строка - текст приветствия.
+      //
+      Функция СформироватьПриветствие(Имя, Приветствие = "Привет") Экспорт
+      Возврат Приветствие;
+      КонецФункции
+
+      Процедура Тест()
+      Сформи
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `Сформи` (line 10, 0-based), позиция сразу после префикса
+    params.setPosition(new Position(10, 6));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "СформироватьПриветствие".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("локальная функция должна попасть в no-dot completion"));
+
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Function);
+    assertThat(item.getDetail())
+      .as("сигнатура и тип возврата локального метода — как у платформенного")
+      .isEqualTo("(Имя, Приветствие?): Строка");
+    assertThat(documentationText(item))
+      .as("документация локального метода берётся из doc-comment")
+      .contains("Возвращает приветствие");
+  }
+
+  @Test
   void testNoDotCompletionReturnsGlobals() {
     var content = "Сооб";
     var documentContext = TestUtils.getDocumentContext(content);
