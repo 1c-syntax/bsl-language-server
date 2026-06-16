@@ -31,10 +31,12 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RaiseStatementContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Position;
 
-import java.util.Locale;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -51,13 +53,21 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
     this.typeService = typeService;
   }
 
-  private static final Set<String> FORBIDDEN_CATEGORIES = Set.of(
-    "всеошибки", "allerrors",
-    "прочаяошибка", "othererror",
-    "ошибкакомпиляциивстроенногоязыка", "scriptcompilationerror",
-    "ошибкавовремявыполнениявстроенногоязыка", "scriptruntimeerror",
-    "исключениевызванноеизвстроенногоязыка", "scriptraisedexception"
-  );
+  private static final Set<String> FORBIDDEN_CATEGORIES = initForbiddenCategories();
+
+  private static Set<String> initForbiddenCategories() {
+    Set<String> errors = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+    errors.addAll(List.of(
+      "ВсеОшибки", "AllErrors",
+      "ПрочаяОшибка", "OtherError",
+      "ОшибкаКомпиляцииВстроенногоЯзыка", "ScriptCompileError",
+      "ОшибкаВоВремяВыполненияВстроенногоЯзыка", "ScriptRuntimeError",
+      "ИсключениеВызванноеИзВстроенногоЯзыка", "ScriptRaisedException"
+    ));
+    return errors;
+  }
+
 
   @Override
   public ParseTree visitRaiseStatement(RaiseStatementContext ctx) {
@@ -77,22 +87,24 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isForbiddenCategoryParam(CallParamContext param) {
-    String rawText = param.getText();
-    String[] parts = rawText.split("\\.");
-    if (parts.length != 2) {
+    String lastTokenText = param.getStop().getText();
+    if (!FORBIDDEN_CATEGORIES.contains(lastTokenText)) {
       return false;
     }
 
-    String ownerName = parts[0].trim();
-    String memberName = parts[1].trim().toLowerCase(Locale.ROOT);
-    if (!FORBIDDEN_CATEGORIES.contains(memberName)) {
-      return false;
-    }
+    int line = param.getStop().getLine() - 1;
+    int character = param.getStop().getCharPositionInLine();
+    Position position = new Position(line, character);
 
-    return typeService.resolve(ownerName, documentContext.getFileType())
-      .filter(typeRef -> {
-        String qName = typeRef.qualifiedName();
-        return "КатегорияОшибки".equalsIgnoreCase(qName) || "ErrorCategory".equalsIgnoreCase(qName);
+    return typeService.memberAt(documentContext, position)
+      .filter(member -> member.owner() != null)
+      .filter(member -> {
+        String ownerName = member.owner().qualifiedName();
+        return "КатегорияОшибки".equalsIgnoreCase(ownerName) || "ErrorCategory".equalsIgnoreCase(ownerName);
+      })
+      .filter(member -> {
+        String memberName = member.descriptor().name();
+        return FORBIDDEN_CATEGORIES.contains(memberName);
       })
       .isPresent();
   }
