@@ -140,51 +140,6 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void isIterableTrueForIterableMarker() {
-    // given — конструктор помечен &Обходимое (маркер обходимой коллекции).
-    var dc = os("&Обходимое\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-
-    // when / then
-    assertThat(oScriptExtends.isIterable(dc)).isTrue();
-  }
-
-  @Test
-  void isIterableTrueForEnglishMarker() {
-    // given — английский псевдоним аннотации &Iterable.
-    var dc = os("&Iterable\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-
-    // when / then
-    assertThat(oScriptExtends.isIterable(dc)).isTrue();
-  }
-
-  @Test
-  void isIterableFalseForPlainClassAndBsl() {
-    // given — обычный класс без маркера и bsl-файл.
-    var os = os("Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    var bsl = TestUtils.getDocumentContext("Процедура П()\nКонецПроцедуры\n");
-
-    // when / then
-    assertThat(oScriptExtends.isIterable(os)).isFalse();
-    assertThat(oScriptExtends.isIterable(bsl)).isFalse();
-  }
-
-  @Test
-  void isIterableIgnoresAnnotationOnNonConstructorMethod() {
-    // given — &Обходимое на вспомогательном методе, а не на конструкторе.
-    var dc = os("""
-      Процедура ПриСозданииОбъекта()
-      КонецПроцедуры
-
-      &Обходимое
-      Процедура Вспомогательный()
-      КонецПроцедуры
-      """);
-
-    // when / then — коллекция не объявлена (аннотация не на конструкторе).
-    assertThat(oScriptExtends.isIterable(dc)).isFalse();
-  }
-
-  @Test
   void isParentHolderForImplicitField() {
     var variable = moduleVariable("Перем _ОбъектРодитель;\n", "_ОбъектРодитель");
     assertThat(oScriptExtends.isParentHolder(variable)).isTrue();

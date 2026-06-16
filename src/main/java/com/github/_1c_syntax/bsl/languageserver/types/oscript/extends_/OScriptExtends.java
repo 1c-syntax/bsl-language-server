@@ -73,18 +73,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OScriptExtends {
 
-  /**
-   * Имя аннотации-маркера обходимой коллекции OneScript {@code &Обходимое}
-   * (англ. {@code &Iterable}). Ставится на конструктор {@code ПриСозданииОбъекта}
-   * и означает, что класс поддерживает обход движковым {@code Для Каждого … Цикл}
-   * (см. {@code UserIterableContextInstance} в OneScript). В отличие от
-   * {@code &Расширяет}/{@code &Реализует}, это аннотация стандартной библиотеки
-   * OneScript, а не библиотеки {@code extends}; разворачивание мета-аннотаций
-   * к ней не применяется.
-   */
-  private static final String ITERABLE_ANNOTATION_RU = "Обходимое";
-  private static final String ITERABLE_ANNOTATION_EN = "Iterable";
-
   /** Резолвер мета-аннотаций «ОСени» (внедряется через конструктор). */
   private final OScriptMetaAnnotationResolver metaAnnotationResolver;
 
@@ -123,29 +111,6 @@ public class OScriptExtends {
       return false;
     }
     return metaAnnotationResolver.hasRole(constructorAnnotations(documentContext), ExtendsAnnotations.INTERFACE_ROLE);
-  }
-
-  /**
-   * Является ли {@code .os}-документ обходимой коллекцией — несёт ли его
-   * конструктор {@code ПриСозданииОбъекта} аннотацию-маркер {@code &Обходимое}
-   * ({@code &Iterable}). Такой класс регистрируется в системе типов как
-   * коллекция, обходимая через {@code Для Каждого … Цикл} (тип элемента при
-   * этом остаётся неизвестным — как у {@code Массив}).
-   *
-   * @param documentContext контекст {@code .os}-документа
-   * @return {@code true}, если документ — обходимая коллекция
-   */
-  public boolean isIterable(DocumentContext documentContext) {
-    if (documentContext.getFileType() != FileType.OS) {
-      return false;
-    }
-    for (Annotation annotation : constructorAnnotations(documentContext)) {
-      var name = annotation.getName();
-      if (ITERABLE_ANNOTATION_RU.equalsIgnoreCase(name) || ITERABLE_ANNOTATION_EN.equalsIgnoreCase(name)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

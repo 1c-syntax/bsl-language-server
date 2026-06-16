@@ -81,6 +81,7 @@ public class OScriptModuleMembersProvider {
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptExtends oScriptExtends;
   private final TypeRelations typeRelations;
+  private final OScriptIterable oScriptIterable;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -131,7 +132,7 @@ public class OScriptModuleMembersProvider {
     // Признак обходимой коллекции (&Обходимое) выставляется при каждой
     // регистрации, а не только при первой: так добавление/удаление аннотации
     // подхватывается hot-reload без ре-регистрации типа.
-    typeRegistry.setUserTypeIterable(ref, oScriptExtends.isIterable(documentContext));
+    typeRegistry.setUserTypeIterable(ref, oScriptIterable.isIterable(documentContext));
 
     if (firstTimeForName) {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), FileType.OS);

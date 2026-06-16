@@ -65,13 +65,15 @@ class OScriptModuleMembersProviderTest {
   private OScriptExtends oScriptExtends;
   @Mock
   private TypeRelations typeRelations;
+  @Mock
+  private OScriptIterable oScriptIterable;
 
   private OScriptModuleMembersProvider provider;
 
   @BeforeEach
   void setUp() {
     provider = new OScriptModuleMembersProvider(
-      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations);
+      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations, oScriptIterable);
   }
 
   @Test
@@ -118,7 +120,7 @@ class OScriptModuleMembersProviderTest {
 
     var ref = new TypeRef(TypeKind.USER, "КоллекцияЧисел");
     when(typeRegistry.registerUserType(eq("КоллекцияЧисел"), any(), eq(FileType.OS))).thenReturn(ref);
-    when(oScriptExtends.isIterable(documentContext)).thenReturn(true);
+    when(oScriptIterable.isIterable(documentContext)).thenReturn(true);
 
     // when
     provider.register(documentContext);
@@ -142,7 +144,7 @@ class OScriptModuleMembersProviderTest {
 
     var ref = new TypeRef(TypeKind.USER, "ОбычныйКласс");
     when(typeRegistry.registerUserType(eq("ОбычныйКласс"), any(), eq(FileType.OS))).thenReturn(ref);
-    when(oScriptExtends.isIterable(documentContext)).thenReturn(false);
+    when(oScriptIterable.isIterable(documentContext)).thenReturn(false);
 
     // when
     provider.register(documentContext);
