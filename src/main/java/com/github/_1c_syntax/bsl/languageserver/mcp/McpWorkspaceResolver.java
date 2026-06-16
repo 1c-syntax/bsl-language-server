@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -33,15 +32,14 @@ import java.net.URI;
 
 /**
  * Выбор workspace для MCP-инструментов, у которых нет явной привязки к конкретному
- * файлу (например, {@code type_info}, {@code global_member_info}).
+ * файлу (например, {@code type_info}, {@code global_member_info}). Клиент обязан явно
+ * указать {@code root} (одно из значений объявленных им MCP-roots), потому что ответ
+ * может различаться между несколькими открытыми пространствами (конфигурации, OneScript-
+ * проекты, библиотеки).
  * <p>
- * Если клиент явно указал {@code root} (одно из значений объявленных им MCP-roots),
- * резолвится конкретно этот workspace; в противном случае берётся любой
- * зарегистрированный. Если зарегистрированных нет — бросается осмысленное исключение.
- * <p>
- * Сравнение URI ведётся через {@link Absolute#uri(String)} — чтобы клиентское
- * представление ({@code file://D:/repo} / {@code file:///D:/repo/} / разный
- * regex-эскейпинг) сходилось с тем URI, под которым workspace зарегистрирован.
+ * Сравнение URI ведётся через {@link Absolute#uri(String)} — чтобы клиентское представление
+ * ({@code file://D:/repo} / {@code file:///D:/repo/} / разный regex-эскейпинг) сходилось с
+ * тем URI, под которым workspace зарегистрирован.
  */
 @Component
 @Profile("mcp")
@@ -53,26 +51,21 @@ public class McpWorkspaceResolver {
   /**
    * Выбрать workspace для tool-запроса.
    *
-   * @param requestedRoot URI workspace-root'а, на который ссылается запрос, либо {@code null}.
+   * @param requestedRoot URI workspace-root'а, на который ссылается запрос.
    * @return URI зарегистрированного workspace.
-   * @throws IllegalArgumentException если {@code requestedRoot} задан, но не совпадает ни с одним
-   *   зарегистрированным workspace; либо если {@code requestedRoot} не задан и нет
-   *   ни одного зарегистрированного workspace.
+   * @throws IllegalArgumentException если {@code requestedRoot} пуст/отсутствует, либо не
+   *   совпадает ни с одним зарегистрированным workspace.
    */
   public URI resolveWorkspaceUri(@Nullable String requestedRoot) {
-    var contexts = serverContextProvider.getAllContexts();
-    if (requestedRoot != null && !requestedRoot.isBlank()) {
-      var normalized = Absolute.uri(requestedRoot);
-      return contexts.keySet().stream()
-        .filter(uri -> uri.equals(normalized))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException(
-          "No registered workspace matches root: " + requestedRoot));
+    if (requestedRoot == null || requestedRoot.isBlank()) {
+      throw new IllegalArgumentException(
+        "Workspace root is required. Pass one of the roots the client declared via MCP roots.");
     }
-    return contexts.values().stream()
+    var normalized = Absolute.uri(requestedRoot);
+    return serverContextProvider.getAllContexts().keySet().stream()
+      .filter(uri -> uri.equals(normalized))
       .findFirst()
-      .map(ServerContext::getWorkspaceUri)
       .orElseThrow(() -> new IllegalArgumentException(
-        "No registered workspace. Open a workspace via MCP roots first."));
+        "No registered workspace matches root: " + requestedRoot));
   }
 }

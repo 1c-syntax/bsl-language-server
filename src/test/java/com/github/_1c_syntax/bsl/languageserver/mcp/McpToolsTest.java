@@ -62,6 +62,7 @@ class McpToolsTest {
 
   private static final String SRC_DIR = "src/test/resources/providers";
   private static final String FILE = SRC_DIR + "/callHierarchy.bsl";
+  private static final String WORKSPACE_ROOT = Absolute.path(SRC_DIR).toUri().toString();
 
   // Объявление ПерваяФункция и место её вызова в callHierarchy.bsl.
   private static final int DECLARATION_LINE = 6;
@@ -159,7 +160,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -167,7 +168,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesWithOsFileType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.OS, null, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.OS, WORKSPACE_ROOT, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -175,13 +176,13 @@ class McpToolsTest {
 
   @Test
   void typeInfoThrowsForUnknownType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL, null, null))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL, WORKSPACE_ROOT, null))
       .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void typeInfoReturnsConstructorsForPlatformClass() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.constructors()).isNotEmpty();
     assertThat(result.constructors().get(0).parameters()).isNotNull();
@@ -189,7 +190,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoExposesEventsListEvenIfEmpty() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.events()).isNotNull();
     // У стандартных коллекций событий нет — но поле всегда присутствует.
@@ -198,8 +199,8 @@ class McpToolsTest {
 
   @Test
   void typeInfoAcceptsExplicitLanguageParameter() {
-    var ru = typeInfoTool.typeInfo("Массив", FileType.BSL, Language.RU, null);
-    var en = typeInfoTool.typeInfo("Массив", FileType.BSL, Language.EN, null);
+    var ru = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, Language.RU);
+    var en = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, Language.EN);
 
     assertThat(ru.methods()).isNotEmpty();
     assertThat(en.methods()).isNotEmpty();
@@ -210,14 +211,14 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsNullDefinedAtForPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.definedAt()).isNull();
   }
 
   @Test
   void globalMemberInfoResolvesPlatformFunction() {
-    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, null);
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
     assertThat(result.member().kind()).isEqualTo("METHOD");
@@ -227,7 +228,7 @@ class McpToolsTest {
 
   @Test
   void globalMemberInfoResolvesByEnglishAlias() {
-    var result = globalMemberInfoTool.globalMemberInfo("Message", FileType.BSL, null, null);
+    var result = globalMemberInfoTool.globalMemberInfo("Message", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
     assertThat(result.member().kind()).isEqualTo("METHOD");
@@ -235,51 +236,47 @@ class McpToolsTest {
 
   @Test
   void globalMemberInfoThrowsForUnknownName() {
-    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, null, null))
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, WORKSPACE_ROOT, null))
       .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void globalMemberInfoAcceptsOscriptFileType() {
-    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, null, null);
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, WORKSPACE_ROOT, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
   }
 
   @Test
-  void typeInfoAcceptsExplicitRoot() {
-    var explicitRoot = Absolute.path(SRC_DIR).toUri().toString();
-
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, null, explicitRoot);
-
-    assertThat(result.name()).isEqualTo("Массив");
-  }
-
-  @Test
-  void typeInfoThrowsWhenExplicitRootIsUnknown() {
+  void typeInfoThrowsWhenRootIsUnknown() {
     var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
 
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, null, unknownRoot))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("No registered workspace matches root");
   }
 
   @Test
-  void globalMemberInfoAcceptsExplicitRoot() {
-    var explicitRoot = Absolute.path(SRC_DIR).toUri().toString();
+  void globalMemberInfoThrowsWhenRootIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
 
-    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, explicitRoot);
-
-    assertThat(result.kind()).isEqualTo("FUNCTION");
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, unknownRoot, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace matches root");
   }
 
   @Test
-  void globalMemberInfoThrowsWhenExplicitRootIsUnknown() {
-    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
-
-    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, unknownRoot))
+  void typeInfoThrowsWhenRootIsMissing() {
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, "  ", null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("Workspace root is required");
+  }
+
+  @Test
+  void globalMemberInfoThrowsWhenRootIsMissing() {
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required");
   }
 
   @Test

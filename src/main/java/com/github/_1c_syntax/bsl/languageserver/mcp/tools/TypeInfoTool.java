@@ -46,11 +46,8 @@ import java.util.List;
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
  * методы, свойства, события, конструкторы — из системы типов {@link TypeService}.
  * <p>
- * Тип ищется в реестре workspace'а, указанного клиентом через параметр {@code root}; если параметр
- * не задан — в любом зарегистрированном (это нормально для платформенных имён, но для
- * конфигурационных и OneScript-проектов результат может зависеть от выбора workspace, поэтому при
- * нескольких roots лучше адресовать явно). Имена и описания — по запрошенной локали (по умолчанию
- * русский).
+ * Тип ищется в реестре workspace'а, указанного клиентом через обязательный параметр {@code root}.
+ * Имена и описания — по запрошенной локали (по умолчанию русский).
  */
 @Component
 @Profile("mcp")
@@ -101,10 +98,10 @@ public class TypeInfoTool {
     String typeName,
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
+    @McpToolParam(required = true, description = McpToolParams.ROOT)
+    String root,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
-    @Nullable Language language,
-    @McpToolParam(required = false, description = McpToolParams.ROOT)
-    @Nullable String root
+    @Nullable Language language
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {

@@ -50,10 +50,8 @@ import java.util.List;
  * платформенной метаинформацией; для свойств/перечислений — упрощённый дескриптор
  * с типом значения и описанием.
  * <p>
- * Резолв выполняется в workspace'е, указанном клиентом через параметр {@code root}; если
- * параметр не задан — в любом зарегистрированном (это нормально для платформенных имён,
- * но для конфигурационных и OneScript-проектов результат может зависеть от выбора
- * workspace, поэтому при нескольких roots лучше адресовать явно).
+ * Резолв выполняется в workspace'е, указанном клиентом через обязательный параметр
+ * {@code root}.
  */
 @Component
 @Profile("mcp")
@@ -90,10 +88,10 @@ public class GlobalMemberInfoTool {
     String name,
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
+    @McpToolParam(required = true, description = McpToolParams.ROOT)
+    String root,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
-    @Nullable Language language,
-    @McpToolParam(required = false, description = McpToolParams.ROOT)
-    @Nullable String root
+    @Nullable Language language
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {

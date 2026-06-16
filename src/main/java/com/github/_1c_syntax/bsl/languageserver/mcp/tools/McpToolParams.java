@@ -34,9 +34,9 @@ final class McpToolParams {
   static final String LANGUAGE = "Language for names and descriptions: `RU` (default) or `EN`.";
   static final String GLOBAL_MEMBER_NAME = "Global function, property or enum name in Russian or English "
     + "(e.g. `Сообщить` / `Message`, `Метаданные` / `Metadata`).";
-  static final String ROOT = "Optional URI of a workspace root (one of the roots the client declared) to scope "
-    + "the lookup to. When omitted, any registered workspace is used — fine for purely platform names, "
-    + "but pick a root explicitly when the answer may differ between configuration and OneScript projects.";
+  static final String ROOT = "URI of the workspace root (one of the roots the client declared) to scope the "
+    + "lookup to. Required because the answer can differ between roots — configuration vs OneScript "
+    + "projects, different configurations, etc. For purely platform names pick any registered root.";
 
   private McpToolParams() {
   }

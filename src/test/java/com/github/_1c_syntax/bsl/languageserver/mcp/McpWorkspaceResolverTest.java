@@ -47,30 +47,17 @@ class McpWorkspaceResolverTest {
   }
 
   @Test
-  void picksAnyRegisteredWorkspaceWhenRootIsNull() {
-    var uri = Absolute.path("src/test/resources/cli").toUri();
-    var ctx = contextOf(uri);
-    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(uri, ctx));
-
-    assertThat(resolver.resolveWorkspaceUri(null)).isEqualTo(uri);
-  }
-
-  @Test
-  void picksAnyRegisteredWorkspaceWhenRootIsBlank() {
-    var uri = Absolute.path("src/test/resources/cli").toUri();
-    var ctx = contextOf(uri);
-    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(uri, ctx));
-
-    assertThat(resolver.resolveWorkspaceUri("   ")).isEqualTo(uri);
-  }
-
-  @Test
-  void throwsWhenNoWorkspacesAndRootNotRequested() {
-    when(serverContextProvider.getAllContexts()).thenReturn(Map.of());
-
+  void throwsWhenRootIsNull() {
     assertThatThrownBy(() -> resolver.resolveWorkspaceUri(null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Open a workspace via MCP roots first");
+      .hasMessageContaining("Workspace root is required");
+  }
+
+  @Test
+  void throwsWhenRootIsBlank() {
+    assertThatThrownBy(() -> resolver.resolveWorkspaceUri("   "))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required");
   }
 
   @Test
