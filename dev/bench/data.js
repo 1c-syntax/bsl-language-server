@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781578356658,
+  "lastUpdate": 1781583161657,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37572,6 +37572,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 5.5628044695354975",
             "extra": "mean: 298.022997935613 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ec2a973b1d4d75701a508f0f0e9303fda79e99e",
+          "message": "Merge pull request #4125 from 1c-syntax/fix/workspace-symbol-scope-context\n\nfix(symbol): сделать WorkspaceSymbolIndex синглтоном (#4123)",
+          "timestamp": "2026-06-15T18:51:14+02:00",
+          "tree_id": "3b9e93164182264b983223300b9623146c188018",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3ec2a973b1d4d75701a508f0f0e9303fda79e99e"
+        },
+        "date": 1781583151686,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 281.1998037497203,
+            "unit": "sec",
+            "range": "stddev: 11.773781431675257",
+            "extra": "mean: 281.1998037497203 sec\nrounds: 3"
           }
         ]
       }
