@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781589592994,
+  "lastUpdate": 1781602312812,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37634,6 +37634,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.059042358468762",
             "extra": "mean: 290.12983679771423 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f8d1d8d71fb4a3a5778041120b01c16889786c1",
+          "message": "Merge pull request #4129 from 1c-syntax/feat/completion-local-method-signature\n\nfeat(completion): паритет completion item — пользовательские методы и конструкторы как платформенные",
+          "timestamp": "2026-06-16T07:39:28+02:00",
+          "tree_id": "90890f98c37653f88192ff32a4467ee60ab56dee",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3f8d1d8d71fb4a3a5778041120b01c16889786c1"
+        },
+        "date": 1781602303397,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 279.548477490743,
+            "unit": "sec",
+            "range": "stddev: 5.940595821431721",
+            "extra": "mean: 279.548477490743 sec\nrounds: 3"
           }
         ]
       }
