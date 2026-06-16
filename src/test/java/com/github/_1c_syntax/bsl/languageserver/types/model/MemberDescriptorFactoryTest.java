@@ -155,12 +155,12 @@ class MemberDescriptorFactoryTest {
   }
 
   @Test
-  void withLocalizedNamesAcceptsRuAndEnAtOnce() {
+  void withBilingualNameAcceptsRuAndEnAtOnce() {
     // given
     var base = MemberDescriptor.method("F");
 
     // when
-    var updated = base.withLocalizedNames("F-ru", "F-en");
+    var updated = base.withBilingualName(BilingualString.of("F-ru", "F-en"));
 
     // then
     assertThat(updated.displayName(Language.RU)).isEqualTo("F-ru");

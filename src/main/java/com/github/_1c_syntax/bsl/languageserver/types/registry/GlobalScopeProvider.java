@@ -1055,7 +1055,7 @@ public class GlobalScopeProvider {
       var nameRu = stringEntry(entry, "nameRu");
       var nameEn = stringEntry(entry, "nameEn");
       if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
-        descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
+        descriptor = descriptor.withBilingualName(BilingualString.of(nameRu, nameEn));
       }
       if (Boolean.TRUE.equals(entry.get("async"))) {
         descriptor = descriptor.withAsync(true);

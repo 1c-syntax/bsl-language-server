@@ -249,11 +249,6 @@ public record MemberDescriptor(
       signatures, sourceSymbol, newGeneric, metadata, async, standardLibrary);
   }
 
-  /** Compat shortcut для двуязычных имён ru/en строками. */
-  public MemberDescriptor withLocalizedNames(String newNameRu, String newNameEn) {
-    return withBilingualName(BilingualString.of(newNameRu, newNameEn));
-  }
-
   /**
    * Возвращает копию дескриптора, в которой placeholder'ы {@code <X>} в
    * {@link #returnTypes} и {@link SignatureDescriptor#returnType} заменены

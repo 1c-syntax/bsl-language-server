@@ -189,9 +189,9 @@ public class BuiltinTypesJsonLoader {
       var nameRu = stringField(m, "nameRu");
       var nameEn = stringField(m, "nameEn");
       if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
-        descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
+        descriptor = descriptor.withBilingualName(BilingualString.of(nameRu, nameEn));
       } else if (name != null && !name.isEmpty()) {
-        descriptor = descriptor.withLocalizedNames(name, name);
+        descriptor = descriptor.withBilingualName(BilingualString.of(name, name));
       }
       // Двуязычное описание: опциональные `descriptionRu`/`descriptionEn`.
       // Если заданы — приоритетнее моноязычного `description` (которое
