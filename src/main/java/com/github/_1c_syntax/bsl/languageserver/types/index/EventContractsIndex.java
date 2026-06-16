@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationType
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
-import com.github._1c_syntax.utils.Lazy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -57,7 +56,7 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
 
   private final EventHandlerResolver eventHandlerResolver;
 
-  private final Map<URI, Lazy<Map<String, Optional<MemberDescriptor>>>> contractsByUri
+  private final Map<URI, Map<String, Optional<MemberDescriptor>>> contractsByUri
     = new ConcurrentHashMap<>();
 
   /**
@@ -65,11 +64,11 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
    * либо {@link Optional#empty()}, если метод не является обработчиком.
    */
   public Optional<MemberDescriptor> getContract(DocumentContext documentContext, String methodName) {
-    var lazy = contractsByUri.computeIfAbsent(
+    var contracts = contractsByUri.computeIfAbsent(
       documentContext.getUri(),
-      uri -> new Lazy<>(() -> buildFor(documentContext))
+      uri -> buildFor(documentContext)
     );
-    return lazy.getOrCompute().getOrDefault(methodName.toLowerCase(Locale.ROOT), Optional.empty());
+    return contracts.getOrDefault(methodName.toLowerCase(Locale.ROOT), Optional.empty());
   }
 
   @Override
