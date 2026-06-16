@@ -520,8 +520,6 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerMemberSource(collRef, columnSource, FileType.BSL);
       }
 
-      // Табличная часть — метаданные конфигурации, не платформенный API → не defaultLibrary
-      // (standardLibrary = false по умолчанию).
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
     if (!tsMembers.isEmpty()) {
@@ -832,8 +830,7 @@ public class ConfigurationTypesProvider {
         descriptor = descriptor.withMetadata(meta);
       }
       // Стандартные реквизиты (Наименование/Код/Ссылка/…) — часть платформенной
-      // объектной модели → defaultLibrary. Собственные реквизиты конфигурации
-      // остаются standardLibrary = false (по умолчанию).
+      // объектной модели; собственные реквизиты конфигурации — нет.
       if (attribute instanceof StandardAttribute) {
         descriptor = descriptor.withStandardLibrary(true);
       }
@@ -941,8 +938,6 @@ public class ConfigurationTypesProvider {
       if (attrName.isBlank()) {
         continue;
       }
-      // Общие реквизиты — метаданные конфигурации, не платформенный API → не defaultLibrary
-      // (standardLibrary = false по умолчанию).
       var returnTypes = resolveCommonAttributeReturnTypes(ca);
       if (returnTypes.isEmpty()) {
         result.add(MemberDescriptor.property(attrName));

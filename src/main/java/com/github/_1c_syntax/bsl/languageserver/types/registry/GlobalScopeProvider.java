@@ -1048,7 +1048,6 @@ public class GlobalScopeProvider {
       var signatures = readSignatures(
         (List<Map<String, Object>>) entry.get("signatures"), returnType
       );
-      // Глобальные функции платформы (builtin-globals.json) → standardLibrary = true.
       var descriptor = MemberDescriptor.method(name, description, signatures)
         .withStandardLibrary(true);
       // Двуязычные имена: опциональные `nameRu` и `nameEn`. Если не заданы —

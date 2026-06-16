@@ -127,7 +127,7 @@ public class EventHandlerResolver {
           BilingualString.of("Значение", "Value"),
           TypeSet.EMPTY, true, BilingualString.EMPTY, "", true)),
         TypeSet.EMPTY, ""))
-    ).withStandardLibrary(true),
+    ),
     MemberDescriptor.event(
       "ОбработкаПолученияПредставления",
       "Вызывается при приведении объекта к строке и позволяет переопределить "
@@ -142,7 +142,7 @@ public class EventHandlerResolver {
             BilingualString.of("СтандартнаяОбработка", "StandardProcessing"),
             TypeSet.of(BOOLEAN), false, BilingualString.EMPTY, "Истина")),
         TypeSet.EMPTY, ""))
-    ).withStandardLibrary(true)
+    )
   );
 
   private static final Map<String, MemberDescriptor> OSCRIPT_CLASS_EVENTS_BY_NAME =

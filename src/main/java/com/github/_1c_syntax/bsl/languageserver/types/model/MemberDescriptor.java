@@ -52,11 +52,10 @@ import java.util.Optional;
  * @param async                асинхронный метод (await-стиль, суффикс Асинх/Async)
  * @param standardLibrary      признак «член стандартной библиотеки/платформы»: член
  *                             платформенного типа либо стандартный реквизит объекта
- *                             конфигурации (Наименование/Код/Ссылка/…). Управляет
- *                             модификатором {@code defaultLibrary} семантических токенов.
- *                             По умолчанию {@code false} — платформенность нужно
- *                             заявлять явно; для членов конфигурации (собственные/общие
- *                             реквизиты, методы модулей) остаётся {@code false}
+ *                             конфигурации (Наименование/Код/Ссылка/…). По умолчанию
+ *                             {@code false} — платформенность заявляется явно; члены
+ *                             конфигурации (собственные/общие реквизиты, методы модулей)
+ *                             остаются {@code false}
  */
 public record MemberDescriptor(
   BilingualString bilingualName,
@@ -224,8 +223,8 @@ public record MemberDescriptor(
 
   /**
    * Копия дескриптора с признаком принадлежности к стандартной библиотеке/платформе.
-   * Для собственных и общих реквизитов конфигурации выставляется {@code false}, чтобы
-   * семантические токены не вешали на них модификатор {@code defaultLibrary}.
+   * Платформенные источники выставляют {@code true}; члены конфигурации
+   * (собственные/общие реквизиты, методы модулей) остаются {@code false}.
    */
   public MemberDescriptor withStandardLibrary(boolean newStandardLibrary) {
     if (this.standardLibrary == newStandardLibrary) {
@@ -372,11 +371,12 @@ public record MemberDescriptor(
   /**
    * Событие платформенного типа (например, {@code Форма.ПриОткрытии}). У события
    * есть сигнатура параметров (handler-контракт), но возвращаемого типа нет.
+   * События — всегда часть платформы, поэтому {@code standardLibrary = true}.
    */
   public static MemberDescriptor event(String name, String description,
                                        List<SignatureDescriptor> signatures) {
     return new MemberDescriptor(name, MemberKind.EVENT, description, TypeSet.EMPTY, signatures,
-      null, false, PlatformMetadata.EMPTY);
+      null, false, PlatformMetadata.EMPTY).withStandardLibrary(true);
   }
 
   private static TypeSet typesOf(TypeRef ref) {
