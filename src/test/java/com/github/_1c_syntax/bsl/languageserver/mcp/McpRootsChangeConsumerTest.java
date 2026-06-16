@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.mcp;
 import com.github._1c_syntax.utils.Absolute;
 import io.modelcontextprotocol.spec.McpSchema.Root;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -76,10 +78,14 @@ class McpRootsChangeConsumerTest {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void normalizesWindowsStyleFileUriBeforeRegistration() {
     // Claude Code 2.1.178 на Windows шлёт roots вида `file://D:\path\with\backslashes`
     // (буква диска как «host» + backslash в path). Absolute.uri такое не разбирает —
-    // нормализуем до RFC 8089 file:///D:/path до передачи в Absolute.
+    // нормализуем до RFC 8089 file:///D:/path до передачи в Absolute. Соответствие пути
+    // Windows-стилю выводится из реального filesystem-роута тестового каталога, поэтому
+    // end-to-end ассерт ограничен Windows; кросс-платформенно само нормализаторное правило
+    // покрыто чистыми string-тестами normalizeWindowsFileUri* ниже.
     var path = Absolute.path("src/test/resources/cli");
     var driveLetter = path.getRoot().toString().substring(0, 2); // "D:"
     var withoutRoot = path.subpath(0, path.getNameCount()).toString(); // backslashes на Windows
