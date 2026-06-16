@@ -34,22 +34,29 @@ import java.util.List;
  * @param name Имя параметра.
  * @param types Допустимые типы значения параметра (полные имена).
  * @param optional Признак необязательного параметра.
+ * @param variadic Признак variadic-параметра (произвольное число значений в хвосте сигнатуры).
  * @param defaultValue Значение по умолчанию; {@code null}, если не задано.
+ * @param description Описание параметра; {@code null}, если отсутствует.
  */
 public record TypeParameterDto(
   String name,
   List<String> types,
   boolean optional,
-  @Nullable String defaultValue
+  boolean variadic,
+  @Nullable String defaultValue,
+  @Nullable String description
 ) {
 
   public static TypeParameterDto from(ParameterDescriptor parameter, Language language) {
     var defaultValue = parameter.defaultValue();
+    var description = parameter.displayDescription(language);
     return new TypeParameterDto(
       parameter.displayName(language),
       parameter.types().refs().stream().map(TypeRef::qualifiedName).sorted().toList(),
       parameter.optional(),
-      defaultValue == null || defaultValue.isBlank() ? null : defaultValue
+      parameter.variadic(),
+      defaultValue.isBlank() ? null : defaultValue,
+      description.isBlank() ? null : description
     );
   }
 }

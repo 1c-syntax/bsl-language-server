@@ -59,6 +59,8 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
    */
   private final Set<Path> registeredRoots = ConcurrentHashMap.newKeySet();
 
+  private static final String FILE_SCHEME_PREFIX = "file://";
+
   @Override
   public synchronized void accept(McpSyncServerExchange exchange, List<Root> roots) {
     var desired = roots.stream()
@@ -99,11 +101,51 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
   }
 
   private static @Nullable Path toPath(Root root) {
+    var raw = root.uri();
+    var normalized = normalizeWindowsFileUri(raw);
     try {
-      return Absolute.path(Absolute.uri(root.uri()));
+      return Absolute.path(Absolute.uri(normalized));
     } catch (RuntimeException e) {
-      LOGGER.warn("Skipping unsupported MCP root uri `{}`", root.uri(), e);
+      LOGGER.warn("Skipping unsupported MCP root uri `{}`", raw, e);
       return null;
     }
+  }
+
+  /**
+   * Чинит {@code file://}-URI в windows-патологии, которую шлют некоторые MCP-клиенты:
+   * {@code file://D:\path\with\backslashes} вместо RFC 8089 {@code file:///D:/path}.
+   * <p>
+   * Конкретно покрытые случаи: {@code file://<letter>:<path>} (буква диска как «host») и
+   * любые backslash'и в path-части — приводятся к {@code file:///<letter>:/<path-with-forward-slashes>}.
+   *
+   * @param raw исходное значение {@code uri} из MCP-Root.
+   * @return нормализованный URI, либо исходный, если нормализация не требуется.
+   */
+  static @Nullable String normalizeWindowsFileUri(@Nullable String raw) {
+    if (raw == null || raw.isEmpty()) {
+      return raw;
+    }
+    var result = raw;
+    if (startsWithIgnoreCase(result, FILE_SCHEME_PREFIX)
+      && hasDriveLetterAfterPrefix(result, FILE_SCHEME_PREFIX.length())) {
+      result = "file:///" + result.substring(FILE_SCHEME_PREFIX.length());
+    }
+    var schemeDelimiter = result.indexOf("://");
+    if (schemeDelimiter >= 0 && result.indexOf('\\', schemeDelimiter) >= 0) {
+      var head = result.substring(0, schemeDelimiter + "://".length());
+      var tail = result.substring(schemeDelimiter + "://".length()).replace('\\', '/');
+      result = head + tail;
+    }
+    return result;
+  }
+
+  private static boolean startsWithIgnoreCase(String value, String prefix) {
+    return value.regionMatches(true, 0, prefix, 0, prefix.length());
+  }
+
+  private static boolean hasDriveLetterAfterPrefix(String value, int offset) {
+    return value.length() > offset + 1
+      && Character.isLetter(value.charAt(offset))
+      && value.charAt(offset + 1) == ':';
   }
 }

@@ -127,6 +127,33 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void definingUriEmptyForPlatformType() {
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var variableSymbol = documentContext.getSymbolTree()
+      .getVariableSymbol("ДругоеИмяМассива", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = referenceOf(documentContext, variableSymbol);
+    var typeRef = typeService.typesAt(reference).refs().iterator().next();
+
+    var uri = typeService.definingUri(typeRef);
+
+    assertThat(uri).isEmpty();
+  }
+
+  @Test
+  void definingUriEmptyForUnknownTypeRef() {
+    var uri = typeService.definingUri(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
+
+    assertThat(uri).isEmpty();
+  }
+
+  @Test
+  void definingUriEmptyForAnyTypeRef() {
+    var uri = typeService.definingUri(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.ANY);
+
+    assertThat(uri).isEmpty();
+  }
+
+  @Test
   void membersOfArrayResolved() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);

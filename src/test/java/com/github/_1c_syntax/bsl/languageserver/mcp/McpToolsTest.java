@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.AnalyzeFileTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DocumentSymbolsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
@@ -60,6 +62,7 @@ class McpToolsTest {
 
   private static final String SRC_DIR = "src/test/resources/providers";
   private static final String FILE = SRC_DIR + "/callHierarchy.bsl";
+  private static final String WORKSPACE_ROOT = Absolute.path(SRC_DIR).toUri().toString();
 
   // Объявление ПерваяФункция и место её вызова в callHierarchy.bsl.
   private static final int DECLARATION_LINE = 6;
@@ -85,6 +88,8 @@ class McpToolsTest {
   private TypeInfoTool typeInfoTool;
   @Autowired
   private TypeAtPositionTool typeAtPositionTool;
+  @Autowired
+  private GlobalMemberInfoTool globalMemberInfoTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
 
@@ -155,7 +160,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -163,7 +168,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesWithOsFileType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.OS);
+    var result = typeInfoTool.typeInfo("Массив", FileType.OS, WORKSPACE_ROOT, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -171,8 +176,107 @@ class McpToolsTest {
 
   @Test
   void typeInfoThrowsForUnknownType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL, WORKSPACE_ROOT, null))
       .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void typeInfoReturnsConstructorsForPlatformClass() {
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+
+    assertThat(result.constructors()).isNotEmpty();
+    assertThat(result.constructors().get(0).parameters()).isNotNull();
+  }
+
+  @Test
+  void typeInfoExposesEventsListEvenIfEmpty() {
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+
+    assertThat(result.events()).isNotNull();
+    // У стандартных коллекций событий нет — но поле всегда присутствует.
+    assertThat(result.events()).allSatisfy(event -> assertThat(event.kind()).isEqualTo("EVENT"));
+  }
+
+  @Test
+  void typeInfoAcceptsExplicitLanguageParameter() {
+    var ru = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, Language.RU);
+    var en = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, Language.EN);
+
+    assertThat(ru.methods()).isNotEmpty();
+    assertThat(en.methods()).isNotEmpty();
+    // В обоих локалях имя типа корректное (хоть оно может быть только в одной локали).
+    assertThat(ru.name()).isNotBlank();
+    assertThat(en.name()).isNotBlank();
+  }
+
+  @Test
+  void typeInfoReturnsNullDefinedAtForPlatformType() {
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+
+    assertThat(result.definedAt()).isNull();
+  }
+
+  @Test
+  void globalMemberInfoResolvesPlatformFunction() {
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, WORKSPACE_ROOT, null);
+
+    assertThat(result.kind()).isEqualTo("FUNCTION");
+    assertThat(result.member().kind()).isEqualTo("METHOD");
+    assertThat(result.member().name()).isEqualTo("Сообщить");
+    assertThat(result.member().signatures()).isNotNull();
+  }
+
+  @Test
+  void globalMemberInfoResolvesByEnglishAlias() {
+    var result = globalMemberInfoTool.globalMemberInfo("Message", FileType.BSL, WORKSPACE_ROOT, null);
+
+    assertThat(result.kind()).isEqualTo("FUNCTION");
+    assertThat(result.member().kind()).isEqualTo("METHOD");
+  }
+
+  @Test
+  void globalMemberInfoThrowsForUnknownName() {
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, WORKSPACE_ROOT, null))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void globalMemberInfoAcceptsOscriptFileType() {
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, WORKSPACE_ROOT, null);
+
+    assertThat(result.kind()).isEqualTo("FUNCTION");
+  }
+
+  @Test
+  void typeInfoThrowsWhenRootIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace matches root");
+  }
+
+  @Test
+  void globalMemberInfoThrowsWhenRootIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, unknownRoot, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace matches root");
+  }
+
+  @Test
+  void typeInfoThrowsWhenRootIsMissing() {
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, "  ", null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required");
+  }
+
+  @Test
+  void globalMemberInfoThrowsWhenRootIsMissing() {
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required");
   }
 
   @Test

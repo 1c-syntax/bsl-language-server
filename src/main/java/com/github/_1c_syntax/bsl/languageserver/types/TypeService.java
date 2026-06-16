@@ -54,6 +54,7 @@ import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -295,6 +296,22 @@ public class TypeService {
     return globalScopeProvider.moduleUriByType(typeRef)
       .map(uri -> requestingContext.getServerContext().getDocument(uri))
       .<SourceDefinedSymbol>map(documentContext -> documentContext.getSymbolTree().getModule());
+  }
+
+  /**
+   * URI исходного файла, в котором объявлен тип. Без загрузки {@code DocumentContext}'а —
+   * годится для запросов без активного документа-потребителя (например, MCP-инструменты).
+   *
+   * @param typeRef тип.
+   * @return URI модуля-объявления для {@link TypeKind#USER} и {@link TypeKind#CONFIGURATION};
+   *   {@code empty} для платформенных/примитивных типов или если объявление недоступно.
+   */
+  public Optional<URI> definingUri(TypeRef typeRef) {
+    return switch (typeRef.kind()) {
+      case USER -> userTypeDeclaration(typeRef).map(symbol -> symbol.getOwner().getUri());
+      case CONFIGURATION -> globalScopeProvider.moduleUriByType(typeRef);
+      default -> Optional.empty();
+    };
   }
 
   /**
