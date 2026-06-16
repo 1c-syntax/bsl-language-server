@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781569221653,
+  "lastUpdate": 1781572947186,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37510,6 +37510,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.594588465094253",
             "extra": "mean: 284.7238294283549 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b0d3bfc57ef5020e36902c69929ea55713c60217",
+          "message": "Merge pull request #4122 from 1c-syntax/feature/bump-bsl-parser-0.36.0\n\nfix(types): поля структуры из возврата функции (в т.ч. межмодульно) + bump bsl-parser 0.36.0",
+          "timestamp": "2026-06-15T15:34:36+02:00",
+          "tree_id": "7399d2ffd71eb1bf39a819b695237ca8a809b98b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b0d3bfc57ef5020e36902c69929ea55713c60217"
+        },
+        "date": 1781572937506,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 290.0865595340729,
+            "unit": "sec",
+            "range": "stddev: 9.578844218438501",
+            "extra": "mean: 290.0865595340729 sec\nrounds: 3"
           }
         ]
       }
