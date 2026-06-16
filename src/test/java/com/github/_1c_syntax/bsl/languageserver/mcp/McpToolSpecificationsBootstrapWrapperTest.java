@@ -54,16 +54,18 @@ class McpToolSpecificationsBootstrapWrapperTest {
   private static SyncToolSpecification toolSpec(
     String name, BiFunction<McpSyncServerExchange, CallToolRequest, CallToolResult> handler
   ) {
-    return new SyncToolSpecification(Tool.builder().name(name).description("desc").build(), handler);
+    var tool = Tool.builder(name, Map.<String, Object>of()).description("desc").build();
+    return new SyncToolSpecification(tool, handler);
   }
 
   private static CallToolResult okResult() {
-    return new CallToolResult(List.<io.modelcontextprotocol.spec.McpSchema.Content>of(new TextContent("ok")),
+    var text = TextContent.builder("ok").build();
+    return new CallToolResult(List.<io.modelcontextprotocol.spec.McpSchema.Content>of(text),
       false, null, Map.of());
   }
 
   private static CallToolRequest emptyRequest(String name) {
-    return new CallToolRequest(name, Map.of());
+    return CallToolRequest.builder().name(name).build();
   }
 
   private static ObjectProvider<McpRootsBootstrapper> providerOf(McpRootsBootstrapper bootstrapper) {

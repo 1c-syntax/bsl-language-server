@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import lombok.RequiredArgsConstructor;
@@ -102,19 +103,19 @@ public class GlobalMemberInfoTool {
 
       var propertyType = globalScopeProvider.findGlobalProperty(name, fileType);
       if (propertyType.isPresent()) {
-        return globalValueResult(name, fileType, propertyType.get(), "PROPERTY", effectiveLanguage);
+        return globalValueResult(name, fileType, propertyType.get(), "PROPERTY");
       }
 
       var enumType = globalScopeProvider.findGlobalEnum(name, fileType);
       if (enumType.isPresent()) {
-        return globalValueResult(name, fileType, enumType.get(), "ENUM", effectiveLanguage);
+        return globalValueResult(name, fileType, enumType.get(), "ENUM");
       }
 
       throw new IllegalArgumentException("Global member is not found: " + name);
     }
   }
 
-  private Result functionResult(MemberDescriptor descriptor, Language language) {
+  private static Result functionResult(MemberDescriptor descriptor, Language language) {
     return new Result(
       descriptor.displayName(language),
       "FUNCTION",
@@ -123,10 +124,10 @@ public class GlobalMemberInfoTool {
   }
 
   private Result globalValueResult(String requestedName, FileType fileType,
-                                   TypeRef valueType, String kind, Language language) {
+                                   TypeRef valueType, String kind) {
     var entry = globalScopeProvider.findGlobalEntry(requestedName, fileType);
     var canonicalName = entry.map(GlobalSymbolScope.Entry::symbol)
-      .map(symbol -> symbol.getName())
+      .map(Symbol::getName)
       .orElse(requestedName);
     var description = entry.map(GlobalSymbolScope.Entry::symbol)
       .filter(SyntheticSymbol.class::isInstance)

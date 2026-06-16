@@ -77,7 +77,7 @@ public class McpToolSpecificationsBootstrapWrapper implements BeanPostProcessor 
   private BiFunction<McpSyncServerExchange, CallToolRequest, CallToolResult> wrapHandler(
     BiFunction<McpSyncServerExchange, CallToolRequest, CallToolResult> original
   ) {
-    return (exchange, request) -> {
+    return (McpSyncServerExchange exchange, CallToolRequest request) -> {
       try {
         rootsBootstrapper.getObject().bootstrapIfNeeded(exchange);
       } catch (RuntimeException e) {

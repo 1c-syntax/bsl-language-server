@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import io.modelcontextprotocol.server.McpSyncServerExchange;
-import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.ClientCapabilities;
 import io.modelcontextprotocol.spec.McpSchema.ListRootsResult;
 import io.modelcontextprotocol.spec.McpSchema.Root;
@@ -64,7 +63,7 @@ class McpRootsBootstrapperTest {
   void requestsRootsAndForwardsThemToConsumer() {
     var roots = List.of(new Root("file:///D:/repo", "repo"));
     var exchange = exchangeWithCapabilities(capsWithRoots());
-    when(exchange.listRoots()).thenReturn(new ListRootsResult(roots));
+    when(exchange.listRoots()).thenReturn(new ListRootsResult(roots, null, null));
 
     bootstrapper.bootstrapIfNeeded(exchange);
 
@@ -76,7 +75,7 @@ class McpRootsBootstrapperTest {
   void requestsRootsOnlyOnce() {
     var roots = List.of(new Root("file:///D:/repo", "repo"));
     var exchange = exchangeWithCapabilities(capsWithRoots());
-    when(exchange.listRoots()).thenReturn(new ListRootsResult(roots));
+    when(exchange.listRoots()).thenReturn(new ListRootsResult(roots, null, null));
 
     bootstrapper.bootstrapIfNeeded(exchange);
     bootstrapper.bootstrapIfNeeded(exchange);
@@ -128,7 +127,7 @@ class McpRootsBootstrapperTest {
   @Test
   void skipsForwardingWhenServerReturnsEmptyRoots() {
     var exchange = exchangeWithCapabilities(capsWithRoots());
-    when(exchange.listRoots()).thenReturn(new ListRootsResult(List.of()));
+    when(exchange.listRoots()).thenReturn(new ListRootsResult(List.of(), null, null));
 
     bootstrapper.bootstrapIfNeeded(exchange);
 

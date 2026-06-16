@@ -55,8 +55,8 @@ public record TypeParameterDto(
       parameter.types().refs().stream().map(TypeRef::qualifiedName).sorted().toList(),
       parameter.optional(),
       parameter.variadic(),
-      defaultValue == null || defaultValue.isBlank() ? null : defaultValue,
-      description == null || description.isBlank() ? null : description
+      defaultValue.isBlank() ? null : defaultValue,
+      description.isBlank() ? null : description
     );
   }
 }

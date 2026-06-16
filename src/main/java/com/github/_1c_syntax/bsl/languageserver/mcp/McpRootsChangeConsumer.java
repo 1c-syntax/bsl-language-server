@@ -59,6 +59,8 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
    */
   private final Set<Path> registeredRoots = ConcurrentHashMap.newKeySet();
 
+  private static final String FILE_SCHEME_PREFIX = "file://";
+
   @Override
   public synchronized void accept(McpSyncServerExchange exchange, List<Root> roots) {
     var desired = roots.stream()
@@ -119,13 +121,14 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
    * @param raw исходное значение {@code uri} из MCP-Root.
    * @return нормализованный URI, либо исходный, если нормализация не требуется.
    */
-  static String normalizeWindowsFileUri(@Nullable String raw) {
+  static @Nullable String normalizeWindowsFileUri(@Nullable String raw) {
     if (raw == null || raw.isEmpty()) {
       return raw;
     }
     var result = raw;
-    if (startsWithIgnoreCase(result, "file://") && hasDriveLetterAfterPrefix(result, "file://".length())) {
-      result = "file:///" + result.substring("file://".length());
+    if (startsWithIgnoreCase(result, FILE_SCHEME_PREFIX)
+      && hasDriveLetterAfterPrefix(result, FILE_SCHEME_PREFIX.length())) {
+      result = "file:///" + result.substring(FILE_SCHEME_PREFIX.length());
     }
     var schemeDelimiter = result.indexOf("://");
     if (schemeDelimiter >= 0 && result.indexOf('\\', schemeDelimiter) >= 0) {

@@ -80,13 +80,20 @@ public record TypeMemberMetadataDto(
   }
 
   public boolean isEmpty() {
-    return sinceVersion == null
-      && deprecatedSinceVersion == null
-      && recommendedReplacements.isEmpty()
+    return allVersionFieldsEmpty() && allTextFieldsEmpty() && allCollectionFieldsEmpty();
+  }
+
+  private boolean allVersionFieldsEmpty() {
+    return sinceVersion == null && deprecatedSinceVersion == null && accessMode == null;
+  }
+
+  private boolean allTextFieldsEmpty() {
+    return returnValueDescription == null && notes == null;
+  }
+
+  private boolean allCollectionFieldsEmpty() {
+    return recommendedReplacements.isEmpty()
       && availabilities.isEmpty()
-      && accessMode == null
-      && returnValueDescription == null
-      && notes == null
       && examples.isEmpty()
       && seeAlso.isEmpty();
   }
