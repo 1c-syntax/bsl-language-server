@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781642210451,
+  "lastUpdate": 1781644254161,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37727,6 +37727,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.9608440327458583",
             "extra": "mean: 289.8103702068329 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6c473b6c9835dac8cd65f1278e8df68bc9d49dbb",
+          "message": "Merge pull request #4136 from 1c-syntax/feature/semantictokens-config-method-defaultlibrary\n\nfeat(semantictokens): не красить методы модулей конфигурации как defaultLibrary",
+          "timestamp": "2026-06-16T20:35:58+02:00",
+          "tree_id": "6e4b7dca4fd75374710eb8bc758cb242bb99735c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6c473b6c9835dac8cd65f1278e8df68bc9d49dbb"
+        },
+        "date": 1781644245523,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 280.4030925432841,
+            "unit": "sec",
+            "range": "stddev: 7.112891343873726",
+            "extra": "mean: 280.4030925432841 sec\nrounds: 3"
           }
         ]
       }
