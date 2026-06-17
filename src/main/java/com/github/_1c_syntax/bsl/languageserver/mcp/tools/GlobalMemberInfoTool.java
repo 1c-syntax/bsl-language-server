@@ -27,11 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -60,7 +58,7 @@ import java.util.List;
 public class GlobalMemberInfoTool {
 
   private final McpWorkspaceResolver workspaceResolver;
-  private final GlobalScopeProvider globalScopeProvider;
+  private final TypeRegistry typeRegistry;
 
   /**
    * Описание глобального члена.
@@ -96,19 +94,15 @@ public class GlobalMemberInfoTool {
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
-      var function = globalScopeProvider.findFunction(name, fileType);
-      if (function.isPresent()) {
-        return functionResult(function.get(), effectiveLanguage);
-      }
-
-      var propertyType = globalScopeProvider.findGlobalProperty(name, fileType);
-      if (propertyType.isPresent()) {
-        return globalValueResult(name, fileType, propertyType.get(), "PROPERTY");
-      }
-
-      var enumType = globalScopeProvider.findGlobalEnum(name, fileType);
-      if (enumType.isPresent()) {
-        return globalValueResult(name, fileType, enumType.get(), "ENUM");
+      var member = typeRegistry.globalMember(name, fileType);
+      if (member.isPresent()) {
+        var resolved = member.get();
+        if (resolved.kind() == MemberKind.METHOD) {
+          return functionResult(resolved, effectiveLanguage);
+        }
+        var valueType = resolved.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+        var kind = typeRegistry.isEnumType(valueType) ? "ENUM" : "PROPERTY";
+        return globalValueResult(resolved, valueType, kind, effectiveLanguage);
       }
 
       throw new IllegalArgumentException("Global member is not found: " + name);
@@ -123,19 +117,12 @@ public class GlobalMemberInfoTool {
     );
   }
 
-  private Result globalValueResult(String requestedName, FileType fileType,
-                                   TypeRef valueType, String kind) {
-    var entry = globalScopeProvider.findGlobalEntry(requestedName, fileType);
-    var canonicalName = entry.map(GlobalSymbolScope.Entry::symbol)
-      .map(Symbol::getName)
-      .orElse(requestedName);
-    var description = entry.map(GlobalSymbolScope.Entry::symbol)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(SyntheticSymbol.class::cast)
-      .map(symbol -> symbol.getSymbolDescription().getPurposeDescription())
-      .filter(text -> !text.isBlank())
-      .orElse(null);
-    var member = new TypeMemberDto(
+  private Result globalValueResult(MemberDescriptor member, TypeRef valueType,
+                                   String kind, Language language) {
+    var canonicalName = member.displayName(language);
+    var rawDescription = member.description();
+    var description = rawDescription == null || rawDescription.isBlank() ? null : rawDescription;
+    var memberDto = new TypeMemberDto(
       canonicalName,
       "PROPERTY",
       List.of(valueType.qualifiedName()),
@@ -144,6 +131,6 @@ public class GlobalMemberInfoTool {
       false,
       null
     );
-    return new Result(canonicalName, kind, member);
+    return new Result(canonicalName, kind, memberDto);
   }
 }
