@@ -35,7 +35,7 @@ class TypeDeclTest {
   void qualifiedNameReturnsPrimaryName() {
     // given
     var name = BilingualString.of("Массив", "Array");
-    var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM, name, List.of(), false,
+    var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM, name, List.of(),
       BilingualString.EMPTY, List.of(), List.of(), false, false,
       BilingualString.EMPTY, BilingualString.EMPTY, List.of(), false);
 
@@ -47,7 +47,7 @@ class TypeDeclTest {
   void toRefBuildsTypeRefFromKindAndName() {
     // given
     var name = BilingualString.of("Структура");
-    var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM, name, List.of(), false,
+    var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM, name, List.of(),
       BilingualString.EMPTY, List.of(), List.of(), false, false,
       BilingualString.EMPTY, BilingualString.EMPTY, List.of(), false);
 
@@ -63,7 +63,7 @@ class TypeDeclTest {
   void canonicalCtorNormalizesNullFields() {
     // given / when — все опциональные поля null → подменяются на EMPTY.
     var decl = new TypePackProvider.TypeDecl(TypeKind.PRIMITIVE,
-      null, List.of(), false,
+      null, List.of(),
       (BilingualString) null, List.of(), List.of(), false, false,
       (BilingualString) null, (BilingualString) null, null, false);
 
@@ -79,7 +79,7 @@ class TypeDeclTest {
   void compatCtorWithStringDescriptionsWrapsToBilingual() {
     // given / when
     var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM,
-      BilingualString.of("T"), List.of(), false,
+      BilingualString.of("T"), List.of(),
       "описание", List.of(), List.of(), true, true,
       "обход", "индексатор",
       List.of("X"), false);

@@ -398,43 +398,6 @@ class BslContextPlatformTypesProviderTest {
       .containsExactly("Строка");
   }
 
-  @Test
-  void exposedAsGlobalHeuristicTriggersOnGenericProperty() {
-    // Универсальный менеджер с generic-property — должен быть помечен exposedAsGlobal=true.
-    var genericProp = PlatformContextProperty.builder()
-      .name(new ContextName("<Имя справочника>", ""))
-      .rawTypes(List.of())
-      .description("")
-      .availabilities(List.of())
-      .build();
-    var catalogsManager = PlatformContextType.builder()
-      .name(new ContextName("СправочникиМенеджер", "CatalogsManager"))
-      .methods(Collections.emptyList())
-      .properties(new ArrayList<>(List.of(genericProp)))
-      .events(Collections.emptyList())
-      .constructors(Collections.emptyList())
-      .build();
-
-    // Обычный тип без generic — exposedAsGlobal=false.
-    var plainType = PlatformContextType.builder()
-      .name(new ContextName("ТаблицаЗначений", "ValueTable"))
-      .methods(Collections.emptyList())
-      .properties(Collections.emptyList())
-      .events(Collections.emptyList())
-      .constructors(Collections.emptyList())
-      .build();
-
-    var types = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(catalogsManager, plainType))).getTypes();
-
-    var manager = types.stream().filter(t -> "СправочникиМенеджер".equals(t.qualifiedName()))
-      .findFirst().orElseThrow();
-    var plain = types.stream().filter(t -> "ТаблицаЗначений".equals(t.qualifiedName()))
-      .findFirst().orElseThrow();
-
-    assertThat(manager.exposedAsGlobal()).isTrue();
-    assertThat(plain.exposedAsGlobal()).isFalse();
-  }
 
   @Test
   void typeDescriptionPropagatedFromContextType() {

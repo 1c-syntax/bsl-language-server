@@ -99,7 +99,6 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
       TypeRegistry.GLOBAL_CONTEXT.kind(),
       GLOBAL_CONTEXT_NAME,
       members,
-      false,
       BilingualString.EMPTY,
       List.of(),
       List.of(),
@@ -148,13 +147,9 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
    */
   private static List<MemberDescriptor> membersFromBuiltin() {
     var members = new ArrayList<MemberDescriptor>(GlobalScopeProvider.globalContextMembers(GLOBALS_RESOURCE));
-    for (var decl : BuiltinTypesJsonLoader.load(PLATFORM_TYPES_RESOURCE)) {
-      if (decl.exposedAsGlobal() && !decl.qualifiedName().contains("<")) {
-        var ref = new TypeRef(decl.kind(), decl.qualifiedName());
-        members.add(MemberDescriptor.property(decl.qualifiedName(), ref, decl.description().primary())
-          .withBilingualName(decl.name()));
-      }
-    }
+    // exposedAsGlobal-типы (перечисления, менеджеры) как свойства-члены: признак
+    // глобальной видимости читается из источника лоадером, не с TypeDecl.
+    members.addAll(BuiltinTypesJsonLoader.globalContextProperties(PLATFORM_TYPES_RESOURCE));
     return members;
   }
 

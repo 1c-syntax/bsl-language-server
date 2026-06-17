@@ -49,10 +49,6 @@ public interface TypePackProvider {
    *                            используется как канонический ключ в реестре,
    *                            альтернативная сторона регистрируется как alias
    * @param members             свойства и методы типа
-   * @param exposedAsGlobal     если {@code true} — имя типа также регистрируется
-   *                            как глобальное свойство (его можно использовать как
-   *                            ресивер dot-выражения: {@code КодировкаТекста.UTF8},
-   *                            {@code Документы.Контрагенты}).
    * @param description         описание типа (для hover'а класса)
    * @param constructors        сигнатуры конструкторов {@code Новый Тип(...)}; пустой список — без конструкторов
    * @param defaultElementTypes для типов-коллекций — типы элементов, доступных
@@ -88,7 +84,6 @@ public interface TypePackProvider {
     TypeKind kind,
     BilingualString name,
     Collection<MemberDescriptor> members,
-    boolean exposedAsGlobal,
     BilingualString description,
     List<SignatureDescriptor> constructors,
     List<TypeRef> defaultElementTypes,
@@ -115,12 +110,12 @@ public interface TypePackProvider {
      * {@code indexAccessDescription} строками.
      */
     public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
-                    boolean exposedAsGlobal, String description,
+                    String description,
                     List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
                     boolean supportsForEach, boolean supportsIndexAccess,
                     String forEachDescription, String indexAccessDescription,
                     List<String> typeParameters, boolean isEnum) {
-      this(kind, name, members, exposedAsGlobal,
+      this(kind, name, members,
         BilingualString.of(description), constructors, defaultElementTypes,
         supportsForEach, supportsIndexAccess,
         BilingualString.of(forEachDescription), BilingualString.of(indexAccessDescription),

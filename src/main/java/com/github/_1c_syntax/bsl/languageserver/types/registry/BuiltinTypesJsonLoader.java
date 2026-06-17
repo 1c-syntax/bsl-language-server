@@ -112,7 +112,6 @@ public class BuiltinTypesJsonLoader {
         }
         var bilingualName = BilingualString.of(nameRu, nameEn);
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
-        var exposedAsGlobal = Boolean.TRUE.equals(entry.get("exposedAsGlobal"));
         var description = (String) entry.getOrDefault("description", "");
         var classRef = new TypeRef(kind, qualifiedName);
         var rawCtors = (List<Map<String, Object>>) entry.get("constructors");
@@ -133,7 +132,7 @@ public class BuiltinTypesJsonLoader {
         // JSON-fallback видели одни и те же placeholder'ы).
         var typeParameters = ContextNames.typeParameters(new ContextName(qualifiedName, ""));
         result.add(new TypeDecl(kind, bilingualName, members,
-          exposedAsGlobal, description, constructors,
+          description, constructors,
           List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess,
           forEachDescription, indexAccessDescription, typeParameters, isEnum));
       }
@@ -141,6 +140,51 @@ public class BuiltinTypesJsonLoader {
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin platform types resource: {}", resourcePath, e);
       return Collections.emptyList();
+    }
+  }
+
+  /**
+   * Свойства глобального контекста из встроенного JSON: типы с
+   * {@code exposedAsGlobal} (системные перечисления, менеджеры) как
+   * свойства-члены {@code GLOBAL_CONTEXT} ({@code valueType} = сам тип).
+   * Признак глобальной видимости читается из источника здесь и не хранится на
+   * {@link TypeDecl} (issue #3994). Generic-плейсхолдеры ({@code .<...>})
+   * пропускаются — это не реальные безпрефиксные имена.
+   */
+  @SuppressWarnings("unchecked")
+  static List<MemberDescriptor> globalContextProperties(String resourcePath) {
+    var mapper = JsonMapper.builder().build();
+    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+      List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
+      var members = new ArrayList<MemberDescriptor>();
+      for (var entry : raw) {
+        if (!Boolean.TRUE.equals(entry.get("exposedAsGlobal"))) {
+          continue;
+        }
+        var name = (String) entry.get("name");
+        if (name == null || name.contains("<")) {
+          continue;
+        }
+        var ref = new TypeRef(mapJsonKind((String) entry.getOrDefault("kind", "TYPE")), name);
+        var nameRu = stringField(entry, "nameRu");
+        var nameEn = stringField(entry, "nameEn");
+        if (nameRu.isEmpty()) {
+          nameRu = name;
+        }
+        if (nameEn.isEmpty()) {
+          var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+          if (!aliases.isEmpty()) {
+            nameEn = aliases.getFirst();
+          }
+        }
+        var description = (String) entry.getOrDefault("description", "");
+        members.add(MemberDescriptor.property(name, ref, description)
+          .withBilingualName(BilingualString.of(nameRu, nameEn)));
+      }
+      return members;
+    } catch (IOException e) {
+      LOGGER.error("Failed to load global context properties: {}", resourcePath, e);
+      return List.of();
     }
   }
 

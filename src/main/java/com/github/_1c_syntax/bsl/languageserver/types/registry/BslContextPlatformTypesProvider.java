@@ -160,7 +160,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     var typeParameters = context.typeParameters();
     var isEnum = context instanceof ContextEnum;
     return new TypeDecl(kind, name, members,
-      isExposedAsGlobal(context), description, constructors,
+      description, constructors,
       defaultElementTypes, supportsForEach, supportsIndexAccess,
       forEachDescription, indexAccessDescription, typeParameters, isEnum);
   }
@@ -230,18 +230,6 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * {@code Справочники} ↔ {@code СправочникиМенеджер} идёт через
    * {@link GlobalScopeProvider} из свойств глобального контекста.
    */
-  private static boolean isExposedAsGlobal(Context context) {
-    if (!(context instanceof ContextType type)) {
-      return false;
-    }
-    for (var p : type.properties()) {
-      if (p.isGeneric()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   @Nullable
   private static TypeKind mapKind(Context context) {
     return switch (context.kind()) {

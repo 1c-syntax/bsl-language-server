@@ -523,7 +523,7 @@ class ConfigurationTypesProviderHelpersTest {
       TypeKind.PLATFORM,
       BilingualString.of("ПеречислениеМенеджер.<A>.<B>"),
       List.of(),
-      false, "", List.of(), List.of(), false, false, "", "",
+      "", List.of(), List.of(), false, false, "", "",
       List.of("A", "B"),
       false);
     runTryRegister(
@@ -577,7 +577,7 @@ class ConfigurationTypesProviderHelpersTest {
       TypeKind.PLATFORM,
       BilingualString.of("РегистрСведенийЗапись.<A>.<B>"),
       List.of(),
-      false, "", List.of(), List.of(), false, false, "", "",
+      "", List.of(), List.of(), false, false, "", "",
       List.of("A", "B"),
       false);
     runTryRegister(
@@ -632,7 +632,6 @@ class ConfigurationTypesProviderHelpersTest {
       TypeKind.PLATFORM,
       BilingualString.of(qualifiedRu),
       List.of(member),
-      false,
       "",
       List.of(),
       List.of(),
@@ -654,7 +653,6 @@ class ConfigurationTypesProviderHelpersTest {
       TypeKind.PLATFORM,
       BilingualString.of(qualifiedRu),
       List.of(member),
-      false,
       "",
       List.of(),
       List.of(),
@@ -726,7 +724,7 @@ class ConfigurationTypesProviderHelpersTest {
       TypeKind.PLATFORM,
       BilingualString.of("Модуль HTTP-сервиса"),
       List.of(),
-      false, "", List.of(), List.of(), false, false, "", "",
+      "", List.of(), List.of(), false, false, "", "",
       List.of(),
       false);
     runTryRegister(
