@@ -158,11 +158,8 @@ public class BuiltinTypesJsonLoader {
       List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
       var members = new ArrayList<MemberDescriptor>();
       for (var entry : raw) {
-        if (!Boolean.TRUE.equals(entry.get("exposedAsGlobal"))) {
-          continue;
-        }
         var name = (String) entry.get("name");
-        if (name == null || name.contains("<")) {
+        if (!Boolean.TRUE.equals(entry.get("exposedAsGlobal")) || name == null || name.contains("<")) {
           continue;
         }
         var ref = new TypeRef(mapJsonKind((String) entry.getOrDefault("kind", "TYPE")), name);
@@ -172,10 +169,7 @@ public class BuiltinTypesJsonLoader {
           nameRu = name;
         }
         if (nameEn.isEmpty()) {
-          var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
-          if (!aliases.isEmpty()) {
-            nameEn = aliases.getFirst();
-          }
+          nameEn = firstAlias(entry);
         }
         var description = (String) entry.getOrDefault("description", "");
         members.add(MemberDescriptor.property(name, ref, description)
@@ -186,6 +180,12 @@ public class BuiltinTypesJsonLoader {
       LOGGER.error("Failed to load global context properties: {}", resourcePath, e);
       return List.of();
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static String firstAlias(Map<String, Object> entry) {
+    var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+    return aliases.isEmpty() ? "" : aliases.getFirst();
   }
 
   @SuppressWarnings("unchecked")

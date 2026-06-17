@@ -324,7 +324,6 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void memberPlaceholderName_typeWithGenericMember_extractsPlaceholder() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
     var registry = new TypeRegistry(List.of(), memberIndex);
     var ref = registry.registerConfigurationType("ПеречислениеМенеджер.X");

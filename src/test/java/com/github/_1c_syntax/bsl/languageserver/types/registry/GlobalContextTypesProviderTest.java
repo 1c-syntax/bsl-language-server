@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.context.platform.PlatformContextProperty;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextProvider;
 import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.context.platform.internal.PlatformContextStorage;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import org.junit.jupiter.api.Test;
 
@@ -103,14 +102,10 @@ class GlobalContextTypesProviderTest {
       .getTypes().iterator().next();
     var members = List.copyOf(decl.members());
 
-    // then: метод глобального контекста — метод-член
+    // then: метод и свойство глобального контекста — соответствующие члены
     assertThat(members)
-      .as("метод глобального контекста — метод-член GLOBAL_CONTEXT")
-      .anyMatch(m -> m.kind() == MemberKind.METHOD && m.matches("Сообщить"));
-
-    // then: свойство глобального контекста — свойство-член
-    assertThat(members)
-      .as("свойство глобального контекста — свойство-член GLOBAL_CONTEXT")
+      .as("методы и свойства глобального контекста — члены GLOBAL_CONTEXT")
+      .anyMatch(m -> m.kind() == MemberKind.METHOD && m.matches("Сообщить"))
       .anyMatch(m -> m.kind() == MemberKind.PROPERTY && m.matches("РабочийКаталог"));
 
     // then: системное перечисление — свойство-член с valueType = сам тип

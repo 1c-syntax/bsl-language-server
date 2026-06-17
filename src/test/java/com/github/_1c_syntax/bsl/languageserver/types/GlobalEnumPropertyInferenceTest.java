@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -69,7 +70,7 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void globalPropertyNamesIncludeBuiltinEnums() {
     assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL))
-      .extracting(member -> member.name())
+      .extracting(MemberDescriptor::name)
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }
 

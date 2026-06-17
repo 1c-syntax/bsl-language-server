@@ -119,11 +119,11 @@ public class GlobalMemberInfoTool {
     );
   }
 
-  private Result globalValueResult(MemberDescriptor member, TypeRef valueType,
-                                   String kind, Language language) {
+  private static Result globalValueResult(MemberDescriptor member, TypeRef valueType,
+                                          String kind, Language language) {
     var canonicalName = member.displayName(language);
     var rawDescription = member.description();
-    var description = rawDescription == null || rawDescription.isBlank() ? null : rawDescription;
+    var description = rawDescription.isBlank() ? null : rawDescription;
     var memberDto = new TypeMemberDto(
       canonicalName,
       "PROPERTY",

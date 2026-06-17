@@ -394,7 +394,8 @@ public class TypeService {
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
       .map(ref -> {
         var desc = typeRegistry.getDescription(ref, fileType);
-        return new TypedMember(ref,
+        // owner == null: глобальное свойство, а не член ресивера (контракт TypedMember).
+        return new TypedMember(null,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),
           Ranges.create(terminal));
       });

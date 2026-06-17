@@ -83,6 +83,9 @@ import java.util.function.Supplier;
 @WorkspaceScope
 public class GlobalScopeProvider {
 
+  private static final String RETURN_TYPE_FIELD = "returnType";
+  private static final String ALIASES_FIELD = "aliases";
+
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
   private static final String OSCRIPT_RESOURCE_PATH =
@@ -763,37 +766,15 @@ public class GlobalScopeProvider {
       var members = new ArrayList<MemberDescriptor>();
       for (var entry : (List<Map<String, Object>>) root.getOrDefault("functions", Collections.emptyList())) {
         var name = (String) entry.get("name");
-        if (name == null) {
-          continue;
+        if (name != null) {
+          members.add(functionMember(name, entry));
         }
-        var description = (String) entry.getOrDefault("description", "");
-        var returnTypeName = (String) entry.get("returnType");
-        var returnType = returnTypeName == null
-          ? TypeRef.UNKNOWN
-          : new TypeRef(TypeKind.PLATFORM, returnTypeName);
-        var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"), returnType);
-        var member = MemberDescriptor.method(name, description, signatures).withStandardLibrary(true);
-        member = withFirstAliasName(member, entry);
-        if (Boolean.TRUE.equals(entry.get("async"))) {
-          member = member.withAsync(true);
-        }
-        var metadata = readGlobalMetadata(entry);
-        if (!metadata.isEmpty()) {
-          member = member.withMetadata(metadata);
-        }
-        members.add(member);
       }
       for (var entry : (List<Map<String, Object>>) root.getOrDefault("variables", Collections.emptyList())) {
         var name = (String) entry.get("name");
-        if (name == null || name.isBlank()) {
-          continue;
+        if (name != null && !name.isBlank()) {
+          members.add(variableMember(name, entry));
         }
-        var description = (String) entry.getOrDefault("description", "");
-        var typeName = (String) entry.get("type");
-        var typeRef = typeName == null || typeName.isBlank()
-          ? TypeRef.UNKNOWN
-          : new TypeRef(TypeKind.PLATFORM, typeName);
-        members.add(withFirstAliasName(MemberDescriptor.property(name, typeRef, description), entry));
       }
       return members;
     } catch (IOException e) {
@@ -803,8 +784,37 @@ public class GlobalScopeProvider {
   }
 
   @SuppressWarnings("unchecked")
+  private static MemberDescriptor functionMember(String name, Map<String, Object> entry) {
+    var description = (String) entry.getOrDefault("description", "");
+    var returnTypeName = (String) entry.get(RETURN_TYPE_FIELD);
+    var returnType = returnTypeName == null
+      ? TypeRef.UNKNOWN
+      : new TypeRef(TypeKind.PLATFORM, returnTypeName);
+    var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"), returnType);
+    var member = withFirstAliasName(
+      MemberDescriptor.method(name, description, signatures).withStandardLibrary(true), entry);
+    if (Boolean.TRUE.equals(entry.get("async"))) {
+      member = member.withAsync(true);
+    }
+    var metadata = readGlobalMetadata(entry);
+    if (!metadata.isEmpty()) {
+      member = member.withMetadata(metadata);
+    }
+    return member;
+  }
+
+  private static MemberDescriptor variableMember(String name, Map<String, Object> entry) {
+    var description = (String) entry.getOrDefault("description", "");
+    var typeName = (String) entry.get("type");
+    var typeRef = typeName == null || typeName.isBlank()
+      ? TypeRef.UNKNOWN
+      : new TypeRef(TypeKind.PLATFORM, typeName);
+    return withFirstAliasName(MemberDescriptor.property(name, typeRef, description), entry);
+  }
+
+  @SuppressWarnings("unchecked")
   private static MemberDescriptor withFirstAliasName(MemberDescriptor member, Map<String, Object> entry) {
-    var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+    var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
     if (aliases.isEmpty() || aliases.get(0) == null || aliases.get(0).isBlank()) {
       return member;
     }
@@ -828,7 +838,7 @@ public class GlobalScopeProvider {
       var typeRef = typeName == null || typeName.isBlank()
         ? TypeRef.UNKNOWN
         : new TypeRef(TypeKind.PLATFORM, typeName);
-      var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+      var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
       result.add(new PlatformVariable(name, List.copyOf(aliases), description, typeRef));
     }
     return List.copyOf(result);
@@ -844,7 +854,7 @@ public class GlobalScopeProvider {
         continue;
       }
       var description = (String) entry.getOrDefault("description", "");
-      var returnTypeName = (String) entry.get("returnType");
+      var returnTypeName = (String) entry.get(RETURN_TYPE_FIELD);
       var returnType = returnTypeName == null
         ? TypeRef.UNKNOWN
         : new TypeRef(TypeKind.PLATFORM, returnTypeName);
@@ -869,7 +879,7 @@ public class GlobalScopeProvider {
         descriptor = descriptor.withMetadata(metadata);
       }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
-      var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+      var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
       for (var alias : aliases) {
         result.put(alias.toLowerCase(Locale.ROOT), descriptor);
       }
@@ -924,7 +934,7 @@ public class GlobalScopeProvider {
     var result = new ArrayList<SignatureDescriptor>(raw.size());
     for (var sig : raw) {
       var description = (String) sig.getOrDefault("description", "");
-      var returnTypeName = (String) sig.get("returnType");
+      var returnTypeName = (String) sig.get(RETURN_TYPE_FIELD);
       var returnType = returnTypeName == null
         ? fallbackReturnType
         : new TypeRef(TypeKind.PLATFORM, returnTypeName);

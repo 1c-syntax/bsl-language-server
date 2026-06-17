@@ -24,21 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.Context;
-import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
 import com.github._1c_syntax.bsl.context.api.ContextName;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
-import com.github._1c_syntax.bsl.context.api.ContextSignatureParameter;
 import com.github._1c_syntax.bsl.context.api.LanguageKeywordCategory;
 import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
-import com.github._1c_syntax.bsl.context.platform.PlatformContextEnum;
-import com.github._1c_syntax.bsl.context.platform.PlatformContextEnumValue;
-import com.github._1c_syntax.bsl.context.platform.PlatformContextMethod;
-import com.github._1c_syntax.bsl.context.platform.PlatformContextMethodSignature;
-import com.github._1c_syntax.bsl.context.platform.PlatformContextProperty;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextProvider;
-import com.github._1c_syntax.bsl.context.platform.PlatformContextSignatureParameter;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextType;
-import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
 import com.github._1c_syntax.bsl.context.platform.internal.PlatformContextStorage;
 import org.junit.jupiter.api.Test;
@@ -163,21 +154,6 @@ class GlobalScopeProviderBslContextTest {
       .properties(Collections.emptyList())
       .events(Collections.emptyList())
       .constructors(Collections.emptyList())
-      .build();
-  }
-
-  private static PlatformContextMethod method(String ru, String en, String description) {
-    var sig = PlatformContextMethodSignature.builder()
-      .name(new ContextName("", ""))
-      .parameters(new ArrayList<ContextSignatureParameter>())
-      .description("")
-      .build();
-    return PlatformContextMethod.builder()
-      .name(new ContextName(ru, en))
-      .description(description)
-      .availabilities(List.of())
-      .rawReturnValues(List.of())
-      .signatures(new ArrayList<>(List.of((ContextMethodSignature) sig)))
       .build();
   }
 

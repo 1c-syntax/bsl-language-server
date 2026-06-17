@@ -119,7 +119,15 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     if (member.isEmpty()) {
       return;
     }
-    var valueType = member.get().returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    // Берём первый КОНКРЕТНЫй тип-значение: UNKNOWN в начале union не должен
+    // ломать классификацию корневого токена.
+    var valueType = member.get().returnTypes().refs().stream()
+      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
+      .findFirst()
+      .orElse(TypeRef.UNKNOWN);
+    if (valueType.equals(TypeRef.UNKNOWN)) {
+      return;
+    }
     // 4-сторонняя классификация выводится из типа-значения (а не из отдельного
     // флага): перечисление → Enum; модульный тип (общий/library-модуль, есть в
     // URI-индексе) → Namespace; иначе платформенное свойство/коллекция → Class.
