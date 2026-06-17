@@ -41,7 +41,6 @@ import com.github._1c_syntax.bsl.context.platform.PlatformContextType;
 import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
 import com.github._1c_syntax.bsl.context.platform.internal.PlatformContextStorage;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

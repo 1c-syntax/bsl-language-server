@@ -41,7 +41,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -87,12 +86,6 @@ public class TypeService {
     var sourceDefined = reference.getSourceDefinedSymbol();
     if (sourceDefined.isPresent()) {
       return inferencer.inferSymbol(sourceDefined.get());
-    }
-    if (reference.symbol() instanceof SyntheticSymbol synthetic) {
-      var valueType = synthetic.getValueType();
-      if (valueType != null && valueType != TypeRef.UNKNOWN) {
-        return TypeSet.of(valueType);
-      }
     }
     if (reference.symbol() instanceof PlatformMemberSymbol platformMember) {
       var returnTypes = platformMember.getDescriptor().returnTypes();

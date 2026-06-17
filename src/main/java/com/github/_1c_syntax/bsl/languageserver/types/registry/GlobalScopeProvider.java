@@ -549,8 +549,9 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Системное перечисление платформы — публикуется в global scope с
-   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM} (через отдельный список enums).
+   * Системное перечисление платформы — публикуется в global scope через
+   * отдельный список enums; классификация property-vs-enum у потребителей идёт
+   * из типа-значения ({@code TypeRegistry.isEnumType}), issue #3994.
    */
   private static void addContextEnum(ContextEnum enumeration,
                                      Set<String> variableSeen,
@@ -946,7 +947,7 @@ public class GlobalScopeProvider {
   /**
    * Иммутабельный снапшот загруженных глобалов одного языка: функции, классы,
    * ключевые слова, платформенные переменные/перечисления, описания и сниппеты
-   * ключевых слов. Runtime-регистрации живут в {@code GlobalSymbolScope}.
+   * ключевых слов.
    */
   private record LanguageData(
     Map<String, MemberDescriptor> functions,

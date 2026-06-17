@@ -46,16 +46,16 @@ import java.util.List;
 
 /**
  * Сапплаер семантических токенов для идентификаторов, разрешающихся через
- * global scope ({@link GlobalScopeProvider}). Тип/модификатор токена выбираются
- * по {@link com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind}
- * найденного символа:
+ * global scope ({@link GlobalScopeProvider#globalProperty}). Тип/модификатор
+ * токена выводится из <b>типа-значения</b> свойства-члена {@code GLOBAL_CONTEXT}
+ * (а не из отдельного флага), issue #3994:
  * <ul>
- *   <li>{@code PLATFORM_GLOBAL_PROPERTY} ({@code Справочники}, {@code Метаданные},
- *       {@code ОбщегоНазначения}) → {@code Class + DefaultLibrary};</li>
- *   <li>{@code PLATFORM_GLOBAL_ENUM} ({@code КодировкаТекста}) →
- *       {@code Enum + DefaultLibrary}; значение перечисления первого уровня
- *       ({@code .UTF8}) → {@code EnumMember};</li>
- *   <li>{@code LIBRARY_MODULE} ({@code ФС}) → {@code Namespace}.</li>
+ *   <li>обычное платформенное свойство/коллекция ({@code Справочники},
+ *       {@code Метаданные}, {@code ОбщегоНазначения}) → {@code Class + DefaultLibrary};</li>
+ *   <li>системное перечисление — тип-значение проходит {@code isEnumType}
+ *       ({@code КодировкаТекста}) → {@code Enum + DefaultLibrary}; значение
+ *       перечисления первого уровня ({@code .UTF8}) → {@code EnumMember};</li>
+ *   <li>модульный тип (общий/library-модуль, есть в URI-индексе) → {@code Namespace}.</li>
  * </ul>
  * Идентификаторы, перекрытые локальной переменной/параметром, пропускаются —
  * локальный символ имеет приоритет.

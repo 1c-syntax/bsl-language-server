@@ -48,7 +48,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.ExtendsAn
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -473,21 +472,8 @@ public class ExpressionTypeInferencer {
     if (sourceDefinedReturn.isPresent() && !sourceDefinedReturn.get().isEmpty()) {
       return sourceDefinedReturn.get();
     }
-    // 2. Платформенная глобальная функция (СтрНайти, ПолучитьСообщенияПользователю
-    //    и т.п.) опубликована как SyntheticSymbol с kind=PLATFORM_GLOBAL_METHOD.
-    //    Его valueType — это returnType метода: пробрасываем как тип переменной.
-    var syntheticReturn = reference
-      .map(Reference::symbol)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(SyntheticSymbol.class::cast)
-      .map(SyntheticSymbol::getValueType)
-      .filter(ref -> ref != null && !ref.equals(TypeRef.UNKNOWN))
-      .map(TypeSet::of);
-    if (syntheticReturn.isPresent()) {
-      return syntheticReturn.get();
-    }
-    // 3. Fallback: глобальная функция через GlobalScopeProvider (полный
-    //    MemberDescriptor с TypeSet, включая union).
+    // 2. Платформенная глобальная функция (СтрНайти и т.п.) — через
+    //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
     return globalFunctionReturnTypes(name.getText(), ctx);
   }
 

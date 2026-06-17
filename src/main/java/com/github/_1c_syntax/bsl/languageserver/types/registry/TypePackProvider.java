@@ -76,9 +76,9 @@ public interface TypePackProvider {
    * @param isEnum             {@code true}, если декларация описывает системное
    *                            перечисление платформы (источник —
    *                            {@code ContextEnum} из bsl-context или {@code "kind": "ENUM"}
-   *                            в JSON-паке). Используется при регистрации
-   *                            в global scope, чтобы поставить
-   *                            {@code SyntheticKind.PLATFORM_GLOBAL_ENUM}.
+   *                            в JSON-паке). Помечает тип как перечисление
+   *                            ({@code TypeRegistry.isEnumType}) — для классификации
+   *                            property-vs-enum у потребителей (issue #3994).
    */
   record TypeDecl(
     TypeKind kind,
