@@ -751,12 +751,10 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Глобальные члены для синтетического {@code GLOBAL_CONTEXT} из
-   * встроенного JSON-fallback: {@code functions} → методы-члены, {@code variables}
-   * → свойства-члены. Двуязычное имя члена собирается из {@code name} + первого
-   * {@code alias}, чтобы резолв работал по обоим написаниям. Временный мост на
-   * время cutover'а — при схлопывании GlobalScopeProvider парсинг переедет в
-   * выделенный loader, читаемый composer'ом напрямую.
+   * Глобальные члены для синтетического {@code GLOBAL_CONTEXT} из встроенного
+   * JSON-fallback: {@code functions} → методы-члены, {@code variables} →
+   * свойства-члены. Двуязычное имя члена собирается из {@code name} + первого
+   * {@code alias}, чтобы резолв работал по обоим написаниям.
    */
   @SuppressWarnings("unchecked")
   static List<MemberDescriptor> globalContextMembers(String resourcePath) {

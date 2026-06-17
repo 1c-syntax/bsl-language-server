@@ -39,10 +39,8 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Фаза 1 рефактора глобальной области: exposedAsGlobal-типы
- * (системные перечисления и пр.) становятся свойствами-членами синтетического
- * типа {@link TypeRegistry#GLOBAL_CONTEXT}, а не публикуются отдельным
- * push-механизмом в GlobalScopeProvider.
+ * exposedAsGlobal-типы (системные перечисления и пр.) видны как свойства-члены
+ * синтетического типа {@link TypeRegistry#GLOBAL_CONTEXT}.
  */
 @SpringBootTest
 class GlobalContextMembersTest {

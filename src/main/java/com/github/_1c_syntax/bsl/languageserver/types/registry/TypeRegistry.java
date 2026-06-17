@@ -200,12 +200,9 @@ public class TypeRegistry {
   /**
    * Явная точка материализации workspace-scoped реестра. Тело пустое: значим
    * сам факт вызова метода на scoped-proxy — он создаёт target и прогоняет
-   * {@code @PostConstruct} {@link #bootstrap()}, который push-моделью наполняет
-   * {@link GlobalScopeProvider} платформенным глобальным скоупом. Вызывается из
-   * {@code GlobalScopeProvider.ensureBootstrapped()}, чтобы первое в свежем
-   * workspace-scope чтение глобального скоупа не увидело пустой реестр
-   *. Заменяет прежний неявный {@code typeRegistry.resolve("")}
-   * у потребителей.
+   * {@code @PostConstruct} {@link #bootstrap()} (регистрацию платформенных типов).
+   * Нужен потребителям, читающим реестр в свежем workspace-scope, чтобы первое
+   * чтение не увидело пустой реестр.
    */
   public void ensureInitialized() {
     // no-op: материализация происходит за счёт самого вызова метода на proxy
@@ -1115,9 +1112,6 @@ public class TypeRegistry {
       registerMemberSource(ref, decl::members, fileType);
       indexMemberMetadata(ref, decl.members());
     }
-    // Глобальная видимость типа (классы для `Новый`, exposedAsGlobal) больше не
-    // эмитится отсюда: глобальную область собирает GlobalContextTypesProvider как
-    // члены GLOBAL_CONTEXT, читая источник напрямую.
   }
 
   /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */
