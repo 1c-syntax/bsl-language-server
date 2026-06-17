@@ -41,6 +41,7 @@ public class CollectionHoverHints {
 
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
+  private final TypeService typeService;
 
   /**
    * Добавляет markdown-блоки про обход и индексатор для типа, если
@@ -54,7 +55,7 @@ public class CollectionHoverHints {
    * </pre>
    * Если тип поддерживает обход, но описание пустое — пишем общий текст-fallback.
    */
-  public void append(StringBuilder sb, TypeRef ref, FileType fileType, TypeService typeService) {
+  public void append(StringBuilder sb, TypeRef ref, FileType fileType) {
     var supportsForEach = typeService.supportsForEach(ref, fileType);
     var supportsIndex = typeService.supportsIndexAccess(ref, fileType);
     if (!supportsForEach && !supportsIndex) {

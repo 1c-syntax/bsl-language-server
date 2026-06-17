@@ -105,7 +105,7 @@ public class ConstructorHoverBuilder {
         sb.append('\n');
       }
     }
-    collectionHoverHints.append(sb, ref, fileType, typeService);
+    collectionHoverHints.append(sb, ref, fileType);
     if (disclaim) {
       sb.append("\n\n_").append(tr("noMatchingConstructor")).append('_');
     }

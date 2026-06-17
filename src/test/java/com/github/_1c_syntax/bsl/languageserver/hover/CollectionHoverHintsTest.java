@@ -59,7 +59,7 @@ class CollectionHoverHintsTest {
 
   @BeforeEach
   void setUp() {
-    hints = new CollectionHoverHints(resources, configuration);
+    hints = new CollectionHoverHints(resources, configuration, typeService);
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(resources.getResourceString(eq(CollectionHoverHints.class), any(String.class)))
       .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
@@ -73,7 +73,7 @@ class CollectionHoverHintsTest {
     var sb = new StringBuilder("PREFIX");
 
     // when
-    hints.append(sb, ARRAY, FT, typeService);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString()).isEqualTo("PREFIX");
@@ -88,7 +88,7 @@ class CollectionHoverHintsTest {
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, FT, typeService);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -106,7 +106,7 @@ class CollectionHoverHintsTest {
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, FT, typeService);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -123,7 +123,7 @@ class CollectionHoverHintsTest {
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, FT, typeService);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -141,7 +141,7 @@ class CollectionHoverHintsTest {
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, FT, typeService);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -159,7 +159,7 @@ class CollectionHoverHintsTest {
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, FT, typeService);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
