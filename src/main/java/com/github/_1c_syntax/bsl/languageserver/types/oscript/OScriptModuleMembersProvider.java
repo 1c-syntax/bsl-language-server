@@ -89,12 +89,18 @@ public class OScriptModuleMembersProvider {
 
   /**
    * Library-модули OneScript как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
-   * для {@link FileType#OS} (issue #3994): имя модуля → его тип. Единый
-   * динамический источник (см. {@link #ensureGlobalContextOsSource()})
-   * пересобирает члены из этой карты; {@link #unregister(URI)} убирает имена.
+   * для {@link FileType#OS} (issue #3994): URI документа → тип модуля + его
+   * {@link DocumentContext} (для {@code sourceSymbol}). Единый динамический
+   * источник (см. {@link #ensureGlobalContextOsSource()}) пересобирает члены из
+   * этой карты; {@link #unregister(URI)} убирает запись. Симметрично BSL-общим
+   * модулям в {@code ConfigurationModuleMembersProvider}.
    */
-  private final Map<String, TypeRef> libraryModuleGlobals = new ConcurrentHashMap<>();
+  private final Map<URI, LibraryModuleGlobal> libraryModuleGlobals = new ConcurrentHashMap<>();
   private final AtomicBoolean globalContextOsSourceRegistered = new AtomicBoolean();
+
+  /** Library-модуль как глобал: тип модуля + документ (для lazy {@code sourceSymbol}). */
+  private record LibraryModuleGlobal(TypeRef ref, DocumentContext documentContext) {
+  }
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -150,8 +156,9 @@ public class OScriptModuleMembersProvider {
           // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
           // роль CLASS не должна перетирать тип модуля под тем же URI.
           globalScopeProvider.indexModuleType(uri, ref);
-          // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS).
-          libraryModuleGlobals.put(qualifiedName, ref);
+          // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS),
+          // с sourceSymbol = ModuleSymbol для навигации/раскраски (как BSL).
+          libraryModuleGlobals.put(uri, new LibraryModuleGlobal(ref, documentContext));
           ensureGlobalContextOsSource();
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
@@ -174,9 +181,9 @@ public class OScriptModuleMembersProvider {
     if (names == null) {
       return;
     }
+    libraryModuleGlobals.remove(uri);
     for (var name : names) {
       typeRegistry.unregisterUserType(name);
-      libraryModuleGlobals.remove(name);
     }
   }
 
@@ -193,8 +200,10 @@ public class OScriptModuleMembersProvider {
    */
   private List<MemberDescriptor> libraryModulesAsGlobalMembers() {
     var members = new ArrayList<MemberDescriptor>(libraryModuleGlobals.size());
-    for (var entry : libraryModuleGlobals.entrySet()) {
-      members.add(MemberDescriptor.property(entry.getKey(), entry.getValue(), ""));
+    for (var global : libraryModuleGlobals.values()) {
+      var moduleSymbol = global.documentContext().getSymbolTree().getModule();
+      members.add(MemberDescriptor.property(global.ref().qualifiedName(), global.ref(), "")
+        .withSourceSymbol(moduleSymbol));
     }
     return members;
   }
