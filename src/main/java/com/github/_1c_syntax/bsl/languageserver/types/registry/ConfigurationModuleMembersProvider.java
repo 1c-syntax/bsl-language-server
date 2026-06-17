@@ -38,9 +38,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -81,6 +83,17 @@ public class ConfigurationModuleMembersProvider {
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Общие модули как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
+   * (issue #3994): URI документа → его {@link DocumentContext}. Единый
+   * динамический member-источник на {@code GLOBAL_CONTEXT} (см.
+   * {@link #ensureGlobalContextSourceRegistered()}) пересобирает члены из этой
+   * карты, поэтому добавление/смена модуля отражаются после ближайшей
+   * инвалидации members-кэша (она бампается на каждом изменении документа).
+   */
+  private final Map<URI, DocumentContext> commonModuleDocs = new ConcurrentHashMap<>();
+  private final AtomicBoolean globalContextSourceRegistered = new AtomicBoolean();
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -160,7 +173,37 @@ public class ConfigurationModuleMembersProvider {
       () -> documentContext.getSymbolTree().getModule();
     typeRegistry.registerAsGlobalProperty(ref, FileType.BSL,
       SyntheticKind.PLATFORM_GLOBAL_PROPERTY, moduleSymbolSupplier);
+
+    // issue #3994: общий модуль — свойство-член GLOBAL_CONTEXT (valueType = тип
+    // модуля, sourceSymbol = ModuleSymbol для навигации/раскраски).
+    commonModuleDocs.put(documentContext.getUri(), documentContext);
+    ensureGlobalContextSourceRegistered();
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
+  }
+
+  private void ensureGlobalContextSourceRegistered() {
+    if (globalContextSourceRegistered.compareAndSet(false, true)) {
+      typeRegistry.registerMemberSource(
+        TypeRegistry.GLOBAL_CONTEXT, this::commonModulesAsGlobalMembers, FileType.BSL);
+    }
+  }
+
+  /**
+   * Текущие общие модули как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}.
+   * Пересобирается на каждый вызов (после инвалидации members-кэша), поэтому
+   * {@code sourceSymbol} всегда берётся из актуального SymbolTree.
+   */
+  private List<MemberDescriptor> commonModulesAsGlobalMembers() {
+    var members = new ArrayList<MemberDescriptor>(commonModuleDocs.size());
+    for (var entry : commonModuleDocs.entrySet()) {
+      var ref = registeredByUri.get(entry.getKey());
+      if (ref == null) {
+        continue;
+      }
+      var moduleSymbol = entry.getValue().getSymbolTree().getModule();
+      members.add(MemberDescriptor.property(ref.qualifiedName(), ref, "").withSourceSymbol(moduleSymbol));
+    }
+    return members;
   }
 
   private List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {

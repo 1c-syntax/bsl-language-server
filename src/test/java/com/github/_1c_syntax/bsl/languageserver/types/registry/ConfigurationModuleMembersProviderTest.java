@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -88,6 +89,24 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(members)
       .extracting(m -> m.name())
       .doesNotContain("Тест", "РегистрацияИзмененийПередУдалением");
+  }
+
+  @Test
+  void registersCommonModuleAsGlobalContextMember() {
+    // given: workspace c общим модулем, его DocumentContext прогрет
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
+      + "ПервыйОбщийМодуль/Ext/Module.bsl");
+    typeRegistry.ensureInitialized();
+
+    // when: члены синтетического типа ГлобальныйКонтекст
+    var members = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+
+    // then: общий модуль — свойство-член контекста (issue #3994)
+    assertThat(members)
+      .as("общий модуль должен быть свойством-членом ГлобальногоКонтекста")
+      .anyMatch(member -> member.kind() == MemberKind.PROPERTY && member.matches("ПервыйОбщийМодуль"));
   }
 
   @Test
