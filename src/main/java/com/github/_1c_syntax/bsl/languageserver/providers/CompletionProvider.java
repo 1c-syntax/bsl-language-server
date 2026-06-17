@@ -39,7 +39,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
@@ -115,7 +114,6 @@ public final class CompletionProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
-  private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -188,19 +186,19 @@ public final class CompletionProvider {
   /**
    * Дедуп ru/en-написаний <b>имён типов</b> — классов для {@code Новый} и
    * составных имён MD-объектов конфигурации ({@code Справочники.Контрагенты}).
-   * Разные написания одного типа резолвятся в один интернированный
-   * {@link TypeRef} → группируются, из группы остаётся написание под настроенный
-   * {@link Language}. Имя без резолва (не тип) проходит как есть, не группируясь
-   *.
+   * Разные написания одного типа резолвятся (с учётом видимости в {@code fileType})
+   * в один {@link TypeRef} → группируются, из группы остаётся написание под
+   * настроенный {@link Language}. Имя без резолва (не тип) проходит как есть,
+   * не группируясь.
    */
-  private List<String> filterTypeNamesByLanguage(Collection<String> names, Language language) {
+  private List<String> filterTypeNamesByLanguage(Collection<String> names, Language language, FileType fileType) {
     if (names.isEmpty()) {
       return List.of();
     }
     var byType = new LinkedHashMap<Object, List<String>>();
     for (var name : names) {
       // ru/en одного типа → один TypeRef; не-тип → уникальный ключ (своя группа).
-      Object key = typeRegistry.resolve(name).<Object>map(ref -> ref).orElseGet(Object::new);
+      Object key = typeService.resolve(name, fileType).<Object>map(ref -> ref).orElseGet(Object::new);
       byType.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
     }
     var result = new ArrayList<String>(names.size());
@@ -546,7 +544,7 @@ public final class CompletionProvider {
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
-      for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(fileType), scriptVariant)) {
+      for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(fileType), scriptVariant, fileType)) {
         if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
           continue;
         }
@@ -575,7 +573,7 @@ public final class CompletionProvider {
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
-      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), scriptVariant)) {
+      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), scriptVariant, fileType)) {
         if (isGenericTemplateName(qualified)) {
           continue;
         }
@@ -679,7 +677,7 @@ public final class CompletionProvider {
    */
   private CompletionItemKind completionKindForGlobalProperty(MemberDescriptor member, FileType fileType) {
     var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-    if (typeRegistry.isEnumType(valueType)) {
+    if (typeService.isEnumType(valueType)) {
       return CompletionItemKind.Enum;
     }
     if (fileType == FileType.OS && globalScopeProvider.moduleUriByType(valueType).isPresent()) {

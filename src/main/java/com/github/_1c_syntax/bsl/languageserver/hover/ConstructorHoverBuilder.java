@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
 public class ConstructorHoverBuilder {
 
   private final TypeService typeService;
-  private final TypeRegistry typeRegistry;
   private final CollectionHoverHints collectionHoverHints;
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
@@ -68,7 +66,7 @@ public class ConstructorHoverBuilder {
   ) {
     var sb = new StringBuilder();
     var lang = configuration.getLanguage();
-    var localizedTypeName = typeRegistry.displayName(ref, lang);
+    var localizedTypeName = typeService.displayName(ref, lang);
     if (localizedTypeName.isBlank()) {
       localizedTypeName = typeName;
     }
@@ -107,7 +105,7 @@ public class ConstructorHoverBuilder {
         sb.append('\n');
       }
     }
-    collectionHoverHints.append(sb, ref, typeRegistry);
+    collectionHoverHints.append(sb, ref, typeService);
     if (disclaim) {
       sb.append("\n\n_").append(tr("noMatchingConstructor")).append('_');
     }
@@ -136,7 +134,7 @@ public class ConstructorHoverBuilder {
       return "";
     }
     return types.refs().stream()
-      .map(r -> typeRegistry.displayName(r, lang))
+      .map(r -> typeService.displayName(r, lang))
       .filter(name -> name != null && !name.isEmpty())
       .collect(Collectors.joining(" | "));
   }

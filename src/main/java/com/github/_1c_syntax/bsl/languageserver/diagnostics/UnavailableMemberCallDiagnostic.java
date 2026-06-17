@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 
@@ -62,14 +61,13 @@ import java.util.HashSet;
 public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
 
   private final TypeService typeService;
-  private final TypeRegistry typeRegistry;
   private final LanguageServerConfiguration configuration;
 
   @Override
   public void check() {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var reported = new HashSet<Range>();
-    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService)) {
       var metadata = member.descriptor().metadata();
       if (!PlatformMemberVersions.firesUnavailable(metadata.sinceVersion(), target)) {
         continue;

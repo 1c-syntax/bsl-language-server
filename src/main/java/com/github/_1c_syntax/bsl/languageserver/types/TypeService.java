@@ -322,6 +322,80 @@ public class TypeService {
   }
 
   /**
+   * Является ли тип перечислением (системным либо конфигурационным enum'ом).
+   *
+   * @param typeRef тип.
+   * @return {@code true}, если тип — перечисление.
+   */
+  public boolean isEnumType(TypeRef typeRef) {
+    return typeRegistry.isEnumType(typeRef);
+  }
+
+  /**
+   * Похоже ли имя члена на версионируемое — дешёвый префиксный фильтр перед
+   * полным резолвом члена (например, для отбора кандидатов на проверку
+   * доступности по версии платформы).
+   *
+   * @param name имя члена.
+   * @return {@code true}, если имя имеет версионный вид.
+   */
+  public boolean isVersionedMemberName(String name) {
+    return typeRegistry.isVersionedMemberName(name);
+  }
+
+  /**
+   * Есть ли среди зарегистрированных типов хотя бы один член, помеченный
+   * «только для чтения» — глобальный гейт для диагностики присваивания.
+   *
+   * @return {@code true}, если хотя бы один read-only член известен.
+   */
+  public boolean hasAnyReadOnlyMember() {
+    return typeRegistry.hasAnyReadOnlyMember();
+  }
+
+  /**
+   * Поддерживает ли тип обход {@code Для Каждого}.
+   *
+   * @param typeRef тип.
+   * @return {@code true}, если тип итерируем.
+   */
+  public boolean supportsForEach(TypeRef typeRef) {
+    return typeRegistry.supportsForEach(typeRef);
+  }
+
+  /**
+   * Поддерживает ли тип индексный доступ {@code [...]}.
+   *
+   * @param typeRef тип.
+   * @return {@code true}, если тип индексируем.
+   */
+  public boolean supportsIndexAccess(TypeRef typeRef) {
+    return typeRegistry.supportsIndexAccess(typeRef);
+  }
+
+  /**
+   * Описание обхода {@code Для Каждого} для типа в указанной локали LS.
+   *
+   * @param typeRef тип.
+   * @param language локаль интерфейса LS.
+   * @return описание; пустая строка, если его нет.
+   */
+  public String getForEachDescription(TypeRef typeRef, Language language) {
+    return typeRegistry.getForEachDescription(typeRef, language);
+  }
+
+  /**
+   * Описание индексного доступа {@code [...]} для типа в указанной локали LS.
+   *
+   * @param typeRef тип.
+   * @param language локаль интерфейса LS.
+   * @return описание; пустая строка, если его нет.
+   */
+  public String getIndexAccessDescription(TypeRef typeRef, Language language) {
+    return typeRegistry.getIndexAccessDescription(typeRef, language);
+  }
+
+  /**
    * Найти член типа в позиции курсора (для hover/go-to-member по
    * выражениям без source-defined символа: цепочки accessor'ов,
    * платформенные типы, library-модули).
