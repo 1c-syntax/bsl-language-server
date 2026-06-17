@@ -339,7 +339,6 @@ public class ConfigurationTypesProvider {
       }
       typeRegistry.registerDisplayName(ref, BilingualString.of(collectionRu, collectionEn));
       typeRegistry.registerMemberSource(ref, () -> members, FileType.BSL);
-      typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
 
       // issue #3994: коллекция-namespace — свойство-член GLOBAL_CONTEXT
       // (valueType = тип коллекции-менеджера).

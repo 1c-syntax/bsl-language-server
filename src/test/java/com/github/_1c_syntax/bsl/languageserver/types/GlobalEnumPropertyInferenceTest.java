@@ -54,23 +54,22 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Test
   void findGlobalContextByName() {
-    typeRegistry.resolve("");
-    var encoding = globalScopeProvider.findGlobalContext("КодировкаТекста", FileType.BSL);
+    var encoding = typeRegistry.globalMember("КодировкаТекста", FileType.BSL)
+      .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow());
     assertThat(encoding).isPresent();
     assertThat(encoding.get().qualifiedName()).isEqualTo("КодировкаТекста");
   }
 
   @Test
   void englishAliasIsRegistered() {
-    typeRegistry.resolve("");
-    var encoding = globalScopeProvider.findGlobalContext("TextEncoding", FileType.BSL);
+    var encoding = typeRegistry.globalMember("TextEncoding", FileType.BSL);
     assertThat(encoding).isPresent();
   }
 
   @Test
   void globalPropertyNamesIncludeBuiltinEnums() {
-    typeRegistry.resolve("");
-    assertThat(globalScopeProvider.getGlobalContextNames(FileType.BSL))
+    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL))
+      .extracting(member -> member.name())
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }
 

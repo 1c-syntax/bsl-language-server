@@ -144,14 +144,12 @@ public class OScriptModuleMembersProvider {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
           registerInheritedMembers(documentContext, ref);
-          globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
           // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
           // (единый источник в GlobalScopeProvider вместо обращения инференсера к
           // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
           // роль CLASS не должна перетирать тип модуля под тем же URI.
           globalScopeProvider.indexModuleType(uri, ref);
-          globalScopeProvider.registerLibraryModule(qualifiedName, ref);
           // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS).
           libraryModuleGlobals.put(qualifiedName, ref);
           ensureGlobalContextOsSource();
@@ -178,8 +176,6 @@ public class OScriptModuleMembersProvider {
     }
     for (var name : names) {
       typeRegistry.unregisterUserType(name);
-      globalScopeProvider.unregisterLibraryModule(name);
-      globalScopeProvider.unregisterLibraryClass(name);
       libraryModuleGlobals.remove(name);
     }
   }

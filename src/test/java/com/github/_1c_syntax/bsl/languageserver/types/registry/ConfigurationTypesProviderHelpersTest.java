@@ -177,7 +177,6 @@ class ConfigurationTypesProviderHelpersTest {
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
       var globalScope = Mockito.mock(GlobalScopeProvider.class);
       var lsConfig = Mockito.mock(
@@ -214,7 +213,6 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
       var globalScope = Mockito.mock(GlobalScopeProvider.class);
       var lsConfig = Mockito.mock(
@@ -260,7 +258,6 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
       var globalScope = Mockito.mock(GlobalScopeProvider.class);
       var lsConfig = Mockito.mock(
@@ -314,7 +311,6 @@ class ConfigurationTypesProviderHelpersTest {
   private static ConfigurationTypesProvider newProviderWith(
       com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider serverProvider) {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
     var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var lsConfig = Mockito.mock(
@@ -330,7 +326,7 @@ class ConfigurationTypesProviderHelpersTest {
   void memberPlaceholderName_typeWithGenericMember_extractsPlaceholder() {
     var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
     var ref = registry.registerConfigurationType("ПеречислениеМенеджер.X");
     var generic = MemberDescriptor.genericProperty("<Имя значения>",
         registry.registerConfigurationType("ПеречислениеСсылка.X"), "")
@@ -846,7 +842,6 @@ class ConfigurationTypesProviderHelpersTest {
         }
       };
       var rawRegistry = new TypeRegistry(List.of(pack),
-        Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
       rawRegistry.bootstrap();
       var registry = registryFn.apply(rawRegistry);
@@ -874,7 +869,6 @@ class ConfigurationTypesProviderHelpersTest {
   @Test
   void memberPlaceholderName_noGenericMember_returnsEmpty() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
     var ref = registry.registerConfigurationType("Тип");
     var regular = MemberDescriptor.property("Регулярный",

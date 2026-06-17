@@ -360,17 +360,6 @@ class TypeRegistryRegistrationTest {
       .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
   }
 
-  @Test
-  void registerAsGlobalPropertyWithScope() {
-    // given
-    var ref = typeRegistry.registerUserType("ТипP", declaration, FileType.BSL);
-
-    // when — overload с FileType (без SyntheticKind, default = PLATFORM_GLOBAL_PROPERTY).
-    typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
-
-    // then — не падает.
-    assertThat(typeRegistry.getMembers(ref, FileType.BSL)).isNotNull();
-  }
 
   @Test
   void registerSpecializationWithEmptyGenericReturnsEmptyMembers() {

@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -43,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 /**
  * Расширяет платформенные типы менеджеров/объектов/наборов записей
@@ -166,13 +163,6 @@ public class ConfigurationModuleMembersProvider {
     }
 
     typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
-    // Source-symbol — ModuleSymbol этого DocumentContext'а. Lazy-резолв,
-    // чтобы пережить rebuild: SymbolTree пересоздаётся, но Supplier всегда
-    // возвращает актуальный getModule().
-    Supplier<Symbol> moduleSymbolSupplier =
-      () -> documentContext.getSymbolTree().getModule();
-    typeRegistry.registerAsGlobalProperty(ref, FileType.BSL,
-      SyntheticKind.PLATFORM_GLOBAL_PROPERTY, moduleSymbolSupplier);
 
     // issue #3994: общий модуль — свойство-член GLOBAL_CONTEXT (valueType = тип
     // модуля, sourceSymbol = ModuleSymbol для навигации/раскраски).

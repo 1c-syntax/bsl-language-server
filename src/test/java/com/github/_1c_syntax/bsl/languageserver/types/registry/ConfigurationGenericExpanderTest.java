@@ -41,7 +41,6 @@ class ConfigurationGenericExpanderTest {
   void registerCommonLibraryExpansions_noWorkspace_noOp() {
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
     WorkspaceContextHolder.clear();
@@ -58,7 +57,6 @@ class ConfigurationGenericExpanderTest {
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of());
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
       var expander = new ConfigurationGenericExpander(registry, serverProvider);
       expander.registerCommonLibraryExpansions();
@@ -82,7 +80,6 @@ class ConfigurationGenericExpanderTest {
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(GlobalScopeProvider.class),
         Mockito.mock(MemberMetadataIndex.class));
       var expander = new ConfigurationGenericExpander(registry, serverProvider);
       expander.registerCommonLibraryExpansions();
@@ -96,7 +93,6 @@ class ConfigurationGenericExpanderTest {
   @Test
   void registerExternalDataSourceSpecializations_emptyBindings_noOp() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
@@ -124,7 +120,6 @@ class ConfigurationGenericExpanderTest {
       .cube(goodCube)
       .build();
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var expander = new ConfigurationGenericExpander(registry, serverProvider);

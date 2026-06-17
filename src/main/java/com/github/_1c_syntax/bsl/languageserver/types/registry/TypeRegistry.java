@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
@@ -43,7 +42,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 import jakarta.annotation.PostConstruct;
@@ -93,8 +91,6 @@ public class TypeRegistry {
   public static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
 
   private final List<PlatformTypesProvider> platformProviders;
-  /** Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы. */
-  private final GlobalScopeProvider globalScopeProvider;
   /**
    * Индекс метаданных членов (read-only свойства + версионные члены) для
    * дешёвых pre-filter'ов диагностик. Workspace-scoped Spring-компонент;
@@ -886,43 +882,6 @@ public class TypeRegistry {
   }
 
   /**
-   * Зарегистрировать тип как глобальное свойство (его имя становится
-   * ресивером dot-выражения: {@code Документы.Контрагенты},
-   * {@code КодировкаТекста.UTF8}, {@code ОбщегоНазначения.Метод()}).
-   * Регистрация идёт в {@link GlobalScopeProvider} — единая точка входа
-   * для глобальных имён.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, FileType fileType) {
-    registerAsGlobalProperty(ref, fileType, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
-  }
-
-  /**
-   * Та же регистрация, но с явным {@link SyntheticKind} — используется
-   * при публикации системных перечислений ({@link SyntheticKind#PLATFORM_GLOBAL_ENUM}),
-   * чтобы отличать их от обычных глобальных свойств.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, FileType fileType, SyntheticKind syntheticKind) {
-    registerAsGlobalProperty(ref, fileType, syntheticKind, () -> null);
-  }
-
-  /**
-   * То же + lazy-провайдер source-defined-символа (для общих модулей).
-   * См. {@link GlobalScopeProvider#registerGlobalProperty(TypeRef, Collection, FileType, String, SyntheticKind, Supplier)}.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, FileType fileType, SyntheticKind syntheticKind,
-                                       Supplier<Symbol> sourceSymbol) {
-    var names = new LinkedHashSet<String>();
-    names.add(ref.qualifiedName());
-    aliasIndex.forEach((alias, target) -> {
-      if (target.equals(ref)) {
-        names.add(alias);
-      }
-    });
-    globalScopeProvider.registerGlobalProperty(ref, names, fileType, getDescription(ref, fileType),
-      syntheticKind, sourceSymbol);
-  }
-
-  /**
    * Описание типа из источника (JSON-пакета или динамической регистрации)
    * в разрезе указанного языка. Возвращает пустую строку, если описание отсутствует.
    *
@@ -1013,25 +972,6 @@ public class TypeRegistry {
   }
 
   /**
-   * Зарегистрировать тип как платформенный класс с конструктором. Имя
-   * становится доступным для completion после {@code Новый} (через
-   * {@link GlobalScopeProvider#getClasses}) и резолвится в {@link SyntheticSymbol}
-   * с ролью {@code TYPE_NAME} для hover/findGlobal. Вызывается автоматически
-   * из {@link #registerPack} при непустых {@code constructors}.
-   */
-  private void registerAsPlatformClass(TypeRef ref, FileType fileType) {
-    var names = new LinkedHashSet<String>();
-    names.add(ref.qualifiedName());
-    aliasIndex.forEach((alias, target) -> {
-      if (target.equals(ref)) {
-        names.add(alias);
-      }
-    });
-    globalScopeProvider.registerPlatformClass(ref, names, fileType,
-      getDescription(ref, fileType));
-  }
-
-  /**
    * Удалить пользовательский тип по qualifiedName (например, при закрытии
    * соответствующего документа).
    */
@@ -1098,18 +1038,14 @@ public class TypeRegistry {
   private void registerPackCallables(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
       registerConstructors(ref, decl.constructors(), fileType);
-      registerAsPlatformClass(ref, fileType);
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, fileType);
       indexMemberMetadata(ref, decl.members());
     }
-    if (decl.exposedAsGlobal()) {
-      var syntheticKind = decl.isEnum()
-        ? SyntheticKind.PLATFORM_GLOBAL_ENUM
-        : SyntheticKind.PLATFORM_GLOBAL_PROPERTY;
-      registerAsGlobalProperty(ref, fileType, syntheticKind);
-    }
+    // Глобальная видимость типа (классы для `Новый`, exposedAsGlobal) больше не
+    // эмитится отсюда: глобальную область собирает GlobalContextTypesProvider как
+    // члены GLOBAL_CONTEXT, читая источник напрямую (issue #3994).
   }
 
   /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */
