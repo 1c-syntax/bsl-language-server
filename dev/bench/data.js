@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781695906581,
+  "lastUpdate": 1781710394086,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37851,6 +37851,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.8122286258096123",
             "extra": "mean: 291.28745516141254 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b146a9230ef2370f8c080de5f6ba6caf1133a533",
+          "message": "Merge pull request #4128 from erprivalov/feature/Issue-1935-update\n\nfix: переход диагностики BadExceptionCategory на TypeService.resolve (#1935)",
+          "timestamp": "2026-06-17T13:44:56+02:00",
+          "tree_id": "5c07dcfdc6f2a4c5d19ffc616b51059d8e3507af",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b146a9230ef2370f8c080de5f6ba6caf1133a533"
+        },
+        "date": 1781710384927,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 286.87589955329895,
+            "unit": "sec",
+            "range": "stddev: 16.880379706620854",
+            "extra": "mean: 286.87589955329895 sec\nrounds: 3"
           }
         ]
       }
