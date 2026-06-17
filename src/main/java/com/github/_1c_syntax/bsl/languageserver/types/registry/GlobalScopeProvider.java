@@ -212,6 +212,41 @@ public class GlobalScopeProvider {
     return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.PROPERTY);
   }
 
+  /**
+   * Все глобальные свойства — свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
+   * (перечисления, менеджеры коллекций, общие/library-модули). Перечисляющий
+   * аналог {@link #globalProperty} для потребителей, которым нужен весь набор
+   * (completion). Issue #3994: enumerate-доступ к глобальной области — тоже через
+   * эту абстракцию, а не прямым чтением {@code GLOBAL_CONTEXT}.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return свойства-члены глобального контекста (порядок — как у источника членов).
+   */
+  public List<MemberDescriptor> globalProperties(FileType fileType) {
+    return globalMembersOfKind(fileType, MemberKind.PROPERTY);
+  }
+
+  /**
+   * Все глобальные функции — методы-члены {@link TypeRegistry#GLOBAL_CONTEXT}.
+   * Перечисляющий аналог {@link #globalFunction}.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return методы-члены глобального контекста.
+   */
+  public List<MemberDescriptor> globalFunctions(FileType fileType) {
+    return globalMembersOfKind(fileType, MemberKind.METHOD);
+  }
+
+  private List<MemberDescriptor> globalMembersOfKind(FileType fileType, MemberKind kind) {
+    var result = new ArrayList<MemberDescriptor>();
+    for (var member : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+      if (member.kind() == kind) {
+        result.add(member);
+      }
+    }
+    return result;
+  }
+
   private Map<String, MemberDescriptor> globalNameIndex(FileType fileType) {
     var map = new HashMap<String, MemberDescriptor>();
     for (var member : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {

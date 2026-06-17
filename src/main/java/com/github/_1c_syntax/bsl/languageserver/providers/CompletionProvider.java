@@ -594,10 +594,7 @@ public final class CompletionProvider {
     // CompletionItemKind выводится из типа-значения. К library-сущностям
     // применяется library-gating (#Использовать / свой пакет / implicit) через
     // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
-    for (var ctx : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
-      if (ctx.kind() != MemberKind.PROPERTY) {
-        continue;
-      }
+    for (var ctx : globalScopeProvider.globalProperties(fileType)) {
       var name = ctx.name();
       if (!matches(name, prefix)) {
         continue;
@@ -620,10 +617,7 @@ public final class CompletionProvider {
     // primary-имени через seenFn.
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new HashSet<String>();
-    for (var fn : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
-      if (fn.kind() != MemberKind.METHOD) {
-        continue;
-      }
+    for (var fn : globalScopeProvider.globalFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
