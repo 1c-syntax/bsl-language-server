@@ -191,7 +191,7 @@ public final class CompletionProvider {
    * Разные написания одного типа резолвятся в один интернированный
    * {@link TypeRef} → группируются, из группы остаётся написание под настроенный
    * {@link Language}. Имя без резолва (не тип) проходит как есть, не группируясь
-   * (issue #3994).
+   *.
    */
   private List<String> filterTypeNamesByLanguage(Collection<String> names, Language language) {
     if (names.isEmpty()) {
@@ -672,7 +672,7 @@ public final class CompletionProvider {
   }
 
   /**
-   * Иконка completion для свойства-члена GLOBAL_CONTEXT (issue #3994),
+   * Иконка completion для свойства-члена GLOBAL_CONTEXT,
    * выведенная из типа-значения: перечисление → {@code Enum}; library-модуль
    * OneScript (модульный тип в OS-файле) → {@code Module}; иначе (платформенное
    * свойство, коллекция, общий модуль) → {@code Variable}.

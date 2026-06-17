@@ -140,7 +140,7 @@ public class OScriptModuleMembersProvider {
           // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
           // роль CLASS не должна перетирать тип модуля под тем же URI.
           globalScopeProvider.indexModuleType(uri, ref);
-          // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS).
+          // library-модуль — свойство-член GLOBAL_CONTEXT (OS).
           // declaration уже хранит UserType (registerUserType выше), поэтому
           // символ не передаём; член собирает сам TypeRegistry (override-source).
           typeRegistry.registerGlobalPropertyType(ref, FileType.OS);

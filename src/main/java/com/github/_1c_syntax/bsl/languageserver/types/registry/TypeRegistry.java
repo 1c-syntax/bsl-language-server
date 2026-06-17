@@ -82,7 +82,7 @@ public class TypeRegistry {
 
   /**
    * Синтетический тип «глобальный контекст»: его члены — глобальные методы и
-   * свойства, видимые в global scope без префикса (issue #3994). Системные
+   * свойства, видимые в global scope без префикса. Системные
    * перечисления и прочие {@code exposedAsGlobal}-типы регистрируются как
    * свойства-члены этого типа (с {@code valueType} = сам тип). Имя
    * зарезервировано и не пересекается с инстанцируемыми типами 1С.
@@ -204,7 +204,7 @@ public class TypeRegistry {
    * {@link GlobalScopeProvider} платформенным глобальным скоупом. Вызывается из
    * {@code GlobalScopeProvider.ensureBootstrapped()}, чтобы первое в свежем
    * workspace-scope чтение глобального скоупа не увидело пустой реестр
-   * (issue #3994). Заменяет прежний неявный {@code typeRegistry.resolve("")}
+   *. Заменяет прежний неявный {@code typeRegistry.resolve("")}
    * у потребителей.
    */
   public void ensureInitialized() {
@@ -222,9 +222,9 @@ public class TypeRegistry {
         registerPack(decl, fileType);
       }
     }
-    // Единый источник членов GLOBAL_CONTEXT из типов-глобал-свойств (коллекции,
-    // общие/library-модули). Override — чтобы конфигурационные коллекции
-    // перекрывали одноимённые платформенные свойства bsl-context (issue #3994).
+    // Единый источник членов GLOBAL_CONTEXT из типов-глобал-свойств. Override
+    // (в начало списка) — эти члены перекрывают одноимённые из других источников
+    // GLOBAL_CONTEXT.
     registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.BSL), FileType.BSL);
     registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.OS), FileType.OS);
   }
@@ -394,7 +394,7 @@ public class TypeRegistry {
   /**
    * Является ли тип системным/платформенным перечислением. Read-проекция для
    * потребителей (например, раскраска {@code GLOBAL_CONTEXT}-свойства как
-   * {@code Enum} vs {@code Class}) — issue #3994.
+   * {@code Enum} vs {@code Class}).
    *
    * @param ref проверяемый тип.
    * @return {@code true}, если тип помечен источником как перечисление.
@@ -404,29 +404,27 @@ public class TypeRegistry {
   }
 
   /**
-   * Типы, видимые как свойства-члены {@link #GLOBAL_CONTEXT} (коллекции-namespace,
-   * общие/library-модули), в разрезе языка. Маркер-множество — аналог
-   * {@link #enumTypes}: «эта сущность видна в глобальной области» хранится здесь,
-   * у хранилища типов, а не картами в провайдерах (issue #3994).
+   * Типы, видимые как свойства-члены {@link #GLOBAL_CONTEXT}, в разрезе языка.
+   * Маркер-множество — аналог {@link #enumTypes}: признак «тип виден в глобальной
+   * области» хранится здесь, у хранилища типов.
    */
   private final Map<FileType, Set<TypeRef>> globalPropertyTypes = Map.of(
     FileType.BSL, ConcurrentHashMap.newKeySet(),
     FileType.OS, ConcurrentHashMap.newKeySet());
 
   /**
-   * Source-символ типа-глобал-свойства для тех типов, что не несут его сами
-   * (конфигурационные общие модули — {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
-   * declaration не хранит). У {@link UserType} declaration уже есть, для них сюда
-   * не пишем. {@link WeakReference} — не удерживаем символ/документ.
+   * Явный source-символ типа-глобал-свойства — для типов, не несущих declaration
+   * сами (в отличие от {@link UserType}). {@link WeakReference} — символ не
+   * удерживается.
    */
   private final Map<TypeRef, WeakReference<SourceDefinedSymbol>> globalPropertySymbols =
     new ConcurrentHashMap<>();
 
   /**
    * Пометить тип как глобальное свойство ({@link #GLOBAL_CONTEXT}-член) для языка
-   * без отдельного source-символа. Для коллекций (символа нет) и library-модулей
-   * OneScript (declaration уже несёт {@link UserType}). Член собирается лениво из
-   * самого реестра (имя/bilingual из displayName, value-type = ref), issue #3994.
+   * без отдельного source-символа (тип либо не имеет его, либо несёт сам — см.
+   * {@link UserType}). Член собирается лениво из реестра (имя/bilingual из
+   * displayName, value-type = ref).
    *
    * @param ref      тип-глобал-свойство.
    * @param fileType язык, в котором он виден без префикса.
@@ -440,13 +438,12 @@ public class TypeRegistry {
   }
 
   /**
-   * То же, но с явным source-символом — для типов, не несущих declaration сами
-   * (конфигурационные общие модули: {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
-   * его не хранит). Символ удерживается слабо ({@link WeakReference}).
+   * То же, но с явным source-символом — для типов, не несущих declaration сами.
+   * Символ удерживается слабо ({@link WeakReference}).
    *
    * @param ref         тип-глобал-свойство.
    * @param fileType    язык, в котором он виден без префикса.
-   * @param declaration символ-источник (например, ModuleSymbol общего модуля).
+   * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
     if (ref == null) {
@@ -458,7 +455,7 @@ public class TypeRegistry {
   }
 
   /**
-   * Снять пометку глобального свойства с типа (удаление документа-модуля).
+   * Снять пометку глобального свойства с типа.
    *
    * @param ref      тип.
    * @param fileType язык.
@@ -473,9 +470,9 @@ public class TypeRegistry {
   }
 
   /**
-   * Члены {@link #GLOBAL_CONTEXT} из типов-глобал-свойств языка. Регистрируется
-   * как override (см. {@code bootstrap}), чтобы конфигурационные коллекции
-   * перекрывали одноимённые платформенные свойства (issue #3994).
+   * Члены {@link #GLOBAL_CONTEXT} из типов, помеченных глобальными свойствами,
+   * для языка. Регистрируется как override (см. {@code bootstrap}) — перекрывает
+   * одноимённые члены из других источников {@link #GLOBAL_CONTEXT}.
    */
   private List<MemberDescriptor> globalPropertyMembers(FileType fileType) {
     var refs = globalPropertyTypes.get(fileType);
@@ -512,7 +509,7 @@ public class TypeRegistry {
    * (например, {@link GlobalScopeProvider} для name-индекса глобальной области)
    * используют его как ключ инвалидации своих кэшей. Резолв глобальной области сам
    * по себе — не дело {@code TypeRegistry} (хранилища типов); это абстракция
-   * {@code GlobalScopeProvider} (issue #3994).
+   * {@code GlobalScopeProvider}.
    *
    * @return текущая эпоха членов.
    */
@@ -524,7 +521,7 @@ public class TypeRegistry {
    * Имя резолвится в платформенный/конфигурационный тип с конструктором —
    * т.е. это имя типа для {@code Новый}/типовой позиции ({@code Структура},
    * {@code ТаблицаЗначений}), а не глобальное значение. Ось type-name отдельно
-   * от членов {@link #GLOBAL_CONTEXT} (issue #3994).
+   * от членов {@link #GLOBAL_CONTEXT}.
    *
    * @param name     имя (регистронезависимо, ru/en).
    * @param fileType язык файла-потребителя.
@@ -1120,7 +1117,7 @@ public class TypeRegistry {
     }
     // Глобальная видимость типа (классы для `Новый`, exposedAsGlobal) больше не
     // эмитится отсюда: глобальную область собирает GlobalContextTypesProvider как
-    // члены GLOBAL_CONTEXT, читая источник напрямую (issue #3994).
+    // члены GLOBAL_CONTEXT, читая источник напрямую.
   }
 
   /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */

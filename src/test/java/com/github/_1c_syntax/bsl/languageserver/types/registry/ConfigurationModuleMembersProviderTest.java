@@ -103,7 +103,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     // when: члены синтетического типа ГлобальныйКонтекст
     var members = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
 
-    // then: общий модуль — свойство-член контекста (issue #3994)
+    // then: общий модуль — свойство-член контекста
     assertThat(members)
       .as("общий модуль должен быть свойством-членом ГлобальногоКонтекста")
       .anyMatch(member -> member.kind() == MemberKind.PROPERTY && member.matches("ПервыйОбщийМодуль"));

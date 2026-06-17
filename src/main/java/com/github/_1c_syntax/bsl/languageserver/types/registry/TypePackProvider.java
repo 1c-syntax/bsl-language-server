@@ -78,7 +78,7 @@ public interface TypePackProvider {
    *                            {@code ContextEnum} из bsl-context или {@code "kind": "ENUM"}
    *                            в JSON-паке). Помечает тип как перечисление
    *                            ({@code TypeRegistry.isEnumType}) — для классификации
-   *                            property-vs-enum у потребителей (issue #3994).
+   *                            property-vs-enum у потребителей.
    */
   record TypeDecl(
     TypeKind kind,

@@ -102,7 +102,7 @@ class MultiWorkspaceTypeRegistryTest {
 
   @Test
   void globalContextMembersFollowWorkspaceContext() {
-    // workspace A: общий модуль A как член GLOBAL_CONTEXT (issue #3994)
+    // workspace A: общий модуль A как член GLOBAL_CONTEXT
     WorkspaceContextHolder.set(WS_A, "mw-a");
     var refA = typeRegistry.registerConfigurationType("ОбщийМодульA");
     typeRegistry.registerMemberSource(TypeRegistry.GLOBAL_CONTEXT,

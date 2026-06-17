@@ -38,7 +38,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Composer глобального контекста (issue #3994): читает <b>источник</b>
+ * Composer глобального контекста: читает <b>источник</b>
  * (bsl-context либо встроенный JSON) и собирает синтетический тип
  * {@link TypeRegistry#GLOBAL_CONTEXT} — его члены суть глобальные методы и
  * свойства, видимые без префикса. {@code exposedAsGlobal}-типы (системные

@@ -36,7 +36,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Регрессия issue #3994 (PR #4135): платформенный глобальный контекст (bsl-context)
+ * Регрессия: платформенный глобальный контекст (bsl-context)
  * содержит свойства-менеджеры коллекций ({@code Справочники → СправочникиМенеджер},
  * {@code Перечисления → ПеречисленияМенеджер}). Они попадают в
  * {@link TypeRegistry#GLOBAL_CONTEXT} на bootstrap'е — РАНЬШЕ, чем

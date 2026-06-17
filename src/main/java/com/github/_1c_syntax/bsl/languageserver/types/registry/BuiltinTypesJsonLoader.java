@@ -148,7 +148,7 @@ public class BuiltinTypesJsonLoader {
    * {@code exposedAsGlobal} (системные перечисления, менеджеры) как
    * свойства-члены {@code GLOBAL_CONTEXT} ({@code valueType} = сам тип).
    * Признак глобальной видимости читается из источника здесь и не хранится на
-   * {@link TypeDecl} (issue #3994). Generic-плейсхолдеры ({@code .<...>})
+   * {@link TypeDecl}. Generic-плейсхолдеры ({@code .<...>})
    * пропускаются — это не реальные безпрефиксные имена.
    */
   @SuppressWarnings("unchecked")

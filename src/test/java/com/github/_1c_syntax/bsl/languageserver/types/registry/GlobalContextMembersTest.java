@@ -39,7 +39,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Фаза 1 рефактора глобальной области (issue #3994): exposedAsGlobal-типы
+ * Фаза 1 рефактора глобальной области: exposedAsGlobal-типы
  * (системные перечисления и пр.) становятся свойствами-членами синтетического
  * типа {@link TypeRegistry#GLOBAL_CONTEXT}, а не публикуются отдельным
  * push-механизмом в GlobalScopeProvider.
@@ -89,7 +89,7 @@ class GlobalContextMembersTest {
 
   @Test
   void oscriptGlobalFunctionResolvesForOsFileType() {
-    // given: свежий workspace-scope (issue #3994 — GLOBAL_CONTEXT для OS наполняет
+    // given: свежий workspace-scope (GLOBAL_CONTEXT для OS наполняет
     // отдельный OneScript-composer из builtin-oscript-globals.json).
     freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
     try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-os")) {

@@ -42,7 +42,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Юнит-тест composer'а глобального контекста (issue #3994), путь bsl-context
+ * Юнит-тест composer'а глобального контекста, путь bsl-context
  * ({@code membersFromContext}): этот путь исполняется только при подключённой
  * платформе (HBK), поэтому покрывается синтетическим {@link PlatformContextProvider}
  * по образцу {@link BslContextPlatformTypesProviderTest}, без реальной платформы.

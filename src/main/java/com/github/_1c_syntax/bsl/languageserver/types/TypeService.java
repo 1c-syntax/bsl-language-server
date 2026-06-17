@@ -380,7 +380,7 @@ public class TypeService {
   private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
     var fileType = documentContext.getFileType();
-    // Глобальная функция — метод-член GLOBAL_CONTEXT (issue #3994).
+    // Глобальная функция — метод-член GLOBAL_CONTEXT.
     var globalFn = globalScopeProvider.globalFunction(bareName, fileType);
     if (globalFn.isPresent()) {
       return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));

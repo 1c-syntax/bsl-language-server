@@ -106,7 +106,7 @@ public class GlobalScopeProvider {
   /**
    * Хранилище типов: источник членов синтетического {@link TypeRegistry#GLOBAL_CONTEXT}.
    * Читается (не пишется) для резолва безпрефиксных имён — direction
-   * {@code GlobalScopeProvider → TypeRegistry}, без цикла (issue #3994).
+   * {@code GlobalScopeProvider → TypeRegistry}, без цикла.
    */
   private final TypeRegistry typeRegistry;
   /** Эпоха-кэшированный name-индекс членов GLOBAL_CONTEXT (см. {@link #globalMember}). */
@@ -168,7 +168,7 @@ public class GlobalScopeProvider {
    * {@link TypeRegistry#GLOBAL_CONTEXT} (глобальная функция-метод либо глобальное
    * свойство: перечисление, менеджер коллекции, общий/library-модуль). Быстрый
    * lookup по name-индексу, пересобираемому при смене эпохи членов
-   * ({@link TypeRegistry#membersEpoch()}). Issue #3994: единая абстракция доступа
+   * ({@link TypeRegistry#membersEpoch()}). Единая абстракция доступа
    * к глобальной области; {@link TypeRegistry} остаётся хранилищем типов.
    *
    * @param name     имя (регистронезависимо, ru/en).
@@ -219,7 +219,7 @@ public class GlobalScopeProvider {
    * Все глобальные свойства — свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
    * (перечисления, менеджеры коллекций, общие/library-модули). Перечисляющий
    * аналог {@link #globalProperty} для потребителей, которым нужен весь набор
-   * (completion). Issue #3994: enumerate-доступ к глобальной области — тоже через
+   * (completion). Enumerate-доступ к глобальной области — тоже через
    * эту абстракцию, а не прямым чтением {@code GLOBAL_CONTEXT}.
    *
    * @param fileType язык файла-потребителя.
@@ -554,7 +554,7 @@ public class GlobalScopeProvider {
   /**
    * Системное перечисление платформы — публикуется в global scope через
    * отдельный список enums; классификация property-vs-enum у потребителей идёт
-   * из типа-значения ({@code TypeRegistry.isEnumType}), issue #3994.
+   * из типа-значения ({@code TypeRegistry.isEnumType}).
    */
   private static void addContextEnum(ContextEnum enumeration,
                                      Set<String> variableSeen,
@@ -751,7 +751,7 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Глобальные члены для синтетического {@code GLOBAL_CONTEXT} (issue #3994) из
+   * Глобальные члены для синтетического {@code GLOBAL_CONTEXT} из
    * встроенного JSON-fallback: {@code functions} → методы-члены, {@code variables}
    * → свойства-члены. Двуязычное имя члена собирается из {@code name} + первого
    * {@code alias}, чтобы резолв работал по обоим написаниям. Временный мост на
