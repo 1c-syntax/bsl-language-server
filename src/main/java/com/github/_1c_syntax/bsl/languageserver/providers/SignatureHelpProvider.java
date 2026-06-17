@@ -33,7 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -85,7 +85,7 @@ import java.util.Optional;
 public final class SignatureHelpProvider {
 
   private final TypeService typeService;
-  private final GlobalScopeProvider globalScopeProvider;
+  private final TypeRegistry typeRegistry;
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
@@ -409,8 +409,9 @@ public final class SignatureHelpProvider {
     if (local.isPresent()) {
       return local;
     }
-    // Fallback: global builtin function — фильтруем по типу файла.
-    return globalScopeProvider.findFunction(methodName, documentContext.getFileType());
+    // Fallback: глобальная функция — метод-член GLOBAL_CONTEXT (issue #3994).
+    return typeRegistry.globalMember(methodName, documentContext.getFileType())
+      .filter(member -> member.kind() == MemberKind.METHOD);
   }
 
   private Optional<MemberDescriptor> resolveAccessCall(

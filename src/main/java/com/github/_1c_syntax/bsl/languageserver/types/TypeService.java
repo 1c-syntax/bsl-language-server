@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -40,9 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -389,24 +388,22 @@ public class TypeService {
   private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
     var fileType = documentContext.getFileType();
-    var globalFn = globalScopeProvider.findFunction(bareName, fileType);
+    // Глобальная функция — метод-член GLOBAL_CONTEXT (issue #3994).
+    var globalFn = typeRegistry.globalMember(bareName, fileType)
+      .filter(member -> member.kind() == MemberKind.METHOD);
     if (globalFn.isPresent()) {
       return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
     }
 
-    return globalScopeProvider.findGlobalEntry(bareName, fileType)
-      .filter(e -> e.role() != GlobalSymbolScope.Role.TYPE_NAME)
-      .map(GlobalSymbolScope.Entry::symbol)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(SyntheticSymbol.class::cast)
-      .filter(s -> s.getSyntheticKind() != SyntheticKind.PLATFORM_GLOBAL_METHOD)
-      .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN))
-      .map((SyntheticSymbol sym) -> {
-        var ref = sym.getValueType();
-        var desc = sym.getDescription();
-        if (desc == null || desc.isBlank()) {
-          desc = typeRegistry.getDescription(ref, fileType);
-        }
+    // Глобальное свойство (перечисление/менеджер коллекции/модуль) — свойство-член
+    // GLOBAL_CONTEXT; имена типов для `Новый` (TYPE_NAME) членами не являются.
+    return typeRegistry.globalMember(bareName, fileType)
+      .filter(member -> member.kind() == MemberKind.PROPERTY)
+      .map(member -> member.returnTypes().refs().stream()
+        .filter(r -> !r.equals(TypeRef.UNKNOWN)).findFirst().orElse(TypeRef.UNKNOWN))
+      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
+      .map(ref -> {
+        var desc = typeRegistry.getDescription(ref, fileType);
         return new TypedMember(ref,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),
           Ranges.create(terminal));

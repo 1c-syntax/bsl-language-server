@@ -22,7 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -37,8 +38,8 @@ import java.util.List;
 /**
  * Сапплаер семантических токенов для вызовов глобальных функций платформы
  * (например, {@code Сообщить}, {@code СтрНайти}). Метод считается платформенным,
- * если резолвится через {@link GlobalScopeProvider#findFunction(String, com.github._1c_syntax.bsl.languageserver.context.FileType)}
- * и не перекрыт локальным методом в текущем модуле — в таком случае
+ * если резолвится как метод-член {@link TypeRegistry#GLOBAL_CONTEXT}
+ * ({@code globalMember}) и не перекрыт локальным методом в текущем модуле — в таком случае
  * приоритет у локального символа, отрисуется через
  * {@link MethodCallSemanticTokensSupplier} как обычный {@code Method}.
  * <p>
@@ -54,7 +55,7 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
   private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS =
     {SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async};
 
-  private final GlobalScopeProvider globalScopeProvider;
+  private final TypeRegistry typeRegistry;
   private final SemanticTokensHelper helper;
 
   @Override
@@ -81,14 +82,16 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       if (symbolTree != null && symbolTree.getMethodSymbol(name).isPresent()) {
         continue;
       }
-      globalScopeProvider.findFunction(name, fileType).ifPresent(function ->
-        helper.addRange(
-          entries,
-          Ranges.create(methodNameCtx),
-          SemanticTokenTypes.Function,
-          modifiers(function.async())
-        )
-      );
+      typeRegistry.globalMember(name, fileType)
+        .filter(function -> function.kind() == MemberKind.METHOD)
+        .ifPresent(function ->
+          helper.addRange(
+            entries,
+            Ranges.create(methodNameCtx),
+            SemanticTokenTypes.Function,
+            modifiers(function.async())
+          )
+        );
     }
 
     return entries;
