@@ -423,25 +423,37 @@ public class TypeRegistry {
     new ConcurrentHashMap<>();
 
   /**
-   * Пометить тип как глобальное свойство ({@link #GLOBAL_CONTEXT}-член) для языка.
-   * Член собирается лениво из самого реестра (имя/bilingual из displayName,
-   * value-type = ref, sourceSymbol — из {@link UserType} либо переданного
-   * {@code declaration}), поэтому провайдерам не нужно держать копии (issue #3994).
+   * Пометить тип как глобальное свойство ({@link #GLOBAL_CONTEXT}-член) для языка
+   * без отдельного source-символа. Для коллекций (символа нет) и library-модулей
+   * OneScript (declaration уже несёт {@link UserType}). Член собирается лениво из
+   * самого реестра (имя/bilingual из displayName, value-type = ref), issue #3994.
    *
-   * @param ref         тип-глобал-свойство.
-   * @param fileType    язык, в котором он виден без префикса.
-   * @param declaration символ-источник (общий модуль) либо {@code null}
-   *                    (коллекции; library-модули несут declaration в {@link UserType}).
+   * @param ref      тип-глобал-свойство.
+   * @param fileType язык, в котором он виден без префикса.
    */
-  public void registerGlobalPropertyType(TypeRef ref, FileType fileType,
-                                         @Nullable SourceDefinedSymbol declaration) {
+  public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
     if (ref == null) {
       return;
     }
     globalPropertyTypes.get(fileType).add(ref);
-    if (declaration != null) {
-      globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * То же, но с явным source-символом — для типов, не несущих declaration сами
+   * (конфигурационные общие модули: {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
+   * его не хранит). Символ удерживается слабо ({@link WeakReference}).
+   *
+   * @param ref         тип-глобал-свойство.
+   * @param fileType    язык, в котором он виден без префикса.
+   * @param declaration символ-источник (например, ModuleSymbol общего модуля).
+   */
+  public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
+    if (ref == null) {
+      return;
     }
+    globalPropertyTypes.get(fileType).add(ref);
+    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
     membersEpoch.incrementAndGet();
   }
 

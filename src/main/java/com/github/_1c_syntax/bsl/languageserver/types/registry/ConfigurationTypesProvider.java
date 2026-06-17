@@ -332,7 +332,7 @@ public class ConfigurationTypesProvider {
 
       // issue #3994: коллекция-namespace — свойство-член GLOBAL_CONTEXT (имя/bilingual
       // и value-type реестр соберёт сам из displayName/ref; declaration у коллекции нет).
-      typeRegistry.registerGlobalPropertyType(ref, FileType.BSL, null);
+      typeRegistry.registerGlobalPropertyType(ref, FileType.BSL);
 
       // Платформенные методы коллекции-менеджера (СправочникиМенеджер,
       // ДокументыМенеджер) — уровня всех справочников/документов, например

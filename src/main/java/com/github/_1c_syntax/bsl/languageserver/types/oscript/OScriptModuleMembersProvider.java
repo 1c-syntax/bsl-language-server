@@ -143,7 +143,7 @@ public class OScriptModuleMembersProvider {
           // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS).
           // declaration уже хранит UserType (registerUserType выше), поэтому
           // символ не передаём; член собирает сам TypeRegistry (override-source).
-          typeRegistry.registerGlobalPropertyType(ref, FileType.OS, null);
+          typeRegistry.registerGlobalPropertyType(ref, FileType.OS);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
