@@ -256,9 +256,9 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
-  void resolveByKindAndQualifiedNameReturnsInternedRef() {
+  void resolveByKindAndQualifiedNameReturnsRegisteredType() {
     // given
-    var ref = typeRegistry.intern(TypeKind.USER, "ТипR2");
+    var ref = typeRegistry.registerUserType("ТипR2", declaration, FileType.BSL);
 
     // when
     var resolved = typeRegistry.resolve(TypeKind.USER, "ТипR2");

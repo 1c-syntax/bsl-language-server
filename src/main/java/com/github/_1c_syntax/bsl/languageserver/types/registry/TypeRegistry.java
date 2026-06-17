@@ -45,6 +45,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
+import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -104,8 +105,8 @@ public class TypeRegistry {
    */
   private final MemberMetadataIndex memberMetadataIndex;
 
-  /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
-  private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
+  /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
+  private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
@@ -236,9 +237,7 @@ public class TypeRegistry {
    * возвращает каноническую ссылку.
    */
   public TypeRef intern(TypeKind kind, String qualifiedName) {
-    var candidate = new TypeRef(kind, qualifiedName);
-    var existing = internedRefs.putIfAbsent(candidate, candidate);
-    return existing != null ? existing : candidate;
+    return refInterner.intern(new TypeRef(kind, qualifiedName));
   }
 
   /**
@@ -349,11 +348,13 @@ public class TypeRegistry {
   }
 
   /**
-   * Найти тип по точному совпадению канонического имени и kind'а.
+   * Найти <b>зарегистрированный</b> тип по точному совпадению kind'а и
+   * канонического имени. Возвращает ссылку, только если тип присутствует в
+   * хранилище типов (был зарегистрирован), а не просто интернирован.
    */
   public Optional<TypeRef> resolve(TypeKind kind, String qualifiedName) {
     var ref = new TypeRef(kind, qualifiedName);
-    return Optional.ofNullable(internedRefs.get(ref));
+    return types.containsKey(ref) ? Optional.of(ref) : Optional.empty();
   }
 
   /**
