@@ -65,6 +65,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -98,6 +100,14 @@ public class GlobalScopeProvider {
    * набор языка файла-потребителя.
    */
   private final Map<FileType, LanguageData> byFileType;
+  /**
+   * Хранилище типов: источник членов синтетического {@link TypeRegistry#GLOBAL_CONTEXT}.
+   * Читается (не пишется) для резолва безпрефиксных имён — direction
+   * {@code GlobalScopeProvider → TypeRegistry}, без цикла (issue #3994).
+   */
+  private final TypeRegistry typeRegistry;
+  /** Эпоха-кэшированный name-индекс членов GLOBAL_CONTEXT (см. {@link #globalMember}). */
+  private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
   /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
@@ -143,10 +153,82 @@ public class GlobalScopeProvider {
    *                         (OS-часть всегда из ресурса). Если платформа недоступна —
    *                         fallback на JSON-ресурс.
    */
-  public GlobalScopeProvider(BslContextHolder bslContextHolder) {
+  public GlobalScopeProvider(BslContextHolder bslContextHolder, TypeRegistry typeRegistry) {
+    this.typeRegistry = typeRegistry;
     var os = loadFromResource(OSCRIPT_RESOURCE_PATH);
     var bsl = loadBsl(bslContextHolder);
     this.byFileType = Map.of(FileType.BSL, bsl, FileType.OS, os);
+  }
+
+  /**
+   * Резолв безпрефиксного имени в член глобальной области — синтетического типа
+   * {@link TypeRegistry#GLOBAL_CONTEXT} (глобальная функция-метод либо глобальное
+   * свойство: перечисление, менеджер коллекции, общий/library-модуль). Быстрый
+   * lookup по name-индексу, пересобираемому при смене эпохи членов
+   * ({@link TypeRegistry#membersEpoch()}). Issue #3994: единая абстракция доступа
+   * к глобальной области; {@link TypeRegistry} остаётся хранилищем типов.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return член глобального контекста или {@link Optional#empty()}.
+   */
+  public Optional<MemberDescriptor> globalMember(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    var epoch = typeRegistry.membersEpoch();
+    var index = globalIndexRef.get();
+    if (index == null || index.epoch() != epoch) {
+      index = new GlobalIndex(epoch, Map.of(
+        FileType.BSL, globalNameIndex(FileType.BSL),
+        FileType.OS, globalNameIndex(FileType.OS)));
+      globalIndexRef.set(index);
+    }
+    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Безпрефиксное имя как глобальная функция — метод-член
+   * {@link TypeRegistry#GLOBAL_CONTEXT}.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return метод-член или {@link Optional#empty()}, если имя не глобальная функция.
+   */
+  public Optional<MemberDescriptor> globalFunction(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+    return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.METHOD);
+  }
+
+  /**
+   * Безпрефиксное имя как глобальное свойство — свойство-член
+   * {@link TypeRegistry#GLOBAL_CONTEXT} (перечисление, менеджер коллекции,
+   * общий/library-модуль).
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return свойство-член или {@link Optional#empty()}, если имя не глобальное свойство.
+   */
+  public Optional<MemberDescriptor> globalProperty(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+    return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.PROPERTY);
+  }
+
+  private Map<String, MemberDescriptor> globalNameIndex(FileType fileType) {
+    var map = new HashMap<String, MemberDescriptor>();
+    for (var member : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+      var ru = member.bilingualName().ru();
+      var en = member.bilingualName().en();
+      if (!ru.isBlank()) {
+        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), member);
+      }
+      if (!en.isBlank()) {
+        map.putIfAbsent(en.toLowerCase(Locale.ROOT), member);
+      }
+    }
+    return map;
+  }
+
+  /** Эпоха-кэшированный индекс имён членов GLOBAL_CONTEXT в разрезе языка. */
+  private record GlobalIndex(long epoch, Map<FileType, Map<String, MemberDescriptor>> byName) {
   }
 
   /**

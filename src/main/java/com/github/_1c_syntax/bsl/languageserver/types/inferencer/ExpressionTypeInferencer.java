@@ -253,8 +253,7 @@ public class ExpressionTypeInferencer {
     // все приходят как свойства-члены синтетического GLOBAL_CONTEXT (issue #3994).
     // Только PROPERTY: голое имя глобальной функции (METHOD) — не значение, а
     // имена типов для `Новый` (Структура) вообще не члены контекста.
-    return typeRegistry.globalMember(text, ctx.documentContext.getFileType())
-      .filter(member -> member.kind() == MemberKind.PROPERTY)
+    return globalScopeProvider.globalProperty(text, ctx.documentContext.getFileType())
       .map(MemberDescriptor::returnTypes)
       .filter(types -> types.refs().stream().anyMatch(ref -> !ref.equals(TypeRef.UNKNOWN)))
       .orElse(TypeSet.EMPTY);
@@ -501,8 +500,7 @@ public class ExpressionTypeInferencer {
     if (methodName == null || methodName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return typeRegistry.globalMember(methodName, ctx.documentContext.getFileType())
-      .filter(member -> member.kind() == MemberKind.METHOD)
+    return globalScopeProvider.globalFunction(methodName, ctx.documentContext.getFileType())
       .map(MemberDescriptor::returnTypes)
       .filter(types -> !types.isEmpty())
       .orElse(TypeSet.EMPTY);

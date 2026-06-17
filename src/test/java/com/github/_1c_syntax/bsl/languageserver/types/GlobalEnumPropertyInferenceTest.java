@@ -54,7 +54,7 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Test
   void findGlobalContextByName() {
-    var encoding = typeRegistry.globalMember("КодировкаТекста", FileType.BSL)
+    var encoding = globalScopeProvider.globalMember("КодировкаТекста", FileType.BSL)
       .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow());
     assertThat(encoding).isPresent();
     assertThat(encoding.get().qualifiedName()).isEqualTo("КодировкаТекста");
@@ -62,7 +62,7 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Test
   void englishAliasIsRegistered() {
-    var encoding = typeRegistry.globalMember("TextEncoding", FileType.BSL);
+    var encoding = globalScopeProvider.globalMember("TextEncoding", FileType.BSL);
     assertThat(encoding).isPresent();
   }
 

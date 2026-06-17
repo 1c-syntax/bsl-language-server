@@ -24,8 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -69,13 +68,13 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
   private static final Set<Integer> CHAIN_ROOTS =
     Set.of(BSLParser.RULE_complexIdentifier, BSLParser.RULE_callStatement);
 
-  private final TypeRegistry typeRegistry;
+  private final GlobalScopeProvider globalScopeProvider;
 
   public PlatformMemberPropertyAccessSemanticTokensSupplier(TypeService typeService,
-                                                            TypeRegistry typeRegistry,
+                                                            GlobalScopeProvider globalScopeProvider,
                                                             SemanticTokensHelper helper) {
     super(typeService, helper);
-    this.typeRegistry = typeRegistry;
+    this.globalScopeProvider = globalScopeProvider;
   }
 
   @Override
@@ -117,9 +116,8 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
    */
   private boolean isGlobalScopeChain(BSLParser.AccessPropertyContext accessProperty, FileType fileType) {
     return chainBaseName(accessProperty)
-      .flatMap(name -> typeRegistry.globalMember(name, fileType))
-      .map(member -> member.kind() == MemberKind.PROPERTY)
-      .orElse(false);
+      .flatMap(name -> globalScopeProvider.globalProperty(name, fileType))
+      .isPresent();
   }
 
   /**

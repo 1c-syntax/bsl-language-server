@@ -54,6 +54,9 @@ class GlobalContextCollectionShadowingTest extends AbstractServerContextAwareTes
   @Autowired
   private TypeRegistry typeRegistry;
 
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
   @Test
   void configurationCollectionWinsOverPlatformGlobalProperty() {
     // given: workspace настроен, но ещё НЕ populated (событие не выпущено)
@@ -72,7 +75,7 @@ class GlobalContextCollectionShadowingTest extends AbstractServerContextAwareTes
 
     // then: безпрефиксное `Справочники` резолвится в конфигурационную коллекцию,
     // а не в затеняющий платформенный менеджер — и её члены содержат каталог
-    var spr = typeRegistry.globalMember("Справочники", FileType.BSL);
+    var spr = globalScopeProvider.globalMember("Справочники", FileType.BSL);
     assertThat(spr).as("Справочники резолвится как член GLOBAL_CONTEXT").isPresent();
 
     var returnType = spr.orElseThrow().returnTypes().refs().stream().findFirst().orElseThrow();

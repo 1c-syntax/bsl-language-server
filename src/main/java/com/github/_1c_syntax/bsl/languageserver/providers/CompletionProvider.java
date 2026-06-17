@@ -200,7 +200,7 @@ public final class CompletionProvider {
       // Группировка ru/en-вариантов одного и того же: глобальное значение — по
       // члену GLOBAL_CONTEXT (один член под обоими написаниями), имя типа — по
       // интернированному TypeRef; иначе не группируем (issue #3994).
-      Object key = typeRegistry.globalMember(name, fileType)
+      Object key = globalScopeProvider.globalMember(name, fileType)
         .map(member -> (Object) member)
         .or(() -> typeRegistry.resolve(name).map(ref -> (Object) ref))
         .orElse(bareKey);
@@ -367,8 +367,7 @@ public final class CompletionProvider {
   public CompletionItem resolveCompletionItem(CompletionItem unresolved, CompletionData data) {
     var functionName = data.getFunctionName();
     if (functionName != null) {
-      typeRegistry.globalMember(functionName, data.getFileType())
-        .filter(function -> function.kind() == MemberKind.METHOD)
+      globalScopeProvider.globalFunction(functionName, data.getFileType())
         .ifPresent(function -> applyDocumentation(unresolved, function, data.getScriptVariant()));
     } else {
       resolveMemberDocumentation(unresolved, data);

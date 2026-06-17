@@ -62,7 +62,7 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
 
     // sanity: коллекция Справочники — свойство-член GLOBAL_CONTEXT, её тип-значение
     // (менеджер-обёртка) несёт метод МетодМенеджера (issue #3994).
-    var collection = typeRegistry.globalMember("Справочники", FileType.BSL).orElseThrow()
+    var collection = globalScopeProvider.globalMember("Справочники", FileType.BSL).orElseThrow()
       .returnTypes().refs().stream().findFirst().orElseThrow();
     var catalogsMembers = typeRegistry.getMembers(collection, FileType.BSL);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");

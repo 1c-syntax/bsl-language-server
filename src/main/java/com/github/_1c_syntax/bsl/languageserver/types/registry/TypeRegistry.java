@@ -64,7 +64,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -399,50 +398,18 @@ public class TypeRegistry {
     return ref != null && enumTypes.contains(ref);
   }
 
-  private record GlobalIndex(long epoch, Map<FileType, Map<String, MemberDescriptor>> byName) {
-  }
-
-  private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
-
   /**
-   * Резолв безпрефиксного имени в член синтетического {@link #GLOBAL_CONTEXT}
-   * (глобальная функция-метод либо глобальное свойство — перечисление, менеджер
-   * коллекции, общий/library-модуль). Быстрый lookup по name-индексу,
-   * пересобираемому при смене {@link #membersEpoch}. Issue #3994: единая точка
-   * резолва глобальной области через тип-модель вместо GlobalScopeProvider.
+   * Версия данных о членах типов: монотонный счётчик, инкрементируемый при любой
+   * мутации member-источников/оверрайдов и при изменении документов. Потребители
+   * (например, {@link GlobalScopeProvider} для name-индекса глобальной области)
+   * используют его как ключ инвалидации своих кэшей. Резолв глобальной области сам
+   * по себе — не дело {@code TypeRegistry} (хранилища типов); это абстракция
+   * {@code GlobalScopeProvider} (issue #3994).
    *
-   * @param name     имя (регистронезависимо, ru/en).
-   * @param fileType язык файла-потребителя.
-   * @return член глобального контекста или {@link Optional#empty()}.
+   * @return текущая эпоха членов.
    */
-  public Optional<MemberDescriptor> globalMember(@Nullable String name, FileType fileType) {
-    if (name == null || name.isBlank()) {
-      return Optional.empty();
-    }
-    var epoch = membersEpoch.get();
-    var index = globalIndexRef.get();
-    if (index == null || index.epoch() != epoch) {
-      index = new GlobalIndex(epoch, Map.of(
-        FileType.BSL, globalNameIndex(FileType.BSL),
-        FileType.OS, globalNameIndex(FileType.OS)));
-      globalIndexRef.set(index);
-    }
-    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
-  }
-
-  private Map<String, MemberDescriptor> globalNameIndex(FileType fileType) {
-    var map = new HashMap<String, MemberDescriptor>();
-    for (var member : getMembers(GLOBAL_CONTEXT, fileType)) {
-      var ru = member.bilingualName().ru();
-      var en = member.bilingualName().en();
-      if (!ru.isBlank()) {
-        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), member);
-      }
-      if (!en.isBlank()) {
-        map.putIfAbsent(en.toLowerCase(Locale.ROOT), member);
-      }
-    }
-    return map;
+  public long membersEpoch() {
+    return membersEpoch.get();
   }
 
   /**

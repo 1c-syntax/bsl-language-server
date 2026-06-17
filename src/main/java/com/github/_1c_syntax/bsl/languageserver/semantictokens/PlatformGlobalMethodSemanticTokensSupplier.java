@@ -22,8 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -55,7 +54,7 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
   private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS =
     {SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async};
 
-  private final TypeRegistry typeRegistry;
+  private final GlobalScopeProvider globalScopeProvider;
   private final SemanticTokensHelper helper;
 
   @Override
@@ -82,8 +81,7 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       if (symbolTree != null && symbolTree.getMethodSymbol(name).isPresent()) {
         continue;
       }
-      typeRegistry.globalMember(name, fileType)
-        .filter(function -> function.kind() == MemberKind.METHOD)
+      globalScopeProvider.globalFunction(name, fileType)
         .ifPresent(function ->
           helper.addRange(
             entries,

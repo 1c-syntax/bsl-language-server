@@ -69,12 +69,19 @@ class GlobalScopeProviderBslContextTest {
     };
   }
 
+  // GlobalScopeProvider читает TypeRegistry только для globalMember-резолва;
+  // этим тестам (getClasses/getKeywords из bsl-context) реестр не нужен — заглушка.
+  private static GlobalScopeProvider scope(ContextProvider provider) {
+    return new GlobalScopeProvider(holderOf(provider),
+      new TypeRegistry(List.of(), org.mockito.Mockito.mock(MemberMetadataIndex.class)));
+  }
+
   @Test
   void classesForNewLoadedFromPlatformTypes() {
     var array = type("Массив", "Array");
     var table = type("ТаблицаЗначений", "ValueTable");
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(array, table)));
+    var scope = scope(providerOf(array, table));
 
     assertThat(scope.getClasses(FileType.BSL)).contains("Массив", "Array", "ТаблицаЗначений", "ValueTable");
   }
@@ -86,7 +93,7 @@ class GlobalScopeProviderBslContextTest {
       "CatalogRef.<Catalog name>");
     var plain = type("Массив", "Array");
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(generic, plain)));
+    var scope = scope(providerOf(generic, plain));
 
     assertThat(scope.getClasses(FileType.BSL)).contains("Массив", "Array");
     assertThat(scope.getClasses(FileType.BSL)).doesNotContain("СправочникСсылка.<Имя справочника>");
@@ -105,8 +112,8 @@ class GlobalScopeProviderBslContextTest {
     var annotation = keyword("Перед", "Before", LanguageKeywordCategory.ANNOTATION, "", "");
     var pre = keyword("Область", "Region", LanguageKeywordCategory.PREPROCESSOR_INSTRUCTION, "", "");
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(
-      ifKw, trueKw, procKw, pragma, annotation, pre)));
+    var scope = scope(providerOf(
+      ifKw, trueKw, procKw, pragma, annotation, pre));
 
     assertThat(scope.getKeywords(FileType.BSL)).contains("Если", "If", "Истина", "True", "Процедура", "Procedure");
     assertThat(scope.getKeywords(FileType.BSL)).doesNotContain("НаКлиенте", "Перед", "Область");
@@ -123,7 +130,7 @@ class GlobalScopeProviderBslContextTest {
       .snippet(LanguageKeywordSnippet.EMPTY)
       .build();
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)));
+    var scope = scope(providerOf(ifKw));
 
     assertThat(scope.findKeywordDescription("Если", Language.DEFAULT_LANGUAGE, null, FileType.BSL))
       .as("description у keyword'а должно проброситься из bsl-context'а")
@@ -137,7 +144,7 @@ class GlobalScopeProviderBslContextTest {
   void keywordSnippetIsBilingualAndAccessibleByEitherName() {
     var ifKw = keyword("Если", "If", LanguageKeywordCategory.STATEMENT,
       "Если <?> Тогда\nКонецЕсли;", "If <?> Then\nEndIf;");
-    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)));
+    var scope = scope(providerOf(ifKw));
 
     var byRu = scope.findKeywordSnippet("Если", FileType.BSL).orElseThrow();
     assertThat(byRu.ru()).isEqualTo("Если <?> Тогда\nКонецЕсли;");

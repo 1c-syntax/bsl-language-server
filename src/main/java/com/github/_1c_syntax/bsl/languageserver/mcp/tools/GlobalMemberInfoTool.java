@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -59,6 +60,7 @@ public class GlobalMemberInfoTool {
 
   private final McpWorkspaceResolver workspaceResolver;
   private final TypeRegistry typeRegistry;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /**
    * Описание глобального члена.
@@ -94,7 +96,7 @@ public class GlobalMemberInfoTool {
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
-      var member = typeRegistry.globalMember(name, fileType);
+      var member = globalScopeProvider.globalMember(name, fileType);
       if (member.isPresent()) {
         var resolved = member.get();
         if (resolved.kind() == MemberKind.METHOD) {

@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -389,16 +388,14 @@ public class TypeService {
     var bareName = terminal.getText();
     var fileType = documentContext.getFileType();
     // Глобальная функция — метод-член GLOBAL_CONTEXT (issue #3994).
-    var globalFn = typeRegistry.globalMember(bareName, fileType)
-      .filter(member -> member.kind() == MemberKind.METHOD);
+    var globalFn = globalScopeProvider.globalFunction(bareName, fileType);
     if (globalFn.isPresent()) {
       return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
     }
 
     // Глобальное свойство (перечисление/менеджер коллекции/модуль) — свойство-член
     // GLOBAL_CONTEXT; имена типов для `Новый` (TYPE_NAME) членами не являются.
-    return typeRegistry.globalMember(bareName, fileType)
-      .filter(member -> member.kind() == MemberKind.PROPERTY)
+    return globalScopeProvider.globalProperty(bareName, fileType)
       .map(member -> member.returnTypes().refs().stream()
         .filter(r -> !r.equals(TypeRef.UNKNOWN)).findFirst().orElse(TypeRef.UNKNOWN))
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN))

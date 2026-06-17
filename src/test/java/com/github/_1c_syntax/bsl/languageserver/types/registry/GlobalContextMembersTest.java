@@ -95,9 +95,10 @@ class GlobalContextMembersTest {
     try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-os")) {
       var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);
       typeRegistry.ensureInitialized();
+      var globalScope = TestApplicationContext.getBean(GlobalScopeProvider.class);
 
       // when/then: глобальная функция резолвится в .os как метод-член контекста
-      var message = typeRegistry.globalMember("Сообщить", FileType.OS);
+      var message = globalScope.globalMember("Сообщить", FileType.OS);
       assertThat(message)
         .as("глобальная функция должна резолвиться в OS-файле")
         .isPresent();
@@ -130,13 +131,14 @@ class GlobalContextMembersTest {
     try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-proj")) {
       var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);
       typeRegistry.ensureInitialized();
+      var globalScope = TestApplicationContext.getBean(GlobalScopeProvider.class);
 
       // when/then: резолв безпрефиксного имени в член GLOBAL_CONTEXT
-      var function = typeRegistry.globalMember("Сообщить", FileType.BSL);
+      var function = globalScope.globalMember("Сообщить", FileType.BSL);
       assertThat(function).as("Сообщить резолвится").isPresent();
       assertThat(function.orElseThrow().kind()).isEqualTo(MemberKind.METHOD);
 
-      var encoding = typeRegistry.globalMember("КодировкаТекста", FileType.BSL);
+      var encoding = globalScope.globalMember("КодировкаТекста", FileType.BSL);
       assertThat(encoding).as("КодировкаТекста резолвится").isPresent();
       assertThat(encoding.orElseThrow().kind()).isEqualTo(MemberKind.PROPERTY);
 

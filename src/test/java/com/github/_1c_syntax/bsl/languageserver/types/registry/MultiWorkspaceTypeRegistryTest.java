@@ -51,6 +51,9 @@ class MultiWorkspaceTypeRegistryTest {
   @Autowired
   private TypeRegistry typeRegistry;
 
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
   @BeforeEach
   void setUp() {
     WorkspaceContextHolder.registerWorkspace(WS_A, "mw-a");
@@ -111,11 +114,11 @@ class MultiWorkspaceTypeRegistryTest {
       () -> List.of(MemberDescriptor.property("ОбщийМодульB", refB)), FileType.BSL);
 
     WorkspaceContextHolder.set(WS_A, "mw-a");
-    assertThat(typeRegistry.globalMember("ОбщийМодульA", FileType.BSL)).isPresent();
-    assertThat(typeRegistry.globalMember("ОбщийМодульB", FileType.BSL)).isEmpty();
+    assertThat(globalScopeProvider.globalMember("ОбщийМодульA", FileType.BSL)).isPresent();
+    assertThat(globalScopeProvider.globalMember("ОбщийМодульB", FileType.BSL)).isEmpty();
 
     WorkspaceContextHolder.set(WS_B, "mw-b");
-    assertThat(typeRegistry.globalMember("ОбщийМодульB", FileType.BSL)).isPresent();
-    assertThat(typeRegistry.globalMember("ОбщийМодульA", FileType.BSL)).isEmpty();
+    assertThat(globalScopeProvider.globalMember("ОбщийМодульB", FileType.BSL)).isPresent();
+    assertThat(globalScopeProvider.globalMember("ОбщийМодульA", FileType.BSL)).isEmpty();
   }
 }

@@ -151,9 +151,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   @Test
   void registersCollectionNamespacesWithMetadataMembers() {
 
-    var nsRu = typeRegistry.globalMember("Справочники", FileType.BSL)
+    var nsRu = globalScopeProvider.globalMember("Справочники", FileType.BSL)
       .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow());
-    var nsEn = typeRegistry.globalMember("Catalogs", FileType.BSL)
+    var nsEn = globalScopeProvider.globalMember("Catalogs", FileType.BSL)
       .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow());
 
     assertThat(nsRu).isPresent();

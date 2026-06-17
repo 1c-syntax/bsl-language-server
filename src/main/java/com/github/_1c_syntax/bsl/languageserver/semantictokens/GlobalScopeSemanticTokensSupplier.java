@@ -115,8 +115,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     // Глобальное VALUE-имя — свойство-член синтетического GLOBAL_CONTEXT
     // (issue #3994). Глобальные функции (METHOD) и имена типов для `Новый`
     // здесь не наш домен — их красят другие сапплаеры.
-    var member = typeRegistry.globalMember(name, fileType)
-      .filter(m -> m.kind() == MemberKind.PROPERTY);
+    var member = globalScopeProvider.globalProperty(name, fileType);
     if (member.isEmpty()) {
       return;
     }
