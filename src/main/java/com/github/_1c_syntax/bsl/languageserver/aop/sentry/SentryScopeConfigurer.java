@@ -105,7 +105,10 @@ public class SentryScopeConfigurer {
   }
 
   private String getEnvironment() {
-    return resolveEnvironment(serverInfo.getVersion());
+    var version = serverInfo.getVersion();
+    // Версия может быть null при запуске без манифеста (из IDE/исходников);
+    // resolveEnvironment ожидает не-null, поэтому неизвестную версию трактуем как feature.
+    return version == null ? "feature" : resolveEnvironment(version);
   }
 
   /**
