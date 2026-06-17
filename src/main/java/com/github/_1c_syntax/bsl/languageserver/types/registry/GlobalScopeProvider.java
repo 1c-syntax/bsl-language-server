@@ -1049,6 +1049,70 @@ public class GlobalScopeProvider {
     return KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
   }
 
+  /**
+   * Глобальные члены для синтетического {@code GLOBAL_CONTEXT} (issue #3994) из
+   * встроенного JSON-fallback: {@code functions} → методы-члены, {@code variables}
+   * → свойства-члены. Двуязычное имя члена собирается из {@code name} + первого
+   * {@code alias}, чтобы резолв работал по обоим написаниям. Временный мост на
+   * время cutover'а — при схлопывании GlobalScopeProvider парсинг переедет в
+   * выделенный loader, читаемый composer'ом напрямую.
+   */
+  @SuppressWarnings("unchecked")
+  static List<MemberDescriptor> globalContextMembers(String resourcePath) {
+    var mapper = JsonMapper.builder().build();
+    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+      Map<String, Object> root = mapper.readValue(stream, Map.class);
+      var members = new ArrayList<MemberDescriptor>();
+      for (var entry : (List<Map<String, Object>>) root.getOrDefault("functions", Collections.emptyList())) {
+        var name = (String) entry.get("name");
+        if (name == null) {
+          continue;
+        }
+        var description = (String) entry.getOrDefault("description", "");
+        var returnTypeName = (String) entry.get("returnType");
+        var returnType = returnTypeName == null
+          ? TypeRef.UNKNOWN
+          : new TypeRef(TypeKind.PLATFORM, returnTypeName);
+        var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"), returnType);
+        var member = MemberDescriptor.method(name, description, signatures).withStandardLibrary(true);
+        member = withFirstAliasName(member, entry);
+        if (Boolean.TRUE.equals(entry.get("async"))) {
+          member = member.withAsync(true);
+        }
+        var metadata = readGlobalMetadata(entry);
+        if (!metadata.isEmpty()) {
+          member = member.withMetadata(metadata);
+        }
+        members.add(member);
+      }
+      for (var entry : (List<Map<String, Object>>) root.getOrDefault("variables", Collections.emptyList())) {
+        var name = (String) entry.get("name");
+        if (name == null || name.isBlank()) {
+          continue;
+        }
+        var description = (String) entry.getOrDefault("description", "");
+        var typeName = (String) entry.get("type");
+        var typeRef = typeName == null || typeName.isBlank()
+          ? TypeRef.UNKNOWN
+          : new TypeRef(TypeKind.PLATFORM, typeName);
+        members.add(withFirstAliasName(MemberDescriptor.property(name, typeRef, description), entry));
+      }
+      return members;
+    } catch (IOException e) {
+      LOGGER.error("Failed to load builtin global members: {}", resourcePath, e);
+      return List.of();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static MemberDescriptor withFirstAliasName(MemberDescriptor member, Map<String, Object> entry) {
+    var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+    if (aliases.isEmpty() || aliases.get(0) == null || aliases.get(0).isBlank()) {
+      return member;
+    }
+    return member.withBilingualName(BilingualString.of(member.name(), aliases.get(0)));
+  }
+
   @SuppressWarnings("unchecked")
   private static List<PlatformVariable> readVariables(Map<String, Object> root) {
     var raw = (List<Map<String, Object>>) root.getOrDefault("variables", Collections.emptyList());

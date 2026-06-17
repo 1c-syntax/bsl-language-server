@@ -86,4 +86,22 @@ class GlobalContextMembersTest {
         .anyMatch(ref -> ref.qualifiedName().equals("КодировкаТекста"));
     }
   }
+
+  @Test
+  void globalFunctionBecomesMethodMemberOfGlobalContext() {
+    // given: свежий workspace-scope с прогнанным bootstrap TypeRegistry
+    freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
+    try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-globalfn")) {
+      var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);
+      typeRegistry.ensureInitialized();
+
+      // when: члены синтетического типа ГлобальныйКонтекст
+      var members = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+
+      // then: глобальная функция Сообщить — метод-член контекста
+      assertThat(members)
+        .as("глобальная функция Сообщить должна быть методом-членом ГлобальногоКонтекста")
+        .anyMatch(member -> member.kind() == MemberKind.METHOD && member.matches("Сообщить"));
+    }
+  }
 }

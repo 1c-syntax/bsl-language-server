@@ -59,6 +59,8 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
 
   private static final String PLATFORM_TYPES_RESOURCE =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
+  private static final String GLOBALS_RESOURCE =
+    "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
 
   private static final BilingualString GLOBAL_CONTEXT_NAME =
     BilingualString.of(TypeRegistry.GLOBAL_CONTEXT.qualifiedName(), "GlobalContext");
@@ -145,7 +147,7 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
    * будут добавлены следующим инкрементом.
    */
   private static List<MemberDescriptor> membersFromBuiltin() {
-    var members = new ArrayList<MemberDescriptor>();
+    var members = new ArrayList<MemberDescriptor>(GlobalScopeProvider.globalContextMembers(GLOBALS_RESOURCE));
     for (var decl : BuiltinTypesJsonLoader.load(PLATFORM_TYPES_RESOURCE)) {
       if (decl.exposedAsGlobal() && !decl.qualifiedName().contains("<")) {
         var ref = new TypeRef(decl.kind(), decl.qualifiedName());
