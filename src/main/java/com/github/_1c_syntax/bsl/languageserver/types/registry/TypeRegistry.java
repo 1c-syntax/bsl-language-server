@@ -82,6 +82,15 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class TypeRegistry {
 
+  /**
+   * Синтетический тип «глобальный контекст»: его члены — глобальные методы и
+   * свойства, видимые в global scope без префикса (issue #3994). Системные
+   * перечисления и прочие {@code exposedAsGlobal}-типы регистрируются как
+   * свойства-члены этого типа (с {@code valueType} = сам тип). Имя
+   * зарезервировано и не пересекается с инстанцируемыми типами 1С.
+   */
+  public static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
+
   private final List<PlatformTypesProvider> platformProviders;
   /** Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы. */
   private final GlobalScopeProvider globalScopeProvider;
