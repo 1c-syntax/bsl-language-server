@@ -140,6 +140,16 @@ public class ConfigurationTypesProvider {
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
+  /**
+   * Коллекции-namespace (Справочники/Документы…) как свойства-члены
+   * {@link TypeRegistry#GLOBAL_CONTEXT} (issue #3994): имя коллекции → член.
+   * Единый динамический источник (см. {@link #ensureGlobalContextCollectionsSource()})
+   * пересобирает члены из этой карты; пересоздаётся при каждом проходе
+   * регистрации конфигурации, поэтому переживает перезагрузку без дублей.
+   */
+  private final Map<String, MemberDescriptor> collectionGlobalMembers = new java.util.concurrent.ConcurrentHashMap<>();
+  private final AtomicBoolean globalContextCollectionsRegistered = new AtomicBoolean(false);
+
   @EventListener
   public void handleEvent(ServerContextPopulatedEvent event) {
     tryRegister();
@@ -317,6 +327,7 @@ public class ConfigurationTypesProvider {
    */
   private int registerCollectionNamespaces(Map<MDOType, List<MemberDescriptor>> collectionMembersByType) {
     int collections = 0;
+    collectionGlobalMembers.clear();
     for (var entry : collectionMembersByType.entrySet()) {
       var mdoType = entry.getKey();
       var members = entry.getValue();
@@ -330,13 +341,27 @@ public class ConfigurationTypesProvider {
       typeRegistry.registerMemberSource(ref, () -> members, FileType.BSL);
       typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
 
+      // issue #3994: коллекция-namespace — свойство-член GLOBAL_CONTEXT
+      // (valueType = тип коллекции-менеджера).
+      collectionGlobalMembers.put(collectionRu,
+        MemberDescriptor.property(collectionRu, ref, "")
+          .withBilingualName(BilingualString.of(collectionRu, collectionEn)));
+
       // Платформенные методы коллекции-менеджера (СправочникиМенеджер,
       // ДокументыМенеджер) — уровня всех справочников/документов, например
       // `ТипВсеСсылки()`. Имя фиксированное (без generic-плейсхолдера).
       registerInheritedMembers(ref, collectionRu + "Менеджер");
       collections++;
     }
+    ensureGlobalContextCollectionsSource();
     return collections;
+  }
+
+  private void ensureGlobalContextCollectionsSource() {
+    if (globalContextCollectionsRegistered.compareAndSet(false, true)) {
+      typeRegistry.registerMemberSource(
+        TypeRegistry.GLOBAL_CONTEXT, () -> List.copyOf(collectionGlobalMembers.values()), FileType.BSL);
+    }
   }
 
   /** MDOType'ы, у которых есть «объектная» обёртка (СправочникОбъект.X / ДокументОбъект.X / ...). */

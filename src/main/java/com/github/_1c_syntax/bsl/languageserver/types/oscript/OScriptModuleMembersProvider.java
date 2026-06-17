@@ -52,6 +52,7 @@ import java.util.Set;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Регистрирует USER-типы и источники членов для .os-файлов
@@ -85,6 +86,15 @@ public class OScriptModuleMembersProvider {
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
   private final Map<URI, Set<String>> registeredByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Library-модули OneScript как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
+   * для {@link FileType#OS} (issue #3994): имя модуля → его тип. Единый
+   * динамический источник (см. {@link #ensureGlobalContextOsSource()})
+   * пересобирает члены из этой карты; {@link #unregister(URI)} убирает имена.
+   */
+  private final Map<String, TypeRef> libraryModuleGlobals = new ConcurrentHashMap<>();
+  private final AtomicBoolean globalContextOsSourceRegistered = new AtomicBoolean();
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -142,6 +152,9 @@ public class OScriptModuleMembersProvider {
           // роль CLASS не должна перетирать тип модуля под тем же URI.
           globalScopeProvider.indexModuleType(uri, ref);
           globalScopeProvider.registerLibraryModule(qualifiedName, ref);
+          // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS).
+          libraryModuleGlobals.put(qualifiedName, ref);
+          ensureGlobalContextOsSource();
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
@@ -167,7 +180,27 @@ public class OScriptModuleMembersProvider {
       typeRegistry.unregisterUserType(name);
       globalScopeProvider.unregisterLibraryModule(name);
       globalScopeProvider.unregisterLibraryClass(name);
+      libraryModuleGlobals.remove(name);
     }
+  }
+
+  private void ensureGlobalContextOsSource() {
+    if (globalContextOsSourceRegistered.compareAndSet(false, true)) {
+      typeRegistry.registerMemberSource(
+        TypeRegistry.GLOBAL_CONTEXT, this::libraryModulesAsGlobalMembers, FileType.OS);
+    }
+  }
+
+  /**
+   * Текущие library-модули как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
+   * (OS). Пересобирается на каждый вызов (после инвалидации members-кэша).
+   */
+  private List<MemberDescriptor> libraryModulesAsGlobalMembers() {
+    var members = new ArrayList<MemberDescriptor>(libraryModuleGlobals.size());
+    for (var entry : libraryModuleGlobals.entrySet()) {
+      members.add(MemberDescriptor.property(entry.getKey(), entry.getValue(), ""));
+    }
+    return members;
   }
 
   /**
