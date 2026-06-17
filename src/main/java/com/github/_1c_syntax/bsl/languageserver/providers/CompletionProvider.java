@@ -186,30 +186,26 @@ public final class CompletionProvider {
   }
 
   /**
-   * Фильтр для plain-имён ({@code List<String>}) — классы, ключевые слова,
-   * глобальные свойства и т.п. Алиас-пары определяются по тому, что разные
-   * имена резолвятся к одному global symbol.
+   * Дедуп ru/en-написаний <b>имён типов</b> — классов для {@code Новый} и
+   * составных имён MD-объектов конфигурации ({@code Справочники.Контрагенты}).
+   * Разные написания одного типа резолвятся в один интернированный
+   * {@link TypeRef} → группируются, из группы остаётся написание под настроенный
+   * {@link Language}. Имя без резолва (не тип) проходит как есть, не группируясь
+   * (issue #3994).
    */
-  private List<String> filterNamesByLanguage(Collection<String> names, FileType fileType, Language language) {
+  private List<String> filterTypeNamesByLanguage(Collection<String> names, Language language) {
     if (names.isEmpty()) {
       return List.of();
     }
-    var byTarget = new LinkedHashMap<Object, List<String>>();
-    var bareKey = new Object();
+    var byType = new LinkedHashMap<Object, List<String>>();
     for (var name : names) {
-      // Группировка ru/en-вариантов одного и того же: глобальное значение — по
-      // члену GLOBAL_CONTEXT (один член под обоими написаниями), имя типа — по
-      // интернированному TypeRef; иначе не группируем (issue #3994).
-      Object key = globalScopeProvider.globalMember(name, fileType)
-        .map(member -> (Object) member)
-        .or(() -> typeRegistry.resolve(name).map(ref -> (Object) ref))
-        .orElse(bareKey);
-      byTarget.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
+      // ru/en одного типа → один TypeRef; не-тип → уникальный ключ (своя группа).
+      Object key = typeRegistry.resolve(name).<Object>map(ref -> ref).orElseGet(Object::new);
+      byType.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
     }
     var result = new ArrayList<String>(names.size());
-    for (var entry : byTarget.entrySet()) {
-      var group = entry.getValue();
-      if (entry.getKey() == bareKey || group.size() == 1) {
+    for (var group : byType.values()) {
+      if (group.size() == 1) {
         result.addAll(group);
         continue;
       }
@@ -550,7 +546,7 @@ public final class CompletionProvider {
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
-      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
+      for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(fileType), scriptVariant)) {
         if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
           continue;
         }
@@ -579,7 +575,7 @@ public final class CompletionProvider {
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
-      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType, scriptVariant)) {
+      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), scriptVariant)) {
         if (isGenericTemplateName(qualified)) {
           continue;
         }
@@ -667,8 +663,9 @@ public final class CompletionProvider {
       }
     }
 
-    // Keywords
-    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType, scriptVariant)) {
+    // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
+    // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
+    for (var keyword : globalScopeProvider.getKeywords(fileType)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
