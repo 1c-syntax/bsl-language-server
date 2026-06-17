@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781650582064,
+  "lastUpdate": 1781689682056,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37789,6 +37789,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.665690978032627",
             "extra": "mean: 287.7536877791087 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06a9a64b75b921f6e713dfee56de2668ed52d2dc",
+          "message": "Merge pull request #4139 from 1c-syntax/fix/diagnostic-refresh-clears-cache\n\nfix(diagnostics): сбрасывать Lazy-кэш диагностик до workspace/diagnostic/refresh",
+          "timestamp": "2026-06-17T08:52:59+02:00",
+          "tree_id": "3bb707d8b408bdfbef9d2e687aa49755830c4f4b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/06a9a64b75b921f6e713dfee56de2668ed52d2dc"
+        },
+        "date": 1781689665877,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 296.8388936519623,
+            "unit": "sec",
+            "range": "stddev: 10.242844971676693",
+            "extra": "mean: 296.8388936519623 sec\nrounds: 3"
           }
         ]
       }
