@@ -55,9 +55,6 @@ public class CollectionHoverHints {
    * Если тип поддерживает обход, но описание пустое — пишем общий текст-fallback.
    */
   public void append(StringBuilder sb, TypeRef ref, FileType fileType, TypeService typeService) {
-    if (sb == null || ref == null || typeService == null) {
-      return;
-    }
     var supportsForEach = typeService.supportsForEach(ref, fileType);
     var supportsIndex = typeService.supportsIndexAccess(ref, fileType);
     if (!supportsForEach && !supportsIndex) {

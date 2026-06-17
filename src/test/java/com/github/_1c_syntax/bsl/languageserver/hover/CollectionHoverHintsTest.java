@@ -166,18 +166,4 @@ class CollectionHoverHintsTest {
       .contains("[forEachLabel]").contains("forEach-text")
       .contains("[indexAccessLabel]").contains("index-text");
   }
-
-  @Test
-  void appendIsNoOpForNullArgs() {
-    // given
-    var sb = new StringBuilder("X");
-
-    // when
-    hints.append(null, ARRAY, FT, typeService);
-    hints.append(sb, null, FT, typeService);
-    hints.append(sb, ARRAY, FT, null);
-
-    // then
-    assertThat(sb.toString()).isEqualTo("X");
-  }
 }
