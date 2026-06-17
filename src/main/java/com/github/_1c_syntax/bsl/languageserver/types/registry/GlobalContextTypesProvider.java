@@ -94,7 +94,7 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
     return List.of(globalContextDecl(members));
   }
 
-  private static TypeDecl globalContextDecl(List<MemberDescriptor> members) {
+  static TypeDecl globalContextDecl(List<MemberDescriptor> members) {
     return new TypeDecl(
       TypeRegistry.GLOBAL_CONTEXT.kind(),
       GLOBAL_CONTEXT_NAME,

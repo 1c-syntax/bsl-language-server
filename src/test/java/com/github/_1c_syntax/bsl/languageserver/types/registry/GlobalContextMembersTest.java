@@ -88,6 +88,24 @@ class GlobalContextMembersTest {
   }
 
   @Test
+  void oscriptGlobalFunctionResolvesForOsFileType() {
+    // given: свежий workspace-scope (issue #3994 — GLOBAL_CONTEXT для OS наполняет
+    // отдельный OneScript-composer из builtin-oscript-globals.json).
+    freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
+    try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-os")) {
+      var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);
+      typeRegistry.ensureInitialized();
+
+      // when/then: глобальная функция резолвится в .os как метод-член контекста
+      var message = typeRegistry.globalMember("Сообщить", FileType.OS);
+      assertThat(message)
+        .as("глобальная функция должна резолвиться в OS-файле")
+        .isPresent();
+      assertThat(message.orElseThrow().kind()).isEqualTo(MemberKind.METHOD);
+    }
+  }
+
+  @Test
   void globalFunctionBecomesMethodMemberOfGlobalContext() {
     // given: свежий workspace-scope с прогнанным bootstrap TypeRegistry
     freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
