@@ -172,14 +172,14 @@ public class TypeRegistry {
    * без аннотаций пользователя.
    */
   private final Map<TypeRef, List<TypeRef>> defaultElementTypes = new ConcurrentHashMap<>();
-  /** Тип ↔ {@code supportsForEach} ({@code true} — обход {@code Для Каждого} разрешён). */
-  private final Map<TypeRef, Boolean> supportsForEach = new ConcurrentHashMap<>();
-  /** Тип ↔ {@code supportsIndexAccess} ({@code true} — индексатор {@code [...]} разрешён). */
-  private final Map<TypeRef, Boolean> supportsIndexAccess = new ConcurrentHashMap<>();
-  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника. */
-  private final Map<TypeRef, BilingualString> forEachDescriptions = new ConcurrentHashMap<>();
-  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника. */
-  private final Map<TypeRef, BilingualString> indexAccessDescriptions = new ConcurrentHashMap<>();
+  /** Тип ↔ {@code supportsForEach} в разрезе языка ({@code true} — обход {@code Для Каждого} разрешён). */
+  private final Map<FileType, Map<TypeRef, Boolean>> supportsForEach = perFileType();
+  /** Тип ↔ {@code supportsIndexAccess} в разрезе языка ({@code true} — индексатор {@code [...]} разрешён). */
+  private final Map<FileType, Map<TypeRef, Boolean>> supportsIndexAccess = perFileType();
+  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника, в разрезе языка. */
+  private final Map<FileType, Map<TypeRef, BilingualString>> forEachDescriptions = perFileType();
+  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника, в разрезе языка. */
+  private final Map<FileType, Map<TypeRef, BilingualString>> indexAccessDescriptions = perFileType();
   /**
    * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
    * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.
@@ -391,19 +391,22 @@ public class TypeRegistry {
     return members;
   }
 
-  /** Типы-перечисления (источник пометил {@code isEnum}). */
-  private final Set<TypeRef> enumTypes = ConcurrentHashMap.newKeySet();
+  /** Типы-перечисления (источник пометил {@code isEnum}), в разрезе языка. */
+  private final Map<FileType, Set<TypeRef>> enumTypes = Map.of(
+    FileType.BSL, ConcurrentHashMap.newKeySet(),
+    FileType.OS, ConcurrentHashMap.newKeySet());
 
   /**
-   * Является ли тип системным/платформенным перечислением. Read-проекция для
-   * потребителей (например, раскраска {@code GLOBAL_CONTEXT}-свойства как
-   * {@code Enum} vs {@code Class}).
+   * Является ли тип системным/платформенным перечислением в данном языке файла.
+   * Read-проекция для потребителей (например, раскраска
+   * {@code GLOBAL_CONTEXT}-свойства как {@code Enum} vs {@code Class}).
    *
-   * @param ref проверяемый тип.
-   * @return {@code true}, если тип помечен источником как перечисление.
+   * @param ref      проверяемый тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
+   * @return {@code true}, если тип помечен источником этого языка как перечисление.
    */
-  public boolean isEnumType(@Nullable TypeRef ref) {
-    return ref != null && enumTypes.contains(ref);
+  public boolean isEnumType(@Nullable TypeRef ref, FileType fileType) {
+    return ref != null && enumTypes.get(fileType).contains(ref);
   }
 
   /**
@@ -1063,12 +1066,12 @@ public class TypeRegistry {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
     if (decl.isEnum()) {
-      enumTypes.add(ref);
+      enumTypes.get(fileType).add(ref);
     }
     registerPackAliases(decl, ref);
     registerPackDescriptions(decl, ref, fileType);
     registerPackCallables(decl, ref, fileType);
-    registerPackCollectionTraits(decl, ref);
+    registerPackCollectionTraits(decl, ref, fileType);
     if (!decl.name().isEmpty()) {
       displayNames.putIfAbsent(ref, decl.name());
     }
@@ -1121,21 +1124,21 @@ public class TypeRegistry {
   }
 
   /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */
-  private void registerPackCollectionTraits(TypePackProvider.TypeDecl decl, TypeRef ref) {
+  private void registerPackCollectionTraits(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
     if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
     }
     if (decl.supportsForEach()) {
-      supportsForEach.put(ref, Boolean.TRUE);
+      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
     }
     if (decl.supportsIndexAccess()) {
-      supportsIndexAccess.put(ref, Boolean.TRUE);
+      supportsIndexAccess.get(fileType).put(ref, Boolean.TRUE);
     }
     if (!decl.forEachDescription().isEmpty()) {
-      forEachDescriptions.put(ref, decl.forEachDescription());
+      forEachDescriptions.get(fileType).put(ref, decl.forEachDescription());
     }
     if (!decl.indexAccessDescription().isEmpty()) {
-      indexAccessDescriptions.put(ref, decl.indexAccessDescription());
+      indexAccessDescriptions.get(fileType).put(ref, decl.indexAccessDescription());
     }
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
@@ -1183,40 +1186,42 @@ public class TypeRegistry {
     return TypeSet.of(canonical);
   }
 
-  /** {@code true}, если у типа разрешён обход {@code Для Каждого}. */
-  public boolean supportsForEach(TypeRef ref) {
-    return Boolean.TRUE.equals(supportsForEach.get(ref));
+  /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
+  public boolean supportsForEach(TypeRef ref, FileType fileType) {
+    return Boolean.TRUE.equals(supportsForEach.get(fileType).get(ref));
   }
 
-  /** {@code true}, если у типа разрешён индексатор {@code [...]}. */
-  public boolean supportsIndexAccess(TypeRef ref) {
-    return Boolean.TRUE.equals(supportsIndexAccess.get(ref));
+  /** {@code true}, если у типа разрешён индексатор {@code [...]} в данном языке файла. */
+  public boolean supportsIndexAccess(TypeRef ref, FileType fileType) {
+    return Boolean.TRUE.equals(supportsIndexAccess.get(fileType).get(ref));
   }
 
   /**
    * Текстовое описание обхода {@code Для Каждого} для типа-коллекции
-   * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
+   * (из синтакс-помощника платформы) в данном языке файла. Пустая строка,
+   * если описание не задано.
    */
-  public String getForEachDescription(TypeRef ref) {
-    return getForEachDescription(ref, Language.DEFAULT_LANGUAGE);
+  public String getForEachDescription(TypeRef ref, FileType fileType) {
+    return getForEachDescription(ref, fileType, Language.DEFAULT_LANGUAGE);
   }
 
-  /** Описание обхода в указанной локали (с fallback на другую). */
-  public String getForEachDescription(TypeRef ref, Language language) {
-    return forEachDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+  /** Описание обхода в указанной локали (с fallback на другую) в данном языке файла. */
+  public String getForEachDescription(TypeRef ref, FileType fileType, Language language) {
+    return forEachDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
   /**
    * Текстовое описание индексатора {@code [...]} для типа-коллекции
-   * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
+   * (из синтакс-помощника платформы) в данном языке файла. Пустая строка,
+   * если описание не задано.
    */
-  public String getIndexAccessDescription(TypeRef ref) {
-    return getIndexAccessDescription(ref, Language.DEFAULT_LANGUAGE);
+  public String getIndexAccessDescription(TypeRef ref, FileType fileType) {
+    return getIndexAccessDescription(ref, fileType, Language.DEFAULT_LANGUAGE);
   }
 
-  /** Описание индексатора в указанной локали. */
-  public String getIndexAccessDescription(TypeRef ref, Language language) {
-    return indexAccessDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+  /** Описание индексатора в указанной локали в данном языке файла. */
+  public String getIndexAccessDescription(TypeRef ref, FileType fileType, Language language) {
+    return indexAccessDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
   /**

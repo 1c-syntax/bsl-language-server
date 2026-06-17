@@ -677,7 +677,7 @@ public final class CompletionProvider {
    */
   private CompletionItemKind completionKindForGlobalProperty(MemberDescriptor member, FileType fileType) {
     var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-    if (typeService.isEnumType(valueType)) {
+    if (typeService.isEnumType(valueType, fileType)) {
       return CompletionItemKind.Enum;
     }
     if (fileType == FileType.OS && globalScopeProvider.moduleUriByType(valueType).isPresent()) {

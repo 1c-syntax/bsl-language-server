@@ -142,7 +142,7 @@ class GlobalContextMembersTest {
 
       // then: тип-значение свойства классифицируется как перечисление
       var valueType = encoding.orElseThrow().returnTypes().refs().stream().findFirst().orElseThrow();
-      assertThat(typeRegistry.isEnumType(valueType))
+      assertThat(typeRegistry.isEnumType(valueType, FileType.BSL))
         .as("тип-значение КодировкаТекста — перечисление")
         .isTrue();
 

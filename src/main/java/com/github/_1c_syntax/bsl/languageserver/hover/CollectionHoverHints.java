@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -53,24 +54,24 @@ public class CollectionHoverHints {
    * </pre>
    * Если тип поддерживает обход, но описание пустое — пишем общий текст-fallback.
    */
-  public void append(StringBuilder sb, TypeRef ref, TypeService typeService) {
+  public void append(StringBuilder sb, TypeRef ref, FileType fileType, TypeService typeService) {
     if (sb == null || ref == null || typeService == null) {
       return;
     }
-    var supportsForEach = typeService.supportsForEach(ref);
-    var supportsIndex = typeService.supportsIndexAccess(ref);
+    var supportsForEach = typeService.supportsForEach(ref, fileType);
+    var supportsIndex = typeService.supportsIndexAccess(ref, fileType);
     if (!supportsForEach && !supportsIndex) {
       return;
     }
     var lang = configuration.getLanguage();
     if (supportsForEach) {
       sb.append("\n\n**").append(tr("forEachLabel")).append("** ");
-      var description = typeService.getForEachDescription(ref, lang);
+      var description = typeService.getForEachDescription(ref, fileType, lang);
       sb.append(description.isBlank() ? tr("forEachFallback") : description);
     }
     if (supportsIndex) {
       sb.append("\n\n**").append(tr("indexAccessLabel")).append("** ");
-      var description = typeService.getIndexAccessDescription(ref, lang);
+      var description = typeService.getIndexAccessDescription(ref, fileType, lang);
       sb.append(description.isBlank() ? tr("indexAccessFallback") : description);
     }
   }

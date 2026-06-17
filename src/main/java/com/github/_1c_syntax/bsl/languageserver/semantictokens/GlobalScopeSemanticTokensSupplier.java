@@ -131,7 +131,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     // 4-сторонняя классификация выводится из типа-значения (а не из отдельного
     // флага): перечисление → Enum; модульный тип (общий/library-модуль, есть в
     // URI-индексе) → Namespace; иначе платформенное свойство/коллекция → Class.
-    if (typeRegistry.isEnumType(valueType)) {
+    if (typeRegistry.isEnumType(valueType, fileType)) {
       helper.addRange(entries, Ranges.create(identifier),
         SemanticTokenTypes.Enum, SemanticTokenModifiers.DefaultLibrary);
     } else if (globalScopeProvider.moduleUriByType(valueType).isPresent()) {

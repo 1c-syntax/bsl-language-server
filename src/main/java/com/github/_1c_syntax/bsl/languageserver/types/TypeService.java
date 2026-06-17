@@ -322,13 +322,15 @@ public class TypeService {
   }
 
   /**
-   * Является ли тип перечислением (системным либо конфигурационным enum'ом).
+   * Является ли тип перечислением (системным либо конфигурационным enum'ом)
+   * в данном языке файла.
    *
    * @param typeRef тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
    * @return {@code true}, если тип — перечисление.
    */
-  public boolean isEnumType(TypeRef typeRef) {
-    return typeRegistry.isEnumType(typeRef);
+  public boolean isEnumType(TypeRef typeRef, FileType fileType) {
+    return typeRegistry.isEnumType(typeRef, fileType);
   }
 
   /**
@@ -354,45 +356,51 @@ public class TypeService {
   }
 
   /**
-   * Поддерживает ли тип обход {@code Для Каждого}.
+   * Поддерживает ли тип обход {@code Для Каждого} в данном языке файла.
    *
    * @param typeRef тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
    * @return {@code true}, если тип итерируем.
    */
-  public boolean supportsForEach(TypeRef typeRef) {
-    return typeRegistry.supportsForEach(typeRef);
+  public boolean supportsForEach(TypeRef typeRef, FileType fileType) {
+    return typeRegistry.supportsForEach(typeRef, fileType);
   }
 
   /**
-   * Поддерживает ли тип индексный доступ {@code [...]}.
+   * Поддерживает ли тип индексный доступ {@code [...]} в данном языке файла.
    *
    * @param typeRef тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
    * @return {@code true}, если тип индексируем.
    */
-  public boolean supportsIndexAccess(TypeRef typeRef) {
-    return typeRegistry.supportsIndexAccess(typeRef);
+  public boolean supportsIndexAccess(TypeRef typeRef, FileType fileType) {
+    return typeRegistry.supportsIndexAccess(typeRef, fileType);
   }
 
   /**
-   * Описание обхода {@code Для Каждого} для типа в указанной локали LS.
+   * Описание обхода {@code Для Каждого} для типа в указанной локали LS,
+   * в данном языке файла.
    *
    * @param typeRef тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
    * @param language локаль интерфейса LS.
    * @return описание; пустая строка, если его нет.
    */
-  public String getForEachDescription(TypeRef typeRef, Language language) {
-    return typeRegistry.getForEachDescription(typeRef, language);
+  public String getForEachDescription(TypeRef typeRef, FileType fileType, Language language) {
+    return typeRegistry.getForEachDescription(typeRef, fileType, language);
   }
 
   /**
-   * Описание индексного доступа {@code [...]} для типа в указанной локали LS.
+   * Описание индексного доступа {@code [...]} для типа в указанной локали LS,
+   * в данном языке файла.
    *
    * @param typeRef тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
    * @param language локаль интерфейса LS.
    * @return описание; пустая строка, если его нет.
    */
-  public String getIndexAccessDescription(TypeRef typeRef, Language language) {
-    return typeRegistry.getIndexAccessDescription(typeRef, language);
+  public String getIndexAccessDescription(TypeRef typeRef, FileType fileType, Language language) {
+    return typeRegistry.getIndexAccessDescription(typeRef, fileType, language);
   }
 
   /**
