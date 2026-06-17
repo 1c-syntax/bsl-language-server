@@ -39,8 +39,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
@@ -115,6 +115,7 @@ public final class CompletionProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
+  private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -196,8 +197,13 @@ public final class CompletionProvider {
     var byTarget = new LinkedHashMap<Object, List<String>>();
     var bareKey = new Object();
     for (var name : names) {
-      var symbol = globalScopeProvider.findGlobal(name, fileType);
-      Object key = symbol.isPresent() ? symbol.get() : bareKey;
+      // Группировка ru/en-вариантов одного и того же: глобальное значение — по
+      // члену GLOBAL_CONTEXT (один член под обоими написаниями), имя типа — по
+      // интернированному TypeRef; иначе не группируем (issue #3994).
+      Object key = typeRegistry.globalMember(name, fileType)
+        .map(member -> (Object) member)
+        .or(() -> typeRegistry.resolve(name).map(ref -> (Object) ref))
+        .orElse(bareKey);
       byTarget.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
     }
     var result = new ArrayList<String>(names.size());
@@ -361,7 +367,8 @@ public final class CompletionProvider {
   public CompletionItem resolveCompletionItem(CompletionItem unresolved, CompletionData data) {
     var functionName = data.getFunctionName();
     if (functionName != null) {
-      globalScopeProvider.findFunction(functionName, data.getFileType())
+      typeRegistry.globalMember(functionName, data.getFileType())
+        .filter(function -> function.kind() == MemberKind.METHOD)
         .ifPresent(function -> applyDocumentation(unresolved, function, data.getScriptVariant()));
     } else {
       resolveMemberDocumentation(unresolved, data);
@@ -587,12 +594,16 @@ public final class CompletionProvider {
       }
     }
 
-    // Global contexts — все VALUE-имена в global scope (property, enum, library-module).
-    // CompletionItemKind выбирается по фактическому SyntheticKind. К library-сущностям
+    // Global contexts — все VALUE-имена глобальной области: свойства-члены
+    // GLOBAL_CONTEXT (платформенные свойства, перечисления, коллекции, модули).
+    // CompletionItemKind выводится из типа-значения. К library-сущностям
     // применяется library-gating (#Использовать / свой пакет / implicit) через
     // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
-    for (var ctx : globalScopeProvider.getGlobalContexts(fileType)) {
-      var name = ctx.getName();
+    for (var ctx : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+      if (ctx.kind() != MemberKind.PROPERTY) {
+        continue;
+      }
+      var name = ctx.name();
       if (!matches(name, prefix)) {
         continue;
       }
@@ -603,7 +614,7 @@ public final class CompletionProvider {
         continue;
       }
       var item = new CompletionItem(name);
-      item.setKind(completionKindForSynthetic(ctx.getSyntheticKind()));
+      item.setKind(completionKindForGlobalProperty(ctx, fileType));
       applySortText(item, BUCKET_GLOBAL, false);
       applyCommitCharacters(item);
       items.add(item);
@@ -614,7 +625,10 @@ public final class CompletionProvider {
     // primary-имени через seenFn.
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new HashSet<String>();
-    for (var fn : globalScopeProvider.getFunctions(fileType)) {
+    for (var fn : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+      if (fn.kind() != MemberKind.METHOD) {
+        continue;
+      }
       if (!seenFn.add(fn.name())) {
         continue;
       }
@@ -668,15 +682,20 @@ public final class CompletionProvider {
   }
 
   /**
-   * Подобрать {@link CompletionItemKind} для имени из global scope по его
-   * {@link SyntheticKind}.
+   * Иконка completion для свойства-члена GLOBAL_CONTEXT (issue #3994),
+   * выведенная из типа-значения: перечисление → {@code Enum}; library-модуль
+   * OneScript (модульный тип в OS-файле) → {@code Module}; иначе (платформенное
+   * свойство, коллекция, общий модуль) → {@code Variable}.
    */
-  private static CompletionItemKind completionKindForSynthetic(SyntheticKind kind) {
-    return switch (kind) {
-      case PLATFORM_GLOBAL_ENUM -> CompletionItemKind.Enum;
-      case LIBRARY_MODULE -> CompletionItemKind.Module;
-      default -> CompletionItemKind.Variable;
-    };
+  private CompletionItemKind completionKindForGlobalProperty(MemberDescriptor member, FileType fileType) {
+    var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    if (typeRegistry.isEnumType(valueType)) {
+      return CompletionItemKind.Enum;
+    }
+    if (fileType == FileType.OS && globalScopeProvider.moduleUriByType(valueType).isPresent()) {
+      return CompletionItemKind.Module;
+    }
+    return CompletionItemKind.Variable;
   }
 
   private static boolean matches(String name, String lowerPrefix) {
