@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
@@ -222,6 +223,11 @@ public class TypeRegistry {
         registerPack(decl, fileType);
       }
     }
+    // Единый источник членов GLOBAL_CONTEXT из типов-глобал-свойств (коллекции,
+    // общие/library-модули). Override — чтобы конфигурационные коллекции
+    // перекрывали одноимённые платформенные свойства bsl-context (issue #3994).
+    registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.BSL), FileType.BSL);
+    registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.OS), FileType.OS);
   }
 
   /**
@@ -396,6 +402,97 @@ public class TypeRegistry {
    */
   public boolean isEnumType(@Nullable TypeRef ref) {
     return ref != null && enumTypes.contains(ref);
+  }
+
+  /**
+   * Типы, видимые как свойства-члены {@link #GLOBAL_CONTEXT} (коллекции-namespace,
+   * общие/library-модули), в разрезе языка. Маркер-множество — аналог
+   * {@link #enumTypes}: «эта сущность видна в глобальной области» хранится здесь,
+   * у хранилища типов, а не картами в провайдерах (issue #3994).
+   */
+  private final Map<FileType, Set<TypeRef>> globalPropertyTypes = Map.of(
+    FileType.BSL, ConcurrentHashMap.newKeySet(),
+    FileType.OS, ConcurrentHashMap.newKeySet());
+
+  /**
+   * Source-символ типа-глобал-свойства для тех типов, что не несут его сами
+   * (конфигурационные общие модули — {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
+   * declaration не хранит). У {@link UserType} declaration уже есть, для них сюда
+   * не пишем. {@link WeakReference} — не удерживаем символ/документ.
+   */
+  private final Map<TypeRef, WeakReference<SourceDefinedSymbol>> globalPropertySymbols =
+    new ConcurrentHashMap<>();
+
+  /**
+   * Пометить тип как глобальное свойство ({@link #GLOBAL_CONTEXT}-член) для языка.
+   * Член собирается лениво из самого реестра (имя/bilingual из displayName,
+   * value-type = ref, sourceSymbol — из {@link UserType} либо переданного
+   * {@code declaration}), поэтому провайдерам не нужно держать копии (issue #3994).
+   *
+   * @param ref         тип-глобал-свойство.
+   * @param fileType    язык, в котором он виден без префикса.
+   * @param declaration символ-источник (общий модуль) либо {@code null}
+   *                    (коллекции; library-модули несут declaration в {@link UserType}).
+   */
+  public void registerGlobalPropertyType(TypeRef ref, FileType fileType,
+                                         @Nullable SourceDefinedSymbol declaration) {
+    if (ref == null) {
+      return;
+    }
+    globalPropertyTypes.get(fileType).add(ref);
+    if (declaration != null) {
+      globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+    }
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * Снять пометку глобального свойства с типа (удаление документа-модуля).
+   *
+   * @param ref      тип.
+   * @param fileType язык.
+   */
+  public void unregisterGlobalPropertyType(TypeRef ref, FileType fileType) {
+    if (ref == null) {
+      return;
+    }
+    globalPropertyTypes.get(fileType).remove(ref);
+    globalPropertySymbols.remove(ref);
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * Члены {@link #GLOBAL_CONTEXT} из типов-глобал-свойств языка. Регистрируется
+   * как override (см. {@code bootstrap}), чтобы конфигурационные коллекции
+   * перекрывали одноимённые платформенные свойства (issue #3994).
+   */
+  private List<MemberDescriptor> globalPropertyMembers(FileType fileType) {
+    var refs = globalPropertyTypes.get(fileType);
+    var result = new ArrayList<MemberDescriptor>(refs.size());
+    for (var ref : refs) {
+      var member = MemberDescriptor.property(ref.qualifiedName(), ref, "");
+      var display = displayNames.get(ref);
+      if (display != null && !display.isEmpty()) {
+        member = member.withBilingualName(display);
+      }
+      var declaration = globalPropertyDeclaration(ref);
+      if (declaration != null) {
+        member = member.withSourceSymbol(declaration);
+      }
+      result.add(member);
+    }
+    return result;
+  }
+
+  private @Nullable SourceDefinedSymbol globalPropertyDeclaration(TypeRef ref) {
+    if (get(ref) instanceof UserType userType) {
+      var declaration = userType.getDeclaration().orElse(null);
+      if (declaration != null) {
+        return declaration;
+      }
+    }
+    var weak = globalPropertySymbols.get(ref);
+    return weak == null ? null : weak.get();
   }
 
   /**

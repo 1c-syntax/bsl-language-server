@@ -52,7 +52,6 @@ import java.util.Set;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Регистрирует USER-типы и источники членов для .os-файлов
@@ -86,21 +85,6 @@ public class OScriptModuleMembersProvider {
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
   private final Map<URI, Set<String>> registeredByUri = new ConcurrentHashMap<>();
-
-  /**
-   * Library-модули OneScript как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
-   * для {@link FileType#OS} (issue #3994): URI документа → тип модуля + его
-   * {@link DocumentContext} (для {@code sourceSymbol}). Единый динамический
-   * источник (см. {@link #ensureGlobalContextOsSource()}) пересобирает члены из
-   * этой карты; {@link #unregister(URI)} убирает запись. Симметрично BSL-общим
-   * модулям в {@code ConfigurationModuleMembersProvider}.
-   */
-  private final Map<URI, LibraryModuleGlobal> libraryModuleGlobals = new ConcurrentHashMap<>();
-  private final AtomicBoolean globalContextOsSourceRegistered = new AtomicBoolean();
-
-  /** Library-модуль как глобал: тип модуля + документ (для lazy {@code sourceSymbol}). */
-  private record LibraryModuleGlobal(TypeRef ref, DocumentContext documentContext) {
-  }
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -156,10 +140,10 @@ public class OScriptModuleMembersProvider {
           // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
           // роль CLASS не должна перетирать тип модуля под тем же URI.
           globalScopeProvider.indexModuleType(uri, ref);
-          // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS),
-          // с sourceSymbol = ModuleSymbol для навигации/раскраски (как BSL).
-          libraryModuleGlobals.put(uri, new LibraryModuleGlobal(ref, documentContext));
-          ensureGlobalContextOsSource();
+          // issue #3994: library-модуль — свойство-член GLOBAL_CONTEXT (OS).
+          // declaration уже хранит UserType (registerUserType выше), поэтому
+          // символ не передаём; член собирает сам TypeRegistry (override-source).
+          typeRegistry.registerGlobalPropertyType(ref, FileType.OS, null);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
@@ -181,31 +165,12 @@ public class OScriptModuleMembersProvider {
     if (names == null) {
       return;
     }
-    libraryModuleGlobals.remove(uri);
     for (var name : names) {
+      // снять пометку глобального свойства до удаления типа (resolve по имени)
+      typeRegistry.resolve(name)
+        .ifPresent(ref -> typeRegistry.unregisterGlobalPropertyType(ref, FileType.OS));
       typeRegistry.unregisterUserType(name);
     }
-  }
-
-  private void ensureGlobalContextOsSource() {
-    if (globalContextOsSourceRegistered.compareAndSet(false, true)) {
-      typeRegistry.registerMemberSource(
-        TypeRegistry.GLOBAL_CONTEXT, this::libraryModulesAsGlobalMembers, FileType.OS);
-    }
-  }
-
-  /**
-   * Текущие library-модули как свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
-   * (OS). Пересобирается на каждый вызов (после инвалидации members-кэша).
-   */
-  private List<MemberDescriptor> libraryModulesAsGlobalMembers() {
-    var members = new ArrayList<MemberDescriptor>(libraryModuleGlobals.size());
-    for (var global : libraryModuleGlobals.values()) {
-      var moduleSymbol = global.documentContext().getSymbolTree().getModule();
-      members.add(MemberDescriptor.property(global.ref().qualifiedName(), global.ref(), "")
-        .withSourceSymbol(moduleSymbol));
-    }
-    return members;
   }
 
   /**
