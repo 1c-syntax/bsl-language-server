@@ -104,4 +104,37 @@ class GlobalContextMembersTest {
         .anyMatch(member -> member.kind() == MemberKind.METHOD && member.matches("Сообщить"));
     }
   }
+
+  @Test
+  void globalMemberResolvesAndProjectionsClassify() {
+    // given: свежий workspace-scope с прогнанным bootstrap TypeRegistry
+    freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
+    try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-proj")) {
+      var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);
+      typeRegistry.ensureInitialized();
+
+      // when/then: резолв безпрефиксного имени в член GLOBAL_CONTEXT
+      var function = typeRegistry.globalMember("Сообщить", FileType.BSL);
+      assertThat(function).as("Сообщить резолвится").isPresent();
+      assertThat(function.orElseThrow().kind()).isEqualTo(MemberKind.METHOD);
+
+      var encoding = typeRegistry.globalMember("КодировкаТекста", FileType.BSL);
+      assertThat(encoding).as("КодировкаТекста резолвится").isPresent();
+      assertThat(encoding.orElseThrow().kind()).isEqualTo(MemberKind.PROPERTY);
+
+      // then: тип-значение свойства классифицируется как перечисление
+      var valueType = encoding.orElseThrow().returnTypes().refs().stream().findFirst().orElseThrow();
+      assertThat(typeRegistry.isEnumType(valueType))
+        .as("тип-значение КодировкаТекста — перечисление")
+        .isTrue();
+
+      // then: ось type-name отдельно — Структура конструируема, Сообщить нет
+      assertThat(typeRegistry.isConstructibleTypeName("Структура", FileType.BSL))
+        .as("Структура — конструируемый тип")
+        .isTrue();
+      assertThat(typeRegistry.isConstructibleTypeName("Сообщить", FileType.BSL))
+        .as("Сообщить — не тип")
+        .isFalse();
+    }
+  }
 }

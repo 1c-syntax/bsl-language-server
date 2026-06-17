@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -385,6 +386,81 @@ public class TypeRegistry {
     var members = computeMembers(ref, fileType);
     membersCache.put(key, new CachedMembers(epoch, members));
     return members;
+  }
+
+  /** Типы-перечисления (источник пометил {@code isEnum}). */
+  private final Set<TypeRef> enumTypes = ConcurrentHashMap.newKeySet();
+
+  /**
+   * Является ли тип системным/платформенным перечислением. Read-проекция для
+   * потребителей (например, раскраска {@code GLOBAL_CONTEXT}-свойства как
+   * {@code Enum} vs {@code Class}) — issue #3994.
+   *
+   * @param ref проверяемый тип.
+   * @return {@code true}, если тип помечен источником как перечисление.
+   */
+  public boolean isEnumType(@Nullable TypeRef ref) {
+    return ref != null && enumTypes.contains(ref);
+  }
+
+  private record GlobalIndex(long epoch, Map<FileType, Map<String, MemberDescriptor>> byName) {
+  }
+
+  private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
+
+  /**
+   * Резолв безпрефиксного имени в член синтетического {@link #GLOBAL_CONTEXT}
+   * (глобальная функция-метод либо глобальное свойство — перечисление, менеджер
+   * коллекции, общий/library-модуль). Быстрый lookup по name-индексу,
+   * пересобираемому при смене {@link #membersEpoch}. Issue #3994: единая точка
+   * резолва глобальной области через тип-модель вместо GlobalScopeProvider.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return член глобального контекста или {@link Optional#empty()}.
+   */
+  public Optional<MemberDescriptor> globalMember(@Nullable String name, FileType fileType) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    var epoch = membersEpoch.get();
+    var index = globalIndexRef.get();
+    if (index == null || index.epoch() != epoch) {
+      index = new GlobalIndex(epoch, Map.of(
+        FileType.BSL, globalNameIndex(FileType.BSL),
+        FileType.OS, globalNameIndex(FileType.OS)));
+      globalIndexRef.set(index);
+    }
+    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  private Map<String, MemberDescriptor> globalNameIndex(FileType fileType) {
+    var map = new HashMap<String, MemberDescriptor>();
+    for (var member : getMembers(GLOBAL_CONTEXT, fileType)) {
+      var ru = member.bilingualName().ru();
+      var en = member.bilingualName().en();
+      if (!ru.isBlank()) {
+        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), member);
+      }
+      if (!en.isBlank()) {
+        map.putIfAbsent(en.toLowerCase(Locale.ROOT), member);
+      }
+    }
+    return map;
+  }
+
+  /**
+   * Имя резолвится в платформенный/конфигурационный тип с конструктором —
+   * т.е. это имя типа для {@code Новый}/типовой позиции ({@code Структура},
+   * {@code ТаблицаЗначений}), а не глобальное значение. Ось type-name отдельно
+   * от членов {@link #GLOBAL_CONTEXT} (issue #3994).
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return {@code true}, если имя — конструируемый тип.
+   */
+  public boolean isConstructibleTypeName(@Nullable String name, FileType fileType) {
+    return resolve(name).map(ref -> !getConstructors(ref, fileType).isEmpty()).orElse(false);
   }
 
   private List<MemberDescriptor> computeMembers(TypeRef ref, FileType fileType) {
@@ -971,6 +1047,9 @@ public class TypeRegistry {
   private void registerPack(TypePackProvider.TypeDecl decl, FileType fileType) {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
+    if (decl.isEnum()) {
+      enumTypes.add(ref);
+    }
     registerPackAliases(decl, ref);
     registerPackDescriptions(decl, ref, fileType);
     registerPackCallables(decl, ref, fileType);
