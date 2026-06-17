@@ -53,6 +53,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class DiagnosticProviderTest {
@@ -215,6 +216,31 @@ class DiagnosticProviderTest {
     );
 
     // then
+    verify(languageClient, times(1)).refreshDiagnostics();
+  }
+
+  @Test
+  void testServerContextPopulatedClearsCachedDiagnosticsForPullClient() {
+    // given: pull-клиент (VSCode) объявил refreshSupport — мы не должны полагаться на то,
+    // что он сам вычищает наш кэш. Иначе после workspace/diagnostic/refresh клиент перезапросит
+    // textDocument/diagnostic, а получит закэшированную диагностику, посчитанную ещё до
+    // наполнения контекста.
+    initializeRefreshSupport(true);
+
+    var languageClient = mock(LanguageClient.class);
+    languageClientHolder.connect(languageClient);
+
+    var openedA = mock(DocumentContext.class);
+    var openedB = mock(DocumentContext.class);
+    var serverContext = mock(ServerContext.class);
+    when(serverContext.getOpenedDocuments()).thenReturn(java.util.Set.of(openedA, openedB));
+
+    // when
+    diagnosticProvider.handleServerContextPopulatedEvent(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    verify(openedA, times(1)).clearDiagnostics();
+    verify(openedB, times(1)).clearDiagnostics();
     verify(languageClient, times(1)).refreshDiagnostics();
   }
 
