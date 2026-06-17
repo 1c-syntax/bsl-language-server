@@ -176,6 +176,12 @@
                 "EmptyStatement": {
                     "$ref": "parameters-schema.json#/definitions/EmptyStatement"
                 },
+                "EventHandlerInvalidSignature": {
+                    "$ref": "parameters-schema.json#/definitions/EventHandlerInvalidSignature"
+                },
+                "EventHandlerOutsideEventRegion": {
+                    "$ref": "parameters-schema.json#/definitions/EventHandlerOutsideEventRegion"
+                },
                 "ExcessiveAutoTestCheck": {
                     "$ref": "parameters-schema.json#/definitions/ExcessiveAutoTestCheck"
                 },
