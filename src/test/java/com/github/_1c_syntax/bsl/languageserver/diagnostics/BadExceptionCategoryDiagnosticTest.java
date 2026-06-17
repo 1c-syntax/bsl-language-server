@@ -37,13 +37,14 @@ class BadExceptionCategoryDiagnosticTest extends AbstractDiagnosticTest<BadExcep
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(24, 31, 24, 56)
       .hasRange(25, 31, 25, 59)
-      .hasRange(26, 31, 26, 81)
+      .hasRange(26, 31, 26, 79)
       .hasRange(27, 31, 27, 86)
       .hasRange(28, 31, 28, 84)
-      .hasRange(31, 18, 31, 41);
+      .hasRange(31, 18, 31, 41)
+      .hasRange(32, 18, 32, 50);
   }
 }

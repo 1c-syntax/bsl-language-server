@@ -658,6 +658,26 @@
             "title": "Empty statement",
             "$id": "#/definitions/EmptyStatement"
         },
+        "EventHandlerInvalidSignature": {
+            "description": "Event handler signature mismatch",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Event handler signature mismatch",
+            "$id": "#/definitions/EventHandlerInvalidSignature"
+        },
+        "EventHandlerOutsideEventRegion": {
+            "description": "Event handler outside standard region",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Event handler outside standard region",
+            "$id": "#/definitions/EventHandlerOutsideEventRegion"
+        },
         "ExcessiveAutoTestCheck": {
             "description": "Excessive AutoTest Check",
             "default": true,

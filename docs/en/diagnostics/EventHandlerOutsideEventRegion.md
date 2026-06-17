@@ -1,6 +1,6 @@
 # Event handler outside standard region (EventHandlerOutsideEventRegion)
 
-<!-- Auto-generated metadata above, do not edit -->
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 A method whose name matches a platform event of the module's owner type (for example, `OnWrite` in a document object module) is treated as an event handler. By the BSL coding standard such methods must reside in the standard region:

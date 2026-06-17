@@ -33,16 +33,17 @@ import com.github._1c_syntax.bsl.parser.BSLParser.RaiseStatementContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 
-import java.util.Locale;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 5,
   scope = DiagnosticScope.BSL,
-  tags = { DiagnosticTag.BADPRACTICE }
+  tags = {DiagnosticTag.BADPRACTICE}
 )
 public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -52,18 +53,25 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
     this.typeService = typeService;
   }
 
-  private static final Set<String> FORBIDDEN_CATEGORIES = Set.of(
-    "всеошибки", "allerrors",
-    "прочаяошибка", "othererror",
-    "ошибкакомпиляциивстроенногоязыка", "scriptcompilationerror",
-    "ошибкавовремявыполнениявстроенногоязыка", "scriptruntimeerror",
-    "исключениевызванноеизвстроенногоязыка", "scriptraisedexception"
-  );
+  private static final Set<String> FORBIDDEN_CATEGORIES = initForbiddenCategories();
+
+  private static Set<String> initForbiddenCategories() {
+    Set<String> errors = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+    errors.addAll(List.of(
+      "ВсеОшибки", "AllErrors",
+      "ПрочаяОшибка", "OtherError",
+      "ОшибкаКомпиляцииВстроенногоЯзыка", "ScriptCompileError",
+      "ОшибкаВоВремяВыполненияВстроенногоЯзыка", "ScriptRuntimeError",
+      "ИсключениеВызванноеИзВстроенногоЯзыка", "ScriptRaisedException"
+    ));
+    return errors;
+  }
+
 
   @Override
   public ParseTree visitRaiseStatement(RaiseStatementContext ctx) {
     checkForbiddenCategory(ctx);
-
     super.visitRaiseStatement(ctx);
     return ctx;
   }
@@ -74,35 +82,30 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
       .map(BSLParser.CallParamListContext::callParam)
       .filter(params -> params.size() > 1)
       .map(params -> params.get(1))
-      .filter(this::isForbiddenCategorySyntax)
-      .filter(this::isSystemErrorCategory)
+      .filter(this::isForbiddenCategoryParam)
       .ifPresent(diagnosticStorage::addDiagnostic);
   }
 
-  private boolean isForbiddenCategorySyntax(CallParamContext categoryParam) {
-    return Optional.of(categoryParam)
-      .map(CallParamContext::expression)
-      .filter(expr -> !expr.member().isEmpty())
-      .map(expr -> expr.member(0))
-      .map(BSLParser.MemberContext::complexIdentifier)
-      .filter(ci -> !ci.modifier().isEmpty())
-      .map(ci -> ci.modifier().getLast())
-      .map(BSLParser.ModifierContext::accessProperty)
-      .map(BSLParser.AccessPropertyContext::IDENTIFIER)
-      .map(identifierNode -> identifierNode.getText().toLowerCase(Locale.ROOT))
-      .filter(FORBIDDEN_CATEGORIES::contains)
-      .isPresent();
-  }
+  private boolean isForbiddenCategoryParam(CallParamContext param) {
+    String lastTokenText = param.getStop().getText();
+    if (!FORBIDDEN_CATEGORIES.contains(lastTokenText)) {
+      return false;
+    }
 
-  private boolean isSystemErrorCategory(CallParamContext param) {
     int line = param.getStop().getLine() - 1;
     int character = param.getStop().getCharPositionInLine();
     Position position = new Position(line, character);
 
     return typeService.memberAt(documentContext, position)
       .filter(member -> member.owner() != null)
-      .map(member -> member.owner().qualifiedName().toLowerCase(Locale.ROOT))
-      .filter(name -> name.equals("категорияошибки") || name.equals("errorcategory"))
+      .filter(member -> {
+        String ownerName = member.owner().qualifiedName();
+        return "КатегорияОшибки".equalsIgnoreCase(ownerName) || "ErrorCategory".equalsIgnoreCase(ownerName);
+      })
+      .filter(member -> {
+        String memberName = member.descriptor().name();
+        return FORBIDDEN_CATEGORIES.contains(memberName);
+      })
       .isPresent();
   }
 }
