@@ -137,7 +137,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -191,7 +191,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("textDocumentServiceExecutor")
-  private final ThreadPoolTaskExecutor taskExecutor;
+  private final AsyncTaskExecutor taskExecutor;
 
   // Executors per document URI to serialize didChange operations and avoid race conditions
   private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
