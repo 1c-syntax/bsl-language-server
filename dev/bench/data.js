@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781689682056,
+  "lastUpdate": 1781695906581,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37820,6 +37820,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.242844971676693",
             "extra": "mean: 296.8388936519623 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7394b55cc3390102685743ac1911a1ff62489b97",
+          "message": "Merge pull request #4141 from 1c-syntax/fix/sentry-environment-null-version\n\nfix(sentry): не падать на null-версии сервера при инициализации Sentry",
+          "timestamp": "2026-06-17T08:51:51+02:00",
+          "tree_id": "fbcdf1a925faa2a6c562ffea66d3239f05d6a225",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7394b55cc3390102685743ac1911a1ff62489b97"
+        },
+        "date": 1781695898118,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 291.28745516141254,
+            "unit": "sec",
+            "range": "stddev: 3.8122286258096123",
+            "extra": "mean: 291.28745516141254 sec\nrounds: 3"
           }
         ]
       }
