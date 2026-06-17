@@ -358,7 +358,14 @@ public class ConfigurationTypesProvider {
 
   private void ensureGlobalContextCollectionsSource() {
     if (globalContextCollectionsRegistered.compareAndSet(false, true)) {
-      typeRegistry.registerMemberSource(
+      // Override (в начало списка источников), а не append: платформенный
+      // глобальный контекст (bsl-context) уже отдаёт одноимённые свойства-менеджеры
+      // коллекций (Справочники → СправочникиМенеджер и т.п.) на bootstrap'е. Без
+      // override putIfAbsent в computeMembers оставил бы платформенное свойство —
+      // без членов-MD конфигурации — и Справочники.<Объект> не резолвился бы
+      // (issue #3994). Конфигурационная коллекция — суперсет (наследует методы
+      // менеджера через registerInheritedMembers + добавляет MD-объекты).
+      typeRegistry.registerMemberOverride(
         TypeRegistry.GLOBAL_CONTEXT, () -> List.copyOf(collectionGlobalMembers.values()), FileType.BSL);
     }
   }
