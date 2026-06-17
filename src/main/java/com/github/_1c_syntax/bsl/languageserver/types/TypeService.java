@@ -380,14 +380,14 @@ public class TypeService {
   private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
     var fileType = documentContext.getFileType();
-    // Глобальная функция — метод-член GLOBAL_CONTEXT.
+    // Глобальная функция.
     var globalFn = globalScopeProvider.globalFunction(bareName, fileType);
     if (globalFn.isPresent()) {
       return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
     }
 
-    // Глобальное свойство (перечисление/менеджер коллекции/модуль) — свойство-член
-    // GLOBAL_CONTEXT; имена типов для `Новый` (TYPE_NAME) членами не являются.
+    // Глобальное свойство (перечисление/менеджер коллекции/модуль); имена типов
+    // для `Новый` (TYPE_NAME) глобальными свойствами не являются.
     return globalScopeProvider.globalProperty(bareName, fileType)
       .map(member -> member.returnTypes().refs().stream()
         .filter(r -> !r.equals(TypeRef.UNKNOWN)).findFirst().orElse(TypeRef.UNKNOWN))

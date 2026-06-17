@@ -86,8 +86,13 @@ public class TypeRegistry {
    * перечисления и прочие {@code exposedAsGlobal}-типы регистрируются как
    * свойства-члены этого типа (с {@code valueType} = сам тип). Имя
    * зарезервировано и не пересекается с инстанцируемыми типами 1С.
+   * <p>
+   * Деталь хранилища: доступ к глобальной области у потребителей — через
+   * {@link GlobalScopeProvider} (геттеры {@code globalFunction}/{@code globalProperty}/…),
+   * а не по этой ссылке. Видимость пакетная — её знают лишь реестр, поставщики
+   * членов глобального контекста и {@code GlobalScopeProvider}.
    */
-  public static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
+  static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
 
   private final List<PlatformTypesProvider> platformProviders;
   /**

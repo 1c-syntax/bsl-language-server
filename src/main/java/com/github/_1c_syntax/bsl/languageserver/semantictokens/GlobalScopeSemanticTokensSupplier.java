@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * Сапплаер семантических токенов для идентификаторов, разрешающихся через
  * global scope ({@link GlobalScopeProvider#globalProperty}). Тип/модификатор
- * токена выводится из <b>типа-значения</b> свойства-члена {@code GLOBAL_CONTEXT}
+ * токена выводится из <b>типа-значения</b> глобального свойства
  * (а не из отдельного флага):
  * <ul>
  *   <li>обычное платформенное свойство/коллекция ({@code Справочники},
@@ -112,8 +112,8 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     if (symbolTree != null && isLocalName(symbolTree, name)) {
       return;
     }
-    // Глобальное VALUE-имя — свойство-член синтетического GLOBAL_CONTEXT
-    //. Глобальные функции (METHOD) и имена типов для `Новый`
+    // Глобальное VALUE-имя — глобальное свойство.
+    // Глобальные функции (METHOD) и имена типов для `Новый`
     // здесь не наш домен — их красят другие сапплаеры.
     var member = globalScopeProvider.globalProperty(name, fileType);
     if (member.isEmpty()) {

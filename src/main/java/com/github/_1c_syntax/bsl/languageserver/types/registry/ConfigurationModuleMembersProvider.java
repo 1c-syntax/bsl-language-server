@@ -146,10 +146,9 @@ public class ConfigurationModuleMembersProvider {
     var prev = registeredByUri.put(documentContext.getUri(), ref);
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
 
-    // общий модуль — свойство-член GLOBAL_CONTEXT (value-type = тип
-    // модуля, sourceSymbol = ModuleSymbol для навигации/раскраски). Помечаем на
-    // каждом изменении — символ освежается из актуального SymbolTree; член
-    // собирает сам TypeRegistry (override-source), без карты в провайдере.
+    // общий модуль — глобальное свойство (value-type = тип модуля,
+    // sourceSymbol = ModuleSymbol для навигации/раскраски). Помечаем на каждом
+    // изменении — символ освежается из актуального SymbolTree.
     typeRegistry.registerGlobalPropertyType(ref, FileType.BSL,
       documentContext.getSymbolTree().getModule());
 

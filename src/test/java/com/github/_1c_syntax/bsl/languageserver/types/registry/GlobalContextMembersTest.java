@@ -87,8 +87,8 @@ class GlobalContextMembersTest {
 
   @Test
   void oscriptGlobalFunctionResolvesForOsFileType() {
-    // given: свежий workspace-scope (GLOBAL_CONTEXT для OS наполняет
-    // отдельный OneScript-composer из builtin-oscript-globals.json).
+    // given: свежий workspace-scope (глобальный контекст для OS наполняет
+    // отдельный OneScript-провайдер из builtin-oscript-globals.json).
     freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
     try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-os")) {
       var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);

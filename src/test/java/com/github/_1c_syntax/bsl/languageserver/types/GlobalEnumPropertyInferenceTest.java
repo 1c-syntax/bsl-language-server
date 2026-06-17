@@ -69,7 +69,7 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Test
   void globalPropertyNamesIncludeBuiltinEnums() {
-    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL))
+    assertThat(globalScopeProvider.globalProperties(FileType.BSL))
       .extracting(MemberDescriptor::name)
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }

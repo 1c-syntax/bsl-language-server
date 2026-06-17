@@ -42,7 +42,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Юнит-тест composer'а глобального контекста, путь bsl-context
+ * Юнит-тест поставщика членов глобального контекста, путь bsl-context
  * ({@code membersFromContext}): этот путь исполняется только при подключённой
  * платформе (HBK), поэтому покрывается синтетическим {@link PlatformContextProvider}
  * по образцу {@link BslContextPlatformTypesProviderTest}, без реальной платформы.
@@ -97,7 +97,7 @@ class GlobalContextTypesProviderTest {
       .values(List.of(new PlatformContextEnumValue(new ContextName("UTF8", "UTF8"))))
       .build();
 
-    // when: composer собирает синтетический тип GLOBAL_CONTEXT
+    // when: провайдер собирает синтетический тип глобального контекста
     var decl = new GlobalContextTypesProvider(holderOf(providerOf(globalContext, encoding)))
       .getTypes().iterator().next();
     var members = List.copyOf(decl.members());

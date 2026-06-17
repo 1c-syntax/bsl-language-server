@@ -249,7 +249,7 @@ public class ExpressionTypeInferencer {
       }
     }
     // Глобальная область: платформенные глобалы, library-модули, common-модули —
-    // все приходят как свойства-члены синтетического GLOBAL_CONTEXT.
+    // все приходят как глобальные свойства.
     // Только PROPERTY: голое имя глобальной функции (METHOD) — не значение, а
     // имена типов для `Новый` (Структура) вообще не члены контекста.
     return globalScopeProvider.globalProperty(text, ctx.documentContext.getFileType())

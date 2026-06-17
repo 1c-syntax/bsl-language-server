@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Composer глобального контекста OneScript: наполняет
+ * Поставщик членов глобального контекста OneScript: наполняет
  * {@link TypeRegistry#GLOBAL_CONTEXT} для {@link FileType#OS} членами из
  * встроенных JSON-ресурсов OneScript (платформа bsl-context здесь не
  * применяется — OneScript-глобалы всегда из ресурсов):

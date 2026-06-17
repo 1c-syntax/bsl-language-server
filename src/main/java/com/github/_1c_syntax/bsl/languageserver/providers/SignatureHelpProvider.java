@@ -411,7 +411,7 @@ public final class SignatureHelpProvider {
     if (local.isPresent()) {
       return local;
     }
-    // Fallback: глобальная функция — метод-член GLOBAL_CONTEXT.
+    // Fallback: глобальная функция.
     return globalScopeProvider.globalFunction(methodName, documentContext.getFileType());
   }
 
