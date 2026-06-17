@@ -31,11 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -115,36 +112,33 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     if (symbolTree != null && isLocalName(symbolTree, name)) {
       return;
     }
-    var synthetic = globalScopeProvider.findGlobalEntry(name, fileType)
-      .filter(entry -> entry.role() == GlobalSymbolScope.Role.VALUE)
-      .map(GlobalSymbolScope.Entry::symbol)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(SyntheticSymbol.class::cast);
-    if (synthetic.isEmpty()) {
+    // Глобальное VALUE-имя — свойство-член синтетического GLOBAL_CONTEXT
+    // (issue #3994). Глобальные функции (METHOD) и имена типов для `Новый`
+    // здесь не наш домен — их красят другие сапплаеры.
+    var member = typeRegistry.globalMember(name, fileType)
+      .filter(m -> m.kind() == MemberKind.PROPERTY);
+    if (member.isEmpty()) {
       return;
     }
-    var kind = synthetic.get().getSyntheticKind();
-    switch (kind) {
-      case PLATFORM_GLOBAL_PROPERTY -> {
-        if (isCommonModuleBacked(synthetic.get())) {
-          helper.addRange(entries, Ranges.create(identifier), SemanticTokenTypes.Namespace);
-        } else {
-          helper.addRange(entries, Ranges.create(identifier),
-            SemanticTokenTypes.Class, SemanticTokenModifiers.DefaultLibrary);
-        }
-      }
-      case PLATFORM_GLOBAL_ENUM -> helper.addRange(entries, Ranges.create(identifier),
+    var valueType = member.get().returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    // 4-сторонняя классификация выводится из типа-значения (а не из отдельного
+    // флага): перечисление → Enum; модульный тип (общий/library-модуль, есть в
+    // URI-индексе) → Namespace; иначе платформенное свойство/коллекция → Class.
+    if (typeRegistry.isEnumType(valueType)) {
+      helper.addRange(entries, Ranges.create(identifier),
         SemanticTokenTypes.Enum, SemanticTokenModifiers.DefaultLibrary);
-      case LIBRARY_MODULE -> helper.addRange(entries, Ranges.create(identifier),
-        SemanticTokenTypes.Namespace);
-      default -> { return; /* остальные SyntheticKind'ы — не наш домен */ }
+    } else if (globalScopeProvider.moduleUriByType(valueType).isPresent()) {
+      helper.addRange(entries, Ranges.create(identifier), SemanticTokenTypes.Namespace);
+    } else {
+      helper.addRange(entries, Ranges.create(identifier),
+        SemanticTokenTypes.Class, SemanticTokenModifiers.DefaultLibrary);
     }
 
     // Walk модификаторов — резолв member'ов с пошаговой проводкой по типам.
     // Покрашиваются: значения enum'а (.UTF8 → EnumMember), mdo-ссылки внутри
     // metadata-collection (.Контрагенты → Class), вызовы платформенных методов
     // (.ПустаяСсылка() → Method+DefaultLibrary).
-    walkChain(entries, synthetic.get().getValueType(), modifiers, fileType);
+    walkChain(entries, valueType, modifiers, fileType);
   }
 
   private void walkChain(List<SemanticTokenEntry> entries, TypeRef startType,
@@ -232,17 +226,5 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
 
   private static boolean isLocalName(SymbolTree symbolTree, String name) {
     return symbolTree.getVariableSymbol(name, symbolTree.getModule()).isPresent();
-  }
-
-  /**
-   * Проверить, что synthetic-имя в global scope соответствует общему модулю
-   * конфигурации (backing — {@link SourceDefinedSymbol} с {@link ModuleType#CommonModule}).
-   */
-  private static boolean isCommonModuleBacked(SyntheticSymbol synthetic) {
-    return synthetic.getSourceSymbol()
-      .filter(SourceDefinedSymbol.class::isInstance)
-      .map(SourceDefinedSymbol.class::cast)
-      .map(s -> s.getOwner().getModuleType() == ModuleType.CommonModule)
-      .orElse(false);
   }
 }

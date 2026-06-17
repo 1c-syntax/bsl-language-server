@@ -48,7 +48,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.ExtendsAn
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -250,24 +249,15 @@ public class ExpressionTypeInferencer {
         return parent;
       }
     }
-    // Глобальная область: платформенные глобалы, library-модули,
-    // common-модули — все приходят через единый GlobalSymbolScope.
-    // ВАЖНО: имена классов (роль TYPE_NAME — например, голое `Структура`)
-    // здесь пропускаются: имя класса само по себе не является инстансом
-    // класса, и `Структура.` не должен показывать методы класса.
-    var fromScope = globalScopeProvider.findGlobalEntry(text, ctx.documentContext.getFileType())
-      .filter(entry -> entry.role() != GlobalSymbolScope.Role.TYPE_NAME)
-      .map(entry -> {
-        var symbol = entry.symbol();
-        if (symbol instanceof SyntheticSymbol s) {
-          return s.getValueType();
-        }
-        return TypeRef.UNKNOWN;
-      })
-      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
-      .map(TypeSet::of)
+    // Глобальная область: платформенные глобалы, library-модули, common-модули —
+    // все приходят как свойства-члены синтетического GLOBAL_CONTEXT (issue #3994).
+    // Только PROPERTY: голое имя глобальной функции (METHOD) — не значение, а
+    // имена типов для `Новый` (Структура) вообще не члены контекста.
+    return typeRegistry.globalMember(text, ctx.documentContext.getFileType())
+      .filter(member -> member.kind() == MemberKind.PROPERTY)
+      .map(MemberDescriptor::returnTypes)
+      .filter(types -> types.refs().stream().anyMatch(ref -> !ref.equals(TypeRef.UNKNOWN)))
       .orElse(TypeSet.EMPTY);
-    return fromScope;
   }
 
   // ---------------------------------------------------------------------------
@@ -511,8 +501,8 @@ public class ExpressionTypeInferencer {
     if (methodName == null || methodName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return globalScopeProvider
-      .findFunction(methodName, ctx.documentContext.getFileType())
+    return typeRegistry.globalMember(methodName, ctx.documentContext.getFileType())
+      .filter(member -> member.kind() == MemberKind.METHOD)
       .map(MemberDescriptor::returnTypes)
       .filter(types -> !types.isEmpty())
       .orElse(TypeSet.EMPTY);
