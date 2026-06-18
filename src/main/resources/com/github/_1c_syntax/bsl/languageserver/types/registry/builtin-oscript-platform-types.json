@@ -2099,7 +2099,7 @@
     ]
   },
   {
-    "kind": "ENUM",
+    "kind": "TYPE",
     "name": "Символы",
     "aliases": [
       "Chars"
@@ -16902,7 +16902,6 @@
         "kind": "PROPERTY"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Цвет шрифта текста, выводимого в консоли."
   },
   {
@@ -16927,7 +16926,6 @@
         "description": "Кодировать (раскодировать) строку URL в URL кодировке. Спецсимволы URL ( !#$%\\'()*+,/:;=?@[] ) не кодируются."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Варианты кодирования строк."
   },
   {
@@ -17022,7 +17020,6 @@
         "description": "Каталог, выполняющий функции общего репозитория для данных приложения, используемого всеми пользователями."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Системное перечисление для специальных папок."
   },
   {
@@ -17069,7 +17066,6 @@
         "kind": "PROPERTY"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет набор допустимых кодировок текстовых файлов."
   },
   {
@@ -17101,7 +17097,6 @@
         "description": "Максимальное сжатие - меньший размер, большее время работы."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты степени сжатия ZIP файлов."
   },
   {
@@ -17126,7 +17121,6 @@
         "description": "Сжатие"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Метод сжатия ZIP"
   },
   {
@@ -17157,7 +17151,6 @@
         "description": "Шифрование методом ZIP версии 2.0. Совместимо со всеми сторонними программами."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты методов шифрования ZIP файлов."
   },
   {
@@ -17182,7 +17175,6 @@
         "description": "При извлечении из архива пути файлов игнорируются."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты восстановления путей файлов при извлечении из архива."
   },
   {
@@ -17214,7 +17206,6 @@
         "description": "При помещении в архив сохраняются полные пути файлов."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты методов сохранения путей файлов при помещении их в архив."
   },
   {
@@ -17239,7 +17230,6 @@
         "description": "При задании маски в качестве пути для архивации подкаталоги также будут рекурсивно обработаны."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты обработки масок файлов в именах для упаковки в ZIP архив."
   },
   {
@@ -17355,11 +17345,10 @@
         "description": "Соответствует тексту элемента XML."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты узлов XML, которые могут быть получены при чтении XML с помощью объекта ЧтениеXML."
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "ЗавершенностьСоставногоТипаXS",
     "aliases": [
       "XSComplexFinal"
@@ -17383,11 +17372,10 @@
         "nameEn": "List",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "НедопустимыеПодстановкиXS",
     "aliases": [
       "XSDisallowedSubstitutions"
@@ -17417,11 +17405,10 @@
         "nameEn": "Extension",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "ФормаПредставленияXS",
     "aliases": [
       "XSForm"
@@ -17439,11 +17426,10 @@
         "nameEn": "Unqualified",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "ЗапрещенныеПодстановкиXS",
     "aliases": [
       "EnumerationXSProhibitedSubstitutions",
@@ -17468,11 +17454,10 @@
         "nameEn": "Extension",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "ЗавершенностьСхемыXS",
     "aliases": [
       "XSSchemaFinal"
@@ -17508,11 +17493,10 @@
         "nameEn": "List",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "ЗавершенностьПростогоТипаXS",
     "aliases": [
       "XSSimpleFinal"
@@ -17542,11 +17526,10 @@
         "nameEn": "List",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
-    "kind": "TYPE",
+    "kind": "ENUM",
     "name": "ИсключенияГруппПодстановкиXS",
     "aliases": [
       "XSSubstitutionGroupExclusions"
@@ -17570,8 +17553,7 @@
         "nameEn": "Extension",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -17602,7 +17584,6 @@
         "description": "СимволыВнеBMP"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Экранирование символов JSON"
   },
   {
@@ -17628,7 +17609,6 @@
         "description": "Формат даты Microsoft вида: \"/Date(123456000000)/\". Этот же вариант в формате JSON с экранированием будет выглядеть следующим образом: \"\\/Date(123456000000)\\/\".  Дата указывается в формате Unix-времени. JSON поддерживает опциональное экранирование символа \"/\", поэтому для чтения допускаются оба варианта."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет различные форматы сериализации/десериализации дат JSON-объектов."
   },
   {
@@ -17663,7 +17643,6 @@
         "description": "Нет"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Перенос строк JSON"
   },
   {
@@ -17749,7 +17728,6 @@
         "description": "Число"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Тип значения JSON"
   },
   {
@@ -17790,7 +17768,6 @@
         "description": "Вычислять значение CRC32."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Варианты типов хеш-функции. Определяет способ вычисления хеш-суммы и тип вычисляемого значения."
   },
   {
@@ -17850,7 +17827,6 @@
         "description": "Диск является диском ОЗУ."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Типы дисков: - Диск является устройством оптических дисков, такие как компакт-ДИСК или DVD-диск. - Диск является жестким диском. - Диск является сетевым диском. - Диск не имеет корневой каталог. - Диск является диском ОЗУ. - Диск является съемное запоминающее устройство, например, дисковод гибких дисков или USB-устройство флэш-памяти. - Тип диска неизвестен."
   },
   {
@@ -17873,7 +17849,6 @@
         "kind": "PROPERTY"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Тип макета в приложении. Значением макета в типе Файл является путь к файлу с данными."
   },
   {
@@ -17905,7 +17880,6 @@
         "description": "Не использовать метку порядка байтов (BOM) при кодировании строк."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты использования метки порядка байтов ( от англ. Byte Order Mark (BOM)) при кодировании строк."
   },
   {
@@ -17937,7 +17911,6 @@
         "description": "Переменная среды устанавливается для системы в целом"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Расположение переменной среды"
   },
   {
@@ -17990,7 +17963,6 @@
         "description": "Окрашено красным цветом."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет набор статусов сообщений, обозначаемых при выводе сообщений цветом."
   },
   {
@@ -18015,7 +17987,6 @@
         "description": "Сортировка по убыванию."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет возможные способы сортировки."
   },
   {
@@ -18040,7 +18011,6 @@
         "description": "Задает направление поиска от конца строки к ее началу."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет направление поиска подстроки в строке."
   },
   {
@@ -18065,7 +18035,6 @@
         "description": "Строка имеет фиксированную длину. Если длина присваиваемой строки будет меньше установленной, то строка будет дополняться пробелами справа до необходимой длины. Если длина присваиваемой строки будет больше установленной, строка будет обрезаться."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет варианты ограничений длины строки. Используется для определения свойства ДопустимаяДлина и в конструкторе объекта КвалификаторыСтроки, если задается длина строки отличная от нуля."
   },
   {
@@ -18090,7 +18059,6 @@
         "description": "Число должно быть строго не отрицательным."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет набор допустимых знаков числа. Используется для определения свойства ДопустимыйЗнак."
   },
   {
@@ -18122,7 +18090,6 @@
         "description": "Значение состоит только из времени (без даты)."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет набор вариантов использования значений типа Дата."
   },
   {
@@ -18152,8 +18119,7 @@
         "nameEn": "OSEncodingWithUTF8",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18176,8 +18142,7 @@
         "name": "Явное",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18212,8 +18177,7 @@
         "name": "Обязательно",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18416,8 +18380,7 @@
         "name": "Фрагмент",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18453,7 +18416,6 @@
         "description": "Требует чтобы элементы следовали в указанной последовательности"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Вид группы модели"
   },
   {
@@ -18482,7 +18444,6 @@
         "description": "Используется фиксированное значение"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Описывает варианты ограничения значения"
   },
   {
@@ -18517,7 +18478,6 @@
         "description": "Составная модель содержания."
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Определяет вид модели содержания."
   },
   {
@@ -18547,8 +18507,7 @@
         "name": "Расширение",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18584,7 +18543,6 @@
         "description": "Ограничение идентичности по определению уникальности"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Типы ограничения идентичности."
   },
   {
@@ -18620,8 +18578,7 @@
         "name": "Набор",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18656,8 +18613,7 @@
         "name": "Строгая",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18686,8 +18642,7 @@
         "name": "Список",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18716,8 +18671,7 @@
         "name": "Сохранять",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18745,7 +18699,6 @@
         "description": "Используется в качестве селектора"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Содержит варианты использования выражения XPath."
   },
   {
@@ -18775,8 +18728,7 @@
         "name": "Атрибут",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18809,8 +18761,7 @@
         "nameEn": "Failed",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18827,8 +18778,7 @@
         "name": "Native",
         "kind": "PROPERTY"
       }
-    ],
-    "exposedAsGlobal": true
+    ]
   },
   {
     "kind": "ENUM",
@@ -18880,7 +18830,6 @@
         "description": "Создать новый"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Режим открытия файла в потоке"
   },
   {
@@ -18912,7 +18861,6 @@
         "description": "Чтение и запись"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Доступ к файлу в потоке"
   },
   {
@@ -18945,7 +18893,6 @@
         "description": "Текущая"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Позиция в потоке"
   },
   {
@@ -18966,7 +18913,6 @@
         "description": "LittleEndian"
       }
     ],
-    "exposedAsGlobal": true,
     "description": "Порядок байтов в потоке"
   },
   {
@@ -19462,7 +19408,6 @@
     "aliases": [
       "XMLSpace"
     ],
-    "exposedAsGlobal": true,
     "members": [
       {
         "name": "ПоУмолчанию",
@@ -19484,7 +19429,6 @@
     "aliases": [
       "XMLValidationType"
     ],
-    "exposedAsGlobal": true,
     "members": [
       {
         "name": "НетПроверки",
@@ -19512,7 +19456,6 @@
     "aliases": [
       "PlatformType"
     ],
-    "exposedAsGlobal": true,
     "members": [
       {
         "name": "Linux_x86",

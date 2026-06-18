@@ -69,7 +69,7 @@ public class GlobalContextOScriptTypesProvider implements PlatformTypesProvider 
   private static List<TypeDecl> build() {
     var members = new ArrayList<MemberDescriptor>(
       GlobalScopeProvider.globalContextMembers(OSCRIPT_GLOBALS_RESOURCE));
-    members.addAll(BuiltinTypesJsonLoader.globalContextProperties(OSCRIPT_PLATFORM_TYPES_RESOURCE));
+    members.addAll(BuiltinTypesJsonLoader.enumGlobalProperties(OSCRIPT_PLATFORM_TYPES_RESOURCE));
     if (members.isEmpty()) {
       return List.of();
     }

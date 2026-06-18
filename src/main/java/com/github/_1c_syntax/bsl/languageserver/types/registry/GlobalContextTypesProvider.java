@@ -139,16 +139,15 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
   }
 
   /**
-   * Глобальные члены из встроенного JSON-fallback (платформа 1С недоступна).
-   * Пока покрывает {@code exposedAsGlobal}-типы (перечисления, менеджеры) как
-   * свойства-члены. Глобальные функции/переменные из {@code builtin-globals.json}
-   * будут добавлены следующим инкрементом.
+   * Глобальные члены из встроенного JSON-fallback (платформа 1С недоступна):
+   * глобальные функции/переменные из {@code builtin-globals.json} плюс системные
+   * перечисления как свойства-члены, выведенные из ENUM-типов пака.
    */
   private static List<MemberDescriptor> membersFromBuiltin() {
     var members = new ArrayList<MemberDescriptor>(GlobalScopeProvider.globalContextMembers(GLOBALS_RESOURCE));
-    // exposedAsGlobal-типы (перечисления, менеджеры) как свойства-члены: признак
-    // глобальной видимости читается из источника лоадером, не с TypeDecl.
-    members.addAll(BuiltinTypesJsonLoader.globalContextProperties(PLATFORM_TYPES_RESOURCE));
+    // Системные перечисления видны в глобальной области как свойства-члены —
+    // выводятся из ENUM-типов пака (как ContextEnum на платформенном пути).
+    members.addAll(BuiltinTypesJsonLoader.enumGlobalProperties(PLATFORM_TYPES_RESOURCE));
     return members;
   }
 

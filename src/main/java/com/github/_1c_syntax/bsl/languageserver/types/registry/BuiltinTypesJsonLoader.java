@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Единый загрузчик встроенных JSON-паков платформенных типов
@@ -84,8 +85,20 @@ public class BuiltinTypesJsonLoader {
     };
   }
 
-  @SuppressWarnings("unchecked")
+  private static final Map<String, List<TypeDecl>> LOAD_CACHE = new ConcurrentHashMap<>();
+
+  /**
+   * Распарсенные декларации пака, мемоизированные по пути ресурса: JSON в jar
+   * неизменен, поэтому каждый ресурс парсится один раз на JVM. Один и тот же
+   * результат читают и платформенный провайдер (как типы), и сборка
+   * enum-глобалов ({@link #enumGlobalProperties}) — без повторного разбора.
+   */
   static List<TypeDecl> load(String resourcePath) {
+    return LOAD_CACHE.computeIfAbsent(resourcePath, BuiltinTypesJsonLoader::parse);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<TypeDecl> parse(String resourcePath) {
     var mapper = JsonMapper.builder().build();
     try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
@@ -144,48 +157,26 @@ public class BuiltinTypesJsonLoader {
   }
 
   /**
-   * Свойства глобального контекста из встроенного JSON: типы с
-   * {@code exposedAsGlobal} (системные перечисления, менеджеры) как
-   * свойства-члены {@code GLOBAL_CONTEXT} ({@code valueType} = сам тип).
-   * Признак глобальной видимости читается из источника здесь и не хранится на
-   * {@link TypeDecl}. Generic-плейсхолдеры ({@code .<...>})
-   * пропускаются — это не реальные безпрефиксные имена.
+   * Глобальные свойства-члены {@code GLOBAL_CONTEXT}, выведенные из системных
+   * перечислений пака: каждый ENUM-тип виден в глобальной области по имени, со
+   * значением-типом = сам перечисление (как {@code КодировкаТекста.UTF8}).
+   * Двуязычное имя члена — имя самого типа ({@code ru}+{@code en}).
+   * <p>
+   * Зеркалит путь платформы (через {@code ContextEnum}), где enum-глобалы тоже
+   * выводятся структурно из факта «тип — перечисление», а не из отдельного флага.
+   * Типы читаются из мемоизированного {@link #load(String)} — без повторного
+   * разбора ресурса.
    */
-  @SuppressWarnings("unchecked")
-  static List<MemberDescriptor> globalContextProperties(String resourcePath) {
-    var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
-      List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
-      var members = new ArrayList<MemberDescriptor>();
-      for (var entry : raw) {
-        var name = (String) entry.get("name");
-        if (!Boolean.TRUE.equals(entry.get("exposedAsGlobal")) || name == null || name.contains("<")) {
-          continue;
-        }
-        var ref = new TypeRef(mapJsonKind((String) entry.getOrDefault("kind", "TYPE")), name);
-        var nameRu = stringField(entry, "nameRu");
-        var nameEn = stringField(entry, "nameEn");
-        if (nameRu.isEmpty()) {
-          nameRu = name;
-        }
-        if (nameEn.isEmpty()) {
-          nameEn = firstAlias(entry);
-        }
-        var description = (String) entry.getOrDefault("description", "");
-        members.add(MemberDescriptor.property(name, ref, description)
-          .withBilingualName(BilingualString.of(nameRu, nameEn)));
+  static List<MemberDescriptor> enumGlobalProperties(String resourcePath) {
+    var members = new ArrayList<MemberDescriptor>();
+    for (var decl : load(resourcePath)) {
+      if (decl.isEnum()) {
+        members.add(MemberDescriptor.property(
+            decl.qualifiedName(), decl.toRef(), decl.description().primary())
+          .withBilingualName(decl.name()));
       }
-      return members;
-    } catch (IOException e) {
-      LOGGER.error("Failed to load global context properties: {}", resourcePath, e);
-      return List.of();
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static String firstAlias(Map<String, Object> entry) {
-    var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
-    return aliases.isEmpty() ? "" : aliases.getFirst();
+    return members;
   }
 
   @SuppressWarnings("unchecked")
