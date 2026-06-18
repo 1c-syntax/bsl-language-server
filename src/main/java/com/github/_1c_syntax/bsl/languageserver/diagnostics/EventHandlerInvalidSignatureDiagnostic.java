@@ -94,8 +94,12 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     var requiredCounts = contractSignatures.stream()
       .mapToInt(sig -> (int) sig.parameters().stream().filter(p -> !p.optional()).count())
       .toArray();
+    // Вариадик-хвост (например, конструктор OneScript-класса ПриСозданииОбъекта)
+    // принимает переменное число аргументов — верхняя граница не ограничена.
     var totalCounts = contractSignatures.stream()
-      .mapToInt(sig -> sig.parameters().size())
+      .mapToInt(sig -> hasVariadicTail(sig)
+        ? Integer.MAX_VALUE
+        : sig.parameters().size())
       .toArray();
     int userParamCount = method.getParameters().size();
     if (fitsAnySignature(userParamCount, requiredCounts, totalCounts)) {
@@ -106,6 +110,11 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     int expected = Arrays.stream(totalCounts).max().orElse(0);
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
       info.getMessage(method.getName(), expected, userParamCount));
+  }
+
+  private static boolean hasVariadicTail(SignatureDescriptor signature) {
+    var parameters = signature.parameters();
+    return !parameters.isEmpty() && parameters.get(parameters.size() - 1).variadic();
   }
 
   private static boolean fitsAnySignature(int userParamCount, int[] requiredCounts, int[] totalCounts) {
