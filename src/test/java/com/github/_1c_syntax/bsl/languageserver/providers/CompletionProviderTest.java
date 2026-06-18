@@ -420,6 +420,46 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionMatchesSubstringInsideGlobalName() {
+    // given - набрана подстрока из середины имени глобальной функции «Сообщить»
+    // (startsWith такое не нашёл бы — имя не начинается на «общ»)
+    var content = "общ";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // when
+    params.setPosition(new Position(0, 3));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .contains("Сообщить");
+  }
+
+  @Test
+  void noDotCompletionMatchesSubsequenceInGlobalName() {
+    // given - набрана разбросанная подпоследовательность имени «Сообщить» (С..б..щ),
+    // не являющаяся непрерывной подстрокой
+    var content = "Сбщ";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // when
+    params.setPosition(new Position(0, 3));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .contains("Сообщить");
+  }
+
+  @Test
   void testDotCompletionReturnsPropertiesAsProperties() {
     // ТЗ = Новый ТаблицаЗначений;
     // ТЗ.Колонки.Добавить("Имя");
