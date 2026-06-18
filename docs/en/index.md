@@ -35,6 +35,34 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
 
 ## Features
 
+Each language-server capability comes with a short animated demo (see the [full catalog](capabilities/index.md)):
+
+* [Code completion](capabilities/completion.md) — Context-aware suggestions as you type: global functions, object methods and properties (with type inference), types after the `New` operator, keywords and local variables.
+* [Go to definition](capabilities/definition.md) — Jump from a usage to the declaration of a procedure, function, variable or method. Works within a module and across configuration modules.
+* [Go to implementations](capabilities/implementation.md) — For OneScript classes using the `extends` inheritance library: jump from an interface method (`&Интерфейс`) to the same-named methods in every implementing class (`&Реализует`).
+* [Find references](capabilities/references.md) — Find all usages of a symbol across the project.
+* [Quick documentation (hover)](capabilities/hover.md) — Hovering over a symbol shows its signature, type and the description from doc comments.
+* [Signature help](capabilities/signatureHelp.md) — While typing a method call, shows the parameter list and highlights the active parameter.
+* [Diagnostics](capabilities/diagnostics.md) — Highlights errors, potential issues and coding-standard violations inline and in the Problems panel.
+* [Code actions / Quick fixes](capabilities/codeAction.md) — Offers automatic fixes for diagnostics and refactorings via a shortcut at the problem location.
+* [Formatting](capabilities/formatting.md) — Format the whole document, a selection, or on-the-fly while typing (indentation, keyword casing).
+* [Rename](capabilities/rename.md) — Safely rename a symbol together with all its usages.
+* [Linked editing](capabilities/linkedEditing.md) — Editing the declaration of a local symbol (variable, parameter) updates all of its occurrences in the module at once — without invoking rename.
+* [Document symbols / Outline](capabilities/documentSymbol.md) — A tree of the module's procedures, functions and regions — in the Outline view and quick navigation.
+* [Workspace symbols](capabilities/workspaceSymbol.md) — Quickly jump to any method or object across the whole project by name.
+* [Document highlight](capabilities/documentHighlight.md) — Placing the cursor on a symbol highlights all its occurrences in the current module.
+* [Call hierarchy](capabilities/callHierarchy.md) — Who calls a method and what it calls — as an expandable tree.
+* [Type hierarchy](capabilities/typeHierarchy.md) — For OneScript classes using the `extends` inheritance library: a tree of supertypes and subtypes derived from the `&Расширяет` and `&Реализует` annotations.
+* [Code folding](capabilities/folding.md) — Collapse procedures, functions, regions and blocks for easier navigation.
+* [Smart selection](capabilities/selectionRange.md) — Expand and shrink the selection step by step along syntactic boundaries.
+* [Semantic highlighting](capabilities/semanticTokens.md) — Accurate highlighting based on code analysis: distinguishes variables, parameters, methods and annotations.
+* [Inlay hints](capabilities/inlayHint.md) — Inline hints embedded in the code — for example, parameter names at call sites.
+* [Code lens](capabilities/codeLens.md) — Informational lines above procedures: cognitive and cyclomatic complexity, test run and coverage.
+* [Colors: preview and picker](capabilities/color.md) — Color preview for `Новый Цвет(...)` and `WebЦвета.*`. Clicking the swatch opens the picker — choosing a color updates the code. Web colors convert to/from the RGB constructor representation.
+* [Document links (hyperlinks)](capabilities/documentLink.md) — Clickable links right in the module text: `См.`/`See` references in doc comments jump to the mentioned method or object; URLs in comments open in the browser; and optionally (**off by default**, `documentLink.showDiagnosticDescription`) the diagnosed range itself becomes a link to the diagnostic's documentation.
+
+Briefly (including command-line features):
+
 * File formatting
 * Selected region formatting
 * On-type formatting (on Enter and `;`)
