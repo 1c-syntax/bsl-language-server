@@ -40,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
+import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
@@ -118,6 +119,7 @@ public final class CompletionProvider {
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final JsonMapper jsonMapper;
+  private final FuzzyMatcher fuzzyMatcher;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
   // прикрепления `editor.action.triggerParameterHints` к completion item.
@@ -692,11 +694,21 @@ public final class CompletionProvider {
     return CompletionItemKind.Variable;
   }
 
-  private static boolean matches(String name, String lowerPrefix) {
+  /**
+   * Совпадает ли имя кандидата с набранным префиксом. Пустой префикс совпадает со всеми.
+   * Непустой матчится нечётко ({@link FuzzyMatcher}): префикс, непрерывная подстрока в середине
+   * имени и разбросанная подпоследовательность — чтобы {@code Сцена} находил и {@code СтартовыйСценарий},
+   * и {@code ТекущийСценарий}, а не только начинающиеся на префикс.
+   *
+   * @param name        имя кандидата (в исходном регистре).
+   * @param lowerPrefix набранный префикс в нижнем регистре.
+   * @return {@code true}, если кандидат должен попасть в автодополнение.
+   */
+  private boolean matches(String name, String lowerPrefix) {
     if (lowerPrefix.isEmpty()) {
       return true;
     }
-    return name.toLowerCase(Locale.ROOT).startsWith(lowerPrefix);
+    return fuzzyMatcher.matches(name, lowerPrefix);
   }
 
   private static boolean isAfterNew(String line, int prefixStart) {
