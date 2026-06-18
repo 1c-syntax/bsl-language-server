@@ -1654,6 +1654,33 @@
 <p><a id="capabilities"></a></p>
 <p>Perfomance measurement - <a href="../bench/index.html">SSL 3.1</a></p>
 <h2 id="Features">Features<a class="headerlink" href="#Features" title="Permanent link">&para;</a></h2>
+<p>Each language-server capability comes with a short animated demo (see the <a href="capabilities/">full catalog</a>):</p>
+<ul>
+<li><a href="capabilities/completion/">Code completion</a> — Context-aware suggestions as you type: global functions, object methods and properties (with type inference), types after the <code>New</code> operator, keywords and local variables.</li>
+<li><a href="capabilities/definition/">Go to definition</a> — Jump from a usage to the declaration of a procedure, function, variable or method. Works within a module and across configuration modules.</li>
+<li><a href="capabilities/implementation/">Go to implementations</a> — For OneScript classes using the <code>extends</code> inheritance library: jump from an interface method (<code>&amp;Интерфейс</code>) to the same-named methods in every implementing class (<code>&amp;Реализует</code>).</li>
+<li><a href="capabilities/references/">Find references</a> — Find all usages of a symbol across the project.</li>
+<li><a href="capabilities/hover/">Quick documentation (hover)</a> — Hovering over a symbol shows its signature, type and the description from doc comments.</li>
+<li><a href="capabilities/signatureHelp/">Signature help</a> — While typing a method call, shows the parameter list and highlights the active parameter.</li>
+<li><a href="capabilities/diagnostics/">Diagnostics</a> — Highlights errors, potential issues and coding-standard violations inline and in the Problems panel.</li>
+<li><a href="capabilities/codeAction/">Code actions / Quick fixes</a> — Offers automatic fixes for diagnostics and refactorings via a shortcut at the problem location.</li>
+<li><a href="capabilities/formatting/">Formatting</a> — Format the whole document, a selection, or on-the-fly while typing (indentation, keyword casing).</li>
+<li><a href="capabilities/rename/">Rename</a> — Safely rename a symbol together with all its usages.</li>
+<li><a href="capabilities/linkedEditing/">Linked editing</a> — Editing the declaration of a local symbol (variable, parameter) updates all of its occurrences in the module at once — without invoking rename.</li>
+<li><a href="capabilities/documentSymbol/">Document symbols / Outline</a> — A tree of the module's procedures, functions and regions — in the Outline view and quick navigation.</li>
+<li><a href="capabilities/workspaceSymbol/">Workspace symbols</a> — Quickly jump to any method or object across the whole project by name.</li>
+<li><a href="capabilities/documentHighlight/">Document highlight</a> — Placing the cursor on a symbol highlights all its occurrences in the current module.</li>
+<li><a href="capabilities/callHierarchy/">Call hierarchy</a> — Who calls a method and what it calls — as an expandable tree.</li>
+<li><a href="capabilities/typeHierarchy/">Type hierarchy</a> — For OneScript classes using the <code>extends</code> inheritance library: a tree of supertypes and subtypes derived from the <code>&amp;Расширяет</code> and <code>&amp;Реализует</code> annotations.</li>
+<li><a href="capabilities/folding/">Code folding</a> — Collapse procedures, functions, regions and blocks for easier navigation.</li>
+<li><a href="capabilities/selectionRange/">Smart selection</a> — Expand and shrink the selection step by step along syntactic boundaries.</li>
+<li><a href="capabilities/semanticTokens/">Semantic highlighting</a> — Accurate highlighting based on code analysis: distinguishes variables, parameters, methods and annotations.</li>
+<li><a href="capabilities/inlayHint/">Inlay hints</a> — Inline hints embedded in the code — for example, parameter names at call sites.</li>
+<li><a href="capabilities/codeLens/">Code lens</a> — Informational lines above procedures: cognitive and cyclomatic complexity, test run and coverage.</li>
+<li><a href="capabilities/color/">Colors: preview and picker</a> — Color preview for <code>Новый Цвет(...)</code> and <code>WebЦвета.*</code>. Clicking the swatch opens the picker — choosing a color updates the code. Web colors convert to/from the RGB constructor representation.</li>
+<li><a href="capabilities/documentLink/">Document links (hyperlinks)</a> — Clickable links right in the module text: <code>См.</code>/<code>See</code> references in doc comments jump to the mentioned method or object; URLs in comments open in the browser; and optionally (<strong>off by default</strong>, <code>documentLink.showDiagnosticDescription</code>) the diagnosed range itself becomes a link to the diagnostic's documentation.</li>
+</ul>
+<p>Briefly (including command-line features):</p>
 <ul>
 <li>File formatting</li>
 <li>Selected region formatting</li>
