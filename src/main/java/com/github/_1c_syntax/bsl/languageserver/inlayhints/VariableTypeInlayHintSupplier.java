@@ -54,9 +54,12 @@ import java.util.Optional;
  * Метка хинта рендерится единственной частью {@link InlayHintLabelPart}: когда
  * выведенный тип объявлен в исходниках рабочей области (общий модуль, модуль
  * менеджера объекта конфигурации, класс/модуль OneScript), к части привязывается
- * ссылка ({@link InlayHintLabelPart#setLocation}) на объявление типа — клик по
- * подсказке выполняет переход к модулю/классу. Объявление типа уже известно на
- * этапе построения хинта, поэтому ссылка проставляется жадно. Платформенные и
+ * ссылка ({@link InlayHintLabelPart#setLocation}) на объявляющий символ типа
+ * ({@link com.github._1c_syntax.bsl.languageserver.types.TypeService#definingSymbol}) —
+ * клик по подсказке выполняет переход. Для OneScript-класса этим символом служит
+ * его конструктор {@code ПриСозданииОбъекта} (по нему hover и go-to-definition
+ * осмысленны), для прочих — объявляющий модуль/класс. Символ уже известен на этапе
+ * построения хинта, поэтому ссылка проставляется жадно. Платформенные и
  * примитивные типы ({@code Массив}, {@code Строка}, …) объявляющего
  * исходник-символа не имеют — для них метка остаётся без ссылки.
  * <p>
@@ -148,8 +151,11 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
       documentContext.getUri(), getId(), inferredType.qualifiedName()
     ));
 
-    // Объявление типа (если есть) уже известно — ссылка части метки проставляется
-    // жадно. Платформенные/примитивные типы исходник-символа не имеют — без ссылки.
+    // Объявляющий символ типа (если есть) уже известен — ссылка части метки
+    // проставляется жадно. Платформенные/примитивные типы исходник-символа не имеют
+    // — без ссылки. Для OneScript-класса definingSymbol возвращает конструктор
+    // ПриСозданииОбъекта: по нему hover и go-to-definition в позиции ссылки
+    // осмысленны, тогда как первый токен модуля-класса часто — ключевое слово Перем.
     typeService.definingSymbol(inferredType, documentContext).ifPresent(declaration -> {
       var targetUri = declaration.getOwner().getUri().toString();
       labelPart.setLocation(new Location(targetUri, declaration.getSelectionRange()));
