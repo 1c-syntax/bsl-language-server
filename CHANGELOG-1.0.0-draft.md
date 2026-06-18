@@ -89,7 +89,7 @@ LSP 3.17/3.18.
 * Добавлена обработка запроса [`textDocument/onTypeFormatting`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) — форматирование по мере набора (флаг `useOnTypeFormatting`).
 * Добавлена обработка запроса [`textDocument/rangesFormatting`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#textDocument_rangesFormatting) — форматирование нескольких диапазонов (LSP 3.18).
 * Добавлена обработка запроса [`textDocument/prepareRename`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) — подготовка переименования с `PrepareRenameResult` и placeholder.
-* Объявлена поддержка нескольких рабочих пространств — [`workspace/didChangeWorkspaceFolders`](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) (`workspaceFolders.supported` и `changeNotifications`): динамическое добавление и удаление workspace folders (см. раздел «Прочие новые возможности»).
+* Объявлена поддержка нескольких рабочих пространств — [`workspace/didChangeWorkspaceFolders`](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) (`workspaceFolders.supported` и `changeNotifications`): динамическое добавление и удаление workspace folders (см. раздел «Поддержка нескольких рабочих пространств»).
 * Добавлена поддержка операций над файлами [`workspace/didCreateFiles`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_didCreateFiles), [`workspace/didRenameFiles`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_didRenameFiles), [`workspace/didDeleteFiles`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_didDeleteFiles) (фильтры `**/*.bsl`, `**/*.os`, каталоги) и динамическая регистрация наблюдателей за файлами ([`didChangeWatchedFiles`](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles)) через `RelativePattern`.
 * Явно декларируется [`positionEncoding`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#positionEncodingKind) = `utf-16`.
 
@@ -123,6 +123,23 @@ LSP 3.17/3.18.
   выражения под курсором), `global_member_info`. Поддержан параметр `fileType` (BSL/OS).
 * Основан на Spring AI 2.0; API и поведение могут меняться.
 
+## Поддержка нескольких рабочих пространств (multi-workspace)
+
+Сервер работает сразу с несколькими каталогами-рабочими пространствами (workspace folders) — например,
+когда в одном окне редактора открыто несколько конфигураций, расширений или пакетов OneScript.
+
+* **Изолированный контекст на каждое рабочее пространство.** Каждая папка анализируется в собственном
+  контексте: метаданные, символы и индексы одной папки не «протекают» в другую. К каждой папке
+  применяется своя конфигурация — настройки и состав диагностик задаются для каждого рабочего
+  пространства отдельно.
+* **Управление составом рабочих пространств.** Папки передаются серверу при инициализации, а их
+  добавление и удаление во время сеанса обрабатывается запросом
+  [`workspace/didChangeWorkspaceFolders`](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders)
+  — переоткрывать редактор не нужно.
+* **Поиск по всем папкам.** Запрос
+  [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol)
+  выполняет поиск символов сразу по всем зарегистрированным workspace folders, а не только в активной.
+
 ## Новые диагностики
 
 На основе системы типов:
@@ -145,8 +162,6 @@ LSP 3.17/3.18.
 
 ## Прочие новые возможности
 
-* **Поддержка нескольких рабочих пространств (multi-workspace)** с отдельной
-  `LanguageServerConfiguration` на каждое рабочее пространство.
 * **Исключение путей** из анализа.
 * **Фильтрация диагностик по авторству Git (`ingoredAuthors`)** — замечания скрываются для строк,
   изменённых указанными авторами (по данным git blame).
