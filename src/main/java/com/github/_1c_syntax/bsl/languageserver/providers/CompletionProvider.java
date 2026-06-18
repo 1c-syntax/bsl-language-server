@@ -195,16 +195,22 @@ public final class CompletionProvider {
     if (names.isEmpty()) {
       return List.of();
     }
-    var byType = new LinkedHashMap<Object, List<String>>();
-    for (var name : names) {
-      // ru/en одного типа → один TypeRef; не-тип → уникальный ключ (своя группа).
-      Object key = typeService.resolve(name, fileType).<Object>map(ref -> ref).orElseGet(Object::new);
-      byType.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
-    }
+    // ru/en одного типа резолвятся в один TypeRef → группируются; имя без
+    // резолва (не тип) проходит как есть. Порядок результата не важен — итоговую
+    // сортировку completion задаёт sortText, а не позиция в этом списке.
+    var byType = new LinkedHashMap<TypeRef, List<String>>();
     var result = new ArrayList<String>(names.size());
+    for (var name : names) {
+      var ref = typeService.resolve(name, fileType).orElse(null);
+      if (ref == null) {
+        result.add(name);
+      } else {
+        byType.computeIfAbsent(ref, k -> new ArrayList<>()).add(name);
+      }
+    }
     for (var group : byType.values()) {
       if (group.size() == 1) {
-        result.addAll(group);
+        result.add(group.get(0));
         continue;
       }
       String pick = null;

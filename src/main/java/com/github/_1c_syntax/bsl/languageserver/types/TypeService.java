@@ -474,7 +474,7 @@ public class TypeService {
       .map(member -> member.returnTypes().refs().stream()
         .filter(r -> !r.equals(TypeRef.UNKNOWN)).findFirst().orElse(TypeRef.UNKNOWN))
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
-      .map(ref -> {
+      .map((TypeRef ref) -> {
         var desc = typeRegistry.getDescription(ref, fileType);
         // owner == null: глобальное свойство, а не член ресивера (контракт TypedMember).
         return new TypedMember(null,
