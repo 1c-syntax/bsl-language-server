@@ -468,7 +468,7 @@ class BSLLanguageServerTest {
 
   /**
    * Группа тестов shutdown/exit изолирована в @Nested-классе с fullRefresh: их методы рвут
-   * singleton-state (флаг shutdownWasCalled на BSLLanguageServer, плюс ThreadPoolTaskExecutor,
+   * singleton-state (флаг shutdownWasCalled на BSLLanguageServer, плюс AsyncTaskExecutor,
    * закрываемый textDocumentService.reset() в shutdown()), которое lite-cleanup не пересоздаёт.
    * Полный Spring refresh между методами этой группы — единственный способ получить свежие
    * BSLLanguageServer и executor.

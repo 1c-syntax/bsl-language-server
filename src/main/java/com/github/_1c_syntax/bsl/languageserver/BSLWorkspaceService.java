@@ -48,7 +48,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -75,7 +75,7 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
   @Qualifier("workspaceServiceExecutor")
-  private final ThreadPoolTaskExecutor executor;
+  private final AsyncTaskExecutor executor;
   @Qualifier("populateContextExecutor")
   private final ExecutorService populateContextExecutor;
 

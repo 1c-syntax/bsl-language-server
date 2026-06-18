@@ -25,9 +25,10 @@ import io.sentry.spring7.SentryTaskDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.net.URI;
 import java.util.Optional;
@@ -46,8 +47,9 @@ import java.util.concurrent.ForkJoinWorkerThread;
  * Исключение: {@code computeConfigurationExecutor} — singleton, т.к. вызывает
  * внешнюю библиотеку MDClasses, не использующую ThreadLocal из BSL LS.
  * <p>
- * Остальные исполнители реализуются через {@link ThreadPoolTaskExecutor} (cached thread pool)
- * с {@link TaskDecorator} для прокидывания контекста.
+ * Остальные исполнители — короткоживущие обработчики запросов LSP без {@code parallelStream()}
+ * внутри — реализуются через {@link SimpleAsyncTaskExecutor} в режиме виртуальных потоков
+ * ({@code setVirtualThreads(true)}) с {@link TaskDecorator} для прокидывания контекста.
  */
 @Configuration
 public class ExecutorConfiguration {
@@ -69,21 +71,23 @@ public class ExecutorConfiguration {
     return runnable -> sentryDecorator.decorate(contextPropagatingDecorator.decorate(runnable));
   }
 
-  // --- ThreadPoolTaskExecutor beans (no parallelStream inside) ---
+  // --- Virtual-thread beans (no parallelStream inside) ---
+  // Короткие задачи-обработчики запросов LSP: один виртуальный поток на задачу,
+  // TaskDecorator переносит контекст (Sentry + micrometer) через async-границу.
 
-  @Bean(destroyMethod = "shutdown")
-  public ThreadPoolTaskExecutor textDocumentServiceExecutor(TaskDecorator compositeTaskDecorator) {
-    return createThreadPoolExecutor(compositeTaskDecorator, "text-document-service-");
+  @Bean
+  public AsyncTaskExecutor textDocumentServiceExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "text-document-service-");
   }
 
-  @Bean(destroyMethod = "shutdown")
-  public ThreadPoolTaskExecutor workspaceServiceExecutor(TaskDecorator compositeTaskDecorator) {
-    return createThreadPoolExecutor(compositeTaskDecorator, "workspace-service-");
+  @Bean
+  public AsyncTaskExecutor workspaceServiceExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "workspace-service-");
   }
 
-  @Bean(destroyMethod = "shutdown")
-  public ThreadPoolTaskExecutor sentryExecutor(TaskDecorator compositeTaskDecorator) {
-    return createThreadPoolExecutor(compositeTaskDecorator, "sentry-");
+  @Bean
+  public AsyncTaskExecutor sentryExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "sentry-");
   }
 
   // --- ForkJoinPool beans (parallelStream runs inside) ---
@@ -126,13 +130,11 @@ public class ExecutorConfiguration {
     return createWorkspaceForkJoinPool("cli-");
   }
 
-  private static ThreadPoolTaskExecutor createThreadPoolExecutor(
+  private static AsyncTaskExecutor createVirtualThreadExecutor(
     TaskDecorator taskDecorator, String threadNamePrefix) {
-    var executor = new ThreadPoolTaskExecutor();
-    executor.setQueueCapacity(0);
-    executor.setThreadNamePrefix(threadNamePrefix);
+    var executor = new SimpleAsyncTaskExecutor(threadNamePrefix);
+    executor.setVirtualThreads(true);
     executor.setTaskDecorator(taskDecorator);
-    executor.initialize();
     return executor;
   }
 
