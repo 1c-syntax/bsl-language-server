@@ -49,8 +49,8 @@ public class LanguageClientAwareAppender
   protected static LanguageClientAwareAppender INSTANCE;
 
   private static final Map<Level, MessageType> loggingLevels = Map.of(
-    Level.TRACE, MessageType.Log,
-    Level.DEBUG, MessageType.Log,
+    Level.TRACE, MessageType.Debug,
+    Level.DEBUG, MessageType.Debug,
     Level.ERROR, MessageType.Error,
     Level.INFO, MessageType.Info,
     Level.WARN, MessageType.Warning
