@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781779254209,
+  "lastUpdate": 1781787320721,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37975,6 +37975,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 8.637007557317794",
             "extra": "mean: 289.0522313117981 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "98694a4b500e4aa723658e6a7aa64b8745f9b2c8",
+          "message": "Merge pull request #4147 from 1c-syntax/feature/completion-fuzzy-matching\n\nfeat(completion): нечёткий поиск в автодополнении (подстрока + подпоследовательность)",
+          "timestamp": "2026-06-18T14:04:26+02:00",
+          "tree_id": "0ee137e10459c7700fe8ff897ccc69722d6d9ec0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/98694a4b500e4aa723658e6a7aa64b8745f9b2c8"
+        },
+        "date": 1781787309700,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.4358702500661,
+            "unit": "sec",
+            "range": "stddev: 14.192349034996393",
+            "extra": "mean: 289.4358702500661 sec\nrounds: 3"
           }
         ]
       }
