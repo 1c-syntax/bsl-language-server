@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -207,6 +208,12 @@ public class PlatformMethodCallInlayHintSupplier
     var fileType = documentContext.getFileType();
     var ref = typeService.resolve(typeName, fileType).orElse(null);
     if (ref == null) {
+      return;
+    }
+    // Конструкторы source-defined типов (OneScript-классы, ПриСозданииОбъекта)
+    // покрывает SourceDefinedMethodCallInlayHintSupplier — иначе подсказки
+    // имён параметров задвоились бы. Здесь обрабатываем только платформенные.
+    if (ref.kind() == TypeKind.USER) {
       return;
     }
     var constructors = typeService.getConstructors(ref, fileType);
