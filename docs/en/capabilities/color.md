@@ -23,3 +23,7 @@ In `colorweb.bsl` the user clicks the swatch next to a color definition, opening
 The cursor is on a web color (`WebЦвета.*`) in `colorweb.bsl`, and the user converts its representation via the picker. The web color turns into the `Новый Цвет(...)` RGB constructor while keeping the exact same color, and the swatch stays unchanged.
 
 ![color-03-webcolor](https://github.com/user-attachments/assets/44bb2a13-6d67-4ca2-94bc-70866d5c7b90)
+
+---
+
+[← Back: Code lens](codeLens.md)  ·  [Next: Document links (hyperlinks) →](documentLink.md)

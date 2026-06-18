@@ -17,3 +17,7 @@
 Курсор ставится на ключевое слово конструкции (`Если`). Подсвечиваются парные ключевые слова конструкции — `Если…КонецЕсли`.
 
 ![documentHighlight-02-keywords](https://github.com/user-attachments/assets/8cbe5bdf-e051-413d-9ba0-61bd47c698c0)
+
+---
+
+[← Назад: Поиск символов по проекту](workspaceSymbol.md)  ·  [Вперёд: Иерархия вызовов →](callHierarchy.md)

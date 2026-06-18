@@ -61,31 +61,10 @@ Each language-server capability comes with a short animated demo (see the [full 
 * [Colors: preview and picker](capabilities/color.md) — Color preview for `Новый Цвет(...)` and `WebЦвета.*`. Clicking the swatch opens the picker — choosing a color updates the code. Web colors convert to/from the RGB constructor representation.
 * [Document links (hyperlinks)](capabilities/documentLink.md) — Clickable links right in the module text: `См.`/`See` references in doc comments jump to the mentioned method or object; URLs in comments open in the browser; and optionally (**off by default**, `documentLink.showDiagnosticDescription`) the diagnosed range itself becomes a link to the diagnostic's documentation.
 
-Briefly (including command-line features):
+Additional capabilities (outside the demo catalog — command line and workspaces):
 
-* File formatting
-* Selected region formatting
-* On-type formatting (on Enter and `;`)
-* Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
-* Folding regions definition `#Region`, `#If`, procedures and functions, code blocks, queries
-* Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
-* Tooltip on local methods and methods of common / manager modules
-* Code completion: methods, functions and constructors with signatures, type members after a dot, variables, keywords
-* Signature help
-* Highlighting of matching constructs (if/elsif/else/endif, try/except/endtry, loops, regions, brackets)
-* Go to method definitions
-* Finding places to use methods
-* Method call hierarchy
-* Expand selection
-* Display color representation and convert between `Color` and `WebColors`
-* Semantic syntax highlighting
-* Code lenses (cognitive/cyclomatic complexity)
-* Inlay hints (method call parameters)
-* Diagnostics
-* Quick fixes and code actions for several diagnostics
 * Run diagnostics engine from command line
 * Run formatter engine from command line
-* Renaming Symbols
 * Multi-workspace support
 
 ## Supported protocol operations

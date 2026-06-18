@@ -4,6 +4,31 @@ nav:
     - index.md
     - faq.md
     - systemRequirements.md
+  - Capabilities:
+    - capabilities/index.md
+    - capabilities/completion.md
+    - capabilities/definition.md
+    - capabilities/implementation.md
+    - capabilities/references.md
+    - capabilities/hover.md
+    - capabilities/signatureHelp.md
+    - capabilities/diagnostics.md
+    - capabilities/codeAction.md
+    - capabilities/formatting.md
+    - capabilities/rename.md
+    - capabilities/linkedEditing.md
+    - capabilities/documentSymbol.md
+    - capabilities/workspaceSymbol.md
+    - capabilities/documentHighlight.md
+    - capabilities/callHierarchy.md
+    - capabilities/typeHierarchy.md
+    - capabilities/folding.md
+    - capabilities/selectionRange.md
+    - capabilities/semanticTokens.md
+    - capabilities/inlayHint.md
+    - capabilities/codeLens.md
+    - capabilities/color.md
+    - capabilities/documentLink.md
   - Contributing:
     - About: contributing/index.md
     - Start:

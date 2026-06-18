@@ -17,3 +17,7 @@ The cursor is placed on a symbol in the code (double-click on the identifier). A
 The cursor is placed on a construct keyword (`Если`). The matching pair of keywords is highlighted — `Если…КонецЕсли`.
 
 ![documentHighlight-02-keywords](https://github.com/user-attachments/assets/8cbe5bdf-e051-413d-9ba0-61bd47c698c0)
+
+---
+
+[← Back: Workspace symbols](workspaceSymbol.md)  ·  [Next: Call hierarchy →](callHierarchy.md)

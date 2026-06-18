@@ -17,3 +17,7 @@ The cursor is placed inside the declaration of the local variable `Счётчи�
 The cursor is placed inside the method parameter name `Заказ` and characters are appended to it. Without invoking rename, all occurrences of the parameter in the method body change simultaneously as you type.
 
 ![linkedEditing-02](https://github.com/user-attachments/assets/707221ea-def3-4b4f-848d-dce03288b8b3)
+
+---
+
+[← Back: Rename](rename.md)  ·  [Next: Document symbols / Outline →](documentSymbol.md)

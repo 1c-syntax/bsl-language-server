@@ -17,3 +17,7 @@ In a diagnostic message, the rule code (`256`) is highlighted as a clickable lin
 In a doc comment, the `См.` (See) reference to method `ВычислитьИтог` is highlighted as clickable. `Ctrl+Click` navigates the editor to the referenced method's declaration.
 
 ![seeReference-01](https://github.com/user-attachments/assets/038f33f2-a6bd-43b5-a3af-998794bcc66c)
+
+---
+
+[← Back: Colors: preview and picker](color.md)

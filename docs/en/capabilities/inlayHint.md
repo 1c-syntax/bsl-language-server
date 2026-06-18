@@ -17,3 +17,7 @@ In `demo.bsl` the cursor moves to a line with a method call passing positional a
 In the `ДемоТипов` procedure variables are declared via assignments (`Колонки = Таблица.Колонки`, `ВсегоСтрок = Таблица.Количество()`). After each variable name the editor shows an inline hint with the inferred type: `Колонки: КоллекцияКолонокТаблицыЗначений`, `ВсегоСтрок: Число`.
 
 ![inlayHint-02-types](https://github.com/user-attachments/assets/f4b82f27-822b-4729-872a-21f116edfa83)
+
+---
+
+[← Back: Semantic highlighting](semanticTokens.md)  ·  [Next: Code lens →](codeLens.md)

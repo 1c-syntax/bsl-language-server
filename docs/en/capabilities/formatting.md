@@ -23,3 +23,7 @@ The user types a procedure with nested `Если`/`Иначе` line by line, pre
 In `range.bsl` the user selects several lines inside the `Если` block and runs `Format Selection`. Only the selected fragment is reformatted (it gets proper indentation), while the rest of the procedure's code is left untouched.
 
 ![formatting-03-range](https://github.com/user-attachments/assets/92a6b1c1-1204-42c7-86b2-6e7ff5d48543)
+
+---
+
+[← Back: Code actions / Quick fixes](codeAction.md)  ·  [Next: Rename →](rename.md)

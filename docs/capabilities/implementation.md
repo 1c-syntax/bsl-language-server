@@ -9,3 +9,7 @@
 На методе интерфейса класса OneScript (`&Интерфейс`, библиотека `extends`) вызывается «Go to Implementations». Открывается список реализаций — одноимённых методов в классах с аннотацией `&Реализует`.
 
 ![implementation-01](https://github.com/user-attachments/assets/0c5638a2-5803-469f-a3dc-368a719c262c)
+
+---
+
+[← Назад: Переход к определению](definition.md)  ·  [Вперёд: Поиск использований →](references.md)
