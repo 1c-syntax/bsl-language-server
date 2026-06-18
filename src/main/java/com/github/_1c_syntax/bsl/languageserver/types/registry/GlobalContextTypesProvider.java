@@ -145,9 +145,27 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
    */
   private static List<MemberDescriptor> membersFromBuiltin() {
     var members = new ArrayList<MemberDescriptor>(GlobalScopeProvider.globalContextMembers(GLOBALS_RESOURCE));
-    // Системные перечисления видны в глобальной области как свойства-члены —
-    // выводятся из ENUM-типов пака (как ContextEnum на платформенном пути).
-    members.addAll(BuiltinTypesJsonLoader.enumGlobalProperties(PLATFORM_TYPES_RESOURCE));
+    members.addAll(enumGlobalProperties(PLATFORM_TYPES_RESOURCE));
+    return members;
+  }
+
+  /**
+   * Системные перечисления пака как глобальные свойства-члены: каждый ENUM-тип
+   * виден в global scope по имени со значением-собой. Зеркалит платформенный
+   * путь ({@code ContextEnum → enumAsProperty}); типы берёт из мемоизированного
+   * {@link BuiltinTypesJsonLoader#load(String)} — без повторного парса ресурса.
+   * Общий для BSL- и OScript-провайдеров.
+   *
+   * @param platformTypesResource путь к JSON-паку платформенных типов.
+   * @return свойства-члены {@code GLOBAL_CONTEXT} для системных перечислений пака.
+   */
+  static List<MemberDescriptor> enumGlobalProperties(String platformTypesResource) {
+    var members = new ArrayList<MemberDescriptor>();
+    for (var decl : BuiltinTypesJsonLoader.load(platformTypesResource)) {
+      if (decl.isEnum()) {
+        members.add(enumAsProperty(decl.qualifiedName(), decl.name().en(), decl.toRef()));
+      }
+    }
     return members;
   }
 

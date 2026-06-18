@@ -156,29 +156,6 @@ public class BuiltinTypesJsonLoader {
     }
   }
 
-  /**
-   * Глобальные свойства-члены {@code GLOBAL_CONTEXT}, выведенные из системных
-   * перечислений пака: каждый ENUM-тип виден в глобальной области по имени, со
-   * значением-типом = сам перечисление (как {@code КодировкаТекста.UTF8}).
-   * Двуязычное имя члена — имя самого типа ({@code ru}+{@code en}).
-   * <p>
-   * Зеркалит путь платформы (через {@code ContextEnum}), где enum-глобалы тоже
-   * выводятся структурно из факта «тип — перечисление», а не из отдельного флага.
-   * Типы читаются из мемоизированного {@link #load(String)} — без повторного
-   * разбора ресурса.
-   */
-  static List<MemberDescriptor> enumGlobalProperties(String resourcePath) {
-    var members = new ArrayList<MemberDescriptor>();
-    for (var decl : load(resourcePath)) {
-      if (decl.isEnum()) {
-        members.add(MemberDescriptor.property(
-            decl.qualifiedName(), decl.toRef(), decl.description().primary())
-          .withBilingualName(decl.name()));
-      }
-    }
-    return members;
-  }
-
   @SuppressWarnings("unchecked")
   private static List<MemberDescriptor> readMembers(List<Map<String, Object>> raw) {
     if (raw == null || raw.isEmpty()) {
