@@ -69,7 +69,7 @@ LSP 3.17/3.18.
 
 * [`textDocument/inlayHint`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) — новые виды подсказок-вставок: имена параметров платформенных методов и конструкторов (`Новый Класс()`), выводимые типы переменных, значения по умолчанию пропущенных аргументов; кликабельные части подписи (`LabelPart`).
 * [`textDocument/foldingRange`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) — сворачивание ветвей `ИначеЕсли`/`Иначе` и блока `Исключение`, блоков `#Вставка`/`#Удаление` расширений, осмысленный `collapsedText`, соблюдение клиентского `rangeLimit`.
-* [`textDocument/documentLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) — кликабельные ссылки `См.`/`See` к упомянутому методу/объекту, открытие http(s)-ссылок из комментариев, опциональная ссылка фрагмента на документацию диагностики.
+* [`textDocument/documentLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) — кликабельные ссылки `См.`/`See` к упомянутому методу/объекту и открытие http(s)-ссылок из комментариев.
 * [`textDocument/documentHighlight`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) — подсветка вхождений идентификаторов с видом Read/Write, `kind=Text` для парных лексем.
 * [`textDocument/documentSymbol`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol) — `detail` с сигнатурой параметров метода.
 * [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) — ранжированный символьный индекс, заполнение `containerName`, отмена запроса через `CancelChecker`, безопасный откат на буквальный поиск при невалидном regex.
@@ -78,9 +78,8 @@ LSP 3.17/3.18.
 * [`textDocument/formatting`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) — поддержка `insertFinalNewline` и `trimFinalNewlines`.
 * [`textDocument/references`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references) — учёт `context.includeDeclaration`.
 * [`textDocument/definition`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition) — учёт клиентской возможности `linkSupport` (`LocationLink`).
-* [`textDocument/documentColor`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) / [`textDocument/colorPresentation`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) — выбор цвета через палитру и конвертация веб-цветов в `Новый Цвет` и обратно.
 * [`textDocument/prepareCallHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy) — раскрытие узла кода модуля в иерархии вызовов.
-* [`textDocument/hover`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) — показ типа и области видимости переменной, признака необязательности параметра («?»), состава возвращаемых структур, признака устаревания членов.
+* [`textDocument/hover`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) — показ выводимого типа переменной/выражения, признака необязательности параметра («?»), состава возвращаемых структур и признака устаревания методов из исходников.
 
 ## Режим MCP (экспериментально)
 
@@ -150,6 +149,7 @@ LSP 3.17/3.18.
 * Исправлен `StringIndexOutOfBoundsException` в `QueryComputer` для соседних строковых токенов после
   разрыва строки.
 * Исправлен `NullPointerException` в `WebColorInformationSupplier` при неизвестном имени цвета.
+* `ColorProvider` больше не показывает ложный чёрный образец цвета для нелитеральных аргументов конструктора `Цвет`.
 * Пропускаются объявления переменных без имени при построении структуры документа.
 * Починен поиск ссылок на общий модуль в `ReferenceIndex.getReferencesTo`.
 * Корректная обработка destruction callbacks в `WorkspaceBeanScope`.
