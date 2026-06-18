@@ -95,7 +95,7 @@ LSP 3.17/3.18.
 
 ### Улучшения существующих запросов
 
-* [`textDocument/inlayHint`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) — новые виды подсказок-вставок: имена параметров платформенных методов и конструкторов (`Новый Класс()`), выводимые типы переменных, значения по умолчанию пропущенных аргументов; кликабельные части подписи (`LabelPart`).
+* [`textDocument/inlayHint`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) — новые виды подсказок-вставок: имена параметров платформенных методов и конструкторов (`Новый Класс()`), выводимые типы переменных, значения по умолчанию пропущенных аргументов; кликабельные части подписи (`LabelPart`); ускорен расчёт подсказок имён параметров (устранён квадратичный обход AST).
 * [`textDocument/foldingRange`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) — сворачивание ветвей `ИначеЕсли`/`Иначе` и блока `Исключение`, блоков `#Вставка`/`#Удаление` расширений, осмысленный `collapsedText`, соблюдение клиентского `rangeLimit`.
 * [`textDocument/documentLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) — кликабельные ссылки `См.`/`See` к упомянутому методу/объекту и открытие http(s)-ссылок из комментариев.
 * [`textDocument/documentHighlight`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) — подсветка вхождений идентификаторов с видом Read/Write, `kind=Text` для парных лексем.
@@ -116,20 +116,6 @@ LSP 3.17/3.18.
 * [`textDocument/prepareCallHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy) — раскрытие узла кода модуля в иерархии вызовов.
 * [`textDocument/hover`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) — показ выводимого типа переменной/выражения, признака необязательности параметра («?»), состава возвращаемых структур и признака устаревания методов из исходников.
 
-## Режим MCP (экспериментально)
-
-Сервер умеет работать как сервер [Model Context Protocol (MCP)](https://modelcontextprotocol.io/),
-открывая возможности анализа кода 1С (BSL) и OneScript AI-агентам. Инструменты MCP работают поверх
-того же движка, что и LSP-режим. Рабочие пространства задаются через
-[MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) — прямой аналог workspace folders.
-
-* **Режимы запуска:** отдельный MCP-сервер (команда `mcp` с транспортом `stdio`/`sse`/`streamable`)
-  либо совместно с LSP по флагу `--mcp` (рядом с `stdio`- или `websocket`-LSP, по Streamable HTTP).
-* **Инструменты:** `analyze_file`, `document_symbols`, `find_references`, `call_hierarchy`, `hover`,
-  `definition`, `type_info` (свойства и методы типа по имени), `type_at_position` (выведенный тип
-  выражения под курсором), `global_member_info`. Поддержан параметр `fileType` (BSL/OS).
-* Основан на Spring AI 2.0; API и поведение могут меняться.
-
 ## Поддержка нескольких рабочих пространств (multi-workspace)
 
 Сервер работает сразу с несколькими каталогами-рабочими пространствами (workspace folders) — например,
@@ -146,6 +132,20 @@ LSP 3.17/3.18.
 * **Поиск по всем папкам.** Запрос
   [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol)
   выполняет поиск символов сразу по всем зарегистрированным workspace folders, а не только в активной.
+
+## Режим MCP (экспериментально)
+
+Сервер умеет работать как сервер [Model Context Protocol (MCP)](https://modelcontextprotocol.io/),
+открывая возможности анализа кода 1С (BSL) и OneScript AI-агентам. Инструменты MCP работают поверх
+того же движка, что и LSP-режим. Рабочие пространства задаются через
+[MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) — прямой аналог workspace folders.
+
+* **Режимы запуска:** отдельный MCP-сервер (команда `mcp` с транспортом `stdio`/`sse`/`streamable`)
+  либо совместно с LSP по флагу `--mcp` (рядом с `stdio`- или `websocket`-LSP, по Streamable HTTP).
+* **Инструменты:** `analyze_file`, `document_symbols`, `find_references`, `call_hierarchy`, `hover`,
+  `definition`, `type_info` (свойства и методы типа по имени), `type_at_position` (выведенный тип
+  выражения под курсором), `global_member_info`. Поддержан параметр `fileType` (BSL/OS).
+* Основан на Spring AI 2.0; API и поведение могут меняться.
 
 ## Новые диагностики
 
@@ -176,12 +176,6 @@ LSP 3.17/3.18.
 * Обновлены данные синтакс-помощника OneScript до OneScript 2.1; автодополнение видит соседей по
   своему пакету без `#Использовать`; добавлены описания встроенных ключевых слов oscript.
 * Поддержка нового объекта метаданных «Цвет палитры» (`ЦветПалитры`).
-
-## Производительность
-
-* Кэш инференса типов и мемоизация получения членов; индекс вызовов для ускорения провайдеров.
-* Устранён квадратичный обход AST в поставщике inlay-hint вызовов методов.
-* Параллельное выполнение тестов JUnit; единая инициализация серверного контекста в «горячих» тестах.
 
 ## Исправлены общие ошибки
 
