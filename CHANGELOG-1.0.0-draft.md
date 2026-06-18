@@ -58,6 +58,20 @@
 * **Навигация по бинам.** Двунаправленный переход между объявлением бина и точками его внедрения:
   код-линзы (`BeanUsagesCodeLensSupplier`) и быстрые действия (`AutumnNavigationCodeActionSupplier`).
 
+## Поддержка библиотеки наследования `extends` (OneScript)
+
+Поверх новой системы типов реализована поддержка библиотеки наследования `extends` для OneScript:
+сервер распознаёт её аннотации и строит модель отношений типов (`ExtendsAnnotations`,
+`OScriptExtends`, `TypeRelationIndex`), на которой работают переход к реализациям и иерархия типов.
+
+* **Аннотации наследования.** Распознаются `&Расширяет` (extends), `&Реализует` (implements) и
+  `&Интерфейс` (interface); по ним выстраиваются связи «супертип ↔ подтип» и «интерфейс ↔
+  реализация».
+* **Переход к реализациям** ([`textDocument/implementation`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation)) — от метода интерфейса (`&Интерфейс`) ко всем одноимённым методам реализующих его классов (`&Реализует`).
+* **Иерархия типов** ([`textDocument/prepareTypeHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy), [`typeHierarchy/supertypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes), [`typeHierarchy/subtypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_subtypes)) — дерево супертипов и подтипов по `&Расширяет`/`&Реализует`, с `SymbolKind.Interface` для интерфейсов.
+
+> Соответствующие запросы LSP перечислены ниже, в разделе «Поддержка протокола LSP».
+
 ## Поддержка протокола LSP
 
 Добавлен **каталог возможностей** в документации (`docs/capabilities`). Сама поддержка протокола
@@ -69,8 +83,8 @@ LSP 3.17/3.18.
 * Добавлена обработка запроса [`textDocument/completion`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_completion) и [`completionItem/resolve`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve) — автодополнение кода: глобальные функции, методы и свойства объектов (с выводом типа), типы после `Новый`, ключевые слова и локальные переменные; нечёткий поиск (подстрока и подпоследовательность), ранжирование через `sortText`, сигнатура и тип в `labelDetails` (LSP 3.17), `commitCharacters`, отложенная документация через resolve, размещение курсора после скобок.
 * Добавлена обработка запроса [`textDocument/signatureHelp`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp) — подсказка по параметрам вызываемого метода с подсветкой текущего параметра и учётом клиентских возможностей (`labelOffset`, `documentationFormat`, контекст retrigger).
 * Добавлена обработка запроса [`inlayHint/resolve`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve) — отложенное наполнение подсказки-вставки (в v0.29.0 не поддерживался).
-* Добавлена обработка запроса [`textDocument/implementation`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation) — переход к реализациям метода интерфейса (`&Интерфейс` → `&Реализует`) для классов OneScript на библиотеке наследования `extends`.
-* Добавлена обработка запросов [`textDocument/prepareTypeHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy), [`typeHierarchy/supertypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes) и [`typeHierarchy/subtypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_subtypes) — иерархия супертипов и подтипов OneScript-классов по `&Расширяет`/`&Реализует` (с `SymbolKind.Interface` для интерфейсов).
+* Добавлена обработка запроса [`textDocument/implementation`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation) — переход к реализациям (поддержка `LocationLink`); подробности — в разделе «Поддержка библиотеки наследования `extends`».
+* Добавлена обработка запросов [`textDocument/prepareTypeHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy), [`typeHierarchy/supertypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes) и [`typeHierarchy/subtypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_subtypes) — иерархия типов; подробности — в разделе «Поддержка библиотеки наследования `extends`».
 * Добавлена обработка запроса [`textDocument/linkedEditingRange`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange) — одновременное редактирование объявления локального символа и всех его вхождений без вызова переименования.
 * Добавлена обработка запроса [`textDocument/onTypeFormatting`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) — форматирование по мере набора (флаг `useOnTypeFormatting`).
 * Добавлена обработка запроса [`textDocument/rangesFormatting`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#textDocument_rangesFormatting) — форматирование нескольких диапазонов (LSP 3.18).
