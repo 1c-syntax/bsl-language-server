@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781710394086,
+  "lastUpdate": 1781771080634,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37882,6 +37882,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 16.880379706620854",
             "extra": "mean: 286.87589955329895 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ac39cbd893da1bccc8bd6f6508e50b687bcad229",
+          "message": "Merge pull request #4135 from 1c-syntax/fix/typeregistry-implicit-bootstrap\n\nrefactor(types): глобальная область видимости — члены синтетического типа ГлобальныйКонтекст",
+          "timestamp": "2026-06-18T07:44:46+02:00",
+          "tree_id": "5f53781c23bf70fff56146a6181aba75f8737c7e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ac39cbd893da1bccc8bd6f6508e50b687bcad229"
+        },
+        "date": 1781771070853,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 291.16948715845746,
+            "unit": "sec",
+            "range": "stddev: 3.330380674035946",
+            "extra": "mean: 291.16948715845746 sec\nrounds: 3"
           }
         ]
       }
