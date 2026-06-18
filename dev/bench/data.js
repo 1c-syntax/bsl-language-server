@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781818451402,
+  "lastUpdate": 1781824884338,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38161,6 +38161,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 16.445103619064927",
             "extra": "mean: 296.51367568969727 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c90bb82cc9256d105d54a87263151c5602bf0638",
+          "message": "Merge pull request #4162 from 1c-syntax/claude/json-schema-config-analysis-e46m33\n\ndocs: синхронизация JSON-схемы и ConfigurationFile с кодом",
+          "timestamp": "2026-06-18T23:06:17+02:00",
+          "tree_id": "73e37be6cc7bc26efb56ca5bc3ce8a18cd6a7730",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c90bb82cc9256d105d54a87263151c5602bf0638"
+        },
+        "date": 1781824875961,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 288.34281571706134,
+            "unit": "sec",
+            "range": "stddev: 6.254000983208758",
+            "extra": "mean: 288.34281571706134 sec\nrounds: 3"
           }
         ]
       }
