@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
@@ -234,12 +235,15 @@ public class TypeService {
   }
 
   /**
-   * Символ-источник, объявивший тип, если такой есть в исходниках рабочей области.
+   * Символ-источник, объявляющий тип (цель go-to-definition и hover), если такой
+   * есть в исходниках рабочей области.
    * <p>
    * Покрывает типы, у которых есть объявляющий их модуль/класс:
    * <ul>
    *   <li>{@link TypeKind#USER} — пользовательские типы OneScript (классы и модули):
-   *       объявление хранится в самом {@link UserType#getDeclaration()};</li>
+   *       объявление хранится в самом {@link UserType#getDeclaration()}. Для класса
+   *       с конструктором предпочитается символ конструктора
+   *       ({@code ПриСозданииОбъекта}) — см. ниже;</li>
    *   <li>{@link TypeKind#CONFIGURATION} — общие модули и модули менеджеров объектов
    *       конфигурации: документ-модуль находится обратным индексом
    *       {@link GlobalScopeProvider#moduleUriByType(TypeRef)}, а его символ —
@@ -248,6 +252,18 @@ public class TypeService {
    * Для платформенных/примитивных типов ({@link TypeKind#PLATFORM},
    * {@link TypeKind#PRIMITIVE}) и служебных {@code Unknown}/{@code Any}
    * объявляющего исходник-символа нет — возвращается {@code empty}.
+   * <p>
+   * <b>Почему для OneScript-класса предпочтён конструктор, а не модуль.</b> У языка
+   * нет отдельного оператора «объявление класса»: класс — это весь {@code .os}-файл,
+   * а его {@link ModuleSymbol#getSelectionRange()} указывает на первый токен файла,
+   * которым часто оказывается {@code Перем} (объявление поля). Потребитель —
+   * {@code InlayHintLabelPart.location}, семантика которого в клиенте: выполнить
+   * hover и go-to-definition <b>в позиции</b> ссылки. На {@code Перем} hover даёт
+   * бесполезное описание ключевого слова, а go-to-definition не находит
+   * source-defined символа и переход не срабатывает. Имя конструктора — это
+   * source-defined метод: hover показывает его сигнатуру, а go-to-definition ведёт
+   * к нему. Для класса без конструктора и не-USER типов цель — модуль/класс
+   * (переход к началу файла).
    *
    * @param typeRef           тип, чей объявляющий символ нужен.
    * @param requestingContext контекст документа-потребителя; через него находится
@@ -258,10 +274,24 @@ public class TypeService {
    */
   public Optional<SourceDefinedSymbol> definingSymbol(TypeRef typeRef, DocumentContext requestingContext) {
     return switch (typeRef.kind()) {
-      case USER -> userTypeDeclaration(typeRef);
+      case USER -> userTypeDeclaration(typeRef).map(TypeService::preferConstructor);
       case CONFIGURATION -> configurationModuleSymbol(typeRef, requestingContext);
       default -> Optional.empty();
     };
+  }
+
+  /**
+   * Для символа-модуля OneScript-класса предпочесть символ конструктора
+   * {@code ПриСозданииОбъекта}, если он есть; иначе вернуть сам символ-модуль
+   * без изменений.
+   */
+  private static SourceDefinedSymbol preferConstructor(SourceDefinedSymbol declaration) {
+    if (declaration instanceof ModuleSymbol module) {
+      return module.getOwner().getSymbolTree().getConstructor()
+        .map(SourceDefinedSymbol.class::cast)
+        .orElse(declaration);
+    }
+    return declaration;
   }
 
   private Optional<SourceDefinedSymbol> userTypeDeclaration(TypeRef typeRef) {
