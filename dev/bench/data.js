@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781773242920,
+  "lastUpdate": 1781779254209,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -37944,6 +37944,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.442744338512238",
             "extra": "mean: 287.5286652247111 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d9ca1b60f456d2c292e7e3785180940c4bf1192",
+          "message": "Merge pull request #4134 from 1c-syntax/feature/oscript-user-collections\n\nfeat(oscript): регистрировать &Обходимое-классы OneScript как коллекции",
+          "timestamp": "2026-06-18T09:24:07+02:00",
+          "tree_id": "b147473af8cdd5541a9ae834a9dbd8c12f226a50",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9d9ca1b60f456d2c292e7e3785180940c4bf1192"
+        },
+        "date": 1781779244154,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.0522313117981,
+            "unit": "sec",
+            "range": "stddev: 8.637007557317794",
+            "extra": "mean: 289.0522313117981 sec\nrounds: 3"
           }
         ]
       }
