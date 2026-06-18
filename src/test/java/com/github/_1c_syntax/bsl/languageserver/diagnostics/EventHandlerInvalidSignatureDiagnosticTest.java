@@ -75,6 +75,27 @@ class EventHandlerInvalidSignatureDiagnosticTest
   }
 
   @Test
+  void silentForVariadicContract() {
+    // Конструктор OneScript-класса ПриСозданииОбъекта принимает переменное
+    // число параметров — любое количество объявленных аргументов допустимо.
+    var variadicParam = new ParameterDescriptor(
+      BilingualString.of("Значение", "Value"),
+      TypeSet.EMPTY, true, BilingualString.EMPTY, "", true);
+    var contract = MemberDescriptor.event("ПриЗаписи", "",
+      List.of(new SignatureDescriptor(List.of(variadicParam), TypeSet.EMPTY, "")));
+    stubAsHandler("ПриЗаписи", contract);
+
+    var src = """
+      Процедура ПриЗаписи(КоордХ, КоордУ)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
   void silentWhenContractEmpty() {
     // Контракт без сигнатур — диагностика молчит (нечем сравнивать).
     stubAsHandler("ПередЗаписью", MemberDescriptor.event("ПередЗаписью", "", List.of()));
