@@ -1449,6 +1449,39 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void multiSignatureCountInLabelDetailsIsSeparatedFromLabel() {
+    // given
+    // Счётчик вариантов синтаксиса в labelDetails.detail клиент рендерит вплотную к label,
+    // поэтому без разделителя имя и счётчик слипались («Массив3 варианта синтаксиса»). Ожидаем,
+    // что счётчик отделён пробелом и взят в скобки: label + detail « (N вариантов синтаксиса)».
+    // Метод Скопировать у ТаблицаЗначений имеет несколько вариантов синтаксиса.
+    enableLabelDetailsSupport(true);
+    var documentContext = TestUtils.getDocumentContext("ТЗ = Новый ТаблицаЗначений;\nТЗ.");
+
+    // when
+    CompletionItem copy;
+    languageServerConfiguration.setLanguage(Language.RU);
+    try {
+      copy = dotCompletionItem(documentContext, new Position(1, 3), "Скопировать");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+
+    // then
+    var labelDetails = copy.getLabelDetails();
+    assertThat(labelDetails)
+      .as("при поддержке labelDetailsSupport счётчик вариантов кладётся в labelDetails")
+      .isNotNull();
+    assertThat(labelDetails.getDetail())
+      .as("счётчик вариантов синтаксиса отделён пробелом и взят в скобки, чтобы не слипаться с label")
+      .startsWith(" (")
+      .endsWith("синтаксиса)");
+    assertThat(copy.getDetail())
+      .as("плоский detail не дублируется при labelDetails")
+      .isNull();
+  }
+
+  @Test
   void propertyTypeGoesToLabelDetailsDescriptionWhenClientSupportsLabelDetails() {
     // given
     enableLabelDetailsSupport(true);
