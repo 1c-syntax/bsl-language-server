@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781793722578,
+  "lastUpdate": 1781807680546,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38068,6 +38068,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.672925005944128",
             "extra": "mean: 294.56456629435223 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "96bdefc68affa37808ae95196fbae5500214ab4e",
+          "message": "Merge pull request #4156 from 1c-syntax/claude/bsl-language-server-4153-w0fr9f\n\nfeat(lsp): использовать MessageType.Debug для отладочных логов (LSP 3.18)",
+          "timestamp": "2026-06-18T19:21:37+02:00",
+          "tree_id": "fcfbd50237fecc2decd758052c2b3aae65b520f7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/96bdefc68affa37808ae95196fbae5500214ab4e"
+        },
+        "date": 1781807671676,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 304.59257793426514,
+            "unit": "sec",
+            "range": "stddev: 3.9079523834164362",
+            "extra": "mean: 304.59257793426514 sec\nrounds: 3"
           }
         ]
       }
