@@ -132,7 +132,7 @@ public class OScriptModuleMembersProvider {
     // Признак обходимой коллекции (&Обходимое) выставляется при каждой
     // регистрации, а не только при первой: так добавление/удаление аннотации
     // подхватывается hot-reload без ре-регистрации типа.
-    typeRegistry.setUserTypeIterable(ref, oScriptIterable.isIterable(documentContext));
+    typeRegistry.setUserTypeIterable(ref, oScriptIterable.isIterable(documentContext), FileType.OS);
 
     if (firstTimeForName) {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), FileType.OS);

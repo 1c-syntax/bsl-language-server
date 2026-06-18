@@ -1185,9 +1185,7 @@ public class TypeRegistry {
    * {@link #registerPackCollectionTraits} для USER-типов, у которых нет
    * {@link TypePackProvider.TypeDecl}: источник истины — аннотация
    * {@code &Обходимое} на {@code ПриСозданииОбъекта} (см.
-   * {@code OScriptIterable#isIterable}). Признак пишется в скоуп
-   * {@link FileType#OS}, поскольку пользовательские OneScript-типы существуют
-   * только в нём.
+   * {@code OScriptIterable#isIterable}).
    * <p>
    * Тип элемента при этом не задаётся: в исходниках OneScript он нигде не
    * объявлен (итератор возвращает нетипизированное значение), поэтому
@@ -1200,15 +1198,13 @@ public class TypeRegistry {
    *
    * @param ref      ссылка на пользовательский тип.
    * @param iterable {@code true} — пометить коллекцией; {@code false} — снять признак.
+   * @param fileType языковой скоуп, в котором действует признак.
    */
-  public void setUserTypeIterable(TypeRef ref, boolean iterable) {
-    if (ref == null) {
-      return;
-    }
+  public void setUserTypeIterable(TypeRef ref, boolean iterable, FileType fileType) {
     if (iterable) {
-      supportsForEach.get(FileType.OS).put(ref, Boolean.TRUE);
+      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
     } else {
-      supportsForEach.get(FileType.OS).remove(ref);
+      supportsForEach.get(fileType).remove(ref);
     }
   }
 

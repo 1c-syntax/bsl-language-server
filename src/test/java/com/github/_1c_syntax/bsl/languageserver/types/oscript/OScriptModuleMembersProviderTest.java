@@ -126,7 +126,7 @@ class OScriptModuleMembersProviderTest {
     provider.register(documentContext);
 
     // then — тип помечен обходимой коллекцией.
-    verify(typeRegistry).setUserTypeIterable(ref, true);
+    verify(typeRegistry).setUserTypeIterable(ref, true, FileType.OS);
   }
 
   @Test
@@ -150,6 +150,6 @@ class OScriptModuleMembersProviderTest {
     provider.register(documentContext);
 
     // then — признак коллекции снимается (false), а не остаётся от прежнего состояния.
-    verify(typeRegistry).setUserTypeIterable(ref, false);
+    verify(typeRegistry).setUserTypeIterable(ref, false, FileType.OS);
   }
 }
