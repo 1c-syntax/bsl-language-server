@@ -133,9 +133,9 @@ LSP 3.17/3.18.
 
 Прочие:
 
-* [`CommonModuleVariables`](https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleVariables) — объявление переменных (`Перем`) в общем модуле (Issue #3854).
-* [`CompareWithBoolean`](https://1c-syntax.github.io/bsl-language-server/diagnostics/CompareWithBoolean) — сравнение с булевой константой (Issue #696).
-* [`BadExceptionCategory`](https://1c-syntax.github.io/bsl-language-server/diagnostics/BadExceptionCategory) — недопустимая категория исключений в `ВызватьИсключение` (Issue #1935).
+* [`CommonModuleVariables`](https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleVariables) — объявление переменных (`Перем`) в общем модуле.
+* [`CompareWithBoolean`](https://1c-syntax.github.io/bsl-language-server/diagnostics/CompareWithBoolean) — сравнение с булевой константой.
+* [`BadExceptionCategory`](https://1c-syntax.github.io/bsl-language-server/diagnostics/BadExceptionCategory) — недопустимая категория исключений в `ВызватьИсключение`.
 * [`EventHandlerInvalidSignature`](https://1c-syntax.github.io/bsl-language-server/diagnostics/EventHandlerInvalidSignature) — несоответствие сигнатуры обработчика платформенного события (с быстрыми исправлениями).
 * [`EventHandlerOutsideEventRegion`](https://1c-syntax.github.io/bsl-language-server/diagnostics/EventHandlerOutsideEventRegion) — обработчик события вне стандартной области (с быстрыми исправлениями).
 
@@ -163,11 +163,9 @@ LSP 3.17/3.18.
 
 ## Исправлены общие ошибки
 
-* Устранено ложное срабатывание `ServerCallsInFormEvents` на директиву `&НаСервереБезКонтекста`
-  (Issue #3852).
+* Устранено ложное срабатывание `ServerCallsInFormEvents` на директиву `&НаСервереБезКонтекста`.
 * Устранено ложное срабатывание `MissingCommonModuleMethod` на цепочках вызовов через общий модуль.
-* Устранено ложное срабатывание `MissingTemporaryFileDeletion` при асинхронном удалении файлов
-  (Issue #3260).
+* Устранено ложное срабатывание `MissingTemporaryFileDeletion` при асинхронном удалении файлов.
 * Исправлена работа `VirtualTableCallWithoutParameters` на `КритерийОтбора`.
 * Устранены ложные срабатывания диагностик метаданных на объектах, заблокированных поддержкой.
 * Исправлены падения при построении графа потока управления (CFG): `IllegalArgumentException` на
