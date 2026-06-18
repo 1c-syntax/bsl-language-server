@@ -2323,7 +2323,7 @@
 <h2 id="Глобальная-и-локальная-конфигурация">Глобальная и локальная конфигурация<a class="headerlink" href="#Глобальная-и-локальная-конфигурация" title="Permanent link">&para;</a></h2>
 <p>BSL Language Server использует двухуровневую систему конфигурации:</p>
 <ul>
-<li><strong>Глобальная конфигурация</strong> — общие настройки, применяемые ко всем рабочим областям. Содержит параметры <code>language</code>, <code>sendErrors</code> и <code>traceLog</code>.</li>
+<li><strong>Глобальная конфигурация</strong> — общие настройки, применяемые ко всем рабочим областям. Содержит параметры <code>language</code>, <code>sendErrors</code>, <code>traceLog</code>, а также <code>capabilities</code> (<code>textDocumentSync.change</code>) и <code>workspaceSymbol</code> (<code>syncFuzzySearch</code>).</li>
 <li><strong>Локальная (per-workspace) конфигурация</strong> — индивидуальные настройки для каждой рабочей области, включая диагностики, codeLens, inlayHint и другие параметры. Каждая рабочая область может иметь собственный конфигурационный файл.</li>
 </ul>
 <h3 id="Стратегия-поиска-конфигурационного-файла">Стратегия поиска конфигурационного файла<a class="headerlink" href="#Стратегия-поиска-конфигурационного-файла" title="Permanent link">&para;</a></h3>
@@ -2340,7 +2340,7 @@
 <h3 id="Отслеживание-изменений">Отслеживание изменений<a class="headerlink" href="#Отслеживание-изменений" title="Permanent link">&para;</a></h3>
 <p>BSL Language Server автоматически отслеживает изменения конфигурационных файлов:</p>
 <ul>
-<li>Изменение глобального файла приводит к обновлению глобальных параметров (<code>language</code>, <code>sendErrors</code>, <code>traceLog</code>).</li>
+<li>Изменение глобального файла приводит к обновлению глобальных параметров (<code>language</code>, <code>sendErrors</code>, <code>traceLog</code>, <code>capabilities</code>, <code>workspaceSymbol</code>).</li>
 <li>Изменение файла в рабочей области приводит к обновлению настроек только этой рабочей области, включая пересчёт диагностик.</li>
 <li>При добавлении рабочей области автоматически регистрируется наблюдатель за её конфигурационным файлом.</li>
 <li>При удалении рабочей области наблюдатель снимается с регистрации.</li>
@@ -2389,6 +2389,61 @@
 <td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>beanUsages</code></td>
 <td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
 <td style="text-align: left;">Включает линзу с количеством точек внедрения и навигацией к ним над производителями желудей — конструктором компонентного желудя и методами <code>&amp;Завязь</code> (OneScript, DI-фреймворк «ОСень»). По умолчанию настройка установлена в <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>testRunner</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Настройки тестового фреймворка, используемые линзами запуска тестов (<code>Запустить тест</code>, <code>Запустить все тесты</code>, <code>Отладить тест</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>testSources</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Каталоги с исходными файлами тестов. По умолчанию <code>["tests"]</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>annotations</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Имена аннотаций, маркирующих тестовые методы. По умолчанию <code>["Тест", "Test"]</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>executable</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Путь/имя исполняемого файла тест-раннера (Linux и macOS). По умолчанию <code>1testrunner</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>executableWin</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Путь/имя исполняемого файла тест-раннера (Windows). По умолчанию <code>1testrunner.bat</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>getTestsByTestRunner</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Получать имена тестовых методов через исполняемый файл тест-раннера. Если <code>false</code>, методы ищутся внутренним парсером по аннотации <code>&amp;Тест</code>. По умолчанию <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>getTestsArguments</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Аргументы тест-раннера для получения списка тестов. <code>%s</code> заменяется на путь к текущему файлу. По умолчанию <code>-show %s</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>getTestsResultPattern</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Регулярное выражение для разбора вывода тест-раннера и извлечения имён методов. По умолчанию <code>^[^&lt;]*Имя\sтеста\s&lt;([^&gt;]+)&gt;.*</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>runTestArguments</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Аргументы для запуска одного теста. Первый <code>%s</code> — путь к файлу, второй <code>%s</code> — имя тестового метода. По умолчанию <code>-run %s %s</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>debugTestArguments</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Аргументы для отладки одного теста. По умолчанию не заполнено.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>runAllTestsArguments</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Аргументы для запуска всех тестов файла. <code>%s</code> заменяется на путь к текущему файлу. По умолчанию <code>-run %s</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>diagnostics</code></td>
@@ -2491,9 +2546,19 @@
 <td style="text-align: left;">Включает отображение значения <a href="../../diagnostics/CyclomaticComplexity/">цикломатической сложности</a> метода в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
 </tr>
 <tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>methodCall</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение параметров вызываемого метода (как методов конфигурации/библиотеки, так и платформенных) в виде inlay hints. По умолчанию настройка установлена в <code>true</code>. Доступные параметры:<br/><em> <code>showParametersWithTheSameName</code> - отображать параметры с именами, содержащимися в передаваемом значении. Значение параметра по умолчанию - <code>false</code>.<br/></em> <code>showDefaultValues</code> - отображать значения по умолчанию для непереданных параметров. Значение параметра по умолчанию - <code>true</code>.</td>
+</tr>
+<tr>
 <td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
 <td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
-<td style="text-align: left;">Включает отображение параметров вызываемого метода конфигурации/библиотеки в виде inlay hints. По умолчанию настройка установлена в <code>true</code>. Доступные параметры:<br/><em> <code>showParametersWithTheSameName</code> - отображать параметры с именами, содержащимися в передаваемом значении. Значение параметра по умолчанию - <code>false</code>.<br/></em> <code>showDefaultValues</code> - отображать значения по умолчанию для непереданных параметров. Значение параметра по умолчанию - <code>true</code>.</td>
+<td style="text-align: left;"><strong>Устарело</strong>, используйте <code>methodCall</code> (единая настройка для методов конфигурации/библиотеки и платформенных методов). Ключ сохранён для совместимости со старыми конфигурационными файлами. Доступные параметры те же, что у <code>methodCall</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>variableType</code></td>
+<td style="text-align: center;"><code>Булево</code> или <code>JSON-Объект</code></td>
+<td style="text-align: left;">Включает отображение выведенного типа переменных в присваиваниях в виде inlay hints. По умолчанию настройка установлена в <code>true</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>capabilities</code></td>
@@ -2554,6 +2619,81 @@
 <td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>commonModuleAccessors</code></td>
 <td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
 <td style="text-align: left;">Список паттернов "Модуль.Метод" для методов, возвращающих ссылку на общий модуль (например, <code>ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")</code>). Поддерживается как формат с указанием модуля (<code>ОбщегоНазначения.ОбщийМодуль</code>), так и локальный вызов (<code>ОбщийМодуль</code>). По умолчанию включает стандартные варианты из БСП: <code>ОбщийМодуль</code>, <code>CommonModule</code>, <code>ОбщегоНазначения.ОбщийМодуль</code>, <code>ОбщегоНазначенияКлиент.ОбщийМодуль</code>, <code>ОбщегоНазначенияСервер.ОбщийМодуль</code>, <code>ОбщегоНазначенияКлиентСервер.ОбщийМодуль</code>, <code>ОбщегоНазначенияПовтИсп.ОбщийМодуль</code> и их английские эквиваленты.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>formatting</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки форматирования кода.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useUpperCaseForOrNotAndKeywords</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Регистр ключевых слов <code>И</code>/<code>ИЛИ</code>/<code>НЕ</code> (<code>And</code>/<code>Or</code>/<code>Not</code>) при форматировании. Возможные значения:<br/><em> <code>true</code> - верхний регистр (<code>ИЛИ</code>, <code>НЕ</code>, <code>И</code>) </em>(установлен по умолчанию)<em><br/></em> <code>false</code> - CamelCase (<code>Или</code>, <code>Не</code>, <code>И</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useKeywordsFormatting</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Приводить ключевые слова к каноническому виду при форматировании. По умолчанию <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useOnTypeFormatting</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Включить форматирование по нажатию символа-триггера (<code>textDocument/onTypeFormatting</code>). Триггеры — <code>Enter</code> и <code>;</code>. По умолчанию <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>semanticTokens</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки семантических токенов.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>strTemplateMethods</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Список паттернов "Модуль.Метод" для функций-шаблонизаторов строк, аналогичных <code>СтрШаблон</code>/<code>StrTemplate</code>. Строки внутри вызовов этих функций подсвечиваются с выделением плейсхолдеров (<code>%1</code>, <code>%2</code> и т.д.). Поддерживается формат с указанием модуля и локальный вызов. По умолчанию: <code>ПодставитьПараметрыВСтроку</code>, <code>SubstituteParametersToString</code>, <code>СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку</code>, <code>StringFunctionsClientServer.SubstituteParametersToString</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>oscript</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки подсистемы библиотек OneScript.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>libRoots</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Дополнительные корневые каталоги для поиска библиотек OneScript (в подкаталогах каждого ищется <code>lib.config</code>). Путь может быть абсолютным или относительным (от рабочей области). По умолчанию список пуст.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useEnvLibLocation</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Дополнительно к <code>libRoots</code> учитывать пути из переменной окружения <code>OSCRIPT_LIB_LOCATION</code>. По умолчанию <code>false</code> (чтобы избежать неожиданного подхвата библиотек, например на CI).</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>showImplicitLibraryEntriesInCompletion</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Предлагать в автодополнении (без точки) неявные записи библиотек — <code>.os</code>-файлы, не объявленные в <code>lib.config</code>. По умолчанию <code>false</code>. Полезно включить разработчику самой библиотеки.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>v8platform</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Содержит настройки платформенных типов 1С:Предприятие.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>binPath</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Путь к каталогу <code>bin</code> установленной платформы 1С (где лежат файлы синтакс-помощника <code>shcntx_*.hbk</code>, <code>shlang_*.hbk</code>). Если не задан, автоматически определяется самая свежая установка на машине. Пример: <code>C:\Program Files\1cv8\8.3.27.1786\bin</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>enabled</code></td>
+<td style="text-align: center;"><code>Булево</code></td>
+<td style="text-align: left;">Разрешить загрузку платформенного контекста из синтакс-помощника установленной 1С. По умолчанию <code>true</code>. Можно отключить (например, в тестовом окружении), чтобы избежать дорогой автодетекции и парсинга HBK.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>targetVersion</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Целевая версия платформы 1С для диагностик совместимости (устаревание, недоступность члена по версии). Имеет приоритет над режимом совместимости конфигурации. Если не задана — используется режим совместимости конфигурации, а при его отсутствии берётся самая свежая платформа. Формат: <code>8.3.21</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>excludePaths</code></td>
+<td style="text-align: center;"><code>Массив</code> <code>Строка</code></td>
+<td style="text-align: left;">Шаблоны путей, исключаемых из индексации. Сопоставляются с путями относительно корня конфигурации (например, имена каталогов <code>.git</code>, <code>node_modules</code> или glob <code>**/.git/**</code>, <code>**/.*</code>). Из индексации и анализа исключаются только BSL/OS-файлы внутри указанных путей. По умолчанию список пуст.</td>
 </tr>
 </tbody>
 </table>

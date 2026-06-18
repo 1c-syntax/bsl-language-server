@@ -2323,7 +2323,7 @@
 <h2 id="Global-and-Local-Configuration">Global and Local Configuration<a class="headerlink" href="#Global-and-Local-Configuration" title="Permanent link">&para;</a></h2>
 <p>BSL Language Server uses a two-level configuration system:</p>
 <ul>
-<li><strong>Global configuration</strong> — common settings applied to all workspaces. Contains parameters <code>language</code>, <code>sendErrors</code>, and <code>traceLog</code>.</li>
+<li><strong>Global configuration</strong> — common settings applied to all workspaces. Contains parameters <code>language</code>, <code>sendErrors</code>, <code>traceLog</code>, as well as <code>capabilities</code> (<code>textDocumentSync.change</code>) and <code>workspaceSymbol</code> (<code>syncFuzzySearch</code>).</li>
 <li><strong>Local (per-workspace) configuration</strong> — individual settings for each workspace, including diagnostics, codeLens, inlayHint, and other parameters. Each workspace can have its own configuration file.</li>
 </ul>
 <h3 id="Configuration-File-Search-Strategy">Configuration File Search Strategy<a class="headerlink" href="#Configuration-File-Search-Strategy" title="Permanent link">&para;</a></h3>
@@ -2340,7 +2340,7 @@
 <h3 id="Change-Tracking">Change Tracking<a class="headerlink" href="#Change-Tracking" title="Permanent link">&para;</a></h3>
 <p>BSL Language Server automatically tracks configuration file changes:</p>
 <ul>
-<li>Changing the global file updates global parameters (<code>language</code>, <code>sendErrors</code>, <code>traceLog</code>).</li>
+<li>Changing the global file updates global parameters (<code>language</code>, <code>sendErrors</code>, <code>traceLog</code>, <code>capabilities</code>, <code>workspaceSymbol</code>).</li>
 <li>Changing a workspace file updates settings only for that workspace, including diagnostics recalculation.</li>
 <li>When a workspace is added, a file watcher is automatically registered for its configuration file.</li>
 <li>When a workspace is removed, the file watcher is unregistered.</li>
@@ -2389,6 +2389,61 @@
 <td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>beanUsages</code></td>
 <td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
 <td style="text-align: left;">Enables the lens above bean producers (component bean constructor and <code>&amp;Завязь</code> factory methods) showing the number of injection points and navigating to them (OneScript, Autumn DI framework). The default is <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>testRunner</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Test runner settings used by the "run test" code lenses (<code>Run test</code>, <code>Run all tests</code>, <code>Debug test</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>testSources</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">Directories containing test sources. Default <code>["tests"]</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>annotations</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">Annotation names that mark test methods. Default <code>["Тест", "Test"]</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>executable</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Path/name of the test runner executable (Linux and macOS). Default <code>1testrunner</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>executableWin</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Path/name of the test runner executable (Windows). Default <code>1testrunner.bat</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>getTestsByTestRunner</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Get test method names via the test runner executable. If <code>false</code>, methods are found by the internal parser using the <code>&amp;Тест</code> annotation. Default <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>getTestsArguments</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Arguments passed to the test runner to get the list of tests. <code>%s</code> is replaced with the path to the current file. Default <code>-show %s</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>getTestsResultPattern</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Regular expression to parse the test runner output for method names. Default <code>^[^&lt;]*Имя\sтеста\s&lt;([^&gt;]+)&gt;.*</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>runTestArguments</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Arguments to run a single test. The first <code>%s</code> is the file path, the second <code>%s</code> is the test method name. Default <code>-run %s %s</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>debugTestArguments</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Arguments to debug a single test. Empty by default.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>runAllTestsArguments</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Arguments to run all tests in the current file. <code>%s</code> is replaced with the path to the current file. Default <code>-run %s</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>diagnostics</code></td>
@@ -2491,9 +2546,19 @@
 <td style="text-align: left;">Enables displaying the value of the <a href="../../diagnostics/CyclomaticComplexity/">Cyclomatic Complexity</a> method as inlay hints. By default, the setting is set to <code>true</code>.</td>
 </tr>
 <tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>methodCall</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the parameters of the invoked method (both configuration/library and platform methods) as inlay hints. By default, the setting is set to <code>true</code>. Available parameters:<br/><em> <code>showParametersWithTheSameName</code> - show parameters with names contained in the passed value. The default parameter value is <code>false</code>.<br/></em> <code>showDefaultValues</code> - show default values for parameters not passed. The default value of the parameter is <code>true</code>.</td>
+</tr>
+<tr>
 <td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>sourceDefinedMethodCall</code></td>
 <td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
-<td style="text-align: left;">Enables displaying the parameters of the invoked configuration/library method as inlay hints. By default, the setting is set to <code>true</code>. Available parameters:<br/><em> <code>showParametersWithTheSameName</code> - show parameters with names contained in the passed value. The default parameter value is <code>false</code>.<br/></em> <code>showDefaultValues</code> - show default values for parameters not passed. The default value of the parameter is <code>true</code>.</td>
+<td style="text-align: left;"><strong>Deprecated</strong>, use <code>methodCall</code> (a single setting for both configuration/library and platform method calls). The key is kept for backward compatibility with older configuration files. Available parameters are the same as for <code>methodCall</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>variableType</code></td>
+<td style="text-align: center;"><code>Boolean</code> or <code>JSON-Object</code></td>
+<td style="text-align: left;">Enables displaying the inferred type of variables in assignments as inlay hints. By default, the setting is set to <code>true</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>capabilities</code></td>
@@ -2554,6 +2619,81 @@
 <td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>commonModuleAccessors</code></td>
 <td style="text-align: center;"><code>Array</code> <code>String</code></td>
 <td style="text-align: left;">List of 'Module.Method' patterns for methods returning common module references (e.g. <code>CommonUse.CommonModule("ModuleName")</code>). Supports both format with module name (<code>CommonUse.CommonModule</code>) and local call (<code>CommonModule</code>). By default, includes standard BSL patterns: <code>ОбщийМодуль</code>, <code>CommonModule</code>, <code>ОбщегоНазначения.ОбщийМодуль</code>, <code>ОбщегоНазначенияКлиент.ОбщийМодуль</code>, <code>ОбщегоНазначенияСервер.ОбщийМодуль</code>, <code>ОбщегоНазначенияКлиентСервер.ОбщийМодуль</code>, <code>ОбщегоНазначенияПовтИсп.ОбщийМодуль</code> and their English equivalents.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>formatting</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains code formatting settings.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useUpperCaseForOrNotAndKeywords</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Case of the <code>And</code>/<code>Or</code>/<code>Not</code> keywords when formatting. Values:<br/><em> <code>true</code> - uppercase (<code>OR</code>, <code>NOT</code>, <code>AND</code>) </em>(default)<em><br/></em> <code>false</code> - CamelCase (<code>Or</code>, <code>Not</code>, <code>And</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useKeywordsFormatting</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Format keywords to canonical view. Default <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useOnTypeFormatting</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Enable formatting on typing a trigger character (<code>textDocument/onTypeFormatting</code>). Triggers are <code>Enter</code> and <code>;</code>. Default <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>semanticTokens</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains semantic tokens settings.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>strTemplateMethods</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">List of 'Module.Method' patterns for string template functions similar to <code>СтрШаблон</code>/<code>StrTemplate</code>. Strings inside calls to these functions are highlighted with placeholder detection (<code>%1</code>, <code>%2</code>, etc.). Both the module-qualified format and local call are supported. Default: <code>ПодставитьПараметрыВСтроку</code>, <code>SubstituteParametersToString</code>, <code>СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку</code>, <code>StringFunctionsClientServer.SubstituteParametersToString</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>oscript</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains OneScript libraries settings.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>libRoots</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">Additional root directories to search for OneScript libraries (each subdirectory is scanned for <code>lib.config</code>). A path can be absolute or relative (to the workspace). Empty by default.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>useEnvLibLocation</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">In addition to <code>libRoots</code>, also use paths from the <code>OSCRIPT_LIB_LOCATION</code> environment variable. Default <code>false</code> (to avoid unexpectedly picking up libraries, e.g. on CI).</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>showImplicitLibraryEntriesInCompletion</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Suggest implicit library entries (<code>.os</code> files not declared in <code>lib.config</code>) in no-dot completion. Default <code>false</code>. Useful for a library author working on their own project.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>v8platform</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains 1C:Enterprise platform types settings.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>binPath</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Path to the <code>bin</code> directory of an installed 1C:Enterprise platform (where syntax-helper files <code>shcntx_*.hbk</code>, <code>shlang_*.hbk</code> are located). If not set, the most recent installation on the machine is autodetected. Example: <code>C:\Program Files\1cv8\8.3.27.1786\bin</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>enabled</code></td>
+<td style="text-align: center;"><code>Boolean</code></td>
+<td style="text-align: left;">Allow loading platform context from the syntax-helper of an installed 1C. Default <code>true</code>. Can be disabled (e.g. in a test environment) to avoid expensive autodetection and HBK parsing.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>targetVersion</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Target 1C platform version for compatibility diagnostics (deprecation, member availability by version). Takes priority over the configuration compatibility mode. When empty, the configuration compatibility mode is used, and if that is unset, the newest platform is assumed. Format: <code>8.3.21</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>excludePaths</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">Path patterns to exclude from indexing. Matched against paths relative to the configuration root (e.g. directory names <code>.git</code>, <code>node_modules</code> or glob <code>**/.git/**</code>, <code>**/.*</code>). Only BSL/OS files under excluded paths are skipped from indexing and analysis. Empty by default.</td>
 </tr>
 </tbody>
 </table>

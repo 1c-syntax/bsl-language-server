@@ -673,6 +673,15 @@
                     "title": "Show cyclomatic complexity score inlay hints.",
                     "$id": "#/definitions/inlayHintParameters/cyclomaticComplexity"
                 },
+                "variableType": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show inferred type of variables in assignments as inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/variableType"
+                },
                 "methodCall": {
                     "default": true,
                     "type": [
@@ -804,7 +813,7 @@
                             "$id": "#/properties/codeLens/testRunner/resultPattern",
                             "type": "string",
                             "title": "Regular expression to parse test runner output for method names.",
-                            "default": "^[^<]*<([^>]+)>.*"
+                            "default": "^[^<]*Имя\\sтеста\\s<([^>]+)>.*"
                         },
                         "runTestArguments": {
                             "$id": "#/properties/codeLens/testRunner/runTestArguments",
@@ -970,6 +979,29 @@
                         }
                     ]
                 },
+                "minimumLSPDiagnosticLevel": {
+                    "$id": "#/properties/minimumLSPDiagnosticLevel",
+                    "type": "string",
+                    "title": "Minimum LSP diagnostic severity level to compute. Diagnostics with severity lower than specified will not be computed.",
+                    "oneOf": [
+                        {
+                            "const": "Error",
+                            "description": "Error"
+                        },
+                        {
+                            "const": "Warning",
+                            "description": "Warning"
+                        },
+                        {
+                            "const": "Information",
+                            "description": "Information"
+                        },
+                        {
+                            "const": "Hint",
+                            "description": "Hint"
+                        }
+                    ]
+                },
                 "overrideMinimumLSPDiagnosticLevel": {
                     "$id": "#/properties/overrideMinimumLSPDiagnosticLevel",
                     "type": "string",
@@ -1113,6 +1145,21 @@
                         {
                             "const": false,
                             "description": "Don't format keywords to canonical view"
+                        }
+                    ]
+                },
+                "useOnTypeFormatting": {
+                    "$id": "#/properties/useOnTypeFormatting",
+                    "type": "boolean",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Enable formatting on typing a trigger character (Enter and ';')."
+                        },
+                        {
+                            "const": false,
+                            "description": "Disable formatting on type."
                         }
                     ]
                 }
