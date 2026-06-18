@@ -73,7 +73,10 @@ class VariableTypeInlayHintOScriptLinkTest extends AbstractServerContextAwareTes
     var method = documentContext.getSymbolTree().getMethods().getFirst();
     var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
 
-    var loggerUri = Absolute.uri(FIXTURE_ROOT.resolve("src/Логгер.os").toUri());
+    var loggerPath = FIXTURE_ROOT.resolve("src/Логгер.os");
+    var loggerUri = Absolute.uri(loggerPath.toUri());
+    var loggerContext = TestUtils.getDocumentContextFromFile(loggerPath.toString(), context);
+    var loggerConstructor = loggerContext.getSymbolTree().getConstructor().orElseThrow();
 
     // when
     var inlayHints = supplier.getInlayHints(documentContext, params);
@@ -86,8 +89,11 @@ class VariableTypeInlayHintOScriptLinkTest extends AbstractServerContextAwareTes
       .satisfies(this::assertLinksToLogger);
 
     InlayHint inlayHint = inlayHints.getFirst();
-    assertThat(inlayHint.getLabel().getRight().getFirst().getLocation().getUri())
-      .isEqualTo(loggerUri.toString());
+    var location = inlayHint.getLabel().getRight().getFirst().getLocation();
+    assertThat(location.getUri()).isEqualTo(loggerUri.toString());
+    // ссылка ведёт к конструктору ПриСозданииОбъекта, а не к первому токену модуля:
+    // только так hover и go-to-definition в позиции ссылки осмысленны.
+    assertThat(location.getRange()).isEqualTo(loggerConstructor.getSelectionRange());
   }
 
   private void assertLinksToLogger(InlayHint inlayHint) {
