@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Единый загрузчик встроенных JSON-паков платформенных типов
@@ -64,6 +65,8 @@ import java.util.Set;
 @Slf4j
 @UtilityClass
 public class BuiltinTypesJsonLoader {
+
+  private static final Map<String, List<TypeDecl>> LOAD_CACHE = new ConcurrentHashMap<>();
 
   /**
    * Маппинг {@code kind}-значений JSON-пака (терминология bsl-context'а
@@ -84,8 +87,18 @@ public class BuiltinTypesJsonLoader {
     };
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * Распарсенные декларации пака, мемоизированные по пути ресурса: JSON в jar
+   * неизменен, поэтому каждый ресурс парсится один раз на JVM. Один и тот же
+   * результат читают и платформенный провайдер (как типы), и сборка
+   * enum-глобалов в провайдере глобального контекста — без повторного разбора.
+   */
   static List<TypeDecl> load(String resourcePath) {
+    return LOAD_CACHE.computeIfAbsent(resourcePath, BuiltinTypesJsonLoader::parse);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<TypeDecl> parse(String resourcePath) {
     var mapper = JsonMapper.builder().build();
     try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
@@ -112,7 +125,6 @@ public class BuiltinTypesJsonLoader {
         }
         var bilingualName = BilingualString.of(nameRu, nameEn);
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
-        var exposedAsGlobal = Boolean.TRUE.equals(entry.get("exposedAsGlobal"));
         var description = (String) entry.getOrDefault("description", "");
         var classRef = new TypeRef(kind, qualifiedName);
         var rawCtors = (List<Map<String, Object>>) entry.get("constructors");
@@ -133,7 +145,7 @@ public class BuiltinTypesJsonLoader {
         // JSON-fallback видели одни и те же placeholder'ы).
         var typeParameters = ContextNames.typeParameters(new ContextName(qualifiedName, ""));
         result.add(new TypeDecl(kind, bilingualName, members,
-          exposedAsGlobal, description, constructors,
+          description, constructors,
           List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess,
           forEachDescription, indexAccessDescription, typeParameters, isEnum));
       }

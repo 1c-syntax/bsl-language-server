@@ -76,9 +76,8 @@ class MetadataCollectionSpecializerUnitTest {
 
   @Test
   void specialize_topLevelGroup_overridesReturnTypeToSyntheticCollection() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
 
     var ownerRef = registry.registerConfigurationType("ОбъектМетаданныхКонфигурация");
     var baseCollectionRef = registry.registerConfigurationType("КоллекцияОбъектовМетаданных");
@@ -152,7 +151,6 @@ class MetadataCollectionSpecializerUnitTest {
   @Test
   void specialize_noProvider_isNoOp() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
 
     var holder = Mockito.mock(BslContextHolder.class);
@@ -168,7 +166,6 @@ class MetadataCollectionSpecializerUnitTest {
   @Test
   void specialize_noWorkspace_isNoOp() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
 
     var holder = Mockito.mock(BslContextHolder.class);
@@ -182,9 +179,8 @@ class MetadataCollectionSpecializerUnitTest {
 
   @Test
   void specialize_nestedCollectionOnPerMdoType_overridesNestedReturnType() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
 
     var ownerRef = registry.registerConfigurationType("ОбъектМетаданныхКонфигурация");
     var documentTypeRef = registry.registerConfigurationType("ОбъектМетаданных: Документ");
@@ -284,9 +280,8 @@ class MetadataCollectionSpecializerUnitTest {
 
   @Test
   void specialize_nestedPropertyWithoutHbkMarker_usesFallbackByPropertyName() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
 
     var docTypeRef = registry.registerConfigurationType("ОбъектМетаданных: Документ");
     var baseCollectionRef = registry.registerConfigurationType("КоллекцияОбъектовМетаданных");
@@ -334,9 +329,8 @@ class MetadataCollectionSpecializerUnitTest {
 
   @Test
   void specialize_propertyWithoutBaseCollectionInTypes_skipped() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
 
     var ownerRef = registry.registerConfigurationType("ОбъектМетаданныхКонфигурация");
 
@@ -374,9 +368,8 @@ class MetadataCollectionSpecializerUnitTest {
 
   @Test
   void specialize_unknownOwnerType_skipped() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
 
     // ownerName из bsl-context, которого НЕТ в реестре LS → resolve вернёт null → continue.
     var provider = mockProvider("ОбъектМетаданныхНезнакомый",
@@ -406,9 +399,8 @@ class MetadataCollectionSpecializerUnitTest {
 
   @Test
   void specialize_blankPropertyName_skipped() {
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), globalScope, memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex);
 
     var ownerRef = registry.registerConfigurationType("ОбъектМетаданныхКонфигурация");
     registry.registerConfigurationType("КоллекцияОбъектовМетаданных");
@@ -438,7 +430,6 @@ class MetadataCollectionSpecializerUnitTest {
   @Test
   void specialize_emptyConfiguration_isNoOp() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
 
     var holder = Mockito.mock(BslContextHolder.class);
@@ -463,7 +454,6 @@ class MetadataCollectionSpecializerUnitTest {
   @Test
   void specialize_noServerContext_isNoOp() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(GlobalScopeProvider.class),
       Mockito.mock(MemberMetadataIndex.class));
     var holder = Mockito.mock(BslContextHolder.class);
     when(holder.get()).thenReturn(Optional.of(Mockito.mock(ContextProvider.class)));

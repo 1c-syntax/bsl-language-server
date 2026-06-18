@@ -23,9 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,19 +46,20 @@ import static org.mockito.Mockito.when;
 class CollectionHoverHintsTest {
 
   private static final TypeRef ARRAY = new TypeRef(TypeKind.PLATFORM, "Массив");
+  private static final FileType FT = FileType.BSL;
 
   @Mock
   private Resources resources;
   @Mock
   private LanguageServerConfiguration configuration;
   @Mock
-  private TypeRegistry registry;
+  private TypeService typeService;
 
   private CollectionHoverHints hints;
 
   @BeforeEach
   void setUp() {
-    hints = new CollectionHoverHints(resources, configuration);
+    hints = new CollectionHoverHints(resources, configuration, typeService);
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(resources.getResourceString(eq(CollectionHoverHints.class), any(String.class)))
       .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
@@ -66,12 +68,12 @@ class CollectionHoverHintsTest {
   @Test
   void appendNoBlocksWhenNeitherForEachNorIndexSupported() {
     // given
-    when(registry.supportsForEach(ARRAY)).thenReturn(false);
-    when(registry.supportsIndexAccess(ARRAY)).thenReturn(false);
+    when(typeService.supportsForEach(ARRAY, FT)).thenReturn(false);
+    when(typeService.supportsIndexAccess(ARRAY, FT)).thenReturn(false);
     var sb = new StringBuilder("PREFIX");
 
     // when
-    hints.append(sb, ARRAY, registry);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString()).isEqualTo("PREFIX");
@@ -80,13 +82,13 @@ class CollectionHoverHintsTest {
   @Test
   void appendForEachBlockWithRegistryDescription() {
     // given
-    when(registry.supportsForEach(ARRAY)).thenReturn(true);
-    when(registry.supportsIndexAccess(ARRAY)).thenReturn(false);
-    when(registry.getForEachDescription(ARRAY, Language.RU)).thenReturn("обход массива");
+    when(typeService.supportsForEach(ARRAY, FT)).thenReturn(true);
+    when(typeService.supportsIndexAccess(ARRAY, FT)).thenReturn(false);
+    when(typeService.getForEachDescription(ARRAY, FT, Language.RU)).thenReturn("обход массива");
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, registry);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -98,13 +100,13 @@ class CollectionHoverHintsTest {
   @Test
   void appendForEachBlockWithFallbackWhenRegistryEmpty() {
     // given
-    when(registry.supportsForEach(ARRAY)).thenReturn(true);
-    when(registry.supportsIndexAccess(ARRAY)).thenReturn(false);
-    when(registry.getForEachDescription(ARRAY, Language.RU)).thenReturn("");
+    when(typeService.supportsForEach(ARRAY, FT)).thenReturn(true);
+    when(typeService.supportsIndexAccess(ARRAY, FT)).thenReturn(false);
+    when(typeService.getForEachDescription(ARRAY, FT, Language.RU)).thenReturn("");
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, registry);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -115,13 +117,13 @@ class CollectionHoverHintsTest {
   @Test
   void appendIndexAccessBlockWithRegistryDescription() {
     // given
-    when(registry.supportsForEach(ARRAY)).thenReturn(false);
-    when(registry.supportsIndexAccess(ARRAY)).thenReturn(true);
-    when(registry.getIndexAccessDescription(ARRAY, Language.RU)).thenReturn("по индексу");
+    when(typeService.supportsForEach(ARRAY, FT)).thenReturn(false);
+    when(typeService.supportsIndexAccess(ARRAY, FT)).thenReturn(true);
+    when(typeService.getIndexAccessDescription(ARRAY, FT, Language.RU)).thenReturn("по индексу");
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, registry);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -133,13 +135,13 @@ class CollectionHoverHintsTest {
   @Test
   void appendIndexAccessBlockWithFallbackWhenRegistryEmpty() {
     // given
-    when(registry.supportsForEach(ARRAY)).thenReturn(false);
-    when(registry.supportsIndexAccess(ARRAY)).thenReturn(true);
-    when(registry.getIndexAccessDescription(ARRAY, Language.RU)).thenReturn("");
+    when(typeService.supportsForEach(ARRAY, FT)).thenReturn(false);
+    when(typeService.supportsIndexAccess(ARRAY, FT)).thenReturn(true);
+    when(typeService.getIndexAccessDescription(ARRAY, FT, Language.RU)).thenReturn("");
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, registry);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
@@ -150,32 +152,18 @@ class CollectionHoverHintsTest {
   @Test
   void appendBothBlocksWhenBothSupported() {
     // given
-    when(registry.supportsForEach(ARRAY)).thenReturn(true);
-    when(registry.supportsIndexAccess(ARRAY)).thenReturn(true);
-    when(registry.getForEachDescription(ARRAY, Language.RU)).thenReturn("forEach-text");
-    when(registry.getIndexAccessDescription(ARRAY, Language.RU)).thenReturn("index-text");
+    when(typeService.supportsForEach(ARRAY, FT)).thenReturn(true);
+    when(typeService.supportsIndexAccess(ARRAY, FT)).thenReturn(true);
+    when(typeService.getForEachDescription(ARRAY, FT, Language.RU)).thenReturn("forEach-text");
+    when(typeService.getIndexAccessDescription(ARRAY, FT, Language.RU)).thenReturn("index-text");
     var sb = new StringBuilder();
 
     // when
-    hints.append(sb, ARRAY, registry);
+    hints.append(sb, ARRAY, FT);
 
     // then
     assertThat(sb.toString())
       .contains("[forEachLabel]").contains("forEach-text")
       .contains("[indexAccessLabel]").contains("index-text");
-  }
-
-  @Test
-  void appendIsNoOpForNullArgs() {
-    // given
-    var sb = new StringBuilder("X");
-
-    // when
-    hints.append(null, ARRAY, registry);
-    hints.append(sb, null, registry);
-    hints.append(sb, ARRAY, null);
-
-    // then
-    assertThat(sb.toString()).isEqualTo("X");
   }
 }

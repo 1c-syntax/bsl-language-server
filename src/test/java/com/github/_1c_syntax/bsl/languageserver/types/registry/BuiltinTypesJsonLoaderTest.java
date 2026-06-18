@@ -182,9 +182,8 @@ class BuiltinTypesJsonLoaderTest {
     // when
     var networkError = member(errorCategory, "ОшибкаСети");
 
-    // then — перечисление двуязычно, глобально и несёт все 28 значений
+    // then — перечисление двуязычно и несёт все 28 значений
     assertThat(errorCategory.isEnum()).isTrue();
-    assertThat(errorCategory.exposedAsGlobal()).isTrue();
     assertThat(errorCategory.name().en()).isEqualTo("ErrorCategory");
     assertThat(errorCategory.members()).hasSize(28);
     assertThat(networkError.matches("NetworkError")).as("значение находится по en-имени").isTrue();

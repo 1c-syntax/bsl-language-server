@@ -40,7 +40,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
@@ -185,26 +184,33 @@ public final class CompletionProvider {
   }
 
   /**
-   * Фильтр для plain-имён ({@code List<String>}) — классы, ключевые слова,
-   * глобальные свойства и т.п. Алиас-пары определяются по тому, что разные
-   * имена резолвятся к одному global symbol.
+   * Дедуп ru/en-написаний <b>имён типов</b> — классов для {@code Новый} и
+   * составных имён MD-объектов конфигурации ({@code Справочники.Контрагенты}).
+   * Разные написания одного типа резолвятся (с учётом видимости в {@code fileType})
+   * в один {@link TypeRef} → группируются, из группы остаётся написание под
+   * настроенный {@link Language}. Имя без резолва (не тип) проходит как есть,
+   * не группируясь.
    */
-  private List<String> filterNamesByLanguage(Collection<String> names, FileType fileType, Language language) {
+  private List<String> filterTypeNamesByLanguage(Collection<String> names, Language language, FileType fileType) {
     if (names.isEmpty()) {
       return List.of();
     }
-    var byTarget = new LinkedHashMap<Object, List<String>>();
-    var bareKey = new Object();
-    for (var name : names) {
-      var symbol = globalScopeProvider.findGlobal(name, fileType);
-      Object key = symbol.isPresent() ? symbol.get() : bareKey;
-      byTarget.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
-    }
+    // ru/en одного типа резолвятся в один TypeRef → группируются; имя без
+    // резолва (не тип) проходит как есть. Порядок результата не важен — итоговую
+    // сортировку completion задаёт sortText, а не позиция в этом списке.
+    var byType = new LinkedHashMap<TypeRef, List<String>>();
     var result = new ArrayList<String>(names.size());
-    for (var entry : byTarget.entrySet()) {
-      var group = entry.getValue();
-      if (entry.getKey() == bareKey || group.size() == 1) {
-        result.addAll(group);
+    for (var name : names) {
+      var ref = typeService.resolve(name, fileType).orElse(null);
+      if (ref == null) {
+        result.add(name);
+      } else {
+        byType.computeIfAbsent(ref, k -> new ArrayList<>()).add(name);
+      }
+    }
+    for (var group : byType.values()) {
+      if (group.size() == 1) {
+        result.add(group.get(0));
         continue;
       }
       String pick = null;
@@ -361,7 +367,7 @@ public final class CompletionProvider {
   public CompletionItem resolveCompletionItem(CompletionItem unresolved, CompletionData data) {
     var functionName = data.getFunctionName();
     if (functionName != null) {
-      globalScopeProvider.findFunction(functionName, data.getFileType())
+      globalScopeProvider.globalFunction(functionName, data.getFileType())
         .ifPresent(function -> applyDocumentation(unresolved, function, data.getScriptVariant()));
     } else {
       resolveMemberDocumentation(unresolved, data);
@@ -544,7 +550,7 @@ public final class CompletionProvider {
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
-      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
+      for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(fileType), scriptVariant, fileType)) {
         if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
           continue;
         }
@@ -573,7 +579,7 @@ public final class CompletionProvider {
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
-      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType, scriptVariant)) {
+      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), scriptVariant, fileType)) {
         if (isGenericTemplateName(qualified)) {
           continue;
         }
@@ -587,12 +593,13 @@ public final class CompletionProvider {
       }
     }
 
-    // Global contexts — все VALUE-имена в global scope (property, enum, library-module).
-    // CompletionItemKind выбирается по фактическому SyntheticKind. К library-сущностям
+    // Глобальные свойства — все VALUE-имена глобальной области (платформенные
+    // свойства, перечисления, коллекции, модули).
+    // CompletionItemKind выводится из типа-значения. К library-сущностям
     // применяется library-gating (#Использовать / свой пакет / implicit) через
     // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
-    for (var ctx : globalScopeProvider.getGlobalContexts(fileType)) {
-      var name = ctx.getName();
+    for (var ctx : globalScopeProvider.globalProperties(fileType)) {
+      var name = ctx.name();
       if (!matches(name, prefix)) {
         continue;
       }
@@ -603,7 +610,7 @@ public final class CompletionProvider {
         continue;
       }
       var item = new CompletionItem(name);
-      item.setKind(completionKindForSynthetic(ctx.getSyntheticKind()));
+      item.setKind(completionKindForGlobalProperty(ctx, fileType));
       applySortText(item, BUCKET_GLOBAL, false);
       applyCommitCharacters(item);
       items.add(item);
@@ -614,7 +621,7 @@ public final class CompletionProvider {
     // primary-имени через seenFn.
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new HashSet<String>();
-    for (var fn : globalScopeProvider.getFunctions(fileType)) {
+    for (var fn : globalScopeProvider.globalFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
@@ -654,8 +661,9 @@ public final class CompletionProvider {
       }
     }
 
-    // Keywords
-    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType, scriptVariant)) {
+    // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
+    // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
+    for (var keyword : globalScopeProvider.getKeywords(fileType)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
@@ -668,15 +676,20 @@ public final class CompletionProvider {
   }
 
   /**
-   * Подобрать {@link CompletionItemKind} для имени из global scope по его
-   * {@link SyntheticKind}.
+   * Иконка completion для глобального свойства, выведенная из типа-значения:
+   * перечисление → {@code Enum}; library-модуль
+   * OneScript (модульный тип в OS-файле) → {@code Module}; иначе (платформенное
+   * свойство, коллекция, общий модуль) → {@code Variable}.
    */
-  private static CompletionItemKind completionKindForSynthetic(SyntheticKind kind) {
-    return switch (kind) {
-      case PLATFORM_GLOBAL_ENUM -> CompletionItemKind.Enum;
-      case LIBRARY_MODULE -> CompletionItemKind.Module;
-      default -> CompletionItemKind.Variable;
-    };
+  private CompletionItemKind completionKindForGlobalProperty(MemberDescriptor member, FileType fileType) {
+    var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    if (typeService.isEnumType(valueType, fileType)) {
+      return CompletionItemKind.Enum;
+    }
+    if (fileType == FileType.OS && globalScopeProvider.moduleUriByType(valueType).isPresent()) {
+      return CompletionItemKind.Module;
+    }
+    return CompletionItemKind.Variable;
   }
 
   private static boolean matches(String name, String lowerPrefix) {

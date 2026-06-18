@@ -140,6 +140,7 @@ public class ConfigurationTypesProvider {
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
+
   @EventListener
   public void handleEvent(ServerContextPopulatedEvent event) {
     tryRegister();
@@ -328,7 +329,10 @@ public class ConfigurationTypesProvider {
       }
       typeRegistry.registerDisplayName(ref, BilingualString.of(collectionRu, collectionEn));
       typeRegistry.registerMemberSource(ref, () -> members, FileType.BSL);
-      typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
+
+      // коллекция-namespace — глобальное свойство (имя/bilingual и value-type
+      // реестр соберёт сам из displayName/ref; declaration у коллекции нет).
+      typeRegistry.registerGlobalPropertyType(ref, FileType.BSL);
 
       // Платформенные методы коллекции-менеджера (СправочникиМенеджер,
       // ДокументыМенеджер) — уровня всех справочников/документов, например

@@ -20,9 +20,11 @@
  * License along with BSL Language Server.
  */
 /**
- * Synthetic-символы: единый Symbol-фронт для платформенных глобалов и
- * членов, конфигурационных коллекций и других сущностей, объявленных
- * вне BSL/OScript кода.
+ * Символы платформенных/синтетических сущностей, объявленных вне BSL/OScript
+ * кода: {@link com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol}
+ * (член платформенного типа/глобал — несёт {@code MemberDescriptor} для hover/типа)
+ * и {@link com.github._1c_syntax.bsl.languageserver.types.symbol.ConstructorCallSymbol}
+ * (конструктор платформенного типа).
  */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.types.symbol;

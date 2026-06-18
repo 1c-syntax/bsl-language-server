@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
@@ -47,13 +46,12 @@ import java.util.Optional;
  * Источник информации о режиме доступа — синтакс-помощник платформы 1С
  * (через {@code bsl-context}) или JSON-fallback. Метаданные пробрасываются
  * платформенным провайдером в {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor#metadata()}
- * и индексируются {@link TypeRegistry#indexMemberMetadata} как пары
- * (тип-владелец, имя свойства), что позволяет быстро отфильтровать
- * безопасные присваивания.
+ * и индексируются как пары (тип-владелец, имя свойства), что позволяет
+ * быстро отфильтровать безопасные присваивания.
  * <p>
  * Поток:
  * <ol>
- *   <li>{@link TypeRegistry#hasAnyReadOnlyMember()} — глобальный гейт.
+ *   <li>{@link TypeService#hasAnyReadOnlyMember()} — глобальный гейт.
  *       Без HBK / без accessMode-данных диагностика моментально no-op.</li>
  *   <li>{@link TypeService#memberAt(com.github._1c_syntax.bsl.languageserver.context.DocumentContext,
  *       Position)} — точный резолв member'а с учётом инференции типа
@@ -86,7 +84,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final TypeRegistry typeRegistry;
   private final TypeService typeService;
 
   @Override
@@ -101,7 +98,7 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
    * конкретного типа-владельца (независимо от языка имени). Иначе — empty.
    */
   private Optional<TerminalNode> readOnlyProperty(BSLParser.AssignmentContext ctx) {
-    if (!typeRegistry.hasAnyReadOnlyMember()) {
+    if (!typeService.hasAnyReadOnlyMember()) {
       return Optional.empty();
     }
     var lValue = ctx.lValue();

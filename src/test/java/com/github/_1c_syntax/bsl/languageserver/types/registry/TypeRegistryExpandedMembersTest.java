@@ -44,7 +44,6 @@ class TypeRegistryExpandedMembersTest {
 
   private final TypeRegistry registry = new TypeRegistry(
     List.of(),
-    Mockito.mock(GlobalScopeProvider.class),
     Mockito.mock(MemberMetadataIndex.class)
   );
 

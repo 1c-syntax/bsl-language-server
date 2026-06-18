@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
@@ -43,9 +43,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
+import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -60,7 +60,6 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,9 +81,21 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class TypeRegistry {
 
+  /**
+   * Синтетический тип «глобальный контекст»: его члены — глобальные методы и
+   * свойства, видимые в global scope без префикса. Системные
+   * перечисления и прочие {@code exposedAsGlobal}-типы регистрируются как
+   * свойства-члены этого типа (с {@code valueType} = сам тип). Имя
+   * зарезервировано и не пересекается с инстанцируемыми типами 1С.
+   * <p>
+   * Деталь хранилища: доступ к глобальной области у потребителей — через
+   * {@link GlobalScopeProvider} (геттеры {@code globalFunction}/{@code globalProperty}/…),
+   * а не по этой ссылке. Видимость пакетная — её знают лишь реестр, поставщики
+   * членов глобального контекста и {@code GlobalScopeProvider}.
+   */
+  static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
+
   private final List<PlatformTypesProvider> platformProviders;
-  /** Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы. */
-  private final GlobalScopeProvider globalScopeProvider;
   /**
    * Индекс метаданных членов (read-only свойства + версионные члены) для
    * дешёвых pre-filter'ов диагностик. Workspace-scoped Spring-компонент;
@@ -94,8 +105,8 @@ public class TypeRegistry {
    */
   private final MemberMetadataIndex memberMetadataIndex;
 
-  /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
-  private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
+  /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
+  private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
@@ -161,14 +172,14 @@ public class TypeRegistry {
    * без аннотаций пользователя.
    */
   private final Map<TypeRef, List<TypeRef>> defaultElementTypes = new ConcurrentHashMap<>();
-  /** Тип ↔ {@code supportsForEach} ({@code true} — обход {@code Для Каждого} разрешён). */
-  private final Map<TypeRef, Boolean> supportsForEach = new ConcurrentHashMap<>();
-  /** Тип ↔ {@code supportsIndexAccess} ({@code true} — индексатор {@code [...]} разрешён). */
-  private final Map<TypeRef, Boolean> supportsIndexAccess = new ConcurrentHashMap<>();
-  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника. */
-  private final Map<TypeRef, BilingualString> forEachDescriptions = new ConcurrentHashMap<>();
-  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника. */
-  private final Map<TypeRef, BilingualString> indexAccessDescriptions = new ConcurrentHashMap<>();
+  /** Тип ↔ {@code supportsForEach} в разрезе языка ({@code true} — обход {@code Для Каждого} разрешён). */
+  private final Map<FileType, Map<TypeRef, Boolean>> supportsForEach = perFileType();
+  /** Тип ↔ {@code supportsIndexAccess} в разрезе языка ({@code true} — индексатор {@code [...]} разрешён). */
+  private final Map<FileType, Map<TypeRef, Boolean>> supportsIndexAccess = perFileType();
+  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника, в разрезе языка. */
+  private final Map<FileType, Map<TypeRef, BilingualString>> forEachDescriptions = perFileType();
+  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника, в разрезе языка. */
+  private final Map<FileType, Map<TypeRef, BilingualString>> indexAccessDescriptions = perFileType();
   /**
    * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
    * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.
@@ -192,6 +203,17 @@ public class TypeRegistry {
    */
   private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
 
+  /**
+   * Явная точка материализации workspace-scoped реестра. Тело пустое: значим
+   * сам факт вызова метода на scoped-proxy — он создаёт target и прогоняет
+   * {@code @PostConstruct} {@link #bootstrap()} (регистрацию платформенных типов).
+   * Нужен потребителям, читающим реестр в свежем workspace-scope, чтобы первое
+   * чтение не увидело пустой реестр.
+   */
+  public void ensureInitialized() {
+    // no-op: материализация происходит за счёт самого вызова метода на proxy
+  }
+
   @PostConstruct
   void bootstrap() {
     if (platformProviders == null) {
@@ -203,6 +225,11 @@ public class TypeRegistry {
         registerPack(decl, fileType);
       }
     }
+    // Единый источник членов GLOBAL_CONTEXT из типов-глобал-свойств. Override
+    // (в начало списка) — эти члены перекрывают одноимённые из других источников
+    // GLOBAL_CONTEXT.
+    registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.BSL), FileType.BSL);
+    registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.OS), FileType.OS);
   }
 
   /**
@@ -210,9 +237,7 @@ public class TypeRegistry {
    * возвращает каноническую ссылку.
    */
   public TypeRef intern(TypeKind kind, String qualifiedName) {
-    var candidate = new TypeRef(kind, qualifiedName);
-    var existing = internedRefs.putIfAbsent(candidate, candidate);
-    return existing != null ? existing : candidate;
+    return refInterner.intern(new TypeRef(kind, qualifiedName));
   }
 
   /**
@@ -323,11 +348,13 @@ public class TypeRegistry {
   }
 
   /**
-   * Найти тип по точному совпадению канонического имени и kind'а.
+   * Найти <b>зарегистрированный</b> тип по точному совпадению kind'а и
+   * канонического имени. Возвращает ссылку, только если тип присутствует в
+   * хранилище типов (был зарегистрирован), а не просто интернирован.
    */
   public Optional<TypeRef> resolve(TypeKind kind, String qualifiedName) {
     var ref = new TypeRef(kind, qualifiedName);
-    return Optional.ofNullable(internedRefs.get(ref));
+    return types.containsKey(ref) ? Optional.of(ref) : Optional.empty();
   }
 
   /**
@@ -362,6 +389,143 @@ public class TypeRegistry {
     var members = computeMembers(ref, fileType);
     membersCache.put(key, new CachedMembers(epoch, members));
     return members;
+  }
+
+  /** Типы-перечисления (источник пометил {@code isEnum}), в разрезе языка. */
+  private final Map<FileType, Set<TypeRef>> enumTypes = Map.of(
+    FileType.BSL, ConcurrentHashMap.newKeySet(),
+    FileType.OS, ConcurrentHashMap.newKeySet());
+
+  /**
+   * Является ли тип системным/платформенным перечислением в данном языке файла.
+   * Read-проекция для потребителей (например, раскраска
+   * {@code GLOBAL_CONTEXT}-свойства как {@code Enum} vs {@code Class}).
+   *
+   * @param ref      проверяемый тип.
+   * @param fileType язык файла-потребителя (BSL/OS).
+   * @return {@code true}, если тип помечен источником этого языка как перечисление.
+   */
+  public boolean isEnumType(@Nullable TypeRef ref, FileType fileType) {
+    return ref != null && enumTypes.get(fileType).contains(ref);
+  }
+
+  /**
+   * Типы, видимые как свойства-члены {@link #GLOBAL_CONTEXT}, в разрезе языка.
+   * Маркер-множество — аналог {@link #enumTypes}: признак «тип виден в глобальной
+   * области» хранится здесь, у хранилища типов.
+   */
+  private final Map<FileType, Set<TypeRef>> globalPropertyTypes = Map.of(
+    FileType.BSL, ConcurrentHashMap.newKeySet(),
+    FileType.OS, ConcurrentHashMap.newKeySet());
+
+  /**
+   * Явный source-символ типа-глобал-свойства — для типов, не несущих declaration
+   * сами (в отличие от {@link UserType}). {@link WeakReference} — символ не
+   * удерживается.
+   */
+  private final Map<TypeRef, WeakReference<SourceDefinedSymbol>> globalPropertySymbols =
+    new ConcurrentHashMap<>();
+
+  /**
+   * Пометить тип как глобальное свойство ({@link #GLOBAL_CONTEXT}-член) для языка
+   * без отдельного source-символа (тип либо не имеет его, либо несёт сам — см.
+   * {@link UserType}). Член собирается лениво из реестра (имя/bilingual из
+   * displayName, value-type = ref).
+   *
+   * @param ref      тип-глобал-свойство.
+   * @param fileType язык, в котором он виден без префикса.
+   */
+  public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
+    globalPropertyTypes.get(fileType).add(ref);
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * То же, но с явным source-символом — для типов, не несущих declaration сами.
+   * Символ удерживается слабо ({@link WeakReference}).
+   *
+   * @param ref         тип-глобал-свойство.
+   * @param fileType    язык, в котором он виден без префикса.
+   * @param declaration символ-источник, объявивший тип.
+   */
+  public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
+    globalPropertyTypes.get(fileType).add(ref);
+    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * Снять пометку глобального свойства с типа.
+   *
+   * @param ref      тип.
+   * @param fileType язык.
+   */
+  public void unregisterGlobalPropertyType(TypeRef ref, FileType fileType) {
+    globalPropertyTypes.get(fileType).remove(ref);
+    globalPropertySymbols.remove(ref);
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * Члены {@link #GLOBAL_CONTEXT} из типов, помеченных глобальными свойствами,
+   * для языка. Регистрируется как override (см. {@code bootstrap}) — перекрывает
+   * одноимённые члены из других источников {@link #GLOBAL_CONTEXT}.
+   */
+  private List<MemberDescriptor> globalPropertyMembers(FileType fileType) {
+    var refs = globalPropertyTypes.get(fileType);
+    var result = new ArrayList<MemberDescriptor>(refs.size());
+    for (var ref : refs) {
+      var member = MemberDescriptor.property(ref.qualifiedName(), ref, "");
+      var display = displayNames.get(ref);
+      if (display != null && !display.isEmpty()) {
+        member = member.withBilingualName(display);
+      }
+      var declaration = globalPropertyDeclaration(ref);
+      if (declaration != null) {
+        member = member.withSourceSymbol(declaration);
+      }
+      result.add(member);
+    }
+    return result;
+  }
+
+  private @Nullable SourceDefinedSymbol globalPropertyDeclaration(TypeRef ref) {
+    if (get(ref) instanceof UserType userType) {
+      var declaration = userType.getDeclaration().orElse(null);
+      if (declaration != null) {
+        return declaration;
+      }
+    }
+    var weak = globalPropertySymbols.get(ref);
+    return weak == null ? null : weak.get();
+  }
+
+  /**
+   * Версия данных о членах типов: монотонный счётчик, инкрементируемый при любой
+   * мутации member-источников/оверрайдов и при изменении документов. Потребители
+   * (например, {@link GlobalScopeProvider} для name-индекса глобальной области)
+   * используют его как ключ инвалидации своих кэшей. Резолв глобальной области сам
+   * по себе — не дело {@code TypeRegistry} (хранилища типов); это абстракция
+   * {@code GlobalScopeProvider}.
+   *
+   * @return текущая эпоха членов.
+   */
+  public long membersEpoch() {
+    return membersEpoch.get();
+  }
+
+  /**
+   * Имя резолвится в платформенный/конфигурационный тип с конструктором —
+   * т.е. это имя типа для {@code Новый}/типовой позиции ({@code Структура},
+   * {@code ТаблицаЗначений}), а не глобальное значение. Ось type-name отдельно
+   * от членов {@link #GLOBAL_CONTEXT}.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return {@code true}, если имя — конструируемый тип.
+   */
+  public boolean isConstructibleTypeName(@Nullable String name, FileType fileType) {
+    return resolve(name).map(ref -> !getConstructors(ref, fileType).isEmpty()).orElse(false);
   }
 
   private List<MemberDescriptor> computeMembers(TypeRef ref, FileType fileType) {
@@ -787,43 +951,6 @@ public class TypeRegistry {
   }
 
   /**
-   * Зарегистрировать тип как глобальное свойство (его имя становится
-   * ресивером dot-выражения: {@code Документы.Контрагенты},
-   * {@code КодировкаТекста.UTF8}, {@code ОбщегоНазначения.Метод()}).
-   * Регистрация идёт в {@link GlobalScopeProvider} — единая точка входа
-   * для глобальных имён.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, FileType fileType) {
-    registerAsGlobalProperty(ref, fileType, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
-  }
-
-  /**
-   * Та же регистрация, но с явным {@link SyntheticKind} — используется
-   * при публикации системных перечислений ({@link SyntheticKind#PLATFORM_GLOBAL_ENUM}),
-   * чтобы отличать их от обычных глобальных свойств.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, FileType fileType, SyntheticKind syntheticKind) {
-    registerAsGlobalProperty(ref, fileType, syntheticKind, () -> null);
-  }
-
-  /**
-   * То же + lazy-провайдер source-defined-символа (для общих модулей).
-   * См. {@link GlobalScopeProvider#registerGlobalProperty(TypeRef, Collection, FileType, String, SyntheticKind, Supplier)}.
-   */
-  public void registerAsGlobalProperty(TypeRef ref, FileType fileType, SyntheticKind syntheticKind,
-                                       Supplier<Symbol> sourceSymbol) {
-    var names = new LinkedHashSet<String>();
-    names.add(ref.qualifiedName());
-    aliasIndex.forEach((alias, target) -> {
-      if (target.equals(ref)) {
-        names.add(alias);
-      }
-    });
-    globalScopeProvider.registerGlobalProperty(ref, names, fileType, getDescription(ref, fileType),
-      syntheticKind, sourceSymbol);
-  }
-
-  /**
    * Описание типа из источника (JSON-пакета или динамической регистрации)
    * в разрезе указанного языка. Возвращает пустую строку, если описание отсутствует.
    *
@@ -914,25 +1041,6 @@ public class TypeRegistry {
   }
 
   /**
-   * Зарегистрировать тип как платформенный класс с конструктором. Имя
-   * становится доступным для completion после {@code Новый} (через
-   * {@link GlobalScopeProvider#getClasses}) и резолвится в {@link SyntheticSymbol}
-   * с ролью {@code TYPE_NAME} для hover/findGlobal. Вызывается автоматически
-   * из {@link #registerPack} при непустых {@code constructors}.
-   */
-  private void registerAsPlatformClass(TypeRef ref, FileType fileType) {
-    var names = new LinkedHashSet<String>();
-    names.add(ref.qualifiedName());
-    aliasIndex.forEach((alias, target) -> {
-      if (target.equals(ref)) {
-        names.add(alias);
-      }
-    });
-    globalScopeProvider.registerPlatformClass(ref, names, fileType,
-      getDescription(ref, fileType));
-  }
-
-  /**
    * Удалить пользовательский тип по qualifiedName (например, при закрытии
    * соответствующего документа).
    */
@@ -948,10 +1056,13 @@ public class TypeRegistry {
   private void registerPack(TypePackProvider.TypeDecl decl, FileType fileType) {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
+    if (decl.isEnum()) {
+      enumTypes.get(fileType).add(ref);
+    }
     registerPackAliases(decl, ref);
     registerPackDescriptions(decl, ref, fileType);
     registerPackCallables(decl, ref, fileType);
-    registerPackCollectionTraits(decl, ref);
+    registerPackCollectionTraits(decl, ref, fileType);
     if (!decl.name().isEmpty()) {
       displayNames.putIfAbsent(ref, decl.name());
     }
@@ -996,36 +1107,29 @@ public class TypeRegistry {
   private void registerPackCallables(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
       registerConstructors(ref, decl.constructors(), fileType);
-      registerAsPlatformClass(ref, fileType);
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, fileType);
       indexMemberMetadata(ref, decl.members());
     }
-    if (decl.exposedAsGlobal()) {
-      var syntheticKind = decl.isEnum()
-        ? SyntheticKind.PLATFORM_GLOBAL_ENUM
-        : SyntheticKind.PLATFORM_GLOBAL_PROPERTY;
-      registerAsGlobalProperty(ref, fileType, syntheticKind);
-    }
   }
 
   /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */
-  private void registerPackCollectionTraits(TypePackProvider.TypeDecl decl, TypeRef ref) {
+  private void registerPackCollectionTraits(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
     if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
     }
     if (decl.supportsForEach()) {
-      supportsForEach.put(ref, Boolean.TRUE);
+      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
     }
     if (decl.supportsIndexAccess()) {
-      supportsIndexAccess.put(ref, Boolean.TRUE);
+      supportsIndexAccess.get(fileType).put(ref, Boolean.TRUE);
     }
     if (!decl.forEachDescription().isEmpty()) {
-      forEachDescriptions.put(ref, decl.forEachDescription());
+      forEachDescriptions.get(fileType).put(ref, decl.forEachDescription());
     }
     if (!decl.indexAccessDescription().isEmpty()) {
-      indexAccessDescriptions.put(ref, decl.indexAccessDescription());
+      indexAccessDescriptions.get(fileType).put(ref, decl.indexAccessDescription());
     }
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
@@ -1073,40 +1177,42 @@ public class TypeRegistry {
     return TypeSet.of(canonical);
   }
 
-  /** {@code true}, если у типа разрешён обход {@code Для Каждого}. */
-  public boolean supportsForEach(TypeRef ref) {
-    return Boolean.TRUE.equals(supportsForEach.get(ref));
+  /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
+  public boolean supportsForEach(TypeRef ref, FileType fileType) {
+    return Boolean.TRUE.equals(supportsForEach.get(fileType).get(ref));
   }
 
-  /** {@code true}, если у типа разрешён индексатор {@code [...]}. */
-  public boolean supportsIndexAccess(TypeRef ref) {
-    return Boolean.TRUE.equals(supportsIndexAccess.get(ref));
+  /** {@code true}, если у типа разрешён индексатор {@code [...]} в данном языке файла. */
+  public boolean supportsIndexAccess(TypeRef ref, FileType fileType) {
+    return Boolean.TRUE.equals(supportsIndexAccess.get(fileType).get(ref));
   }
 
   /**
    * Текстовое описание обхода {@code Для Каждого} для типа-коллекции
-   * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
+   * (из синтакс-помощника платформы) в данном языке файла. Пустая строка,
+   * если описание не задано.
    */
-  public String getForEachDescription(TypeRef ref) {
-    return getForEachDescription(ref, Language.DEFAULT_LANGUAGE);
+  public String getForEachDescription(TypeRef ref, FileType fileType) {
+    return getForEachDescription(ref, fileType, Language.DEFAULT_LANGUAGE);
   }
 
-  /** Описание обхода в указанной локали (с fallback на другую). */
-  public String getForEachDescription(TypeRef ref, Language language) {
-    return forEachDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+  /** Описание обхода в указанной локали (с fallback на другую) в данном языке файла. */
+  public String getForEachDescription(TypeRef ref, FileType fileType, Language language) {
+    return forEachDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
   /**
    * Текстовое описание индексатора {@code [...]} для типа-коллекции
-   * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
+   * (из синтакс-помощника платформы) в данном языке файла. Пустая строка,
+   * если описание не задано.
    */
-  public String getIndexAccessDescription(TypeRef ref) {
-    return getIndexAccessDescription(ref, Language.DEFAULT_LANGUAGE);
+  public String getIndexAccessDescription(TypeRef ref, FileType fileType) {
+    return getIndexAccessDescription(ref, fileType, Language.DEFAULT_LANGUAGE);
   }
 
-  /** Описание индексатора в указанной локали. */
-  public String getIndexAccessDescription(TypeRef ref, Language language) {
-    return indexAccessDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+  /** Описание индексатора в указанной локали в данном языке файла. */
+  public String getIndexAccessDescription(TypeRef ref, FileType fileType, Language language) {
+    return indexAccessDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
   /**
@@ -1199,7 +1305,7 @@ public class TypeRegistry {
       case PRIMITIVE -> new PrimitiveType(ref);
       case PLATFORM -> new PlatformType(ref);
       case CONFIGURATION -> new ConfigurationType(ref);
-      case USER -> new UserType(ref, new java.lang.ref.WeakReference<>(null));
+      case USER -> new UserType(ref, new WeakReference<>(null));
       case ANY -> AnyType.INSTANCE;
       case UNKNOWN -> UnknownType.INSTANCE;
     };

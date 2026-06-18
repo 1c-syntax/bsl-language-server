@@ -409,8 +409,8 @@ public final class SignatureHelpProvider {
     if (local.isPresent()) {
       return local;
     }
-    // Fallback: global builtin function — фильтруем по типу файла.
-    return globalScopeProvider.findFunction(methodName, documentContext.getFileType());
+    // Fallback: глобальная функция.
+    return globalScopeProvider.globalFunction(methodName, documentContext.getFileType());
   }
 
   private Optional<MemberDescriptor> resolveAccessCall(

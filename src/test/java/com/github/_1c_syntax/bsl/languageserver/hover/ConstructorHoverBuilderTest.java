@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.MarkupKind;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,8 +59,6 @@ class ConstructorHoverBuilderTest {
   @Mock
   private TypeService typeService;
   @Mock
-  private TypeRegistry typeRegistry;
-  @Mock
   private CollectionHoverHints collectionHoverHints;
   @Mock
   private Resources resources;
@@ -73,9 +70,9 @@ class ConstructorHoverBuilderTest {
   @BeforeEach
   void setUp() {
     builder = new ConstructorHoverBuilder(
-      typeService, typeRegistry, collectionHoverHints, resources, configuration);
+      typeService, collectionHoverHints, resources, configuration);
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(typeRegistry.displayName(any(TypeRef.class), any(Language.class)))
+    when(typeService.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
     when(typeService.getDescription(any(TypeRef.class), any(Language.class), any(FileType.class))).thenReturn("");
     when(resources.getResourceString(eq(ConstructorHoverBuilder.class), any(String.class)))
@@ -199,7 +196,7 @@ class ConstructorHoverBuilderTest {
   @Test
   void buildUsesProvidedTypeNameWhenRegistryReturnsBlank() {
     // given
-    when(typeRegistry.displayName(eq(STRUCTURE), any(Language.class))).thenReturn("");
+    when(typeService.displayName(eq(STRUCTURE), any(Language.class))).thenReturn("");
 
     // when
     var content = builder.build("CustomName", STRUCTURE, null, List.of(), false, "", FileType.BSL);

@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * Сапплаер семантических токенов для вызовов глобальных функций платформы
  * (например, {@code Сообщить}, {@code СтрНайти}). Метод считается платформенным,
- * если резолвится через {@link GlobalScopeProvider#findFunction(String, com.github._1c_syntax.bsl.languageserver.context.FileType)}
+ * если резолвится как глобальная функция через {@link GlobalScopeProvider#globalFunction}
  * и не перекрыт локальным методом в текущем модуле — в таком случае
  * приоритет у локального символа, отрисуется через
  * {@link MethodCallSemanticTokensSupplier} как обычный {@code Method}.
@@ -81,14 +81,15 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       if (symbolTree != null && symbolTree.getMethodSymbol(name).isPresent()) {
         continue;
       }
-      globalScopeProvider.findFunction(name, fileType).ifPresent(function ->
-        helper.addRange(
-          entries,
-          Ranges.create(methodNameCtx),
-          SemanticTokenTypes.Function,
-          modifiers(function.async())
-        )
-      );
+      globalScopeProvider.globalFunction(name, fileType)
+        .ifPresent(function ->
+          helper.addRange(
+            entries,
+            Ranges.create(methodNameCtx),
+            SemanticTokenTypes.Function,
+            modifiers(function.async())
+          )
+        );
     }
 
     return entries;

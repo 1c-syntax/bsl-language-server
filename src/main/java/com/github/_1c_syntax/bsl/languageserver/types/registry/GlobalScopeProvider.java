@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.context.platform.EnAttachments;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextProvider;
 import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
@@ -44,12 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -71,6 +65,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -86,6 +82,9 @@ import java.util.function.Supplier;
 @Component
 @WorkspaceScope
 public class GlobalScopeProvider {
+
+  private static final String RETURN_TYPE_FIELD = "returnType";
+  private static final String ALIASES_FIELD = "aliases";
 
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
@@ -104,6 +103,14 @@ public class GlobalScopeProvider {
    * набор языка файла-потребителя.
    */
   private final Map<FileType, LanguageData> byFileType;
+  /**
+   * Хранилище типов: источник членов синтетического {@link TypeRegistry#GLOBAL_CONTEXT}.
+   * Читается (не пишется) для резолва безпрефиксных имён — direction
+   * {@code GlobalScopeProvider → TypeRegistry}, без цикла.
+   */
+  private final TypeRegistry typeRegistry;
+  /** Эпоха-кэшированный name-индекс членов GLOBAL_CONTEXT (см. {@link #globalMember}). */
+  private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
   /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
@@ -148,14 +155,118 @@ public class GlobalScopeProvider {
    *                         встроенный {@code builtin-globals.json} для BSL-части
    *                         (OS-часть всегда из ресурса). Если платформа недоступна —
    *                         fallback на JSON-ресурс.
-   * @param globalSymbolScope глобальная область символов, в которую публикуются
-   *                          загруженные глобалы и register*-регистрации.
    */
-  public GlobalScopeProvider(BslContextHolder bslContextHolder, GlobalSymbolScope globalSymbolScope) {
+  public GlobalScopeProvider(BslContextHolder bslContextHolder, TypeRegistry typeRegistry) {
+    this.typeRegistry = typeRegistry;
     var os = loadFromResource(OSCRIPT_RESOURCE_PATH);
     var bsl = loadBsl(bslContextHolder);
     this.byFileType = Map.of(FileType.BSL, bsl, FileType.OS, os);
-    this.globalSymbolScope = globalSymbolScope;
+  }
+
+  /**
+   * Резолв безпрефиксного имени в член глобальной области — синтетического типа
+   * {@link TypeRegistry#GLOBAL_CONTEXT} (глобальная функция-метод либо глобальное
+   * свойство: перечисление, менеджер коллекции, общий/library-модуль). Быстрый
+   * lookup по name-индексу, пересобираемому при смене эпохи членов
+   * ({@link TypeRegistry#membersEpoch()}). Единая абстракция доступа
+   * к глобальной области; {@link TypeRegistry} остаётся хранилищем типов.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return член глобального контекста или {@link Optional#empty()}.
+   */
+  public Optional<MemberDescriptor> globalMember(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    var epoch = typeRegistry.membersEpoch();
+    var index = globalIndexRef.get();
+    if (index == null || index.epoch() != epoch) {
+      index = new GlobalIndex(epoch, Map.of(
+        FileType.BSL, globalNameIndex(FileType.BSL),
+        FileType.OS, globalNameIndex(FileType.OS)));
+      globalIndexRef.set(index);
+    }
+    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Безпрефиксное имя как глобальная функция — метод-член
+   * {@link TypeRegistry#GLOBAL_CONTEXT}.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return метод-член или {@link Optional#empty()}, если имя не глобальная функция.
+   */
+  public Optional<MemberDescriptor> globalFunction(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+    return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.METHOD);
+  }
+
+  /**
+   * Безпрефиксное имя как глобальное свойство — свойство-член
+   * {@link TypeRegistry#GLOBAL_CONTEXT} (перечисление, менеджер коллекции,
+   * общий/library-модуль).
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return свойство-член или {@link Optional#empty()}, если имя не глобальное свойство.
+   */
+  public Optional<MemberDescriptor> globalProperty(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+    return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.PROPERTY);
+  }
+
+  /**
+   * Все глобальные свойства — свойства-члены {@link TypeRegistry#GLOBAL_CONTEXT}
+   * (перечисления, менеджеры коллекций, общие/library-модули). Перечисляющий
+   * аналог {@link #globalProperty} для потребителей, которым нужен весь набор
+   * (completion). Enumerate-доступ к глобальной области — тоже через
+   * эту абстракцию, а не прямым чтением {@code GLOBAL_CONTEXT}.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return свойства-члены глобального контекста (порядок — как у источника членов).
+   */
+  public List<MemberDescriptor> globalProperties(FileType fileType) {
+    return globalMembersOfKind(fileType, MemberKind.PROPERTY);
+  }
+
+  /**
+   * Все глобальные функции — методы-члены {@link TypeRegistry#GLOBAL_CONTEXT}.
+   * Перечисляющий аналог {@link #globalFunction}.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return методы-члены глобального контекста.
+   */
+  public List<MemberDescriptor> globalFunctions(FileType fileType) {
+    return globalMembersOfKind(fileType, MemberKind.METHOD);
+  }
+
+  private List<MemberDescriptor> globalMembersOfKind(FileType fileType, MemberKind kind) {
+    var result = new ArrayList<MemberDescriptor>();
+    for (var member : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+      if (member.kind() == kind) {
+        result.add(member);
+      }
+    }
+    return result;
+  }
+
+  private Map<String, MemberDescriptor> globalNameIndex(FileType fileType) {
+    var map = new HashMap<String, MemberDescriptor>();
+    for (var member : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+      var ru = member.bilingualName().ru();
+      var en = member.bilingualName().en();
+      if (!ru.isBlank()) {
+        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), member);
+      }
+      if (!en.isBlank()) {
+        map.putIfAbsent(en.toLowerCase(Locale.ROOT), member);
+      }
+    }
+    return map;
+  }
+
+  /** Эпоха-кэшированный индекс имён членов GLOBAL_CONTEXT в разрезе языка. */
+  private record GlobalIndex(long epoch, Map<FileType, Map<String, MemberDescriptor>> byName) {
   }
 
   /**
@@ -259,321 +370,6 @@ public class GlobalScopeProvider {
     }
   }
 
-  /** Параллельный Symbol-фронт. Заполняется лениво в {@link #ensureGlobalsPublished()}. */
-  private final GlobalSymbolScope globalSymbolScope;
-
-  private final AtomicBoolean globalsPublished = new AtomicBoolean(false);
-
-  /**
-   * Поиск symbol'а в глобальной области (globals + library entries) в разрезе
-   * указанного языка. Дополнительных проверок видимости нет: запись в разрезе
-   * существует ровно тогда, когда имя зарегистрировано для этого языка.
-   */
-  public Optional<Symbol> findGlobal(String name, FileType fileType) {
-    ensureGlobalsPublished();
-    return globalSymbolScope.findEntry(name, fileType).map(GlobalSymbolScope.Entry::symbol);
-  }
-
-  /**
-   * То же, что {@link #findGlobal(String, FileType)}, но возвращает запись с её
-   * семантической ролью ({@link GlobalSymbolScope.Role#VALUE} или
-   * {@link GlobalSymbolScope.Role#TYPE_NAME}). Нужно потребителям, которым важно
-   * отличить голое имя класса ({@code Структура}) от глобал-значения
-   * ({@code Справочники}, {@code ФС}, library-модули).
-   */
-  public Optional<GlobalSymbolScope.Entry> findGlobalEntry(String name, FileType fileType) {
-    if (findGlobal(name, fileType).isEmpty()) {
-      return Optional.empty();
-    }
-    return globalSymbolScope.findEntry(name, fileType);
-  }
-
-  private void ensureGlobalsPublished() {
-    if (globalsPublished.compareAndSet(false, true)) {
-      publishGlobals();
-    }
-  }
-
-  private void publishGlobals() {
-    // Регистрируем глобальные функции в GlobalSymbolScope как synthetic-методы.
-    // Каждый язык публикует свой набор со своим скоупом: для имён, существующих
-    // в обоих языках, появляются ДВА варианта записи — выбор при чтении по типу файла.
-    for (var fileType : FileType.values()) {
-      var data = byFileType.get(fileType);
-      // Кэш на ОДИН язык: склеивает ru-имя и en-алиас одного дескриптора в один
-      // SyntheticSymbol (aliasesBySymbol/getEntries в GlobalSymbolScope работают
-      // по identity). Ключ — canonical-имя дескриптора: внутри языка оно уникально.
-      // Межъязыкового переиспользования символов нет намеренно.
-      var symbolsByName = new HashMap<String, SyntheticSymbol>();
-      for (var entry : data.functions.entrySet()) {
-        registerFunctionSymbol(symbolsByName, entry.getKey(), entry.getValue(), fileType);
-      }
-      // Платформенные глобальные переменные (БиблиотекаКартинок, ПараметрыСеанса, …)
-      // и системные перечисления (КодировкаТекста, НаправлениеСортировки, …).
-      publishPlatformGlobals(data.platformVariables, SyntheticKind.PLATFORM_GLOBAL_PROPERTY, fileType);
-      publishPlatformGlobals(data.platformEnums, SyntheticKind.PLATFORM_GLOBAL_ENUM, fileType);
-    }
-  }
-
-  /**
-   * Публикует функцию в {@link GlobalSymbolScope} под ключом {@code key}
-   * (canonical-имя или алиас), переиспользуя один {@link SyntheticSymbol}
-   * на дескриптор через {@code cache}.
-   */
-  private void registerFunctionSymbol(Map<String, SyntheticSymbol> cache,
-                                      String key, MemberDescriptor descriptor, FileType fileType) {
-    var symbol = cache.computeIfAbsent(descriptor.name().toLowerCase(Locale.ROOT), k -> new SyntheticSymbol(
-      descriptor.name(),
-      SyntheticKind.PLATFORM_GLOBAL_METHOD,
-      descriptor.description(),
-      descriptor.returnType()
-    ));
-    var displayName = key.equalsIgnoreCase(descriptor.name()) ? descriptor.name() : key;
-    globalSymbolScope.register(displayName, symbol, GlobalSymbolScope.Role.VALUE, fileType);
-  }
-
-  private void publishPlatformGlobals(List<PlatformVariable> globals, SyntheticKind kind, FileType fileType) {
-    for (var v : globals) {
-      var symbol = new SyntheticSymbol(
-        v.name(),
-        kind,
-        v.description(),
-        v.type()
-      );
-      globalSymbolScope.register(v.name(), symbol, GlobalSymbolScope.Role.VALUE, fileType);
-      for (var alias : v.aliases()) {
-        globalSymbolScope.register(alias, symbol, GlobalSymbolScope.Role.VALUE, fileType);
-      }
-    }
-  }
-
-  /**
-   * Найти тип глобального свойства по имени (canonical или alias) в наборе
-   * указанного языка. Покрывает только build-time источники с
-   * {@link SyntheticKind#PLATFORM_GLOBAL_PROPERTY}. LIBRARY_MODULE и
-   * configuration-registered записи сюда не попадают — для них используйте
-   * umbrella-метод {@link #findGlobalContext(String, FileType)}.
-   *
-   * @param name     имя свойства (регистронезависимо, ru/en).
-   * @param fileType язык файла-потребителя.
-   * @return тип значения свойства или {@link Optional#empty()}.
-   */
-  public Optional<TypeRef> findGlobalProperty(String name, FileType fileType) {
-    return findInList(byFileType.get(fileType).platformVariables, name);
-  }
-
-  /**
-   * Имена платформенных глобальных свойств набора указанного языка
-   * (canonical, без алиасов).
-   *
-   * @param fileType язык файла-потребителя.
-   * @return имена свойств.
-   */
-  public List<String> getGlobalPropertyNames(FileType fileType) {
-    return namesFromList(byFileType.get(fileType).platformVariables);
-  }
-
-  /**
-   * Найти тип системного перечисления по имени (canonical или alias) в наборе
-   * указанного языка. Покрывает только bsl-context-источники с
-   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM}.
-   *
-   * @param name     имя перечисления (регистронезависимо, ru/en).
-   * @param fileType язык файла-потребителя.
-   * @return тип перечисления или {@link Optional#empty()}.
-   */
-  public Optional<TypeRef> findGlobalEnum(String name, FileType fileType) {
-    return findInList(byFileType.get(fileType).platformEnums, name);
-  }
-
-  /**
-   * Имена системных перечислений набора указанного языка (canonical, без алиасов).
-   *
-   * @param fileType язык файла-потребителя.
-   * @return имена перечислений.
-   */
-  public List<String> getGlobalEnumNames(FileType fileType) {
-    return namesFromList(byFileType.get(fileType).platformEnums);
-  }
-
-  private static Optional<TypeRef> findInList(List<PlatformVariable> list, String name) {
-    if (name == null || name.isBlank()) {
-      return Optional.empty();
-    }
-    var lc = name.toLowerCase(Locale.ROOT);
-    return list.stream()
-      .filter(v -> v.name().equalsIgnoreCase(name)
-        || v.aliases().stream().anyMatch(a -> a.toLowerCase(Locale.ROOT).equals(lc)))
-      .findFirst()
-      .map(PlatformVariable::type);
-  }
-
-  private static List<String> namesFromList(List<PlatformVariable> list) {
-    return list.stream()
-      .map(PlatformVariable::name)
-      .toList();
-  }
-
-  /**
-   * Глобальные функции набора указанного языка (уникальные дескрипторы,
-   * без дубликатов по ru/en алиасам).
-   *
-   * @param fileType язык файла-потребителя.
-   * @return дескрипторы глобальных функций.
-   */
-  public Collection<MemberDescriptor> getFunctions(FileType fileType) {
-    return new LinkedHashSet<>(byFileType.get(fileType).functions.values());
-  }
-
-  /**
-   * Поиск глобальной функции по имени в наборе указанного языка
-   * (регистронезависимо, с учётом ru/en алиасов). Для имён, существующих
-   * в обоих языках, возвращается дескриптор языка файла-потребителя.
-   *
-   * @param name     имя функции (регистронезависимо, ru/en).
-   * @param fileType язык файла-потребителя.
-   * @return дескриптор функции или {@link Optional#empty()}.
-   */
-  public Optional<MemberDescriptor> findFunction(String name, FileType fileType) {
-    if (name == null || name.isBlank()) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(byFileType.get(fileType).functions.get(name.toLowerCase(Locale.ROOT)));
-  }
-
-  /**
-   * Зарегистрировать тип как глобальное свойство — его имя (и алиасы) становятся
-   * ресивером dot-выражения: {@code Документы.Контрагенты},
-   * {@code КодировкаТекста.UTF8}, {@code ОбщегоНазначения.МойМетод()},
-   * {@code ФС.КаталогПустой()}. Каждое имя получает {@link SyntheticSymbol}
-   * с типом-значением {@code ref}.
-   */
-  public void registerGlobalProperty(TypeRef ref, Collection<String> names, FileType fileType) {
-    registerGlobalProperty(ref, names, fileType, "");
-  }
-
-  /**
-   * То же, что {@link #registerGlobalProperty(TypeRef, Collection, FileType)},
-   * но с описанием, которое будет прикреплено к {@link SyntheticSymbol} для
-   * последующего отображения в hover/completion.
-   */
-  public void registerGlobalProperty(TypeRef ref, Collection<String> names, FileType fileType, String description) {
-    registerGlobalProperty(ref, names, fileType, description, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
-  }
-
-  /**
-   * Та же регистрация, но с явным {@link SyntheticKind} — используется
-   * при публикации системных перечислений ({@link SyntheticKind#PLATFORM_GLOBAL_ENUM}),
-   * чтобы отличать их в hover/completion/подсветке от обычных глобальных свойств.
-   */
-  public void registerGlobalProperty(TypeRef ref, Collection<String> names, FileType fileType,
-                                     String description, SyntheticKind syntheticKind) {
-    registerGlobalProperty(ref, names, fileType, description, syntheticKind, () -> null);
-  }
-
-  /**
-   * Та же регистрация, но с lazy-провайдером source-defined-символа.
-   * Используется для общих модулей конфигурации (backing —
-   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol}),
-   * чтобы supplier'ы (подсветка, hover) могли узнать, что синтетическое имя
-   * соответствует source-defined-сущности.
-   */
-  public void registerGlobalProperty(TypeRef ref, Collection<String> names, FileType fileType,
-                                     String description, SyntheticKind syntheticKind,
-                                     Supplier<Symbol> sourceSymbol) {
-    if (ref == null || names == null || names.isEmpty()) {
-      return;
-    }
-    ensureGlobalsPublished();
-    var canonical = ref.qualifiedName();
-    var symbol = new SyntheticSymbol(canonical, syntheticKind,
-      description, ref, null, sourceSymbol);
-    for (var name : names) {
-      if (name == null || name.isBlank()) {
-        continue;
-      }
-      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE, fileType);
-    }
-  }
-
-  /**
-   * Зарегистрировать платформенный класс (имеет блок {@code constructors} в
-   * JSON-пакете). Создаёт {@link SyntheticSymbol} с ролью
-   * {@link GlobalSymbolScope.Role#TYPE_NAME} для каждого имени/алиаса,
-   * чтобы hover/findGlobal на имени класса в {@code Новый <Класс>(...)} нашёл
-   * символ с описанием класса. Сами сигнатуры конструкторов хранятся в
-   * {@link TypeRegistry#getConstructors(TypeRef, FileType)}.
-   */
-  public void registerPlatformClass(TypeRef ref, Collection<String> names, FileType fileType, String description) {
-    if (ref == null || names == null || names.isEmpty()) {
-      return;
-    }
-    ensureGlobalsPublished();
-    var symbol = new SyntheticSymbol(ref.qualifiedName(), SyntheticKind.TYPE_NAME,
-      description, ref);
-    for (var name : names) {
-      if (name == null || name.isBlank()) {
-        continue;
-      }
-      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME, fileType);
-    }
-  }
-
-  private static final Set<SyntheticKind> CONTEXT_KINDS = EnumSet.of(
-    SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
-    SyntheticKind.PLATFORM_GLOBAL_ENUM,
-    SyntheticKind.LIBRARY_MODULE
-  );
-
-  /**
-   * Все VALUE-символы global scope разреза указанного языка
-   * (property + enum + library-module). Унифицированный вход для всего,
-   * что можно использовать как ресивер dot-выражения. Имена классов для
-   * {@code Новый} ({@link SyntheticKind#TYPE_NAME}, Role.TYPE_NAME) сюда не
-   * попадают — они выдаются через {@link #getClasses(FileType)}.
-   *
-   * @param fileType язык файла-потребителя.
-   * @return синтетические символы глобальных контекстов.
-   */
-  public List<SyntheticSymbol> getGlobalContexts(FileType fileType) {
-    ensureGlobalsPublished();
-    return globalSymbolScope.streamSymbols(fileType)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(SyntheticSymbol.class::cast)
-      .filter(s -> CONTEXT_KINDS.contains(s.getSyntheticKind()))
-      .distinct()
-      .toList();
-  }
-
-  /**
-   * Canonical-имена VALUE-имён global scope разреза указанного языка
-   * (property + enum + library-module).
-   *
-   * @param fileType язык файла-потребителя.
-   * @return имена глобальных контекстов.
-   */
-  public Collection<String> getGlobalContextNames(FileType fileType) {
-    return getGlobalContexts(fileType).stream().map(SyntheticSymbol::getName).toList();
-  }
-
-  /**
-   * Найти тип имени в global scope (любое VALUE-имя: property, enum, library-module)
-   * с фильтрацией по типу файла. Унифицированная точка входа — для consumer'ов,
-   * которым не важно различение property/enum.
-   *
-   * @param name     имя (регистронезависимо, ru/en).
-   * @param fileType язык файла-потребителя.
-   * @return тип-значение имени или {@link Optional#empty()}.
-   */
-  public Optional<TypeRef> findGlobalContext(String name, FileType fileType) {
-    return findGlobalEntry(name, fileType)
-      .filter(entry -> entry.role() == GlobalSymbolScope.Role.VALUE)
-      .map(GlobalSymbolScope.Entry::symbol)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(s -> ((SyntheticSymbol) s).getValueType())
-      .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
-  }
-
   /**
    * Имена платформенных классов, доступных в выражении {@code Новый}
    * в файлах указанного языка.
@@ -593,61 +389,6 @@ public class GlobalScopeProvider {
    */
   public List<String> getKeywords(FileType fileType) {
     return byFileType.get(fileType).keywords;
-  }
-
-  /**
-   * Зарегистрировать synthetic-symbol для библиотечного модуля OneScript
-   * (записи {@code <module>} из {@code lib.config}). Symbol становится
-   * видимым через {@link #findGlobal(String, FileType)} с фильтрацией по {@link FileType}
-   * (через {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex}).
-   * Источник {@link TypeRef} и {@code libOrigin} — {@code OScriptLibraryIndex}.
-   */
-  public void registerLibraryModule(String name, TypeRef ref) {
-    if (name == null || name.isBlank() || ref == null) {
-      return;
-    }
-    ensureGlobalsPublished();
-    var symbol = new SyntheticSymbol(name, SyntheticKind.LIBRARY_MODULE, "", ref);
-    globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE, FileType.OS);
-  }
-
-  /**
-   * Зарегистрировать synthetic-symbol для библиотечного класса OneScript
-   * (записи {@code <class>} из {@code lib.config}). Конструкторы хранятся в
-   * {@link TypeRegistry} через {@code registerConstructorSource} (см.
-   * {@code OScriptModuleMembersProvider}).
-   */
-  public void registerLibraryClass(String name, TypeRef classRef) {
-    if (name == null || name.isBlank()) {
-      return;
-    }
-    ensureGlobalsPublished();
-    var ref = classRef;
-    var symbol = new SyntheticSymbol(name, SyntheticKind.TYPE_NAME, "", ref);
-    globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME, FileType.OS);
-  }
-
-  /**
-   * Удалить synthetic-symbol library-модуля по имени.
-   */
-  public void unregisterLibraryModule(String name) {
-    unregisterLibrarySymbol(name);
-  }
-
-  /**
-   * Удалить synthetic-symbol library-класса по имени.
-   */
-  public void unregisterLibraryClass(String name) {
-    unregisterLibrarySymbol(name);
-  }
-
-  private void unregisterLibrarySymbol(String name) {
-    if (name == null || name.isBlank()) {
-      return;
-    }
-    globalSymbolScope.findEntry(name, FileType.OS)
-      .map(GlobalSymbolScope.Entry::symbol)
-      .ifPresent(globalSymbolScope::unregister);
   }
 
   /**
@@ -811,8 +552,9 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Системное перечисление платформы — публикуется в global scope с
-   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM} (через отдельный список enums).
+   * Системное перечисление платформы — публикуется в global scope через
+   * отдельный список enums; классификация property-vs-enum у потребителей идёт
+   * из типа-значения ({@code TypeRegistry.isEnumType}).
    */
   private static void addContextEnum(ContextEnum enumeration,
                                      Set<String> variableSeen,
@@ -1008,6 +750,75 @@ public class GlobalScopeProvider {
     return KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
   }
 
+  /**
+   * Глобальные члены для синтетического {@code GLOBAL_CONTEXT} из встроенного
+   * JSON-fallback: {@code functions} → методы-члены, {@code variables} →
+   * свойства-члены. Двуязычное имя члена собирается из {@code name} + первого
+   * {@code alias}, чтобы резолв работал по обоим написаниям.
+   */
+  @SuppressWarnings("unchecked")
+  static List<MemberDescriptor> globalContextMembers(String resourcePath) {
+    var mapper = JsonMapper.builder().build();
+    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+      Map<String, Object> root = mapper.readValue(stream, Map.class);
+      var members = new ArrayList<MemberDescriptor>();
+      for (var entry : (List<Map<String, Object>>) root.getOrDefault("functions", Collections.emptyList())) {
+        var name = (String) entry.get("name");
+        if (name != null) {
+          members.add(functionMember(name, entry));
+        }
+      }
+      for (var entry : (List<Map<String, Object>>) root.getOrDefault("variables", Collections.emptyList())) {
+        var name = (String) entry.get("name");
+        if (name != null && !name.isBlank()) {
+          members.add(variableMember(name, entry));
+        }
+      }
+      return members;
+    } catch (IOException e) {
+      LOGGER.error("Failed to load builtin global members: {}", resourcePath, e);
+      return List.of();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static MemberDescriptor functionMember(String name, Map<String, Object> entry) {
+    var description = (String) entry.getOrDefault("description", "");
+    var returnTypeName = (String) entry.get(RETURN_TYPE_FIELD);
+    var returnType = returnTypeName == null
+      ? TypeRef.UNKNOWN
+      : new TypeRef(TypeKind.PLATFORM, returnTypeName);
+    var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"), returnType);
+    var member = withFirstAliasName(
+      MemberDescriptor.method(name, description, signatures).withStandardLibrary(true), entry);
+    if (Boolean.TRUE.equals(entry.get("async"))) {
+      member = member.withAsync(true);
+    }
+    var metadata = readGlobalMetadata(entry);
+    if (!metadata.isEmpty()) {
+      member = member.withMetadata(metadata);
+    }
+    return member;
+  }
+
+  private static MemberDescriptor variableMember(String name, Map<String, Object> entry) {
+    var description = (String) entry.getOrDefault("description", "");
+    var typeName = (String) entry.get("type");
+    var typeRef = typeName == null || typeName.isBlank()
+      ? TypeRef.UNKNOWN
+      : new TypeRef(TypeKind.PLATFORM, typeName);
+    return withFirstAliasName(MemberDescriptor.property(name, typeRef, description), entry);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static MemberDescriptor withFirstAliasName(MemberDescriptor member, Map<String, Object> entry) {
+    var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
+    if (aliases.isEmpty() || aliases.get(0) == null || aliases.get(0).isBlank()) {
+      return member;
+    }
+    return member.withBilingualName(BilingualString.of(member.name(), aliases.get(0)));
+  }
+
   @SuppressWarnings("unchecked")
   private static List<PlatformVariable> readVariables(Map<String, Object> root) {
     var raw = (List<Map<String, Object>>) root.getOrDefault("variables", Collections.emptyList());
@@ -1025,7 +836,7 @@ public class GlobalScopeProvider {
       var typeRef = typeName == null || typeName.isBlank()
         ? TypeRef.UNKNOWN
         : new TypeRef(TypeKind.PLATFORM, typeName);
-      var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+      var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
       result.add(new PlatformVariable(name, List.copyOf(aliases), description, typeRef));
     }
     return List.copyOf(result);
@@ -1041,7 +852,7 @@ public class GlobalScopeProvider {
         continue;
       }
       var description = (String) entry.getOrDefault("description", "");
-      var returnTypeName = (String) entry.get("returnType");
+      var returnTypeName = (String) entry.get(RETURN_TYPE_FIELD);
       var returnType = returnTypeName == null
         ? TypeRef.UNKNOWN
         : new TypeRef(TypeKind.PLATFORM, returnTypeName);
@@ -1066,7 +877,7 @@ public class GlobalScopeProvider {
         descriptor = descriptor.withMetadata(metadata);
       }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
-      var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+      var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
       for (var alias : aliases) {
         result.put(alias.toLowerCase(Locale.ROOT), descriptor);
       }
@@ -1121,7 +932,7 @@ public class GlobalScopeProvider {
     var result = new ArrayList<SignatureDescriptor>(raw.size());
     for (var sig : raw) {
       var description = (String) sig.getOrDefault("description", "");
-      var returnTypeName = (String) sig.get("returnType");
+      var returnTypeName = (String) sig.get(RETURN_TYPE_FIELD);
       var returnType = returnTypeName == null
         ? fallbackReturnType
         : new TypeRef(TypeKind.PLATFORM, returnTypeName);
@@ -1144,7 +955,7 @@ public class GlobalScopeProvider {
   /**
    * Иммутабельный снапшот загруженных глобалов одного языка: функции, классы,
    * ключевые слова, платформенные переменные/перечисления, описания и сниппеты
-   * ключевых слов. Runtime-регистрации живут в {@code GlobalSymbolScope}.
+   * ключевых слов.
    */
   private record LanguageData(
     Map<String, MemberDescriptor> functions,

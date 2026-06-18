@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.platform;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
@@ -43,7 +42,7 @@ import java.util.List;
  * <p>
  * Глобальные функции резолвятся напрямую (без инференса), поэтому собираются
  * без pre-filter'а. Члены типов (метод/свойство) предварительно отсеиваются по
- * имени через {@link TypeRegistry#isVersionedMemberName(String)} — это лишь
+ * имени через {@link TypeService#isVersionedMemberName(String)} — это лишь
  * дешёвый фильтр, после которого {@link TypeService#membersAt} выполняет
  * точный резолв члена на конкретном типе-владельце (иначе сработал бы
  * однофамилец с другого типа).
@@ -66,12 +65,11 @@ public final class PlatformMemberCalls {
    * одному {@link TypedMember} на тип) с одинаковым диапазоном.
    */
   public static List<TypedMember> collect(DocumentContext documentContext,
-                                          TypeService typeService,
-                                          TypeRegistry typeRegistry) {
+                                          TypeService typeService) {
     var ast = documentContext.getAst();
     var result = new ArrayList<TypedMember>();
     collectGlobalCalls(ast, documentContext, typeService, result);
-    collectVersionedMembers(ast, documentContext, typeService, typeRegistry, result);
+    collectVersionedMembers(ast, documentContext, typeService, result);
     return result;
   }
 
@@ -107,35 +105,35 @@ public final class PlatformMemberCalls {
 
   /**
    * Члены типов (метод/свойство) — с pre-filter'ом по имени.
-   * Включает версионные ({@link TypeRegistry#isVersionedMemberName}) и
+   * Включает версионные ({@link TypeService#isVersionedMemberName}) и
    * следующие 1С-конвенции «устарело» (префикс «Удалить»). Остальные
    * имена не резолвятся, чтобы не тратить инференс на каждый узел.
    */
   private static void collectVersionedMembers(BSLParser.FileContext ast, DocumentContext documentContext,
-                                              TypeService typeService, TypeRegistry typeRegistry,
+                                              TypeService typeService,
                                               List<TypedMember> sink) {
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_methodCall)) {
       var methodName = ((BSLParser.MethodCallContext) node).methodName();
       if (methodName != null) {
-        resolveCandidate(methodName.getStart(), documentContext, typeService, typeRegistry, sink);
+        resolveCandidate(methodName.getStart(), documentContext, typeService, sink);
       }
     }
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
       var identifier = ((BSLParser.AccessPropertyContext) node).IDENTIFIER();
       if (identifier != null) {
-        resolveCandidate(identifier.getSymbol(), documentContext, typeService, typeRegistry, sink);
+        resolveCandidate(identifier.getSymbol(), documentContext, typeService, sink);
       }
     }
   }
 
   private static void resolveCandidate(@Nullable Token token, DocumentContext documentContext,
-                                       TypeService typeService, TypeRegistry typeRegistry,
+                                       TypeService typeService,
                                        List<TypedMember> sink) {
     if (token == null) {
       return;
     }
     var text = token.getText();
-    if (typeRegistry.isVersionedMemberName(text) || hasDeletedPrefix(text)) {
+    if (typeService.isVersionedMemberName(text) || hasDeletedPrefix(text)) {
       resolveInto(sink, documentContext, typeService, token);
     }
   }

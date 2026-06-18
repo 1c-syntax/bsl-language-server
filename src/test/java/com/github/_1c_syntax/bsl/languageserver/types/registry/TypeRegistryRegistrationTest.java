@@ -209,8 +209,8 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerUserType("ТипУ", declaration, FileType.BSL);
 
     // when / then — без явной регистрации флаги выключены.
-    assertThat(typeRegistry.supportsForEach(ref)).isFalse();
-    assertThat(typeRegistry.supportsIndexAccess(ref)).isFalse();
+    assertThat(typeRegistry.supportsForEach(ref, FileType.BSL)).isFalse();
+    assertThat(typeRegistry.supportsIndexAccess(ref, FileType.BSL)).isFalse();
   }
 
   @Test
@@ -241,8 +241,8 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerUserType("ТипF", declaration, FileType.BSL);
 
     // when / then
-    assertThat(typeRegistry.getForEachDescription(ref)).isEmpty();
-    assertThat(typeRegistry.getIndexAccessDescription(ref)).isEmpty();
+    assertThat(typeRegistry.getForEachDescription(ref, FileType.BSL)).isEmpty();
+    assertThat(typeRegistry.getIndexAccessDescription(ref, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -256,9 +256,9 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
-  void resolveByKindAndQualifiedNameReturnsInternedRef() {
+  void resolveByKindAndQualifiedNameReturnsRegisteredType() {
     // given
-    var ref = typeRegistry.intern(TypeKind.USER, "ТипR2");
+    var ref = typeRegistry.registerUserType("ТипR2", declaration, FileType.BSL);
 
     // when
     var resolved = typeRegistry.resolve(TypeKind.USER, "ТипR2");
@@ -360,17 +360,6 @@ class TypeRegistryRegistrationTest {
       .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
   }
 
-  @Test
-  void registerAsGlobalPropertyWithScope() {
-    // given
-    var ref = typeRegistry.registerUserType("ТипP", declaration, FileType.BSL);
-
-    // when — overload с FileType (без SyntheticKind, default = PLATFORM_GLOBAL_PROPERTY).
-    typeRegistry.registerAsGlobalProperty(ref, FileType.BSL);
-
-    // then — не падает.
-    assertThat(typeRegistry.getMembers(ref, FileType.BSL)).isNotNull();
-  }
 
   @Test
   void registerSpecializationWithEmptyGenericReturnsEmptyMembers() {
@@ -416,9 +405,9 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerUserType("ТипL", declaration, FileType.BSL);
 
     // when / then — без регистрации для обоих языков empty.
-    assertThat(typeRegistry.getForEachDescription(ref,
+    assertThat(typeRegistry.getForEachDescription(ref, FileType.BSL,
       com.github._1c_syntax.bsl.languageserver.configuration.Language.EN)).isEmpty();
-    assertThat(typeRegistry.getIndexAccessDescription(ref,
+    assertThat(typeRegistry.getIndexAccessDescription(ref, FileType.BSL,
       com.github._1c_syntax.bsl.languageserver.configuration.Language.EN)).isEmpty();
   }
 

@@ -48,8 +48,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.ExtendsAn
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -250,24 +248,14 @@ public class ExpressionTypeInferencer {
         return parent;
       }
     }
-    // Глобальная область: платформенные глобалы, library-модули,
-    // common-модули — все приходят через единый GlobalSymbolScope.
-    // ВАЖНО: имена классов (роль TYPE_NAME — например, голое `Структура`)
-    // здесь пропускаются: имя класса само по себе не является инстансом
-    // класса, и `Структура.` не должен показывать методы класса.
-    var fromScope = globalScopeProvider.findGlobalEntry(text, ctx.documentContext.getFileType())
-      .filter(entry -> entry.role() != GlobalSymbolScope.Role.TYPE_NAME)
-      .map(entry -> {
-        var symbol = entry.symbol();
-        if (symbol instanceof SyntheticSymbol s) {
-          return s.getValueType();
-        }
-        return TypeRef.UNKNOWN;
-      })
-      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
-      .map(TypeSet::of)
+    // Глобальная область: платформенные глобалы, library-модули, common-модули —
+    // все приходят как глобальные свойства.
+    // Только PROPERTY: голое имя глобальной функции (METHOD) — не значение, а
+    // имена типов для `Новый` (Структура) вообще не члены контекста.
+    return globalScopeProvider.globalProperty(text, ctx.documentContext.getFileType())
+      .map(MemberDescriptor::returnTypes)
+      .filter(types -> types.refs().stream().anyMatch(ref -> !ref.equals(TypeRef.UNKNOWN)))
       .orElse(TypeSet.EMPTY);
-    return fromScope;
   }
 
   // ---------------------------------------------------------------------------
@@ -484,21 +472,8 @@ public class ExpressionTypeInferencer {
     if (sourceDefinedReturn.isPresent() && !sourceDefinedReturn.get().isEmpty()) {
       return sourceDefinedReturn.get();
     }
-    // 2. Платформенная глобальная функция (СтрНайти, ПолучитьСообщенияПользователю
-    //    и т.п.) опубликована как SyntheticSymbol с kind=PLATFORM_GLOBAL_METHOD.
-    //    Его valueType — это returnType метода: пробрасываем как тип переменной.
-    var syntheticReturn = reference
-      .map(Reference::symbol)
-      .filter(SyntheticSymbol.class::isInstance)
-      .map(SyntheticSymbol.class::cast)
-      .map(SyntheticSymbol::getValueType)
-      .filter(ref -> ref != null && !ref.equals(TypeRef.UNKNOWN))
-      .map(TypeSet::of);
-    if (syntheticReturn.isPresent()) {
-      return syntheticReturn.get();
-    }
-    // 3. Fallback: глобальная функция через GlobalScopeProvider (полный
-    //    MemberDescriptor с TypeSet, включая union).
+    // 2. Платформенная глобальная функция (СтрНайти и т.п.) — через
+    //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
     return globalFunctionReturnTypes(name.getText(), ctx);
   }
 
@@ -511,8 +486,7 @@ public class ExpressionTypeInferencer {
     if (methodName == null || methodName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return globalScopeProvider
-      .findFunction(methodName, ctx.documentContext.getFileType())
+    return globalScopeProvider.globalFunction(methodName, ctx.documentContext.getFileType())
       .map(MemberDescriptor::returnTypes)
       .filter(types -> !types.isEmpty())
       .orElse(TypeSet.EMPTY);

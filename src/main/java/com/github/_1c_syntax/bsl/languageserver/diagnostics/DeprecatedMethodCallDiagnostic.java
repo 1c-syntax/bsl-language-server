@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
@@ -56,7 +55,6 @@ import java.util.Optional;
 public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   private final ReferenceIndex referenceIndex;
   private final TypeService typeService;
-  private final TypeRegistry typeRegistry;
   private final LanguageServerConfiguration configuration;
 
   @Override
@@ -91,7 +89,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   private void checkPlatformMembers() {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var reported = new HashSet<Range>();
-    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService)) {
       var metadata = member.descriptor().metadata();
       if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)
         && reported.add(member.range())) {
@@ -114,7 +112,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
    */
   private void checkDeletedPrefixMembers() {
     var reported = new HashSet<Range>();
-    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService)) {
       if (member.descriptor().kind() != MemberKind.PROPERTY) {
         continue;
       }

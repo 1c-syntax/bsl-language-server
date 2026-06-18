@@ -134,14 +134,16 @@ public class OScriptModuleMembersProvider {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
           registerInheritedMembers(documentContext, ref);
-          globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
           // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
           // (единый источник в GlobalScopeProvider вместо обращения инференсера к
           // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
           // роль CLASS не должна перетирать тип модуля под тем же URI.
           globalScopeProvider.indexModuleType(uri, ref);
-          globalScopeProvider.registerLibraryModule(qualifiedName, ref);
+          // library-модуль — глобальное свойство (OS).
+          // declaration уже хранит UserType (registerUserType выше), поэтому
+          // символ не передаём; член собирает сам TypeRegistry (override-source).
+          typeRegistry.registerGlobalPropertyType(ref, FileType.OS);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), FileType.OS);
@@ -164,9 +166,10 @@ public class OScriptModuleMembersProvider {
       return;
     }
     for (var name : names) {
+      // снять пометку глобального свойства до удаления типа (resolve по имени)
+      typeRegistry.resolve(name)
+        .ifPresent(ref -> typeRegistry.unregisterGlobalPropertyType(ref, FileType.OS));
       typeRegistry.unregisterUserType(name);
-      globalScopeProvider.unregisterLibraryModule(name);
-      globalScopeProvider.unregisterLibraryClass(name);
     }
   }
 

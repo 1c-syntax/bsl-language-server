@@ -22,16 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Утилита для добавления в hover-блок коллекционных подсказок (обход
- * {@code Для Каждого} и индексатор {@code [...]}) на основании данных из
- * {@link TypeRegistry}. Информация подмешивается источниками
+ * {@code Для Каждого} и индексатор {@code [...]}) на основании данных о типе,
+ * получаемых через {@link TypeService}. Информация подмешивается источниками
  * платформенных типов (bsl-context / JSON-fallback) из синтакс-помощника.
  */
 @Component
@@ -40,10 +41,11 @@ public class CollectionHoverHints {
 
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
+  private final TypeService typeService;
 
   /**
    * Добавляет markdown-блоки про обход и индексатор для типа, если
-   * соответствующие признаки заданы в {@link TypeRegistry}. Если у типа нет
+   * соответствующие признаки у типа заданы. Если у типа нет
    * ни forEach, ни indexAccess — ничего не пишет.
    * <p>
    * Формат блоков:
@@ -51,27 +53,23 @@ public class CollectionHoverHints {
    * **&lt;label-обхода&gt;** &lt;описание из синтакс-помощника&gt;
    * **&lt;label-индексатора&gt;** &lt;описание из синтакс-помощника&gt;
    * </pre>
-   * Если в TypeRegistry есть {@code supportsForEach}, но описание пустое —
-   * пишем общий текст-fallback.
+   * Если тип поддерживает обход, но описание пустое — пишем общий текст-fallback.
    */
-  public void append(StringBuilder sb, TypeRef ref, TypeRegistry registry) {
-    if (sb == null || ref == null || registry == null) {
-      return;
-    }
-    var supportsForEach = registry.supportsForEach(ref);
-    var supportsIndex = registry.supportsIndexAccess(ref);
+  public void append(StringBuilder sb, TypeRef ref, FileType fileType) {
+    var supportsForEach = typeService.supportsForEach(ref, fileType);
+    var supportsIndex = typeService.supportsIndexAccess(ref, fileType);
     if (!supportsForEach && !supportsIndex) {
       return;
     }
     var lang = configuration.getLanguage();
     if (supportsForEach) {
       sb.append("\n\n**").append(tr("forEachLabel")).append("** ");
-      var description = registry.getForEachDescription(ref, lang);
+      var description = typeService.getForEachDescription(ref, fileType, lang);
       sb.append(description.isBlank() ? tr("forEachFallback") : description);
     }
     if (supportsIndex) {
       sb.append("\n\n**").append(tr("indexAccessLabel")).append("** ");
-      var description = registry.getIndexAccessDescription(ref, lang);
+      var description = typeService.getIndexAccessDescription(ref, fileType, lang);
       sb.append(description.isBlank() ? tr("indexAccessFallback") : description);
     }
   }

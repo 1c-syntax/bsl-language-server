@@ -34,8 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,34 +83,6 @@ class TypeServiceDelegationTest {
   void setUp() {
     typeService = new TypeService(typeRegistry, symbolTypeIndex, inferencer,
       referenceResolver, globalScopeProvider, dereferenceMatcher);
-  }
-
-  @Test
-  void findTypesByReferenceForSyntheticSymbolUsesValueType() {
-    // given — Reference с SyntheticSymbol, у которого valueType=NUMBER.
-    var synthetic = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", NUMBER);
-    var location = new Location("file:///fake.bsl", new Range());
-    var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
-
-    // when
-    var types = typeService.typesAt(ref);
-
-    // then
-    assertThat(types.refs()).containsExactly(NUMBER);
-  }
-
-  @Test
-  void findTypesByReferenceWithUnknownSyntheticValueReturnsEmpty() {
-    // given
-    var synthetic = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
-    var location = new Location("file:///fake.bsl", new Range());
-    var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
-
-    // when
-    var types = typeService.typesAt(ref);
-
-    // then — нет valueType → EMPTY.
-    assertThat(types).isSameAs(TypeSet.EMPTY);
   }
 
   @Test
@@ -206,9 +176,10 @@ class TypeServiceDelegationTest {
     var uri = java.net.URI.create("file:///fake.bsl");
     when(docMock.getUri()).thenReturn(uri);
     var pos = new org.eclipse.lsp4j.Position(0, 0);
-    var synthetic = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    var symbol = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol.class);
     var location = new Location("file:///fake.bsl", new Range());
-    var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
+    var ref = Reference.of(null, symbol, location, OccurrenceType.REFERENCE);
     when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.of(ref));
 
     // when / then

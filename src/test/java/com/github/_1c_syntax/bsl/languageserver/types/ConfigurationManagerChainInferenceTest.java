@@ -60,10 +60,10 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile(
       "./src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl");
 
-    // sanity: коллекция Справочники зарегистрирована как глобальное свойство,
-    // её член — менеджер-обёртка с методом МетодМенеджера.
-    typeRegistry.resolve("");
-    var collection = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
+    // sanity: коллекция Справочники — глобальное свойство, её тип-значение
+    // (менеджер-обёртка) несёт метод МетодМенеджера.
+    var collection = globalScopeProvider.globalMember("Справочники", FileType.BSL).orElseThrow()
+      .returnTypes().refs().stream().findFirst().orElseThrow();
     var catalogsMembers = typeRegistry.getMembers(collection, FileType.BSL);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");
     var memberReturn = catalogsMembers.stream()
