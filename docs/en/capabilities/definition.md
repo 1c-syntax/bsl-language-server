@@ -95,3 +95,7 @@ In `demo-annotation.os`, the user places the cursor on the name of a registered 
 The user works with a variable assigned the result of `ОбщийМодуль("...")`, places the cursor on a method called on it and presses F12. The editor resolves the common module from the `ОбщийМодуль()` result, opens its `Module.bsl` and navigates to the method's declaration.
 
 ![def-16-method-via-commonmodule-result](https://github.com/user-attachments/assets/13947cf8-f555-4573-8431-fb1e5b1c7ad2)
+
+---
+
+[← Back: Code completion](completion.md)  ·  [Next: Go to implementations →](implementation.md)

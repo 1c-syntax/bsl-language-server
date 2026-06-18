@@ -35,3 +35,7 @@ Above the `&Тест` methods in a OneScript module, «Run test» and «Run all 
 In `.bsl` code, the «Cognitive complexity» lens above a method is clicked. Inline complexity counters appear in the code: `+1` on branches and `+2 (nesting=1)` on nested constructs.
 
 ![codeLens-05-complexity-toggle](https://github.com/user-attachments/assets/16904a15-e131-4b9e-9025-16f0c59b2ef1)
+
+---
+
+[← Back: Inlay hints](inlayHint.md)  ·  [Next: Colors: preview and picker →](color.md)

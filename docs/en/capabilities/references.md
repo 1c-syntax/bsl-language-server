@@ -23,3 +23,7 @@ The cursor is placed on a local variable inside a method and `Shift+F12` (find r
 The cursor is placed on a manager-module method and `Shift+F12` (find references) is pressed. A list opens with all calls to this method across the whole configuration.
 
 ![refs-03-manager-module-method](https://github.com/user-attachments/assets/7b7cd73f-30fb-4542-8d39-a7e1f6ddb887)
+
+---
+
+[← Back: Go to implementations](implementation.md)  ·  [Next: Quick documentation (hover) →](hover.md)

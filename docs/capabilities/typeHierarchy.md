@@ -9,3 +9,7 @@
 На классе OneScript, использующем наследование `extends`, вызывается «Show Type Hierarchy». Открывается дерево иерархии типов — супертипы и подтипы класса.
 
 ![typeHierarchy-01](https://github.com/user-attachments/assets/bc6a0349-00f4-4c7c-82ad-fe9390eec8ae)
+
+---
+
+[← Назад: Иерархия вызовов](callHierarchy.md)  ·  [Вперёд: Сворачивание кода →](folding.md)

@@ -23,3 +23,7 @@ In the `query.bsl` module the cursor moves to a string literal that holds a quer
 The cursor sits in the doc-comment block above the `РассчитатьСкидку` function. Semantic highlighting colors the BSLDoc markup: the `Параметры`/`Возвращаемое значение` sections, parameter names, types (`Структура`, `Число`, `СправочникСсылка.Клиенты`) and descriptions are each shown in distinct colors.
 
 ![semanticTokens-03-bsldoc](https://github.com/user-attachments/assets/166387e9-7790-41db-91d6-3bd62c0f7515)
+
+---
+
+[← Back: Smart selection](selectionRange.md)  ·  [Next: Inlay hints →](inlayHint.md)

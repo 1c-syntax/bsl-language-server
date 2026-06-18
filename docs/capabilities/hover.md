@@ -59,3 +59,7 @@
 Курсор наводится на использование аннотации `&Кэшировать` в OneScript-модуле. Всплывающая подсказка показывает описание этой аннотации.
 
 ![hover-09-os-annotation](https://github.com/user-attachments/assets/1dea5538-ac4e-416a-9fa4-bea6574ff61b)
+
+---
+
+[← Назад: Поиск использований](references.md)  ·  [Вперёд: Подсказка по параметрам →](signatureHelp.md)

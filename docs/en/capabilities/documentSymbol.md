@@ -23,3 +23,7 @@ The Outline view is opened for the current `.bsl` module. It shows a tree of the
 The Outline view shows a module whose `ПосчитатьИтог` method is marked deprecated by a `// Устарела.` comment. The deprecated method is rendered struck through, unlike the current `РассчитатьСумму`.
 
 ![documentSymbol-03-deprecated](https://github.com/user-attachments/assets/6cdf4400-b89f-42a5-987b-70d4a8164506)
+
+---
+
+[← Back: Linked editing](linkedEditing.md)  ·  [Next: Workspace symbols →](workspaceSymbol.md)

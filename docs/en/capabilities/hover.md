@@ -59,3 +59,7 @@ The cursor hovers over a common module name in the code. The popup shows the com
 The cursor hovers over a usage of the `&Кэшировать` annotation in a OneScript module. The popup shows the description of that annotation.
 
 ![hover-09-os-annotation](https://github.com/user-attachments/assets/1dea5538-ac4e-416a-9fa4-bea6574ff61b)
+
+---
+
+[← Back: Find references](references.md)  ·  [Next: Signature help →](signatureHelp.md)
