@@ -45,8 +45,32 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   private static final String FILE_PATH =
     "./src/test/resources/types/PlatformMethodInlayHints.bsl";
 
+  private static final String CONSTRUCTOR_FIXTURE_DIR =
+    "src/test/resources/oscript-libraries/constructor-inlay-test";
+  private static final String CONSTRUCTOR_CALLER_PATH = CONSTRUCTOR_FIXTURE_DIR + "/src/Классы/Caller.os";
+
   @Autowired
   private PlatformMethodCallInlayHintSupplier supplier;
+
+  @Autowired
+  private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
+
+  @Test
+  void noHintsForSourceDefinedOScriptConstructor() {
+    // given — конструктор OneScript-класса (ПриСозданииОбъекта) source-defined и
+    // покрывается SourceDefinedMethodCallInlayHintSupplier'ом; платформенный
+    // supplier не должен дублировать эти подсказки.
+    initServerContext(java.nio.file.Path.of(CONSTRUCTOR_FIXTURE_DIR).toAbsolutePath());
+    oScriptLibraryIndex.reindex(context);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(CONSTRUCTOR_CALLER_PATH, context);
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then
+    assertThat(hints).isEmpty();
+  }
 
   @Test
   void hintsTooltipContainsTypesAndOptionalLabel() {
