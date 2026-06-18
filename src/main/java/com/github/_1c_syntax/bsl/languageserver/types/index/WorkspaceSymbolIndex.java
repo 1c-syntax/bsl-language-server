@@ -29,8 +29,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
@@ -119,7 +121,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * рабочих областей). Записи {@link Entry} неизменяемы и безопасно покидают блокировку в составе результата.
  */
 @Component
+@RequiredArgsConstructor
 public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableIndex {
+
+  /**
+   * Нечёткий матчер для fuzzy-хвоста ({@link #searchFuzzyTail(String, Collection, CancelChecker)}):
+   * непрерывная подстрока и подпоследовательность со скорингом позиции.
+   */
+  private final FuzzyMatcher fuzzyMatcher;
 
   /**
    * Частота проверки отмены запроса (раз в N просмотренных записей).
@@ -165,20 +174,9 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    */
   private static final int SCORE_MULTI_WORD_UNORDERED = 4;
 
-  /**
-   * Скор совпадения запроса как непрерывной подстроки имени (но не префикса слова). Относится к
-   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Collection, CancelChecker)}), а не к древесному
-   * {@link #search(String, CancelChecker)}.
-   */
-  private static final int SCORE_SUBSTRING = 5;
-
-  /**
-   * Базовый скор совпадения запроса как подпоследовательности имени; к нему прибавляется
-   * позиция первого совпавшего символа (более ранняя позиция — релевантнее). Относится к
-   * fuzzy-хвосту ({@link #searchFuzzyTail(String, Collection, CancelChecker)}), а не к древесному
-   * {@link #search(String, CancelChecker)}.
-   */
-  private static final int SCORE_SUBSEQUENCE = 6;
+  // Скоры подстрочного (FuzzyMatcher.SCORE_SUBSTRING = 5) и подпоследовательностного
+  // (FuzzyMatcher.SCORE_SUBSEQUENCE = 6 + позиция) совпадений принадлежат fuzzy-хвосту и живут в
+  // FuzzyMatcher; они ранжируются ниже всех древесных скоров (0..4) этого индекса.
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -368,7 +366,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * потоковой дослыки нижнеранжированных результатов через partial result progress, а не для
    * синхронного ответа. Возвращаются только записи, которых НЕТ в {@code exclude} (сравнение по
    * идентичности), отсортированные тем же {@link Scored}-порядком: подстрочные
-   * ({@link #SCORE_SUBSTRING}) выше подпоследовательностных ({@link #SCORE_SUBSEQUENCE}{@code  + позиция}),
+   * ({@link FuzzyMatcher#SCORE_SUBSTRING}) выше подпоследовательностных
+   * ({@link FuzzyMatcher#SCORE_SUBSEQUENCE}{@code  + позиция}),
    * при равном скоре раньше более короткое имя, затем более ранняя позиция. Пустой запрос даёт пустой
    * список (полная выдача — это путь пустого запроса {@code search}, fuzzy там не нужен).
    * <p>
@@ -409,21 +408,21 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * Вычислить скор записи для fuzzy-хвоста, учитывая исключение уже отданных быстрым путём записей.
    * <p>
    * Запись, присутствующая в {@code exclude} (сравнение по идентичности), отбрасывается ({@code -1}),
-   * иначе возвращается её fuzzy-скор {@link #fuzzyScore(String, String)} (тоже {@code -1}, если
-   * совпадения нет). Выделено из цикла
+   * иначе возвращается её fuzzy-скор {@link FuzzyMatcher#fuzzyScore(String, String)} (тоже {@code -1},
+   * если совпадения нет). Выделено из цикла
    * {@link #searchFuzzyTail(String, Collection, CancelChecker)}, чтобы условия отбора не приходилось
    * выражать множественными {@code continue}.
    *
    * @param entry      запись-кандидат
    * @param lowerQuery lowercase-запрос (непустой)
    * @param exclude    записи, уже отданные быстрым путём (сравнение по идентичности)
-   * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если запись исключена или не совпала
+   * @return скор {@code >= FuzzyMatcher.SCORE_SUBSTRING}, либо {@code -1}, если запись исключена или не совпала
    */
-  private static int fuzzyTailScore(Entry entry, String lowerQuery, Collection<Entry> exclude) {
+  private int fuzzyTailScore(Entry entry, String lowerQuery, Collection<Entry> exclude) {
     if (exclude.contains(entry)) {
       return -1;
     }
-    return fuzzyScore(entry.lowerName(), lowerQuery);
+    return fuzzyMatcher.fuzzyScore(entry.lowerName(), lowerQuery);
   }
 
   /**
@@ -446,49 +445,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     } finally {
       lock.readLock().unlock();
     }
-  }
-
-  /**
-   * Вычислить скор «не-префиксного» fuzzy-совпадения lowercase-имени с lowercase-запросом.
-   * <p>
-   * Меньшее значение — релевантнее: {@link #SCORE_SUBSTRING} — непрерывная подстрока,
-   * {@link #SCORE_SUBSEQUENCE}{@code  + позиция первого совпавшего символа} — подпоследовательность.
-   *
-   * @param lowerName  lowercase-имя символа
-   * @param lowerQuery lowercase-запрос (непустой)
-   * @return скор {@code >= SCORE_SUBSTRING}, либо {@code -1}, если совпадения нет
-   */
-  private static int fuzzyScore(String lowerName, String lowerQuery) {
-    if (lowerName.contains(lowerQuery)) {
-      return SCORE_SUBSTRING;
-    }
-    var firstMatch = subsequenceFirstIndex(lowerName, lowerQuery);
-    if (firstMatch >= 0) {
-      return SCORE_SUBSEQUENCE + firstMatch;
-    }
-    return -1;
-  }
-
-  /**
-   * Проверить, что {@code lowerQuery} — подпоследовательность {@code lowerName}, и вернуть индекс
-   * символа имени, на котором совпал первый символ запроса.
-   *
-   * @param lowerName  lowercase-имя символа
-   * @param lowerQuery lowercase-запрос (непустой)
-   * @return индекс первого совпавшего символа, либо {@code -1}, если не подпоследовательность
-   */
-  private static int subsequenceFirstIndex(String lowerName, String lowerQuery) {
-    var firstMatch = -1;
-    var queryIndex = 0;
-    for (var nameIndex = 0; nameIndex < lowerName.length() && queryIndex < lowerQuery.length(); nameIndex++) {
-      if (lowerName.charAt(nameIndex) == lowerQuery.charAt(queryIndex)) {
-        if (queryIndex == 0) {
-          firstMatch = nameIndex;
-        }
-        queryIndex++;
-      }
-    }
-    return queryIndex == lowerQuery.length() ? firstMatch : -1;
   }
 
   /**

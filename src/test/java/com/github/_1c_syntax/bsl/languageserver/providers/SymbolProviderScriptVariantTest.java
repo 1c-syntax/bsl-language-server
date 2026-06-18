@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
+import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -90,7 +91,7 @@ class SymbolProviderScriptVariantTest {
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
 
     // имя контейнера вычисляется индексом на момент индексации в варианте языка проекта
-    var index = new WorkspaceSymbolIndex();
+    var index = new WorkspaceSymbolIndex(new FuzzyMatcher());
     index.handleContentChanged(new DocumentContextContentChangedEvent(documentContext));
 
     // запрос без partialResultToken: клиент не используется, древесная выдача отдаётся синхронно
