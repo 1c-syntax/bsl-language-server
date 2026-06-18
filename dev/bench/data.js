@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781787320721,
+  "lastUpdate": 1781789444831,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38006,6 +38006,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.192349034996393",
             "extra": "mean: 289.4358702500661 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5d1d590fcb8aed85eeb1dd353fc30d401a8602f3",
+          "message": "Merge pull request #4145 from 1c-syntax/dependabot/gradle/io.sentry.jvm.gradle-6.12.0\n\nbuild(deps): bump io.sentry.jvm.gradle from 6.11.0 to 6.12.0",
+          "timestamp": "2026-06-18T14:09:17+02:00",
+          "tree_id": "9742489a3705072df6f91031046d216c48b7a089",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5d1d590fcb8aed85eeb1dd353fc30d401a8602f3"
+        },
+        "date": 1781789433906,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.6263229052226,
+            "unit": "sec",
+            "range": "stddev: 15.802477027966626",
+            "extra": "mean: 289.6263229052226 sec\nrounds: 3"
           }
         ]
       }
