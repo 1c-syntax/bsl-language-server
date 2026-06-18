@@ -100,7 +100,14 @@ LSP 3.17/3.18.
 * [`textDocument/documentLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) — кликабельные ссылки `См.`/`See` к упомянутому методу/объекту и открытие http(s)-ссылок из комментариев.
 * [`textDocument/documentHighlight`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) — подсветка вхождений идентификаторов с видом Read/Write, `kind=Text` для парных лексем.
 * [`textDocument/documentSymbol`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol) — `detail` с сигнатурой параметров метода.
-* [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) — ранжированный символьный индекс, заполнение `containerName`, отмена запроса через `CancelChecker`, безопасный откат на буквальный поиск при невалидном regex.
+* [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) — поиск символов по проекту полностью переработан:
+  * инкрементальный индекс символов с ранжированием по релевантности; выдача больше не усекается «вслепую»;
+  * префиксный поиск как по началу полного имени, так и по началу любого слова: запрос `Док` находит `ПровестиДокумент` (имена 1С пишутся в CamelCase, кириллица поддержана);
+  * многословный camel-hump-поиск («тайтл-кейс-хоп») — запрос `ПрДок` находит `ПровестиДокумент` (`Провести` + `Документ`); совпадения «по порядку слов» ранжируются выше совпадений «вразброс»;
+  * порядок релевантности: точное имя → префикс полного имени → многословное совпадение по порядку → префикс слова из середины имени → многословное совпадение не по порядку;
+  * потоковая выдача результатов (partial results, `$/progress`): сначала быстрый набор из индекса, затем нижнеранжированный fuzzy-хвост (подстрока внутри слова и разбросанная подпоследовательность) досылается чанками; для клиентов без потоковой выдачи — флаг `workspaceSymbol.syncFuzzySearch` (по умолчанию выключен);
+  * поиск выполняется сразу по всем зарегистрированным workspace folders (см. раздел «Поддержка нескольких рабочих пространств»);
+  * заполнение `containerName`, отмена запроса через `CancelChecker`, безопасный откат на буквальный поиск при невалидном regex.
 * [`textDocument/codeAction`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction) — поддержка `source.fixAll` (автопочинка при сохранении) и учёт `context.triggerKind`.
 * [`textDocument/rename`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) — `WorkspaceEdit` на `documentChanges` и `ChangeAnnotation`, валидация нового имени, защита от переименования символов-модулей.
 * [`textDocument/formatting`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) — поддержка `insertFinalNewline` и `trimFinalNewlines`.
