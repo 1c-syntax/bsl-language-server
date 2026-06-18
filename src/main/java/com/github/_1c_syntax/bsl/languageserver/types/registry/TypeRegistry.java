@@ -436,9 +436,6 @@ public class TypeRegistry {
    * @param fileType язык, в котором он виден без префикса.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
-    if (ref == null) {
-      return;
-    }
     globalPropertyTypes.get(fileType).add(ref);
     membersEpoch.incrementAndGet();
   }
@@ -452,9 +449,6 @@ public class TypeRegistry {
    * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    if (ref == null) {
-      return;
-    }
     globalPropertyTypes.get(fileType).add(ref);
     globalPropertySymbols.put(ref, new WeakReference<>(declaration));
     membersEpoch.incrementAndGet();
@@ -467,9 +461,6 @@ public class TypeRegistry {
    * @param fileType язык.
    */
   public void unregisterGlobalPropertyType(TypeRef ref, FileType fileType) {
-    if (ref == null) {
-      return;
-    }
     globalPropertyTypes.get(fileType).remove(ref);
     globalPropertySymbols.remove(ref);
     membersEpoch.incrementAndGet();
@@ -1314,7 +1305,7 @@ public class TypeRegistry {
       case PRIMITIVE -> new PrimitiveType(ref);
       case PLATFORM -> new PlatformType(ref);
       case CONFIGURATION -> new ConfigurationType(ref);
-      case USER -> new UserType(ref, new java.lang.ref.WeakReference<>(null));
+      case USER -> new UserType(ref, new WeakReference<>(null));
       case ANY -> AnyType.INSTANCE;
       case UNKNOWN -> UnknownType.INSTANCE;
     };

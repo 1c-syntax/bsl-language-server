@@ -59,8 +59,9 @@ class GlobalScopeProviderBslContextTest {
     };
   }
 
-  // GlobalScopeProvider читает TypeRegistry только для globalMember-резолва;
-  // этим тестам (getClasses/getKeywords из bsl-context) реестр не нужен — заглушка.
+  // Реестр нужен GlobalScopeProvider лишь при резолве globalMember, а этим
+  // тестам он не требуется (проверяют getClasses и getKeywords из bsl-context),
+  // поэтому передаём заглушку.
   private static GlobalScopeProvider scope(ContextProvider provider) {
     return new GlobalScopeProvider(holderOf(provider),
       new TypeRegistry(List.of(), org.mockito.Mockito.mock(MemberMetadataIndex.class)));

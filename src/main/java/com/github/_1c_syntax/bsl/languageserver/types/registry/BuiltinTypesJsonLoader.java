@@ -66,6 +66,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @UtilityClass
 public class BuiltinTypesJsonLoader {
 
+  private static final Map<String, List<TypeDecl>> LOAD_CACHE = new ConcurrentHashMap<>();
+
   /**
    * Маппинг {@code kind}-значений JSON-пака (терминология bsl-context'а
    * {@code ContextKind}) в наш {@link TypeKind}:
@@ -85,13 +87,11 @@ public class BuiltinTypesJsonLoader {
     };
   }
 
-  private static final Map<String, List<TypeDecl>> LOAD_CACHE = new ConcurrentHashMap<>();
-
   /**
    * Распарсенные декларации пака, мемоизированные по пути ресурса: JSON в jar
    * неизменен, поэтому каждый ресурс парсится один раз на JVM. Один и тот же
    * результат читают и платформенный провайдер (как типы), и сборка
-   * enum-глобалов ({@link #enumGlobalProperties}) — без повторного разбора.
+   * enum-глобалов в провайдере глобального контекста — без повторного разбора.
    */
   static List<TypeDecl> load(String resourcePath) {
     return LOAD_CACHE.computeIfAbsent(resourcePath, BuiltinTypesJsonLoader::parse);
