@@ -6,9 +6,10 @@
 Версия 1.0.0 — рубежный релиз. Основой стала **полностью новая система типов**, на которой
 переосмыслены семантические возможности сервера: вывод типов, всплывающие подсказки,
 автодополнение, подсказки по параметрам, семантическая подсветка и целое семейство новых
-диагностик. Параллельно существенно расширена поддержка протокола LSP (вплоть до возможностей
-LSP 3.18), добавлен экспериментальный режим работы в качестве **MCP-сервера** и собран
-полноценный **каталог возможностей** в документации.
+диагностик. Существенно расширена поддержка протокола LSP — добавлены автодополнение, подсказка по
+параметрам, иерархия типов и другие запросы (вплоть до возможностей LSP 3.18). Добавлен
+экспериментальный режим работы в качестве **MCP-сервера** и собран полноценный **каталог
+возможностей** в документации.
 
 ## Новая система типов
 
@@ -23,8 +24,7 @@ LSP 3.18), добавлен экспериментальный режим раб
   * типы OneScript из синтакс-помощника OneScript 2.1, а также пользовательские OScript-классы.
 * **Вывод типов выражений (inference).** Сервер определяет тип переменной/выражения под курсором,
   в том числе по присваиванию, по возвращаемому значению функций (включая межмодульный вывод) и по
-  полям структур, формируемых функцией-конструктором. Результаты инференса кэшируются для
-  производительности.
+  полям структур, формируемых функцией-конструктором. Результаты инференса кэшируются.
 * **Билингвальность.** Полноценная поддержка русских и английских имён типов и членов: двуязычное
   отображение в ховере, автодополнении и подсказках по параметрам; классификация смешанных имён;
   показ информации на «своём» языке символа (BSL/OneScript).
@@ -43,74 +43,49 @@ LSP 3.18), добавлен экспериментальный режим раб
   модулей и конструкторы классов после `Новый` подсвечиваются корректно; собственные методы и
   реквизиты конфигурации не окрашиваются как `defaultLibrary`. Поддержана подсветка лямбд внутри
   строковых литералов.
-* **Ховер и подсказки по параметрам** показывают тип и область видимости переменной, признак
-  необязательности параметра («?»), состав возвращаемых структур, признак устаревания членов и
-  ссылки `См.`/`See`.
 
-## Новые диагностики на основе системы типов
+## Поддержка протокола LSP
 
-* **UnknownMember** — обращение к неизвестному методу или свойству.
-* **UnavailableMemberCall** — использование метода/свойства, недоступного в целевой версии платформы.
-* **AssignToReadOnlyProperty** — присвоение значения свойству, доступному только для чтения.
+Добавлен **каталог возможностей** в документации (`docs/capabilities`). Сама поддержка протокола
+существенно расширена — реализованы новые запросы и улучшены существующие, вплоть до возможностей
+LSP 3.17/3.18.
 
-Механизм устаревания и недоступности платформенных членов переведён на data-driven модель: вместо
-жёстко зашитых диагностик `DeprecatedMethods8310`/`DeprecatedMethods8317` устаревание и доступность
-членов теперь определяются по версии платформы из данных типов.
+### Новые обрабатываемые запросы
 
-## Прочие новые диагностики
+* Добавлена обработка запроса [`textDocument/completion`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_completion) и [`completionItem/resolve`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve) — автодополнение кода: глобальные функции, методы и свойства объектов (с выводом типа), типы после `Новый`, ключевые слова и локальные переменные; нечёткий поиск (подстрока и подпоследовательность), ранжирование через `sortText`, сигнатура и тип в `labelDetails` (LSP 3.17), `commitCharacters`, отложенная документация через resolve, размещение курсора после скобок.
+* Добавлена обработка запроса [`textDocument/signatureHelp`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp) — подсказка по параметрам вызываемого метода с подсветкой текущего параметра и учётом клиентских возможностей (`labelOffset`, `documentationFormat`, контекст retrigger).
+* Добавлена обработка запроса [`textDocument/inlayHint`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_inlayHint) и [`inlayHint/resolve`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#inlayHint_resolve) — встроенные подсказки имён параметров (в т.ч. для конструктора `Новый Класс()`) и типов переменных, показ значений по умолчанию пропущенных аргументов, кликабельные части подписи (`LabelPart`).
+* Добавлена обработка запроса [`textDocument/implementation`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation) — переход к реализациям метода интерфейса (`&Интерфейс` → `&Реализует`) для классов OneScript на библиотеке наследования `extends`.
+* Добавлена обработка запросов [`textDocument/prepareTypeHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy), [`typeHierarchy/supertypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes) и [`typeHierarchy/subtypes`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_subtypes) — иерархия супертипов и подтипов OneScript-классов по `&Расширяет`/`&Реализует` (с `SymbolKind.Interface` для интерфейсов).
+* Добавлена обработка запроса [`textDocument/linkedEditingRange`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange) — одновременное редактирование объявления локального символа и всех его вхождений без вызова переименования.
+* Добавлена обработка запроса [`textDocument/onTypeFormatting`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) — форматирование по мере набора (флаг `useOnTypeFormatting`).
+* Добавлена обработка запроса [`textDocument/rangesFormatting`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#textDocument_rangesFormatting) — форматирование нескольких диапазонов (LSP 3.18).
+* Добавлена обработка запроса [`textDocument/prepareRename`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) — подготовка переименования с `PrepareRenameResult` и placeholder.
+* Добавлена поддержка операций над файлами [`workspace/didCreateFiles`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_didCreateFiles), [`workspace/didRenameFiles`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_didRenameFiles), [`workspace/didDeleteFiles`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_didDeleteFiles) и динамическая регистрация наблюдателей за файлами ([`didChangeWatchedFiles`](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles)) через `RelativePattern`.
+* Явно декларируется [`positionEncoding`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#positionEncodingKind) = `utf-16`.
 
-* **CommonModuleVariables** — объявление переменных (`Перем`) в общем модуле (Issue #3854).
-* **CompareWithBoolean** — сравнение с булевой константой (Issue #696).
-* **BadExceptionCategory** — недопустимая категория исключений в `ВызватьИсключение` (Issue #1935).
-* **EventHandlerInvalidSignature** — несоответствие сигнатуры обработчика платформенного события
-  (с быстрыми исправлениями).
-* **EventHandlerOutsideEventRegion** — обработчик события вне стандартной области
-  (с быстрыми исправлениями).
+### Улучшения существующих запросов
 
-## Расширенная поддержка LSP
-
-Добавлен **каталог возможностей** в документации (`docs/capabilities`), а сама поддержка протокола
-существенно расширена — вплоть до возможностей LSP 3.17/3.18.
-
-* **Подсказки-вставки (inlay hints):** хинты типов переменных и имён параметров (в т.ч. для вызовов
-  конструктора `Новый Класс()`), показ значений по умолчанию пропущенных аргументов, кликабельные
-  части подписи (`LabelPart`), отложенное наполнение через `inlayHint/resolve`.
-* **Автодополнение:** нечёткий поиск (подстрока и подпоследовательность), ранжирование кандидатов
-  через `sortText`, отложенная документация через `completionItem/resolve`, сигнатура и тип в
-  `labelDetails`, `commitCharacters`, размещение курсора после скобок у безпараметровых элементов,
-  паритет пользовательских методов и конструкторов с платформенными.
-* **Сворачивание кода (folding range):** ветви `ИначеЕсли`/`Иначе` и блок `Исключение`, блоки
-  `#Вставка`/`#Удаление` расширений, осмысленный `collapsedText`, соблюдение клиентского `rangeLimit`.
-* **Гиперссылки в коде (document link):** кликабельные ссылки `См.`/`See` к упомянутому методу/объекту,
-  открытие http(s)-ссылок из комментариев, опциональная ссылка фрагмента на документацию диагностики.
-* **Связанное редактирование (linked editing range):** одновременное редактирование объявления и всех
-  вхождений локального символа без вызова переименования.
-* **Переименование (rename):** `prepareRename` с плейсхолдером, `WorkspaceEdit` на `documentChanges`
-  и `ChangeAnnotation`, валидация нового имени, защита от переименования символов-модулей.
-* **Поиск символов по проекту (workspace symbol):** ранжированный символьный индекс, заполнение
-  `containerName`, отмена запроса через `CancelChecker`, безопасный откат на буквальный поиск при
-  невалидном regex.
-* **Иерархия типов и переход к реализациям** для классов OneScript на библиотеке наследования
-  `extends`: супертипы/подтипы по `&Расширяет`/`&Реализует`, `SymbolKind.Interface` для интерфейсов,
-  переход от метода `&Интерфейс` к реализациям `&Реализует`.
-* **Форматирование:** диапазонное форматирование `textDocument/rangesFormatting` (LSP 3.18), поддержка
-  `insertFinalNewline`/`trimFinalNewlines`, форматирование по мере набора (`onTypeFormatting`) с флагом
-  `useOnTypeFormatting`.
-* **Быстрые исправления (code action):** поддержка `source.fixAll` (автопочинка при сохранении), учёт
-  `context.triggerKind`.
-* **Подсветка вхождений (document highlight):** подсветка вхождений идентификаторов с видом Read/Write,
-  `kind=Text` для парных лексем.
-* **Структура документа:** `detail` с сигнатурой параметров метода.
-* **Прочее:** явное декларирование `positionEncoding=utf-16`, `fileOperations` и динамическая
-  регистрация наблюдателей за файлами (`RelativePattern`), раскрытие узла кода модуля в иерархии
-  вызовов, учёт клиентских возможностей (`definition`/`references` `linkSupport`,
-  `documentationFormat`, `labelOffset`, контекст `signatureHelp`).
+* [`textDocument/foldingRange`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) — сворачивание ветвей `ИначеЕсли`/`Иначе` и блока `Исключение`, блоков `#Вставка`/`#Удаление` расширений, осмысленный `collapsedText`, соблюдение клиентского `rangeLimit`.
+* [`textDocument/documentLink`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) — кликабельные ссылки `См.`/`See` к упомянутому методу/объекту, открытие http(s)-ссылок из комментариев, опциональная ссылка фрагмента на документацию диагностики.
+* [`textDocument/documentHighlight`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) — подсветка вхождений идентификаторов с видом Read/Write, `kind=Text` для парных лексем.
+* [`textDocument/documentSymbol`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol) — `detail` с сигнатурой параметров метода.
+* [`workspace/symbol`](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) — ранжированный символьный индекс, заполнение `containerName`, отмена запроса через `CancelChecker`, безопасный откат на буквальный поиск при невалидном regex.
+* [`textDocument/codeAction`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction) — поддержка `source.fixAll` (автопочинка при сохранении) и учёт `context.triggerKind`.
+* [`textDocument/rename`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) — `WorkspaceEdit` на `documentChanges` и `ChangeAnnotation`, валидация нового имени, защита от переименования символов-модулей.
+* [`textDocument/formatting`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) — поддержка `insertFinalNewline` и `trimFinalNewlines`.
+* [`textDocument/references`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references) — учёт `context.includeDeclaration`.
+* [`textDocument/definition`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition) — учёт клиентской возможности `linkSupport` (`LocationLink`).
+* [`textDocument/documentColor`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) / [`textDocument/colorPresentation`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) — выбор цвета через палитру и конвертация веб-цветов в `Новый Цвет` и обратно.
+* [`textDocument/prepareCallHierarchy`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy) — раскрытие узла кода модуля в иерархии вызовов.
+* [`textDocument/hover`](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) — показ типа и области видимости переменной, признака необязательности параметра («?»), состава возвращаемых структур, признака устаревания членов.
 
 ## Режим MCP (экспериментально)
 
 Сервер умеет работать как сервер [Model Context Protocol (MCP)](https://modelcontextprotocol.io/),
-открывая возможности анализа кода 1С (BSL) и OneScript AI-агентам. Инструменты MCP работают поверх того
-же движка, что и LSP-режим. Рабочие пространства задаются через MCP roots (аналог workspace folders).
+открывая возможности анализа кода 1С (BSL) и OneScript AI-агентам. Инструменты MCP работают поверх
+того же движка, что и LSP-режим. Рабочие пространства задаются через
+[MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) — прямой аналог workspace folders.
 
 * **Режимы запуска:** отдельный MCP-сервер (команда `mcp` с транспортом `stdio`/`sse`/`streamable`)
   либо совместно с LSP по флагу `--mcp` (рядом с `stdio`- или `websocket`-LSP, по Streamable HTTP).
@@ -118,6 +93,26 @@ LSP 3.18), добавлен экспериментальный режим раб
   `definition`, `type_info` (свойства и методы типа по имени), `type_at_position` (выведенный тип
   выражения под курсором), `global_member_info`. Поддержан параметр `fileType` (BSL/OS).
 * Основан на Spring AI 2.0; API и поведение могут меняться.
+
+## Новые диагностики
+
+На основе системы типов:
+
+* [`UnknownMember`](https://1c-syntax.github.io/bsl-language-server/diagnostics/UnknownMember) — обращение к неизвестному методу или свойству.
+* [`UnavailableMemberCall`](https://1c-syntax.github.io/bsl-language-server/diagnostics/UnavailableMemberCall) — использование метода/свойства, недоступного в целевой версии платформы.
+* [`AssignToReadOnlyProperty`](https://1c-syntax.github.io/bsl-language-server/diagnostics/AssignToReadOnlyProperty) — присвоение значения свойству, доступному только для чтения.
+
+Прочие:
+
+* [`CommonModuleVariables`](https://1c-syntax.github.io/bsl-language-server/diagnostics/CommonModuleVariables) — объявление переменных (`Перем`) в общем модуле (Issue #3854).
+* [`CompareWithBoolean`](https://1c-syntax.github.io/bsl-language-server/diagnostics/CompareWithBoolean) — сравнение с булевой константой (Issue #696).
+* [`BadExceptionCategory`](https://1c-syntax.github.io/bsl-language-server/diagnostics/BadExceptionCategory) — недопустимая категория исключений в `ВызватьИсключение` (Issue #1935).
+* [`EventHandlerInvalidSignature`](https://1c-syntax.github.io/bsl-language-server/diagnostics/EventHandlerInvalidSignature) — несоответствие сигнатуры обработчика платформенного события (с быстрыми исправлениями).
+* [`EventHandlerOutsideEventRegion`](https://1c-syntax.github.io/bsl-language-server/diagnostics/EventHandlerOutsideEventRegion) — обработчик события вне стандартной области (с быстрыми исправлениями).
+
+Механизм устаревания и недоступности платформенных членов переведён на data-driven модель: вместо
+жёстко зашитых диагностик `DeprecatedMethods8310`/`DeprecatedMethods8317` устаревание и доступность
+членов теперь определяются по версии платформы из данных типов.
 
 ## Прочие новые возможности
 
@@ -161,17 +156,39 @@ LSP 3.18), добавлен экспериментальный режим раб
 
 ## Обновления значимых зависимостей
 
-* BSL Parser: 0.32.0 → 0.36.0;
-* MDClasses: 0.18.0 → 0.19.1;
-* BSL Context: добавлена зависимость, 0.7.0;
-* BSL Common Library: 0.10.0 → 0.11.0;
-* 1c-syntax utils: 0.7.0 → 0.7.2;
-* Eclipse LSP4J: 0.24.0 → 1.0.0;
-* Spring Boot: 4.0.1 → 4.1.0;
-* Spring AI: 2.0.0 (новая зависимость, для режима MCP);
-* Sentry Gradle Plugin: 6.2.0 → 6.12.0;
-* Eclipse JGit: 7.3 → 7.7;
-* обновлены прочие плагины сборки и тестовые зависимости (Gradle, GitHub Actions, JMockit и др.).
+Библиотеки 1c-syntax:
+
+* `io.github.1c-syntax:bsl-parser`: 0.32.0 → 0.36.0;
+* `io.github.1c-syntax:mdclasses`: 0.18.0 → 0.19.1;
+* `io.github.1c-syntax:bsl-context`: новая зависимость, 0.7.0;
+* `io.github.1c-syntax:bsl-common-library`: 0.10.0 → 0.11.0;
+* `io.github.1c-syntax:utils`: 0.7.0 → 0.7.2.
+
+Внешние библиотеки:
+
+* `org.eclipse.lsp4j` (lsp4j core + websocket.jakarta): 0.24.0 → 1.0.0;
+* `org.springframework.boot`: 4.0.1 → 4.1.0;
+* `org.springframework.ai:spring-ai-bom`: новая зависимость, 2.0.0 (режим MCP);
+* `org.eclipse.jgit`: 7.3.0 → 7.7.0 (фильтрация диагностик по git blame);
+* `com.github.ben-manes.caffeine:caffeine`: 3.2.3 → 3.2.4;
+* `org.ehcache:ehcache`: 3.11.1 → 3.12.0;
+* `org.jgrapht:jgrapht-core`: 1.5.2 → 1.5.3;
+* `commons-io:commons-io`: 2.21.0 → 2.22.0;
+* `commons-codec:commons-codec`: 1.21.0 → 1.22.0;
+* `com.google.guava:guava`: 33.5.0-jre → 33.6.0-jre;
+* LanguageTool: 6.7 → 6.8.
+
+Сборка и инструменты:
+
+* `io.sentry.jvm.gradle`: 6.2.0 → 6.12.0;
+* `org.springframework.boot` (Gradle-плагин): 4.0.1 → 4.1.0;
+* `io.freefair.*` (lombok, javadoc-links, javadoc-utf-8, aspectj): 9.2.0 → 9.5.0;
+* `org.sonarqube`: 7.2.3.7755 → 7.3.1.8318;
+* `com.gorylenko.gradle-git-properties`: 2.5.7 → 4.0.1;
+* `org.jreleaser`: 1.23.0 → 1.24.0;
+* `com.github.ben-manes.versions`: 0.53.0 → 0.54.0;
+* `com.github.hazendaz.jmockit:jmockit`: 2.1.0 → 2.2.0;
+* проект переведён на JDK 21 как базовую версию Java; обновлены `actions/checkout`, `actions/setup-java`, `gradle/actions` и другие GitHub Actions.
 
 ## Спасибо!
 
