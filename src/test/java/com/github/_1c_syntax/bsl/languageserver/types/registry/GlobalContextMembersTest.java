@@ -105,6 +105,30 @@ class GlobalContextMembersTest {
   }
 
   @Test
+  void oscriptGlobalVariableCharsResolvesItsMembers() {
+    // given: свежий workspace-scope
+    freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
+    try (var ignored = WorkspaceContextHolder.forUri(freshWorkspaceUri, "issue-3994-chars")) {
+      var typeRegistry = TestApplicationContext.getBean(TypeRegistry.class);
+      typeRegistry.ensureInitialized();
+      var globalScope = TestApplicationContext.getBean(GlobalScopeProvider.class);
+
+      // given: Символы — глобальная переменная-класс набора системных символов
+      var chars = globalScope.globalProperty("Символы", FileType.OS);
+      assertThat(chars).as("Символы — глобальное свойство в OS-файле").isPresent();
+
+      // when: тип-значение Символы
+      var valueType = chars.orElseThrow().returnTypes().refs().stream()
+        .findFirst().orElseThrow();
+
+      // then: член ПС резолвится через тип-значение (Символы.ПС)
+      assertThat(typeRegistry.getMembers(valueType, FileType.OS))
+        .as("Символы.ПС должен резолвиться через тип-значение глобальной переменной")
+        .anyMatch(member -> member.matches("ПС"));
+    }
+  }
+
+  @Test
   void globalFunctionBecomesMethodMemberOfGlobalContext() {
     // given: свежий workspace-scope с прогнанным bootstrap TypeRegistry
     freshWorkspaceUri = Absolute.uri(freshWorkspaceDir.toUri());
