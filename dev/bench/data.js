@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781807680546,
+  "lastUpdate": 1781816253453,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38099,6 +38099,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.9079523834164362",
             "extra": "mean: 304.59257793426514 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9811e6d4e71674ad32272e6df31350c7c002d5a7",
+          "message": "Merge pull request #4158 from 1c-syntax/claude/oscript-duplicate-inlay-hints-bmwdcl\n\nfix(inlayhints): не задваивать подсказки параметров конструктора oscript-класса",
+          "timestamp": "2026-06-18T20:32:30+02:00",
+          "tree_id": "15c6a10c4b37ffe184e8ad116626f215d32b57fb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9811e6d4e71674ad32272e6df31350c7c002d5a7"
+        },
+        "date": 1781816243575,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 287.2743013699849,
+            "unit": "sec",
+            "range": "stddev: 2.3291696664952046",
+            "extra": "mean: 287.2743013699849 sec\nrounds: 3"
           }
         ]
       }
