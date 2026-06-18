@@ -65,13 +65,15 @@ class OScriptModuleMembersProviderTest {
   private OScriptExtends oScriptExtends;
   @Mock
   private TypeRelations typeRelations;
+  @Mock
+  private OScriptIterable oScriptIterable;
 
   private OScriptModuleMembersProvider provider;
 
   @BeforeEach
   void setUp() {
     provider = new OScriptModuleMembersProvider(
-      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations);
+      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations, oScriptIterable);
   }
 
   @Test
@@ -101,5 +103,53 @@ class OScriptModuleMembersProviderTest {
     // then — обратный индекс URI→тип хранит тип модуля, а не класса.
     verify(globalScopeProvider).indexModuleType(uri, moduleRef);
     verify(globalScopeProvider, never()).indexModuleType(uri, classRef);
+  }
+
+  @Test
+  void iterableAnnotationMarksUserTypeAsForEachCollection() {
+    // given — небиблиотечный .os, помеченный &Обходимое.
+    var uri = URI.create("file:///КоллекцияЧисел.os");
+    when(oScriptLibraryIndex.findEntriesByUri(uri)).thenReturn(List.of());
+
+    var documentContext = mock(DocumentContext.class);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    when(documentContext.getUri()).thenReturn(uri);
+    var symbolTree = mock(SymbolTree.class);
+    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
+
+    var ref = new TypeRef(TypeKind.USER, "КоллекцияЧисел");
+    when(typeRegistry.registerUserType(eq("КоллекцияЧисел"), any(), eq(FileType.OS))).thenReturn(ref);
+    when(oScriptIterable.isIterable(documentContext)).thenReturn(true);
+
+    // when
+    provider.register(documentContext);
+
+    // then — тип помечен обходимой коллекцией.
+    verify(typeRegistry).setUserTypeIterable(ref, true, FileType.OS);
+  }
+
+  @Test
+  void plainClassIsNotMarkedAsForEachCollection() {
+    // given — небиблиотечный .os без &Обходимое.
+    var uri = URI.create("file:///ОбычныйКласс.os");
+    when(oScriptLibraryIndex.findEntriesByUri(uri)).thenReturn(List.of());
+
+    var documentContext = mock(DocumentContext.class);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    when(documentContext.getUri()).thenReturn(uri);
+    var symbolTree = mock(SymbolTree.class);
+    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
+
+    var ref = new TypeRef(TypeKind.USER, "ОбычныйКласс");
+    when(typeRegistry.registerUserType(eq("ОбычныйКласс"), any(), eq(FileType.OS))).thenReturn(ref);
+    when(oScriptIterable.isIterable(documentContext)).thenReturn(false);
+
+    // when
+    provider.register(documentContext);
+
+    // then — признак коллекции снимается (false), а не остаётся от прежнего состояния.
+    verify(typeRegistry).setUserTypeIterable(ref, false, FileType.OS);
   }
 }

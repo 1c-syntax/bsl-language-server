@@ -1051,6 +1051,8 @@ public class TypeRegistry {
     membersEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
+    supportsForEach.values().forEach(byRef -> byRef.remove(ref));
+    defaultElementTypes.remove(ref);
   }
 
   private void registerPack(TypePackProvider.TypeDecl decl, FileType fileType) {
@@ -1175,6 +1177,35 @@ public class TypeRegistry {
       canonical.add(resolved);
     }
     return TypeSet.of(canonical);
+  }
+
+  /**
+   * Пометить пользовательский тип (OneScript-класс) как коллекцию, обходимую
+   * через {@code Для Каждого} — или снять признак. Это императивный аналог
+   * {@link #registerPackCollectionTraits} для USER-типов, у которых нет
+   * {@link TypePackProvider.TypeDecl}: источник истины — аннотация
+   * {@code &Обходимое} на {@code ПриСозданииОбъекта} (см.
+   * {@code OScriptIterable#isIterable}).
+   * <p>
+   * Тип элемента при этом не задаётся: в исходниках OneScript он нигде не
+   * объявлен (итератор возвращает нетипизированное значение), поэтому
+   * {@code Для Каждого X Из Коллекция} даёт {@code X} типа «любой» — ровно как
+   * у платформенного {@code Массив}.
+   * <p>
+   * Метод идемпотентен и пригоден для hot-reload: повторный вызов с {@code true}
+   * ничего не меняет, вызов с {@code false} снимает ранее выставленный признак
+   * (например, если из класса убрали {@code &Обходимое}).
+   *
+   * @param ref      ссылка на пользовательский тип.
+   * @param iterable {@code true} — пометить коллекцией; {@code false} — снять признак.
+   * @param fileType языковой скоуп, в котором действует признак.
+   */
+  public void setUserTypeIterable(TypeRef ref, boolean iterable, FileType fileType) {
+    if (iterable) {
+      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
+    } else {
+      supportsForEach.get(fileType).remove(ref);
+    }
   }
 
   /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
