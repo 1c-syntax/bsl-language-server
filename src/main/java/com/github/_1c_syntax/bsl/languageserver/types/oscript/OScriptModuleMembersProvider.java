@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -232,8 +233,8 @@ public class OScriptModuleMembersProvider {
    * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источник —
    * структурно разобранные парсером типы {@code VariableDescription.trailingDescription.getTypes()}:
    * для коллекционной нотации {@code Массив из Число} парсер возвращает один тип-голову
-   * {@code Массив} (элемент {@code Число} — внутри него), поэтому достаточно резолвить
-   * {@link com.github._1c_syntax.bsl.parser.description.TypeDescription#name()} каждого типа.
+   * {@code Массив} (элемент {@code Число} — внутри него), а имя для резолва извлекает
+   * {@link DescriptionTypes#resolveName(com.github._1c_syntax.bsl.parser.description.TypeDescription)}.
    * Без комментария/типа возвращает {@link TypeSet#EMPTY}.
    */
   private TypeSet propertyTypesFromComment(VariableSymbol variable) {
@@ -251,7 +252,10 @@ public class OScriptModuleMembersProvider {
     }
     var refs = new ArrayList<TypeRef>(types.size());
     for (var td : types) {
-      typeRegistry.resolve(resolvableTypeName(td), FileType.OS).ifPresent(refs::add);
+      var name = DescriptionTypes.resolveName(td);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
+      }
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
@@ -315,23 +319,12 @@ public class OScriptModuleMembersProvider {
     }
     var refs = new ArrayList<TypeRef>(types.size());
     for (var td : types) {
-      typeRegistry.resolve(resolvableTypeName(td)).ifPresent(refs::add);
+      var name = DescriptionTypes.resolveName(td);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name).ifPresent(refs::add);
+      }
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
-  }
-
-  /**
-   * Имя типа, пригодное для резолва в реестре. Для коллекционной нотации
-   * ({@code Массив из Число}, variant {@code COLLECTION}) {@link TypeDescription#name()}
-   * содержит полную запись {@code Массив<Число>}, поэтому берём имя самой коллекции
-   * {@link com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription#collectionName()}
-   * — тип-голову {@code Массив}.
-   */
-  private static String resolvableTypeName(com.github._1c_syntax.bsl.parser.description.TypeDescription td) {
-    if (td instanceof com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription collection) {
-      return collection.collectionName();
-    }
-    return td.name();
   }
 
   private static String buildParameterDescription(com.github._1c_syntax.bsl.parser.description.ParameterDescription pd) {

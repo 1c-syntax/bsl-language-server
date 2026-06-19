@@ -24,8 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
-import com.github._1c_syntax.bsl.parser.description.support.DescriptionElement;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -43,6 +44,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Сапплаер семантических токенов для BSL документации (описаний методов и переменных).
@@ -120,20 +123,23 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     int fileStartLine = range.startLine();
     int fileStartChar = range.startCharacter();
 
-    // Split the description text into lines to get line lengths (also used to read element texts)
+    // Split the description text into lines to get line lengths
     var lines = descriptionText.split("\n", -1);
 
-    var fileType = documentContext.getFileType();
+    // Диапазоны типов, резолвящихся в реальный тип. Для описаний переменных это гвард: нотация
+    // «тип в начале» иначе подсветила бы любой первый токен висячего комментария. Для описаний
+    // методов проверка не нужна (validateTypeResolution = false) — типы заданы структурно.
+    var resolvableTypeRanges = validateTypeResolution
+      ? resolvableTypeRanges(description, documentContext)
+      : Set.<SimpleRange>of();
 
     // Collect semantic elements from AST (parameter names, types, and keywords in structural positions)
     var semanticElements = new ArrayList<SemanticTokenEntry>();
 
     for (var element : description.getElements()) {
       var semanticType = switch (element.type()) {
-        case TYPE_NAME -> typeName(element, lines, fileStartLine, fileStartChar)
-          .filter(name -> !validateTypeResolution || typeService.resolve(name, fileType).isPresent())
-          .map(name -> SemanticTokenTypes.Type)
-          .orElse("");
+        case TYPE_NAME -> !validateTypeResolution || resolvableTypeRanges.contains(element.range())
+          ? SemanticTokenTypes.Type : "";
         case PARAMETER_NAME -> SemanticTokenTypes.Parameter;
         case RETURNS_KEYWORD, EXAMPLE_KEYWORD, PARAMETERS_KEYWORD, DEPRECATE_KEYWORD,
              CALL_OPTIONS_KEYWORD -> SemanticTokenTypes.Macro;
@@ -280,33 +286,24 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Читает текст элемента описания (например, имя типа) из строк описания по его диапазону.
+   * Диапазоны типов описания, которые резолвятся в реальный тип через {@link TypeService}.
    * <p>
-   * Диапазон элемента — абсолютный (координаты файла); первая строка описания начинается
-   * со столбца {@code fileStartChar}, остальные — со столбца 0.
-   *
-   * @return текст элемента, либо {@link Optional#empty()}, если диапазон выходит за пределы строк.
+   * Идентичность типа берётся из семантических аксессоров парсера ({@link DescriptionTypes#typesOf}),
+   * а не восстанавливается из текста по координатам; для сопоставления с подсвечиваемыми
+   * {@code TYPE_NAME}-элементами используется диапазон {@code element().range()}.
    */
-  private static Optional<String> typeName(
-    DescriptionElement element,
-    String[] lines,
-    int fileStartLine,
-    int fileStartChar
+  private Set<SimpleRange> resolvableTypeRanges(
+    SourceDefinedSymbolDescription description,
+    DocumentContext documentContext
   ) {
-    var elementRange = element.range();
-    int lineIdx = elementRange.startLine() - fileStartLine;
-    if (lineIdx < 0 || lineIdx >= lines.length) {
-      return Optional.empty();
-    }
-
-    var lineText = lines[lineIdx];
-    int start = elementRange.startCharacter() - (lineIdx == 0 ? fileStartChar : 0);
-    int end = start + elementRange.length();
-    if (start < 0 || end > lineText.length() || start >= end) {
-      return Optional.empty();
-    }
-
-    return Optional.of(lineText.substring(start, end));
+    var fileType = documentContext.getFileType();
+    return DescriptionTypes.typesOf(description)
+      .filter(type -> {
+        var name = DescriptionTypes.resolveName(type);
+        return !name.isBlank() && typeService.resolve(name, fileType).isPresent();
+      })
+      .map(type -> type.element().range())
+      .collect(Collectors.toSet());
   }
 
   private void addDocCommentRange(List<SemanticTokenEntry> entries, int line, int start, int length) {

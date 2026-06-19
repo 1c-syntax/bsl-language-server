@@ -65,7 +65,7 @@ class McpToolSpecificationsBootstrapWrapperTest {
   }
 
   private static CallToolRequest emptyRequest(String name) {
-    return CallToolRequest.builder().name(name).build();
+    return CallToolRequest.builder(name).build();
   }
 
   private static ObjectProvider<McpRootsBootstrapper> providerOf(McpRootsBootstrapper bootstrapper) {
