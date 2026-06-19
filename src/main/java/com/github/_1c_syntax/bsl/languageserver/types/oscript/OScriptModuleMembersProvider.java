@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.InlineTypeCommentParser;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -216,10 +217,42 @@ public class OScriptModuleMembersProvider {
     }
     for (VariableSymbol variable : symbolTree.getVariables()) {
       if (variable.isExport()) {
-        members.add(MemberDescriptor.property(variable.getName()));
+        var types = propertyTypesFromComment(variable);
+        if (types.isEmpty()) {
+          members.add(MemberDescriptor.property(variable.getName()));
+        } else {
+          members.add(MemberDescriptor.property(variable.getName(), types, ""));
+        }
       }
     }
     return members;
+  }
+
+  /**
+   * Типы экспортной переменной-свойства из типизирующего висячего комментария
+   * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источник —
+   * {@code VariableDescription.trailingDescription}, разбор — общий
+   * {@link InlineTypeCommentParser}. Без комментария/типа возвращает
+   * {@link TypeSet#EMPTY}.
+   */
+  private TypeSet propertyTypesFromComment(VariableSymbol variable) {
+    var description = variable.getDescription().orElse(null);
+    if (description == null) {
+      return TypeSet.EMPTY;
+    }
+    var trailing = description.getTrailingDescription().orElse(null);
+    if (trailing == null) {
+      return TypeSet.EMPTY;
+    }
+    var names = InlineTypeCommentParser.parseTypeNames(trailing.getDescription());
+    if (names.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var refs = new ArrayList<TypeRef>(names.size());
+    for (var name : names) {
+      typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
+    }
+    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {

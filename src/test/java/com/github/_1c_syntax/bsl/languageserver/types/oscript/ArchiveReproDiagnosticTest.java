@@ -126,4 +126,43 @@ class ArchiveReproDiagnosticTest extends AbstractServerContextAwareTest {
       .isPresent();
     assertThat(hover.get().getContents().getRight().getValue()).contains("МойКласс");
   }
+
+  @Test
+  void hoverOnPropertyInfersTypeFromTrailingComment() {
+    initWorkspace();
+
+    // Перем Контейнер Экспорт; // Массив из Число — тип члена выводится как Массив
+    var content = "#Использовать \"lib\"\nКлас = Новый МойКласс();\nСообщить(Клас.Контейнер);\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    int col = content.split("\n")[2].indexOf("Контейнер") + 2;
+    var params = new HoverParams();
+    params.setPosition(new Position(2, col));
+
+    var hover = hoverProvider.getHover(dc, params);
+
+    assertThat(hover).as("hover на члене Контейнер должен быть").isPresent();
+    assertThat(hover.get().getContents().getRight().getValue())
+      .as("тип Контейнер выводится из `// Массив из Число`")
+      .contains("Контейнер: Массив");
+  }
+
+  @Test
+  void dotCompletionMemberShowsInferredType() {
+    initWorkspace();
+
+    var content = "#Использовать \"lib\"\nКлас = Новый МойКласс();\nКлас.\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(2, "Клас.".length()));
+
+    var items = completionProvider.getCompletion(dc, params).getItems();
+
+    assertThat(items)
+      .as("члены экземпляра МойКласс доступны в dot-completion")
+      .extracting(CompletionItem::getLabel)
+      .contains("Контейнер", "Сложно");
+  }
 }

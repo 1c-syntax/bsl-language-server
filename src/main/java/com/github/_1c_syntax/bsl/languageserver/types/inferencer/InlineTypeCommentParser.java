@@ -25,6 +25,7 @@ import lombok.experimental.UtilityClass;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Парсер inline-типизирующих комментариев вида
@@ -76,13 +77,33 @@ public class InlineTypeCommentParser {
     var parts = body.split(",");
     var result = new java.util.ArrayList<String>(parts.length);
     for (var part : parts) {
-      var name = part.trim();
+      var name = headType(part.trim());
       if (!name.isEmpty() && isLikelyTypeIdentifier(name)) {
         result.add(name);
       }
     }
     return result;
   }
+
+  /**
+   * Голова коллекционного типа в нотации {@code Тип из ЭлементТип} /
+   * {@code Type of Element} (например {@code Массив из Число} → {@code Массив}).
+   * Разделитель {@code из}/{@code of} должен быть отдельным словом (окружён
+   * пробелами), иначе часть возвращается без изменений — чтобы свободный
+   * многословный комментарий остался невалидным идентификатором и был отброшен.
+   */
+  private static String headType(String part) {
+    var lower = part.toLowerCase(Locale.ROOT);
+    for (var separator : SEPARATORS) {
+      var idx = lower.indexOf(separator);
+      if (idx > 0) {
+        return part.substring(0, idx).trim();
+      }
+    }
+    return part;
+  }
+
+  private static final List<String> SEPARATORS = List.of(" из ", " of ");
 
   /**
    * Найти позицию дефиса-разделителя «типы — описание». Дефис должен быть

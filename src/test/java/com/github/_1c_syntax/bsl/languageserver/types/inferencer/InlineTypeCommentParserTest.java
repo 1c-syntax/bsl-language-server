@@ -150,4 +150,21 @@ class InlineTypeCommentParserTest {
     // then
     assertThat(result).isEmpty();
   }
+
+  @Test
+  void parseCollectionNotationKeepsHeadType() {
+    // нотация «Тип из ЭлементТип» — берём коллекционный тип (голову)
+    assertThat(InlineTypeCommentParser.parseTypeNames("// Массив из Число"))
+      .containsExactly("Массив");
+    assertThat(InlineTypeCommentParser.parseTypeNames("// Соответствие из КлючИЗначение"))
+      .containsExactly("Соответствие");
+    assertThat(InlineTypeCommentParser.parseTypeNames("// Array of Number"))
+      .containsExactly("Array");
+  }
+
+  @Test
+  void parseFreeformMultiwordCommentReturnsEmpty() {
+    // свободный многословный комментарий без разделителя «из»/«of» — не тип
+    assertThat(InlineTypeCommentParser.parseTypeNames("// просто заметка про поле")).isEmpty();
+  }
 }
