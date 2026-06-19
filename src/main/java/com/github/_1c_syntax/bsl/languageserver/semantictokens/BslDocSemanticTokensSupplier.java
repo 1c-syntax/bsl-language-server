@@ -231,8 +231,14 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     List<SemanticTokenEntry> elements,
     int charOffset
   ) {
-    int lineEnd = lineText.length();
-    int currentPos = 0;
+    // Позиции элементов приходят от парсера в абсолютных координатах файла, а charOffset —
+    // это абсолютный столбец начала строки описания (ненулевой для висячих/trailing комментариев,
+    // которые начинаются не с начала строки). Поэтому работаем в абсолютных координатах:
+    // прибавлять charOffset к позиции элемента нельзя — это приводило к двойному смещению
+    // и «съезжавшей» подсветке типов в висячих (trailing) комментариях.
+    int lineStart = charOffset;
+    int lineEnd = charOffset + lineText.length();
+    int currentPos = lineStart;
 
     for (var element : elements) {
       int elementStart = element.start();
@@ -240,13 +246,12 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       int elementEnd = elementStart + elementLength;
 
       if (currentPos < elementStart) {
-        addDocCommentRange(entries, fileLine, charOffset + currentPos, elementStart - currentPos);
+        addDocCommentRange(entries, fileLine, currentPos, elementStart - currentPos);
       }
 
-      // Add the element with adjusted position
       entries.add(new SemanticTokenEntry(
         fileLine,
-        charOffset + elementStart,
+        elementStart,
         elementLength,
         element.type(),
         element.modifiers()
@@ -256,7 +261,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     if (currentPos < lineEnd) {
-      addDocCommentRange(entries, fileLine, charOffset + currentPos, lineEnd - currentPos);
+      addDocCommentRange(entries, fileLine, currentPos, lineEnd - currentPos);
     }
   }
 
