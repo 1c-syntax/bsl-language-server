@@ -176,6 +176,9 @@ dependencies {
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // JMH: измерение retained-памяти структур данных (jol) в бенчмарках
+    jmhImplementation("org.openjdk.jol:jol-core:0.17")
 }
 
 java {
@@ -323,8 +326,18 @@ tasks.jacocoTestReport {
     }
 }
 
+// Fat-jar бенчмарков с зависимостями превышает лимит в 65535 записей zip — включаем zip64.
+tasks.named<Jar>("jmhJar") {
+    isZip64 = true
+}
+
 jmh {
     jmhVersion = "1.37"
+    // Необязательные параметры запуска через -P:
+    //   -PjmhInclude=SymbolOccurrenceRepositoryBenchmark — гонять только подходящие бенчмарки;
+    //   -PjmhProfilers=gc — включить JMH-профайлеры (напр. gc для аллокаций).
+    (project.findProperty("jmhInclude") as String?)?.let { includes.add(it) }
+    (project.findProperty("jmhProfilers") as String?)?.split(",")?.forEach { profilers.add(it.trim()) }
 }
 
 sentry {
