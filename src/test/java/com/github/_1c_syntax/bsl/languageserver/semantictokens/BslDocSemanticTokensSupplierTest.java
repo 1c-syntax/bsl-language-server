@@ -276,6 +276,27 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testTrailingVariableDescriptionUnresolvedTypeNotHighlighted() {
+    // given - висячий комментарий, у которого первый токен (по нотации «тип в начале») — свободный
+    // текст, не резолвящийся в реальный тип.
+    String bsl = """
+      Процедура Тест()
+          Перем П; // привет - это не тип
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - «привет» не подсвечивается как тип: весь висячий комментарий остаётся
+    // одним комментарием-документацией (не разрезается Type-токеном).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 13, 22, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// привет - это не тип")
+    ));
+  }
+
+  @Test
   void testMultilineSupport() {
     // given
     String bsl = """
