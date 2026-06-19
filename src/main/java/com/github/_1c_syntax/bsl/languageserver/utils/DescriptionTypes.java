@@ -83,11 +83,15 @@ public class DescriptionTypes {
   }
 
   private Stream<TypeDescription> flatten(TypeDescription type) {
+    // Вложенные типы: типы-значения коллекции (Массив из Число → Число) и типы полей структуры.
+    var valueTypes = type instanceof CollectionTypeDescription collection
+      ? collection.valueTypes().stream()
+      : Stream.<TypeDescription>empty();
+    var fieldTypes = type.fields().stream()
+      .flatMap(field -> field.types().stream());
     return Stream.concat(
       Stream.of(type),
-      type.fields().stream()
-        .flatMap(field -> field.types().stream())
-        .flatMap(DescriptionTypes::flatten)
+      Stream.concat(valueTypes, fieldTypes).flatMap(DescriptionTypes::flatten)
     );
   }
 }
