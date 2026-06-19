@@ -221,6 +221,16 @@ public class SymbolTypeIndex {
     }
   }
 
+  /**
+   * Разрешить список описаний типов в {@link TypeSet} on-demand, с навешиванием
+   * полей структур/ТЗ ({@link TypeDescription#fields()}) и элементов коллекций.
+   * В отличие от {@link #getDeclaredReturnTypes(MethodSymbol)} не требует
+   * предварительной индексации — вычисляет напрямую по описанию.
+   */
+  public TypeSet resolveDescribedTypes(List<? extends TypeDescription> descriptions) {
+    return resolveTypes(descriptions);
+  }
+
   private TypeSet resolveTypes(List<? extends TypeDescription> descriptions) {
     if (descriptions == null || descriptions.isEmpty()) {
       return TypeSet.EMPTY;

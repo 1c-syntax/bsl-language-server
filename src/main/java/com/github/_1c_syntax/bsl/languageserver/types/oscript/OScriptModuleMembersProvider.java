@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.MemberTypeFromCommentResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
@@ -83,6 +84,7 @@ public class OScriptModuleMembersProvider {
   private final OScriptExtends oScriptExtends;
   private final TypeRelations typeRelations;
   private final OScriptIterable oScriptIterable;
+  private final MemberTypeFromCommentResolver memberTypeFromCommentResolver;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -230,70 +232,12 @@ public class OScriptModuleMembersProvider {
 
   /**
    * Типы экспортной переменной-свойства из типизирующего висячего комментария
-   * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источники:
-   * <ul>
-   *   <li>структурно разобранные парсером типы {@code trailingDescription.getTypes()}
-   *       (для {@code Массив из Число} — один тип-голова {@code Массив}, имя берёт
-   *       {@link DescriptionTypes#resolveName(com.github._1c_syntax.bsl.parser.description.TypeDescription)});</li>
-   *   <li>если прямых типов нет — {@code См.}-ссылки {@code trailingDescription.getLinks()}
-   *       ({@code Перем Сложно Экспорт; // см. НовыйСложно}): тип берётся из возвращаемого
-   *       значения одноимённой функции этого же модуля, либо ссылка трактуется как имя типа.</li>
-   * </ul>
-   * Без комментария/типа возвращает {@link TypeSet#EMPTY}.
+   * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число},
+   * {@code Перем Сложно Экспорт; // см. НовыйСложно}). Делегирует общему для обоих
+   * языков {@link MemberTypeFromCommentResolver}.
    */
   private TypeSet propertyTypesFromComment(VariableSymbol variable) {
-    var description = variable.getDescription().orElse(null);
-    if (description == null) {
-      return TypeSet.EMPTY;
-    }
-    var trailing = description.getTrailingDescription().orElse(null);
-    if (trailing == null) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new ArrayList<TypeRef>();
-    var types = trailing.getTypes();
-    if (types != null) {
-      for (var td : types) {
-        var name = DescriptionTypes.resolveName(td);
-        if (!name.isBlank()) {
-          typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
-        }
-      }
-    }
-    // Прямые типы приоритетнее; к См.-ссылкам обращаемся, только если тип не указан явно.
-    if (refs.isEmpty()) {
-      for (var link : trailing.getLinks()) {
-        addHyperlinkTypes(variable, link, refs);
-      }
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
-  }
-
-  /**
-   * Тип из {@code См.}-ссылки висячего комментария. Если ссылка указывает на
-   * функцию того же модуля — берём её возвращаемый тип ({@code // см. НовыйСложно}
-   * → возвращаемое значение {@code НовыйСложно()}); иначе пробуем трактовать
-   * ссылку как имя типа. Cross-module ссылки ({@code Модуль.Метод}) не поддержаны.
-   */
-  private void addHyperlinkTypes(VariableSymbol variable,
-                                 com.github._1c_syntax.bsl.parser.description.support.Hyperlink link,
-                                 List<TypeRef> refs) {
-    var target = link.link();
-    if (target == null || target.isBlank() || target.contains(".")) {
-      return;
-    }
-    var localFunction = variable.getOwner().getSymbolTree().getMethods().stream()
-      .filter(method -> method.isFunction() && method.getName().equalsIgnoreCase(target))
-      .findFirst()
-      .orElse(null);
-    if (localFunction != null) {
-      var returnTypes = localFunction.getDescription()
-        .map(com.github._1c_syntax.bsl.parser.description.MethodDescription::getReturnedValue)
-        .orElse(List.of());
-      refs.addAll(resolveTypes(returnTypes).refs());
-      return;
-    }
-    typeRegistry.resolve(target, FileType.OS).ifPresent(refs::add);
+    return memberTypeFromCommentResolver.resolve(variable, FileType.OS);
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {

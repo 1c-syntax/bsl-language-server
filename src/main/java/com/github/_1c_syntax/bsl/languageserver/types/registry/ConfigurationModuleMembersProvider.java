@@ -24,11 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.MemberTypeFromCommentResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +41,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,6 +81,7 @@ public class ConfigurationModuleMembersProvider {
 
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
+  private final MemberTypeFromCommentResolver memberTypeFromCommentResolver;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -127,7 +134,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
+    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -156,24 +163,44 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
+    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }
 
-  private List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol::isExport)
+  /**
+   * Члены типа-обёртки из модуля: экспортные методы и экспортные переменные.
+   * Экспортные {@code Перем X Экспорт} модулей объекта/набора записей и т.п.
+   * становятся свойствами соответствующего типа ({@code СправочникОбъект.X}),
+   * тип свойства выводится из висячего комментария декларации через общий
+   * {@link MemberTypeFromCommentResolver}.
+   */
+  private List<MemberDescriptor> collectModuleMembers(DocumentContext documentContext) {
+    var members = new ArrayList<MemberDescriptor>();
+    documentContext.getSymbolTree().getMethods().stream()
+      .filter(MethodSymbol::isExport)
       .map(this::toMethodMember)
-      .toList();
+      .forEach(members::add);
+    documentContext.getSymbolTree().getVariables().stream()
+      .filter(VariableSymbol::isExport)
+      .map(this::toVariableMember)
+      .forEach(members::add);
+    return members;
   }
 
-  private MemberDescriptor toMethodMember(
-    com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol method
-  ) {
+  private MemberDescriptor toVariableMember(VariableSymbol variable) {
+    var types = memberTypeFromCommentResolver.resolve(variable, FileType.BSL);
+    var description = variable.getDescription()
+      .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
+      .orElse("");
+    return MemberDescriptor.property(variable.getName(), types, description)
+      .withSourceSymbol(variable);
+  }
+
+  private MemberDescriptor toMethodMember(MethodSymbol method) {
     var params = method.getParameters().stream()
       .map(p -> new ParameterDescriptor(
         p.getName(),
-        com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY,
+        TypeSet.EMPTY,
         p.isOptional(),
         ""
       ))
@@ -196,7 +223,7 @@ public class ConfigurationModuleMembersProvider {
    * {@link TypeRegistry}.
    */
   private TypeRef resolveReturnType(
-    List<com.github._1c_syntax.bsl.parser.description.TypeDescription> returnedValue
+    List<TypeDescription> returnedValue
   ) {
     if (returnedValue == null || returnedValue.isEmpty()) {
       return TypeRef.UNKNOWN;
