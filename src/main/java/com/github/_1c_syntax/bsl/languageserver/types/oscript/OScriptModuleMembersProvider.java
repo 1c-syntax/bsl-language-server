@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.InlineTypeCommentParser;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -231,9 +230,11 @@ public class OScriptModuleMembersProvider {
   /**
    * Типы экспортной переменной-свойства из типизирующего висячего комментария
    * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источник —
-   * {@code VariableDescription.trailingDescription}, разбор — общий
-   * {@link InlineTypeCommentParser}. Без комментария/типа возвращает
-   * {@link TypeSet#EMPTY}.
+   * структурно разобранные парсером типы {@code VariableDescription.trailingDescription.getTypes()}:
+   * для коллекционной нотации {@code Массив из Число} парсер возвращает один тип-голову
+   * {@code Массив} (элемент {@code Число} — внутри него), поэтому достаточно резолвить
+   * {@link com.github._1c_syntax.bsl.parser.description.TypeDescription#name()} каждого типа.
+   * Без комментария/типа возвращает {@link TypeSet#EMPTY}.
    */
   private TypeSet propertyTypesFromComment(VariableSymbol variable) {
     var description = variable.getDescription().orElse(null);
@@ -244,13 +245,13 @@ public class OScriptModuleMembersProvider {
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
-    var names = InlineTypeCommentParser.parseTypeNames(trailing.getDescription());
-    if (names.isEmpty()) {
+    var types = trailing.getTypes();
+    if (types == null || types.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    var refs = new ArrayList<TypeRef>(names.size());
-    for (var name : names) {
-      typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
+    var refs = new ArrayList<TypeRef>(types.size());
+    for (var td : types) {
+      typeRegistry.resolve(td.name(), FileType.OS).ifPresent(refs::add);
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
