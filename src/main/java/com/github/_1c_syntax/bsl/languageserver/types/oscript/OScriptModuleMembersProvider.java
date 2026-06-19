@@ -107,7 +107,11 @@ public class OScriptModuleMembersProvider {
     var libraryEntries = oScriptLibraryIndex.findEntriesByUri(uri);
     if (libraryEntries.isEmpty()) {
       // не библиотечный .os — регистрируем по basename как USER-тип.
-      registerOne(documentContext, FilenameUtils.getBaseName(uri.getPath()), null);
+      // NFC-нормализация: имя файла на macOS хранится в NFD и иначе не совпадёт
+      // с идентификатором типа в исходном коде (NFC). См. OScriptLibraryIndex#nameKey.
+      var baseName = java.text.Normalizer.normalize(
+        FilenameUtils.getBaseName(uri.getPath()), java.text.Normalizer.Form.NFC);
+      registerOne(documentContext, baseName, null);
       return;
     }
     // Для библиотечного файла регистрируем каждую роль (модуль и/или класс)

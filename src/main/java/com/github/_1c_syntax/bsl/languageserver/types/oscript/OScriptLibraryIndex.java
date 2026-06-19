@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.Normalizer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -168,7 +169,7 @@ public class OScriptLibraryIndex {
     }
     oScriptModuleTypeResolver.unregister(uri);
     for (var entry : entries) {
-      entriesByName.remove(entry.qualifiedName().toLowerCase(Locale.ROOT));
+      entriesByName.remove(nameKey(entry.qualifiedName()));
     }
     oScriptModuleMembersProvider.unregister(uri);
   }
@@ -194,7 +195,21 @@ public class OScriptLibraryIndex {
     if (qualifiedName == null || qualifiedName.isBlank()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(entriesByName.get(qualifiedName.toLowerCase(Locale.ROOT)));
+    return Optional.ofNullable(entriesByName.get(nameKey(qualifiedName)));
+  }
+
+  /**
+   * Канонический ключ имени library-сущности: NFC-нормализация + lower-case.
+   * <p>
+   * Имена классов/модулей выводятся из имён файлов, а файловые системы macOS
+   * хранят имена в форме NFC-декомпозиции (NFD): например, {@code й} —
+   * как {@code и} + U+0306. Идентификаторы же в исходном коде (и в {@code Новый
+   * ИмяКласса}) набираются в NFC. Без нормализации имя класса из файла
+   * {@code МойКласс.os} (NFD) не совпадает с {@code МойКласс} в коде (NFC), и
+   * автодополнение/hover/переход к определению не работают.
+   */
+  static String nameKey(String name) {
+    return Normalizer.normalize(name, Normalizer.Form.NFC).toLowerCase(Locale.ROOT);
   }
 
   /** @return URI .os-файла зарегистрированного library-класса/модуля. */
@@ -377,8 +392,13 @@ public class OScriptLibraryIndex {
    * для неявных записей (необъявленный .os внутри каталога-библиотеки), так и
    * из тестов — package-private видимость намеренно сохранена.
    */
-  void registerEntry(String qualifiedName, Path osFile, EntryKind kind, ServerContext serverContext,
+  void registerEntry(String rawQualifiedName, Path osFile, EntryKind kind, ServerContext serverContext,
                      String libOrigin, boolean implicit) {
+    // NFC-нормализация имени: имя выводится из имени файла, которое на macOS
+    // хранится в NFD. Приводим к NFC, чтобы оно совпадало с идентификаторами в
+    // исходном коде (см. nameKey). qualifiedName в этом виде попадёт и в
+    // OScriptModuleMembersProvider → TypeRegistry, и в completion-метки.
+    var qualifiedName = Normalizer.normalize(rawQualifiedName, Normalizer.Form.NFC);
     var uri = Absolute.uri(osFile.toUri());
     var moduleType = kind == EntryKind.CLASS ? ModuleType.OScriptClass : ModuleType.OScriptModule;
     // Сначала сообщаем резолверу тип модуля — это нужно, чтобы при первом
@@ -392,7 +412,7 @@ public class OScriptLibraryIndex {
 
     var entry = new LibraryEntry(uri, qualifiedName, kind, libOrigin, implicit);
     entriesByUri.computeIfAbsent(uri, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(entry);
-    entriesByName.put(qualifiedName.toLowerCase(Locale.ROOT), entry);
+    entriesByName.put(nameKey(qualifiedName), entry);
 
     // Добавляем .os-файл в ServerContext как обычный документ. SymbolTreeComputer,
     // ReferenceIndexFiller, OScriptModuleMembersProvider и прочие подхватят его
