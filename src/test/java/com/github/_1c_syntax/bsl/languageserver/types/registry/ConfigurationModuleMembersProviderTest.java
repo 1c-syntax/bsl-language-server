@@ -137,6 +137,30 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void resolvesObjectModuleExportVariableTypeFromQualifiedSeeReference() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    // нужны оба модуля: общий (цель ссылки) и модуль объекта (носитель Перем)
+    TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/Catalogs/"
+      + "СправочникСМенеджером/Ext/ObjectModule.bsl");
+
+    var objectType = typeRegistry.resolve("СправочникОбъект.СправочникСМенеджером").orElseThrow();
+    var members = typeRegistry.getMembers(objectType, FileType.BSL);
+
+    // квалифицированная `// см. ОбщегоНазначения.ЗначениеВМассиве` разворачивается
+    // обходом членов: тип = возврат метода (Массив)
+    var member = members.stream()
+      .filter(m -> "ИтогРасчёта".equals(m.name()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(member.kind()).isEqualTo(MemberKind.PROPERTY);
+    assertThat(member.returnType().qualifiedName()).isEqualTo("Массив");
+  }
+
+  @Test
   void resolvesReturnTypeFromMethodDescription() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
