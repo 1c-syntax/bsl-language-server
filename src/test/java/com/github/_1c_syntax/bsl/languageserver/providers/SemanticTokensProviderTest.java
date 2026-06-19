@@ -489,8 +489,10 @@ class SemanticTokensProviderTest {
       new ExpectedToken(1, 6, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Перем1"),
       // Line 1: ; operator
       new ExpectedToken(1, 12, 1, SemanticTokenTypes.Operator, ";"),
-      // Line 1: trailing comment as Comment+Documentation
-      new ExpectedToken(1, 14, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// трейл")
+      // Line 1: trailing comment "// " prefix as Comment+Documentation
+      new ExpectedToken(1, 14, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
+      // Line 1: первый токен висячего описания трактуется как тип переменной (нотация «тип в начале»)
+      new ExpectedToken(1, 17, 5, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "трейл")
     );
 
     assertTokensMatch(decoded, expected);

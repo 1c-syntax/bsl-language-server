@@ -254,6 +254,28 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testTrailingVariableDescriptionTypeHighlighting() {
+    // given - висячий (trailing) комментарий переменной с типом в начале (нотация «тип в начале»).
+    // Описание начинается не со столбца 0, поэтому проверяем сквозную работу:
+    // bsl-parser отдаёт TYPE_NAME-элемент в абсолютных координатах, а сапплаер подсвечивает его
+    // как тип ровно на позиции типа, без «съезжания» из-за отступа описания.
+    String bsl = """
+      Процедура Тест()
+          Перем Стр; // Строка - описание переменной
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - "Строка" подсвечивается как тип на позиции 18 (а не со смещением на отступ описания).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 18, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+    ));
+  }
+
+  @Test
   void testMultilineSupport() {
     // given
     String bsl = """
