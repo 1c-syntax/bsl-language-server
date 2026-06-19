@@ -89,9 +89,17 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 2)
 public class SymbolOccurrenceRepositoryBenchmark {
 
-  public enum Variant {BASELINE, FIX1_HOISTED_CMP, FIX2_HASH, FIX12_BOTH}
+  public enum Variant {
+    BASELINE,                  // skiplist/skiplist + natural ordering (per-call cmp) — как в проде
+    FIX1_HOISTED_CMP,          // skiplist/skiplist + вынесенные компараторы (#1)
+    FIX2_HASH,                 // hash/newKeySet, сортировка на чтении per-call (#2)
+    FIX12_BOTH,                // hash/newKeySet, сортировка на чтении вынес. (#1+#2)
+    HYBRID_HASH_SLINNER,       // hash снаружи + skiplist-множество внутри (per-call inner cmp)
+    HYBRID_HASH_SLINNER_FIX1   // hash снаружи + skiplist-множество внутри + вынесенный inner cmp
+  }
 
-  @Param({"BASELINE", "FIX1_HOISTED_CMP", "FIX2_HASH", "FIX12_BOTH"})
+  @Param({"BASELINE", "FIX1_HOISTED_CMP", "FIX2_HASH", "FIX12_BOTH",
+    "HYBRID_HASH_SLINNER", "HYBRID_HASH_SLINNER_FIX1"})
   private Variant variant;
 
   /** Число обращений в редактируемом модуле (чистится+наполняется на каждый keystroke). */
@@ -224,6 +232,8 @@ public class SymbolOccurrenceRepositoryBenchmark {
       case FIX1_HOISTED_CMP -> new SkipListRepo(SYMBOL_CMP, OCCURRENCE_CMP);
       case FIX2_HASH -> new HashRepo(null);                          // sort on read, per-call
       case FIX12_BOTH -> new HashRepo(OCCURRENCE_CMP);               // sort on read, hoisted
+      case HYBRID_HASH_SLINNER -> new HashSkipListInnerRepo(null);   // hash outer + skiplist inner (per-call)
+      case HYBRID_HASH_SLINNER_FIX1 -> new HashSkipListInnerRepo(OCCURRENCE_CMP); // + hoisted inner cmp
     };
   }
 
@@ -337,6 +347,51 @@ public class SymbolOccurrenceRepositoryBenchmark {
       var list = new ArrayList<>(map.getOrDefault(symbol, Collections.emptySet()));
       list.sort(readComparator); // null => natural ordering (per-call compareTo)
       return list;
+    }
+
+    @Override
+    public int distinctSymbols() {
+      return map.size();
+    }
+
+    @Override
+    public Object backing() {
+      return map;
+    }
+  }
+
+  /**
+   * HYBRID: hash снаружи (быстрый O(1) lookup ключа-символа — основной выигрыш по скорости),
+   * сортированное {@link ConcurrentSkipListSet} внутри (порядок обращений сохраняется, чтение
+   * не сортирует, память легче newKeySet на мелких множествах).
+   */
+  private static final class HashSkipListInnerRepo implements Repo {
+    private final ConcurrentHashMap<Symbol, Set<SymbolOccurrence>> map = new ConcurrentHashMap<>();
+    private final Comparator<SymbolOccurrence> innerComparator;
+
+    HashSkipListInnerRepo(Comparator<SymbolOccurrence> innerComparator) {
+      this.innerComparator = innerComparator;
+    }
+
+    @Override
+    public void save(SymbolOccurrence occurrence) {
+      map.computeIfAbsent(occurrence.symbol(), s -> innerComparator == null
+        ? new ConcurrentSkipListSet<>()
+        : new ConcurrentSkipListSet<>(innerComparator)).add(occurrence);
+    }
+
+    @Override
+    public void deleteAll(Collection<SymbolOccurrence> occurrences) {
+      occurrences.forEach(occurrence ->
+        map.computeIfPresent(occurrence.symbol(), (s, set) -> {
+          set.remove(occurrence);
+          return set.isEmpty() ? null : set;
+        }));
+    }
+
+    @Override
+    public List<SymbolOccurrence> getAllSorted(Symbol symbol) {
+      return new ArrayList<>(map.getOrDefault(symbol, Collections.emptySet())); // already sorted
     }
 
     @Override
