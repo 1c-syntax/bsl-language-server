@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,13 +68,16 @@ class OScriptModuleMembersProviderTest {
   private TypeRelations typeRelations;
   @Mock
   private OScriptIterable oScriptIterable;
+  @Mock
+  private SymbolTypeIndex symbolTypeIndex;
 
   private OScriptModuleMembersProvider provider;
 
   @BeforeEach
   void setUp() {
     provider = new OScriptModuleMembersProvider(
-      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations, oScriptIterable);
+      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations, oScriptIterable,
+      symbolTypeIndex);
   }
 
   @Test

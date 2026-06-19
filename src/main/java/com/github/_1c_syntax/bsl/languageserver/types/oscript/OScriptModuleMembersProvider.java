@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
@@ -83,6 +84,7 @@ public class OScriptModuleMembersProvider {
   private final OScriptExtends oScriptExtends;
   private final TypeRelations typeRelations;
   private final OScriptIterable oScriptIterable;
+  private final SymbolTypeIndex symbolTypeIndex;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -261,39 +263,41 @@ public class OScriptModuleMembersProvider {
       }
     }
     // Прямые типы приоритетнее; к См.-ссылкам обращаемся, только если тип не указан явно.
-    if (refs.isEmpty()) {
-      for (var link : trailing.getLinks()) {
-        addHyperlinkTypes(variable, link, refs);
-      }
+    if (!refs.isEmpty()) {
+      return TypeSet.of(refs);
     }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    var result = TypeSet.EMPTY;
+    for (var link : trailing.getLinks()) {
+      result = result.union(hyperlinkTypes(variable, link));
+    }
+    return result;
   }
 
   /**
    * Тип из {@code См.}-ссылки висячего комментария. Если ссылка указывает на
    * функцию того же модуля — берём её возвращаемый тип ({@code // см. НовыйСложно}
-   * → возвращаемое значение {@code НовыйСложно()}); иначе пробуем трактовать
+   * → возвращаемое значение {@code НовыйСложно()}), причём через
+   * {@link SymbolTypeIndex#resolveDescribedTypes(List)} — чтобы перенести и поля
+   * структуры/ТЗ из JsDoc-возврата (доступны кросс-файл). Иначе пробуем трактовать
    * ссылку как имя типа. Cross-module ссылки ({@code Модуль.Метод}) не поддержаны.
    */
-  private void addHyperlinkTypes(VariableSymbol variable,
-                                 com.github._1c_syntax.bsl.parser.description.support.Hyperlink link,
-                                 List<TypeRef> refs) {
+  private TypeSet hyperlinkTypes(VariableSymbol variable,
+                                 com.github._1c_syntax.bsl.parser.description.support.Hyperlink link) {
     var target = link.link();
     if (target == null || target.isBlank() || target.contains(".")) {
-      return;
+      return TypeSet.EMPTY;
     }
     var localFunction = variable.getOwner().getSymbolTree().getMethods().stream()
       .filter(method -> method.isFunction() && method.getName().equalsIgnoreCase(target))
       .findFirst()
       .orElse(null);
     if (localFunction != null) {
-      var returnTypes = localFunction.getDescription()
+      var returnedValue = localFunction.getDescription()
         .map(com.github._1c_syntax.bsl.parser.description.MethodDescription::getReturnedValue)
         .orElse(List.of());
-      refs.addAll(resolveTypes(returnTypes).refs());
-      return;
+      return symbolTypeIndex.resolveDescribedTypes(returnedValue);
     }
-    typeRegistry.resolve(target, FileType.OS).ifPresent(refs::add);
+    return typeRegistry.resolve(target, FileType.OS).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {

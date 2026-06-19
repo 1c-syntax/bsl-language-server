@@ -186,4 +186,25 @@ class ArchiveReproDiagnosticTest extends AbstractServerContextAwareTest {
       .as("тип Сложно выводится из `// см. НовыйСложно` → возврат функции (Структура)")
       .contains("Сложно: Структура");
   }
+
+  @Test
+  void dotCompletionOnStructurePropertyShowsLocalFieldsCrossFile() {
+    initWorkspace();
+
+    // Кросс-файл: тип Сложно — Структура из возврата НовыйСложно(), у которой
+    // в JsDoc описаны поля СЧислом/СТекстом. Они должны быть видны в Клас.Сложно.
+    var content = "#Использовать \"lib\"\nКлас = Новый МойКласс();\nКлас.Сложно.\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(2, "Клас.Сложно.".length()));
+
+    var items = completionProvider.getCompletion(dc, params).getItems();
+
+    assertThat(items)
+      .as("поля структуры из JsDoc-возврата переносятся кросс-файл в Клас.Сложно")
+      .extracting(CompletionItem::getLabel)
+      .contains("СЧислом", "СТекстом");
+  }
 }
