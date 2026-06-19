@@ -75,6 +75,8 @@ public class ConfigurationModuleMembersProvider {
 
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
+  private final com.github._1c_syntax.bsl.languageserver.types.MemberTypeFromCommentResolver
+    memberTypeFromCommentResolver;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -127,7 +129,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
+    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -156,15 +158,39 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), FileType.BSL);
+    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }
 
-  private List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {
-    return documentContext.getSymbolTree().getMethods().stream()
+  /**
+   * Члены типа-обёртки из модуля: экспортные методы и экспортные переменные.
+   * Экспортные {@code Перем X Экспорт} модулей объекта/набора записей и т.п.
+   * становятся свойствами соответствующего типа ({@code СправочникОбъект.X}),
+   * тип свойства выводится из висячего комментария декларации через общий
+   * {@link com.github._1c_syntax.bsl.languageserver.types.MemberTypeFromCommentResolver}.
+   */
+  private List<MemberDescriptor> collectModuleMembers(DocumentContext documentContext) {
+    var members = new java.util.ArrayList<MemberDescriptor>();
+    documentContext.getSymbolTree().getMethods().stream()
       .filter(com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol::isExport)
       .map(this::toMethodMember)
-      .toList();
+      .forEach(members::add);
+    documentContext.getSymbolTree().getVariables().stream()
+      .filter(com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol::isExport)
+      .map(this::toVariableMember)
+      .forEach(members::add);
+    return members;
+  }
+
+  private MemberDescriptor toVariableMember(
+    com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol variable
+  ) {
+    var types = memberTypeFromCommentResolver.resolve(variable, FileType.BSL);
+    var description = variable.getDescription()
+      .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
+      .orElse("");
+    return MemberDescriptor.property(variable.getName(), types, description)
+      .withSourceSymbol(variable);
   }
 
   private MemberDescriptor toMethodMember(
