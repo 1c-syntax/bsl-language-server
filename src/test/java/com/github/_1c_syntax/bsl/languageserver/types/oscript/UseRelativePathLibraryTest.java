@@ -134,4 +134,31 @@ class UseRelativePathLibraryTest extends AbstractServerContextAwareTest {
     assertThat(hover.get().getContents().getRight().getValue())
       .contains("МойКласс");
   }
+
+  @Test
+  void hoverOnClassNameInRealConsumingFileInWorkspace() {
+    // Точное воспроизведение: курсор наводится в самом файле test.os, который
+    // лежит в корне workspace (и сам регистрируется как flat-модуль), а не в
+    // постороннем синтетическом документе.
+    initWorkspace();
+
+    var fileUri = Path.of("src/test/resources/oscript-libraries/use-relative-path-test/test.os")
+      .toAbsolutePath().toUri();
+    var content = ""
+      + "#Использовать \"lib\"\n"
+      + "\n"
+      + "Клас = Новый МойКласс();\n";
+    var dc = TestUtils.getDocumentContext(fileUri, content, context);
+
+    var params = new HoverParams();
+    params.setPosition(new Position(2, "Клас = Новый Мой".length()));
+
+    var hover = hoverProvider.getHover(dc, params);
+
+    assertThat(hover)
+      .as("hover на МойКласс после `Новый` в реальном файле workspace должен быть непустым")
+      .isPresent();
+    assertThat(hover.get().getContents().getRight().getValue())
+      .contains("МойКласс");
+  }
 }
