@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781901564553,
+  "lastUpdate": 1781903743720,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38378,6 +38378,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 8.212959650847798",
             "extra": "mean: 293.1872338453929 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ad0fb3f2f388f411ec44b858c99d3c5c76efbe41",
+          "message": "Merge pull request #4172 from 1c-syntax/claude/collection-type-highlighting-kxwwas\n\nfix(semanticTokens): подсвечивать тип-значение коллекции в описаниях",
+          "timestamp": "2026-06-19T15:25:52+02:00",
+          "tree_id": "e9486870e5c50639be320a05c4a5f7db1aa178d5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ad0fb3f2f388f411ec44b858c99d3c5c76efbe41"
+        },
+        "date": 1781903733715,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 291.24099548657733,
+            "unit": "sec",
+            "range": "stddev: 3.508086514633706",
+            "extra": "mean: 291.24099548657733 sec\nrounds: 3"
           }
         ]
       }
