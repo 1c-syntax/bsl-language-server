@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781897221172,
+  "lastUpdate": 1781901564553,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38347,6 +38347,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 5.743210822723561",
             "extra": "mean: 284.5059464772542 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": false,
+          "id": "bcba08693920eaeed0cebad6aec60a8c76ef9084",
+          "message": "Merge pull request #4173 from 1c-syntax/claude/test-os-autocomplete-issue-zzts1o\n\nfix(oscript): переносить поля структуры из JsDoc-возврата в property кросс-файл",
+          "timestamp": "2026-06-19T16:35:09+02:00",
+          "tree_id": "d356dd15981e4a16b5364d6b1316cd71d63104c5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bcba08693920eaeed0cebad6aec60a8c76ef9084"
+        },
+        "date": 1781901556231,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 293.1872338453929,
+            "unit": "sec",
+            "range": "stddev: 8.212959650847798",
+            "extra": "mean: 293.1872338453929 sec\nrounds: 3"
           }
         ]
       }
