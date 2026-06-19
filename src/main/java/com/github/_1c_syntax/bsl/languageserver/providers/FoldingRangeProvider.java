@@ -31,8 +31,8 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.FoldingRangeSupportCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
