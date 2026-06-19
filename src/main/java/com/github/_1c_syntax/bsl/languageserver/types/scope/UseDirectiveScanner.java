@@ -28,7 +28,6 @@ import lombok.experimental.UtilityClass;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -58,11 +57,46 @@ public class UseDirectiveScanner {
     }
     var result = new LinkedHashSet<String>();
     for (var use : nodes) {
-      Optional.ofNullable(use.usedLib())
-        .map(BSLParser.UsedLibContext::PREPROC_IDENTIFIER)
-        .ifPresent(id -> result.add(id.getText()));
+      var usedLib = use.usedLib();
+      if (usedLib == null) {
+        continue;
+      }
+      var identifier = usedLib.PREPROC_IDENTIFIER();
+      if (identifier != null) {
+        // #Использовать <имяБиблиотеки>
+        result.add(identifier.getText());
+        continue;
+      }
+      // #Использовать "относительный/путь" — подключение каталога-библиотеки по
+      // пути. Имя библиотеки для gating'а — последний сегмент пути (совпадает с
+      // libOrigin = имя каталога, см. OScriptLibraryIndex#libOriginOf).
+      var string = usedLib.PREPROC_STRING();
+      if (string != null) {
+        var libName = libraryNameFromPath(string.getText());
+        if (!libName.isBlank()) {
+          result.add(libName);
+        }
+      }
     }
     return result;
+  }
+
+  /**
+   * Имя библиотеки из строкового пути директивы {@code #Использовать "путь"}:
+   * снимает обрамляющие кавычки и берёт последний сегмент пути.
+   * Пример: {@code "lib"} → {@code lib}, {@code "./libs/mylib"} → {@code mylib}.
+   */
+  private static String libraryNameFromPath(String raw) {
+    var text = raw.strip();
+    if (text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"")) {
+      text = text.substring(1, text.length() - 1);
+    }
+    text = text.strip().replace('\\', '/');
+    while (text.endsWith("/")) {
+      text = text.substring(0, text.length() - 1);
+    }
+    var slash = text.lastIndexOf('/');
+    return slash >= 0 ? text.substring(slash + 1) : text;
   }
 
   /**

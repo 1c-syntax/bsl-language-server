@@ -11,9 +11,9 @@
  * Вывод типов выражений BSL: основной
  * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer},
  * адресация по позиции
- * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition},
- * парсинг inline-комментариев с типами
- * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.InlineTypeCommentParser}.
+ * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition}.
+ * Типы из inline-комментариев теперь берутся структурно из
+ * {@code VariableDescription.trailingDescription.getTypes()} парсера.
  */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;

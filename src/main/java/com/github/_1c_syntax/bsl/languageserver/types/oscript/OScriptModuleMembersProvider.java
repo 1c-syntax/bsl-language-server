@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +108,11 @@ public class OScriptModuleMembersProvider {
     var libraryEntries = oScriptLibraryIndex.findEntriesByUri(uri);
     if (libraryEntries.isEmpty()) {
       // не библиотечный .os — регистрируем по basename как USER-тип.
-      registerOne(documentContext, FilenameUtils.getBaseName(uri.getPath()), null);
+      // NFC-нормализация: имя файла на macOS хранится в NFD и иначе не совпадёт
+      // с идентификатором типа в исходном коде (NFC). См. OScriptLibraryIndex#nameKey.
+      var baseName = java.text.Normalizer.normalize(
+        FilenameUtils.getBaseName(uri.getPath()), java.text.Normalizer.Form.NFC);
+      registerOne(documentContext, baseName, null);
       return;
     }
     // Для библиотечного файла регистрируем каждую роль (модуль и/или класс)
@@ -212,10 +217,47 @@ public class OScriptModuleMembersProvider {
     }
     for (VariableSymbol variable : symbolTree.getVariables()) {
       if (variable.isExport()) {
-        members.add(MemberDescriptor.property(variable.getName()));
+        var types = propertyTypesFromComment(variable);
+        if (types.isEmpty()) {
+          members.add(MemberDescriptor.property(variable.getName()));
+        } else {
+          members.add(MemberDescriptor.property(variable.getName(), types, ""));
+        }
       }
     }
     return members;
+  }
+
+  /**
+   * Типы экспортной переменной-свойства из типизирующего висячего комментария
+   * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источник —
+   * структурно разобранные парсером типы {@code VariableDescription.trailingDescription.getTypes()}:
+   * для коллекционной нотации {@code Массив из Число} парсер возвращает один тип-голову
+   * {@code Массив} (элемент {@code Число} — внутри него), а имя для резолва извлекает
+   * {@link DescriptionTypes#resolveName(com.github._1c_syntax.bsl.parser.description.TypeDescription)}.
+   * Без комментария/типа возвращает {@link TypeSet#EMPTY}.
+   */
+  private TypeSet propertyTypesFromComment(VariableSymbol variable) {
+    var description = variable.getDescription().orElse(null);
+    if (description == null) {
+      return TypeSet.EMPTY;
+    }
+    var trailing = description.getTrailingDescription().orElse(null);
+    if (trailing == null) {
+      return TypeSet.EMPTY;
+    }
+    var types = trailing.getTypes();
+    if (types == null || types.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var refs = new ArrayList<TypeRef>(types.size());
+    for (var td : types) {
+      var name = DescriptionTypes.resolveName(td);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
+      }
+    }
+    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {
@@ -277,7 +319,10 @@ public class OScriptModuleMembersProvider {
     }
     var refs = new ArrayList<TypeRef>(types.size());
     for (var td : types) {
-      typeRegistry.resolve(td.name()).ifPresent(refs::add);
+      var name = DescriptionTypes.resolveName(td);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name).ifPresent(refs::add);
+      }
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
