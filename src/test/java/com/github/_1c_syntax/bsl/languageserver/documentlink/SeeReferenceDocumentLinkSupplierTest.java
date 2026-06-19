@@ -121,6 +121,36 @@ class SeeReferenceDocumentLinkSupplierTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void testTrailingVariableDescriptionReferenceProducesLink() {
+    // given - висячий (trailing) комментарий после объявления переменной со ссылкой «См.».
+    // Переменная объявлена последним оператором процедуры, чтобы комментарий не «прилип»
+    // как ведущее описание к следующему символу.
+    var content = """
+      Процедура Тест()
+          Перем ОписаннаяПеременная; // См. ДругойМетод
+      КонецПроцедуры
+
+      Процедура ДругойМетод() Экспорт
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+    var targetMethod = documentContext.getSymbolTree().getMethodSymbol("ДругойМетод").orElseThrow();
+
+    // when
+    var documentLinks = supplier.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .hasSize(1)
+      .first()
+      .satisfies(documentLink -> {
+        assertThat(documentLink.getRange()).isEqualTo(Ranges.create(1, 38, 49));
+        assertThat(documentLink.getTarget())
+          .isEqualTo(targetTarget(documentContext.getUri().toString(), targetMethod.getSelectionRange()));
+      });
+  }
+
+  @Test
   void testUnresolvedReferenceProducesNothing() {
     // given
     var content = """

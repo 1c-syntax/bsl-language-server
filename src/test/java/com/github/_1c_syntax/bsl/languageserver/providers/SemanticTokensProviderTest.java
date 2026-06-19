@@ -489,7 +489,8 @@ class SemanticTokensProviderTest {
       new ExpectedToken(1, 6, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Перем1"),
       // Line 1: ; operator
       new ExpectedToken(1, 12, 1, SemanticTokenTypes.Operator, ";"),
-      // Line 1: trailing comment as Comment+Documentation
+      // Line 1: trailing comment as Comment+Documentation. Первый токен «трейл» не резолвится
+      // в реальный тип, поэтому остаётся частью комментария, а не подсвечивается как тип.
       new ExpectedToken(1, 14, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// трейл")
     );
 

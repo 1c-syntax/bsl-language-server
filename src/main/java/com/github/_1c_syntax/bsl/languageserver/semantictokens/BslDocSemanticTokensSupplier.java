@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -41,6 +44,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Сапплаер семантических токенов для BSL документации (описаний методов и переменных).
@@ -52,6 +57,7 @@ import java.util.Optional;
 public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private final SemanticTokensHelper helper;
+  private final TypeService typeService;
 
   @Setter
   private boolean multilineTokenSupport;
@@ -72,19 +78,23 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     List<SemanticTokenEntry> entries = new ArrayList<>();
     var symbolTree = documentContext.getSymbolTree();
 
-    // Process method descriptions
+    // Process method descriptions. Типы параметров/возврата в описаниях методов задаются
+    // структурно (после «Параметры:»/«Возвращаемое значение:»), поэтому подсвечиваются без
+    // проверки резолва — чтобы не терять подсветку конфигурационных типов без загруженных метаданных.
     for (var method : symbolTree.getMethods()) {
       method.getDescription().ifPresent(description ->
-        addBslDocDescriptionTokens(entries, description, multilineTokenSupport)
+        addBslDocDescriptionTokens(entries, description, multilineTokenSupport, documentContext, false)
       );
     }
 
-    // Process variable descriptions
+    // Process variable descriptions. Тип переменной берётся из первого токена описания
+    // (нотация «тип в начале»), что для свободного текста даёт ложные срабатывания. Поэтому
+    // подсвечиваем как тип только то, что резолвится в реальный тип.
     for (var variable : symbolTree.getVariables()) {
       variable.getDescription().ifPresent(description -> {
-        addBslDocDescriptionTokens(entries, description, multilineTokenSupport);
+        addBslDocDescriptionTokens(entries, description, multilineTokenSupport, documentContext, true);
         description.getTrailingDescription().ifPresent(trailing ->
-          addBslDocDescriptionTokens(entries, trailing, multilineTokenSupport)
+          addBslDocDescriptionTokens(entries, trailing, multilineTokenSupport, documentContext, true)
         );
       });
     }
@@ -95,7 +105,9 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   private void addBslDocDescriptionTokens(
     List<SemanticTokenEntry> entries,
     SourceDefinedSymbolDescription description,
-    boolean multilineTokenSupport
+    boolean multilineTokenSupport,
+    DocumentContext documentContext,
+    boolean validateTypeResolution
   ) {
     var range = description.getRange();
     if (range.isEmpty()) {
@@ -111,12 +123,23 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     int fileStartLine = range.startLine();
     int fileStartChar = range.startCharacter();
 
+    // Split the description text into lines to get line lengths
+    var lines = descriptionText.split("\n", -1);
+
+    // Диапазоны типов, резолвящихся в реальный тип. Для описаний переменных это гвард: нотация
+    // «тип в начале» иначе подсветила бы любой первый токен висячего комментария. Для описаний
+    // методов проверка не нужна (validateTypeResolution = false) — типы заданы структурно.
+    var resolvableTypeRanges = validateTypeResolution
+      ? resolvableTypeRanges(description, documentContext)
+      : Set.<SimpleRange>of();
+
     // Collect semantic elements from AST (parameter names, types, and keywords in structural positions)
     var semanticElements = new ArrayList<SemanticTokenEntry>();
 
     for (var element : description.getElements()) {
       var semanticType = switch (element.type()) {
-        case TYPE_NAME -> SemanticTokenTypes.Type;
+        case TYPE_NAME -> !validateTypeResolution || resolvableTypeRanges.contains(element.range())
+          ? SemanticTokenTypes.Type : "";
         case PARAMETER_NAME -> SemanticTokenTypes.Parameter;
         case RETURNS_KEYWORD, EXAMPLE_KEYWORD, PARAMETERS_KEYWORD, DEPRECATE_KEYWORD,
              CALL_OPTIONS_KEYWORD -> SemanticTokenTypes.Macro;
@@ -134,9 +157,6 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     for (var element : semanticElements) {
       elementsByLine.computeIfAbsent(element.line(), k -> new ArrayList<>()).add(element);
     }
-
-    // Split the description text into lines to get line lengths
-    var lines = descriptionText.split("\n", -1);
 
     if (multilineTokenSupport) {
       addBslDocTokensWithMultilineSupport(entries, lines, elementsByLine, fileStartLine, fileStartChar);
@@ -231,8 +251,14 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     List<SemanticTokenEntry> elements,
     int charOffset
   ) {
-    int lineEnd = lineText.length();
-    int currentPos = 0;
+    // Позиции элементов приходят от парсера в абсолютных координатах файла, а charOffset —
+    // это абсолютный столбец начала строки описания (ненулевой для висячих/trailing комментариев,
+    // которые начинаются не с начала строки). Поэтому работаем в абсолютных координатах:
+    // прибавлять charOffset к позиции элемента нельзя — это приводило к двойному смещению
+    // и «съезжавшей» подсветке типов в висячих (trailing) комментариях.
+    int lineStart = charOffset;
+    int lineEnd = charOffset + lineText.length();
+    int currentPos = lineStart;
 
     for (var element : elements) {
       int elementStart = element.start();
@@ -240,13 +266,12 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       int elementEnd = elementStart + elementLength;
 
       if (currentPos < elementStart) {
-        addDocCommentRange(entries, fileLine, charOffset + currentPos, elementStart - currentPos);
+        addDocCommentRange(entries, fileLine, currentPos, elementStart - currentPos);
       }
 
-      // Add the element with adjusted position
       entries.add(new SemanticTokenEntry(
         fileLine,
-        charOffset + elementStart,
+        elementStart,
         elementLength,
         element.type(),
         element.modifiers()
@@ -256,8 +281,29 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     if (currentPos < lineEnd) {
-      addDocCommentRange(entries, fileLine, charOffset + currentPos, lineEnd - currentPos);
+      addDocCommentRange(entries, fileLine, currentPos, lineEnd - currentPos);
     }
+  }
+
+  /**
+   * Диапазоны типов описания, которые резолвятся в реальный тип через {@link TypeService}.
+   * <p>
+   * Идентичность типа берётся из семантических аксессоров парсера ({@link DescriptionTypes#typesOf}),
+   * а не восстанавливается из текста по координатам; для сопоставления с подсвечиваемыми
+   * {@code TYPE_NAME}-элементами используется диапазон {@code element().range()}.
+   */
+  private Set<SimpleRange> resolvableTypeRanges(
+    SourceDefinedSymbolDescription description,
+    DocumentContext documentContext
+  ) {
+    var fileType = documentContext.getFileType();
+    return DescriptionTypes.typesOf(description)
+      .filter(type -> {
+        var name = DescriptionTypes.resolveName(type);
+        return !name.isBlank() && typeService.resolve(name, fileType).isPresent();
+      })
+      .map(type -> type.element().range())
+      .collect(Collectors.toSet());
   }
 
   private void addDocCommentRange(List<SemanticTokenEntry> entries, int line, int start, int length) {

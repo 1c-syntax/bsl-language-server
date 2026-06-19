@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -66,13 +68,35 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
       symbolTree.getVariables().stream()
     ).forEach(describable ->
       describable.getDescription().ifPresent(description ->
-        description.getLinks().forEach(link ->
-          addLinkIfResolvable(documentContext, link, documentLinks)
-        )
+        addLinksFromDescription(documentContext, description, documentLinks)
       )
     );
 
     return documentLinks;
+  }
+
+  /**
+   * Добавляет ссылки «См.» из описания символа, включая описание висячего (trailing)
+   * комментария переменной.
+   * <p>
+   * Висячий комментарий ({@code Перем П; // См. ДругойМетод}) хранится отдельным
+   * {@link VariableDescription} в {@link VariableDescription#getTrailingDescription()},
+   * и его ссылки не попадают в {@code getLinks()} основного описания, поэтому обрабатываются явно.
+   */
+  private static void addLinksFromDescription(
+    DocumentContext documentContext,
+    SourceDefinedSymbolDescription description,
+    List<DocumentLink> documentLinks
+  ) {
+    description.getLinks().forEach(link ->
+      addLinkIfResolvable(documentContext, link, documentLinks)
+    );
+
+    if (description instanceof VariableDescription variableDescription) {
+      variableDescription.getTrailingDescription().ifPresent(trailingDescription ->
+        addLinksFromDescription(documentContext, trailingDescription, documentLinks)
+      );
+    }
   }
 
   private static void addLinkIfResolvable(
