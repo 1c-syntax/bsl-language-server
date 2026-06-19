@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781824884338,
+  "lastUpdate": 1781843165664,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38192,6 +38192,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.254000983208758",
             "extra": "mean: 288.34281571706134 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e644c057cf92b329d2a9e79eade3ab955f72e33",
+          "message": "Merge pull request #4161 from 1c-syntax/claude/vector-type-hints-autocomplete-o7rjss\n\nfix(inlayhints): вести ссылку хинта типа OneScript-класса к конструктору",
+          "timestamp": "2026-06-18T23:44:42+02:00",
+          "tree_id": "ed8f1664441662e8a2783d2efd679a0f73fdca08",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6e644c057cf92b329d2a9e79eade3ab955f72e33"
+        },
+        "date": 1781843157074,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 303.48606904347736,
+            "unit": "sec",
+            "range": "stddev: 4.119263270156287",
+            "extra": "mean: 303.48606904347736 sec\nrounds: 3"
           }
         ]
       }
