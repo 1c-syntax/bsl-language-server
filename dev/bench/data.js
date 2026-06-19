@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781894743392,
+  "lastUpdate": 1781897221172,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38316,6 +38316,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.587760700769241",
             "extra": "mean: 297.00590984026593 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "82e58a7a30dc04826ae79d8572b668a22cc01ace",
+          "message": "Merge pull request #4171 from 1c-syntax/claude/test-os-autocomplete-issue-zzts1o\n\nfeat(oscript): выводить тип property-члена из См.-ссылки висячего комментария",
+          "timestamp": "2026-06-19T15:17:26+02:00",
+          "tree_id": "728c57ad6601ed411262997462756ce76391e472",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/82e58a7a30dc04826ae79d8572b668a22cc01ace"
+        },
+        "date": 1781897211088,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.5059464772542,
+            "unit": "sec",
+            "range": "stddev: 5.743210822723561",
+            "extra": "mean: 284.5059464772542 sec\nrounds: 3"
           }
         ]
       }
