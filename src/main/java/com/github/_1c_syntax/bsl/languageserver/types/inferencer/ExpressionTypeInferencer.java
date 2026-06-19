@@ -59,6 +59,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallN
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
@@ -1430,7 +1431,10 @@ public class ExpressionTypeInferencer {
     }
     Set<TypeRef> refs = new LinkedHashSet<>();
     for (var td : types) {
-      typeRegistry.resolve(td.name(), fileType).ifPresent(refs::add);
+      var typeName = td instanceof CollectionTypeDescription collection
+        ? collection.collectionName()
+        : td.name();
+      typeRegistry.resolve(typeName, fileType).ifPresent(refs::add);
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }

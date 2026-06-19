@@ -251,7 +251,7 @@ public class OScriptModuleMembersProvider {
     }
     var refs = new ArrayList<TypeRef>(types.size());
     for (var td : types) {
-      typeRegistry.resolve(td.name(), FileType.OS).ifPresent(refs::add);
+      typeRegistry.resolve(resolvableTypeName(td), FileType.OS).ifPresent(refs::add);
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
@@ -315,9 +315,23 @@ public class OScriptModuleMembersProvider {
     }
     var refs = new ArrayList<TypeRef>(types.size());
     for (var td : types) {
-      typeRegistry.resolve(td.name()).ifPresent(refs::add);
+      typeRegistry.resolve(resolvableTypeName(td)).ifPresent(refs::add);
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+  }
+
+  /**
+   * Имя типа, пригодное для резолва в реестре. Для коллекционной нотации
+   * ({@code Массив из Число}, variant {@code COLLECTION}) {@link TypeDescription#name()}
+   * содержит полную запись {@code Массив<Число>}, поэтому берём имя самой коллекции
+   * {@link com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription#collectionName()}
+   * — тип-голову {@code Массив}.
+   */
+  private static String resolvableTypeName(com.github._1c_syntax.bsl.parser.description.TypeDescription td) {
+    if (td instanceof com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription collection) {
+      return collection.collectionName();
+    }
+    return td.name();
   }
 
   private static String buildParameterDescription(com.github._1c_syntax.bsl.parser.description.ParameterDescription pd) {
