@@ -297,6 +297,28 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testTrailingVariableCollectionTypeHighlighting() {
+    // given - висячий комментарий с типом-коллекцией «Массив из Число»: подсвечиваться должны
+    // и тип-голова (Массив), и тип-значение коллекции (Число), а не только голова.
+    String bsl = """
+      Процедура Тест()
+          Перем Контейнер Экспорт; // Массив из Число
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - и «Массив», и «Число» подсвечены как тип («из» — разделитель, остаётся комментарием).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 32, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Массив"),
+      new ExpectedToken(1, 42, 5, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Число")
+    ));
+  }
+
+  @Test
   void testMultilineSupport() {
     // given
     String bsl = """
