@@ -165,4 +165,25 @@ class ArchiveReproDiagnosticTest extends AbstractServerContextAwareTest {
       .extracting(CompletionItem::getLabel)
       .contains("Контейнер", "Сложно");
   }
+
+  @Test
+  void hoverOnPropertyInfersTypeFromSeeReference() {
+    initWorkspace();
+
+    // Перем Сложно Экспорт; // см. НовыйСложно — тип члена выводится из
+    // возвращаемого значения функции НовыйСложно() (Структура).
+    var content = "#Использовать \"lib\"\nКлас = Новый МойКласс();\nСообщить(Клас.Сложно);\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    int col = content.split("\n")[2].indexOf("Сложно") + 2;
+    var params = new HoverParams();
+    params.setPosition(new Position(2, col));
+
+    var hover = hoverProvider.getHover(dc, params);
+
+    assertThat(hover).as("hover на члене Сложно должен быть").isPresent();
+    assertThat(hover.get().getContents().getRight().getValue())
+      .as("тип Сложно выводится из `// см. НовыйСложно` → возврат функции (Структура)")
+      .contains("Сложно: Структура");
+  }
 }
