@@ -23,12 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,9 @@ class UseRelativePathLibraryTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private CompletionProvider completionProvider;
+
+  @Autowired
+  private HoverProvider hoverProvider;
 
   private void initWorkspace() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/use-relative-path-test").toAbsolutePath();
@@ -82,6 +87,51 @@ class UseRelativePathLibraryTest extends AbstractServerContextAwareTest {
 
     assertThat(items)
       .extracting(CompletionItem::getLabel)
+      .contains("МойКласс");
+  }
+
+  @Test
+  void hoverOnClassNameInNewExpressionFromRelativeUse() {
+    initWorkspace();
+
+    var content = "#Использовать \"lib\"\nА = Новый МойКласс();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    int typeNameStart = content.indexOf("МойКласс") - content.indexOf('\n') - 1;
+    var params = new HoverParams();
+    params.setPosition(new Position(1, typeNameStart + 2));
+
+    var hover = hoverProvider.getHover(dc, params);
+
+    assertThat(hover)
+      .as("hover на имени класса в `Новый МойКласс()` должен быть непустым")
+      .isPresent();
+    assertThat(hover.get().getContents().getRight().getValue())
+      .contains("МойКласс");
+  }
+
+  @Test
+  void hoverOnClassNameWithDanglingDotMemberAccessBelow() {
+    // Точное воспроизведение исходного файла: ниже строки `Новый МойКласс()`
+    // есть незавершённое обращение к члену `Клас.Контейнер.` (parse error).
+    initWorkspace();
+
+    var content = ""
+      + "#Использовать \"lib\"\n"
+      + "\n"
+      + "Клас = Новый МойКласс();\n"
+      + "Клас.Контейнер.\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new HoverParams();
+    params.setPosition(new Position(2, "Клас = Новый Мой".length()));
+
+    var hover = hoverProvider.getHover(dc, params);
+
+    assertThat(hover)
+      .as("hover на МойКласс должен работать даже при висячей точке `Клас.Контейнер.` ниже")
+      .isPresent();
+    assertThat(hover.get().getContents().getRight().getValue())
       .contains("МойКласс");
   }
 }
