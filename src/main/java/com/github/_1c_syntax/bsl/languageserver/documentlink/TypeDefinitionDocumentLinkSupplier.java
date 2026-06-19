@@ -25,31 +25,32 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
-import com.github._1c_syntax.bsl.parser.description.support.DescriptionElement;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentLink;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
  * Сапплаер кликабельных ссылок на тип в описаниях символов (методов и переменных).
  * <p>
- * В doc-комментарии типы упоминаются в структурных позициях (типы параметров/возвращаемого
- * значения метода, тип переменной по нотации «тип в начале»). Сапплаер разрешает каждое такое
- * имя типа через {@link TypeService} и, если у типа есть объявляющий исходный символ
- * ({@link TypeService#definingSymbol}), формирует {@link DocumentLink} на его местоположение.
+ * В doc-комментарии типы упоминаются как типы параметров/возвращаемого значения метода и как
+ * тип переменной (нотация «тип в начале», в т.ч. в висячем комментарии). Идентичность типа берётся
+ * из семантических аксессоров парсера ({@link DescriptionTypes#typesOf}), а не из координат текста.
+ * Каждое имя типа разрешается через {@link TypeService}; если у типа есть объявляющий исходный символ
+ * ({@link TypeService#definingSymbol}), формируется {@link DocumentLink} на его местоположение.
  * <p>
  * Ссылки создаются только для типов с источниковым символом ({@code USER}/{@code CONFIGURATION}):
- * платформенные/примитивные типы объявляющего символа не имеют и пропускаются. Это же служит
- * гвардом для описаний переменных — произвольный текст в висячем комментарии не резолвится
- * в тип и ссылку не порождает.
+ * платформенные/примитивные типы объявляющего символа не имеют и пропускаются. Это же служит гвардом
+ * для описаний переменных — произвольный текст в висячем комментарии не резолвится в тип.
  */
 @Component
 @RequiredArgsConstructor
@@ -79,12 +80,8 @@ public class TypeDefinitionDocumentLinkSupplier implements DocumentLinkSupplier 
     SourceDefinedSymbolDescription description,
     List<DocumentLink> documentLinks
   ) {
-    for (var element : description.getElements()) {
-      if (element.type() != DescriptionElement.Type.TYPE_NAME) {
-        continue;
-      }
-      addTypeLink(documentContext, description, element, documentLinks);
-    }
+    DescriptionTypes.typesOf(description)
+      .forEach(type -> addTypeLink(documentContext, type, documentLinks));
 
     if (description instanceof VariableDescription variableDescription) {
       variableDescription.getTrailingDescription().ifPresent(trailingDescription ->
@@ -95,15 +92,18 @@ public class TypeDefinitionDocumentLinkSupplier implements DocumentLinkSupplier 
 
   private void addTypeLink(
     DocumentContext documentContext,
-    SourceDefinedSymbolDescription description,
-    DescriptionElement element,
+    TypeDescription type,
     List<DocumentLink> documentLinks
   ) {
-    elementText(element, description)
-      .flatMap(typeName -> typeService.resolve(typeName, documentContext.getFileType()))
+    var name = DescriptionTypes.resolveName(type);
+    if (name.isBlank()) {
+      return;
+    }
+
+    typeService.resolve(name, documentContext.getFileType())
       .flatMap(typeRef -> typeService.definingSymbol(typeRef, documentContext))
       .ifPresent(symbol -> {
-        var elementRange = element.range();
+        SimpleRange elementRange = type.element().range();
         var range = Ranges.create(
           elementRange.startLine(),
           elementRange.startCharacter(),
@@ -112,35 +112,6 @@ public class TypeDefinitionDocumentLinkSupplier implements DocumentLinkSupplier 
         );
         documentLinks.add(new DocumentLink(range, symbolTarget(symbol)));
       });
-  }
-
-  /**
-   * Читает текст элемента описания (имя типа) из исходного текста описания по диапазону элемента.
-   * <p>
-   * Диапазон элемента абсолютный; первая строка описания начинается со столбца
-   * {@code range.startCharacter()}, остальные — со столбца 0.
-   */
-  private static Optional<String> elementText(
-    DescriptionElement element,
-    SourceDefinedSymbolDescription description
-  ) {
-    var lines = description.getDescription().split("\n", -1);
-    var descriptionRange = description.getRange();
-    var elementRange = element.range();
-
-    int lineIdx = elementRange.startLine() - descriptionRange.startLine();
-    if (lineIdx < 0 || lineIdx >= lines.length) {
-      return Optional.empty();
-    }
-
-    var lineText = lines[lineIdx];
-    int start = elementRange.startCharacter() - (lineIdx == 0 ? descriptionRange.startCharacter() : 0);
-    int end = start + elementRange.length();
-    if (start < 0 || end > lineText.length() || start >= end) {
-      return Optional.empty();
-    }
-
-    return Optional.of(lineText.substring(start, end));
   }
 
   private static String symbolTarget(SourceDefinedSymbol symbol) {
