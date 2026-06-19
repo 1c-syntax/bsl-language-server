@@ -1088,7 +1088,7 @@ public final class CompletionProvider {
       }
       var labelDetails = new CompletionItemLabelDetails();
       if (!signature.isBlank()) {
-        labelDetails.setDetail(signature);
+        labelDetails.setDetail(formatLabelDetail(signature));
       }
       if (!type.isBlank()) {
         labelDetails.setDescription(type);
@@ -1106,6 +1106,24 @@ public final class CompletionProvider {
     if (sb.length() > 0) {
       item.setDetail(sb.toString());
     }
+  }
+
+  /**
+   * Готовит значение для {@link CompletionItemLabelDetails#setDetail}: клиент рендерит его вплотную
+   * к label, без разделителя. Список параметров «{@code (...)}» так и должен примыкать к имени
+   * («{@code Метод(Пар)}»), а вот счётчик вариантов синтаксиса иначе склеивается с именем типа
+   * («{@code Массив3 варианта синтаксиса}»), поэтому его отделяем пробелом и берём в скобки —
+   * получается «{@code Массив (3 варианта синтаксиса)}». Распознаём список параметров по ведущей
+   * «{@code (}» (счётчик вариантов с неё не начинается).
+   *
+   * @param signature сигнатура «{@code (...)}» либо строка-счётчик вариантов синтаксиса.
+   * @return значение для {@code labelDetails.detail}.
+   */
+  private static String formatLabelDetail(String signature) {
+    if (signature.startsWith("(")) {
+      return signature;
+    }
+    return " (" + signature + ")";
   }
 
   /** Сигнатура «{@code (Пар1, Пар2?)}» с пометкой «?» у необязательных параметров. */
