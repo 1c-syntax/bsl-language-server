@@ -47,4 +47,24 @@ class UseDirectiveScannerTest {
     var dc = TestUtils.getDocumentContext("Сообщить(\"Hello\");\n");
     assertThat(UseDirectiveScanner.usedLibraries(dc)).isEmpty();
   }
+
+  @Test
+  void extractsRelativePathLibraryByDirectoryName() {
+    // #Использовать "путь" — подключение каталога-библиотеки относительным путём;
+    // имя библиотеки для gating'а — имя каталога (последний сегмент пути).
+    var dc = TestUtils.getDocumentContext("#Использовать \"lib\"\n");
+    assertThat(UseDirectiveScanner.usedLibraries(dc)).containsExactly("lib");
+  }
+
+  @Test
+  void extractsNestedRelativePathLibraryByLastSegment() {
+    var dc = TestUtils.getDocumentContext("#Использовать \"./libs/mylib\"\n");
+    assertThat(UseDirectiveScanner.usedLibraries(dc)).containsExactly("mylib");
+  }
+
+  @Test
+  void extractsBothIdentifierAndStringDirectives() {
+    var dc = TestUtils.getDocumentContext("#Использовать fs\n#Использовать \"lib\"\n");
+    assertThat(UseDirectiveScanner.usedLibrariesList(dc)).containsExactly("fs", "lib");
+  }
 }

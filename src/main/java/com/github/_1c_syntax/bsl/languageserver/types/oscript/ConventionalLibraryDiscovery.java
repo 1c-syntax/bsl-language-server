@@ -116,8 +116,19 @@ public class ConventionalLibraryDiscovery {
     if (!visited.add(normalized) || skip.contains(normalized)) {
       return;
     }
-    if (tryRegister(normalized, sink)) {
-      // не спускаемся внутрь уже найденной библиотеки
+    // Сильный сигнал: convention-каталоги Классы/Модули. Это завершённая
+    // библиотека — внутрь не спускаемся.
+    if (tryRegisterConventional(normalized, sink)) {
+      return;
+    }
+    // Слабый сигнал (третий способ подключения): плоские .os прямо в каталоге.
+    // Регистрируем их как flat-библиотеку, но на корневом уровне (depth == 0)
+    // НЕ прекращаем обход: рядом с потребляющим скриптом (плоский .os в корне
+    // workspace) может лежать каталог-библиотека, подключаемая относительным
+    // путём #Использовать "<dir>". На вложенных уровнях flat-каталог по-прежнему
+    // считаем завершённой библиотекой и внутрь не спускаемся.
+    var registeredFlat = tryRegisterFlat(normalized, sink);
+    if (registeredFlat && depth > 0) {
       return;
     }
     if (depth >= MAX_DEPTH) {
@@ -131,21 +142,33 @@ public class ConventionalLibraryDiscovery {
         // отдельные библиотеки. Корневой workspace/oscript_modules/<lib>
         // обрабатывается отдельно через addOscriptModulesChildren.
         .filter(child -> !LibConfigDiscovery.OSCRIPT_MODULES_DIRNAME.equals(child.getFileName().toString()))
+        // Если каталог зарегистрирован как flat-библиотека, его подкаталог src
+        // уже включён в неё (listFlatOsFiles читает и <root>/src) — повторно как
+        // отдельную библиотеку не открываем.
+        .filter(child -> !(registeredFlat && SRC_PREFIX.equals(child.getFileName().toString())))
         .forEach(child -> walk(child, skip, visited, sink, depth + 1));
     } catch (IOException e) {
       LOGGER.debug("Skipping unreadable directory while scanning conventional libraries: {}", dir, e);
     }
   }
 
-  private static boolean tryRegister(Path libraryRoot, List<ConventionalLibrary> sink) {
+  /** Регистрация по convention-каталогам {@code Классы}/{@code Модули} (сильный сигнал). */
+  private static boolean tryRegisterConventional(Path libraryRoot, List<ConventionalLibrary> sink) {
     var classFiles = listOsFiles(libraryRoot, CLASS_DIRS);
     var moduleFiles = listOsFiles(libraryRoot, MODULE_DIRS);
     if (!classFiles.isEmpty() || !moduleFiles.isEmpty()) {
       sink.add(new ConventionalLibrary(libraryRoot, classFiles, moduleFiles));
       return true;
     }
-    // Третий способ подключения библиотеки: каталог без lib.config и без
-    // Классы/Модули, но содержащий .os-файлы — все они подключаются как модули.
+    return false;
+  }
+
+  /**
+   * Третий способ подключения библиотеки: каталог без {@code lib.config} и без
+   * {@code Классы}/{@code Модули}, но содержащий {@code .os}-файлы — все они
+   * подключаются как модули.
+   */
+  private static boolean tryRegisterFlat(Path libraryRoot, List<ConventionalLibrary> sink) {
     var flatModules = listFlatOsFiles(libraryRoot);
     if (!flatModules.isEmpty()) {
       sink.add(new ConventionalLibrary(libraryRoot, List.of(), flatModules));
