@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781849494889,
+  "lastUpdate": 1781861228828,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38254,6 +38254,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.224901258004797",
             "extra": "mean: 298.65745011965436 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "35004107a855d1cb93a1a89cfe48db68223457bd",
+          "message": "Merge pull request #4164 from 1c-syntax/claude/nullable-jspecify-migration-6ikxf4\n\nReplace Spring's @Nullable with JSpecify @Nullable annotation",
+          "timestamp": "2026-06-19T09:49:58+02:00",
+          "tree_id": "78e43ba40c7c9824e98dec624ad99a14f673d22b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/35004107a855d1cb93a1a89cfe48db68223457bd"
+        },
+        "date": 1781861218938,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 297.67809653282166,
+            "unit": "sec",
+            "range": "stddev: 6.52256366938192",
+            "extra": "mean: 297.67809653282166 sec\nrounds: 3"
           }
         ]
       }
