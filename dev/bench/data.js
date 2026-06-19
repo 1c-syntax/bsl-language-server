@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781861228828,
+  "lastUpdate": 1781894743392,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38285,6 +38285,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.52256366938192",
             "extra": "mean: 297.67809653282166 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b94c17a14e4fe5a3c3569ed0e1f6c3b7f308d5fd",
+          "message": "Merge pull request #4169 from 1c-syntax/claude/test-os-autocomplete-issue-zzts1o\n\nFix OScript library discovery and type inference for relative paths",
+          "timestamp": "2026-06-19T14:52:55+02:00",
+          "tree_id": "fbde855a6942a463d719ab9035c32880777b0738",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b94c17a14e4fe5a3c3569ed0e1f6c3b7f308d5fd"
+        },
+        "date": 1781894733132,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 297.00590984026593,
+            "unit": "sec",
+            "range": "stddev: 9.587760700769241",
+            "extra": "mean: 297.00590984026593 sec\nrounds: 3"
           }
         ]
       }
