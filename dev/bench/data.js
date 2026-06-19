@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781843165664,
+  "lastUpdate": 1781849494889,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38223,6 +38223,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.119263270156287",
             "extra": "mean: 303.48606904347736 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c345b05f558a604f85e5d55f316bca800a1bb122",
+          "message": "Merge pull request #4163 from 1c-syntax/claude/russian-text-formatting-m7vgd7\n\nОтделять счётчик вариантов синтаксиса от имени в labelDetails",
+          "timestamp": "2026-06-19T07:36:06+02:00",
+          "tree_id": "b4559958fb142ddbbf08ebb522aaff8d88652cea",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c345b05f558a604f85e5d55f316bca800a1bb122"
+        },
+        "date": 1781849484397,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 298.65745011965436,
+            "unit": "sec",
+            "range": "stddev: 9.224901258004797",
+            "extra": "mean: 298.65745011965436 sec\nrounds: 3"
           }
         ]
       }
