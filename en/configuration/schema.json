@@ -29,6 +29,12 @@
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
+                "AssignToReadOnlyProperty": {
+                    "$ref": "parameters-schema.json#/definitions/AssignToReadOnlyProperty"
+                },
+                "BadExceptionCategory": {
+                    "$ref": "parameters-schema.json#/definitions/BadExceptionCategory"
+                },
                 "BadWords": {
                     "$ref": "parameters-schema.json#/definitions/BadWords"
                 },
@@ -95,6 +101,12 @@
                 "CommonModuleNameWords": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameWords"
                 },
+                "CommonModuleVariables": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleVariables"
+                },
+                "CompareWithBoolean": {
+                    "$ref": "parameters-schema.json#/definitions/CompareWithBoolean"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
                 },
@@ -137,12 +149,6 @@
                 "DeprecatedMethodCall": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMethodCall"
                 },
-                "DeprecatedMethods8310": {
-                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8310"
-                },
-                "DeprecatedMethods8317": {
-                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8317"
-                },
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
                 },
@@ -169,6 +175,12 @@
                 },
                 "EmptyStatement": {
                     "$ref": "parameters-schema.json#/definitions/EmptyStatement"
+                },
+                "EventHandlerInvalidSignature": {
+                    "$ref": "parameters-schema.json#/definitions/EventHandlerInvalidSignature"
+                },
+                "EventHandlerOutsideEventRegion": {
+                    "$ref": "parameters-schema.json#/definitions/EventHandlerOutsideEventRegion"
                 },
                 "ExcessiveAutoTestCheck": {
                     "$ref": "parameters-schema.json#/definitions/ExcessiveAutoTestCheck"
@@ -467,8 +479,14 @@
                 "UnaryPlusInConcatenation": {
                     "$ref": "parameters-schema.json#/definitions/UnaryPlusInConcatenation"
                 },
+                "UnavailableMemberCall": {
+                    "$ref": "parameters-schema.json#/definitions/UnavailableMemberCall"
+                },
                 "UnionAll": {
                     "$ref": "parameters-schema.json#/definitions/UnionAll"
+                },
+                "UnknownMember": {
+                    "$ref": "parameters-schema.json#/definitions/UnknownMember"
                 },
                 "UnknownPreprocessorSymbol": {
                     "$ref": "parameters-schema.json#/definitions/UnknownPreprocessorSymbol"
@@ -607,6 +625,24 @@
                         }
                     },
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
+                },
+                "injectionPoint": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show navigation to the injected Autumn bean producer above injection points (OneScript).",
+                    "$id": "#/definitions/codeLensParameters/injectionPoint"
+                },
+                "beanUsages": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show injection points count and navigation above Autumn bean producers (OneScript).",
+                    "$id": "#/definitions/codeLensParameters/beanUsages"
                 }
             }
         },
@@ -637,13 +673,46 @@
                     "title": "Show cyclomatic complexity score inlay hints.",
                     "$id": "#/definitions/inlayHintParameters/cyclomaticComplexity"
                 },
-                "sourceDefinedMethodCall": {
+                "variableType": {
                     "default": true,
                     "type": [
                         "boolean",
                         "object"
                     ],
-                    "title": "Show parameters of called source defined methods.",
+                    "title": "Show inferred type of variables in assignments as inlay hints.",
+                    "$id": "#/definitions/inlayHintParameters/variableType"
+                },
+                "methodCall": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show parameters of called methods (source-defined and platform).",
+                    "properties": {
+                        "showParametersWithTheSameName": {
+                            "description": "Show hints for parameters with names that are contained in passed value.",
+                            "default": false,
+                            "type": "boolean",
+                            "title": "Show hints for parameters with names that contains passed value."
+                        },
+                        "showDefaultValues": {
+                            "description": "Show hints with default values for non-passed parameters.",
+                            "default": true,
+                            "type": "boolean",
+                            "title": "Show hints with default values for non-passed parameters."
+                        }
+                    },
+                    "$id": "#/definitions/inlayHintParameters/methodCall"
+                },
+                "sourceDefinedMethodCall": {
+                    "deprecated": true,
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Deprecated: use `methodCall` (single setting for both source-defined and platform method calls).",
                     "properties": {
                         "showParametersWithTheSameName": {
                             "description": "Show hints for parameters with names that are contained in passed value.",
@@ -744,7 +813,7 @@
                             "$id": "#/properties/codeLens/testRunner/resultPattern",
                             "type": "string",
                             "title": "Regular expression to parse test runner output for method names.",
-                            "default": "^[^<]*<([^>]+)>.*"
+                            "default": "^[^<]*Имя\\sтеста\\s<([^>]+)>.*"
                         },
                         "runTestArguments": {
                             "$id": "#/properties/codeLens/testRunner/runTestArguments",
@@ -910,6 +979,29 @@
                         }
                     ]
                 },
+                "minimumLSPDiagnosticLevel": {
+                    "$id": "#/properties/minimumLSPDiagnosticLevel",
+                    "type": "string",
+                    "title": "Minimum LSP diagnostic severity level to compute. Diagnostics with severity lower than specified will not be computed.",
+                    "oneOf": [
+                        {
+                            "const": "Error",
+                            "description": "Error"
+                        },
+                        {
+                            "const": "Warning",
+                            "description": "Warning"
+                        },
+                        {
+                            "const": "Information",
+                            "description": "Information"
+                        },
+                        {
+                            "const": "Hint",
+                            "description": "Hint"
+                        }
+                    ]
+                },
                 "overrideMinimumLSPDiagnosticLevel": {
                     "$id": "#/properties/overrideMinimumLSPDiagnosticLevel",
                     "type": "string",
@@ -1006,6 +1098,18 @@
                             }
                         }
                     }
+                },
+                "ignoredAuthors": {
+                    "$id": "#/properties/ignoredAuthors",
+                    "type": "array",
+                    "title": "Git blame ignored authors. Diagnostics will not fire on lines authored by these email addresses.",
+                    "items": {
+                        "type": "string",
+                        "description": "Author email address as recorded in git blame."
+                    },
+                    "default": [
+                        
+                    ]
                 }
             }
         },
@@ -1041,6 +1145,21 @@
                         {
                             "const": false,
                             "description": "Don't format keywords to canonical view"
+                        }
+                    ]
+                },
+                "useOnTypeFormatting": {
+                    "$id": "#/properties/useOnTypeFormatting",
+                    "type": "boolean",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Enable formatting on typing a trigger character (Enter and ';')."
+                        },
+                        {
+                            "const": false,
+                            "description": "Disable formatting on type."
                         }
                     ]
                 }
@@ -1081,6 +1200,19 @@
                 }
             }
         },
+        "workspaceSymbol": {
+            "$id": "#/properties/workspaceSymbol",
+            "type": "object",
+            "title": "Workspace symbol search configuration.",
+            "properties": {
+                "syncFuzzySearch": {
+                    "$id": "#/properties/workspaceSymbol/syncFuzzySearch",
+                    "type": "boolean",
+                    "title": "Append a synchronous blocking fuzzy scan to the workspace/symbol response for clients without partial-result streaming.",
+                    "default": false
+                }
+            }
+        },
         "useDevSite": {
             "$id": "#/properties/useDevSite",
             "type": "boolean",
@@ -1107,6 +1239,17 @@
             "type": "string",
             "title": "Path to root directory of configuration files.",
             "default": null
+        },
+        "excludePaths": {
+            "$id": "#/properties/excludePaths",
+            "type": "array",
+            "title": "Path patterns to exclude from indexing. Patterns are matched against paths relative to the configuration root (e.g. directory names \".git\", \"node_modules\" or glob \"**/.git/**\", \"**/.*\"). Only BSL/OS files under excluded paths are skipped from indexing and analysis.",
+            "items": {
+                "type": "string"
+            },
+            "default": [
+                
+            ]
         },
         "sendErrors": {
             "$id": "#/properties/sendErrors",
@@ -1174,6 +1317,59 @@
                         "\u0421\u0442\u0440\u043e\u043a\u043e\u0432\u044b\u0435\u0424\u0443\u043d\u043a\u0446\u0438\u0438\u041a\u043b\u0438\u0435\u043d\u0442\u0421\u0435\u0440\u0432\u0435\u0440.\u041f\u043e\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u044c\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b\u0412\u0421\u0442\u0440\u043e\u043a\u0443",
                         "StringFunctionsClientServer.SubstituteParametersToString"
                     ]
+                }
+            }
+        },
+        "oscript": {
+            "$id": "#/properties/oscript",
+            "type": "object",
+            "title": "OneScript libraries configuration.",
+            "properties": {
+                "libRoots": {
+                    "$id": "#/properties/oscript/libRoots",
+                    "type": "array",
+                    "title": "Additional root directories to search for OneScript libraries (each subdirectory is scanned for lib.config).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        
+                    ]
+                },
+                "useEnvLibLocation": {
+                    "$id": "#/properties/oscript/useEnvLibLocation",
+                    "type": "boolean",
+                    "title": "Also use paths from the OSCRIPT_LIB_LOCATION environment variable in addition to libRoots.",
+                    "default": false
+                },
+                "showImplicitLibraryEntriesInCompletion": {
+                    "$id": "#/properties/oscript/showImplicitLibraryEntriesInCompletion",
+                    "type": "boolean",
+                    "title": "Suggest implicit library entries (.os files not declared in lib.config) in no-dot completion.",
+                    "default": false
+                }
+            }
+        },
+        "v8platform": {
+            "$id": "#/properties/v8platform",
+            "type": "object",
+            "title": "1C:Enterprise platform types configuration.",
+            "properties": {
+                "binPath": {
+                    "$id": "#/properties/v8platform/binPath",
+                    "type": "string",
+                    "title": "Path to the 'bin' directory of an installed 1C:Enterprise platform (where syntax-helper files shcntx_*.hbk, shlang_*.hbk are located). If not set, the most recent installation on the machine is autodetected."
+                },
+                "enabled": {
+                    "$id": "#/properties/v8platform/enabled",
+                    "type": "boolean",
+                    "title": "Allow loading platform context from the syntax-helper of an installed 1C:Enterprise.",
+                    "default": true
+                },
+                "targetVersion": {
+                    "$id": "#/properties/v8platform/targetVersion",
+                    "type": "string",
+                    "title": "Target 1C platform version for compatibility diagnostics (deprecation, member availability). Takes priority over the configuration compatibility mode. When empty, the configuration compatibility mode is used, and if that is unset the newest platform is assumed. Format: 8.3.21."
                 }
             }
         }
