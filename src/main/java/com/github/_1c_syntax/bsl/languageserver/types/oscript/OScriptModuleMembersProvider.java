@@ -230,11 +230,15 @@ public class OScriptModuleMembersProvider {
 
   /**
    * Типы экспортной переменной-свойства из типизирующего висячего комментария
-   * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источник —
-   * структурно разобранные парсером типы {@code VariableDescription.trailingDescription.getTypes()}:
-   * для коллекционной нотации {@code Массив из Число} парсер возвращает один тип-голову
-   * {@code Массив} (элемент {@code Число} — внутри него), а имя для резолва извлекает
-   * {@link DescriptionTypes#resolveName(com.github._1c_syntax.bsl.parser.description.TypeDescription)}.
+   * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число}). Источники:
+   * <ul>
+   *   <li>структурно разобранные парсером типы {@code trailingDescription.getTypes()}
+   *       (для {@code Массив из Число} — один тип-голова {@code Массив}, имя берёт
+   *       {@link DescriptionTypes#resolveName(com.github._1c_syntax.bsl.parser.description.TypeDescription)});</li>
+   *   <li>если прямых типов нет — {@code См.}-ссылки {@code trailingDescription.getLinks()}
+   *       ({@code Перем Сложно Экспорт; // см. НовыйСложно}): тип берётся из возвращаемого
+   *       значения одноимённой функции этого же модуля, либо ссылка трактуется как имя типа.</li>
+   * </ul>
    * Без комментария/типа возвращает {@link TypeSet#EMPTY}.
    */
   private TypeSet propertyTypesFromComment(VariableSymbol variable) {
@@ -246,18 +250,50 @@ public class OScriptModuleMembersProvider {
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
+    var refs = new ArrayList<TypeRef>();
     var types = trailing.getTypes();
-    if (types == null || types.isEmpty()) {
-      return TypeSet.EMPTY;
+    if (types != null) {
+      for (var td : types) {
+        var name = DescriptionTypes.resolveName(td);
+        if (!name.isBlank()) {
+          typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
+        }
+      }
     }
-    var refs = new ArrayList<TypeRef>(types.size());
-    for (var td : types) {
-      var name = DescriptionTypes.resolveName(td);
-      if (!name.isBlank()) {
-        typeRegistry.resolve(name, FileType.OS).ifPresent(refs::add);
+    // Прямые типы приоритетнее; к См.-ссылкам обращаемся, только если тип не указан явно.
+    if (refs.isEmpty()) {
+      for (var link : trailing.getLinks()) {
+        addHyperlinkTypes(variable, link, refs);
       }
     }
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+  }
+
+  /**
+   * Тип из {@code См.}-ссылки висячего комментария. Если ссылка указывает на
+   * функцию того же модуля — берём её возвращаемый тип ({@code // см. НовыйСложно}
+   * → возвращаемое значение {@code НовыйСложно()}); иначе пробуем трактовать
+   * ссылку как имя типа. Cross-module ссылки ({@code Модуль.Метод}) не поддержаны.
+   */
+  private void addHyperlinkTypes(VariableSymbol variable,
+                                 com.github._1c_syntax.bsl.parser.description.support.Hyperlink link,
+                                 List<TypeRef> refs) {
+    var target = link.link();
+    if (target == null || target.isBlank() || target.contains(".")) {
+      return;
+    }
+    var localFunction = variable.getOwner().getSymbolTree().getMethods().stream()
+      .filter(method -> method.isFunction() && method.getName().equalsIgnoreCase(target))
+      .findFirst()
+      .orElse(null);
+    if (localFunction != null) {
+      var returnTypes = localFunction.getDescription()
+        .map(com.github._1c_syntax.bsl.parser.description.MethodDescription::getReturnedValue)
+        .orElse(List.of());
+      refs.addAll(resolveTypes(returnTypes).refs());
+      return;
+    }
+    typeRegistry.resolve(target, FileType.OS).ifPresent(refs::add);
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {
