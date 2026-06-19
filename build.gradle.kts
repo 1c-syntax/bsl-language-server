@@ -272,6 +272,21 @@ tasks.test {
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}", "-javaagent:${mockitoAgentPath}")
 
+    // Профилировочный прогон автодополнения (CompletionTypingProfileTest) включается
+    // флагом -Dbsl.profile=true. Под ним пробрасываем bsl.profile.* в тест-форк и
+    // поднимаем heap: в одной JVM держатся большой открытый модуль SSL, метаданные
+    // конфигурации и две записи JFR. На обычные прогоны тестов флаг не влияет.
+    if (System.getProperty("bsl.profile") == "true") {
+        maxHeapSize = "8g"
+        maxParallelForks = 1
+        System.getProperties().forEach { key, value ->
+            val name = key.toString()
+            if (name == "bsl.profile" || name.startsWith("bsl.profile.")) {
+                systemProperty(name, value.toString())
+            }
+        }
+    }
+
     // Cleanup test cache directories after tests complete
     doLast {
         try {
