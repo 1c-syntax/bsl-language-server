@@ -177,6 +177,9 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    // Замер retained-памяти структур данных (jol) в тестах-профилировщиках
+    testImplementation("org.openjdk.jol:jol-core:0.17")
+
     // JMH: измерение retained-памяти структур данных (jol) в бенчмарках
     jmhImplementation("org.openjdk.jol:jol-core:0.17")
 }
@@ -282,6 +285,8 @@ tasks.test {
     if (System.getProperty("bsl.profile") == "true") {
         maxHeapSize = "8g"
         maxParallelForks = 1
+        // JOL читает оффсеты полей record-классов только с этим флагом.
+        jvmArgs("-Djol.magicFieldOffset=true")
         System.getProperties().forEach { key, value ->
             val name = key.toString()
             if (name == "bsl.profile" || name.startsWith("bsl.profile.")) {
