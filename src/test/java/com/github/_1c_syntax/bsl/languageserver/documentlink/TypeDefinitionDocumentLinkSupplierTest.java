@@ -98,9 +98,10 @@ class TypeDefinitionDocumentLinkSupplierTest {
     assertThat(documentLinks)
       .hasSize(1)
       .first()
-      .satisfies(documentLink ->
-        assertThat(documentLink.getTarget()).isEqualTo(symbolTarget(documentContext, targetSymbol.getSelectionRange()))
-      );
+      .satisfies(documentLink -> {
+        assertThat(documentLink.getRange()).isEqualTo(Ranges.create(1, 16, 22));
+        assertThat(documentLink.getTarget()).isEqualTo(symbolTarget(documentContext, targetSymbol.getSelectionRange()));
+      });
   }
 
   @Test
