@@ -28,6 +28,8 @@ import lombok.Builder;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Comparator;
+
 import static java.util.Comparator.comparing;
 
 /**
@@ -51,6 +53,17 @@ public record Symbol(
 
   private static final GenericInterner<Symbol> INTERNER = new GenericInterner<>();
 
+  // Компаратор по всем полям, вынесенный в константу. Иначе цепочка из пяти
+  // comparing/thenComparing пересобиралась на каждый вызов compareTo, а он
+  // вызывается при каждой навигации по сортированным структурам reference-индекса
+  // (на keystroke это десятки тысяч вызовов и мегабайты лишних аллокаций).
+  private static final Comparator<Symbol> COMPARATOR =
+    comparing(Symbol::mdoRef)
+      .thenComparing(Symbol::moduleType)
+      .thenComparing(Symbol::scopeName)
+      .thenComparing(Symbol::symbolKind)
+      .thenComparing(Symbol::symbolName);
+
   public Symbol intern() {
     return INTERNER.intern(this);
   }
@@ -61,11 +74,6 @@ public record Symbol(
       return 1;
     }
 
-    return comparing(Symbol::mdoRef)
-      .thenComparing(Symbol::moduleType)
-      .thenComparing(Symbol::scopeName)
-      .thenComparing(Symbol::symbolKind)
-      .thenComparing(Symbol::symbolName)
-      .compare(this, other);
+    return COMPARATOR.compare(this, other);
   }
 }
