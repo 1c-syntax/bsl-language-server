@@ -251,6 +251,15 @@ tasks.test {
     // 3g gives enough headroom on GitHub Actions ubuntu-latest runners with 1 fork.
     maxHeapSize = "3g"
 
+    // Профилировочные тесты (@EnabledIfSystemProperty bsl.profile): пробрасываем bsl.profile.* в форк
+    // и показываем stderr. На обычные прогоны не влияет (флага нет).
+    if (System.getProperty("bsl.profile") != null) {
+        System.getProperties().forEach { k, v ->
+            if (k.toString().startsWith("bsl.profile")) systemProperty(k.toString(), v.toString())
+        }
+        testLogging { showStandardStreams = true }
+    }
+
     // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
     // Использование форков, а не потоков, обусловлено тем, что многие тесты
     // изменяют общее состояние Spring-контекста (@DirtiesContext,
