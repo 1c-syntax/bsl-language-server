@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
@@ -39,8 +39,13 @@ public class SymbolOccurrenceRepository {
 
   /**
    * Список обращений к символам в разрезе символов.
+   * <p>
+   * Внешняя карта — {@link ConcurrentHashMap}: ключ-{@link Symbol} ищется по hashCode/equals
+   * за O(1) без вызовов {@code Symbol.compareTo} (на перестроении индекса при наборе текста это
+   * было основной не-ANTLR статьёй расхода). Внутреннее множество остаётся сортированным
+   * {@link ConcurrentSkipListSet}, поэтому порядок обращений ({@code getAllBySymbol}) сохраняется.
    */
-  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentSkipListMap<>();
+  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
 
   /**
    * Сохранить обращение к символу в хранилище.
