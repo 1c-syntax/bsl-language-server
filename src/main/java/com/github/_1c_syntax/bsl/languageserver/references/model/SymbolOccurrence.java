@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.Builder;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Comparator;
+
 import static java.util.Comparator.comparing;
 
 /**
@@ -41,18 +43,24 @@ public record SymbolOccurrence(
   Location location
 ) implements Comparable<SymbolOccurrence> {
 
+  // Компаратор, вынесенный в константу. Иначе вложенная цепочка (включая
+  // сравнение URI и Ranges.compare, а также рекурсивный Symbol-компаратор)
+  // пересобиралась на каждый вызов compareTo при навигации по сортированным
+  // множествам обращений reference-индекса.
+  private static final Comparator<SymbolOccurrence> COMPARATOR =
+    comparing(SymbolOccurrence::location, comparing(Location::uri)
+        .thenComparing((Location l1, Location l2) -> Ranges.compare(
+          l1.startLine(), l1.startCharacter(), l1.endLine(), l1.endCharacter(),
+          l2.startLine(), l2.startCharacter(), l2.endLine(), l2.endCharacter())))
+      .thenComparing(SymbolOccurrence::occurrenceType)
+      .thenComparing(SymbolOccurrence::symbol);
+
   @Override
   public int compareTo(@Nullable SymbolOccurrence other) {
     if (other == null) {
       return 1;
     }
 
-    return comparing(SymbolOccurrence::location, comparing(Location::uri)
-        .thenComparing((l1, l2) -> Ranges.compare(
-          l1.startLine(), l1.startCharacter(), l1.endLine(), l1.endCharacter(),
-          l2.startLine(), l2.startCharacter(), l2.endLine(), l2.endCharacter())))
-      .thenComparing(SymbolOccurrence::occurrenceType)
-      .thenComparing(SymbolOccurrence::symbol)
-      .compare(this, other);
+    return COMPARATOR.compare(this, other);
   }
 }
