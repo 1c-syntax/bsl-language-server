@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781908125485,
+  "lastUpdate": 1781946448290,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38440,6 +38440,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.5629145465936",
             "extra": "mean: 289.56098675727844 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "346bcef6727fced398f71fbaa74d70ce4fd4d44e",
+          "message": "Merge pull request #4174 from 1c-syntax/claude/perf-reference-index-structures\n\nperf(references): ускорить reference-индекс — компараторы-константы и hash-карта",
+          "timestamp": "2026-06-20T09:22:35+02:00",
+          "tree_id": "2151f59095f580fa7108bf5a79a2f19089ea4219",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/346bcef6727fced398f71fbaa74d70ce4fd4d44e"
+        },
+        "date": 1781946438251,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 291.2704617182414,
+            "unit": "sec",
+            "range": "stddev: 6.075916871534518",
+            "extra": "mean: 291.2704617182414 sec\nrounds: 3"
           }
         ]
       }
