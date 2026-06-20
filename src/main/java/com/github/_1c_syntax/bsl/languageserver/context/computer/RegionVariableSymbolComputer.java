@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
@@ -38,42 +40,56 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Вычислитель символов областей (регионов).
+ * Вычислитель символов переменных и регионов за <b>один</b> обход AST.
  * <p>
- * Анализирует директивы #Область/#Region и #КонецОбласти/#EndRegion
- * для построения иерархии областей кода.
+ * И {@link VariableSymbolComputer}, и {@link RegionSymbolComputer} обходят всё дерево вглубь
+ * (методы — вместе с телами), и при перестроении дерева символов на каждый keystroke это были два
+ * отдельных полных обхода 48k-строчного модуля (по профилю набора текста на больших модулях обход
+ * визиторами — заметная доля стоимости перестроения). Наборы перекрытых узлов у них не пересекаются
+ * (директивы {@code #Область}/{@code #КонецОбласти} против объявлений переменных/параметров/lvalue/
+ * циклов), поэтому сбор регионов добавляется поверх обхода переменных, и два полных обхода
+ * схлопываются в один.
+ * <p>
+ * {@link VariableSymbolComputer} остаётся самостоятельным (используется отдельно), а этот класс лишь
+ * расширяет его сбором регионов в том же {@code visitFile}.
  */
-public final class RegionSymbolComputer
-  extends BSLParserBaseVisitor<ParseTree>
-  implements Computer<List<RegionSymbol>> {
+public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
 
   private final DocumentContext documentContext;
   private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack =
     new ArrayDeque<>();
   private final Set<RegionSymbol> regions = new HashSet<>();
 
-  public RegionSymbolComputer(DocumentContext documentContext) {
+  public RegionVariableSymbolComputer(DocumentContext documentContext,
+                                      ModuleSymbol module,
+                                      List<? extends MethodSymbol> methods) {
+    super(documentContext, module, methods);
     this.documentContext = documentContext;
   }
 
   @Override
-  public List<RegionSymbol> compute() {
+  public List<VariableSymbol> compute() {
     regionStack.clear();
     regions.clear();
 
-    visitFile(documentContext.getAst());
+    // Единственный обход дерева: попутно с переменными собираем регионы (см. visitRegion*).
+    var variables = super.compute();
 
     regionStack.clear();
+    return variables;
+  }
 
-    List<RegionSymbol> result = new ArrayList<>(regions);
-    regions.clear();
-
-    return result;
+  /**
+   * Собранные за тот же обход регионы. Вызывать после {@link #compute()}.
+   *
+   * @return список символов регионов модуля.
+   */
+  public List<RegionSymbol> getRegions() {
+    return new ArrayList<>(regions);
   }
 
   @Override
   public ParseTree visitRegionStart(BSLParser.RegionStartContext ctx) {
-
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
       .owner(documentContext)
       .name(ctx.regionName().getText().intern())
@@ -86,7 +102,6 @@ public final class RegionSymbolComputer
 
   @Override
   public ParseTree visitRegionEnd(BSLParser.RegionEndContext ctx) {
-
     if (regionStack.isEmpty()) {
       return super.visitRegionEnd(ctx);
     }
@@ -99,14 +114,10 @@ public final class RegionSymbolComputer
     Range range = Ranges.create(regionStartContext, ctx);
     builder
       .range(range)
-      .endRange(Ranges.create(ctx))
-    ;
+      .endRange(Ranges.create(ctx));
 
-    RegionSymbol region = builder.build();
-
-    regions.add(region);
+    regions.add(builder.build());
 
     return super.visitRegionEnd(ctx);
   }
-
 }
