@@ -35,6 +35,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +60,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * ({@link ServerContextDocumentClosedEvent}/{@link ServerContextDocumentClearedEvent}/
  * {@link ServerContextDocumentRemovedEvent}). На изменение содержимого ({@code didChange}) индекс
  * НЕ сбрасывается — иначе терялся бы весь смысл (кэш должен пережить ребилд); устаревшие записи
- * вытесняются по размеру (Caffeine, {@link #PER_DOCUMENT_MAX_SIZE}).
+ * вытесняются по размеру ({@link #PER_DOCUMENT_MAX_SIZE}) и по простою
+ * ({@link #EXPIRE_AFTER_ACCESS}).
  * <p>
  * Ключ контент-адресный: сигнатуры токенов {@code line:charPositionInLine:text}. Захватывает и
  * <b>текст</b> (результат разбора), и <b>абсолютные позиции</b> (от них зависят {@code SimpleRange}
@@ -77,6 +79,15 @@ public class SymbolDescriptionIndex {
    * С запасом покрывает число методов/переменных даже крупного модуля.
    */
   private static final int PER_DOCUMENT_MAX_SIZE = 8_192;
+
+  /**
+   * Время простоя записи, после которого она вытесняется по времени. Правки, сдвигающие номера
+   * строк, плодят новое поколение позиционных ключей на каждый ребилд; на крупных модулях такой
+   * кэш быстро упирается в {@link #PER_DOCUMENT_MAX_SIZE}, держа устаревшие описания. Простой в
+   * минуту означает, что после паузы в наборе устаревшие ключи отваливаются, не дожидаясь
+   * вытеснения по размеру.
+   */
+  private static final Duration EXPIRE_AFTER_ACCESS = Duration.ofMinutes(1);
 
   /** Разделитель ведущих и висячего комментариев в ключе (управляющий символ, в исходниках не встречается). */
   private static final String PART_SEPARATOR = String.valueOf((char) 1);
@@ -173,8 +184,10 @@ public class SymbolDescriptionIndex {
    */
   private static final class DocumentDescriptions {
     private final Cache<String, MethodDescription> methods =
-      Caffeine.newBuilder().maximumSize(PER_DOCUMENT_MAX_SIZE).executor(Runnable::run).build();
+      Caffeine.newBuilder().maximumSize(PER_DOCUMENT_MAX_SIZE)
+        .expireAfterAccess(EXPIRE_AFTER_ACCESS).executor(Runnable::run).build();
     private final Cache<String, VariableDescription> variables =
-      Caffeine.newBuilder().maximumSize(PER_DOCUMENT_MAX_SIZE).executor(Runnable::run).build();
+      Caffeine.newBuilder().maximumSize(PER_DOCUMENT_MAX_SIZE)
+        .expireAfterAccess(EXPIRE_AFTER_ACCESS).executor(Runnable::run).build();
   }
 }
