@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticCompl
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolDescriptionIndex;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -119,6 +120,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private OScriptModuleTypeResolver oScriptModuleTypeResolver;
+
+  @SuppressWarnings("NullAway.Init")
+  @Getter
+  @Setter(onMethod_ = {@Autowired})
+  private SymbolDescriptionIndex symbolDescriptionIndex;
 
   @Nullable
   private BSLTokenizer tokenizer;
