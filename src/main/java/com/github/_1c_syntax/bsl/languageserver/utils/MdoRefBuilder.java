@@ -112,14 +112,19 @@ public class MdoRefBuilder {
       return commonModule.get().getMdoRef();
     }
 
+    // имя объекта метаданных — второй "модификатор" (после точки). Если его нет, то и ссылку
+    // на платформенный объект построить нельзя, поэтому дорогой MDOType.fromValue даже не вызываем
+    // (на голых идентификаторах, например чтениях локальных переменных, это самый частый случай).
+    var mdoName = getMdoName(modifiers);
+    if (mdoName.isEmpty()) {
+      return "";
+    }
+
     // раз не общий модуль, то нужно определить тип метаданного и, если у него есть модуль менеджера, вызвать метод
     // todo такой подход не дает использовать ссылки на методы платформенных объектов
     var mdoType = MDOType.fromValue(identifier.getText());
     if (mdoType.isPresent()) {
-      var mdoName = getMdoName(modifiers);
-      if (!mdoName.isEmpty()) {
-        return MdoReference.create(mdoType.get(), mdoName).getMdoRef();
-      }
+      return MdoReference.create(mdoType.get(), mdoName).getMdoRef();
     }
     return "";
   }
