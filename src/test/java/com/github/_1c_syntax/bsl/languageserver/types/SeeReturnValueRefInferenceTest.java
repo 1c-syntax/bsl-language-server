@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -49,7 +50,7 @@ class SeeReturnValueRefInferenceTest extends AbstractServerContextAwareTest {
     var t = at("ОтветСКомментарием = ОтправитьЗапрос()", "ОтветСКомментарием = ".length());
     assertThat(t.refs())
       .as("`см. СхемаОтвета - описание` разрешается в возвращаемый тип СхемаОтвета (Структура)")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Структура");
     assertFieldsPropagated(t);
   }
@@ -59,7 +60,7 @@ class SeeReturnValueRefInferenceTest extends AbstractServerContextAwareTest {
     var t = at("ОтветБезКомментария = ОтправитьЗапрос2()", "ОтветБезКомментария = ".length());
     assertThat(t.refs())
       .as("`см. СхемаОтвета` разрешается в возвращаемый тип СхемаОтвета (Структура)")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Структура");
     assertFieldsPropagated(t);
   }
@@ -73,10 +74,10 @@ class SeeReturnValueRefInferenceTest extends AbstractServerContextAwareTest {
       .as("поля СхемаОтвета переносятся через См.-ссылку")
       .contains("Код", "Сообщение");
     assertThat(t.getFieldTypes("Код").refs())
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Число");
     assertThat(t.getFieldTypes("Сообщение").refs())
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
   }
 

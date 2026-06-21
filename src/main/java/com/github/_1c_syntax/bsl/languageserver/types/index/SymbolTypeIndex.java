@@ -275,7 +275,7 @@ public class SymbolTypeIndex {
    * @return {@link TypeSet} (возможно с {@code localFields}); {@link TypeSet#EMPTY},
    *         если ссылка не разворачивается.
    */
-  public TypeSet resolveSeeReference(String link, DocumentContext owner, FileType fileType) {
+  public TypeSet resolveSeeReference(@Nullable String link, DocumentContext owner, FileType fileType) {
     if (link == null || link.isBlank()) {
       return TypeSet.EMPTY;
     }
