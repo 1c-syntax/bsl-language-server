@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781946448290,
+  "lastUpdate": 1782069060950,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38471,6 +38471,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.075916871534518",
             "extra": "mean: 291.2704617182414 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6e363b8fa51bf8a2085fa9ddc22f06b832542db",
+          "message": "Merge pull request #4180 from 1c-syntax/claude/perf-document-mdobject-cache\n\nperf(context): кэшировать MD-объект и mdoRef документа (lazy)",
+          "timestamp": "2026-06-21T19:34:46+02:00",
+          "tree_id": "f207b3f1e8fce932a8c8a9817f6d3e10938a71c8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f6e363b8fa51bf8a2085fa9ddc22f06b832542db"
+        },
+        "date": 1782069050366,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 283.11516213417053,
+            "unit": "sec",
+            "range": "stddev: 9.614333480870728",
+            "extra": "mean: 283.11516213417053 sec\nrounds: 3"
           }
         ]
       }
