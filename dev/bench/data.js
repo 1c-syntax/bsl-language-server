@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782071554883,
+  "lastUpdate": 1782085295425,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38533,6 +38533,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 19.776447864940835",
             "extra": "mean: 283.8820497194926 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a538ec8d443195375dab5f6313f15b7463b39e80",
+          "message": "Merge pull request #4183 from 1c-syntax/claude/session-4178-2779ql\n\nfix(types): разрешать См.-ссылку в описании возвращаемого значения функции",
+          "timestamp": "2026-06-22T00:02:17+02:00",
+          "tree_id": "064d4092f2748a1ac731ea2afb2beb8a3c430a54",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a538ec8d443195375dab5f6313f15b7463b39e80"
+        },
+        "date": 1782085286547,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 283.8889419237773,
+            "unit": "sec",
+            "range": "stddev: 13.449441968374073",
+            "extra": "mean: 283.8889419237773 sec\nrounds: 3"
           }
         ]
       }
