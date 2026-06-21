@@ -275,8 +275,10 @@ public class SymbolTypeIndex {
    * @return {@link TypeSet} (возможно с {@code localFields}); {@link TypeSet#EMPTY},
    *         если ссылка не разворачивается.
    */
-  public TypeSet resolveSeeReference(@Nullable String link, DocumentContext owner, FileType fileType) {
-    if (link == null || link.isBlank()) {
+  public TypeSet resolveSeeReference(String link, DocumentContext owner, FileType fileType) {
+    // Парсер не отдаёт null: Hyperlink.link()/TypeDescription.name() в крайнем
+    // случае возвращают пустую строку, поэтому достаточно проверки на пустоту.
+    if (link.isBlank()) {
       return TypeSet.EMPTY;
     }
     if (link.contains(".")) {
