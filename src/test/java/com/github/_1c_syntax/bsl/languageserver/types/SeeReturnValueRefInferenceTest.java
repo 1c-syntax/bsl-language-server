@@ -51,6 +51,7 @@ class SeeReturnValueRefInferenceTest extends AbstractServerContextAwareTest {
       .as("`см. СхемаОтвета - описание` разрешается в возвращаемый тип СхемаОтвета (Структура)")
       .extracting(ref -> ref.qualifiedName())
       .containsExactly("Структура");
+    assertFieldsPropagated(t);
   }
 
   @Test
@@ -60,6 +61,23 @@ class SeeReturnValueRefInferenceTest extends AbstractServerContextAwareTest {
       .as("`см. СхемаОтвета` разрешается в возвращаемый тип СхемаОтвета (Структура)")
       .extracting(ref -> ref.qualifiedName())
       .containsExactly("Структура");
+    assertFieldsPropagated(t);
+  }
+
+  /**
+   * Поля структуры из JsDoc целевой функции (* Код - Число, * Сообщение - Строка)
+   * должны переноситься через См.-ссылку, а не теряться.
+   */
+  private static void assertFieldsPropagated(TypeSet t) {
+    assertThat(t.getAllFieldNames())
+      .as("поля СхемаОтвета переносятся через См.-ссылку")
+      .contains("Код", "Сообщение");
+    assertThat(t.getFieldTypes("Код").refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Число");
+    assertThat(t.getFieldTypes("Сообщение").refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
   }
 
   private TypeSet at(String marker, int offsetInMarker) {

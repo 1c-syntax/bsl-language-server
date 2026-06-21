@@ -272,7 +272,13 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     if (link.contains(".")) {
-      return resolveHyperlink(link, fileType);
+      var hyperlinkTypes = resolveHyperlink(link, fileType);
+      if (!hyperlinkTypes.isEmpty()) {
+        return hyperlinkTypes;
+      }
+      // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член) — пробуем
+      // трактовать как полное имя типа (например, квалифицированный платформенный
+      // тип) через TypeRegistry ниже.
     }
     var localFunction = owner.getSymbolTree().getMethods().stream()
       .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(link))
