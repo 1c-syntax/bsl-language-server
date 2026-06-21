@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
@@ -100,6 +101,14 @@ public class ServerContext {
   @Getter
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = new ConcurrentHashMap<>();
+  /**
+   * Мемоизация {@link CF#findCommonModule(String)}: имя → найденный общий модуль (или
+   * {@link Optional#empty()} — кэшируются и промахи). Резолв общего модуля по имени
+   * зависит только от конфигурации, которая инвариантна на время жизни контекста, поэтому
+   * результат можно кэшировать до её перезагрузки. Вызывается на каждый идентификатор при
+   * заполнении индекса ссылок (на каждый keystroke-ребилд), а имена сильно повторяются.
+   */
+  private final Map<String, Optional<CommonModule>> commonModulesByName = new ConcurrentHashMap<>();
   /**
    * Внутренний EnumMap не потокобезопасен; создаётся обёрнутый в
    * {@link Collections#synchronizedMap(Map)} (см. {@link #addMdoRefByUri(URI, DocumentContext)}).
@@ -321,6 +330,7 @@ public class ServerContext {
     documentsByMDORef.clear();
     mdoRefs.clear();
     documentLocks.clear();
+    commonModulesByName.clear();
     configurationMetadata.clear();
   }
 
@@ -438,6 +448,18 @@ public class ServerContext {
 
   public CF getConfiguration() {
     return configurationMetadata.getOrCompute();
+  }
+
+  /**
+   * Найти общий модуль по имени с мемоизацией результата (см. {@link #commonModulesByName}).
+   * Эквивалентно {@code getConfiguration().findCommonModule(name)}, но без повторного
+   * прохода по case-insensitive карте конфигурации на каждый вызов.
+   *
+   * @param name имя общего модуля
+   * @return общий модуль или {@link Optional#empty()}, если такого нет
+   */
+  public Optional<CommonModule> findCommonModule(String name) {
+    return commonModulesByName.computeIfAbsent(name, key -> getConfiguration().findCommonModule(key));
   }
 
   private DocumentContext createDocumentContext(URI uri) {

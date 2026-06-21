@@ -107,7 +107,7 @@ public class MdoRefBuilder {
     }
 
     // предполагаем, что это вызов метода общего модуля
-    var commonModule = documentContext.getServerContext().getConfiguration().findCommonModule(identifier.getText());
+    var commonModule = documentContext.getServerContext().findCommonModule(identifier.getText());
     if (commonModule.isPresent()) {
       return commonModule.get().getMdoRef();
     }

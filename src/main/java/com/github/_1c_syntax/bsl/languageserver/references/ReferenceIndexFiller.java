@@ -360,7 +360,6 @@ public class ReferenceIndexFiller {
       var identifierText = identifier.getText();
 
       documentContext.getServerContext()
-        .getConfiguration()
         .findCommonModule(identifierText)
         .ifPresent(commonModule ->
           index.addModuleReference(
@@ -393,7 +392,6 @@ public class ReferenceIndexFiller {
       ModuleReference.extractMethodCallOnGetterModule(
           baseIdentifier, baseGlobalCall, modifiers, trailingCall, parsedAccessors)
         .ifPresent(call -> documentContext.getServerContext()
-          .getConfiguration()
           .findCommonModule(call.moduleName())
           .ifPresent(commonModule -> addMethodCall(
             commonModule.getMdoReference().getMdoRef(),
@@ -440,12 +438,12 @@ public class ReferenceIndexFiller {
       if (paramList == null) {
         return Collections.emptySet();
       }
-      final var mdoConfiguration = documentContext.getServerContext().getConfiguration();
+      final var serverContext = documentContext.getServerContext();
       return paramList.param().stream()
         .map(BSLParser.ParamContext::IDENTIFIER)
         .filter(Objects::nonNull)
         .map(ParseTree::getText)
-        .map(mdoConfiguration::findCommonModule)
+        .map(serverContext::findCommonModule)
         .filter(Optional::isPresent)
         .flatMap(Optional::stream)
         .map(MD::getMdoRef)
@@ -546,7 +544,6 @@ public class ReferenceIndexFiller {
         } else if (ModuleReference.isCommonModuleExpression(expression, parsedAccessors)) {
           var commonModuleOpt = ModuleReference.extractCommonModuleName(expression, parsedAccessors)
             .flatMap(moduleName -> documentContext.getServerContext()
-              .getConfiguration()
               .findCommonModule(moduleName));
           if (commonModuleOpt.isPresent()) {
             var mdoRef = commonModuleOpt.get().getMdoReference().getMdoRef();
