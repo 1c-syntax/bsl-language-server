@@ -1290,7 +1290,9 @@ public class ExpressionTypeInferencer {
 
   /**
    * Разрешить hyperlink-ссылки {@code См. Метод} в описании параметра в тип
-   * возвращаемого значения целевого метода (только в пределах текущего модуля).
+   * возвращаемого значения целевого метода. Использует общий резолвер
+   * {@link SymbolTypeIndex#resolveSeeReference} — ту же логику, что и для
+   * возвращаемых значений и висячих комментариев переменных.
    */
   private TypeSet parameterHyperlinkTypes(ParameterDefinition parameter, DocumentContext owner) {
     var description = parameter.getDescription().orElse(null);
@@ -1302,19 +1304,7 @@ public class ExpressionTypeInferencer {
       if (typeDescription.variant() != TypeDescription.Variant.HYPERLINK) {
         continue;
       }
-      var link = typeDescription.name();
-      // Cross-module / cross-type: разворачиваем через TypeRegistry.getMembers.
-      var fromRegistry = symbolTypeIndex.resolveHyperlink(link, owner.getFileType());
-      if (!fromRegistry.isEmpty()) {
-        acc = acc.union(fromRegistry);
-        continue;
-      }
-      // Fallback: метод в этом же модуле, который ещё не зарегистрирован как
-      // тип (standalone .bsl-файл без модульного контекста).
-      var target = findLocalMethod(owner, link);
-      if (target != null) {
-        acc = acc.union(symbolTypeIndex.getDeclaredReturnTypes(target));
-      }
+      acc = acc.union(symbolTypeIndex.resolveSeeReference(typeDescription.name(), owner, owner.getFileType()));
     }
     return acc;
   }

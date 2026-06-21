@@ -255,11 +255,19 @@ public class SymbolTypeIndex {
    *   <li>квалифицированная ссылка {@code Модуль.Метод} / {@code Тип.Член} —
    *       через {@link #resolveHyperlink(String, FileType)};</li>
    *   <li>неквалифицированная ссылка на функцию того же модуля — её возвращаемый
-   *       тип (через {@link #resolveDescribedTypes(List)}, поэтому переносятся и
-   *       поля структуры/ТЗ из JsDoc);</li>
+   *       тип: сначала из уже проиндексированных типов
+   *       ({@link #getDeclaredReturnTypes(MethodSymbol)}, поэтому разворачиваются
+   *       и цепочки {@code см.}), а на этапе самой индексации (когда цель ещё не
+   *       проиндексирована) — напрямую из описания через
+   *       {@link #resolveDescribedTypes(List)} (с полями структуры/ТЗ из JsDoc);</li>
    *   <li>иначе ссылка трактуется как имя типа и резолвится через
    *       {@link TypeRegistry}.</li>
    * </ul>
+   * <p>
+   * Единая точка разворачивания {@code См.}-ссылок: используется и индексацией
+   * возвращаемых значений, и выводом типов параметров
+   * ({@code ExpressionTypeInferencer}), и резолвером висячих комментариев
+   * переменных ({@code MemberTypeFromCommentResolver}).
    *
    * @param link     имя/ссылка из {@code См.}-ссылки (без текста описания).
    * @param owner    документ-владелец — для поиска локальной функции.
@@ -285,6 +293,13 @@ public class SymbolTypeIndex {
       .findFirst()
       .orElse(null);
     if (localFunction != null) {
+      // Предпочитаем уже проиндексированный возвращаемый тип (в т.ч. с раскрытыми
+      // цепочками см.); если цель ещё не проиндексирована (вызов из самой
+      // индексации) — резолвим напрямую из описания.
+      var cached = getDeclaredReturnTypes(localFunction);
+      if (!cached.isEmpty()) {
+        return cached;
+      }
       var returnedValue = localFunction.getDescription()
         .map(MethodDescription::getReturnedValue)
         .orElse(List.of());
