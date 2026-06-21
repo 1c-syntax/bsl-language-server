@@ -137,6 +137,12 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  // MD-объект и mdoRef документа зависят только от его URI и конфигурации (не от содержимого),
+  // а конфигурация инвариантна на всё время жизни DocumentContext (её перезагрузка в
+  // ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ сбрасываются в
+  // clearSecondaryData — считаются один раз на жизнь документа.
+  private final Lazy<Optional<MD>> mdObject = new Lazy<>(this::computeMdObject, computeLock);
+  private final Lazy<String> mdoRef = new Lazy<>(this::computeMdoRef, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private final Lazy<ComplexityData> cyclomaticComplexityData
@@ -278,7 +284,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   public Optional<MD> getMdObject() {
-    return getServerContext().getConfiguration().findChild(getUri());
+    return mdObject.getOrCompute();
   }
 
   /**
@@ -288,7 +294,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * @return Строковое представление ссылки
    */
   public String getMdoRef() {
-    return MdoRefBuilder.getMdoRef(this);
+    return mdoRef.getOrCompute();
   }
 
   public List<SDBLTokenizer> getQueries() {
@@ -440,6 +446,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
       return fromConfiguration;
     }
     return oScriptModuleTypeResolver.resolve(uri).orElse(fromConfiguration);
+  }
+
+  private Optional<MD> computeMdObject() {
+    return getServerContext().getConfiguration().findChild(getUri());
+  }
+
+  private String computeMdoRef() {
+    return MdoRefBuilder.getMdoRef(this);
   }
 
   private ComplexityData computeCognitiveComplexity() {
