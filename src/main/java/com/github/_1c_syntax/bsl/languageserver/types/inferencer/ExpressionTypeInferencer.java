@@ -336,10 +336,12 @@ public class ExpressionTypeInferencer {
    * {@code Для Каждого X Из Коллекция Цикл} увидеть тип X (например,
    * {@code КлючИЗначение} для {@code Соответствие}) без явных JsDoc-аннотаций.
    * <p>
-   * Если у {@code ref} уже есть {@code elementTypes} (например, через
-   * dynamic-аккумуляторы вроде {@link #accumulateValueTableColumnFields}),
-   * дефолты добавляются через {@link TypeSet#withElement(TypeRef, TypeSet)},
-   * который реализует union — пользовательские поля сохраняются.
+   * Если у ссылки уже есть объявленный (конкретный) тип элемента, то общий
+   * {@code Произвольный} из дефолтов не подмешивается — он не несёт информации и
+   * только зашумляет ({@code Массив из Число} превращался бы в
+   * {@code Массив из Число, Произвольный}, #4179). Осмысленные дефолты обёрток
+   * ({@code ЭлементСпискаЗначений}, {@code КлючИЗначение}) при этом сохраняются,
+   * чтобы не сломать вывод типа элемента итерации.
    */
   private TypeSet attachDefaultElementTypes(TypeSet base) {
     if (base.isEmpty()) {
@@ -348,11 +350,41 @@ public class ExpressionTypeInferencer {
     var result = base;
     for (var ref : base.refs()) {
       var defaults = typeRegistry.getDefaultElementTypes(ref);
-      if (!defaults.isEmpty()) {
-        result = result.withElement(ref, defaults);
+      if (defaults.isEmpty()) {
+        continue;
       }
+      if (!base.getElementTypes(ref).isEmpty()) {
+        defaults = withoutAnyType(defaults);
+        if (defaults.isEmpty()) {
+          continue;
+        }
+      }
+      result = result.withElement(ref, defaults);
     }
     return result;
+  }
+
+  /**
+   * Убрать из набора универсальный тип-вершину ({@code Произвольный}/
+   * {@code Arbitrary}/{@link TypeKind#ANY}) — он не уточняет уже известные
+   * конкретные типы.
+   */
+  private static TypeSet withoutAnyType(TypeSet types) {
+    var specific = types.refs().stream()
+      .filter(ref -> !isAnyType(ref))
+      .toList();
+    if (specific.size() == types.refs().size()) {
+      return types;
+    }
+    return TypeSet.of(specific);
+  }
+
+  private static boolean isAnyType(TypeRef ref) {
+    if (ref.kind() == TypeKind.ANY) {
+      return true;
+    }
+    var name = ref.qualifiedName();
+    return "Произвольный".equalsIgnoreCase(name) || "Arbitrary".equalsIgnoreCase(name);
   }
 
   /**
