@@ -319,6 +319,31 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testMethodReturnCollectionTypeHighlighting() {
+    // given - описание возвращаемого значения метода с типом-коллекцией «Массив из Число».
+    // Парсер отдаёт TYPE_NAME-элементом только тип-голову (Массив), поэтому тип-значение (Число)
+    // подсвечивается из структурных аксессоров типов — иначе светилась бы только голова.
+    String bsl = """
+      // Возвращаемое значение:
+      //  Массив из Число - Массив тестовых чисел.
+      Функция ТестовыеЧисла() Экспорт
+      КонецФункции
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - и «Массив», и «Число» подсвечены как тип; второй «Массив» (в тексте описания)
+    // и разделители остаются комментарием.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 4, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Массив"),
+      new ExpectedToken(1, 14, 5, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Число")
+    ));
+  }
+
+  @Test
   void testMultilineSupport() {
     // given
     String bsl = """
