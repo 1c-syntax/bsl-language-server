@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -34,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
@@ -209,7 +211,13 @@ public class SymbolTypeIndex {
   private void indexMethodsRecursive(SourceDefinedSymbol parent, List<MethodSymbol> collected) {
     if (parent instanceof MethodSymbol method) {
       method.getDescription().ifPresent(descr -> {
-        var returnTypes = resolveTypes(descr.getReturnedValue());
+        var returnedValue = descr.getReturnedValue();
+        var returnTypes = resolveTypes(returnedValue);
+        // Прямые типы приоритетнее; См.-ссылки (// Возвращаемое значение: см. Метод)
+        // разворачиваем, только если явный тип не указан.
+        if (returnTypes.isEmpty()) {
+          returnTypes = resolveReturnedValueHyperlinks(method, returnedValue);
+        }
         if (!returnTypes.isEmpty()) {
           declaredReturnTypes.put(method, returnTypes);
           collected.add(method);
@@ -219,6 +227,64 @@ public class SymbolTypeIndex {
     for (var child : parent.getChildren()) {
       indexMethodsRecursive(child, collected);
     }
+  }
+
+  /**
+   * Развернуть {@code См.}-ссылки в описании возвращаемого значения метода
+   * ({@code // Возвращаемое значение: см. Метод}) в типы. Каждая
+   * {@code HYPERLINK}-ссылка резолвится через {@link #resolveSeeReference}.
+   */
+  private TypeSet resolveReturnedValueHyperlinks(
+    MethodSymbol method,
+    List<? extends TypeDescription> returnedValue
+  ) {
+    var owner = method.getOwner();
+    TypeSet acc = TypeSet.EMPTY;
+    for (var td : returnedValue) {
+      if (td.variant() == TypeDescription.Variant.HYPERLINK) {
+        acc = acc.union(resolveSeeReference(td.name(), owner, owner.getFileType()));
+      }
+    }
+    return acc;
+  }
+
+  /**
+   * Развернуть {@code См.}-ссылку (из описания возвращаемого значения, параметра
+   * или висячего комментария переменной) в {@link TypeSet}.
+   * <ul>
+   *   <li>квалифицированная ссылка {@code Модуль.Метод} / {@code Тип.Член} —
+   *       через {@link #resolveHyperlink(String, FileType)};</li>
+   *   <li>неквалифицированная ссылка на функцию того же модуля — её возвращаемый
+   *       тип (через {@link #resolveDescribedTypes(List)}, поэтому переносятся и
+   *       поля структуры/ТЗ из JsDoc);</li>
+   *   <li>иначе ссылка трактуется как имя типа и резолвится через
+   *       {@link TypeRegistry}.</li>
+   * </ul>
+   *
+   * @param link     имя/ссылка из {@code См.}-ссылки (без текста описания).
+   * @param owner    документ-владелец — для поиска локальной функции.
+   * @param fileType язык владельца — для резолва имён.
+   * @return {@link TypeSet} (возможно с {@code localFields}); {@link TypeSet#EMPTY},
+   *         если ссылка не разворачивается.
+   */
+  public TypeSet resolveSeeReference(String link, DocumentContext owner, FileType fileType) {
+    if (link == null || link.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    if (link.contains(".")) {
+      return resolveHyperlink(link, fileType);
+    }
+    var localFunction = owner.getSymbolTree().getMethods().stream()
+      .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(link))
+      .findFirst()
+      .orElse(null);
+    if (localFunction != null) {
+      var returnedValue = localFunction.getDescription()
+        .map(MethodDescription::getReturnedValue)
+        .orElse(List.of());
+      return resolveDescribedTypes(returnedValue);
+    }
+    return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**

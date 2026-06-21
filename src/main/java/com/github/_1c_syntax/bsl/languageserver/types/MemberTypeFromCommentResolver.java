@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
-import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -101,25 +100,6 @@ public class MemberTypeFromCommentResolver {
   }
 
   private TypeSet hyperlinkTypes(VariableSymbol variable, Hyperlink link, FileType fileType) {
-    var target = link.link();
-    if (target == null || target.isBlank()) {
-      return TypeSet.EMPTY;
-    }
-    // Квалифицированная ссылка (Модуль.Метод / Тип.Член) — разворачиваем через
-    // обход членов в индексе типов (как делает инференсер для См.-ссылок параметров).
-    if (target.contains(".")) {
-      return symbolTypeIndex.resolveHyperlink(target, fileType);
-    }
-    var localFunction = variable.getOwner().getSymbolTree().getMethods().stream()
-      .filter(method -> method.isFunction() && method.getName().equalsIgnoreCase(target))
-      .findFirst()
-      .orElse(null);
-    if (localFunction != null) {
-      var returnedValue = localFunction.getDescription()
-        .map(MethodDescription::getReturnedValue)
-        .orElse(List.of());
-      return symbolTypeIndex.resolveDescribedTypes(returnedValue);
-    }
-    return typeRegistry.resolve(target, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
+    return symbolTypeIndex.resolveSeeReference(link.link(), variable.getOwner(), fileType);
   }
 }
