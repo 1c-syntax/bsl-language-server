@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782069060950,
+  "lastUpdate": 1782071554883,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38502,6 +38502,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.614333480870728",
             "extra": "mean: 283.11516213417053 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9c7a9e64913ade936c8b6e81476d15833cb2405",
+          "message": "Merge pull request #4181 from 1c-syntax/claude/perf-mdoref-early-exit\n\nperf(references): не вызывать MDOType.fromValue для идентификаторов без свойства",
+          "timestamp": "2026-06-21T20:01:38+02:00",
+          "tree_id": "3ba28f387b9e5de7f6b611dc8c90d95b6b9d6d42",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c9c7a9e64913ade936c8b6e81476d15833cb2405"
+        },
+        "date": 1782071544408,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 283.8820497194926,
+            "unit": "sec",
+            "range": "stddev: 19.776447864940835",
+            "extra": "mean: 283.8820497194926 sec\nrounds: 3"
           }
         ]
       }
