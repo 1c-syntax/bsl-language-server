@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
@@ -36,8 +38,10 @@ import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.ScopedProxyMode;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring-конфигурация кэширования.
@@ -50,6 +54,12 @@ import java.util.List;
 public class CacheConfiguration {
   private static final String TYPO_CACHE_NAME = "typoCache";
   private static final int MAX_CACHE_INSTANCES = 10;
+  /**
+   * Потолок кэша резолва общих модулей. Кэшируются и промахи, поэтому размер считается по словарю
+   * имён-идентификаторов исходного кода (на полной типовой конфигурации SSL 3.2 намерено ~32 000
+   * уникальных), а не по числу модулей; берём с запасом. Кэш растёт лениво и ограничен по памяти.
+   */
+  private static final int COMMON_MODULE_CACHE_SIZE = 1 << 17; // 131072
   private static final long HEAP_ENTRIES_COUNT = 125_000;
   private static final long DISK_SIZE_MB = 50;
 
@@ -70,6 +80,21 @@ public class CacheConfiguration {
   @Bean
   public Caffeine<Object, Object> caffeineConfig() {
     return Caffeine.newBuilder();
+  }
+
+  /**
+   * Ограниченный кэш резолва общего модуля по имени для {@code ServerContext.findCommonModule}.
+   * <p>
+   * Workspace-scoped: один экземпляр на воркспейс (резолв зависит от конфигурации воркспейса,
+   * поэтому общий singleton-кэш смешивал бы воркспейсы). Ограничен по размеру, т.к. кэшируются
+   * и промахи, а ключи — имена-идентификаторы исходного кода.
+   */
+  @Bean
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
+  public Cache<String, Optional<CommonModule>> commonModuleCache() {
+    return Caffeine.newBuilder()
+      .maximumSize(COMMON_MODULE_CACHE_SIZE)
+      .build();
   }
 
   /**

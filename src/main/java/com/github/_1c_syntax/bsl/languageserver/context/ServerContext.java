@@ -29,9 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import com.github.benmanes.caffeine.cache.Cache;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -82,6 +84,15 @@ public class ServerContext {
   private final ExecutorService computeConfigurationExecutor;
   @Qualifier("populateContextExecutor")
   private final ExecutorService populateContextExecutor;
+
+  /**
+   * Ограниченный кэш резолва общего модуля по имени ({@code имя -> Optional<CommonModule>},
+   * кэшируются и промахи) — workspace-scoped бин (см. {@code CacheConfiguration#commonModuleCache}).
+   * Резолв зависит только от конфигурации воркспейса, а {@code findCommonModule} вызывается на
+   * каждый идентификатор при заполнении индекса ссылок — memo снимает повторное сворачивание
+   * регистра в {@code CaseInsensitiveMap} конфигурации. Сбрасывается в {@link #clear()}.
+   */
+  private final Cache<String, Optional<CommonModule>> commonModuleCache;
 
   @Getter
   @Setter
@@ -321,6 +332,7 @@ public class ServerContext {
     documentsByMDORef.clear();
     mdoRefs.clear();
     documentLocks.clear();
+    commonModuleCache.invalidateAll();
     configurationMetadata.clear();
   }
 
@@ -438,6 +450,18 @@ public class ServerContext {
 
   public CF getConfiguration() {
     return configurationMetadata.getOrCompute();
+  }
+
+  /**
+   * Найти общий модуль по имени с мемоизацией (ограниченный кэш {@link #commonModuleCache}).
+   * Эквивалентно {@code getConfiguration().findCommonModule(name)}, но без повторного прохода
+   * по case-insensitive карте конфигурации на каждый вызов.
+   *
+   * @param name имя общего модуля
+   * @return общий модуль или {@link Optional#empty()}, если такого нет
+   */
+  public Optional<CommonModule> findCommonModule(String name) {
+    return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
   }
 
   private DocumentContext createDocumentContext(URI uri) {
