@@ -54,8 +54,10 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
-    List<RegionSymbol> regions = new RegionSymbolComputer(documentContext).compute();
-    List<VariableSymbol> variables = new VariableSymbolComputer(documentContext, moduleSymbol, methods).compute();
+    // Переменные и регионы — за один общий обход дерева (оба обходят его вглубь).
+    var regionVariableComputer = new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods);
+    List<VariableSymbol> variables = regionVariableComputer.compute();
+    List<RegionSymbol> regions = regionVariableComputer.getRegions();
 
     List<SourceDefinedSymbol> allOfThem = new ArrayList<>(methods);
     allOfThem.addAll(regions);
