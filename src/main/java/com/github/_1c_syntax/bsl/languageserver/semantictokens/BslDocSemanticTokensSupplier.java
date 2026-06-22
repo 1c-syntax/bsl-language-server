@@ -22,11 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
-import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -44,8 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Сапплаер семантических токенов для BSL документации (описаний методов и переменных).
@@ -126,20 +125,13 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     // Split the description text into lines to get line lengths
     var lines = descriptionText.split("\n", -1);
 
-    // Диапазоны типов, резолвящихся в реальный тип. Для описаний переменных это гвард: нотация
-    // «тип в начале» иначе подсветила бы любой первый токен висячего комментария. Для описаний
-    // методов проверка не нужна (validateTypeResolution = false) — типы заданы структурно.
-    var resolvableTypeRanges = validateTypeResolution
-      ? resolvableTypeRanges(description, documentContext)
-      : Set.<SimpleRange>of();
-
-    // Collect semantic elements from AST (parameter names, types, and keywords in structural positions)
+    // Collect semantic elements from AST (parameter names and keywords in structural positions).
+    // Типы здесь НЕ подсвечиваются — они идут отдельным проходом из структурных аксессоров (addTypeTokens),
+    // т.к. текстовая разметка TYPE_NAME не отдаёт вложенные типы коллекций/полей структур.
     var semanticElements = new ArrayList<SemanticTokenEntry>();
 
     for (var element : description.getElements()) {
       var semanticType = switch (element.type()) {
-        case TYPE_NAME -> !validateTypeResolution || resolvableTypeRanges.contains(element.range())
-          ? SemanticTokenTypes.Type : "";
         case PARAMETER_NAME -> SemanticTokenTypes.Parameter;
         case RETURNS_KEYWORD, EXAMPLE_KEYWORD, PARAMETERS_KEYWORD, DEPRECATE_KEYWORD,
              CALL_OPTIONS_KEYWORD -> SemanticTokenTypes.Macro;
@@ -147,6 +139,12 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       };
       helper.addDescriptionElement(semanticElements, element, semanticType, SemanticTokenModifiers.Documentation);
     }
+
+    // Все типы описания (включая вложенные типы-значения коллекций «Массив из Число» → «Число»
+    // и типы полей структур) подсвечиваются из структурных аксессоров парсера по element().range().
+    // На корпусе описаний typesOf — надмножество TYPE_NAME-элементов getElements(), поэтому единый
+    // источник покрывает и тип-головы, и вложенные типы без отдельного прохода по TYPE_NAME.
+    addTypeTokens(semanticElements, description, validateTypeResolution, documentContext);
 
     // Sort elements by position
     semanticElements.sort(Comparator.comparingInt(SemanticTokenEntry::line)
@@ -286,24 +284,42 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Диапазоны типов описания, которые резолвятся в реальный тип через {@link TypeService}.
+   * Подсветить все типы описания из структурных аксессоров парсера ({@link DescriptionTypes#typesOf}).
    * <p>
-   * Идентичность типа берётся из семантических аксессоров парсера ({@link DescriptionTypes#typesOf}),
-   * а не восстанавливается из текста по координатам; для сопоставления с подсвечиваемыми
-   * {@code TYPE_NAME}-элементами используется диапазон {@code element().range()}.
+   * Источник именно структурный, а не {@code TYPE_NAME}-элементы {@link SourceDefinedSymbolDescription#getElements()}:
+   * текстовая разметка не отдаёт вложенные типы (типы-значения коллекций «Массив из Число» → «Число»,
+   * типы полей структур). На корпусе описаний {@code typesOf} — надмножество {@code TYPE_NAME}, поэтому
+   * отдельный проход по {@code TYPE_NAME} не нужен.
+   * <p>
+   * Для описаний переменных ({@code validateTypeResolution}) подсвечиваются только типы, резолвящиеся
+   * в реальный тип через {@link TypeService}, — иначе нотация «тип в начале» висячего комментария
+   * подсветила бы как тип любой первый токен свободного текста. Для описаний методов проверка не нужна
+   * ({@code validateTypeResolution = false}): типы заданы структурно.
    */
-  private Set<SimpleRange> resolvableTypeRanges(
+  private void addTypeTokens(
+    List<SemanticTokenEntry> semanticElements,
     SourceDefinedSymbolDescription description,
+    boolean validateTypeResolution,
     DocumentContext documentContext
   ) {
     var fileType = documentContext.getFileType();
-    return DescriptionTypes.typesOf(description)
-      .filter(type -> {
-        var name = DescriptionTypes.resolveName(type);
-        return !name.isBlank() && typeService.resolve(name, fileType).isPresent();
-      })
+    DescriptionTypes.typesOf(description)
+      .filter(type -> !validateTypeResolution || isResolvable(type, fileType))
       .map(type -> type.element().range())
-      .collect(Collectors.toSet());
+      .distinct()
+      .forEach(range -> helper.addEntry(semanticElements,
+        range.startLine(), range.startCharacter(), range.length(),
+        SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation));
+  }
+
+  /**
+   * Резолвится ли тип описания в реальный тип через {@link TypeService}. Имя типа для резолва берётся
+   * из семантических аксессоров парсера ({@link DescriptionTypes#resolveName}); гиперссылки {@code См.}
+   * (пустое имя) типами не считаются.
+   */
+  private boolean isResolvable(TypeDescription type, FileType fileType) {
+    var name = DescriptionTypes.resolveName(type);
+    return !name.isBlank() && typeService.resolve(name, fileType).isPresent();
   }
 
   private void addDocCommentRange(List<SemanticTokenEntry> entries, int line, int start, int length) {
