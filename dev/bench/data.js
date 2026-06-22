@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782113236480,
+  "lastUpdate": 1782115389180,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38595,6 +38595,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 17.983441464305706",
             "extra": "mean: 287.4011673132579 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4dbf671832101e994b10b617f59397e62cb3541b",
+          "message": "Merge pull request #4176 from 1c-syntax/claude/perf-symbol-tree-single-pass\n\nperf(context): объединить обход регионов и переменных в один проход",
+          "timestamp": "2026-06-22T08:03:14+02:00",
+          "tree_id": "258af6c23fba45318d2a0adcb7cf6bbfcf11528e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4dbf671832101e994b10b617f59397e62cb3541b"
+        },
+        "date": 1782115379954,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 288.3260340690613,
+            "unit": "sec",
+            "range": "stddev: 15.452574379451544",
+            "extra": "mean: 288.3260340690613 sec\nrounds: 3"
           }
         ]
       }
