@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782159002427,
+  "lastUpdate": 1782160648820,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38688,6 +38688,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.0873090581784846",
             "extra": "mean: 288.5487596988678 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "49181d71be76b96307c303dbd5687e434654c5e3",
+          "message": "Merge pull request #4187 from 1c-syntax/claude/javadoc-1c-syntax-antlr-5s2qb3\n\nUse 1c-syntax.github.io javadoc link for antlr4",
+          "timestamp": "2026-06-22T20:29:11+02:00",
+          "tree_id": "1bf5ba8695325a653f152aa913458c4762418302",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/49181d71be76b96307c303dbd5687e434654c5e3"
+        },
+        "date": 1782160638814,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 288.47413063049316,
+            "unit": "sec",
+            "range": "stddev: 14.695009574856458",
+            "extra": "mean: 288.47413063049316 sec\nrounds: 3"
           }
         ]
       }
