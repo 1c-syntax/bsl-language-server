@@ -45,6 +45,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -312,6 +313,15 @@ public class MetadataCollectionSpecializer {
   private final BslContextHolder bslContextHolder;
   private final ServerContextProvider serverContextProvider;
 
+  /**
+   * Уже обработанные per-owner synthetic-типы в рамках одного {@link #specialize()}.
+   * Обход дерева метаданных приходит к одному и тому же synthetic-типу многократно
+   * (общие имена табличных частей, общий element-type), а
+   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации.
+   * Защита гарантирует ровно одну регистрацию источников на тип.
+   */
+  private final Set<TypeRef> registeredOwners = new HashSet<>();
+
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
     for (var spec : COLLECTIONS) {
@@ -345,6 +355,7 @@ public class MetadataCollectionSpecializer {
       return;
     }
 
+    registeredOwners.clear();
     var mdosByGroup = collectMdosByGroup(configuration.getChildrenByMdoRef().values());
     var counters = new SpecializationCounters();
     for (var context : providerOpt.get().getContexts()) {
@@ -530,6 +541,9 @@ public class MetadataCollectionSpecializer {
   private TypeRef registerPerOwner(TypeRef elementTypeRef, String ownerSuffix, MD owner) {
     var perOwnerName = elementTypeRef.qualifiedName() + "." + ownerSuffix;
     var perOwnerRef = typeRegistry.intern(TypeKind.PLATFORM, perOwnerName);
+    if (!registeredOwners.add(perOwnerRef)) {
+      return perOwnerRef;
+    }
     var overrides = buildPerOwnerOverrides(perOwnerName, owner);
     var capturedElement = elementTypeRef;
     typeRegistry.registerMemberSource(perOwnerRef,
