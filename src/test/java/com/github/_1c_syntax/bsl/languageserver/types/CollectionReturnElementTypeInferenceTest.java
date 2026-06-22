@@ -23,9 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,9 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
   @Autowired
   private ExpressionTypeInferencer inferencer;
 
+  @Autowired
+  private TypeRegistry typeRegistry;
+
   @Test
   void declaredArrayElementTypeIsNotPollutedByDefault() {
     var types = inferVar("Числа");
@@ -61,7 +66,7 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
     // Без явной "из"-аннотации платформенный дефолтный тип элемента обёрточной
     // коллекции (ЭлементСпискаЗначений для СписокЗначений) должен сохраняться —
     // на нём держится вывод типа элемента в `Для Каждого`.
-    var types = inferVar("Список");
+    var types = inferVar(doc(), "Список");
     var listRef = types.refs().iterator().next();
 
     assertThat(listRef.qualifiedName()).isEqualTo("СписокЗначений");
@@ -71,8 +76,22 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
       .contains("ЭлементСпискаЗначений");
   }
 
-  private TypeSet inferVar(String varName) {
-    var dc = doc();
+  @Test
+  void arrayHasArbitraryDefaultElementTypeInBothLanguages() {
+    // Симметрия BSL/OneScript: `Массив` имеет платформенный дефолтный тип
+    // элемента `Произвольный` в обоих контекстах. Именно он раньше «загрязнял»
+    // объявленный тип элемента (#4179); фильтрация ANY в attachDefaultElementTypes
+    // общая для обоих языков (см. declaredArrayElementTypeIsNotPollutedByDefault).
+    for (var fileType : new FileType[]{FileType.BSL, FileType.OS}) {
+      var arrayRef = typeRegistry.resolve("Массив", fileType).orElseThrow();
+      assertThat(typeRegistry.getDefaultElementTypes(arrayRef).refs())
+        .as("Массив (%s) имеет дефолтный тип элемента Произвольный", fileType)
+        .extracting(r -> r.qualifiedName())
+        .containsExactly("Произвольный");
+    }
+  }
+
+  private TypeSet inferVar(DocumentContext dc, String varName) {
     var method = dc.getSymbolTree().getMethods().stream()
       .filter(m -> m.getName().equalsIgnoreCase("Пример"))
       .findFirst()
@@ -81,6 +100,10 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
       .getVariableSymbol(varName, method)
       .orElseThrow();
     return inferencer.inferSymbol(variable);
+  }
+
+  private TypeSet inferVar(String varName) {
+    return inferVar(doc(), varName);
   }
 
   private DocumentContext doc() {

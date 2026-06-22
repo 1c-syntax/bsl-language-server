@@ -205,6 +205,9 @@
     "aliases": [
       "Array"
     ],
+    "elementTypes": [
+      "Произвольный"
+    ],
     "supportsForEach": true,
     "supportsIndexAccess": true,
     "members": [
