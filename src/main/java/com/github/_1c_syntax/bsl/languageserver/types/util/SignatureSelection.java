@@ -187,7 +187,8 @@ public final class SignatureSelection {
 
   /**
    * Регистронезависимое пересечение двух {@link TypeSet} по {@code qualifiedName}.
-   * Универсальный тип ({@code Произвольный}/{@code Arbitrary}/{@link TypeRef#ANY}) —
+   * Универсальный тип {@link TypeRef#ANY} (в него канонизируются имена
+   * {@code Произвольный}/{@code Arbitrary} ещё при создании {@link TypeRef}) —
    * вершина решётки типов и совместим с любым: параметр такого типа не должен
    * штрафовать аргумент произвольного типа при выборе перегрузки.
    */
@@ -197,21 +198,12 @@ public final class SignatureSelection {
         if (refA.qualifiedName().equalsIgnoreCase(refB.qualifiedName())) {
           return true;
         }
-        if (isAny(refA) || isAny(refB)) {
+        if (refA.equals(TypeRef.ANY) || refB.equals(TypeRef.ANY)) {
           return true;
         }
       }
     }
     return false;
-  }
-
-  /**
-   * Является ли {@code ref} универсальным типом — вершиной решётки. Имя
-   * {@code Произвольный}/{@code Arbitrary} канонизируется в {@link TypeRef#ANY}
-   * ещё при создании {@link TypeRef}, поэтому достаточно сравнения с {@link TypeRef#ANY}.
-   */
-  private static boolean isAny(TypeRef ref) {
-    return ref.equals(TypeRef.ANY);
   }
 
   /**
