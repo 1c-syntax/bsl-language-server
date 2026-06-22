@@ -163,7 +163,6 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
     }
 
     return documentContext.getServerContext()
-      .getConfiguration()
       .findCommonModule(moduleName)
       .map(commonModule -> commonModule.getMdoReference().getMdoRef())
       .flatMap(mdoRef ->
