@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -456,12 +457,16 @@ public class ServerContext {
    * Найти общий модуль по имени с мемоизацией (ограниченный кэш {@link #commonModuleCache}).
    * Эквивалентно {@code getConfiguration().findCommonModule(name)}, но без повторного прохода
    * по case-insensitive карте конфигурации на каждый вызов.
+   * <p>
+   * Резолв регистронезависимый, поэтому ключ кэша нормализуется в нижний регистр
+   * ({@link Locale#ROOT}) — разные написания одного имени дают одну запись.
    *
    * @param name имя общего модуля
    * @return общий модуль или {@link Optional#empty()}, если такого нет
    */
   public Optional<CommonModule> findCommonModule(String name) {
-    return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
+    var normalizedName = name.toLowerCase(Locale.ROOT);
+    return commonModuleCache.get(normalizedName, key -> getConfiguration().findCommonModule(key));
   }
 
   private DocumentContext createDocumentContext(URI uri) {
