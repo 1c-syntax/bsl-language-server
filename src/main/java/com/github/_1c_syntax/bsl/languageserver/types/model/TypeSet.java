@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.utils.GenericInterner;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,6 +68,13 @@ public record TypeSet(
 
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
 
+  /**
+   * Кэш-интернер: одни и те же наборы типов (особенно односложные returnType'ы
+   * членов) повторяются миллионы раз в материализованной модели членов, поэтому
+   * фабрики {@link #of} возвращают разделяемый экземпляр на каждое уникальное значение.
+   */
+  private static final GenericInterner<TypeSet> INTERNER = new GenericInterner<>();
+
   public TypeSet {
     refs = compactRefs(refs);
     elementTypes = elementTypes == null || elementTypes.isEmpty()
@@ -90,16 +98,16 @@ public record TypeSet(
   public static TypeSet of(TypeRef... refs) {
     return switch (refs.length) {
       case 0 -> EMPTY;
-      case 1 -> new TypeSet(Set.of(refs[0]));
-      default -> new TypeSet(new LinkedHashSet<>(Arrays.asList(refs)));
+      case 1 -> INTERNER.intern(new TypeSet(Set.of(refs[0])));
+      default -> INTERNER.intern(new TypeSet(new LinkedHashSet<>(Arrays.asList(refs))));
     };
   }
 
   public static TypeSet of(Collection<TypeRef> refs) {
     return switch (refs.size()) {
       case 0 -> EMPTY;
-      case 1 -> new TypeSet(Set.of(refs.iterator().next()));
-      default -> new TypeSet(new LinkedHashSet<>(refs));
+      case 1 -> INTERNER.intern(new TypeSet(Set.of(refs.iterator().next())));
+      default -> INTERNER.intern(new TypeSet(new LinkedHashSet<>(refs)));
     };
   }
 

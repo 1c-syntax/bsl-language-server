@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.utils.GenericInterner;
 
 /**
  * Двуязычная (ru + en) пара строк. Используется для всех 1С-сущностей с
@@ -48,6 +49,13 @@ public record BilingualString(String ru, String en) {
 
   public static final BilingualString EMPTY = new BilingualString("", "");
 
+  /**
+   * Кэш-интернер: одни и те же двуязычные пары (имена методов/типов, описания)
+   * повторяются миллионы раз в материализованной модели членов, поэтому
+   * фабрики {@link #of} возвращают разделяемый экземпляр на каждое уникальное значение.
+   */
+  private static final GenericInterner<BilingualString> INTERNER = new GenericInterner<>();
+
   public BilingualString {
     ru = ru == null ? "" : ru;
     en = en == null ? "" : en;
@@ -59,14 +67,14 @@ public record BilingualString(String ru, String en) {
   public static BilingualString of(String singleLocale) {
     return singleLocale == null || singleLocale.isEmpty()
       ? EMPTY
-      : new BilingualString(singleLocale, "");
+      : INTERNER.intern(new BilingualString(singleLocale, ""));
   }
 
   public static BilingualString of(String ru, String en) {
     if ((ru == null || ru.isEmpty()) && (en == null || en.isEmpty())) {
       return EMPTY;
     }
-    return new BilingualString(ru, en);
+    return INTERNER.intern(new BilingualString(ru, en));
   }
 
   public boolean isEmpty() {
