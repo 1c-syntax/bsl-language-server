@@ -68,7 +68,7 @@ public record TypeSet(
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
 
   public TypeSet {
-    refs = Collections.unmodifiableSet(new LinkedHashSet<>(refs));
+    refs = compactRefs(refs);
     elementTypes = elementTypes == null || elementTypes.isEmpty()
       ? Collections.emptyMap()
       : Collections.unmodifiableMap(new LinkedHashMap<>(elementTypes));
@@ -88,17 +88,36 @@ public record TypeSet(
   }
 
   public static TypeSet of(TypeRef... refs) {
-    if (refs.length == 0) {
-      return EMPTY;
-    }
-    return new TypeSet(new LinkedHashSet<>(Arrays.asList(refs)));
+    return switch (refs.length) {
+      case 0 -> EMPTY;
+      case 1 -> new TypeSet(Set.of(refs[0]));
+      default -> new TypeSet(new LinkedHashSet<>(Arrays.asList(refs)));
+    };
   }
 
   public static TypeSet of(Collection<TypeRef> refs) {
-    if (refs.isEmpty()) {
-      return EMPTY;
-    }
-    return new TypeSet(new LinkedHashSet<>(refs));
+    return switch (refs.size()) {
+      case 0 -> EMPTY;
+      case 1 -> new TypeSet(Set.of(refs.iterator().next()));
+      default -> new TypeSet(new LinkedHashSet<>(refs));
+    };
+  }
+
+  /**
+   * Компактное неизменяемое представление набора ссылок: одно- и пустые наборы
+   * (подавляющее большинство) обходятся без {@link LinkedHashSet}/обёртки, что
+   * экономит память на каждый {@code TypeSet}. Для наборов из двух и более ссылок
+   * сохраняется порядок вставки через {@link LinkedHashSet}.
+   *
+   * @param refs исходный набор ссылок на типы
+   * @return неизменяемый набор тех же ссылок, компактный для размеров 0 и 1
+   */
+  private static Set<TypeRef> compactRefs(Set<TypeRef> refs) {
+    return switch (refs.size()) {
+      case 0 -> Collections.emptySet();
+      case 1 -> Set.of(refs.iterator().next());
+      default -> Collections.unmodifiableSet(new LinkedHashSet<>(refs));
+    };
   }
 
   public boolean isEmpty() {
