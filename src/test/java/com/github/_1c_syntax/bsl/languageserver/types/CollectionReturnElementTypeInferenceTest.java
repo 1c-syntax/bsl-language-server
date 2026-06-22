@@ -21,11 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -78,17 +80,20 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
 
   @Test
   void arrayHasArbitraryDefaultElementTypeInBothLanguages() {
-    // Симметрия BSL/OneScript: `Массив` имеет платформенный дефолтный тип
-    // элемента `Произвольный` в обоих контекстах. Именно он раньше «загрязнял»
-    // объявленный тип элемента (#4179); фильтрация ANY в attachDefaultElementTypes
-    // общая для обоих языков (см. declaredArrayElementTypeIsNotPollutedByDefault).
+    // Симметрия BSL/OneScript: `Массив` имеет дефолтный тип элемента —
+    // универсальный `Произвольный`, канонизированный в TypeRef.ANY (он раньше
+    // «загрязнял» объявленный тип элемента, #4179). Фильтрация ANY в
+    // attachDefaultElementTypes общая для обоих языков (см.
+    // declaredArrayElementTypeIsNotPollutedByDefault).
     for (var fileType : new FileType[]{FileType.BSL, FileType.OS}) {
       var arrayRef = typeRegistry.resolve("Массив", fileType).orElseThrow();
       assertThat(typeRegistry.getDefaultElementTypes(arrayRef).refs())
-        .as("Массив (%s) имеет дефолтный тип элемента Произвольный", fileType)
-        .extracting(r -> r.qualifiedName())
-        .containsExactly("Произвольный");
+        .as("Массив (%s) дефолтный тип элемента канонизирован в ANY", fileType)
+        .containsExactly(TypeRef.ANY);
     }
+    assertThat(typeRegistry.displayName(TypeRef.ANY, Language.RU))
+      .as("ANY отображается как «Произвольный»")
+      .isEqualTo("Произвольный");
   }
 
   private TypeSet inferVar(DocumentContext dc, String varName) {

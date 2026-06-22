@@ -360,9 +360,9 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
-  /** Набор состоит из единственного универсального типа ({@code Произвольный}). */
+  /** Набор состоит из единственного универсального типа ({@link TypeRef#ANY}). */
   private static boolean isOnlyAny(TypeSet types) {
-    return types.refs().size() == 1 && types.refs().iterator().next().isAny();
+    return types.refs().size() == 1 && types.refs().iterator().next().equals(TypeRef.ANY);
   }
 
   /**

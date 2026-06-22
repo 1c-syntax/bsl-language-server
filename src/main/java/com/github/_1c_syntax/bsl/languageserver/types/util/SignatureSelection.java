@@ -211,7 +211,11 @@ public final class SignatureSelection {
    * с которым приходит синтакс-помощник и JSON-fallback.
    */
   private static boolean isAny(TypeRef ref) {
-    return ref.isAny();
+    if (ref.equals(TypeRef.ANY)) {
+      return true;
+    }
+    var name = ref.qualifiedName();
+    return "Произвольный".equalsIgnoreCase(name) || "Arbitrary".equalsIgnoreCase(name);
   }
 
   /**
