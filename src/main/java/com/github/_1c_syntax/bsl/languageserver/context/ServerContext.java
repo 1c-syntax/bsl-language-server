@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -458,15 +457,17 @@ public class ServerContext {
    * Эквивалентно {@code getConfiguration().findCommonModule(name)}, но без повторного прохода
    * по case-insensitive карте конфигурации на каждый вызов.
    * <p>
-   * Резолв регистронезависимый, поэтому ключ кэша нормализуется в нижний регистр
-   * ({@link Locale#ROOT}) — разные написания одного имени дают одну запись.
+   * Ключ кэша — сырой текст идентификатора (намеренно не нормализуется): на попадании это дешёвый
+   * lookup без сворачивания регистра — ровно то, ради чего кэш и нужен. {@code toLowerCase} на
+   * каждый вызов вернул бы посимвольное сворачивание + аллокацию строки на горячий путь, а
+   * экономия (схлопывание редких регистровых вариантов одного имени) — околонулевая. Сам резолв
+   * внутри остаётся регистронезависимым.
    *
    * @param name имя общего модуля
    * @return общий модуль или {@link Optional#empty()}, если такого нет
    */
   public Optional<CommonModule> findCommonModule(String name) {
-    var normalizedName = name.toLowerCase(Locale.ROOT);
-    return commonModuleCache.get(normalizedName, key -> getConfiguration().findCommonModule(key));
+    return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
   }
 
   private DocumentContext createDocumentContext(URI uri) {
