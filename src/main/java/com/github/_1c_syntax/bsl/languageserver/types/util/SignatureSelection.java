@@ -206,16 +206,12 @@ public final class SignatureSelection {
   }
 
   /**
-   * Является ли {@code ref} универсальным типом (вершиной решётки): канонический
-   * {@link TypeRef#ANY} либо платформенное имя {@code Произвольный}/{@code Arbitrary},
-   * с которым приходит синтакс-помощник и JSON-fallback.
+   * Является ли {@code ref} универсальным типом — вершиной решётки. Имя
+   * {@code Произвольный}/{@code Arbitrary} канонизируется в {@link TypeRef#ANY}
+   * ещё при создании {@link TypeRef}, поэтому достаточно сравнения с {@link TypeRef#ANY}.
    */
   private static boolean isAny(TypeRef ref) {
-    if (ref.equals(TypeRef.ANY)) {
-      return true;
-    }
-    var name = ref.qualifiedName();
-    return "Произвольный".equalsIgnoreCase(name) || "Arbitrary".equalsIgnoreCase(name);
+    return ref.equals(TypeRef.ANY);
   }
 
   /**
