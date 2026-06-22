@@ -89,7 +89,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
         }
 
         // проверка на существование модуля
-        var module = configuration.findCommonModule(eventSubs.getHandler().getModuleName());
+        var module = documentContext.getServerContext().findCommonModule(eventSubs.getHandler().getModuleName());
 
         if (module.isEmpty()) {
           addDiagnostic("missingModule", eventSubs, eventSubs.getHandler().getModuleName());
