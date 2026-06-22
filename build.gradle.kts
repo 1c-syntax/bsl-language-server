@@ -348,20 +348,12 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
-    // Версия antlr4 приходит транзитивно (через bsl-parser), поэтому берём её
-    // из разрешённого runtimeClasspath, чтобы ссылка на javadoc.io указывала
-    // ровно на используемую версию (иначе .../latest даёт redirect-warning).
-    val antlr4Version = configurations.runtimeClasspath.get()
-        .resolvedConfiguration.resolvedArtifacts
-        .map { it.moduleVersion.id }
-        .first { it.group == "io.github.1c-syntax" && it.name == "antlr4" }
-        .version
     options {
         this as StandardJavadocDocletOptions
         links(
             "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://javadoc.io/doc/io.github.1c-syntax/antlr4/$antlr4Version"
+            "https://1c-syntax.github.io/antlr/"
         )
         // Проверяем корректность javadoc (битые ссылки, синтаксис, html),
         // но не требуем наличия комментариев у каждого элемента (группа missing).
