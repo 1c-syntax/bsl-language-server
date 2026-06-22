@@ -353,7 +353,7 @@ tasks.javadoc {
         links(
             "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
             "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://1c-syntax.github.io/antlr/"
+            "https://1c-syntax.github.io/antlr/javadoc/"
         )
         // Проверяем корректность javadoc (битые ссылки, синтаксис, html),
         // но не требуем наличия комментариев у каждого элемента (группа missing).
