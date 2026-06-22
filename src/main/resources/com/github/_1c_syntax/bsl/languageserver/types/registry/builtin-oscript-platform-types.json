@@ -490,6 +490,9 @@
     "aliases": [
       "Array"
     ],
+    "elementTypes": [
+      "Произвольный"
+    ],
     "members": [
       {
         "name": "Количество",
@@ -1187,6 +1190,9 @@
     "name": "ФиксированныйМассив",
     "aliases": [
       "FixedArray"
+    ],
+    "elementTypes": [
+      "Произвольный"
     ],
     "members": [
       {

@@ -230,6 +230,13 @@ public class TypeRegistry {
     // GLOBAL_CONTEXT.
     registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.BSL), FileType.BSL);
     registerMemberOverride(GLOBAL_CONTEXT, () -> globalPropertyMembers(FileType.OS), FileType.OS);
+
+    // «Произвольный»/«Arbitrary» — вершина решётки типов. Канонизируем имя в
+    // TypeRef.ANY, чтобы по всему движку универсальный тип распознавался
+    // сравнением с ANY (без проверки имени). Отображается как «Произвольный».
+    aliasIndex.put("произвольный", TypeRef.ANY);
+    aliasIndex.put("arbitrary", TypeRef.ANY);
+    registerDisplayName(TypeRef.ANY, BilingualString.of("Произвольный", "Arbitrary"));
   }
 
   /**

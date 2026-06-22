@@ -50,6 +50,20 @@ public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable
   public static final TypeRef ANY = new TypeRef(TypeKind.ANY, "Any");
 
   /**
+   * Канонизация на самом нижнем уровне: универсальный тип-вершина решётки,
+   * приходящий из платформенных метаданных под именем {@code Произвольный}/
+   * {@code Arbitrary} (синтакс-помощник, JSON-пакеты, JsDoc-fallback), всегда
+   * сводится к {@link #ANY}. Благодаря этому весь движок распознаёт «any»
+   * сравнением с {@link #ANY}, без проверки имени где-либо выше.
+   */
+  public TypeRef {
+    if ("Произвольный".equalsIgnoreCase(qualifiedName) || "Arbitrary".equalsIgnoreCase(qualifiedName)) {
+      kind = TypeKind.ANY;
+      qualifiedName = "Any";
+    }
+  }
+
+  /**
    * Глобальный кэш разобранных placeholder'ов по qualifiedName. Парсинг
    * угловых скобок выполняется один раз на каждое уникальное имя, дальше
    * {@link #specialize(TypeRef, Map)} работает со структурным представлением.

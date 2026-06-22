@@ -336,10 +336,11 @@ public class ExpressionTypeInferencer {
    * {@code Для Каждого X Из Коллекция Цикл} увидеть тип X (например,
    * {@code КлючИЗначение} для {@code Соответствие}) без явных JsDoc-аннотаций.
    * <p>
-   * Если у {@code ref} уже есть {@code elementTypes} (например, через
-   * dynamic-аккумуляторы вроде {@link #accumulateValueTableColumnFields}),
-   * дефолты добавляются через {@link TypeSet#withElement(TypeRef, TypeSet)},
-   * который реализует union — пользовательские поля сохраняются.
+   * Если у ссылки уже есть объявленный тип элемента, а дефолт — это лишь
+   * универсальный {@code Произвольный} (вершина решётки), он не уточняет
+   * известный тип и не подмешивается ({@code Массив из Число} иначе превращался
+   * бы в {@code Массив из Число, Произвольный}, #4179). Осмысленные дефолты
+   * обёрток ({@code ЭлементСпискаЗначений}, {@code КлючИЗначение}) сохраняются.
    */
   private TypeSet attachDefaultElementTypes(TypeSet base) {
     if (base.isEmpty()) {
@@ -348,11 +349,20 @@ public class ExpressionTypeInferencer {
     var result = base;
     for (var ref : base.refs()) {
       var defaults = typeRegistry.getDefaultElementTypes(ref);
-      if (!defaults.isEmpty()) {
-        result = result.withElement(ref, defaults);
+      if (defaults.isEmpty()) {
+        continue;
       }
+      if (!base.getElementTypes(ref).isEmpty() && isOnlyAny(defaults)) {
+        continue;
+      }
+      result = result.withElement(ref, defaults);
     }
     return result;
+  }
+
+  /** Набор состоит из единственного универсального типа ({@link TypeRef#ANY}). */
+  private static boolean isOnlyAny(TypeSet types) {
+    return types.refs().size() == 1 && types.refs().iterator().next().equals(TypeRef.ANY);
   }
 
   /**
