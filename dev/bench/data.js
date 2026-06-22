@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782119685112,
+  "lastUpdate": 1782159002427,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38657,6 +38657,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 12.161564621887326",
             "extra": "mean: 277.2880943616231 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b4b61f205495b30b025619f3fd1cdb9b9dbd6638",
+          "message": "Merge pull request #4186 from 1c-syntax/claude/perf-findcommonmodule-cache\n\nperf(context): мемоизировать findCommonModule (workspace-scoped кэш)",
+          "timestamp": "2026-06-22T20:27:39+02:00",
+          "tree_id": "a1330a9db401b09a329fba9321d8248e8bf2498c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b4b61f205495b30b025619f3fd1cdb9b9dbd6638"
+        },
+        "date": 1782158992208,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 288.5487596988678,
+            "unit": "sec",
+            "range": "stddev: 4.0873090581784846",
+            "extra": "mean: 288.5487596988678 sec\nrounds: 3"
           }
         ]
       }
