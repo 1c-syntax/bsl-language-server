@@ -70,6 +70,20 @@ public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable
   }
 
   /**
+   * Является ли ссылка универсальным типом — вершиной решётки типов: канонический
+   * {@link #ANY} либо платформенное имя {@code Произвольный}/{@code Arbitrary}, с
+   * которым приходят синтакс-помощник и JSON-fallback (в платформенных метаданных
+   * «Произвольный» не резолвится в {@link #ANY}, а представлен именованным типом).
+   *
+   * @return {@code true}, если тип универсальный
+   */
+  public boolean isAny() {
+    return equals(ANY)
+      || "Произвольный".equalsIgnoreCase(qualifiedName)
+      || "Arbitrary".equalsIgnoreCase(qualifiedName);
+  }
+
+  /**
    * Краткое имя без квалификатора (часть после последней точки), удобно для
    * отображения в hover/completion.
    *
