@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782115389180,
+  "lastUpdate": 1782119685112,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38626,6 +38626,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 15.452574379451544",
             "extra": "mean: 288.3260340690613 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b63770132e3efbca15b25e2fd1b291f0071aff3",
+          "message": "Merge pull request #4185 from 1c-syntax/claude/issue-4179\n\nfix(types): не подмешивать «Произвольный» к объявленному типу элемента коллекции",
+          "timestamp": "2026-06-22T10:35:49+02:00",
+          "tree_id": "c5c0389c5c1ff6aa1ff878ba8cdd8065c58f7546",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8b63770132e3efbca15b25e2fd1b291f0071aff3"
+        },
+        "date": 1782119676208,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 277.2880943616231,
+            "unit": "sec",
+            "range": "stddev: 12.161564621887326",
+            "extra": "mean: 277.2880943616231 sec\nrounds: 3"
           }
         ]
       }
