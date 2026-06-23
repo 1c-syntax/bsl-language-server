@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782160648820,
+  "lastUpdate": 1782174917344,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38719,6 +38719,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.695009574856458",
             "extra": "mean: 288.47413063049316 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f3d45aabeb699f2c2e0a15e4c08ed7ff625c8be",
+          "message": "Merge pull request #4188 from 1c-syntax/perf/typeset-compact\n\nperf(types): компактное представление односложного TypeSet",
+          "timestamp": "2026-06-23T00:30:41+02:00",
+          "tree_id": "40b3390ee79d0d90161d5800430cddd9fa3c558d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8f3d45aabeb699f2c2e0a15e4c08ed7ff625c8be"
+        },
+        "date": 1782174907220,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.66699902216595,
+            "unit": "sec",
+            "range": "stddev: 19.569581888298906",
+            "extra": "mean: 284.66699902216595 sec\nrounds: 3"
           }
         ]
       }
