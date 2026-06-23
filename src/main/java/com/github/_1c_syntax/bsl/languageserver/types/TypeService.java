@@ -121,8 +121,9 @@ public class TypeService {
    * @return список наборов типов по параметрам, в порядке объявления.
    */
    public List<TypeSet> getParameterTypes(MethodSymbol method) {
+     var owner = method.getOwner();
      return method.getParameters().stream()
-       .map(symbolTypeIndex::getDeclaredParameterTypes)
+       .map(parameter -> symbolTypeIndex.getDeclaredParameterTypes(parameter, owner))
        .toList();
    }
 

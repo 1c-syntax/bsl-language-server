@@ -46,9 +46,11 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -92,12 +94,19 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * @return типы параметра, объявленные в описании метода. Вычисляется on-demand —
-   *         декларации параметров уже распарсены парсером.
+   * Типы параметра, объявленные в описании метода. Вычисляется on-demand —
+   * декларации параметров уже распарсены парсером. {@code См.}-ссылки (в т.ч.
+   * вложенные — элементы коллекций и поля структур) разворачиваются через
+   * {@code owner}.
+   *
+   * @param parameter параметр.
+   * @param owner     документ-владелец метода — для разворота {@code См.}-ссылок.
+   * @return набор типов параметра; {@link TypeSet#EMPTY}, если тип не объявлен.
    */
-  public TypeSet getDeclaredParameterTypes(ParameterDefinition parameter) {
+  public TypeSet getDeclaredParameterTypes(ParameterDefinition parameter, DocumentContext owner) {
     return parameter.getDescription()
-      .map(descr -> resolveTypes(descr.types()))
+      .map(descr -> resolveTypes(descr.types(),
+        new ResolutionContext(owner, owner.getFileType(), new HashSet<>())))
       .orElse(TypeSet.EMPTY);
   }
 
@@ -212,12 +221,17 @@ public class SymbolTypeIndex {
     if (parent instanceof MethodSymbol method) {
       method.getDescription().ifPresent(descr -> {
         var returnedValue = descr.getReturnedValue();
-        var returnTypes = resolveTypes(returnedValue);
-        // Прямые типы приоритетнее; См.-ссылки (// Возвращаемое значение: см. Метод)
-        // разворачиваем, только если явный тип не указан.
-        if (returnTypes.isEmpty()) {
-          returnTypes = resolveReturnedValueHyperlinks(method, returnedValue);
-        }
+        var owner = method.getOwner();
+        // visited содержит уже посещённые при развороте См.-цепочек локальные
+        // функции (защита от закольцованных ссылок); сам индексируемый метод —
+        // тоже в наборе, чтобы оборвать самоссылку.
+        var visited = new HashSet<MethodSymbol>();
+        visited.add(method);
+        var context = new ResolutionContext(owner, owner.getFileType(), visited);
+        // Прямые типы и См.-ссылки (// Возвращаемое значение: см. Метод, включая
+        // вложенные — элементы коллекций и поля структур) разворачиваются единым
+        // проходом: см.-ссылка резолвится через resolveSeeReference при наличии owner.
+        var returnTypes = resolveTypes(returnedValue, context);
         if (!returnTypes.isEmpty()) {
           declaredReturnTypes.put(method, returnTypes);
           collected.add(method);
@@ -230,25 +244,6 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Развернуть {@code См.}-ссылки в описании возвращаемого значения метода
-   * ({@code // Возвращаемое значение: см. Метод}) в типы. Каждая
-   * {@code HYPERLINK}-ссылка резолвится через {@link #resolveSeeReference}.
-   */
-  private TypeSet resolveReturnedValueHyperlinks(
-    MethodSymbol method,
-    List<? extends TypeDescription> returnedValue
-  ) {
-    var owner = method.getOwner();
-    TypeSet acc = TypeSet.EMPTY;
-    for (var td : returnedValue) {
-      if (td.variant() == TypeDescription.Variant.HYPERLINK) {
-        acc = acc.union(resolveSeeReference(td.name(), owner, owner.getFileType()));
-      }
-    }
-    return acc;
-  }
-
-  /**
    * Развернуть {@code См.}-ссылку (из описания возвращаемого значения, параметра
    * или висячего комментария переменной) в {@link TypeSet}.
    * <ul>
@@ -258,8 +253,8 @@ public class SymbolTypeIndex {
    *       тип: сначала из уже проиндексированных типов
    *       ({@link #getDeclaredReturnTypes(MethodSymbol)}, поэтому разворачиваются
    *       и цепочки {@code см.}), а на этапе самой индексации (когда цель ещё не
-   *       проиндексирована) — напрямую из описания через
-   *       {@link #resolveDescribedTypes(List)} (с полями структуры/ТЗ из JsDoc);</li>
+   *       проиндексирована) — напрямую из описания (с полями структуры/ТЗ
+   *       и элементами коллекций из JsDoc);</li>
    *   <li>иначе ссылка трактуется как имя типа и резолвится через
    *       {@link TypeRegistry}.</li>
    * </ul>
@@ -276,6 +271,21 @@ public class SymbolTypeIndex {
    *         если ссылка не разворачивается.
    */
   public TypeSet resolveSeeReference(String link, DocumentContext owner, FileType fileType) {
+    return resolveSeeReference(link, owner, fileType, new HashSet<>());
+  }
+
+  /**
+   * Вариант {@link #resolveSeeReference(String, DocumentContext, FileType)} с
+   * набором уже посещённых локальных функций — для защиты от закольцованных
+   * {@code см.}-ссылок при рекурсивном разворачивании вложенных типов
+   * (элементов коллекций и полей структур).
+   */
+  private TypeSet resolveSeeReference(
+    String link,
+    DocumentContext owner,
+    FileType fileType,
+    Set<MethodSymbol> visited
+  ) {
     // Парсер не отдаёт null: Hyperlink.link()/TypeDescription.name() в крайнем
     // случае возвращают пустую строку, поэтому достаточно проверки на пустоту.
     if (link.isBlank()) {
@@ -302,31 +312,44 @@ public class SymbolTypeIndex {
       if (!cached.isEmpty()) {
         return cached;
       }
+      // Закольцованная ссылка (A → см. B → см. A): прерываем рекурсию.
+      if (!visited.add(localFunction)) {
+        return TypeSet.EMPTY;
+      }
       var returnedValue = localFunction.getDescription()
         .map(MethodDescription::getReturnedValue)
         .orElse(List.of());
-      return resolveDescribedTypes(returnedValue);
+      return resolveTypes(returnedValue, new ResolutionContext(owner, fileType, visited));
     }
     return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**
-   * Разрешить список описаний типов в {@link TypeSet} on-demand, с навешиванием
-   * полей структур/ТЗ ({@link TypeDescription#fields()}) и элементов коллекций.
-   * В отличие от {@link #getDeclaredReturnTypes(MethodSymbol)} не требует
-   * предварительной индексации — вычисляет напрямую по описанию.
+   * Контекст разворачивания {@code см.}-ссылок при рекурсивном резолве типов.
+   *
+   * @param owner    документ-владелец описания — для поиска локальной функции.
+   * @param fileType язык владельца — для резолва имён.
+   * @param visited  уже посещённые локальные функции — защита от закольцованных ссылок.
    */
-  public TypeSet resolveDescribedTypes(List<? extends TypeDescription> descriptions) {
-    return resolveTypes(descriptions);
+  private record ResolutionContext(
+    DocumentContext owner,
+    FileType fileType,
+    Set<MethodSymbol> visited
+  ) {
   }
 
-  private TypeSet resolveTypes(List<? extends TypeDescription> descriptions) {
+  /**
+   * Разрешить список описаний типов в {@link TypeSet} с навешиванием полей
+   * структур/ТЗ и элементов коллекций. {@code См.}-ссылки разворачиваются
+   * единообразно на любом уровне (см. {@link #resolveTypeDescription}).
+   */
+  private TypeSet resolveTypes(List<? extends TypeDescription> descriptions, ResolutionContext context) {
     if (descriptions == null || descriptions.isEmpty()) {
       return TypeSet.EMPTY;
     }
     TypeSet acc = TypeSet.EMPTY;
     for (var td : descriptions) {
-      acc = acc.union(applyFields(resolveTypeDescription(td), td));
+      acc = acc.union(applyFields(resolveTypeDescription(td, context), td, context));
     }
     return acc;
   }
@@ -334,9 +357,10 @@ public class SymbolTypeIndex {
   /**
    * Разрешить одно описание типа в {@link TypeSet}.
    * <ul>
-   *   <li>{@code HYPERLINK} ({@code См. Метод} / {@code См. Справочник.X}) сам
-   *       по себе тип не образует — его резолвят consumer'ы, имеющие контекст
-   *       документа; возвращается {@link TypeSet#EMPTY}.</li>
+   *   <li>{@code HYPERLINK} ({@code См. Метод} / {@code См. Справочник.X})
+   *       разворачивается через {@link #resolveSeeReference}. Работает одинаково
+   *       на верхнем уровне и во вложенных позициях (элементы коллекций, поля
+   *       структур).</li>
    *   <li>{@code COLLECTION} ({@code Массив из X, Y}) — головной тип берётся
    *       из {@link CollectionTypeDescription#collectionName()}, элементы
    *       коллекции — рекурсивно из {@link CollectionTypeDescription#valueTypes()}
@@ -344,20 +368,21 @@ public class SymbolTypeIndex {
    *   <li>{@code SIMPLE} — простое имя резолвится через {@link TypeRegistry}.</li>
    * </ul>
    */
-  private TypeSet resolveTypeDescription(TypeDescription td) {
+  private TypeSet resolveTypeDescription(TypeDescription td, ResolutionContext context) {
     return switch (td.variant()) {
-      case HYPERLINK -> TypeSet.EMPTY;
+      case HYPERLINK ->
+        resolveSeeReference(td.name(), context.owner(), context.fileType(), context.visited());
       case SIMPLE -> resolveOne(td.name()).map(TypeSet::of).orElse(TypeSet.EMPTY);
-      case COLLECTION -> resolveCollection((CollectionTypeDescription) td);
+      case COLLECTION -> resolveCollection((CollectionTypeDescription) td, context);
     };
   }
 
-  private TypeSet resolveCollection(CollectionTypeDescription td) {
+  private TypeSet resolveCollection(CollectionTypeDescription td, ResolutionContext context) {
     var headRef = resolveOne(td.collectionName()).orElse(null);
     if (headRef == null) {
       return TypeSet.EMPTY;
     }
-    var elementTypes = resolveTypes(td.valueTypes());
+    var elementTypes = resolveTypes(td.valueTypes(), context);
     if (elementTypes.isEmpty()) {
       return TypeSet.of(headRef);
     }
@@ -370,7 +395,7 @@ public class SymbolTypeIndex {
    * навесить их на головной {@link TypeRef} через
    * {@link TypeSet#withField(TypeRef, String, TypeSet)}.
    */
-  private TypeSet applyFields(TypeSet base, TypeDescription td) {
+  private TypeSet applyFields(TypeSet base, TypeDescription td, ResolutionContext context) {
     var fields = td.fields();
     if (fields == null || fields.isEmpty() || base.refs().isEmpty()) {
       return base;
@@ -378,7 +403,7 @@ public class SymbolTypeIndex {
     var headRef = base.refs().iterator().next();
     var result = base;
     for (var field : fields) {
-      var fieldTypes = resolveTypes(field.types());
+      var fieldTypes = resolveTypes(field.types(), context);
       if (!fieldTypes.isEmpty()) {
         result = result.withField(headRef, field.name(), fieldTypes, fieldDescription(field));
       }

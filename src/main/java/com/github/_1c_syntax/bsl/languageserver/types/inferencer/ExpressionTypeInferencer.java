@@ -1248,19 +1248,18 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Источники типа параметра в порядке убывания приоритета: doc-комментарий,
-   * hyperlink-ссылка, контракт платформенного события (для обработчиков),
-   * наследование от родительского метода в иерархии.
+   * Источники типа параметра в порядке убывания приоритета: doc-комментарий
+   * (включая {@code См.}-ссылки, в т.ч. вложенные в коллекции/структуры),
+   * контракт платформенного события (для обработчиков), наследование от
+   * родительского метода в иерархии.
    */
   private TypeSet resolveParameterTypes(MethodSymbol method, ParameterDefinition parameter,
                                         String name, int paramIndex) {
-    var direct = symbolTypeIndex.getDeclaredParameterTypes(parameter);
+    // getDeclaredParameterTypes разворачивает и См.-ссылки в описании параметра
+    // (включая вложенные) — отдельный проход по hyperlink-ам больше не нужен.
+    var direct = symbolTypeIndex.getDeclaredParameterTypes(parameter, method.getOwner());
     if (!direct.isEmpty()) {
       return direct;
-    }
-    var fromHyperlink = parameterHyperlinkTypes(parameter, method.getOwner());
-    if (!fromHyperlink.isEmpty()) {
-      return fromHyperlink;
     }
     var fromContract = eventHandlerParameterTypes(method, paramIndex);
     if (!fromContract.isEmpty()) {
@@ -1299,27 +1298,6 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Разрешить hyperlink-ссылки {@code См. Метод} в описании параметра в тип
-   * возвращаемого значения целевого метода. Использует общий резолвер
-   * {@link SymbolTypeIndex#resolveSeeReference} — ту же логику, что и для
-   * возвращаемых значений и висячих комментариев переменных.
-   */
-  private TypeSet parameterHyperlinkTypes(ParameterDefinition parameter, DocumentContext owner) {
-    var description = parameter.getDescription().orElse(null);
-    if (description == null) {
-      return TypeSet.EMPTY;
-    }
-    TypeSet acc = TypeSet.EMPTY;
-    for (var typeDescription : description.types()) {
-      if (typeDescription.variant() != TypeDescription.Variant.HYPERLINK) {
-        continue;
-      }
-      acc = acc.union(symbolTypeIndex.resolveSeeReference(typeDescription.name(), owner, owner.getFileType()));
-    }
-    return acc;
-  }
-
-  /**
    * Найти типы параметра {@code name} в методе-источнике, на который
    * ссылается текущий метод через {@code // См. Метод} в docblock'е.
    * Сейчас работает только для ссылок на методы в том же модуле.
@@ -1341,7 +1319,7 @@ public class ExpressionTypeInferencer {
       }
       for (var targetParam : target.getParameters()) {
         if (targetParam.getName().equalsIgnoreCase(paramName)) {
-          var types = symbolTypeIndex.getDeclaredParameterTypes(targetParam);
+          var types = symbolTypeIndex.getDeclaredParameterTypes(targetParam, owner);
           if (!types.isEmpty()) {
             return types;
           }
