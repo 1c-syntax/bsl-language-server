@@ -71,7 +71,7 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
+    referenceIndex.getMethodCallReferencesFrom(documentContext.getUri()).stream()
       .filter(this::isReferenceToModules)
       .forEach(this::fireIssue);
   }

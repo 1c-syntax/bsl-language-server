@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
@@ -79,7 +79,9 @@ class SymbolProviderScriptVariantTest {
     when(documentContext.getScriptVariantLanguage()).thenReturn(scriptVariantLanguage);
     when(documentContext.getMdObject()).thenReturn(Optional.of(mdObject));
 
-    var symbol = mock(SourceDefinedSymbol.class);
+    // метод общего модуля — это MethodSymbol; индекс поддерживает символ по его
+    // типу (MethodSymbol), а не по SymbolKind
+    var symbol = mock(MethodSymbol.class);
     when(symbol.getName()).thenReturn("НеУстаревшаяПроцедура");
     when(symbol.getSymbolKind()).thenReturn(SymbolKind.Method);
     when(symbol.getRange()).thenReturn(Ranges.create(0, 0, 0, 0));

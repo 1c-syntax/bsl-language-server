@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Modules;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -57,7 +56,7 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
     List<SemanticTokenEntry> entries = new ArrayList<>();
     var uri = documentContext.getUri();
 
-    for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Method)) {
+    for (var reference : referenceIndex.getMethodCallReferencesFrom(uri)) {
       if (!reference.isSourceDefinedSymbolReference()) {
         continue;
       }

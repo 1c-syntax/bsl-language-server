@@ -37,7 +37,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -70,7 +69,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   private void checkUserDefinedMethods() {
     var uri = documentContext.getUri();
 
-    referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
+    referenceIndex.getMethodCallReferencesFrom(uri).stream()
       .filter(reference -> reference.symbol().isDeprecated())
       .filter(reference -> !reference.from().isDeprecated())
       .forEach((Reference reference) -> {

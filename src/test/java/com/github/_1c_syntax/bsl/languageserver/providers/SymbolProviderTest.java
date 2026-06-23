@@ -91,21 +91,24 @@ class SymbolProviderTest {
     assertThat(symbols)
       .hasSizeGreaterThan(0)
       .anyMatch(symbolInformation ->
+        // общий модуль — модуль без состояния, метод отдаётся как Function
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
           && uriContains(symbolInformation, "ПервыйОбщийМодуль")
-          && symbolInformation.getKind() == SymbolKind.Method
+          && symbolInformation.getKind() == SymbolKind.Function
           && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
+        // модуль менеджера регистра — модуль со состоянием, метод остаётся Method
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
           && uriContains(symbolInformation, "РегистрСведений1")
           && symbolInformation.getKind() == SymbolKind.Method
           && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
+        // общий модуль — модуль без состояния, метод отдаётся как Function
         symbolInformation.getName().equals("УстаревшаяПроцедура")
           && uriContains(symbolInformation, "ПервыйОбщийМодуль")
-          && symbolInformation.getKind() == SymbolKind.Method
+          && symbolInformation.getKind() == SymbolKind.Function
           && symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->

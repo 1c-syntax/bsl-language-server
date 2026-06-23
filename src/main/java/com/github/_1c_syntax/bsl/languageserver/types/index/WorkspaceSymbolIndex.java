@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -758,11 +759,16 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   private static boolean isSupported(Symbol symbol) {
-    return switch (symbol.getSymbolKind()) {
-      case Method, Constructor -> true;
-      case Variable -> SUPPORTED_VARIABLE_KINDS.contains(((VariableSymbol) symbol).getKind());
-      default -> false;
-    };
+    // Методы и конструкторы определяются по типу символа, а не по SymbolKind:
+    // иначе индекс пришлось бы знать, каким видом ({@code Method}/{@code Function}/…)
+    // метод представляется в LSP.
+    if (symbol instanceof MethodSymbol) {
+      return true;
+    }
+    if (symbol instanceof VariableSymbol variableSymbol) {
+      return SUPPORTED_VARIABLE_KINDS.contains(variableSymbol.getKind());
+    }
+    return false;
   }
 
   private static Optional<String> getContainerName(SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {

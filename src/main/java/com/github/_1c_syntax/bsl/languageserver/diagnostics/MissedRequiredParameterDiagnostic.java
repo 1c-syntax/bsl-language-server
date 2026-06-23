@@ -38,7 +38,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -65,7 +64,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     super.visitFile(ctx);
-    for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
+    for (var reference : referenceIndex.getMethodCallReferencesFrom(documentContext.getUri())) {
       var call = calls.get(reference.selectionRange());
       if (call != null) {
         checkMethod((MethodSymbol) reference.symbol(), call);

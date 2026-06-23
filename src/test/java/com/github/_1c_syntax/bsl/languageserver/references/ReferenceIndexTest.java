@@ -351,6 +351,43 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
     ;
   }
 
+  @Test
+  void commonModuleMethodCallIsIndexedAsFunction() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var callerMethod = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
+
+    var commonModuleContext = context
+      .getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
+      .orElseThrow();
+    var calledMethod = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+
+    var location = new Location(documentContext.getUri().toString(), Ranges.create(2, 22, 41));
+
+    // when
+    var references = referenceIndex.getReferencesTo(calledMethod);
+
+    // then
+    // метод общего модуля BSL — самостоятельная функция (SymbolKind.Function),
+    // и поиск ссылок находит его вызов без приведения вида при поиске
+    assertThat(calledMethod.getSymbolKind()).isEqualTo(SymbolKind.Function);
+    assertThat(references)
+      .isNotEmpty()
+      .contains(Reference.of(callerMethod, calledMethod, location));
+  }
+
+  @Test
+  void methodCallSymbolKindMatchesDefinitionKind() {
+    // given
+    // when / then
+    // методы модулей без состояния — функции, прочие — методы
+    assertThat(ReferenceIndex.methodCallSymbolKind(ModuleType.CommonModule)).isEqualTo(SymbolKind.Function);
+    assertThat(ReferenceIndex.methodCallSymbolKind(ModuleType.OScriptModule)).isEqualTo(SymbolKind.Function);
+    assertThat(ReferenceIndex.methodCallSymbolKind(ModuleType.OScriptClass)).isEqualTo(SymbolKind.Method);
+    assertThat(ReferenceIndex.methodCallSymbolKind(ModuleType.ManagerModule)).isEqualTo(SymbolKind.Method);
+    assertThat(ReferenceIndex.methodCallSymbolKind(ModuleType.UNKNOWN)).isEqualTo(SymbolKind.Method);
+  }
+
   /**
    * Тесты, мутирующие ReferenceIndex (addMethodCall, clearReferences). Чтобы
    * мутации не попадали в read-only тесты внешнего класса (которые делят
@@ -395,12 +432,14 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
         Ranges.create(0, 0, 10)
       );
 
-      // Build the same Symbol key used for both workspaces
+      // Build the same Symbol key used for both workspaces.
+      // Вызов метода общего модуля индексируется под SymbolKind.Function — тем же видом,
+      // что сообщает символ-определение метода общего модуля (см. ReferenceIndex#methodCallSymbolKind).
       var symbolDto = com.github._1c_syntax.bsl.languageserver.references.model.Symbol.builder()
         .mdoRef("CommonModule.TestModule")
         .moduleType(ModuleType.CommonModule)
         .scopeName("")
-        .symbolKind(SymbolKind.Method)
+        .symbolKind(SymbolKind.Function)
         .symbolName("testmethod")
         .build();
 

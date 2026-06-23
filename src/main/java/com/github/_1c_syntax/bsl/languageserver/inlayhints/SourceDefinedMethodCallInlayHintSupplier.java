@@ -39,7 +39,6 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -95,7 +94,7 @@ public class SourceDefinedMethodCallInlayHintSupplier
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
-    var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
+    var references = referenceIndex.getMethodCallReferencesFrom(documentContext.getUri()).stream()
       .filter(reference -> Ranges.containsPosition(range, reference.selectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
       .toList();
