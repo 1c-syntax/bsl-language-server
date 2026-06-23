@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -245,6 +246,32 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   @Override
   public void handleDataCleared(ServerContextDocumentClearedEvent event) {
     // no-op: записи автономны и должны пережить освобождение AST при batch-наполнении
+  }
+
+  /**
+   * Ужать backing-массивы бакетов до фактического размера после массового наполнения
+   * ({@code populateContext}).
+   * <p>
+   * Бакеты создаются как {@link ArrayList} с ёмкостью по умолчанию (10) и растут инкрементально по
+   * мере индексации документов. Подавляющее большинство ключей дерева редкие (1–3 записи), поэтому у
+   * них остаётся запас ёмкости; в сумме по множеству ключей это заметный перерасход. Триминг после
+   * наполнения возвращает массивы к точному размеру (аналог {@code trimToSize} в
+   * {@code SymbolTreeComputer}). Последующие инкрементальные правки до-растят бакеты как обычно.
+   *
+   * @param event событие завершения наполнения контекста
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    lock.writeLock().lock();
+    try {
+      for (var bucket : trie.values()) {
+        if (bucket instanceof ArrayList<?> arrayList) {
+          arrayList.trimToSize();
+        }
+      }
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   /**
