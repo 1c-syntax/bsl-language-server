@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782177096644,
+  "lastUpdate": 1782202041082,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38781,6 +38781,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 8.568280811445486",
             "extra": "mean: 291.56186572710675 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": false,
+          "id": "7e399a1be5db1814544122346cbd23ff6dc241ee",
+          "message": "Merge pull request #4193 from 1c-syntax/perf/workspace-symbol-buckets\n\nperf(workspacesymbol): убрать copy-on-write бакеты и лишнюю переиндексацию",
+          "timestamp": "2026-06-23T09:19:40+02:00",
+          "tree_id": "360f6aba4caa9fcded2f6094493340f5fc95e4ee",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7e399a1be5db1814544122346cbd23ff6dc241ee"
+        },
+        "date": 1782202031241,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 291.47584255536395,
+            "unit": "sec",
+            "range": "stddev: 17.095958816784872",
+            "extra": "mean: 291.47584255536395 sec\nrounds: 3"
           }
         ]
       }
