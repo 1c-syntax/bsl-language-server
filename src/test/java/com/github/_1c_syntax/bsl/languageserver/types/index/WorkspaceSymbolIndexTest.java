@@ -75,6 +75,34 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void reindexingUnchangedContentIsNoOpAndReusesEntries() {
+    // given — документ уже проиндексирован (при batch-анализе он индексируется дважды:
+    // populateContext, затем rebuild на этапе диагностик через AnalyzeCommand.getFileInfoFromFile)
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ОбработкаПроведения() Экспорт
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var first = findByName("ОбработкаПроведения");
+
+    // when — повторная индексация ТОГО ЖЕ содержимого
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var second = findByName("ОбработкаПроведения");
+
+    // then — набор записей не изменился, поэтому переиндексация не пересобирает индекс:
+    // возвращается тот же экземпляр Entry. При повторной clear+re-add (прежнее поведение)
+    // Entry создавалась бы заново, и проверка идентичности падала бы.
+    assertThat(second).isSameAs(first);
+  }
+
+  private Entry findByName(String name) {
+    return index.search(name, NO_CANCEL).stream()
+      .filter(entry -> entry.name().equals(name))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  @Test
   void findsSymbolByWordStartAndMultiWord() {
     // given
     var documentContext = TestUtils.getDocumentContext("""
