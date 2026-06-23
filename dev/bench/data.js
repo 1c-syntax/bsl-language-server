@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782174917344,
+  "lastUpdate": 1782177096644,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38750,6 +38750,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 19.569581888298906",
             "extra": "mean: 284.66699902216595 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b2ae376a0ec317400e2ee6f6577aa15b56994b66",
+          "message": "Merge pull request #4189 from 1c-syntax/perf/membersource-idempotent\n\nperf(types): идемпотентная регистрация member-source в MetadataCollectionSpecializer",
+          "timestamp": "2026-06-23T00:35:36+02:00",
+          "tree_id": "93578fe0b673d10ab115345186ef6c118f365ef0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b2ae376a0ec317400e2ee6f6577aa15b56994b66"
+        },
+        "date": 1782177086397,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 291.56186572710675,
+            "unit": "sec",
+            "range": "stddev: 8.568280811445486",
+            "extra": "mean: 291.56186572710675 sec\nrounds: 3"
           }
         ]
       }
