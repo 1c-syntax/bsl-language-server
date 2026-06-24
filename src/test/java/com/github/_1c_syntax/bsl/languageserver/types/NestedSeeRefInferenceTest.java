@@ -119,6 +119,17 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void seeRefToTypeNameResolvesViaRegistry() {
+    // см. ТаблицаЗначений — не локальная функция: трактуется как имя типа.
+    var declared = typeService.getDeclaredReturnTypes(method("ПолучитьТаблицу"));
+
+    assertThat(declared.refs())
+      .as("См.-ссылка на имя типа разрешается через TypeRegistry")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ТаблицаЗначений");
+  }
+
+  @Test
   void cyclicSeeRefDoesNotLoop() {
     // ПервыйУзел -> см. ВторойУзел -> см. ПервыйУзел: индексация не должна зациклиться.
     // Без защиты от цикла мьютуальная рекурсия упала бы со StackOverflowError ещё

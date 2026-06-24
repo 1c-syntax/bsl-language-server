@@ -328,6 +328,46 @@ class TypeSetTest {
   }
 
   @Test
+  void withLazyFieldAccumulatesMultipleFields() {
+    // given: два ленивых поля подряд — покрывает копирование существующих бакетов.
+    var ts = TypeSet.of(STRUCTURE)
+      .withLazyField(STRUCTURE, "A", new LazyTypeSet("a", () -> TypeSet.of(NUMBER)), "")
+      .withLazyField(STRUCTURE, "B", new LazyTypeSet("b", () -> TypeSet.of(STRING)), "");
+
+    // then
+    assertThat(ts.getAllFieldNames()).containsExactlyInAnyOrder("A", "B");
+    assertThat(ts.getFieldTypes("A").refs()).containsExactly(NUMBER);
+    assertThat(ts.getFieldTypes("B").refs()).containsExactly(STRING);
+  }
+
+  @Test
+  void unionAddsLazyDecorationsOnNewRefs() {
+    // given: other несёт ленивые декорации на ref'ах, которых нет у this.
+    var a = TypeSet.of(NUMBER);
+    var b = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("e", () -> TypeSet.of(STRING)))
+      .withLazyField(STRUCTURE, "K", new LazyTypeSet("f", () -> TypeSet.of(NUMBER)), "опис");
+
+    // when
+    var union = a.union(b);
+
+    // then: новые бакеты ленивых декораций созданы.
+    assertThat(union.getElementTypes(ARRAY).refs()).containsExactly(STRING);
+    assertThat(union.getFieldTypes("K").refs()).containsExactly(NUMBER);
+    assertThat(union.getLocalFields(STRUCTURE).get("K").description()).isEqualTo("опис");
+  }
+
+  @Test
+  void getFieldTypesIgnoresNonMatchingLazyField() {
+    // given: ленивое поле с другим именем — не должно попасть в выборку.
+    var ts = TypeSet.of(STRUCTURE)
+      .withLazyField(STRUCTURE, "Другое", new LazyTypeSet("k", () -> TypeSet.of(NUMBER)), "");
+
+    // when / then
+    assertThat(ts.getFieldTypes("Искомое")).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
   void unionWithLazyOnlyOtherIsNotShortCircuited() {
     // given: other непустой только по ленивым декорациям — не должен «потеряться».
     var self = TypeSet.of(NUMBER);
