@@ -90,6 +90,11 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
     assertThat(tokenData.getAllFieldNames())
       .as("вложенные поля целевой структуры переносятся через См.-ссылку")
       .contains("Токен", "СрокДействия");
+
+    var structRef = declared.refs().iterator().next();
+    assertThat(declared.getLocalFields(structRef).get("ДанныеТокена").description())
+      .as("текстовое описание поля с См.-ссылкой не теряется")
+      .isEqualTo("Данные токена.");
   }
 
   @Test
@@ -127,6 +132,19 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
         .as("головной тип разрешается, рекурсия по закольцованной ссылке оборвана")
         .extracting(TypeRef::qualifiedName)
         .containsExactly("Массив");
+    });
+  }
+
+  @Test
+  void topLevelCyclicSeeRefResolvesToEmptyWithoutLoop() {
+    // ЭхоА -> см. ЭхоБ -> см. ЭхоА: верхнеуровневая закольцованная цепочка
+    // (eager-путь) должна оборваться через visited, дав пустой тип, без зацикливания.
+    assertTimeout(Duration.ofSeconds(30), () -> {
+      var dc = cyclicDoc();
+      var echoA = typeService.getDeclaredReturnTypes(method(dc, "ЭхоА"));
+      assertThat(echoA.isEmpty())
+        .as("чистая закольцованная см.-цепочка не образует типа и не зацикливается")
+        .isTrue();
     });
   }
 

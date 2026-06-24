@@ -311,13 +311,20 @@ public class SymbolTypeIndex {
         return cached;
       }
       // Закольцованная ссылка (A → см. B → см. A): прерываем рекурсию.
+      // visited скоупится на текущий путь обхода: после возврата из ветки
+      // localFunction убирается, иначе вторая (нециклическая) ссылка на ту же
+      // функцию из соседнего поля/элемента ложно считалась бы циклом.
       if (!visited.add(localFunction)) {
         return TypeSet.EMPTY;
       }
-      var returnedValue = localFunction.getDescription()
-        .map(MethodDescription::getReturnedValue)
-        .orElse(List.of());
-      return resolveTypes(returnedValue, new ResolutionContext(owner, fileType, visited));
+      try {
+        var returnedValue = localFunction.getDescription()
+          .map(MethodDescription::getReturnedValue)
+          .orElse(List.of());
+        return resolveTypes(returnedValue, new ResolutionContext(owner, fileType, visited));
+      } finally {
+        visited.remove(localFunction);
+      }
     }
     return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
@@ -417,7 +424,8 @@ public class SymbolTypeIndex {
       for (var fieldType : field.types()) {
         var localFunction = localFunctionSeeRef(fieldType, context);
         if (localFunction != null) {
-          result = result.withLazyField(headRef, field.name(), lazyReturnTypes(localFunction));
+          result = result.withLazyField(headRef, field.name(),
+            lazyReturnTypes(localFunction), fieldDescription(field));
         } else {
           eager = eager.union(resolveTypes(List.of(fieldType), context));
         }

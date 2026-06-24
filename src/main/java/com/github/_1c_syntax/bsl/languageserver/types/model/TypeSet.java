@@ -64,7 +64,7 @@ public record TypeSet(
   Map<TypeRef, TypeSet> elementTypes,
   Map<TypeRef, Map<String, LocalField>> localFields,
   Map<TypeRef, LazyTypeSet> lazyElements,
-  Map<TypeRef, Map<String, LazyTypeSet>> lazyFields
+  Map<TypeRef, Map<String, LazyField>> lazyFields
 ) {
 
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
@@ -89,7 +89,7 @@ public record TypeSet(
     if (lazyFields == null || lazyFields.isEmpty()) {
       lazyFields = Collections.emptyMap();
     } else {
-      var copy = new LinkedHashMap<TypeRef, Map<String, LazyTypeSet>>();
+      var copy = new LinkedHashMap<TypeRef, Map<String, LazyField>>();
       for (var entry : lazyFields.entrySet()) {
         copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
       }
@@ -178,14 +178,14 @@ public record TypeSet(
       mergedLazyElements.merge(entry.getKey(), entry.getValue(), LazyTypeSet::combine);
     }
 
-    var mergedLazyFields = new LinkedHashMap<TypeRef, Map<String, LazyTypeSet>>();
+    var mergedLazyFields = new LinkedHashMap<TypeRef, Map<String, LazyField>>();
     for (var entry : this.lazyFields.entrySet()) {
       mergedLazyFields.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
     }
     for (var entry : other.lazyFields.entrySet()) {
       var existing = mergedLazyFields.computeIfAbsent(entry.getKey(), k -> new LinkedHashMap<>());
       for (var fieldEntry : entry.getValue().entrySet()) {
-        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), LazyTypeSet::combine);
+        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), LazyField::merge);
       }
     }
 
@@ -279,21 +279,21 @@ public record TypeSet(
   /**
    * Прикрепить к {@code ref} <b>ленивое</b> поле «открытого» объекта — поле,
    * тип которого задан {@code см.}-ссылкой на локальную функцию
-   * (см. {@link LazyTypeSet}).
+   * (см. {@link LazyTypeSet}), с текстовым описанием из doc-комментария.
    *
    * @return новый {@link TypeSet} с дополненным {@code lazyFields[ref][name]}.
    */
-  public TypeSet withLazyField(TypeRef ref, String name, LazyTypeSet types) {
+  public TypeSet withLazyField(TypeRef ref, String name, LazyTypeSet types, String description) {
     Objects.requireNonNull(ref, "ref");
     Objects.requireNonNull(name, "name");
     Objects.requireNonNull(types, "types");
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
-    var merged = new LinkedHashMap<TypeRef, Map<String, LazyTypeSet>>();
+    var merged = new LinkedHashMap<TypeRef, Map<String, LazyField>>();
     for (var entry : this.lazyFields.entrySet()) {
       merged.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
     }
     var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
-    bucket.merge(name, types, LazyTypeSet::combine);
+    bucket.merge(name, new LazyField(types, description), LazyField::merge);
     return new TypeSet(newRefs, this.elementTypes, this.localFields, this.lazyElements, merged);
   }
 
@@ -336,7 +336,7 @@ public record TypeSet(
     }
     var merged = new LinkedHashMap<>(eager);
     for (var entry : lazy.entrySet()) {
-      merged.merge(entry.getKey(), new LocalField(entry.getValue().get(), ""), LocalField::merge);
+      merged.merge(entry.getKey(), entry.getValue().materialize(), LocalField::merge);
     }
     return Collections.unmodifiableMap(merged);
   }
@@ -358,7 +358,7 @@ public record TypeSet(
     for (var fields : lazyFields.values()) {
       for (var entry : fields.entrySet()) {
         if (entry.getKey().toLowerCase(Locale.ROOT).equals(lookup)) {
-          acc = acc.union(entry.getValue().get());
+          acc = acc.union(entry.getValue().types().get());
         }
       }
     }

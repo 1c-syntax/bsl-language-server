@@ -81,6 +81,9 @@ class RecursiveSeeRefInferenceTest extends AbstractServerContextAwareTest {
     var dc = doc();
     var content = dc.getContent();
     int markerStart = content.indexOf(marker);
+    assertThat(markerStart)
+      .as("Marker must exist in fixture: %s", marker)
+      .isGreaterThanOrEqualTo(0);
     int targetOffset = markerStart + offsetInMarker;
     int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
     int line = content.substring(0, targetOffset).split("\n").length - 1;
