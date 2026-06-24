@@ -354,7 +354,14 @@ public class SymbolTypeIndex {
     }
     TypeSet acc = TypeSet.EMPTY;
     for (var td : descriptions) {
-      acc = acc.union(applyFields(resolveTypeDescription(td, context), td, context));
+      var resolved = resolveTypeDescription(td, context);
+      // У коллекций (`Соответствие из КлючИЗначение: * Ключ - ...`) поля описывают
+      // ЭЛЕМЕНТ и навешиваются внутри resolveCollection; у простых типов
+      // (`Структура: * Поле - ...`) — на сам тип.
+      if (td.variant() != TypeDescription.Variant.COLLECTION) {
+        resolved = applyFields(resolved, td, context);
+      }
+      acc = acc.union(resolved);
     }
     return acc;
   }
@@ -396,7 +403,9 @@ public class SymbolTypeIndex {
         // из её возвращаемого значения на чтении, глубина — по выражению курсора.
         result = result.withLazyElement(headRef, lazyReturnTypes(localFunction));
       } else {
-        var eager = resolveTypes(List.of(valueType), context);
+        // Поля коллекции (`* Ключ - Строка`) относятся к элементу (КлючИЗначение,
+        // строке ТЗ и т.п.), поэтому навешиваем их на тип элемента, а не на голову.
+        var eager = applyFields(resolveTypes(List.of(valueType), context), td, context);
         if (!eager.isEmpty()) {
           result = result.withElement(headRef, eager);
         }
