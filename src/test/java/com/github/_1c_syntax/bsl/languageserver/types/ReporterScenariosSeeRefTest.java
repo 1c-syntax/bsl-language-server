@@ -117,8 +117,12 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
     assertTimeout(Duration.ofSeconds(20), () -> {
       var hover = hoverContent(mutualDoc(), "Контекст = ", 0);
       assertThat(hover)
-        .as("hover взаимно-рекурсивной структуры завершается и что-то показывает")
-        .isNotEmpty();
+        .as("hover взаимно-рекурсивной структуры завершается и показывает поля")
+        .contains("Содержимое")
+        .contains("Описание");
+      assertThat(hover)
+        .as("повторный вход в см.-цикл обрывается ссылкой `См. Функция`, а не уходит в рекурсию")
+        .containsPattern("См\\. (Контейнер|Коробка)");
     });
   }
 

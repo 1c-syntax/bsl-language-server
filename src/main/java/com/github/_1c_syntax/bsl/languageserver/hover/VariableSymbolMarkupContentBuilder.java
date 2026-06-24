@@ -46,9 +46,11 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -61,9 +63,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
   private static final String TYPE_KEY = "type";
-
-  /** Максимальная глубина разворота вложенных структур в hover (защита от рекурсивных см.-цепочек). */
-  private static final int MAX_FIELD_NESTING = 8;
 
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
@@ -156,7 +155,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     // строка ТаблицыЗначений) рендерим маркдаун-списком под заголовком типа.
     // Описания (и недостающие ключи) подмешиваем из doc-комментария параметра.
     var bullets = new ArrayList<String>();
-    collectFieldBullets(bullets, types, lang, 0, docFieldIndex(symbol));
+    collectFieldBullets(bullets, types, lang, 0, docFieldIndex(symbol), new HashSet<>());
     if (!bullets.isEmpty()) {
       sb.append('\n');
       bullets.forEach(line -> sb.append('\n').append(line));
@@ -173,17 +172,16 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    *
    * @param doc описания ключей из doc-комментария (имя ключа в нижнем регистре →
    *            тип/описание/вложенные ключи); пустая мапа, если документации нет.
+   * @param expandedSources функции-источники {@code см.}-ссылок, уже развёрнутые на
+   *            текущем пути обхода. Поле, тип которого снова приводит к одной из них,
+   *            не разворачивается повторно, а рендерится как {@code См. Функция} —
+   *            это и обрывает взаимную/само-рекурсию (Контейнер↔Коробка) без
+   *            искусственного лимита глубины.
    */
   private void collectFieldBullets(
-    List<String> out, TypeSet types, Language lang, int indent, Map<String, DocField> doc
+    List<String> out, TypeSet types, Language lang, int indent, Map<String, DocField> doc,
+    Set<Object> expandedSources
   ) {
-    // Ограничение глубины разворота вложенных структур: поля, типизированные
-    // через см.-ссылку, лениво раскрываются на чтении, и взаимно-рекурсивные
-    // структуры (Контейнер↔Коробка) иначе уводят рекурсию в бесконечность
-    // (StackOverflow). Несколько уровней достаточно для подсказки.
-    if (indent > MAX_FIELD_NESTING) {
-      return;
-    }
     var pad = "  ".repeat(indent);
     var rendered = new HashSet<String>();
     for (var entry : collectFields(types).entrySet()) {
@@ -197,8 +195,25 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       var description = info != null && !info.description().isBlank()
         ? info.description()
         : cleanupKeyDescription(field.description());
-      out.add(fieldBullet(pad, key, fieldTypeLabel(fieldTypes, lang), description));
-      collectFieldBullets(out, fieldTypes, lang, indent + 1, info == null ? Map.of() : info.children());
+
+      // Ленивые см.-источники, к которым приводит разворот этого поля. Если хотя бы
+      // один уже разворачивался выше по пути — это цикл: показываем `См. Функция`
+      // и не углубляемся.
+      var fieldSources = lazySourceKeys(fieldTypes);
+      var cyclic = !fieldSources.isEmpty() && !Collections.disjoint(fieldSources, expandedSources);
+      var seeLabel = cyclic ? seeReferenceLabel(fieldSources, lang) : "";
+      var typeLabel = seeLabel.isBlank() ? fieldTypeLabel(fieldTypes, lang) : seeLabel;
+
+      out.add(fieldBullet(pad, key, typeLabel, description));
+      if (!cyclic) {
+        var nextSources = expandedSources;
+        if (!fieldSources.isEmpty()) {
+          nextSources = new HashSet<>(expandedSources);
+          nextSources.addAll(fieldSources);
+        }
+        collectFieldBullets(out, fieldTypes, lang, indent + 1,
+          info == null ? Map.of() : info.children(), nextSources);
+      }
     }
     // Ключи, описанные в doc-комментарии, но не выведенные инференсером.
     for (var info : doc.values()) {
@@ -229,6 +244,37 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       }
     }
     return fields;
+  }
+
+  /**
+   * Ключи функций-источников ленивых {@code см.}-декораций типа (элементов коллекций
+   * и полей структур). По ним обнаруживается повторный вход (цикл) при обходе.
+   */
+  private static Set<Object> lazySourceKeys(TypeSet types) {
+    var keys = new HashSet<>();
+    types.lazyElements().values().forEach(lazy -> keys.add(lazy.key()));
+    types.lazyFields().values()
+      .forEach(byName -> byName.values().forEach(lazyField -> keys.add(lazyField.types().key())));
+    return keys;
+  }
+
+  /**
+   * Метка {@code См. Функция} для поля, чей тип задан {@code см.}-ссылкой,
+   * образующей цикл. Пустая строка, если имя источника извлечь не удалось
+   * (тогда вызывающий покажет обычную метку типа).
+   */
+  private static String seeReferenceLabel(Set<Object> sources, Language lang) {
+    var prefix = lang == Language.EN ? "See " : "См. ";
+    var names = sources.stream()
+      .map(VariableSymbolMarkupContentBuilder::sourceName)
+      .filter(name -> !name.isBlank())
+      .distinct()
+      .collect(Collectors.joining(" | "));
+    return names.isBlank() ? "" : prefix + names;
+  }
+
+  private static String sourceName(Object key) {
+    return key instanceof MethodSymbol method ? method.getName() : "";
   }
 
   /** markdown-метка типов значения поля: имена в кавычках, объединение через {@code |}. */
