@@ -130,6 +130,22 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void nestedQualifiedSeeRefIsNotLazyAndYieldsNoElement() {
+    // Массив из см. ОбщегоНазначения.НеизвестныйМетод — квалифицированная ссылка
+    // не считается локальной функцией (не лениво) и, не разрешившись, не даёт
+    // тип элемента; головной тип коллекции при этом сохраняется.
+    var declared = typeService.getDeclaredReturnTypes(method("СписокСКвалифицированнойСсылкой"));
+
+    assertThat(declared.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Массив");
+    var arrayRef = declared.refs().iterator().next();
+    assertThat(declared.getElementTypes(arrayRef).isEmpty())
+      .as("неразрешённая квалифицированная ссылка не даёт тип элемента")
+      .isTrue();
+  }
+
+  @Test
   void cyclicSeeRefDoesNotLoop() {
     // ПервыйУзел -> см. ВторойУзел -> см. ПервыйУзел: индексация не должна зациклиться.
     // Без защиты от цикла мьютуальная рекурсия упала бы со StackOverflowError ещё
