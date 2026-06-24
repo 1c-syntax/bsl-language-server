@@ -46,7 +46,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +128,7 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
-      var head = String.join(".", Arrays.copyOfRange(parts, 0, prefixLen));
+      var head = String.join(".", List.of(parts).subList(0, prefixLen));
       var headRef = typeRegistry.resolve(head, fileType).orElse(null);
       if (headRef == null) {
         continue;
