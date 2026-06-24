@@ -70,10 +70,11 @@ class LazyTypeSetTest {
     var b = new LazyTypeSet("k", () -> TypeSet.of(STRING));
     var c = new LazyTypeSet("other", () -> TypeSet.of(NUMBER));
 
-    assertThat(a).isEqualTo(b);
-    assertThat(a).hasSameHashCodeAs(b);
-    assertThat(a).isNotEqualTo(c);
-    assertThat(a).isNotEqualTo("not a lazy");
+    assertThat(a)
+      .isEqualTo(b)
+      .hasSameHashCodeAs(b)
+      .isNotEqualTo(c)
+      .isNotEqualTo("not a lazy");
   }
 
   @Test

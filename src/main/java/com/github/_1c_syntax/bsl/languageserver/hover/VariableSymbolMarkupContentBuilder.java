@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.MarkupContent;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -187,33 +188,8 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     for (var entry : collectFields(types).entrySet()) {
       var key = entry.getKey();
       rendered.add(key.toLowerCase(Locale.ROOT));
-      var field = entry.getValue();
-      var fieldTypes = field.types();
       var info = doc.get(key.toLowerCase(Locale.ROOT));
-      // Описание: приоритет у doc-комментария (для параметров), иначе — описание
-      // поля из модели типов (для локальной переменной из возврата функции).
-      var description = info != null && !info.description().isBlank()
-        ? info.description()
-        : cleanupKeyDescription(field.description());
-
-      // Ленивые см.-источники, к которым приводит разворот этого поля. Если хотя бы
-      // один уже разворачивался выше по пути — это цикл: показываем `См. Функция`
-      // и не углубляемся.
-      var fieldSources = lazySourceKeys(fieldTypes);
-      var cyclic = !fieldSources.isEmpty() && !Collections.disjoint(fieldSources, expandedSources);
-      var seeLabel = cyclic ? seeReferenceLabel(fieldSources, lang) : "";
-      var typeLabel = seeLabel.isBlank() ? fieldTypeLabel(fieldTypes, lang) : seeLabel;
-
-      out.add(fieldBullet(pad, key, typeLabel, description));
-      if (!cyclic) {
-        var nextSources = expandedSources;
-        if (!fieldSources.isEmpty()) {
-          nextSources = new HashSet<>(expandedSources);
-          nextSources.addAll(fieldSources);
-        }
-        collectFieldBullets(out, fieldTypes, lang, indent + 1,
-          info == null ? Map.of() : info.children(), nextSources);
-      }
+      renderInferredField(out, pad, key, entry.getValue(), lang, indent, info, expandedSources);
     }
     // Ключи, описанные в doc-комментарии, но не выведенные инференсером.
     for (var info : doc.values()) {
@@ -223,6 +199,41 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       out.add(fieldBullet(pad, info.name(), info.typeLabel(), info.description()));
       collectDocOnlyBullets(out, info.children(), indent + 1);
     }
+  }
+
+  /**
+   * Отрендерить один выведенный инференсером ключ и, если он не образует цикла по
+   * см.-ссылке, рекурсивно развернуть его вложенные поля.
+   */
+  private void renderInferredField(List<String> out, String pad, String key, LocalField field,
+                                   Language lang, int indent, @Nullable DocField info,
+                                   Set<Object> expandedSources) {
+    var fieldTypes = field.types();
+    // Описание: приоритет у doc-комментария (для параметров), иначе — описание
+    // поля из модели типов (для локальной переменной из возврата функции).
+    var description = info != null && !info.description().isBlank()
+      ? info.description()
+      : cleanupKeyDescription(field.description());
+
+    // Ленивые см.-источники, к которым приводит разворот этого поля. Если хотя бы
+    // один уже разворачивался выше по пути — это цикл: показываем `См. Функция`
+    // и не углубляемся.
+    var fieldSources = lazySourceKeys(fieldTypes);
+    var cyclic = !fieldSources.isEmpty() && !Collections.disjoint(fieldSources, expandedSources);
+    var seeLabel = cyclic ? seeReferenceLabel(fieldSources, lang) : "";
+    var typeLabel = seeLabel.isBlank() ? fieldTypeLabel(fieldTypes, lang) : seeLabel;
+
+    out.add(fieldBullet(pad, key, typeLabel, description));
+    if (cyclic) {
+      return;
+    }
+    var nextSources = expandedSources;
+    if (!fieldSources.isEmpty()) {
+      nextSources = new HashSet<>(expandedSources);
+      nextSources.addAll(fieldSources);
+    }
+    collectFieldBullets(out, fieldTypes, lang, indent + 1,
+      info == null ? Map.of() : info.children(), nextSources);
   }
 
   /**
@@ -270,7 +281,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       .filter(name -> !name.isBlank())
       .distinct()
       .collect(Collectors.joining(" | "));
-    return names.isBlank() ? "" : prefix + names;
+    return names.isBlank() ? "" : (prefix + names);
   }
 
   private static String sourceName(Object key) {

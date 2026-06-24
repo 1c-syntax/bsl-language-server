@@ -70,30 +70,29 @@ public record TypeSet(
 
   public TypeSet {
     refs = compactRefs(refs);
-    elementTypes = elementTypes == null || elementTypes.isEmpty()
+    elementTypes = immutableCopy(elementTypes);
+    localFields = immutableNestedCopy(localFields);
+    lazyElements = immutableCopy(lazyElements);
+    lazyFields = immutableNestedCopy(lazyFields);
+  }
+
+  /** Неизменяемая копия плоской декорационной мапы (пустая — общий emptyMap). */
+  private static <K, V> Map<K, V> immutableCopy(Map<K, V> source) {
+    return source == null || source.isEmpty()
       ? Collections.emptyMap()
-      : Collections.unmodifiableMap(new LinkedHashMap<>(elementTypes));
-    if (localFields == null || localFields.isEmpty()) {
-      localFields = Collections.emptyMap();
-    } else {
-      var copy = new LinkedHashMap<TypeRef, Map<String, LocalField>>();
-      for (var entry : localFields.entrySet()) {
-        copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
-      }
-      localFields = Collections.unmodifiableMap(copy);
+      : Collections.unmodifiableMap(new LinkedHashMap<>(source));
+  }
+
+  /** Неизменяемая глубокая копия вложенной декорационной мапы (ключ → имя → значение). */
+  private static <K, N, V> Map<K, Map<N, V>> immutableNestedCopy(Map<K, Map<N, V>> source) {
+    if (source == null || source.isEmpty()) {
+      return Collections.emptyMap();
     }
-    lazyElements = lazyElements == null || lazyElements.isEmpty()
-      ? Collections.emptyMap()
-      : Collections.unmodifiableMap(new LinkedHashMap<>(lazyElements));
-    if (lazyFields == null || lazyFields.isEmpty()) {
-      lazyFields = Collections.emptyMap();
-    } else {
-      var copy = new LinkedHashMap<TypeRef, Map<String, LazyField>>();
-      for (var entry : lazyFields.entrySet()) {
-        copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
-      }
-      lazyFields = Collections.unmodifiableMap(copy);
+    var copy = new LinkedHashMap<K, Map<N, V>>();
+    for (var entry : source.entrySet()) {
+      copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
     }
+    return Collections.unmodifiableMap(copy);
   }
 
   public TypeSet(Set<TypeRef> refs) {

@@ -303,30 +303,37 @@ public class SymbolTypeIndex {
     }
     var localFunction = findLocalFunction(owner, link);
     if (localFunction != null) {
-      // Предпочитаем уже проиндексированный возвращаемый тип (в т.ч. с раскрытыми
-      // цепочками см.); если цель ещё не проиндексирована (вызов из самой
-      // индексации) — резолвим напрямую из описания.
-      var cached = getDeclaredReturnTypes(localFunction);
-      if (!cached.isEmpty()) {
-        return cached;
-      }
-      // Закольцованная ссылка (A → см. B → см. A): прерываем рекурсию.
-      // visited скоупится на текущий путь обхода: после возврата из ветки
-      // localFunction убирается, иначе вторая (нециклическая) ссылка на ту же
-      // функцию из соседнего поля/элемента ложно считалась бы циклом.
-      if (!visited.add(localFunction)) {
-        return TypeSet.EMPTY;
-      }
-      try {
-        var returnedValue = localFunction.getDescription()
-          .map(MethodDescription::getReturnedValue)
-          .orElse(List.of());
-        return resolveTypes(returnedValue, new ResolutionContext(owner, fileType, visited));
-      } finally {
-        visited.remove(localFunction);
-      }
+      return resolveLocalFunctionTypes(localFunction, owner, fileType, visited);
     }
     return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Возвращаемый тип локальной функции, на которую указывает {@code см.}-ссылка.
+   * <p>
+   * Предпочитаем уже проиндексированный тип (в т.ч. с раскрытыми цепочками см.);
+   * если цель ещё не проиндексирована (вызов из самой индексации) — резолвим
+   * напрямую из описания. {@code visited} скоупится на текущий путь обхода:
+   * после возврата из ветки функция убирается, иначе вторая (нециклическая)
+   * ссылка на неё из соседнего поля/элемента ложно считалась бы циклом.
+   */
+  private TypeSet resolveLocalFunctionTypes(MethodSymbol localFunction, DocumentContext owner,
+                                            FileType fileType, Set<MethodSymbol> visited) {
+    var cached = getDeclaredReturnTypes(localFunction);
+    if (!cached.isEmpty()) {
+      return cached;
+    }
+    if (!visited.add(localFunction)) {
+      return TypeSet.EMPTY;
+    }
+    try {
+      var returnedValue = localFunction.getDescription()
+        .map(MethodDescription::getReturnedValue)
+        .orElse(List.of());
+      return resolveTypes(returnedValue, new ResolutionContext(owner, fileType, visited));
+    } finally {
+      visited.remove(localFunction);
+    }
   }
 
   /**
@@ -452,12 +459,12 @@ public class SymbolTypeIndex {
    * ({@code Модуль.Метод}) и имена типов не рекурсивны — резолвятся eager.
    */
   @Nullable
-  private MethodSymbol localFunctionSeeRef(TypeDescription td, ResolutionContext context) {
+  private static MethodSymbol localFunctionSeeRef(TypeDescription td, ResolutionContext context) {
     if (td.variant() != TypeDescription.Variant.HYPERLINK) {
       return null;
     }
     var name = td.name();
-    if (name == null || name.isBlank() || name.contains(".")) {
+    if (name.isBlank() || name.contains(".")) {
       return null;
     }
     return findLocalFunction(context.owner(), name);

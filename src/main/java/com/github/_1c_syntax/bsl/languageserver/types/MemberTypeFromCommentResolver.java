@@ -33,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Единый для обоих языков (BSL и OneScript) резолвер типа переменной-свойства из
