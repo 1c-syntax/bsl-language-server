@@ -62,6 +62,9 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private static final String EXPORT_KEY = "export";
   private static final String TYPE_KEY = "type";
 
+  /** Максимальная глубина разворота вложенных структур в hover (защита от рекурсивных см.-цепочек). */
+  private static final int MAX_FIELD_NESTING = 8;
+
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
@@ -174,6 +177,13 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private void collectFieldBullets(
     List<String> out, TypeSet types, Language lang, int indent, Map<String, DocField> doc
   ) {
+    // Ограничение глубины разворота вложенных структур: поля, типизированные
+    // через см.-ссылку, лениво раскрываются на чтении, и взаимно-рекурсивные
+    // структуры (Контейнер↔Коробка) иначе уводят рекурсию в бесконечность
+    // (StackOverflow). Несколько уровней достаточно для подсказки.
+    if (indent > MAX_FIELD_NESTING) {
+      return;
+    }
     var pad = "  ".repeat(indent);
     var rendered = new HashSet<String>();
     for (var entry : collectFields(types).entrySet()) {
