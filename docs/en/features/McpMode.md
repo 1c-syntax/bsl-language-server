@@ -67,6 +67,7 @@ Source directories are provided by the client through MCP roots — just like an
 | `definition` | Go to the symbol declaration |
 | `type_info` | Properties and methods of a type looked up by name (e.g. `Массив`/`Array`) |
 | `global_member_info` | A global member looked up by name (e.g. `Сообщить`/`Message`) — function, property or system enum with signatures and metadata |
+| `global_methods` | List of global context methods (e.g. `СтартовыйСценарий`/`StartupScript`) with signatures and metadata; can be narrowed by a name substring |
 | `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |
 
 Positions (`line`, `character`) are zero-based, as in LSP.

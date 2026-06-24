@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DocumentSymbolsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMethodsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
@@ -90,6 +91,8 @@ class McpToolsTest {
   private TypeAtPositionTool typeAtPositionTool;
   @Autowired
   private GlobalMemberInfoTool globalMemberInfoTool;
+  @Autowired
+  private GlobalMethodsTool globalMethodsTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
 
@@ -245,6 +248,68 @@ class McpToolsTest {
     var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, WORKSPACE_ROOT, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
+  }
+
+  @Test
+  void globalMethodsListsGlobalContextFunctions() {
+    var result = globalMethodsTool.globalMethods(FileType.BSL, WORKSPACE_ROOT, null, null);
+
+    assertThat(result.count()).isEqualTo(result.methods().size());
+    assertThat(result.methods()).isNotEmpty();
+    assertThat(result.methods()).allSatisfy(method -> assertThat(method.kind()).isEqualTo("METHOD"));
+    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Сообщить");
+  }
+
+  @Test
+  void globalMethodsFiltersByNameSubstring() {
+    var result = globalMethodsTool.globalMethods(FileType.BSL, WORKSPACE_ROOT, "Сообщ", null);
+
+    assertThat(result.methods()).isNotEmpty();
+    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Сообщить");
+    assertThat(result.methods()).allSatisfy(method ->
+      assertThat(method.name().toLowerCase()).contains("сообщ"));
+  }
+
+  @Test
+  void globalMethodsFiltersByEnglishSubstring() {
+    var unfiltered = globalMethodsTool.globalMethods(FileType.BSL, WORKSPACE_ROOT, null, null);
+    var filtered = globalMethodsTool.globalMethods(FileType.BSL, WORKSPACE_ROOT, "Message", null);
+
+    // EN-подстрока сужает выборку относительно полного списка, но что-то находит.
+    assertThat(filtered.methods()).isNotEmpty();
+    assertThat(filtered.count()).isLessThan(unfiltered.count());
+  }
+
+  @Test
+  void globalMethodsReturnsEmptyForUnmatchedFilter() {
+    var result = globalMethodsTool.globalMethods(FileType.BSL, WORKSPACE_ROOT, "НетТакогоМетода", null);
+
+    assertThat(result.count()).isZero();
+    assertThat(result.methods()).isEmpty();
+  }
+
+  @Test
+  void globalMethodsAcceptsOscriptFileType() {
+    var result = globalMethodsTool.globalMethods(FileType.OS, WORKSPACE_ROOT, null, null);
+
+    assertThat(result.methods()).isNotEmpty();
+    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Сообщить");
+  }
+
+  @Test
+  void globalMethodsThrowsWhenRootIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> globalMethodsTool.globalMethods(FileType.BSL, unknownRoot, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace matches root");
+  }
+
+  @Test
+  void globalMethodsThrowsWhenRootIsMissing() {
+    assertThatThrownBy(() -> globalMethodsTool.globalMethods(FileType.BSL, null, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required");
   }
 
   @Test
