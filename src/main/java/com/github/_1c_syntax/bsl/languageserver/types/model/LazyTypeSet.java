@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -49,8 +48,8 @@ public final class LazyTypeSet {
   private final Supplier<TypeSet> resolver;
 
   public LazyTypeSet(Object key, Supplier<TypeSet> resolver) {
-    this.key = Objects.requireNonNull(key, "key");
-    this.resolver = Objects.requireNonNull(resolver, "resolver");
+    this.key = key;
+    this.resolver = resolver;
   }
 
   /**

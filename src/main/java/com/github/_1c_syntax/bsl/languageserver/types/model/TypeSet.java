@@ -230,8 +230,6 @@ public record TypeSet(
    * @return новый {@link TypeSet} с дополненным {@code lazyElements[ref]}.
    */
   public TypeSet withLazyElement(TypeRef ref, LazyTypeSet element) {
-    Objects.requireNonNull(ref, "ref");
-    Objects.requireNonNull(element, "element");
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<>(this.lazyElements);
     merged.merge(ref, element, LazyTypeSet::combine);
@@ -284,9 +282,6 @@ public record TypeSet(
    * @return новый {@link TypeSet} с дополненным {@code lazyFields[ref][name]}.
    */
   public TypeSet withLazyField(TypeRef ref, String name, LazyTypeSet types, String description) {
-    Objects.requireNonNull(ref, "ref");
-    Objects.requireNonNull(name, "name");
-    Objects.requireNonNull(types, "types");
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<TypeRef, Map<String, LazyField>>();
     for (var entry : this.lazyFields.entrySet()) {

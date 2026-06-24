@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LazyTypeSetTest {
 
@@ -99,11 +98,5 @@ class LazyTypeSetTest {
   @Test
   void toStringContainsKey() {
     assertThat(new LazyTypeSet("МойКлюч", () -> TypeSet.EMPTY)).hasToString("Lazy(МойКлюч)");
-  }
-
-  @Test
-  void constructorRejectsNulls() {
-    assertThrows(NullPointerException.class, () -> new LazyTypeSet(null, () -> TypeSet.EMPTY));
-    assertThrows(NullPointerException.class, () -> new LazyTypeSet("k", null));
   }
 }
