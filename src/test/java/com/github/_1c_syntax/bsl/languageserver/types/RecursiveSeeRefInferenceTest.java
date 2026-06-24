@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,6 +50,33 @@ class RecursiveSeeRefInferenceTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ExpressionTypeInferencer inferencer;
+
+  @Autowired
+  private HoverProvider hoverProvider;
+
+  @Test
+  void hoverOverRecursiveTreeCutsElementCycleWithSeeRef() {
+    // Hover по узлу дерева (поле Потомки — Массив из см. ДеревоУзел): разворот
+    // вложенных полей завершается, а повторный вход в элемент-цикл рендерится
+    // ссылкой `См. ДеревоУзел` (а не уходит в бесконечную рекурсию).
+    var dc = doc();
+    var content = dc.getContent();
+    int offset = content.indexOf("Узел = Корень.Потомки[0]");
+    int lineStart = content.lastIndexOf('\n', offset) + 1;
+    int line = content.substring(0, offset).split("\n", -1).length - 1;
+    // позиция внутри идентификатора `Узел`
+    var params = new HoverParams(new TextDocumentIdentifier(dc.getUri().toString()),
+      new Position(line, offset - lineStart + 1));
+    var hover = hoverProvider.getHover(dc, params)
+      .map(h -> h.getContents().getRight().getValue())
+      .orElse("");
+
+    assertThat(hover)
+      .as("hover рекурсивного дерева показывает поля и обрывает элемент-цикл ссылкой")
+      .contains("Значение")
+      .contains("Потомки")
+      .containsPattern("См\\. ДеревоУзел");
+  }
 
   @Test
   void deepNavigationThroughRecursiveSeeRefResolves() {

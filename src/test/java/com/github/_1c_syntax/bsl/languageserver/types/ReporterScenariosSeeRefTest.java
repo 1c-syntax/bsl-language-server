@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -65,6 +67,23 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private CompletionProvider completionProvider;
+
+  @Autowired
+  private LanguageServerConfiguration languageServerConfiguration;
+
+  @Test
+  void mutualRecursionHoverSeeRefHonorsEnglishLocale() {
+    // В EN-локали обрыв см.-цикла рендерится как `See Функция` (а не `См.`).
+    languageServerConfiguration.setLanguage(Language.EN);
+    try {
+      var hover = hoverContent(mutualDoc(), "Контекст = ", 0);
+      assertThat(hover)
+        .as("в EN-локали ссылка на цикле рендерится как `See Функция`")
+        .containsPattern("See (Контейнер|Коробка)");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+  }
 
   // 1. Чейнинг через точку по ленивому полю — инференс.
 
