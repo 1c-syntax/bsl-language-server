@@ -28,7 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -212,8 +211,6 @@ public record TypeSet(
    *         {@code elementTypes[ref]} (через {@link #union(TypeSet)}).
    */
   public TypeSet withElement(TypeRef ref, TypeSet element) {
-    Objects.requireNonNull(ref, "ref");
-    Objects.requireNonNull(element, "element");
     if (element.isEmpty() && !element.hasDecorations()) {
       return this;
     }
@@ -261,9 +258,6 @@ public record TypeSet(
    * @return новый {@link TypeSet} с дополненным {@code localFields[ref][name]}.
    */
   public TypeSet withField(TypeRef ref, String name, TypeSet types, String description) {
-    Objects.requireNonNull(ref, "ref");
-    Objects.requireNonNull(name, "name");
-    Objects.requireNonNull(types, "types");
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<TypeRef, Map<String, LocalField>>();
     for (var entry : this.localFields.entrySet()) {
