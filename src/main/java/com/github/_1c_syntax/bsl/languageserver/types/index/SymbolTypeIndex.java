@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -300,10 +301,7 @@ public class SymbolTypeIndex {
       // трактовать как полное имя типа (например, квалифицированный платформенный
       // тип) через TypeRegistry ниже.
     }
-    var localFunction = owner.getSymbolTree().getMethods().stream()
-      .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(link))
-      .findFirst()
-      .orElse(null);
+    var localFunction = findLocalFunction(owner, link);
     if (localFunction != null) {
       // Предпочитаем уже проиндексированный возвращаемый тип (в т.ч. с раскрытыми
       // цепочками см.); если цель ещё не проиндексирована (вызов из самой
@@ -382,18 +380,30 @@ public class SymbolTypeIndex {
     if (headRef == null) {
       return TypeSet.EMPTY;
     }
-    var elementTypes = resolveTypes(td.valueTypes(), context);
-    if (elementTypes.isEmpty()) {
-      return TypeSet.of(headRef);
+    var result = TypeSet.of(headRef);
+    for (var valueType : td.valueTypes()) {
+      var localFunction = localFunctionSeeRef(valueType, context);
+      if (localFunction != null) {
+        // Тип элемента задан см.-ссылкой на локальную функцию — возможно
+        // самоссылочную (дерево). Храним ленивую ссылку: реальный тип берётся
+        // из её возвращаемого значения на чтении, глубина — по выражению курсора.
+        result = result.withLazyElement(headRef, lazyReturnTypes(localFunction));
+      } else {
+        var eager = resolveTypes(List.of(valueType), context);
+        if (!eager.isEmpty()) {
+          result = result.withElement(headRef, eager);
+        }
+      }
     }
-    return TypeSet.of(headRef).withElement(headRef, elementTypes);
+    return result;
   }
 
   /**
    * Если у описания типа есть {@link TypeDescription#fields() поля}
    * (декларация структуры/ТЗ ключами через {@code * Поле - Тип}),
-   * навесить их на головной {@link TypeRef} через
-   * {@link TypeSet#withField(TypeRef, String, TypeSet)}.
+   * навесить их на головной {@link TypeRef}. Поле, типизированное см.-ссылкой
+   * на локальную функцию, навешивается лениво ({@link TypeSet#withLazyField}) —
+   * для поддержки рекурсивных структур.
    */
   private TypeSet applyFields(TypeSet base, TypeDescription td, ResolutionContext context) {
     var fields = td.fields();
@@ -403,12 +413,50 @@ public class SymbolTypeIndex {
     var headRef = base.refs().iterator().next();
     var result = base;
     for (var field : fields) {
-      var fieldTypes = resolveTypes(field.types(), context);
-      if (!fieldTypes.isEmpty()) {
-        result = result.withField(headRef, field.name(), fieldTypes, fieldDescription(field));
+      var eager = TypeSet.EMPTY;
+      for (var fieldType : field.types()) {
+        var localFunction = localFunctionSeeRef(fieldType, context);
+        if (localFunction != null) {
+          result = result.withLazyField(headRef, field.name(), lazyReturnTypes(localFunction));
+        } else {
+          eager = eager.union(resolveTypes(List.of(fieldType), context));
+        }
+      }
+      if (!eager.isEmpty()) {
+        result = result.withField(headRef, field.name(), eager, fieldDescription(field));
       }
     }
     return result;
+  }
+
+  /**
+   * Если {@code td} — неквалифицированная {@code см.}-ссылка на функцию того же
+   * модуля, вернуть её символ; иначе {@code null}. Квалифицированные ссылки
+   * ({@code Модуль.Метод}) и имена типов не рекурсивны — резолвятся eager.
+   */
+  @Nullable
+  private MethodSymbol localFunctionSeeRef(TypeDescription td, ResolutionContext context) {
+    if (td.variant() != TypeDescription.Variant.HYPERLINK) {
+      return null;
+    }
+    var name = td.name();
+    if (name == null || name.isBlank() || name.contains(".")) {
+      return null;
+    }
+    return findLocalFunction(context.owner(), name);
+  }
+
+  @Nullable
+  private static MethodSymbol findLocalFunction(DocumentContext owner, String name) {
+    return owner.getSymbolTree().getMethods().stream()
+      .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(name))
+      .findFirst()
+      .orElse(null);
+  }
+
+  /** Ленивая ссылка на возвращаемый тип функции (из кэша, на момент чтения). */
+  private LazyTypeSet lazyReturnTypes(MethodSymbol function) {
+    return new LazyTypeSet(function, () -> getDeclaredReturnTypes(function));
   }
 
   /**

@@ -62,7 +62,9 @@ import java.util.Set;
 public record TypeSet(
   Set<TypeRef> refs,
   Map<TypeRef, TypeSet> elementTypes,
-  Map<TypeRef, Map<String, LocalField>> localFields
+  Map<TypeRef, Map<String, LocalField>> localFields,
+  Map<TypeRef, LazyTypeSet> lazyElements,
+  Map<TypeRef, Map<String, LazyTypeSet>> lazyFields
 ) {
 
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
@@ -81,10 +83,23 @@ public record TypeSet(
       }
       localFields = Collections.unmodifiableMap(copy);
     }
+    lazyElements = lazyElements == null || lazyElements.isEmpty()
+      ? Collections.emptyMap()
+      : Collections.unmodifiableMap(new LinkedHashMap<>(lazyElements));
+    if (lazyFields == null || lazyFields.isEmpty()) {
+      lazyFields = Collections.emptyMap();
+    } else {
+      var copy = new LinkedHashMap<TypeRef, Map<String, LazyTypeSet>>();
+      for (var entry : lazyFields.entrySet()) {
+        copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
+      }
+      lazyFields = Collections.unmodifiableMap(copy);
+    }
   }
 
   public TypeSet(Set<TypeRef> refs) {
-    this(refs, Collections.emptyMap(), Collections.emptyMap());
+    this(refs, Collections.emptyMap(), Collections.emptyMap(),
+      Collections.emptyMap(), Collections.emptyMap());
   }
 
   public static TypeSet of(TypeRef... refs) {
@@ -133,10 +148,10 @@ public record TypeSet(
    *         наборов сохраняются, при пересечении ref union-ятся per-key.
    */
   public TypeSet union(TypeSet other) {
-    if (other.isEmpty() && other.elementTypes.isEmpty() && other.localFields.isEmpty()) {
+    if (other.isEmpty() && !other.hasDecorations()) {
       return this;
     }
-    if (this.isEmpty() && this.elementTypes.isEmpty() && this.localFields.isEmpty()) {
+    if (this.isEmpty() && !this.hasDecorations()) {
       return other;
     }
     var merged = new LinkedHashSet<>(this.refs);
@@ -158,13 +173,35 @@ public record TypeSet(
       }
     }
 
-    return new TypeSet(merged, mergedElements, mergedFields);
+    var mergedLazyElements = new LinkedHashMap<>(this.lazyElements);
+    for (var entry : other.lazyElements.entrySet()) {
+      mergedLazyElements.merge(entry.getKey(), entry.getValue(), LazyTypeSet::combine);
+    }
+
+    var mergedLazyFields = new LinkedHashMap<TypeRef, Map<String, LazyTypeSet>>();
+    for (var entry : this.lazyFields.entrySet()) {
+      mergedLazyFields.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+    }
+    for (var entry : other.lazyFields.entrySet()) {
+      var existing = mergedLazyFields.computeIfAbsent(entry.getKey(), k -> new LinkedHashMap<>());
+      for (var fieldEntry : entry.getValue().entrySet()) {
+        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), LazyTypeSet::combine);
+      }
+    }
+
+    return new TypeSet(merged, mergedElements, mergedFields, mergedLazyElements, mergedLazyFields);
+  }
+
+  /** Есть ли у набора декорации (element/field, в т.ч. ленивые). */
+  private boolean hasDecorations() {
+    return !elementTypes.isEmpty() || !localFields.isEmpty()
+      || !lazyElements.isEmpty() || !lazyFields.isEmpty();
   }
 
   public TypeSet add(TypeRef ref) {
     var merged = new LinkedHashSet<>(this.refs);
     merged.add(ref);
-    return new TypeSet(merged, this.elementTypes, this.localFields);
+    return new TypeSet(merged, this.elementTypes, this.localFields, this.lazyElements, this.lazyFields);
   }
 
   /**
@@ -177,13 +214,28 @@ public record TypeSet(
   public TypeSet withElement(TypeRef ref, TypeSet element) {
     Objects.requireNonNull(ref, "ref");
     Objects.requireNonNull(element, "element");
-    if (element.isEmpty() && element.elementTypes.isEmpty() && element.localFields.isEmpty()) {
+    if (element.isEmpty() && !element.hasDecorations()) {
       return this;
     }
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<>(this.elementTypes);
     merged.merge(ref, element, TypeSet::union);
-    return new TypeSet(newRefs, merged, this.localFields);
+    return new TypeSet(newRefs, merged, this.localFields, this.lazyElements, this.lazyFields);
+  }
+
+  /**
+   * Прикрепить к {@code ref} <b>ленивый</b> тип элемента коллекции — элемент,
+   * заданный {@code см.}-ссылкой на локальную функцию (см. {@link LazyTypeSet}).
+   *
+   * @return новый {@link TypeSet} с дополненным {@code lazyElements[ref]}.
+   */
+  public TypeSet withLazyElement(TypeRef ref, LazyTypeSet element) {
+    Objects.requireNonNull(ref, "ref");
+    Objects.requireNonNull(element, "element");
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    var merged = new LinkedHashMap<>(this.lazyElements);
+    merged.merge(ref, element, LazyTypeSet::combine);
+    return new TypeSet(newRefs, this.elementTypes, this.localFields, merged, this.lazyFields);
   }
 
   /**
@@ -221,7 +273,28 @@ public record TypeSet(
     }
     var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
     bucket.merge(name, new LocalField(types, description), LocalField::merge);
-    return new TypeSet(newRefs, this.elementTypes, merged);
+    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields);
+  }
+
+  /**
+   * Прикрепить к {@code ref} <b>ленивое</b> поле «открытого» объекта — поле,
+   * тип которого задан {@code см.}-ссылкой на локальную функцию
+   * (см. {@link LazyTypeSet}).
+   *
+   * @return новый {@link TypeSet} с дополненным {@code lazyFields[ref][name]}.
+   */
+  public TypeSet withLazyField(TypeRef ref, String name, LazyTypeSet types) {
+    Objects.requireNonNull(ref, "ref");
+    Objects.requireNonNull(name, "name");
+    Objects.requireNonNull(types, "types");
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    var merged = new LinkedHashMap<TypeRef, Map<String, LazyTypeSet>>();
+    for (var entry : this.lazyFields.entrySet()) {
+      merged.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+    }
+    var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
+    bucket.merge(name, types, LazyTypeSet::combine);
+    return new TypeSet(newRefs, this.elementTypes, this.localFields, this.lazyElements, merged);
   }
 
   /**
@@ -229,7 +302,12 @@ public record TypeSet(
    *         {@link #EMPTY}.
    */
   public TypeSet getElementTypes(TypeRef ref) {
-    return elementTypes.getOrDefault(ref, EMPTY);
+    var eager = elementTypes.getOrDefault(ref, EMPTY);
+    var lazy = lazyElements.get(ref);
+    if (lazy == null) {
+      return eager;
+    }
+    return eager.isEmpty() ? lazy.get() : eager.union(lazy.get());
   }
 
   /**
@@ -240,15 +318,27 @@ public record TypeSet(
     for (var ts : elementTypes.values()) {
       acc = acc.union(ts);
     }
+    for (var lazy : lazyElements.values()) {
+      acc = acc.union(lazy.get());
+    }
     return acc;
   }
 
   /**
    * @return поля «открытого» объекта для указанного {@code ref}, либо пустую
-   *         мапу.
+   *         мапу. Ленивые поля ({@code см.}-ссылки) форсятся на чтении.
    */
   public Map<String, LocalField> getLocalFields(TypeRef ref) {
-    return localFields.getOrDefault(ref, Collections.emptyMap());
+    var eager = localFields.getOrDefault(ref, Collections.emptyMap());
+    var lazy = lazyFields.get(ref);
+    if (lazy == null) {
+      return eager;
+    }
+    var merged = new LinkedHashMap<>(eager);
+    for (var entry : lazy.entrySet()) {
+      merged.merge(entry.getKey(), new LocalField(entry.getValue().get(), ""), LocalField::merge);
+    }
+    return Collections.unmodifiableMap(merged);
   }
 
   /**
@@ -265,15 +355,26 @@ public record TypeSet(
         }
       }
     }
+    for (var fields : lazyFields.values()) {
+      for (var entry : fields.entrySet()) {
+        if (entry.getKey().toLowerCase(Locale.ROOT).equals(lookup)) {
+          acc = acc.union(entry.getValue().get());
+        }
+      }
+    }
     return acc;
   }
 
   /**
-   * @return имена всех известных полей открытых объектов в наборе.
+   * @return имена всех известных полей открытых объектов в наборе (включая
+   *         ленивые поля — их имена известны без форса).
    */
   public Set<String> getAllFieldNames() {
     var names = new LinkedHashSet<String>();
     for (var fields : localFields.values()) {
+      names.addAll(fields.keySet());
+    }
+    for (var fields : lazyFields.values()) {
       names.addAll(fields.keySet());
     }
     return Collections.unmodifiableSet(names);
