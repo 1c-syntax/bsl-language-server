@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
@@ -444,23 +445,29 @@ public final class CompletionProvider {
     // MemberDescriptor и documentation строится сразу (eager), резолвить нечего.
     var owners = new LinkedHashMap<String, TypeRef>();
     for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
-        if (members.putIfAbsent(member.name(), member) == null) {
-          owners.put(member.name(), ref);
-        }
-      }
-      // Декларированные ключи «открытого» объекта данных (Структура из
-      // Новый Структура("К1, К2"), ТЗ с описанными колонками из JsDoc).
-      // Поля идут перед members такого же имени, чтобы пользовательские
-      // ключи приоритетнее дефолтных алиасов.
+      // Декларированные поля «открытого» объекта данных (Структура из
+      // Новый Структура("К1, К2"), ТЗ с описанными колонками из JsDoc, элемент
+      // Соответствия — КлючИЗначение с типами Ключ/Значение из JsDoc).
+      // Обрабатываются ПЕРЕД members: при совпадении имён задокументированное
+      // поле приоритетнее одноимённого дефолтного члена платформы (у которого
+      // типа нет). Иначе putIfAbsent оставлял бы бестиповый платформенный член
+      // и тип поля терялся в подсказке — например, у КлючИЗначение.Ключ /
+      // .Значение пропадали Строка / Число (#4206).
       var localFields = typeSet.getLocalFields(ref);
       for (var entry : localFields.entrySet()) {
         var fieldName = entry.getKey();
         var field = entry.getValue();
-        var fieldRef = field.types().refs().stream().findFirst().orElse(null);
+        // Полный TypeSet поля (с union/вложенными полями), как в
+        // DereferenceMemberMatcher, а не только головной ref.
+        var fieldTypes = !field.types().isEmpty() ? field.types() : TypeSet.of(TypeRef.UNKNOWN);
         if (members.putIfAbsent(fieldName,
-          MemberDescriptor.property(fieldName, fieldRef, field.description())) == null) {
+          MemberDescriptor.property(fieldName, fieldTypes, field.description())) == null) {
           localFieldNames.add(fieldName);
+        }
+      }
+      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
+        if (members.putIfAbsent(member.name(), member) == null) {
+          owners.put(member.name(), ref);
         }
       }
     }
