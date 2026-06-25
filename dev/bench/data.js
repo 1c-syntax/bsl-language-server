@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782406713240,
+  "lastUpdate": 1782418650159,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38967,6 +38967,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.892869874526205",
             "extra": "mean: 274.06592257817584 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "287be258bf0440f18c6e7ef972a53c806dcb6f7f",
+          "message": "Merge pull request #4207 from 1c-syntax/claude/github-issue-4204-v19sfb\n\nfix(hover): корректный конструктор на обрыве рекурсивной см.-цепочки",
+          "timestamp": "2026-06-25T21:28:32+02:00",
+          "tree_id": "fe7d13df2772b39a464f3141da906a4660f60946",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/287be258bf0440f18c6e7ef972a53c806dcb6f7f"
+        },
+        "date": 1782418639288,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.30014204978943,
+            "unit": "sec",
+            "range": "stddev: 6.042895395553847",
+            "extra": "mean: 284.30014204978943 sec\nrounds: 3"
           }
         ]
       }
