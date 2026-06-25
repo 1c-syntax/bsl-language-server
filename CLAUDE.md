@@ -27,7 +27,8 @@
 на Spring Boot. Главная ценность — движок **диагностик** (150+ правил статического анализа кода 1С).
 
 Режимы работы (подкоманды): `lsp` (по умолчанию, stdin/stdout) · `analyze` (пакетный анализ для CI,
-отчёты SARIF/Generic/JSON) · `format` (форматтер) · `websocket` · `mcp` (Model Context Protocol) · `version`.
+отчёты SARIF/Generic/JSON) · `format` (форматтер) · `websocket` · `mcp` (Model Context Protocol;
+stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`websocket`) · `version`.
 
 Ссылки: [сайт](https://1c-syntax.github.io/bsl-language-server) ·
 [DeepWiki — машинный обзор архитектуры](https://deepwiki.com/1c-syntax/bsl-language-server) (проверяй по коду) ·
