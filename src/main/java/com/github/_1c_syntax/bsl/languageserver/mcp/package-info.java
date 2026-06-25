@@ -20,12 +20,12 @@
  * License along with BSL Language Server.
  */
 /**
- * Прототип режима Model Context Protocol (MCP).
+ * Реализация сервера Model Context Protocol (MCP) для движка анализа BSL.
  * <p>
- * MCP-сервер поверх stdio поднимает автоконфигурация Spring AI (профиль {@code mcp});
- * инструменты объявлены аннотацией {@code @McpTool} и переиспользуют движок анализа и
- * провайдеры языкового сервера. Демонстрирует, что MCP — это ещё один транспорт над уже
- * отвязанным от LSP ядром (наряду с режимами {@code lsp}, {@code websocket}, {@code analyze}).
+ * MCP-сервер поднимает автоконфигурация Spring AI; инструменты объявлены аннотацией
+ * {@code @McpTool} и переиспользуют движок анализа и провайдеры языкового сервера. Поверх единого
+ * ядра, отвязанного от транспорта LSP, поддерживаются транспорты stdio, SSE (Server-Sent Events)
+ * и Streamable HTTP; HTTP-транспорты работают на встроенном servlet-контейнере.
  */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.mcp;
