@@ -69,6 +69,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SymbolTypeIndex {
 
+  /** Минимальное число сегментов квалифицированной ссылки ({@code Модуль.Метод}). */
+  private static final int MIN_QUALIFIED_SEGMENTS = 2;
+
   private final TypeRegistry typeRegistry;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
@@ -156,7 +159,7 @@ public class SymbolTypeIndex {
       return Optional.empty();
     }
     var parts = link.split("\\.");
-    if (parts.length < 2) {
+    if (parts.length < MIN_QUALIFIED_SEGMENTS) {
       return Optional.empty();
     }
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
@@ -188,7 +191,7 @@ public class SymbolTypeIndex {
       }
       if (i < parts.length - 1) {
         var next = member.returnType();
-        if (next == null || next.kind() == TypeKind.UNKNOWN) {
+        if (next.kind() == TypeKind.UNKNOWN) {
           return null;
         }
         current = next;

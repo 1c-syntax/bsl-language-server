@@ -23,7 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.documentlink;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.SourceSymbolLinks;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -47,7 +49,8 @@ import java.util.stream.Stream;
  * {@code // См. ДругойМетод} (на метод того же модуля) либо {@code // См. Модуль.Метод}
  * (на экспортный метод другого модуля — общего, менеджера и т.п.). Сапплаер находит
  * такие ссылки в описаниях всех символов модуля, разрешает их в определение целевого
- * метода через {@link TypeService} и формирует {@link DocumentLink} над текстом ссылки.
+ * метода через реестр типов ({@link SymbolTypeIndex}) и формирует {@link DocumentLink}
+ * над текстом ссылки.
  * <p>
  * Ссылки, которые не удалось разрешить в существующий метод, пропускаются —
  * висячие (битые) ссылки не создаются.
@@ -56,7 +59,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
 
-  private final TypeService typeService;
+  private final SymbolTypeIndex symbolTypeIndex;
 
   @Override
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
@@ -109,12 +112,25 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
       return;
     }
 
-    typeService.resolveSeeReference(reference, documentContext)
+    resolveTarget(documentContext, reference)
       .ifPresent(target -> {
         var range = referenceRange(hyperlink, reference);
         var documentLink = new DocumentLink(range, SourceSymbolLinks.navigationTarget(target));
         documentLinks.add(documentLink);
       });
+  }
+
+  /**
+   * Разрешить текст ссылки «См.» в символ-определение: неквалифицированную — среди
+   * методов того же модуля, квалифицированную — через реестр типов (общие модули,
+   * модули менеджеров и пр.).
+   */
+  private Optional<SourceDefinedSymbol> resolveTarget(DocumentContext documentContext, String reference) {
+    if (reference.indexOf('.') < 0) {
+      return documentContext.getSymbolTree().getMethodSymbol(reference)
+        .map(SourceDefinedSymbol.class::cast);
+    }
+    return symbolTypeIndex.resolveReferenceSymbol(reference, documentContext.getFileType());
   }
 
   /**
