@@ -235,4 +235,150 @@ class TypeSetTest {
     // when / then
     assertThrows(UnsupportedOperationException.class, () -> ts.refs().add(STRING));
   }
+
+  @Test
+  void withLazyElementForcedOnRead() {
+    // given: ленивый элемент массива — разрешается на чтении.
+    var array = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("k", () -> TypeSet.of(STRUCTURE)));
+
+    // then
+    assertThat(array.refs()).containsExactly(ARRAY);
+    assertThat(array.getElementTypes(ARRAY).refs()).containsExactly(STRUCTURE);
+    assertThat(array.getElementTypes().refs()).containsExactly(STRUCTURE);
+  }
+
+  @Test
+  void withLazyElementAddsRefIfMissing() {
+    // given / when
+    var ts = TypeSet.EMPTY.withLazyElement(ARRAY, new LazyTypeSet("k", () -> TypeSet.of(NUMBER)));
+
+    // then
+    assertThat(ts.refs()).containsExactly(ARRAY);
+  }
+
+  @Test
+  void getElementTypesUnionsEagerAndLazy() {
+    // given: у одного ref'а и eager-, и lazy-элемент.
+    var ts = TypeSet.of(ARRAY)
+      .withElement(ARRAY, TypeSet.of(NUMBER))
+      .withLazyElement(ARRAY, new LazyTypeSet("k", () -> TypeSet.of(STRING)));
+
+    // then
+    assertThat(ts.getElementTypes(ARRAY).refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+  }
+
+  @Test
+  void withLazyFieldMaterializesWithTypeAndDescription() {
+    // given / when
+    var ts = TypeSet.of(STRUCTURE)
+      .withLazyField(STRUCTURE, "Узел", new LazyTypeSet("k", () -> TypeSet.of(STRUCTURE)), "дочерний");
+
+    // then
+    var field = ts.getLocalFields(STRUCTURE).get("Узел");
+    assertThat(field.types().refs()).containsExactly(STRUCTURE);
+    assertThat(field.description()).isEqualTo("дочерний");
+    assertThat(ts.getFieldTypes("узел").refs()).containsExactly(STRUCTURE);
+  }
+
+  @Test
+  void getAllFieldNamesIncludesLazyWithoutForcing() {
+    // given: резолвер ленивого поля бросил бы, если бы его форсили.
+    var ts = TypeSet.of(STRUCTURE)
+      .withField(STRUCTURE, "Прямое", TypeSet.of(STRING))
+      .withLazyField(STRUCTURE, "Ленивое",
+        new LazyTypeSet("k", () -> {
+          throw new AssertionError("must not force for names");
+        }), "");
+
+    // then: имена известны без форса.
+    assertThat(ts.getAllFieldNames()).containsExactlyInAnyOrder("Прямое", "Ленивое");
+  }
+
+  @Test
+  void unionMergesLazyElementsAndFields() {
+    // given
+    var a = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("ea", () -> TypeSet.of(NUMBER)))
+      .withLazyField(STRUCTURE, "K", new LazyTypeSet("fa", () -> TypeSet.of(NUMBER)), "");
+    var b = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("eb", () -> TypeSet.of(STRING)))
+      .withLazyField(STRUCTURE, "K", new LazyTypeSet("fb", () -> TypeSet.of(STRING)), "");
+
+    // when
+    var union = a.union(b);
+
+    // then: разные ключи — оба форсятся и объединяются.
+    assertThat(union.getElementTypes(ARRAY).refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+    assertThat(union.getFieldTypes("K").refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+  }
+
+  @Test
+  void addPreservesLazyDecorations() {
+    // given
+    var ts = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("k", () -> TypeSet.of(NUMBER)));
+
+    // when
+    var grown = ts.add(STRING);
+
+    // then: ленивый элемент сохранён.
+    assertThat(grown.refs()).containsExactlyInAnyOrder(ARRAY, STRING);
+    assertThat(grown.getElementTypes(ARRAY).refs()).containsExactly(NUMBER);
+  }
+
+  @Test
+  void withLazyFieldAccumulatesMultipleFields() {
+    // given: два ленивых поля подряд — покрывает копирование существующих бакетов.
+    var ts = TypeSet.of(STRUCTURE)
+      .withLazyField(STRUCTURE, "A", new LazyTypeSet("a", () -> TypeSet.of(NUMBER)), "")
+      .withLazyField(STRUCTURE, "B", new LazyTypeSet("b", () -> TypeSet.of(STRING)), "");
+
+    // then
+    assertThat(ts.getAllFieldNames()).containsExactlyInAnyOrder("A", "B");
+    assertThat(ts.getFieldTypes("A").refs()).containsExactly(NUMBER);
+    assertThat(ts.getFieldTypes("B").refs()).containsExactly(STRING);
+  }
+
+  @Test
+  void unionAddsLazyDecorationsOnNewRefs() {
+    // given: other несёт ленивые декорации на ref'ах, которых нет у this.
+    var a = TypeSet.of(NUMBER);
+    var b = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("e", () -> TypeSet.of(STRING)))
+      .withLazyField(STRUCTURE, "K", new LazyTypeSet("f", () -> TypeSet.of(NUMBER)), "опис");
+
+    // when
+    var union = a.union(b);
+
+    // then: новые бакеты ленивых декораций созданы.
+    assertThat(union.getElementTypes(ARRAY).refs()).containsExactly(STRING);
+    assertThat(union.getFieldTypes("K").refs()).containsExactly(NUMBER);
+    assertThat(union.getLocalFields(STRUCTURE).get("K").description()).isEqualTo("опис");
+  }
+
+  @Test
+  void getFieldTypesIgnoresNonMatchingLazyField() {
+    // given: ленивое поле с другим именем — не должно попасть в выборку.
+    var ts = TypeSet.of(STRUCTURE)
+      .withLazyField(STRUCTURE, "Другое", new LazyTypeSet("k", () -> TypeSet.of(NUMBER)), "");
+
+    // when / then
+    assertThat(ts.getFieldTypes("Искомое")).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
+  void unionWithLazyOnlyOtherIsNotShortCircuited() {
+    // given: other непустой только по ленивым декорациям — не должен «потеряться».
+    var self = TypeSet.of(NUMBER);
+    var lazyOnly = TypeSet.of(ARRAY)
+      .withLazyElement(ARRAY, new LazyTypeSet("k", () -> TypeSet.of(STRING)));
+
+    // when
+    var union = self.union(lazyOnly);
+
+    // then
+    assertThat(union.refs()).containsExactlyInAnyOrder(NUMBER, ARRAY);
+    assertThat(union.getElementTypes(ARRAY).refs()).containsExactly(STRING);
+  }
 }

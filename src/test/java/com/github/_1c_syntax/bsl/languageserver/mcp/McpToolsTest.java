@@ -28,7 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DocumentSymbolsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberCategory;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
@@ -90,6 +92,8 @@ class McpToolsTest {
   private TypeAtPositionTool typeAtPositionTool;
   @Autowired
   private GlobalMemberInfoTool globalMemberInfoTool;
+  @Autowired
+  private GlobalMemberSearchTool globalMemberSearchTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
 
@@ -245,6 +249,97 @@ class McpToolsTest {
     var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, WORKSPACE_ROOT, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
+  }
+
+  @Test
+  void globalMemberSearchListsAllCategoriesByDefault() {
+    var result = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_ROOT, null, null, null);
+
+    assertThat(result.count())
+      .isEqualTo(result.functions().size() + result.properties().size() + result.enums().size());
+    assertThat(result.functions()).isNotEmpty();
+    assertThat(result.functions()).extracting(TypeMemberDto::name).contains("Сообщить");
+    // Свойства и перечисления тоже должны присутствовать в полной выборке.
+    assertThat(result.properties()).isNotEmpty();
+    assertThat(result.enums()).isNotEmpty();
+  }
+
+  @Test
+  void globalMemberSearchRestrictsToRequestedCategories() {
+    var result = globalMemberSearchTool.globalMemberSearch(
+      FileType.BSL, WORKSPACE_ROOT, null, List.of(GlobalMemberCategory.FUNCTION), null);
+
+    assertThat(result.functions()).isNotEmpty();
+    assertThat(result.properties()).isEmpty();
+    assertThat(result.enums()).isEmpty();
+    assertThat(result.count()).isEqualTo(result.functions().size());
+  }
+
+  @Test
+  void globalMemberSearchReturnsOnlyEnumsWhenRequested() {
+    var result = globalMemberSearchTool.globalMemberSearch(
+      FileType.BSL, WORKSPACE_ROOT, null, List.of(GlobalMemberCategory.ENUM), null);
+
+    assertThat(result.enums()).isNotEmpty();
+    assertThat(result.functions()).isEmpty();
+    assertThat(result.properties()).isEmpty();
+  }
+
+  @Test
+  void globalMemberSearchMatchesFuzzilyAcrossCategories() {
+    var result = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_ROOT, "Сообщ", null, null);
+
+    assertThat(result.functions()).extracting(TypeMemberDto::name).contains("Сообщить");
+    assertThat(result.functions()).allSatisfy(member ->
+      assertThat(member.name().toLowerCase()).contains("сообщ"));
+  }
+
+  @Test
+  void globalMemberSearchRanksExactPrefixMatchFirst() {
+    // Запрос совпадает как префикс с «Сообщить» и как подпоследовательность с другими именами —
+    // более релевантное «Сообщить» должно быть выше в выдаче (ранжирование, как в автодополнении).
+    var result = globalMemberSearchTool.globalMemberSearch(
+      FileType.BSL, WORKSPACE_ROOT, "Сообщить", List.of(GlobalMemberCategory.FUNCTION), null);
+
+    assertThat(result.functions()).isNotEmpty();
+    assertThat(result.functions().get(0).name()).isEqualTo("Сообщить");
+  }
+
+  @Test
+  void globalMemberSearchReturnsEmptyForUnmatchedQuery() {
+    var result = globalMemberSearchTool.globalMemberSearch(
+      FileType.BSL, WORKSPACE_ROOT, "btzzzqqqxyz", null, null);
+
+    assertThat(result.count()).isZero();
+    assertThat(result.functions()).isEmpty();
+    assertThat(result.properties()).isEmpty();
+    assertThat(result.enums()).isEmpty();
+  }
+
+  @Test
+  void globalMemberSearchAcceptsOscriptFileType() {
+    var result = globalMemberSearchTool.globalMemberSearch(FileType.OS, WORKSPACE_ROOT, null, null, null);
+
+    assertThat(result.functions()).isNotEmpty();
+    assertThat(result.functions()).extracting(TypeMemberDto::name).contains("Сообщить");
+  }
+
+  @Test
+  void globalMemberSearchThrowsWhenRootIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() ->
+      globalMemberSearchTool.globalMemberSearch(FileType.BSL, unknownRoot, null, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace matches root");
+  }
+
+  @Test
+  void globalMemberSearchThrowsWhenRootIsMissing() {
+    assertThatThrownBy(() ->
+      globalMemberSearchTool.globalMemberSearch(FileType.BSL, null, null, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required");
   }
 
   @Test

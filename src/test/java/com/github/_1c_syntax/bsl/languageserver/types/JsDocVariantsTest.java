@@ -34,8 +34,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Покрывает разные варианты JsDoc-параметров (один тип, несколько типов,
- * См.-ссылка, битая См.-ссылка) — проходит через {@code declaredParameterTypes}
- * / {@code parameterHyperlinkTypes} в ExpressionTypeInferencer.
+ * См.-ссылка, битая См.-ссылка) — проходит через
+ * {@code SymbolTypeIndex.getDeclaredParameterTypes} (включая разворот
+ * См.-ссылок) в ExpressionTypeInferencer.
  */
 @CleanupContextBeforeClassAndAfterClass
 class JsDocVariantsTest extends AbstractServerContextAwareTest {
