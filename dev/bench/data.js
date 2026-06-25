@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782398279043,
+  "lastUpdate": 1782402574181,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38905,6 +38905,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 17.97095835684498",
             "extra": "mean: 276.3788816134135 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e1a14e9f4971999b40fa47b621f71684a0f7764c",
+          "message": "Merge pull request #4202 from 1c-syntax/claude/fix-definition-source-defined-member\n\nfix(definition): переход к определению члена через source-defined символ дескриптора",
+          "timestamp": "2026-06-25T16:13:59+02:00",
+          "tree_id": "b7637159138775d967249ba4080bc248871d44c1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e1a14e9f4971999b40fa47b621f71684a0f7764c"
+        },
+        "date": 1782402564428,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.53790775934857,
+            "unit": "sec",
+            "range": "stddev: 3.7623530796728764",
+            "extra": "mean: 289.53790775934857 sec\nrounds: 3"
           }
         ]
       }
