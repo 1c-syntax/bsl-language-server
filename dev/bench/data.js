@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782208418852,
+  "lastUpdate": 1782395875039,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38843,6 +38843,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 12.991696998885187",
             "extra": "mean: 270.1929051876068 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b4582b2fcc25c1ae82bc6fa15c97a6d1d1308cb",
+          "message": "Merge pull request #4199 from 1c-syntax/claude/global-methods-tool-3wnzci\n\nfeat(mcp): add global_methods tool for listing global context methods",
+          "timestamp": "2026-06-25T15:31:25+02:00",
+          "tree_id": "9791bb377ddc14cf2d5c901ba189b56378bd31c0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5b4582b2fcc25c1ae82bc6fa15c97a6d1d1308cb"
+        },
+        "date": 1782395862871,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 280.8564145565033,
+            "unit": "sec",
+            "range": "stddev: 4.784485925493545",
+            "extra": "mean: 280.8564145565033 sec\nrounds: 3"
           }
         ]
       }
