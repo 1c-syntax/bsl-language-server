@@ -298,6 +298,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       .map(VariableSymbolMarkupContentBuilder::sourceLink)
       .filter(link -> !link.isBlank())
       .distinct()
+      .sorted()
       .collect(Collectors.joining(" | "));
     return names.isBlank() ? "" : (prefix + names);
   }
