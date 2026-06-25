@@ -59,6 +59,13 @@
 - **Индекс ссылок** (`references/`) · **символы** (`context/symbol/`) · **CFG** (`cfg/`) ·
   **конфигурация** (`configuration/`) · **отчёты** (`reporters/`).
 
+Ключевые подсистемы снабжены вложенными `CLAUDE.md` (подгружаются при работе с их файлами):
+[`context/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/context/CLAUDE.md) (контекст и символы) ·
+[`types/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/types/CLAUDE.md) (система типов) ·
+[`references/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/references/CLAUDE.md) ·
+[`diagnostics/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CLAUDE.md) ·
+[`providers/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/providers/CLAUDE.md).
+
 ### Структура каталогов
 
 ```
