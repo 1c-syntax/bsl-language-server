@@ -1,197 +1,139 @@
+<!--
+Заметка для мейнтейнеров (этот блок вырезается из контекста Claude и не тратит токены):
+- Держи файл компактным: цель — < 200 строк (рекомендация Anthropic: чем короче, тем стабильнее следование).
+- Не дублируй сюда docs/contributing — давай ссылки, агент прочитает их по требованию.
+- Ссылки на docs делай обычными markdown-ссылками, НЕ через @import: @import грузит файл в контекст
+  целиком при старте и раздувает его. Обычная ссылка читается агентом только при необходимости.
+- Узкие правила для отдельных каталогов лучше класть в nested CLAUDE.md (например, diagnostics/CLAUDE.md):
+  они подгружаются лениво, когда агент работает с файлами в этом каталоге.
+-->
+
 # CLAUDE.md
 
-Инструкции для Claude Code (и других ИИ-ассистентов) по работе с этим репозиторием.
-Документ описывает, что это за проект, его архитектуру, и практические правила сборки,
-тестирования и оформления изменений. Держи его в актуальном состоянии при крупных
-изменениях в структуре проекта.
+Инструкции для Claude Code по работе с этим репозиторием: что это за проект, его архитектура,
+и правила сборки/тестов/оформления. Это краткая карта со ссылками на первоисточники, а не их копия.
+
+## Поддержание файла в актуальности
+
+**Если обнаружишь расхождение между написанным здесь и реальным состоянием репозитория**
+(другие команды, изменилась структура/версии/процесс) — не молчи: сообщи пользователю о
+несоответствии и **предложи обновить соответствующий `CLAUDE.md`** (корневой или вложенный).
+Применяй правку только с согласия пользователя. То же касается вложенных `CLAUDE.md` в подкаталогах.
 
 ## Что это за проект
 
-**BSL Language Server** — реализация [Language Server Protocol](https://microsoft.github.io/language-server-protocol/)
-для языка **1С:Предприятие 8 (BSL)** и [OneScript](http://oscript.io).
+**BSL Language Server** — реализация [LSP](https://microsoft.github.io/language-server-protocol/)
+для языка **1С:Предприятие 8 (BSL)** и [OneScript](http://oscript.io). Консольное Java-приложение
+на Spring Boot. Главная ценность — движок **диагностик** (150+ правил статического анализа кода 1С).
 
-Это консольное Java-приложение на Spring Boot, которое умеет работать в нескольких режимах:
+Режимы работы (подкоманды): `lsp` (по умолчанию, stdin/stdout) · `analyze` (пакетный анализ для CI,
+отчёты SARIF/Generic/JSON) · `format` (форматтер) · `websocket` · `mcp` (Model Context Protocol) · `version`.
 
-- **LSP-сервер** (`lsp`, режим по умолчанию) — интеграция с редакторами по stdin/stdout.
-- **WebSocket-сервер** (`websocket`) — подключение браузерных/удалённых редакторов.
-- **Пакетный анализатор** (`analyze`) — статический анализ всего проекта для CI/CD с
-  выгрузкой отчётов в разных форматах (SARIF, Generic issue, JSON и т.д.).
-- **Форматтер** (`format`) — массовое форматирование кода / pre-commit хук.
-- **MCP-сервер** (`mcp`) — предоставление возможностей анализа через Model Context Protocol.
+Ссылки: [сайт](https://1c-syntax.github.io/bsl-language-server) ·
+[DeepWiki — машинный обзор архитектуры](https://deepwiki.com/1c-syntax/bsl-language-server) (проверяй по коду) ·
+[docs/index.md](docs/index.md) (ru) · [docs/en/index.md](docs/en/index.md) (en) ·
+[руководство контрибьютора](docs/contributing/index.md).
 
-Главная ценность проекта — движок **диагностик**: 150+ встроенных правил статического
-анализа кода 1С (каталог `diagnostics/`).
+## Стек
 
-Полезные ссылки:
-- Сайт проекта: https://1c-syntax.github.io/bsl-language-server
-- DeepWiki (автогенерированный обзор архитектуры): https://deepwiki.com/1c-syntax/bsl-language-server
-- Исходники документации: [`docs/index.md`](docs/index.md) (ru), [`docs/en/index.md`](docs/en/index.md) (en)
-- Руководство контрибьютора: [`docs/contributing/index.md`](docs/contributing/index.md)
+- **Java**, компиляция таргетится на **Java 21**; поддерживаемый рантайм — 17/21/25 (CI: 21 и 25).
+- **Gradle 9.6** (wrapper, Kotlin DSL — `build.gradle.kts`); **Spring Boot 4** (DI, кэш, websocket, MCP).
+- Парсер [`bsl-parser`](https://github.com/1c-syntax/bsl-parser) (ANTLR4, грамматики BSL и SDBL-запросов);
+  метаданные 1С — [`mdclasses`](https://github.com/1c-syntax/mdclasses); LSP — Eclipse LSP4J.
+- Кэш Caffeine + EhCache · NLP JLanguageTool (ru/en) · AspectJ (AOP) · Lombok · JSpecify · picocli (CLI).
 
-## Технологический стек
+## Архитектура
 
-- **Язык/JDK:** Java. Компиляция таргетится на **Java 21** (`sourceCompatibility`/`targetCompatibility = 21`),
-  поддерживаемый рантайм — **Java 17, 21, 25** (CI собирает на 21 и 25).
-- **Сборка:** Gradle (wrapper, **Gradle 9.6**, Kotlin DSL — `build.gradle.kts`).
-- **Фреймворк:** Spring Boot 4 (DI, lifecycle, кэш, websocket, Spring AI MCP starters).
-- **Парсер:** [`bsl-parser`](https://github.com/1c-syntax/bsl-parser) (ANTLR4) — грамматики BSL и SDBL (запросы).
-- **Метаданные 1С:** [`mdclasses`](https://github.com/1c-syntax/mdclasses).
-- **LSP:** Eclipse LSP4J.
-- **Кэширование:** Caffeine + EhCache.
-- **NLP:** JLanguageTool (`language-en`, `language-ru`) — проверка орфографии/опечаток.
-- **AOP:** AspectJ (post-compile weaving, см. пакет `aop/`).
-- **Прочее:** Lombok, JSpecify (nullability), Jackson, JGraphT, java-sarif, picocli (CLI).
-
-## Архитектура верхнего уровня
-
-Точка входа — `BSLLSPLauncher` (`Main-Class` в jar). Это picocli-приложение, которое по
-имени подкоманды (`lsp` / `analyze` / `format` / `websocket` / `mcp` / `version`) поднимает
-нужный Spring-контекст и делегирует работу классам из пакета `cli/`.
-
+Точка входа — `BSLLSPLauncher` (picocli; по подкоманде поднимает Spring-контекст, делегирует в `cli/`).
 Ключевые абстракции (пакет `com.github._1c_syntax.bsl.languageserver`):
 
-- **`ServerContextProvider` / `ServerContext`** (`context/`) — рабочая область (workspace).
-  `ServerContext` хранит коллекцию `DocumentContext` и метаданные конфигурации 1С (через `mdclasses`).
-- **`DocumentContext`** (`context/`) — состояние одного файла: AST (дерево разбора), поток токенов,
-  вычисленные диагностики и метрики. Тяжёлые вычисления **ленивые** и кэшируются.
-- **`DocumentChangeExecutor`** — применяет инкрементальные изменения из LSP `didChange`.
-- **`BSLLanguageServer` / `BSLTextDocumentService` / `BSLWorkspaceService`** — реализация
-  интерфейсов LSP4J, маршрутизация запросов протокола к провайдерам.
-- **Провайдеры** (`providers/`) — реализуют отдельные возможности LSP: hover, definition,
-  references, call hierarchy, rename, code actions, formatting, semantic tokens, inlay hints,
-  code lens, folding и т.д. `DiagnosticProvider` поддерживает обе модели публикации —
-  push (`publishDiagnostics`) и pull (`textDocument/diagnostic`).
-- **Диагностики** (`diagnostics/`) — правила статического анализа (наследники `AbstractDiagnostic`).
-- **Индекс ссылок** (`references/`) — межфайловый индекс символов для go-to-definition / find-references.
-- **Символы** (`context/symbol/`) — извлечение символов программы из AST.
-- **Граф потока управления** (`cfg/`) — построение CFG для анализа достижимости и т.п.
-- **Конфигурация** (`configuration/`) — `LanguageServerConfiguration`, настройки диагностик,
-  маппинг на JSON-схему (`.bsl-language-server.json`).
-- **Отчёты** (`reporters/`) — форматы выгрузки для режима `analyze`.
+- **`ServerContext` / `ServerContextProvider`** (`context/`) — рабочая область: коллекция документов +
+  метаданные конфигурации 1С.
+- **`DocumentContext`** (`context/`) — состояние одного файла: AST, токены, диагностики, метрики.
+  Тяжёлые вычисления **ленивые** и кэшируются. `DocumentChangeExecutor` применяет инкрементальные `didChange`.
+- **`BSLLanguageServer` / `BSLTextDocumentService` / `BSLWorkspaceService`** — реализация LSP4J, маршрутизация.
+- **Провайдеры** (`providers/`) — возможности LSP: hover, definition, references, rename, code actions,
+  formatting, semantic tokens, inlay hints, code lens, folding и т.д. `DiagnosticProvider` поддерживает
+  обе модели публикации — push (`publishDiagnostics`) и pull (`textDocument/diagnostic`).
+- **Диагностики** (`diagnostics/`) — правила анализа (наследники `AbstractDiagnostic`, аннотация `@DiagnosticMetadata`).
+- **Индекс ссылок** (`references/`) · **символы** (`context/symbol/`) · **CFG** (`cfg/`) ·
+  **конфигурация** (`configuration/`) · **отчёты** (`reporters/`).
 
-> Для более подробного обзора см. DeepWiki (ссылка выше) — но проверяй его выводы по коду,
-> это машинно-сгенерированный текст.
-
-## Структура каталогов
+### Структура каталогов
 
 ```
 src/main/java/.../languageserver/
-  ├─ cli/            CLI-подкоманды (analyze, format, lsp, mcp, websocket, version)
-  ├─ context/        ServerContext, DocumentContext, символы, метрики, CFG-вход
-  ├─ providers/      провайдеры возможностей LSP
-  ├─ diagnostics/    правила статического анализа (~235 файлов, 150+ правил)
-  ├─ references/     индекс межфайловых ссылок
-  ├─ configuration/  конфигурация сервера и диагностик
-  ├─ reporters/      форматы отчётов для пакетного анализа
-  ├─ codeactions/, hover/, completion/, inlayhints/, codelenses/, rename/,
-  │  folding/, semantictokens/, color/, documentlink/, documenthighlight/ — фичи LSP
-  ├─ cfg/            граф потока управления
-  ├─ mcp/            MCP-сервер
-  ├─ commands/, events/, jsonrpc/, recognizer/, infrastructure/, utils/, aop/, databind/
-  └─ BSLLSPLauncher, BSLLanguageServer, BSLTextDocumentService, BSLWorkspaceService …
-src/main/resources/   локализованные ресурсы диагностик (_ru/_en .properties), application*.properties
-src/test/java/        тесты (JUnit 5)
-src/test/resources/   фикстуры: .bsl/.os файлы, метаданные, ожидаемые результаты
-src/jmh/              бенчмарки JMH
-docs/                 документация (ru), docs/en/ (en), docs/contributing/ — для разработчиков
+  cli/ context/ providers/ diagnostics/ references/ configuration/ reporters/ cfg/ mcp/
+  codeactions/ hover/ completion/ inlayhints/ codelenses/ rename/ folding/ semantictokens/ …
+src/main/resources/  локализованные ресурсы диагностик (_ru/_en .properties), application*.properties
+src/test/java/       тесты (JUnit 5);  src/test/resources/  фикстуры (.bsl/.os, метаданные, ожидаемые результаты)
+src/jmh/             бенчмарки JMH;     docs/ (ru) · docs/en/ (en) · docs/contributing/ — для разработчиков
 ```
 
 ## Сборка и запуск
 
-Используй **только** Gradle wrapper (`./gradlew`, на Windows `gradlew.bat`). Не требуется
-устанавливать Gradle вручную.
+Используй **только** wrapper `./gradlew` (Windows — `gradlew.bat`); устанавливать Gradle вручную не нужно.
 
 ```bash
-./gradlew build          # полная сборка + проверки + тесты (долго, см. ниже)
-./gradlew bootJar        # собрать исполняемый "fat" jar (classifier -exec)
-./gradlew clean          # очистка
-java -jar build/libs/bsl-language-server-*-exec.jar --help   # запуск собранного сервера
+./gradlew build       # сборка + проверки + тесты (долго, см. ниже)
+./gradlew bootJar     # исполняемый fat-jar (classifier -exec)
+java -jar build/libs/bsl-language-server-*-exec.jar --help    # запуск; подкоманды см. выше
 ```
-
-Подкоманды запуска: `lsp` (по умолчанию), `analyze`, `format`, `websocket`, `mcp`, `version`.
 
 ## Тесты и их длительность
 
 ```bash
-./gradlew test                                   # весь набор тестов (МЕДЛЕННО)
-./gradlew test --tests "*SomeDiagnosticTest"     # один класс — для разработки используй это
-./gradlew check                                  # то, что гоняет CI: test + jacoco + spotless + javadoc
+./gradlew test --tests "*SomeDiagnosticTest"   # один класс — используй это при разработке
+./gradlew test                                  # весь набор (МЕДЛЕННО)
+./gradlew check                                 # то, что гоняет CI: test + jacoco + spotless + javadoc
 ```
 
-**Важно про длительность:** в проекте **600+ тестовых классов**, многие из которых
-поднимают/перезагружают Spring-контекст (`@DirtiesContext`, `@CleanupContextBeforeClassAndAfterClass`).
-Полный прогон `./gradlew test` занимает **много минут** (на CI с одним форком и `maxHeapSize=3g`
-это самый долгий шаг сборки). Поэтому:
+- **600+ тестовых классов**, многие перезагружают Spring-контекст (`@DirtiesContext`,
+  `@CleanupContextBeforeClassAndAfterClass`) → полный прогон занимает **много минут** (самый долгий шаг CI).
+  Не прерывай его раньше времени, считая «зависшим»; при разработке гоняй одиночный класс через `--tests`.
+- Параллелизм — на уровне **форков JVM** (не потоков): на CI 1 форк, локально половина ядер (1..4),
+  переопределяется `-PmaxParallelForks=N`. Тестовой JVM нужен `maxHeapSize = 3g`.
+- Автоматически подключаются java-агенты **jmockit** и **mockito**.
 
-- При локальной разработке **запускай только нужный класс/тест** через `--tests`, а не весь набор.
-- Не жди мгновенного завершения `./gradlew check` / `test` — закладывай время и не прерывай
-  раньше, считая, что «завис».
-- Тесты используют java-агенты **jmockit** и **mockito** (подключаются автоматически в `tasks.test`).
-- Параллелизм — на уровне **форков JVM** (не потоков), т.к. тесты меняют общий Spring-контекст и
-  статические кэши. На CI — 1 форк; локально — половина ядер (1..4). Можно переопределить:
-  `./gradlew test -PmaxParallelForks=4`.
-- Требуется ощутимая память: тестовой JVM выставлен `maxHeapSize = 3g`.
+## UTF-8 и кириллица — обязательно к соблюдению
 
-## UTF-8 и кириллица — читай обязательно
+Проект двуязычный (ru/en), в коде/ресурсах/тестах **много кириллицы** (1С пишется кириллицей).
 
-Проект **двуязычный** (ru/en), и в исходниках/ресурсах/тестах **много кириллицы** (код 1С
-пишется кириллицей). Правила:
+- **Всё в UTF-8 без BOM.** Компиляция, `processResources`, Sonar настроены на UTF-8.
+- **`.properties` диагностик пиши живой кириллицей** — Gradle сам экранирует их в `\uXXXX` через
+  `EscapeUnicode` (замена `native2ascii`). Не экранируй вручную и не коммить уже экранированные `.properties`.
+- **EOL** по `.gitattributes`: для большинства файлов (`*.java/*.bsl/*.xml/*.md/*.json`) — **LF**,
+  для `*.bat` — **CRLF**. Не меняй EOL целиком; отдельные тестовые файлы помечены `binary` или особыми
+  правилами в `.editorconfig` — их whitespace не трогай.
 
-- **Кодировка везде UTF-8.** Компиляция, `processResources` и Sonar настроены на UTF-8
-  (`options.encoding = "UTF-8"`, `filteringCharset = "UTF-8"`, `sonar.sourceEncoding = UTF-8`).
-  Сохраняй любые файлы в UTF-8 **без BOM**.
-- **`.properties`-файлы диагностик пиши в обычном UTF-8** (с живой кириллицей). При сборке
-  Gradle сам прогоняет их через `EscapeUnicode` (замена `native2ascii` → `\uXXXX`).
-  **Не** экранируй кириллицу вручную и не коммить уже экранированные `.properties`.
-- **Переводы строк (EOL):** задаются в `.gitattributes`. Для большинства файлов
-  (`*.java`, `*.bsl`, `*.xml`, `*.md`, `*.json`) — **LF**; для `*.bat` — **CRLF**.
-  Не меняй EOL целиком в файлах при правках. Отдельные тестовые файлы помечены как `binary`
-  или имеют особые правила в `.editorconfig` — не трогай их whitespace.
-- При создании/правке тестовых фикстур (`.bsl`/`.os` в `src/test/resources`) сохраняй кириллицу
-  как есть в UTF-8.
+## Диагностики
 
-## Диагностики (как они устроены)
+Одна диагностика = несколько связанных файлов (подробные гайды в `docs/contributing/` — следуй им, не выдумывай свой процесс):
 
-Это основная и чаще всего расширяемая часть проекта. Одна диагностика = несколько связанных файлов:
+1. Java-класс в `diagnostics/` — наследник `AbstractDiagnostic` с `@DiagnosticMetadata`.
+2. Сообщения — `XxxDiagnostic_ru.properties` и `_en.properties` в `src/main/resources/.../diagnostics/`.
+3. Документация — `docs/diagnostics/Xxx.md` (ru) и `docs/en/diagnostics/Xxx.md` (en);
+   встраивается в ресурсы задачей `generateDiagnosticDocs`.
+4. Тест `XxxDiagnosticTest` + фикстуры в `src/test/resources/diagnostics/`.
 
-1. **Java-класс** в `src/main/java/.../diagnostics/` — наследник `AbstractDiagnostic`
-   (или одного из `Abstract*Diagnostic`), с аннотацией `@DiagnosticMetadata`.
-2. **Локализованные сообщения** — `XxxDiagnostic_ru.properties` и `XxxDiagnostic_en.properties`
-   в `src/main/resources/.../diagnostics/`.
-3. **Документация** — `docs/diagnostics/XxxDiagnostic.md` (ru) и `docs/en/diagnostics/XxxDiagnostic.md` (en).
-   Она встраивается в ресурсы при сборке задачей `generateDiagnosticDocs`.
-4. **Тест** — `XxxDiagnosticTest` + фикстуры в `src/test/resources/diagnostics/`.
+Подавление в коде 1С: `// BSLLS:КлючДиагностики-off` / `-on`, либо `// BSLLS-off`.
+Гайды: [DiagnosticExample](docs/contributing/DiagnosticExample.md) ·
+[DiagnosticStructure](docs/contributing/DiagnosticStructure.md) ·
+[DiagnostcAddSettings](docs/contributing/DiagnostcAddSettings.md) ·
+[DiagnosticQuickFix](docs/contributing/DiagnosticQuickFix.md) ·
+[DiagnosticDevWorkFlow](docs/contributing/DiagnosticDevWorkFlow.md).
 
-Подавление диагностик в коде 1С: `// BSLLS:КлючДиагностики-off` / `-on`, либо `// BSLLS-off`.
+## Стиль кода и правила
 
-Подробные пошаговые руководства уже есть в репозитории — **используй их, не выдумывай свой процесс**:
-- [`docs/contributing/DiagnosticExample.md`](docs/contributing/DiagnosticExample.md) — пример с нуля
-- [`docs/contributing/DiagnosticStructure.md`](docs/contributing/DiagnosticStructure.md) — структура файлов
-- [`docs/contributing/DiagnostcAddSettings.md`](docs/contributing/DiagnostcAddSettings.md) — параметры
-- [`docs/contributing/DiagnosticQuickFix.md`](docs/contributing/DiagnosticQuickFix.md) — quick fix
-- [`docs/contributing/DiagnosticDevWorkFlow.md`](docs/contributing/DiagnosticDevWorkFlow.md) — общий workflow
+- **Spotless** проверяет лицензионные заголовки `.java`. Перед коммитом при необходимости:
+  `./gradlew spotlessApply` (алиас `./gradlew updateLicenses`). `check` упадёт без корректного заголовка.
+- **Lombok** активно используется (нужен annotation processing). Соблюдай `.editorconfig`.
+- Не запускай «оптимизацию импортов» по всему проекту — за порядком импортов следят мейнтейнеры
+  (см. [EnvironmentSetting](docs/contributing/EnvironmentSetting.md)). Javadoc проверяется `-Xdoclint:all,-missing`.
+- Следуй идиомам соседних файлов. Документация — в `docs/` и `docs/en/`; при изменении поведения обновляй **обе** локали.
 
-## Стиль кода и проверки
-
-- **Spotless** следит за **лицензионными заголовками** в `.java` (шаблон `license/HEADER.txt`).
-  Перед коммитом при необходимости: `./gradlew spotlessApply` (или алиас `./gradlew updateLicenses`).
-  `./gradlew check` упадёт, если заголовок отсутствует/устарел.
-- **Lombok** активно используется — включи annotation processing (в IDE — автоматически).
-- **EditorConfig** — соблюдай (`.editorconfig`). Не запускай «оптимизацию импортов» по всему
-  проекту: за порядком импортов следят мейнтейнеры (см. `docs/contributing/EnvironmentSetting.md`).
-- **Javadoc** проверяется с `-Xdoclint:all,-missing` — не ломай ссылки/HTML в javadoc.
-- Соблюдай существующие соглашения соседних файлов (именование, аннотации, идиомы).
-
-## Документация
-
-- Документация живёт в `docs/` (ru) и `docs/en/` (en), собирается MkDocs
-  (`mkdocs.yml`, `mkdocs.en.yml`). При изменении поведения/диагностик обновляй **обе** локали.
-- Раздел для разработчиков — `docs/contributing/`. Это первоисточник по процессам разработки;
-  при работе над фичами сверяйся с ним.
-
-## Рабочий процесс (git)
+## Git
 
 - Веди разработку в отдельной ветке; не пуш в `develop`/`master` без явного запроса.
-- Не создавай Pull Request, если об этом явно не попросили.
-- Пиши осмысленные сообщения коммитов.
-- Версия проставляется автоматически плагином git-versioning по тегам/веткам — руками версию не правь.
+- Не создавай Pull Request, если об этом явно не попросили. Версия проставляется плагином
+  git-versioning по тегам/веткам — руками не правь.
