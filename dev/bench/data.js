@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782418650159,
+  "lastUpdate": 1782424927429,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38998,6 +38998,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.042895395553847",
             "extra": "mean: 284.30014204978943 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fa0d855dec7d70f532c7562a12f2493b7ecdaed0",
+          "message": "Merge pull request #4210 from 1c-syntax/claude/repo-docs-setup-oviuj5\n\ndocs: add CLAUDE.md with project overview and dev guidelines",
+          "timestamp": "2026-06-25T22:06:02+02:00",
+          "tree_id": "0a326924129da5606bf285c24d8ac15cf6a8a75c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fa0d855dec7d70f532c7562a12f2493b7ecdaed0"
+        },
+        "date": 1782424917939,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.4932604630788,
+            "unit": "sec",
+            "range": "stddev: 11.421490156149403",
+            "extra": "mean: 284.4932604630788 sec\nrounds: 3"
           }
         ]
       }
