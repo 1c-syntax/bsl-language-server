@@ -78,8 +78,8 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
     try {
       var hover = hoverContent(mutualDoc(), "Контекст = ", 0);
       assertThat(hover)
-        .as("в EN-локали ссылка на цикле рендерится как `See Функция`")
-        .containsPattern("See (Контейнер|Коробка)");
+        .as("в EN-локали ссылка на цикле рендерится как `See Коробка`")
+        .contains("See Коробка");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -140,8 +140,10 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
         .contains("Содержимое")
         .contains("Описание");
       assertThat(hover)
-        .as("повторный вход в см.-цикл обрывается ссылкой `См. Функция`, а не уходит в рекурсию")
-        .containsPattern("См\\. (Контейнер|Коробка)");
+        .as("на обрыве цикла поле `Содержимое - см. Коробка` сворачивается именно в `См. Коробка` "
+          + "(а не в источник уровнем глубже), #4204 п.2")
+        .contains("См. Коробка")
+        .doesNotContain("См. Контейнер");
     });
   }
 
