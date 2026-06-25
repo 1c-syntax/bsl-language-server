@@ -189,7 +189,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       var key = entry.getKey();
       rendered.add(key.toLowerCase(Locale.ROOT));
       var info = doc.get(key.toLowerCase(Locale.ROOT));
-      renderInferredField(out, pad, key, entry.getValue(), lang, indent, info, expandedSources);
+      renderInferredField(out, pad, key, entry.getValue(), types, lang, indent, info, expandedSources);
     }
     // Ключи, описанные в doc-комментарии, но не выведенные инференсером.
     for (var info : doc.values()) {
@@ -206,7 +206,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    * см.-ссылке, рекурсивно развернуть его вложенные поля.
    */
   private void renderInferredField(List<String> out, String pad, String key, LocalField field,
-                                   Language lang, int indent, @Nullable DocField info,
+                                   TypeSet owner, Language lang, int indent, @Nullable DocField info,
                                    Set<Object> expandedSources) {
     var fieldTypes = field.types();
     // Описание: приоритет у doc-комментария (для параметров), иначе — описание
@@ -215,10 +215,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       ? info.description()
       : cleanupKeyDescription(field.description());
 
-    // Ленивые см.-источники, к которым приводит разворот этого поля. Если хотя бы
-    // один уже разворачивался выше по пути — это цикл: показываем `См. Функция`
-    // и не углубляемся.
-    var fieldSources = lazySourceKeys(fieldTypes);
+    // Функция-источник см.-ссылки, разворот которой даёт вложенные поля этого
+    // ключа: собственная ленивая ссылка поля (`Содержимое - см. Коробка`), либо —
+    // для коллекций — ленивый элемент (`Массив из см. Узел`). Именно её имя нужно
+    // показать при обрыве цикла, а не источники уровнем глубже.
+    var fieldSources = fieldExpansionSources(owner, key, fieldTypes);
     var cyclic = !fieldSources.isEmpty() && !Collections.disjoint(fieldSources, expandedSources);
     var seeLabel = cyclic ? seeReferenceLabel(fieldSources, lang) : "";
     var typeLabel = seeLabel.isBlank() ? fieldTypeLabel(fieldTypes, lang) : seeLabel;
@@ -258,15 +259,32 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   }
 
   /**
-   * Ключи функций-источников ленивых {@code см.}-декораций типа (элементов коллекций
-   * и полей структур). По ним обнаруживается повторный вход (цикл) при обходе.
+   * Функции-источники см.-ссылки, разворот которой даёт вложенные поля ключа
+   * {@code key} объекта {@code owner}. Это либо собственная ленивая ссылка поля
+   * (поле {@code owner.lazyFields[key]}), либо — если поле эагерное, но его тип —
+   * коллекция с ленивым элементом — источник этого элемента. Возвращаемые ключи и
+   * обнаруживают цикл, и дают имя для метки {@code См. Функция}.
    */
-  private static Set<Object> lazySourceKeys(TypeSet types) {
-    var keys = new HashSet<>();
-    types.lazyElements().values().forEach(lazy -> keys.add(lazy.key()));
-    types.lazyFields().values()
-      .forEach(byName -> byName.values().forEach(lazyField -> keys.add(lazyField.types().key())));
-    return keys;
+  private static Set<Object> fieldExpansionSources(TypeSet owner, String key, TypeSet fieldTypes) {
+    var ownSource = lazyFieldSource(owner, key);
+    if (ownSource != null) {
+      return Set.of(ownSource);
+    }
+    var elementKeys = new HashSet<>();
+    fieldTypes.lazyElements().values().forEach(lazy -> elementKeys.add(lazy.key()));
+    return elementKeys;
+  }
+
+  /** Ключ собственной ленивой см.-ссылки поля {@code name} в наборе типов, либо {@code null}. */
+  private static @Nullable Object lazyFieldSource(TypeSet owner, String name) {
+    for (var byName : owner.lazyFields().values()) {
+      for (var entry : byName.entrySet()) {
+        if (entry.getKey().equalsIgnoreCase(name)) {
+          return entry.getValue().types().key();
+        }
+      }
+    }
+    return null;
   }
 
   /**
