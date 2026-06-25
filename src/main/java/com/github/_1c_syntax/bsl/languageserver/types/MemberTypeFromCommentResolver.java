@@ -33,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Единый для обоих языков (BSL и OneScript) резолвер типа переменной-свойства из
@@ -60,7 +59,7 @@ public class MemberTypeFromCommentResolver {
    *       тип-голова через {@link DescriptionTypes#resolveName});</li>
    *   <li>если прямых типов нет — {@code См.}-ссылки {@code getLinks()}
    *       ({@code // см. НовыйСложно}): неквалифицированная ссылка на функцию того же модуля
-   *       даёт её возвращаемый тип (через {@link SymbolTypeIndex#resolveDescribedTypes(List)},
+   *       даёт её возвращаемый тип (через {@link SymbolTypeIndex#resolveSeeReference},
    *       поэтому переносятся и поля структуры/ТЗ из JsDoc), иначе трактуется как имя типа;
    *       квалифицированная ссылка ({@code Модуль.Метод}) разворачивается обходом членов
    *       через {@link SymbolTypeIndex#resolveHyperlink(String, FileType)}.</li>

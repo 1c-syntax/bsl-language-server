@@ -156,9 +156,12 @@ public class DereferenceMemberMatcher {
         continue;
       }
       var field = entry.getValue();
-      var fieldRef = field.types().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+      // Полный тип поля (с вложенными полями/элементами структуры), а не только
+      // головной ref — иначе при чейнинге `a.b.` ресивер теряет содержимое b
+      // (поля структуры, типизированной через см.-ссылку).
+      var fieldTypes = !field.types().isEmpty() ? field.types() : TypeSet.of(TypeRef.UNKNOWN);
       sink.add(new TypedMember(owner,
-        MemberDescriptor.property(entry.getKey(), fieldRef, field.description()),
+        MemberDescriptor.property(entry.getKey(), fieldTypes, field.description()),
         ctx.range(), ctx.argCount(), ctx.argTypes()));
     }
   }
