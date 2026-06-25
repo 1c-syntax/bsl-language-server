@@ -72,10 +72,11 @@ class RecursiveSeeRefInferenceTest extends AbstractServerContextAwareTest {
       .orElse("");
 
     assertThat(hover)
-      .as("hover рекурсивного дерева показывает поля и обрывает элемент-цикл ссылкой")
+      .as("hover рекурсивного дерева показывает поля и обрывает элемент-цикл гиперссылкой "
+        + "`См. [ДеревоУзел](…)`")
       .contains("Значение")
       .contains("Потомки")
-      .containsPattern("См\\. ДеревоУзел");
+      .containsPattern("См\\. \\[ДеревоУзел]\\(\\S+#L\\d+,\\d+\\)");
   }
 
   @Test
