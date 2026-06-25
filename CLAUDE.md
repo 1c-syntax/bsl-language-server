@@ -137,3 +137,21 @@ java -jar build/libs/bsl-language-server-*-exec.jar --help    # запуск; п
 - Веди разработку в отдельной ветке; не пуш в `develop`/`master` без явного запроса.
 - Не создавай Pull Request, если об этом явно не попросили. Версия проставляется плагином
   git-versioning по тегам/веткам — руками не правь.
+- **Сообщения коммитов — по [Conventional Commits](https://www.conventionalcommits.org/)**:
+  `type(scope): описание` (типы: `feat`, `fix`, `docs`, `refactor`, `test`, `build`, `ci`, `chore`,
+  `perf`, `style`). Например: `feat(diagnostics): add NewDiagnostic` / `fix(providers): …`.
+
+### Работа в git worktree
+
+Плагин **git-versioning** (`me.qoomon.git-versioning`) определяет версию по git-ref'у текущего
+рабочего дерева. В **отдельном git worktree** он не может корректно её вычислить и **сборка
+падает**. В этом случае отключи плагин и **задай версию вручную**:
+
+```bash
+./gradlew build -Dversioning.disable -Pversion=0.0.0-worktree
+# эквивалент через переменные окружения:
+# VERSIONING_DISABLE=true ./gradlew build -Pversion=0.0.0-worktree
+```
+
+`-Dversioning.disable` выключает плагин, `-Pversion=…` задаёт версию проекта (без неё она будет
+`unspecified`). Флаги нужно передавать при каждом вызове `gradlew` в worktree.
