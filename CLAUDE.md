@@ -59,12 +59,41 @@
 - **Индекс ссылок** (`references/`) · **символы** (`context/symbol/`) · **CFG** (`cfg/`) ·
   **конфигурация** (`configuration/`) · **отчёты** (`reporters/`).
 
+Точки входа подкоманд — в `cli/` (каждый класс реализует picocli-`Command`: `LanguageServerStart`,
+`Analyze`, `Format`, `Mcp`, `Websocket`, `Version`); `BSLLSPLauncher` выбирает по подкоманде.
+
 Ключевые подсистемы снабжены вложенными `CLAUDE.md` (подгружаются при работе с их файлами):
-[`context/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/context/CLAUDE.md) (контекст и символы) ·
+[`context/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/context/CLAUDE.md) (контекст, символы, AOP) ·
 [`types/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/types/CLAUDE.md) (система типов) ·
 [`references/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/references/CLAUDE.md) ·
 [`diagnostics/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/CLAUDE.md) ·
-[`providers/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/providers/CLAUDE.md).
+[`providers/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/providers/CLAUDE.md) ·
+[`configuration/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/configuration/CLAUDE.md) ·
+[`reporters/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/CLAUDE.md) ·
+[`cfg/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/cfg/CLAUDE.md) ·
+[`mcp/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/mcp/CLAUDE.md) ·
+[`utils/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/CLAUDE.md).
+
+### Сквозные концепции (важно для всего кода)
+
+- **Spring DI и скоупы бинов.** Различай три уровня: *синглтоны приложения*
+  (`ServerContextProvider`, `GlobalLanguageServerConfiguration`, LSP-сервисы); **`@WorkspaceScope`**
+  — **по одному экземпляру на каждый workspace** (`ServerContext`, `ReferenceIndex`, `TypeRegistry`,
+  `DiagnosticInfos`, индексы типов, per-workspace конфиг и executor'ы); *prototype* — `DocumentContext`
+  (по экземпляру на документ).
+- **Multi-workspace.** `ServerContextProvider` держит `URI → ServerContext` (по папке workspace) и
+  индекс документов для O(1) поиска. «Текущий» workspace выбирается через **thread-local**
+  `WorkspaceContextHolder` (а не передаётся параметром); CGLIB-прокси workspace-бина резолвит
+  нужный экземпляр через `WorkspaceBeanScope` по этому URI. Контекст пробрасывается в пулы потоков
+  через Micrometer `ThreadLocalAccessor` — поэтому `parallelStream()` видит правильный workspace.
+- **Событийная модель.** Подсистемы общаются через Spring `ApplicationEvent` (`context/events/`,
+  `configuration/events/`): `ServerContextDocumentAdded/Removed/Closed/ClearedEvent`,
+  `DocumentContextContentChangedEvent`, `ServerContextPopulatedEvent`, `ConfigurationTypesRegisteredEvent`,
+  `*ConfigurationChangedEvent`, события workspace и др. **События публикуются не вручную, а через AOP**
+  (`aop/EventPublisherAspect`, AspectJ compile-time weaving) при вызовах методов-мутаторов контекста.
+  Downstream-индексы (`ReferenceIndex`, `TypeRegistry`, провайдеры) слушают их через `@EventListener`
+  и инвалидируют кэши. **Правило:** меняешь модель/добавляешь вид изменения данных — убедись, что
+  публикуется нужное событие и что заинтересованные подсистемы на него подписаны.
 
 ### Структура каталогов
 

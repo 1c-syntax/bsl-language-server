@@ -57,11 +57,18 @@
 
 ## События — `events/`
 
-Spring `ApplicationEvent` (публикуются через AOP при мутациях контекста):
-`ServerContextDocumentAdded/Removed/Closed/ClearedEvent`, `DocumentContextContentChangedEvent`,
-`ServerContextPopulatedEvent`, `Workspace(Before)Added/RemovedEvent`,
-`ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
-для инвалидации кэшей.
+Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEvent`,
+`DocumentContextContentChangedEvent`, `ServerContextPopulatedEvent`,
+`Workspace(Before)Added/RemovedEvent`, `ConfigurationTypesRegisteredEvent`. Используются
+downstream-индексами (`references/`, `types/`) для инвалидации кэшей.
+
+**Эти события публикуются не вручную, а через AOP** — аспект `aop/EventPublisherAspect`
+(AspectJ compile-time weaving) перехватывает вызовы методов-мутаторов `ServerContext`/
+`DocumentContext` (по пойнткатам в `aop/Pointcuts`) и публикует событие в нужный Spring-контекст.
+Поэтому: чтобы появилось новое событие — добавь метод-мутатор под пойнткат/новый advice в аспекте,
+а не вызывай `publishEvent` из бизнес-логики. Там же — аспекты `MeasuresAspect` (замеры,
+`@ConditionalOnMeasuresEnabled`) и `SentryAspect` (отправка исключений в Sentry).
+Подписка downstream — через `@EventListener` (исполняется в правильном workspace-контексте).
 
 ## Правки в этом каталоге
 
