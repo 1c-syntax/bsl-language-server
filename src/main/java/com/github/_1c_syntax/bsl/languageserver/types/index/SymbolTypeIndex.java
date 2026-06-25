@@ -142,6 +142,62 @@ public class SymbolTypeIndex {
   }
 
   /**
+   * Разрешить квалифицированную {@code см.}-ссылку ({@code Модуль.Метод},
+   * {@code Справочники.X.Метод} и т.п.) в символ-определение, на который она
+   * указывает. Резолв идёт через {@link TypeRegistry} единообразно для общих
+   * модулей, модулей менеджеров и прочих типов: у найденного члена берётся
+   * символ-источник ({@link MemberDescriptor#getSourceSymbol()}).
+   *
+   * @return символ-определение цели ссылки, либо {@link Optional#empty()}, если
+   *         ссылка не разрешается или у члена нет source-defined источника.
+   */
+  public Optional<SourceDefinedSymbol> resolveReferenceSymbol(String link, FileType fileType) {
+    if (link.isBlank()) {
+      return Optional.empty();
+    }
+    var parts = link.split("\\.");
+    if (parts.length < 2) {
+      return Optional.empty();
+    }
+    for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
+      var head = String.join(".", List.of(parts).subList(0, prefixLen));
+      var headRef = typeRegistry.resolve(head, fileType).orElse(null);
+      if (headRef == null) {
+        continue;
+      }
+      var member = walkToMember(headRef, parts, prefixLen, fileType);
+      if (member != null && member.getSourceSymbol().orElse(null) instanceof SourceDefinedSymbol target) {
+        return Optional.of(target);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Пройти по сегментам ссылки и вернуть member последнего сегмента (его и нужно
+   * для перехода к определению), либо {@code null}, если цепочка не разрешается.
+   */
+  @Nullable
+  private MemberDescriptor walkToMember(TypeRef headRef, String[] parts, int startIndex, FileType fileType) {
+    var current = headRef;
+    MemberDescriptor member = null;
+    for (int i = startIndex; i < parts.length; i++) {
+      member = findMember(current, parts[i], fileType);
+      if (member == null) {
+        return null;
+      }
+      if (i < parts.length - 1) {
+        var next = member.returnType();
+        if (next == null || next.kind() == TypeKind.UNKNOWN) {
+          return null;
+        }
+        current = next;
+      }
+    }
+    return member;
+  }
+
+  /**
    * Пройти по оставшимся сегментам ссылки, начиная с {@code parts[startIndex]},
    * через members типа. Последний сегмент может оказаться именем параметра
    * метода (записи вида {@code Модуль.Метод.Параметр}) — тогда возвращаются

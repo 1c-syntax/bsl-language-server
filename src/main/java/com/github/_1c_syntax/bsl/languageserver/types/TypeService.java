@@ -282,6 +282,32 @@ public class TypeService {
   }
 
   /**
+   * Разрешить {@code см.}-ссылку из doc-комментария в символ-определение, на
+   * который она указывает.
+   * <p>
+   * Неквалифицированная ссылка ({@code Метод}) ищется среди методов того же
+   * модуля; квалифицированная ({@code Модуль.Метод}, {@code Справочники.X.Метод}
+   * и т.п.) разрешается через реестр типов — единообразно для общих модулей,
+   * модулей менеджеров и прочих типов.
+   *
+   * @param reference         текст ссылки (без ключевого слова {@code См.}).
+   * @param requestingContext документ, в котором встретилась ссылка.
+   * @return символ-определение цели ссылки, либо {@code empty}, если не
+   *         разрешается.
+   */
+  public Optional<SourceDefinedSymbol> resolveSeeReference(String reference, DocumentContext requestingContext) {
+    if (reference.isBlank()) {
+      return Optional.empty();
+    }
+    if (reference.indexOf('.') < 0) {
+      return requestingContext.getSymbolTree()
+        .getMethodSymbol(reference)
+        .map(SourceDefinedSymbol.class::cast);
+    }
+    return symbolTypeIndex.resolveReferenceSymbol(reference, requestingContext.getFileType());
+  }
+
+  /**
    * Для символа-модуля OneScript-класса предпочесть символ конструктора
    * {@code ПриСозданииОбъекта}, если он есть; иначе вернуть сам символ-модуль
    * без изменений.
