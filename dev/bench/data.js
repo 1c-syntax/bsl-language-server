@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782395875039,
+  "lastUpdate": 1782398279043,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -38874,6 +38874,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.784485925493545",
             "extra": "mean: 280.8564145565033 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b180d5a196dc6a19e247d8672d182de65238235",
+          "message": "Merge pull request #4196 from 1c-syntax/claude/github-issue-4194-v19sfb\n\nfeat(types): вложенные и рекурсивные см.-ссылки в выводе типов, hover и автокомплите",
+          "timestamp": "2026-06-25T15:31:43+02:00",
+          "tree_id": "92f5b301be1e37ca7272c9754f77209cb2559d2d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3b180d5a196dc6a19e247d8672d182de65238235"
+        },
+        "date": 1782398267027,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 276.3788816134135,
+            "unit": "sec",
+            "range": "stddev: 17.97095835684498",
+            "extra": "mean: 276.3788816134135 sec\nrounds: 3"
           }
         ]
       }
