@@ -34,6 +34,13 @@ final class McpToolParams {
   static final String LANGUAGE = "Language for names and descriptions: `RU` (default) or `EN`.";
   static final String GLOBAL_MEMBER_NAME = "Global function, property or enum name in Russian or English "
     + "(e.g. `Сообщить` / `Message`, `Метаданные` / `Metadata`).";
+  static final String GLOBAL_MEMBER_CATEGORIES = "Optional list of categories to include: `FUNCTION` "
+    + "(global functions/procedures), `PROPERTY` (global properties) and/or `ENUM` (system enums). "
+    + "When omitted or empty, all categories are searched.";
+  static final String GLOBAL_MEMBER_QUERY = "Optional search query matched fuzzily against member names "
+    + "(exact > prefix > substring > subsequence, case-insensitive, over both the Russian and English "
+    + "spelling, e.g. `Сценар` / `Script`), like the editor's autocomplete. Results are ranked by "
+    + "relevance. When omitted, every member in the selected categories is returned.";
   static final String ROOT = "URI of the workspace root (one of the roots the client declared) to scope the "
     + "lookup to. Required because the answer can differ between roots — configuration vs OneScript "
     + "projects, different configurations, etc. For purely platform names pick any registered root.";
