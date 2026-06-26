@@ -44,11 +44,14 @@ com.github._1c_syntax.bsl.languageserver.documenthighlight
 com.github._1c_syntax.bsl.languageserver.documentlink
 com.github._1c_syntax.bsl.languageserver.events
 com.github._1c_syntax.bsl.languageserver.folding
+com.github._1c_syntax.bsl.languageserver.formatting
 com.github._1c_syntax.bsl.languageserver.hover
 com.github._1c_syntax.bsl.languageserver.infrastructure
 com.github._1c_syntax.bsl.languageserver.inlayhints
 com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure
 com.github._1c_syntax.bsl.languageserver.jsonrpc
+com.github._1c_syntax.bsl.languageserver.lsp
+com.github._1c_syntax.bsl.languageserver.lsp.client
 com.github._1c_syntax.bsl.languageserver.mcp
 com.github._1c_syntax.bsl.languageserver.mcp.dto
 com.github._1c_syntax.bsl.languageserver.mcp.tools
@@ -60,7 +63,6 @@ com.github._1c_syntax.bsl.languageserver.rename
 com.github._1c_syntax.bsl.languageserver.reporters
 com.github._1c_syntax.bsl.languageserver.reporters.data
 com.github._1c_syntax.bsl.languageserver.reporters.databind
-com.github._1c_syntax.bsl.languageserver.reporters.infrastructure
 com.github._1c_syntax.bsl.languageserver.semantictokens
 com.github._1c_syntax.bsl.languageserver.semantictokens.strings
 com.github._1c_syntax.bsl.languageserver.types
@@ -70,6 +72,7 @@ com.github._1c_syntax.bsl.languageserver.types.model
 com.github._1c_syntax.bsl.languageserver.types.oscript
 com.github._1c_syntax.bsl.languageserver.types.oscript.annotations
 com.github._1c_syntax.bsl.languageserver.types.oscript.autumn
+com.github._1c_syntax.bsl.languageserver.types.oscript.events
 com.github._1c_syntax.bsl.languageserver.types.oscript.extends_
 com.github._1c_syntax.bsl.languageserver.types.registry
 com.github._1c_syntax.bsl.languageserver.types.scope
