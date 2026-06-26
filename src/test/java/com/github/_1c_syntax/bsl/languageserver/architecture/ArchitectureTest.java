@@ -36,6 +36,8 @@ import java.util.concurrent.Callable;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
+import static com.tngtech.archunit.library.GeneralCodingRules.ACCESS_STANDARD_STREAMS;
 
 /**
  * Архитектурные тесты на базе <a href="https://www.archunit.org/">ArchUnit</a>.
@@ -89,6 +91,30 @@ class ArchitectureTest {
     .should().beAssignableTo(BSLDiagnostic.class)
     .because("@DiagnosticMetadata имеет смысл только на реализациях BSLDiagnostic");
 
+  @ArchTest
+  static final ArchRule diagnostics_should_reside_in_diagnostics_package = classes()
+    .that().areAssignableTo(BSLDiagnostic.class)
+    .should().resideInAPackage("..diagnostics..")
+    .because("все реализации BSLDiagnostic живут в пакете diagnostics");
+
+  // --- Стандартные потоки -------------------------------------------------------------------------
+  // stdout/stderr запрещены везде, кроме мест, где они нужны по протоколу/природе процесса:
+  //  - ParentProcessWatcher — fallback-логирование до инициализации логгера;
+  //  - LanguageServerLauncherConfiguration — поток stdout как транспорт LSP;
+  //  - VersionCommand — печать версии в CLI;
+  //  - McpStdioConfiguration — поток stdout как транспорт MCP (stdio).
+  // Новый класс, которому реально нужен stdout, добавляется в этот список осознанно (через ревью).
+
+  @ArchTest
+  static final ArchRule no_classes_should_access_standard_streams_except_allowed = noClasses()
+    .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".ParentProcessWatcher")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.lsp.LanguageServerLauncherConfiguration")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.VersionCommand")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".mcp.McpStdioConfiguration")
+    .should(ACCESS_STANDARD_STREAMS)
+    .because("вывод в stdout/stderr допустим только в транспортных и CLI-точках из списка выше; "
+      + "остальной код использует slf4j и доменные каналы вывода");
+
   // --- Провайдеры ---------------------------------------------------------------------------------
 
   @ArchTest
@@ -118,33 +144,58 @@ class ArchitectureTest {
     .because("подкоманды picocli в пакете cli именуются с суффиксом Command");
 
   // --- События ------------------------------------------------------------------------------------
+  // Правило двунаправленное: «в пакете events лежат только события» и «события лежат только в events».
 
   @ArchTest
-  static final ArchRule events_should_extend_application_event_and_be_named_with_event_suffix = classes()
+  static final ArchRule classes_in_events_packages_should_be_application_events = classes()
     .that().resideInAPackage("..events..")
     .and().areTopLevelClasses()
     .should().beAssignableTo(ApplicationEvent.class)
     .andShould().haveSimpleNameEndingWith("Event")
-    .because("классы в пакетах events — это Spring ApplicationEvent с суффиксом Event");
-
-  // --- Слои и зависимости -------------------------------------------------------------------------
+    .because("в пакетах events лежат только Spring ApplicationEvent с суффиксом Event");
 
   @ArchTest
-  static final ArchRule domain_layers_should_not_depend_on_cli = noClasses()
-    .that().resideInAnyPackage(
-      "..diagnostics..",
-      "..providers..",
-      "..references..",
-      "..context..",
-      "..configuration.."
-    )
-    .should().dependOnClassesThat().resideInAPackage("..cli..")
-    .because("cli — слой точек входа (подкоманды picocli); доменные слои не должны от него зависеть");
+  static final ArchRule application_events_should_reside_in_events_packages = classes()
+    .that().areAssignableTo(ApplicationEvent.class)
+    .and().areTopLevelClasses()
+    .should().resideInAPackage("..events..")
+    .because("каждый Spring ApplicationEvent должен лежать в пакете events");
+
+  @ArchTest
+  static final ArchRule classes_named_event_should_reside_in_events_packages = classes()
+    .that().haveSimpleNameEndingWith("Event")
+    .and().areTopLevelClasses()
+    .should().resideInAPackage("..events..")
+    .because("класс с суффиксом Event должен лежать в пакете events");
+
+  // --- Логирование --------------------------------------------------------------------------------
 
   @ArchTest
   static final ArchRule no_classes_should_use_java_util_logging = noClasses()
     .should().dependOnClassesThat().resideInAPackage("java.util.logging..")
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
+
+  // --- Слои и зависимости -------------------------------------------------------------------------
+  // Слоистую архитектуру вводим «потихоньку»: пока зафиксировано единственное ограничение, которое
+  // уже выполняется, — слой точек входа cli не должен использоваться доменными слоями (исключение —
+  // reporters.infrastructure, где сборка отчёта анализа стартует из AnalyzeCommand). По мере чистки
+  // зависимостей сюда добавляются новые whereLayer(...)-ограничения, а cli со временем ужесточается
+  // до mayNotBeAccessedByAnyLayer().
+
+  @ArchTest
+  static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
+    .consideringOnlyDependenciesInLayers()
+    .layer("CLI").definedBy("..cli..")
+    .layer("Reporters").definedBy("..reporters..")
+    .layer("Providers").definedBy("..providers..")
+    .layer("Diagnostics").definedBy("..diagnostics..")
+    .layer("References").definedBy("..references..")
+    .layer("Configuration").definedBy("..configuration..")
+    .layer("Context").definedBy("..context..")
+
+    .whereLayer("CLI").mayOnlyBeAccessedByLayers("Reporters")
+
+    .because("cli — слой точек входа (подкоманды picocli); доменные слои не должны от него зависеть");
 
   /**
    * Исключает сгенерированные {@code package-info} из анализа: это не классы предметной области,
