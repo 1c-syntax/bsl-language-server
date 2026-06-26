@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782503757766,
+  "lastUpdate": 1782514834237,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39060,6 +39060,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 19.973429119177926",
             "extra": "mean: 294.49927194913226 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b695ad5684e5b163016155c7a79ae7188bbd0e2",
+          "message": "Merge pull request #4212 from 1c-syntax/claude/utils-leaf-decouple\n\nrefactor(utils): make utils a leaf package",
+          "timestamp": "2026-06-27T00:19:50+02:00",
+          "tree_id": "369e37cc9db7274d0084ee9d54fa1ae4f23e8b0a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3b695ad5684e5b163016155c7a79ae7188bbd0e2"
+        },
+        "date": 1782514822854,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 286.4360779921214,
+            "unit": "sec",
+            "range": "stddev: 5.303088321382667",
+            "extra": "mean: 286.4360779921214 sec\nrounds: 3"
           }
         ]
       }
