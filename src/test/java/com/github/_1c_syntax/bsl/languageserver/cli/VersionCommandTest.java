@@ -58,6 +58,18 @@ class VersionCommandTest {
   }
 
   @Test
+  void testNullVersion() {
+    // given
+    when(serverInfo.getVersion()).thenReturn(null);
+
+    // when
+    var call = command.call();
+
+    // then
+    assertThat(call).isEqualTo(1);
+  }
+
+  @Test
   void testSuccessfulCall() {
     // given
     when(serverInfo.getVersion()).thenReturn("0.0.0");

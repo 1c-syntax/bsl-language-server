@@ -52,7 +52,7 @@ public class VersionCommand implements Callable<Integer> {
 
   public Integer call() {
     String version = serverInfo.getVersion();
-    if (version.isEmpty()) {
+    if (version == null || version.isEmpty()) {
       return 1;
     }
 
