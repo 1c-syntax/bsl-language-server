@@ -32,17 +32,22 @@ import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.library.dependencies.SliceAssignment;
+import com.tngtech.archunit.library.dependencies.SliceIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMembers;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.GeneralCodingRules.ACCESS_STANDARD_STREAMS;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 /**
  * Архитектурные тесты на базе <a href="https://www.archunit.org/">ArchUnit</a>.
@@ -188,6 +193,8 @@ class ArchitectureTest {
   // лежат bootstrap-классы MainApplication и BSLLSBinding. Lsp задан точным именем пакета и содержит
   // только сервисы-головы, а общее состояние LSP-клиента — это нижний слой LspClient, отдельный от
   // сервисов, поэтому сервисы и потребляющие холдеры из providers и codelenses не образуют цикла.
+  // Узкие доменные слои с единственным легитимным потребителем: cfg (граф потока управления) — только
+  // из diagnostics; jsonrpc (DTO нестандартных LSP-запросов) — только из lsp.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
@@ -203,11 +210,67 @@ class ArchitectureTest {
     .layer("Context").definedBy(ROOT_PACKAGE + ".context..")
     .layer("References").definedBy(ROOT_PACKAGE + ".references..")
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
+    .layer("Cfg").definedBy(ROOT_PACKAGE + ".cfg..")
+    .layer("Jsonrpc").definedBy(ROOT_PACKAGE + ".jsonrpc..")
 
     .whereLayer("CLI").mayOnlyBeAccessedByLayers("Application")
     .whereLayer("Providers").mayOnlyBeAccessedByLayers("Lsp", "CLI", "Mcp")
+    .whereLayer("Cfg").mayOnlyBeAccessedByLayers("Diagnostics")
+    .whereLayer("Jsonrpc").mayOnlyBeAccessedByLayers("Lsp")
 
-    .as("Слоистая архитектура: cli — только из Application (корня); providers — только из голов (lsp/cli/mcp)");
+    .as("Слоистая архитектура: cli — только из Application (корня); providers — только из голов "
+      + "(lsp/cli/mcp); cfg — только из diagnostics; jsonrpc — только из lsp");
+
+  // --- Листовой пакет utils -----------------------------------------------------------------------
+  // utils — переиспользуемые хелперы (AST, диапазоны, строки, файлы) — обязан оставаться листом:
+  // он не зависит ни от одного пакета проекта вне самого utils. Хелперу, которому нужен доменный
+  // тип, место в этом домене, а не здесь.
+
+  @ArchTest
+  static final ArchRule utils_should_not_depend_on_project_packages = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".utils..")
+    .should().dependOnClassesThat(
+      resideInAPackage(ROOT_PACKAGE + "..")
+        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".utils..")))
+    .because("utils — листовой пакет: не зависит от доменных пакетов проекта");
+
+  // --- Ацикличность чистых доменов ----------------------------------------------------------------
+  // Ядро (configuration↔diagnostics↔context↔providers↔…) сейчас переплетено циклами и здесь не
+  // проверяется. Домены вне этого клубка уже ацикличны — фиксируем это, чтобы новый код не завёл
+  // цикл среди них. Пакеты ядра в срез не входят; aop тоже (его рёбра — артефакт compile-time
+  // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
+
+  static final Set<String> ACYCLIC_DOMAINS = Set.of(
+    "cfg", "cli", "color", "events", "folding", "formatting",
+    "jsonrpc", "mcp", "recognizer", "reporters", "utils", "websocket"
+  );
+
+  static final SliceAssignment ACYCLIC_DOMAIN_SLICES = new SliceAssignment() {
+    @Override
+    public SliceIdentifier getIdentifierOf(JavaClass javaClass) {
+      var prefix = ROOT_PACKAGE + ".";
+      var packageName = javaClass.getPackageName();
+      if (packageName.startsWith(prefix)) {
+        var rest = packageName.substring(prefix.length());
+        var dot = rest.indexOf('.');
+        var topLevel = dot < 0 ? rest : rest.substring(0, dot);
+        if (ACYCLIC_DOMAINS.contains(topLevel)) {
+          return SliceIdentifier.of(topLevel);
+        }
+      }
+      return SliceIdentifier.ignore();
+    }
+
+    @Override
+    public String getDescription() {
+      return "ацикличные доменные пакеты вне ядра";
+    }
+  };
+
+  @ArchTest
+  static final ArchRule acyclic_domains_stay_free_of_cycles = slices()
+    .assignedFrom(ACYCLIC_DOMAIN_SLICES)
+    .should().beFreeOfCycles();
 
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
