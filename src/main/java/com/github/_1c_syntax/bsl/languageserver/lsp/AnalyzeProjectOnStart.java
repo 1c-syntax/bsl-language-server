@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopu
 import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.lsp.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;

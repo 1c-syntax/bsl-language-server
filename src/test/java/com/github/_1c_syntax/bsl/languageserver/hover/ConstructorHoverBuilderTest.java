@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import org.eclipse.lsp4j.MarkupKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

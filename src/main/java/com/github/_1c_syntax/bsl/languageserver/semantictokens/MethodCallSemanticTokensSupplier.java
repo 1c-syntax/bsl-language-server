@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.utils.Modules;
+import com.github._1c_syntax.bsl.languageserver.context.Modules;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;

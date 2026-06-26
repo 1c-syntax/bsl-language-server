@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.KeywordSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;

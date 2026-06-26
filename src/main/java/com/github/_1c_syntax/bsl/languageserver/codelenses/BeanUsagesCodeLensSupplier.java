@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnInjectionPointIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnNavigation;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;

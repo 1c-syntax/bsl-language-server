@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;

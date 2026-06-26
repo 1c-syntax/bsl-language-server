@@ -19,17 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
@@ -48,43 +44,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @UtilityClass
 public final class DiagnosticHelper {
-
-  /**
-   * Проверить равенство двух узлов синтаксического дерева.
-   *
-   * @param leftNode  Первый узел для сравнения
-   * @param rightNode Второй узел для сравнения
-   * @return true, если узлы эквивалентны
-   */
-  public static boolean equalNodes(Tree leftNode, Tree rightNode) {
-
-    if (leftNode.getChildCount() != rightNode.getChildCount()
-      || !leftNode.getClass().equals(rightNode.getClass())) {
-      return false;
-    }
-
-    if (leftNode instanceof TerminalNode node) {
-
-      int leftNodeType = node.getSymbol().getType();
-      int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
-
-      if (leftNodeType != rightNodeType
-        || (leftNodeType == BSLParser.STRING
-        && !leftNode.toString().equals(rightNode.toString()))
-        || (!leftNode.toString().equalsIgnoreCase(rightNode.toString()))) {
-        return false;
-      }
-
-    }
-
-    for (int i = 0; i < leftNode.getChildCount(); i++) {
-      if (!equalNodes(leftNode.getChild(i), rightNode.getChild(i))) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   /**
    * Проверить, является ли узел типом "Структура".
