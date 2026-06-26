@@ -10,7 +10,8 @@
 
 - **`DiagnosticReporter`** — интерфейс: `key()` (уникальный ключ формата) + `report(AnalysisInfo, Path)`.
 - **`AbstractDiagnosticReporter`** — база с доступом к `ServerContextProvider` и `DiagnosticInfos`.
-- Выбор форматов: CLI `analyze --reporter <key>` → `ReportersConfiguration` фильтрует все бины
+- Выбор форматов: CLI `analyze --reporter <key>` → бин `filteredReporters`
+  (`cli/ReporterSelectionConfiguration`, зависит от `AnalyzeCommand`) фильтрует все бины
   `DiagnosticReporter` по ключам → `ReportersAggregator.report()` вызывает каждый активный.
 
 ## Форматы (ключ → файл)

@@ -19,9 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.reporters.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,8 +31,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Отбор активных репортёров по ключам, переданным подкоманде {@code analyze}
+ * (опция {@code --reporter}). Зависит от CLI-команды, поэтому объявлен в слое cli,
+ * а не в самих репортёрах.
+ */
 @Configuration
-public class ReportersConfiguration {
+public class ReporterSelectionConfiguration {
 
   @Bean
   @Lazy
