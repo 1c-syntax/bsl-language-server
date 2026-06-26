@@ -27,6 +27,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import picocli.CommandLine;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -57,11 +61,15 @@ class VersionCommandTest {
   void testSuccessfulCall() {
     // given
     when(serverInfo.getVersion()).thenReturn("0.0.0");
+    var out = new StringWriter();
+    var commandLine = new CommandLine(command);
+    commandLine.setOut(new PrintWriter(out));
 
     // when
-    var call = command.call();
+    var call = commandLine.execute();
 
     // then
     assertThat(call).isZero();
+    assertThat(out.toString()).contains("version: 0.0.0");
   }
 }
