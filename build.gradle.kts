@@ -351,6 +351,10 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
+    // Вложенные CLAUDE.md лежат рядом с исходниками; delombok копирует их в сгенерированные
+    // сорсы, и javadoc спотыкается о них ("Illegal package name"). Исключаем не-java файлы.
+    exclude("**/*.md")
+
     options {
         this as StandardJavadocDocletOptions
         links(
