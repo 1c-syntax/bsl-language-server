@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782424927429,
+  "lastUpdate": 1782503757766,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39029,6 +39029,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.421490156149403",
             "extra": "mean: 284.4932604630788 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c53577d3b2dd097e18fee5369c2769d28b1f601",
+          "message": "Merge pull request #4211 from 1c-syntax/claude/archunit-integration-jc1qcm\n\ntest(architecture): add ArchUnit architecture tests",
+          "timestamp": "2026-06-26T21:23:17+02:00",
+          "tree_id": "1ddb928bc2760a01d3258aa589dc1a0ad3783fd4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1c53577d3b2dd097e18fee5369c2769d28b1f601"
+        },
+        "date": 1782503747226,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 294.49927194913226,
+            "unit": "sec",
+            "range": "stddev: 19.973429119177926",
+            "extra": "mean: 294.49927194913226 sec\nrounds: 3"
           }
         ]
       }
