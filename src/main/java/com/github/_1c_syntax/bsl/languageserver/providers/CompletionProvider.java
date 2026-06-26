@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.context.api.ContextNames;
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -936,7 +936,7 @@ public final class CompletionProvider {
    *       поднял signatureHelp без дополнительного нажатия.</li>
    *   <li>Метод с параметрами без {@code snippetSupport} — фолбэк «{@code Метод(}»: символ
    *       {@code (} тоже trigger character для signatureHelp
-   *       ({@link com.github._1c_syntax.bsl.languageserver.BSLLanguageServer}),
+   *       ({@link com.github._1c_syntax.bsl.languageserver.lsp.BSLLanguageServer}),
    *       но закрывающую скобку пользователь поставит сам.</li>
    * </ul>
    *

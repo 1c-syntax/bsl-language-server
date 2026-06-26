@@ -29,38 +29,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Проверяет выбор Spring-профилей, типа веб-приложения и эндпоинта MCP по аргументам командной строки.
  */
-class BSLLSPLauncherModeTest {
+class MainApplicationModeTest {
 
   private static final String MCP_ENDPOINT_PROPERTY = "spring.ai.mcp.server.streamable-http.mcp-endpoint";
 
   @Test
   void activeProfilesPerMode() {
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{})).isEmpty();
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"lsp"})).isEmpty();
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"websocket"})).isEmpty();
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"mcp"}))
+    assertThat(MainApplication.getActiveProfiles(new String[]{})).isEmpty();
+    assertThat(MainApplication.getActiveProfiles(new String[]{"lsp"})).isEmpty();
+    assertThat(MainApplication.getActiveProfiles(new String[]{"websocket"})).isEmpty();
+    assertThat(MainApplication.getActiveProfiles(new String[]{"mcp"}))
       .containsExactly("mcp", "mcp-stdio");
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"mcp", "--protocol", "sse"}))
+    assertThat(MainApplication.getActiveProfiles(new String[]{"mcp", "--protocol", "sse"}))
       .containsExactly("mcp", "mcp-sse");
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"mcp", "--protocol", "streamable"}))
+    assertThat(MainApplication.getActiveProfiles(new String[]{"mcp", "--protocol", "streamable"}))
       .containsExactly("mcp", "mcp-streamable");
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"--mcp"}))
+    assertThat(MainApplication.getActiveProfiles(new String[]{"--mcp"}))
       .containsExactly("mcp", "lsp-mcp");
-    assertThat(BSLLSPLauncher.getActiveProfiles(new String[]{"websocket", "--mcp"}))
+    assertThat(MainApplication.getActiveProfiles(new String[]{"websocket", "--mcp"}))
       .containsExactly("mcp", "websocket-mcp");
   }
 
   @Test
   void webApplicationTypePerMode() {
-    assertThat(BSLLSPLauncher.getWebApplicationType(new String[]{})).isEqualTo(WebApplicationType.NONE);
-    assertThat(BSLLSPLauncher.getWebApplicationType(new String[]{"mcp"})).isEqualTo(WebApplicationType.NONE);
-    assertThat(BSLLSPLauncher.getWebApplicationType(new String[]{"mcp", "--protocol", "sse"}))
+    assertThat(MainApplication.getWebApplicationType(new String[]{})).isEqualTo(WebApplicationType.NONE);
+    assertThat(MainApplication.getWebApplicationType(new String[]{"mcp"})).isEqualTo(WebApplicationType.NONE);
+    assertThat(MainApplication.getWebApplicationType(new String[]{"mcp", "--protocol", "sse"}))
       .isEqualTo(WebApplicationType.SERVLET);
-    assertThat(BSLLSPLauncher.getWebApplicationType(new String[]{"mcp", "--protocol", "streamable"}))
+    assertThat(MainApplication.getWebApplicationType(new String[]{"mcp", "--protocol", "streamable"}))
       .isEqualTo(WebApplicationType.SERVLET);
-    assertThat(BSLLSPLauncher.getWebApplicationType(new String[]{"--mcp"}))
+    assertThat(MainApplication.getWebApplicationType(new String[]{"--mcp"}))
       .isEqualTo(WebApplicationType.SERVLET);
-    assertThat(BSLLSPLauncher.getWebApplicationType(new String[]{"websocket"}))
+    assertThat(MainApplication.getWebApplicationType(new String[]{"websocket"}))
       .isEqualTo(WebApplicationType.SERVLET);
   }
 
@@ -69,10 +69,10 @@ class BSLLSPLauncherModeTest {
     System.clearProperty(MCP_ENDPOINT_PROPERTY);
     try {
       // Без флага --mcp путь не применяется.
-      BSLLSPLauncher.applyMcpEndpointPath(new String[]{"mcp"});
+      MainApplication.applyMcpEndpointPath(new String[]{"mcp"});
       assertThat(System.getProperty(MCP_ENDPOINT_PROPERTY)).isNull();
 
-      BSLLSPLauncher.applyMcpEndpointPath(new String[]{"--mcp", "--mcp-path=/custom"});
+      MainApplication.applyMcpEndpointPath(new String[]{"--mcp", "--mcp-path=/custom"});
       assertThat(System.getProperty(MCP_ENDPOINT_PROPERTY)).isEqualTo("/custom");
     } finally {
       System.clearProperty(MCP_ENDPOINT_PROPERTY);

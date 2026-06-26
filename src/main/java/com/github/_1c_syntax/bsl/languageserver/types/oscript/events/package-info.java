@@ -19,23 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver;
+/**
+ * События индексации библиотек OneScript (Spring {@code ApplicationEvent}).
+ */
+@NullMarked
+package com.github._1c_syntax.bsl.languageserver.types.oscript.events;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-@SpringBootTest
-class AutoServerInfoTest {
-
-  @Autowired
-  private AutoServerInfo autoServerInfo;
-
-  @Test
-  void testDataIsFilled() {
-    assertThat(autoServerInfo.getName()).isNotBlank();
-    assertThat(autoServerInfo.getVersion()).isNotBlank();
-  }
-}
+import org.jspecify.annotations.NullMarked;

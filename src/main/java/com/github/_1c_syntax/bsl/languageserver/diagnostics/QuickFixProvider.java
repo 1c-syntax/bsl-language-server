@@ -23,10 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
 
+import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Интерфейс для диагностик, предоставляющих быстрые исправления.
@@ -49,5 +56,47 @@ public interface QuickFixProvider {
     CodeActionParams params,
     DocumentContext documentContext
   );
+
+  /**
+   * Собрать Code Actions (быстрые исправления) для списка текстовых изменений.
+   *
+   * @param textEdits Список текстовых изменений
+   * @param title Название действия
+   * @param uri URI документа
+   * @param diagnostics Список диагностик, которые исправляет это действие
+   * @return Список Code Actions
+   */
+  static List<CodeAction> createCodeActions(
+    List<TextEdit> textEdits,
+    String title,
+    URI uri,
+    List<Diagnostic> diagnostics
+  ) {
+
+    if (diagnostics.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    WorkspaceEdit edit = new WorkspaceEdit();
+
+    Map<String, List<TextEdit>> changes = new HashMap<>();
+    changes.put(uri.toString(), textEdits);
+    edit.setChanges(changes);
+
+    if (diagnostics.size() > 1) {
+      title = "Fix all: " + title;
+    }
+
+    CodeAction codeAction = new CodeAction(title);
+    codeAction.setDiagnostics(diagnostics);
+    codeAction.setEdit(edit);
+    codeAction.setKind(CodeActionKind.QuickFix);
+    if (diagnostics.size() == 1) {
+      codeAction.setIsPreferred(Boolean.TRUE);
+    }
+
+    return Collections.singletonList(codeAction);
+
+  }
 
 }

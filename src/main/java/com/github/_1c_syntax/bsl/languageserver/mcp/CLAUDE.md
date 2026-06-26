@@ -8,7 +8,7 @@
 
 ## Способы запуска и транспорты
 
-Транспорт и Spring-профили выбирает **`BSLLSPLauncher`** по аргументам **до** старта контекста
+Транспорт и Spring-профили выбирает **`MainApplication`** по аргументам **до** старта контекста
 (`getActiveProfiles`/`getWebApplicationType`/`applyMcpEndpointPath`); сам MCP-сервер поднимает
 автоконфигурация Spring AI. Два способа:
 
@@ -44,5 +44,5 @@ folders; при `--mcp` оба источника (LSP folders + MCP roots) пи
   `McpDocumentReader`/`McpWorkspaceResolver`; бизнес-логику в `mcp/` не дублируй.
 - Инструментам, которым нужен workspace, его выдаёт `McpWorkspaceResolver` — не полагайся на
   «текущий» неявно.
-- Транспорт/профили задаёт `BSLLSPLauncher` по аргументам — при добавлении транспорта правь и
+- Транспорт/профили задаёт `MainApplication` по аргументам — при добавлении транспорта правь и
   выбор профиля там, и соответствующий `application-*-mcp.properties`.

@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver;
+package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Range;
@@ -29,8 +29,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService.applyIncrementalChange;
-import static com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService.applyTextDocumentChanges;
+import static com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService.applyIncrementalChange;
+import static com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService.applyTextDocumentChanges;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**

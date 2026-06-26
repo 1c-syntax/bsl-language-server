@@ -39,7 +39,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class BSLLSPLauncherTest {
+class MainApplicationTest {
 
   private ByteArrayOutputStream outContent;
   private ByteArrayOutputStream errContent;
@@ -71,7 +71,7 @@ class BSLLSPLauncherTest {
     String[] args = new String[]{"--error"};
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("2");
 
@@ -85,7 +85,7 @@ class BSLLSPLauncherTest {
     String[] args = "--analyze --srcDir ./src/test/resources/cli".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -102,7 +102,7 @@ class BSLLSPLauncherTest {
     String[] args = "--analyze --srcDir ./src/test/resources/cli --silent".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -118,7 +118,7 @@ class BSLLSPLauncherTest {
     String[] args = "--analyze --srcDir fake-dir".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("1");
 
@@ -134,7 +134,7 @@ class BSLLSPLauncherTest {
     String[] args = "--format --src ./src/test/resources/cli".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -151,7 +151,7 @@ class BSLLSPLauncherTest {
     String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -168,7 +168,7 @@ class BSLLSPLauncherTest {
     String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt,./src/test/resources/cli/test.bsl".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -185,7 +185,7 @@ class BSLLSPLauncherTest {
     String[] args = "--format --src ./src/test/resources/cli --silent".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -201,7 +201,7 @@ class BSLLSPLauncherTest {
     String[] args = "--format --src fake-dir".split(" ");
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("1");
 
@@ -217,7 +217,7 @@ class BSLLSPLauncherTest {
     String[] args = {"-v"};
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -233,7 +233,7 @@ class BSLLSPLauncherTest {
     String[] args = new String[]{};
 
     // when
-    BSLLSPLauncher.main(args);
+    MainApplication.main(args);
 
     // then
     // main-method should runs without exceptions
@@ -249,7 +249,7 @@ class BSLLSPLauncherTest {
     String[] args = "-c src/test/resources/.bsl-language-server.json".split(" ");
 
     // when
-    BSLLSPLauncher.main(args);
+    MainApplication.main(args);
 
     // then
     // main-method should run without exceptions
@@ -263,7 +263,7 @@ class BSLLSPLauncherTest {
     String[] args = new String[]{"-c", "src/test/resources/cli/error-trace.json"};
 
     // when
-    BSLLSPLauncher.main(args);
+    MainApplication.main(args);
 
     // then
     // main-method should runs without exceptions

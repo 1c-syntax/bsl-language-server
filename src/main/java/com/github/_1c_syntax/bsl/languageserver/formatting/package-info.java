@@ -20,11 +20,9 @@
  * License along with BSL Language Server.
  */
 /**
- * Инфраструктура для работы с репортерами результатов диагностики.
- * <p>
- * Пакет содержит конфигурацию и служебные классы для системы формирования отчётов.
+ * Движок форматирования кода BSL: преобразование потока токенов в отформатированный текст.
  */
 @NullMarked
-package com.github._1c_syntax.bsl.languageserver.reporters.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.formatting;
 
 import org.jspecify.annotations.NullMarked;

@@ -175,6 +175,9 @@ dependencies {
     testImplementation("com.github.hazendaz.jmockit:jmockit:2.2.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
+    // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -193,7 +196,7 @@ tasks.withType<JavaCompile> {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.MainApplication"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     enabled = true
@@ -348,6 +351,10 @@ tasks.generateDiagnosticDocs {
 }
 
 tasks.javadoc {
+    // Вложенные CLAUDE.md лежат рядом с исходниками; delombok копирует их в сгенерированные
+    // сорсы, и javadoc спотыкается о них ("Illegal package name"). Исключаем не-java файлы.
+    exclude("**/*.md")
+
     options {
         this as StandardJavadocDocletOptions
         links(

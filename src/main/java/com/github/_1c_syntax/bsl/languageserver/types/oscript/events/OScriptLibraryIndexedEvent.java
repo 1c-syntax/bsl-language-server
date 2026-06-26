@@ -19,9 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.oscript;
+package com.github._1c_syntax.bsl.languageserver.types.oscript.events;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

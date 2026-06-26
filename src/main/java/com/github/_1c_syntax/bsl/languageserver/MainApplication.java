@@ -72,7 +72,7 @@ import static picocli.CommandLine.Command;
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
   footer = "@|green Copyright(c) 2018-2025|@",
   header = "@|green BSL language server|@")
-@SpringBootApplication(scanBasePackageClasses = BSLLSPLauncher.class)
+@SpringBootApplication(scanBasePackageClasses = MainApplication.class)
 @Component
 @ConditionalOnProperty(
   prefix = "app.command.line.runner",
@@ -80,7 +80,7 @@ import static picocli.CommandLine.Command;
   havingValue = "true",
   matchIfMissing = true)
 @RequiredArgsConstructor
-public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
+public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -117,12 +117,12 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   public static void main(String[] args) {
     applyMcpEndpointPath(args);
 
-    var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
+    var applicationContext = new SpringApplicationBuilder(MainApplication.class)
       .web(getWebApplicationType(args))
       .profiles(getActiveProfiles(args))
       .run(args);
 
-    var launcher = applicationContext.getBean(BSLLSPLauncher.class);
+    var launcher = applicationContext.getBean(MainApplication.class);
     launcher.run(args);
 
     if (launcher.getExitCode() >= 0) {

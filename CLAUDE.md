@@ -45,7 +45,7 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 
 ## Архитектура
 
-Точка входа — `BSLLSPLauncher` (picocli; по подкоманде поднимает Spring-контекст, делегирует в `cli/`).
+Точка входа — `MainApplication` (picocli; по подкоманде поднимает Spring-контекст, делегирует в `cli/`).
 Ключевые абстракции (пакет `com.github._1c_syntax.bsl.languageserver`):
 
 - **`ServerContext` / `ServerContextProvider`** (`context/`) — рабочая область: коллекция документов +
@@ -60,8 +60,9 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 - **Индекс ссылок** (`references/`) · **символы** (`context/symbol/`) · **CFG** (`cfg/`) ·
   **конфигурация** (`configuration/`) · **отчёты** (`reporters/`).
 
-Точки входа подкоманд — в `cli/` (каждый класс реализует picocli-`Command`: `LanguageServerStart`,
-`Analyze`, `Format`, `Mcp`, `Websocket`, `Version`); `BSLLSPLauncher` выбирает по подкоманде.
+Точки входа подкоманд — в `cli/` (каждый класс реализует picocli-`Callable<Integer>` с аннотацией
+`@Command` и именуется с суффиксом `Command`: `LanguageServerStartCommand`, `AnalyzeCommand`,
+`FormatCommand`, `McpCommand`, `WebsocketCommand`, `VersionCommand`); `MainApplication` выбирает по подкоманде.
 
 Ключевые подсистемы снабжены вложенными `CLAUDE.md` (подгружаются при работе с их файлами):
 [`context/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/context/CLAUDE.md) (контекст, символы, AOP) ·
@@ -142,6 +143,12 @@ java -jar build/libs/bsl-language-server-*-exec.jar --help    # запуск; п
 - **EOL** по `.gitattributes`: для большинства файлов (`*.java/*.bsl/*.xml/*.md/*.json`) — **LF**,
   для `*.bat` — **CRLF**. Не меняй EOL целиком; отдельные тестовые файлы помечены `binary` или особыми
   правилами в `.editorconfig` — их whitespace не трогай.
+- **Локаль рантайма (не только кодировка файлов!).** Указанное выше про UTF-8 — это про *содержимое*
+  файлов. Отдельная проблема — *локаль JVM*: при `LC_CTYPE=POSIX`/`C` Java берёт `sun.jnu.encoding`
+  ASCII и **не может декодировать кириллические имена файлов** (фикстуры вроде `Документ1.xml`) —
+  падают `processTestResources` и часть тестов. Нужна UTF-8-локаль. В среде Claude Code на вебе она
+  уже задаётся репозиторным `.claude/settings.json` (`env.LANG=C.UTF-8`); вне неё запускай вручную:
+  `LANG=C.UTF-8 ./gradlew …`.
 
 ## Диагностики
 
