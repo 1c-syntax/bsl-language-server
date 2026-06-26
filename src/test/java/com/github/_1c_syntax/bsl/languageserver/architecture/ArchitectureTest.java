@@ -103,12 +103,11 @@ class ArchitectureTest {
     .because("все реализации BSLDiagnostic живут в пакете diagnostics");
 
   // --- Стандартные потоки -------------------------------------------------------------------------
-  // Никто не пишет в стандартные потоки (stdout/stderr). Исключения — лишь места, где стандартный
-  // поток нужен по протоколу или природе процесса:
-  //  - LanguageServerLauncherConfiguration — stdout как транспорт LSP;
-  //  - McpStdioConfiguration — stdout как транспорт MCP (stdio);
-  //  - ParentProcessWatcher — аварийный fallback на завершении, когда логгер уже недоступен.
-  // Новый класс, которому реально нужен стандартный поток, добавляется сюда осознанно (через ревью).
+  // Никто не пишет в стандартные потоки stdout и stderr. Исключения — лишь места, где стандартный
+  // поток нужен по протоколу или природе процесса. Это транспорт LSP в классе
+  // LanguageServerLauncherConfiguration, транспорт MCP по stdio в классе McpStdioConfiguration и
+  // аварийный fallback в классе ParentProcessWatcher на завершении процесса, когда логгер уже
+  // недоступен. Новый класс с такой потребностью добавляется в список исключений осознанно, через ревью.
 
   @ArchTest
   static final ArchRule no_classes_should_access_standard_streams = noClasses()
@@ -180,15 +179,15 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  //   - cli (подкоманды picocli) используется только из слоя Application — корневого пакета с точкой
-  //     входа MainApplication (она подключает подкоманды через @Command(subcommands = …));
-  //   - providers (возможности LSP) вызываются только из «голов» — lsp, cli и mcp.
-  // Связи ядра (context↔diagnostics↔configuration) переплетены циклами и здесь не моделируются.
-  // Пакеты заданы абсолютными путями, иначе "..diagnostics.." матчил бы и configuration.diagnostics,
-  // превращая внутрислойные связи в мнимые межслойные. Application — корневой пакет (точное имя,
-  // без "..") с bootstrap-классами MainApplication и BSLLSBinding. Lsp задан точным именем пакета
-  // (только сервисы-головы); общее состояние LSP-клиента — это нижний слой LspClient (lsp.client),
-  // отдельный от сервисов, поэтому сервисы и потребляющие холдеры providers/codelenses/… не образуют цикла.
+  // Пакет cli с подкомандами picocli доступен только из слоя Application — корневого пакета с точкой
+  // входа MainApplication, которая подключает подкоманды. Пакет providers с возможностями LSP
+  // доступен только из голов lsp, cli и mcp. Связи ядра между context, diagnostics и configuration
+  // переплетены циклами и здесь не моделируются. Пакеты заданы абсолютными путями, иначе шаблон по
+  // имени diagnostics матчил бы и одноимённый пакет внутри configuration, превращая внутрислойные
+  // связи в мнимые межслойные. Application — корневой пакет с точным именем, без вложенных, в нём
+  // лежат bootstrap-классы MainApplication и BSLLSBinding. Lsp задан точным именем пакета и содержит
+  // только сервисы-головы, а общее состояние LSP-клиента — это нижний слой LspClient, отдельный от
+  // сервисов, поэтому сервисы и потребляющие холдеры из providers и codelenses не образуют цикла.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
