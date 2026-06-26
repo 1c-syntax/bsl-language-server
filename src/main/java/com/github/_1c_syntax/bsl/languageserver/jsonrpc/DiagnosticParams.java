@@ -34,7 +34,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Параметры запроса <code>textDocument/x-diagnostics</code>.
  * <br>
- * См. {@link com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService#diagnostics(DiagnosticParams)}
+ * См. {@link com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService#diagnostics(DiagnosticParams)}
  */
 @RequiredArgsConstructor
 @AllArgsConstructor
