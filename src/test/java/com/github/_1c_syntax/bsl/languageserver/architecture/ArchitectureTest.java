@@ -178,32 +178,32 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Фиксируем только реальные инверсии, а не легитимные связи ядра. Ограничения два:
-  //   - cli (точки входа) не должен использоваться ни одним слоем (инверсия: reporters→cli);
-  //   - providers (возможности LSP) не должны вызываться из diagnostics (инверсия: diagnostics→providers).
+  // Ограничиваем два направления:
+  //   - cli (точки входа) не должен использоваться ни одним слоем;
+  //   - providers (возможности LSP) не должны вызываться из diagnostics.
   // Связи вроде context→diagnostics (DiagnosticComputer) и configuration→diagnostics.metadata —
-  // легитимны и НЕ ограничиваются. Правило заморожено (FreezingArchRule): обе текущие инверсии лежат
-  // в базовой линии (archunit_store/), новые межслойные нарушения валят сборку.
+  // легитимны и НЕ ограничиваются. Прежние инверсии (reporters→cli, diagnostics→providers через
+  // createCodeActions и FormatProvider) устранены рефакторингом, поэтому правило строгое — без
+  // FreezingArchRule и базовой линии: любое новое межслойное нарушение валит сборку сразу.
   // Важно: пакеты заданы абсолютными путями, иначе шаблон "..diagnostics.." матчил бы и
   // configuration.diagnostics, превращая внутрислойные связи в мнимые межслойные.
 
   @ArchTest
-  static final ArchRule layer_dependencies_are_respected = FreezingArchRule.freeze(
-    layeredArchitecture()
-      .consideringOnlyDependenciesInLayers()
-      .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
-      .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
-      .layer("Providers").definedBy(ROOT_PACKAGE + ".providers..")
-      .layer("Diagnostics").definedBy(ROOT_PACKAGE + ".diagnostics..")
-      .layer("Context").definedBy(ROOT_PACKAGE + ".context..")
-      .layer("References").definedBy(ROOT_PACKAGE + ".references..")
-      .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
+  static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
+    .consideringOnlyDependenciesInLayers()
+    .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
+    .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
+    .layer("Providers").definedBy(ROOT_PACKAGE + ".providers..")
+    .layer("Diagnostics").definedBy(ROOT_PACKAGE + ".diagnostics..")
+    .layer("Context").definedBy(ROOT_PACKAGE + ".context..")
+    .layer("References").definedBy(ROOT_PACKAGE + ".references..")
+    .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
 
-      .whereLayer("CLI").mayNotBeAccessedByAnyLayer()
-      .whereLayer("Providers")
-      .mayOnlyBeAccessedByLayers("CLI", "Reporters", "Context", "References", "Configuration")
+    .whereLayer("CLI").mayNotBeAccessedByAnyLayer()
+    .whereLayer("Providers")
+    .mayOnlyBeAccessedByLayers("CLI", "Reporters", "Context", "References", "Configuration")
 
-      .as("Слоистая архитектура: cli и providers не используются «снизу» (ядром/diagnostics)"));
+    .as("Слоистая архитектура: cli и providers не используются «снизу» (ядром/diagnostics)");
 
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
