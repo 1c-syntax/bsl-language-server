@@ -175,6 +175,9 @@ dependencies {
     testImplementation("com.github.hazendaz.jmockit:jmockit:2.2.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
+    // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
