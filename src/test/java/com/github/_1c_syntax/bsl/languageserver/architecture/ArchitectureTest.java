@@ -181,17 +181,21 @@ class ArchitectureTest {
 
   // --- Слои и зависимости -------------------------------------------------------------------------
   // Ограничения отражают ТОЛЬКО реальные зависимости (без «про запас»):
-  //   - cli (точка входа подкоманд) не используется ни одним слоем;
+  //   - cli (подкоманды picocli) используется только из слоя Application — корневого пакета с точкой
+  //     входа MainApplication (она подключает подкоманды через @Command(subcommands = …));
   //   - providers (возможности LSP) вызываются только из «голов» — lsp, cli и mcp.
   // Прежние инверсии (reporters→cli, diagnostics→providers через createCodeActions и FormatProvider)
   // устранены рефакторингом, поэтому правило строгое — без FreezingArchRule и базовой линии: любое
   // новое межслойное нарушение валит сборку сразу. Связи ядра (context↔diagnostics↔configuration)
   // переплетены циклами и здесь не моделируются. Пакеты — абсолютными путями, иначе "..diagnostics.."
   // матчил бы и configuration.diagnostics, превращая внутрислойные связи в мнимые межслойные.
+  // Application задан точным именем корневого пакета (без "..") — это bootstrap-классы
+  // MainApplication и BSLLSBinding, а не весь проект.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
     .consideringOnlyDependenciesInLayers()
+    .layer("Application").definedBy(ROOT_PACKAGE)
     .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp..")
     .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
     .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
@@ -202,10 +206,10 @@ class ArchitectureTest {
     .layer("References").definedBy(ROOT_PACKAGE + ".references..")
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
 
-    .whereLayer("CLI").mayNotBeAccessedByAnyLayer()
+    .whereLayer("CLI").mayOnlyBeAccessedByLayers("Application")
     .whereLayer("Providers").mayOnlyBeAccessedByLayers("Lsp", "CLI", "Mcp")
 
-    .as("Слоистая архитектура: providers вызывается только из голов (lsp/cli/mcp); cli не используется снизу");
+    .as("Слоистая архитектура: cli — только из Application (корня); providers — только из голов (lsp/cli/mcp)");
 
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
