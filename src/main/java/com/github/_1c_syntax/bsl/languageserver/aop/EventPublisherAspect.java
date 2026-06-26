@@ -41,7 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceRemovedE
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.events.OScriptLibraryIndexedEvent;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
