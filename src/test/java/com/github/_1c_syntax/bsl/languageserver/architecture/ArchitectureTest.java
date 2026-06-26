@@ -24,16 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.architecture;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-import com.tngtech.archunit.library.freeze.FreezingArchRule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
@@ -207,16 +209,34 @@ class ArchitectureTest {
 
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
-  // и сеттерах — нежелателен. Текущие точки нельзя убрать одномоментно: self-инъекция в code lens
-  // (через конструктор невозможна), именованные бины в ReportersAggregator, setter-инъекция в
-  // AspectJ-аспектах и logback-appender (объекты вне Spring-контейнера). Поэтому правило заморожено:
-  // существующие места зафиксированы базовой линией, а любое НОВОЕ @Autowired валит сборку.
+  // и сеттерах — нежелателен. Исключения — классы из списка ниже, где конструкторное внедрение
+  // невозможно: AspectJ-аспекты и logback-appender (создаются вне Spring-контейнера), self-инъекция
+  // в code lens (циклична), именованные бины/провайдеры. Новый @Autowired вне списка валит сборку.
+
+  private static final Set<String> ALLOWED_AUTOWIRED_CLASSES = Set.of(
+    ROOT_PACKAGE + ".aop.MeasuresAspect",
+    ROOT_PACKAGE + ".aop.SentryAspect",
+    ROOT_PACKAGE + ".codelenses.DebugTestCodeLensSupplier",
+    ROOT_PACKAGE + ".codelenses.RunAllTestsCodeLensSupplier",
+    ROOT_PACKAGE + ".codelenses.RunTestCodeLensSupplier",
+    ROOT_PACKAGE + ".context.DocumentContext",
+    ROOT_PACKAGE + ".context.computer.CognitiveComplexityComputer",
+    ROOT_PACKAGE + ".context.computer.CyclomaticComplexityComputer",
+    ROOT_PACKAGE + ".diagnostics.AbstractMetadataDiagnostic",
+    ROOT_PACKAGE + ".infrastructure.LanguageClientAwareAppender",
+    ROOT_PACKAGE + ".reporters.ReportersAggregator"
+  );
 
   @ArchTest
-  static final ArchRule no_members_should_be_injected_via_autowired = FreezingArchRule.freeze(
-    noMembers()
-      .should().beAnnotatedWith(Autowired.class)
-      .as("Поля и методы не должны помечаться @Autowired (предпочтительно конструкторное внедрение)"));
+  static final ArchRule no_members_should_be_injected_via_autowired = noMembers()
+    .that().areDeclaredInClassesThat(
+      DescribedPredicate.describe(
+        "вне списка легитимных @Autowired",
+        (JavaClass javaClass) -> !ALLOWED_AUTOWIRED_CLASSES.contains(javaClass.getFullName())))
+    .should().beAnnotatedWith(Autowired.class)
+    .because("предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor); "
+      + "оставшиеся @Autowired — AspectJ-аспекты, logback-appender и self-инъекция, "
+      + "которые нельзя внедрить через конструктор");
 
   /**
    * Исключает сгенерированные {@code package-info} из анализа: это не классы предметной области,
