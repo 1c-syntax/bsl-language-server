@@ -180,17 +180,13 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Ограничения отражают ТОЛЬКО реальные зависимости (без «про запас»):
   //   - cli (подкоманды picocli) используется только из слоя Application — корневого пакета с точкой
   //     входа MainApplication (она подключает подкоманды через @Command(subcommands = …));
   //   - providers (возможности LSP) вызываются только из «голов» — lsp, cli и mcp.
-  // Прежние инверсии (reporters→cli, diagnostics→providers через createCodeActions и FormatProvider)
-  // устранены рефакторингом, поэтому правило строгое — без FreezingArchRule и базовой линии: любое
-  // новое межслойное нарушение валит сборку сразу. Связи ядра (context↔diagnostics↔configuration)
-  // переплетены циклами и здесь не моделируются. Пакеты — абсолютными путями, иначе "..diagnostics.."
-  // матчил бы и configuration.diagnostics, превращая внутрислойные связи в мнимые межслойные.
-  // Application задан точным именем корневого пакета (без "..") — это bootstrap-классы
-  // MainApplication и BSLLSBinding, а не весь проект.
+  // Связи ядра (context↔diagnostics↔configuration) переплетены циклами и здесь не моделируются.
+  // Пакеты заданы абсолютными путями, иначе "..diagnostics.." матчил бы и configuration.diagnostics,
+  // превращая внутрислойные связи в мнимые межслойные. Application — корневой пакет (точное имя,
+  // без "..") с bootstrap-классами MainApplication и BSLLSBinding.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()

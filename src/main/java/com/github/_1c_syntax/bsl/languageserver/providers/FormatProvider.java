@@ -53,8 +53,7 @@ import java.util.stream.Collectors;
  * Провайдер для форматирования исходного кода.
  * <p>
  * Обрабатывает запросы {@code textDocument/formatting}, {@code textDocument/rangeFormatting} и
- * {@code textDocument/rangesFormatting}. Сам алгоритм форматирования вынесен в {@link BslFormatter};
- * провайдер только адаптирует протокольные запросы LSP к движку.
+ * {@code textDocument/rangesFormatting}, адаптируя их к движку форматирования {@link BslFormatter}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting">Document Formatting Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">Document Range Formatting Request specification</a>

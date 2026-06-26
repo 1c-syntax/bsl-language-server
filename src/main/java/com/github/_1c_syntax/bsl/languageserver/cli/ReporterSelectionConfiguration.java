@@ -32,9 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Отбор активных репортёров по ключам, переданным подкоманде {@code analyze}
- * (опция {@code --reporter}). Зависит от CLI-команды, поэтому объявлен в слое cli,
- * а не в самих репортёрах.
+ * Отбор активных репортёров по ключам опции {@code --reporter} подкоманды {@code analyze}.
  */
 @Configuration
 public class ReporterSelectionConfiguration {
