@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions.BeforeSendCallback;

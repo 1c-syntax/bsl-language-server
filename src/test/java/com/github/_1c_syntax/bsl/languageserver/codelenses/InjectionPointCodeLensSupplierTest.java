@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnNavig
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;

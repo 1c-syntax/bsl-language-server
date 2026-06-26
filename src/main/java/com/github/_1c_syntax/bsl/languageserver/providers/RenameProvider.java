@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.rename.NewNameValidator;
 import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
 import com.github._1c_syntax.bsl.languageserver.rename.SymbolDefinitionReferenceFactory;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior;
