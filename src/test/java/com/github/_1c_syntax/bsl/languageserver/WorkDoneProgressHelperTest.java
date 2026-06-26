@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.lsp.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.LanguageClientHolder;
+
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WindowClientCapabilities;

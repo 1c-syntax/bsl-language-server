@@ -180,19 +180,20 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Ограничиваем два направления:
-  //   - cli (точки входа) не должен использоваться ни одним слоем;
-  //   - providers (возможности LSP) не должны вызываться из diagnostics.
-  // Связи вроде context→diagnostics (DiagnosticComputer) и configuration→diagnostics.metadata —
-  // легитимны и НЕ ограничиваются. Прежние инверсии (reporters→cli, diagnostics→providers через
-  // createCodeActions и FormatProvider) устранены рефакторингом, поэтому правило строгое — без
-  // FreezingArchRule и базовой линии: любое новое межслойное нарушение валит сборку сразу.
-  // Важно: пакеты заданы абсолютными путями, иначе шаблон "..diagnostics.." матчил бы и
-  // configuration.diagnostics, превращая внутрислойные связи в мнимые межслойные.
+  // Ограничения отражают ТОЛЬКО реальные зависимости (без «про запас»):
+  //   - cli (точка входа подкоманд) не используется ни одним слоем;
+  //   - providers (возможности LSP) вызываются только из «голов» — lsp, cli и mcp.
+  // Прежние инверсии (reporters→cli, diagnostics→providers через createCodeActions и FormatProvider)
+  // устранены рефакторингом, поэтому правило строгое — без FreezingArchRule и базовой линии: любое
+  // новое межслойное нарушение валит сборку сразу. Связи ядра (context↔diagnostics↔configuration)
+  // переплетены циклами и здесь не моделируются. Пакеты — абсолютными путями, иначе "..diagnostics.."
+  // матчил бы и configuration.diagnostics, превращая внутрислойные связи в мнимые межслойные.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
     .consideringOnlyDependenciesInLayers()
+    .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp..")
+    .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
     .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
     .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
     .layer("Providers").definedBy(ROOT_PACKAGE + ".providers..")
@@ -202,10 +203,9 @@ class ArchitectureTest {
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
 
     .whereLayer("CLI").mayNotBeAccessedByAnyLayer()
-    .whereLayer("Providers")
-    .mayOnlyBeAccessedByLayers("CLI", "Reporters", "Context", "References", "Configuration")
+    .whereLayer("Providers").mayOnlyBeAccessedByLayers("Lsp", "CLI", "Mcp")
 
-    .as("Слоистая архитектура: cli и providers не используются «снизу» (ядром/diagnostics)");
+    .as("Слоистая архитектура: providers вызывается только из голов (lsp/cli/mcp); cli не используется снизу");
 
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях

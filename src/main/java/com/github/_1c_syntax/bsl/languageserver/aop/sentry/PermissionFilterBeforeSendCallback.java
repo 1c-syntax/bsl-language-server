@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
-import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
