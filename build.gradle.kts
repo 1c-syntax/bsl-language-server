@@ -196,7 +196,7 @@ tasks.withType<JavaCompile> {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.MainApplication"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     enabled = true

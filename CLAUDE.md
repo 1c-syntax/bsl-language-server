@@ -45,7 +45,7 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 
 ## Архитектура
 
-Точка входа — `BSLLSPLauncher` (picocli; по подкоманде поднимает Spring-контекст, делегирует в `cli/`).
+Точка входа — `MainApplication` (picocli; по подкоманде поднимает Spring-контекст, делегирует в `cli/`).
 Ключевые абстракции (пакет `com.github._1c_syntax.bsl.languageserver`):
 
 - **`ServerContext` / `ServerContextProvider`** (`context/`) — рабочая область: коллекция документов +
@@ -62,7 +62,7 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 
 Точки входа подкоманд — в `cli/` (каждый класс реализует picocli-`Callable<Integer>` с аннотацией
 `@Command` и именуется с суффиксом `Command`: `LanguageServerStartCommand`, `AnalyzeCommand`,
-`FormatCommand`, `McpCommand`, `WebsocketCommand`, `VersionCommand`); `BSLLSPLauncher` выбирает по подкоманде.
+`FormatCommand`, `McpCommand`, `WebsocketCommand`, `VersionCommand`); `MainApplication` выбирает по подкоманде.
 
 Ключевые подсистемы снабжены вложенными `CLAUDE.md` (подгружаются при работе с их файлами):
 [`context/`](src/main/java/com/github/_1c_syntax/bsl/languageserver/context/CLAUDE.md) (контекст, символы, AOP) ·
