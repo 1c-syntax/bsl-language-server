@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;

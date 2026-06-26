@@ -20,7 +20,8 @@
  * License along with BSL Language Server.
  */
 /**
- * Состояние подключённого LSP-клиента: его возможности и канал отправки уведомлений.
+ * Взаимодействие с подключённым LSP-клиентом: его возможности, канал отправки уведомлений и
+ * отчёт о прогрессе длительных операций.
  */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.lsp.client;
