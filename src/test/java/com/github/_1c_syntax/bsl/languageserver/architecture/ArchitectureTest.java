@@ -186,13 +186,16 @@ class ArchitectureTest {
   // Связи ядра (context↔diagnostics↔configuration) переплетены циклами и здесь не моделируются.
   // Пакеты заданы абсолютными путями, иначе "..diagnostics.." матчил бы и configuration.diagnostics,
   // превращая внутрислойные связи в мнимые межслойные. Application — корневой пакет (точное имя,
-  // без "..") с bootstrap-классами MainApplication и BSLLSBinding.
+  // без "..") с bootstrap-классами MainApplication и BSLLSBinding. Lsp задан точным именем пакета
+  // (только сервисы-головы); общее состояние LSP-клиента — это нижний слой LspClient (lsp.client),
+  // отдельный от сервисов, поэтому сервисы и потребляющие холдеры providers/codelenses/… не образуют цикла.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
     .consideringOnlyDependenciesInLayers()
     .layer("Application").definedBy(ROOT_PACKAGE)
-    .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp..")
+    .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp")
+    .layer("LspClient").definedBy(ROOT_PACKAGE + ".lsp.client..")
     .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
     .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
     .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")

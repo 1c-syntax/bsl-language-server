@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;

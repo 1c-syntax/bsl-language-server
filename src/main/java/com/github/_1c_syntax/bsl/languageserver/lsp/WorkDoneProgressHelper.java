@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
 
+import com.github._1c_syntax.bsl.languageserver.lsp.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
+
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

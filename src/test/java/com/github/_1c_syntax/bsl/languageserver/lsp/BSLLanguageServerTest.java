@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;

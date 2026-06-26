@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
-import com.github._1c_syntax.bsl.languageserver.lsp.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
 import lombok.Setter;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;

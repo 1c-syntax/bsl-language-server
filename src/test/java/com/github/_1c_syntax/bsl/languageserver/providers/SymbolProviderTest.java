@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.lsp.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;

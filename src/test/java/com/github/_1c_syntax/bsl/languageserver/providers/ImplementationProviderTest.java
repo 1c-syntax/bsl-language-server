@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.lsp.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;

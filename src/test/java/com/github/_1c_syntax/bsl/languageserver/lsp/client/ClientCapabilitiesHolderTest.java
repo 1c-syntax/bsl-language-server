@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.lsp;
+package com.github._1c_syntax.bsl.languageserver.lsp.client;
 
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ClientInfo;
