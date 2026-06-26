@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.lsp.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;

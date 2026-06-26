@@ -114,7 +114,7 @@ class ArchitectureTest {
   static final ArchRule no_classes_should_access_standard_streams = noClasses()
     .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.lsp.LanguageServerLauncherConfiguration")
     .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".mcp.McpStdioConfiguration")
-    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".ParentProcessWatcher")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".lsp.ParentProcessWatcher")
     .should(ACCESS_STANDARD_STREAMS)
     .because("вывод в стандартные потоки допустим только в транспортных точках и аварийном "
       + "fallback из списка выше; остальной код пишет через slf4j");

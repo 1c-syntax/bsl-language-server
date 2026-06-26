@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
-import com.github._1c_syntax.bsl.languageserver.AutoServerInfo;
+import com.github._1c_syntax.bsl.languageserver.lsp.AutoServerInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.server.common.autoconfigure.properties.McpServerProperties;
 import org.springframework.beans.factory.ObjectProvider;
