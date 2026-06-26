@@ -30,12 +30,15 @@ import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.library.freeze.FreezingArchRule;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.concurrent.Callable;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMembers;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.GeneralCodingRules.ACCESS_STANDARD_STREAMS;
 
@@ -98,22 +101,21 @@ class ArchitectureTest {
     .because("все реализации BSLDiagnostic живут в пакете diagnostics");
 
   // --- Стандартные потоки -------------------------------------------------------------------------
-  // stdout/stderr запрещены везде, кроме мест, где они нужны по протоколу/природе процесса:
-  //  - ParentProcessWatcher — fallback-логирование до инициализации логгера;
-  //  - LanguageServerLauncherConfiguration — поток stdout как транспорт LSP;
-  //  - VersionCommand — печать версии в CLI;
-  //  - McpStdioConfiguration — поток stdout как транспорт MCP (stdio).
-  // Новый класс, которому реально нужен stdout, добавляется в этот список осознанно (через ревью).
+  // Никто не пишет в стандартные потоки (stdout/stderr). Исключения — лишь места, где стандартный
+  // поток нужен по протоколу или природе процесса:
+  //  - LanguageServerLauncherConfiguration — stdout как транспорт LSP;
+  //  - McpStdioConfiguration — stdout как транспорт MCP (stdio);
+  //  - ParentProcessWatcher — аварийный fallback на завершении, когда логгер уже недоступен.
+  // Новый класс, которому реально нужен стандартный поток, добавляется сюда осознанно (через ревью).
 
   @ArchTest
-  static final ArchRule no_classes_should_access_standard_streams_except_allowed = noClasses()
-    .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".ParentProcessWatcher")
-    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.lsp.LanguageServerLauncherConfiguration")
-    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.VersionCommand")
+  static final ArchRule no_classes_should_access_standard_streams = noClasses()
+    .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.lsp.LanguageServerLauncherConfiguration")
     .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".mcp.McpStdioConfiguration")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".ParentProcessWatcher")
     .should(ACCESS_STANDARD_STREAMS)
-    .because("вывод в stdout/stderr допустим только в транспортных и CLI-точках из списка выше; "
-      + "остальной код использует slf4j и доменные каналы вывода");
+    .because("вывод в стандартные потоки допустим только в транспортных точках и аварийном "
+      + "fallback из списка выше; остальной код пишет через slf4j");
 
   // --- Провайдеры ---------------------------------------------------------------------------------
 
@@ -176,26 +178,43 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Слоистую архитектуру вводим «потихоньку»: пока зафиксировано единственное ограничение, которое
-  // уже выполняется, — слой точек входа cli не должен использоваться доменными слоями (исключение —
-  // reporters.infrastructure, где сборка отчёта анализа стартует из AnalyzeCommand). По мере чистки
-  // зависимостей сюда добавляются новые whereLayer(...)-ограничения, а cli со временем ужесточается
-  // до mayNotBeAccessedByAnyLayer().
+  // Целевая слоистость (сверху вниз): cli → reporters → providers → diagnostics → ядро
+  // (context/references/configuration). Реальный код пока имеет инверсии (reporters→cli,
+  // diagnostics→providers, context→diagnostics), поэтому правило обёрнуто в FreezingArchRule:
+  // текущие нарушения зафиксированы базовой линией (archunit_store/), а сборку валят только НОВЫЕ.
+  // «Потихоньку» = удаляем инверсии и сокращаем базовую линию, пока правило не станет «чистым».
 
   @ArchTest
-  static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
-    .consideringOnlyDependenciesInLayers()
-    .layer("CLI").definedBy("..cli..")
-    .layer("Reporters").definedBy("..reporters..")
-    .layer("Providers").definedBy("..providers..")
-    .layer("Diagnostics").definedBy("..diagnostics..")
-    .layer("References").definedBy("..references..")
-    .layer("Configuration").definedBy("..configuration..")
-    .layer("Context").definedBy("..context..")
+  static final ArchRule layer_dependencies_are_respected = FreezingArchRule.freeze(
+    layeredArchitecture()
+      .consideringOnlyDependenciesInLayers()
+      .layer("CLI").definedBy("..cli..")
+      .layer("Reporters").definedBy("..reporters..")
+      .layer("Providers").definedBy("..providers..")
+      .layer("Diagnostics").definedBy("..diagnostics..")
+      .layer("Context").definedBy("..context..")
+      .layer("References").definedBy("..references..")
+      .layer("Configuration").definedBy("..configuration..")
 
-    .whereLayer("CLI").mayOnlyBeAccessedByLayers("Reporters")
+      .whereLayer("CLI").mayNotBeAccessedByAnyLayer()
+      .whereLayer("Reporters").mayOnlyBeAccessedByLayers("CLI")
+      .whereLayer("Providers").mayOnlyBeAccessedByLayers("CLI", "Reporters")
+      .whereLayer("Diagnostics").mayOnlyBeAccessedByLayers("CLI", "Reporters", "Providers")
 
-    .because("cli — слой точек входа (подкоманды picocli); доменные слои не должны от него зависеть");
+      .as("Слоистая архитектура: cli → reporters → providers → diagnostics → ядро"));
+
+  // --- Внедрение зависимостей ---------------------------------------------------------------------
+  // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
+  // и сеттерах — нежелателен. Текущие точки нельзя убрать одномоментно: self-инъекция в code lens
+  // (через конструктор невозможна), именованные бины в ReportersAggregator, setter-инъекция в
+  // AspectJ-аспектах и logback-appender (объекты вне Spring-контейнера). Поэтому правило заморожено:
+  // существующие места зафиксированы базовой линией, а любое НОВОЕ @Autowired валит сборку.
+
+  @ArchTest
+  static final ArchRule no_members_should_be_injected_via_autowired = FreezingArchRule.freeze(
+    noMembers()
+      .should().beAnnotatedWith(Autowired.class)
+      .as("Поля и методы не должны помечаться @Autowired (предпочтительно конструкторное внедрение)"));
 
   /**
    * Исключает сгенерированные {@code package-info} из анализа: это не классы предметной области,
