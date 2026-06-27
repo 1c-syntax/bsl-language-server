@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782544615409,
+  "lastUpdate": 1782552081050,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39122,6 +39122,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.457577440727675",
             "extra": "mean: 271.75410946210224 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "846de53f4af621fe8ccfa3c8d28f84353d85d873",
+          "message": "Merge pull request #4214 from 1c-syntax/claude/archunit-cycle-check\n\ntest(architecture): expand layer model and add cycle ratchet for acyclic packages",
+          "timestamp": "2026-06-27T10:40:26+02:00",
+          "tree_id": "6f2d9f10dd24e407062b2878c31e2b76d8ad4c84",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/846de53f4af621fe8ccfa3c8d28f84353d85d873"
+        },
+        "date": 1782552070675,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.1381640434265,
+            "unit": "sec",
+            "range": "stddev: 14.420973013029244",
+            "extra": "mean: 284.1381640434265 sec\nrounds: 3"
           }
         ]
       }
