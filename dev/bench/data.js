@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782552081050,
+  "lastUpdate": 1782556321126,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39153,6 +39153,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.420973013029244",
             "extra": "mean: 284.1381640434265 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cfb8092771f290d3f24b31a5f5f8eaaa9500741c",
+          "message": "Merge pull request #4216 from 1c-syntax/claude/databind-feature-self-register\n\nrefactor(databind): let each LSP feature register its own JSON subtypes",
+          "timestamp": "2026-06-27T11:24:28+02:00",
+          "tree_id": "b6344ee53c47e941c8c780887afde31aba0aae06",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cfb8092771f290d3f24b31a5f5f8eaaa9500741c"
+        },
+        "date": 1782556312023,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 270.6886869271596,
+            "unit": "sec",
+            "range": "stddev: 5.378937057156382",
+            "extra": "mean: 270.6886869271596 sec\nrounds: 3"
           }
         ]
       }
