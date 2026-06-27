@@ -78,8 +78,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
 
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
       var arguments = new ToggleComplexityInlayHintsCommandArguments(
+        data.getUri(),
         commandSupplier.getId(),
-        data
+        data.getMethodName()
       );
 
       var command = commandSupplier.createCommand(title, arguments);
