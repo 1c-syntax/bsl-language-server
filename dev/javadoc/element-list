@@ -5,6 +5,7 @@ com.github._1c_syntax.bsl.languageserver.aop.sentry
 com.github._1c_syntax.bsl.languageserver.cfg
 com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
+com.github._1c_syntax.bsl.languageserver.client
 com.github._1c_syntax.bsl.languageserver.codeactions
 com.github._1c_syntax.bsl.languageserver.codelenses
 com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure
@@ -51,7 +52,6 @@ com.github._1c_syntax.bsl.languageserver.inlayhints
 com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure
 com.github._1c_syntax.bsl.languageserver.jsonrpc
 com.github._1c_syntax.bsl.languageserver.lsp
-com.github._1c_syntax.bsl.languageserver.lsp.client
 com.github._1c_syntax.bsl.languageserver.mcp
 com.github._1c_syntax.bsl.languageserver.mcp.dto
 com.github._1c_syntax.bsl.languageserver.mcp.tools
