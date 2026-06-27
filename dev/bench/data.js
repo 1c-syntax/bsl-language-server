@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782514834237,
+  "lastUpdate": 1782544615409,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39091,6 +39091,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 5.303088321382667",
             "extra": "mean: 286.4360779921214 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d66950912e60197bd7b7ef58f8e01f359881efd8",
+          "message": "Merge pull request #4213 from 1c-syntax/claude/archunit-cycle-check\n\ntest(architecture): enforce utils-as-leaf, add cfg/jsonrpc layers, ratchet acyclic domains",
+          "timestamp": "2026-06-27T08:21:09+02:00",
+          "tree_id": "547bc391f35623f0b27c43132944a0def2ea2caf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d66950912e60197bd7b7ef58f8e01f359881efd8"
+        },
+        "date": 1782544606418,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 271.75410946210224,
+            "unit": "sec",
+            "range": "stddev: 11.457577440727675",
+            "extra": "mean: 271.75410946210224 sec\nrounds: 3"
           }
         ]
       }
