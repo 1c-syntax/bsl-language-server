@@ -107,6 +107,32 @@ class ArchitectureTest {
     .should().resideInAPackage("..diagnostics..")
     .because("все реализации BSLDiagnostic живут в пакете diagnostics");
 
+  // --- Словарь метаданных diagnostics.metadata ----------------------------------------------------
+  // diagnostics.metadata — чистый словарь объявления диагностик (аннотация @DiagnosticMetadata и
+  // энумы). Он не зависит ни от одного пакета проекта (как utils — лист), поэтому от него безопасно
+  // зависит и движок диагностик, и слой configuration (десериализация переопределений метаданных из
+  // .bsl-language-server.json). Рантайм-обёртки, которым нужны configuration/BSLDiagnostic, живут в
+  // diagnostics.info, а не здесь. Эта пара правил держит границу «словарь vs движок» настоящей,
+  // чтобы configuration не втянул движок диагностик в обратное ребро (цикл configuration↔diagnostics).
+
+  @ArchTest
+  static final ArchRule diagnostics_metadata_should_be_a_dependency_free_vocabulary = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".diagnostics.metadata..")
+    .should().dependOnClassesThat(
+      resideInAPackage(ROOT_PACKAGE + "..")
+        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
+    .because("diagnostics.metadata — листовой словарь: не зависит от пакетов проекта, "
+      + "поэтому от него может зависеть configuration, не образуя цикл");
+
+  @ArchTest
+  static final ArchRule configuration_should_depend_on_diagnostics_only_via_metadata = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".configuration..")
+    .should().dependOnClassesThat(
+      resideInAPackage(ROOT_PACKAGE + ".diagnostics..")
+        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
+    .because("configuration зависит только от словаря diagnostics.metadata, а не от движка "
+      + "диагностик: иначе замыкается прямое ребро configuration→diagnostics");
+
   // --- Стандартные потоки -------------------------------------------------------------------------
   // Никто не пишет в стандартные потоки stdout и stderr. Исключения — лишь места, где стандартный
   // поток нужен по протоколу или природе процесса. Это транспорт LSP в классе
