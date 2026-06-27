@@ -184,9 +184,9 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Правило фиксирует направление вызовов между пакетами (циклы оно не проверяет). Группы слоёв:
+  // Правило фиксирует направление вызовов между пакетами по зависимостям времени компиляции (циклы
+  // оно не проверяет). Группы слоёв:
   //   - головы: cli доступен только из Application (корня с MainApplication, подключающим подкоманды);
-  //     websocket — самостоятельная голова, в неё никто не ходит;
   //   - возможности LSP: фасад providers доступен только из голов lsp/cli/mcp; поставщики отдельных
   //     фич (codeactions, color, documenthighlight, documentlink, folding, rename, semantictokens) —
   //     только из providers; презентационный кластер codelenses/commands/databind/hover/inlayhints
@@ -200,6 +200,9 @@ class ArchitectureTest {
   // пакеты — абсолютными путями, иначе шаблон по имени diagnostics матчил бы и одноимённый пакет внутри
   // configuration. Ядро (configuration↔diagnostics↔context↔types↔…) переплетено циклами и здесь не
   // моделируется: у его пакетов нет фиксированного набора потребителей, который можно было бы закрепить.
+  // Пакет websocket слоем не задан: его режим поднимает подкоманда cli через Spring
+  // (@ConditionalOnWebApplication), без ссылок времени компиляции, поэтому слоистому правилу,
+  // работающему по зависимостям компиляции, закреплять тут нечего.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
@@ -211,7 +214,6 @@ class ArchitectureTest {
     .layer("LspClient").definedBy(ROOT_PACKAGE + ".lsp.client..")
     .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
     .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
-    .layer("Websocket").definedBy(ROOT_PACKAGE + ".websocket..")
     .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
 
     // Возможности LSP: фасад providers и поставщики отдельных фич
@@ -240,9 +242,8 @@ class ArchitectureTest {
     .layer("Recognizer").definedBy(ROOT_PACKAGE + ".recognizer..")
     .layer("Formatting").definedBy(ROOT_PACKAGE + ".formatting..")
 
-    // Головы: cli — только из корня; websocket — самостоятельная голова, в неё никто не ходит.
+    // Голова cli доступна только из корня.
     .whereLayer("CLI").mayOnlyBeAccessedByLayers("Application")
-    .whereLayer("Websocket").mayNotBeAccessedByAnyLayer()
 
     // Фасад providers — только из голов; поставщики фич — из providers (и из соседних фич,
     // где фичи композируются друг с другом).
@@ -267,7 +268,7 @@ class ArchitectureTest {
     .whereLayer("Jsonrpc").mayOnlyBeAccessedByLayers("Lsp")
     .whereLayer("Formatting").mayOnlyBeAccessedByLayers("Diagnostics", "Providers")
 
-    .as("Слоистая архитектура: головы (lsp/cli/mcp/websocket), фасад providers с поставщиками "
+    .as("Слоистая архитектура: головы (lsp/cli/mcp), фасад providers с поставщиками "
       + "фич, домены и узкие предметные пакеты с фиксированными потребителями");
 
   // --- Листовой пакет utils -----------------------------------------------------------------------
