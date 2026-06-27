@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782562592008,
+  "lastUpdate": 1782573211382,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39246,6 +39246,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.689350163328275",
             "extra": "mean: 263.43764932950336 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2e2c6a6aab24fbf6f7d077c0cac0a1ef6f9743b6",
+          "message": "Merge pull request #4219 from 1c-syntax/claude/mcp-decouple-from-lsp\n\nrefactor(mcp): inject the ServerInfo interface to decouple mcp from lsp",
+          "timestamp": "2026-06-27T13:27:27+02:00",
+          "tree_id": "f76474465775a2c6e8804d9281ca890ccd8459a4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2e2c6a6aab24fbf6f7d077c0cac0a1ef6f9743b6"
+        },
+        "date": 1782573200221,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 288.5738426844279,
+            "unit": "sec",
+            "range": "stddev: 7.787615494941593",
+            "extra": "mean: 288.5738426844279 sec\nrounds: 3"
           }
         ]
       }
