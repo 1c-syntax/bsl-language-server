@@ -32,17 +32,22 @@ import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.library.dependencies.SliceAssignment;
+import com.tngtech.archunit.library.dependencies.SliceIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMembers;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.GeneralCodingRules.ACCESS_STANDARD_STREAMS;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 /**
  * Архитектурные тесты на базе <a href="https://www.archunit.org/">ArchUnit</a>.
@@ -179,35 +184,143 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Пакет cli с подкомандами picocli доступен только из слоя Application — корневого пакета с точкой
-  // входа MainApplication, которая подключает подкоманды. Пакет providers с возможностями LSP
-  // доступен только из голов lsp, cli и mcp. Связи ядра между context, diagnostics и configuration
-  // переплетены циклами и здесь не моделируются. Пакеты заданы абсолютными путями, иначе шаблон по
-  // имени diagnostics матчил бы и одноимённый пакет внутри configuration, превращая внутрислойные
-  // связи в мнимые межслойные. Application — корневой пакет с точным именем, без вложенных, в нём
-  // лежат bootstrap-классы MainApplication и BSLLSBinding. Lsp задан точным именем пакета и содержит
-  // только сервисы-головы, а общее состояние LSP-клиента — это нижний слой LspClient, отдельный от
-  // сервисов, поэтому сервисы и потребляющие холдеры из providers и codelenses не образуют цикла.
+  // Правило фиксирует направление вызовов между пакетами по зависимостям времени компиляции (циклы
+  // оно не проверяет). Группы слоёв:
+  //   - головы: cli доступен только из Application (корня с MainApplication, подключающим подкоманды);
+  //   - возможности LSP: фасад providers доступен только из голов lsp/cli/mcp; поставщики отдельных
+  //     фич (codeactions, color, documenthighlight, documentlink, folding, rename, semantictokens) —
+  //     только из providers; презентационный кластер codelenses/commands/databind/hover/inlayhints
+  //     композируется внутри себя; а codelenses/completion/inlayhints вдобавок доступны из lsp,
+  //     который резолвит их Data-DTO в ответ на resolve-запросы протокола;
+  //   - узкие предметные пакеты с единственным потребителем: cfg (граф потока управления) и recognizer
+  //     — только из diagnostics; jsonrpc (DTO нестандартных LSP-запросов) — только из lsp; formatting
+  //     (движок форматирования) — из diagnostics и providers.
+  // Application задан точным именем (корень с bootstrap-классами MainApplication и BSLLSBinding), Lsp —
+  // точным именем пакета сервисов-голов, а состояние LSP-клиента — это нижний слой LspClient. Остальные
+  // пакеты — абсолютными путями, иначе шаблон по имени diagnostics матчил бы и одноимённый пакет внутри
+  // configuration. Ядро (configuration↔diagnostics↔context↔types↔…) переплетено циклами и здесь не
+  // моделируется: у его пакетов нет фиксированного набора потребителей, который можно было бы закрепить.
+  // Пакет websocket слоем не задан: его режим поднимает подкоманда cli через Spring
+  // (@ConditionalOnWebApplication), без ссылок времени компиляции, поэтому слоистому правилу,
+  // работающему по зависимостям компиляции, закреплять тут нечего.
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
     .consideringOnlyDependenciesInLayers()
+
+    // Точки входа и «головы»
     .layer("Application").definedBy(ROOT_PACKAGE)
     .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp")
     .layer("LspClient").definedBy(ROOT_PACKAGE + ".lsp.client..")
     .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
     .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
     .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
+
+    // Возможности LSP: фасад providers и поставщики отдельных фич
     .layer("Providers").definedBy(ROOT_PACKAGE + ".providers..")
+    .layer("CodeActions").definedBy(ROOT_PACKAGE + ".codeactions..")
+    .layer("CodeLenses").definedBy(ROOT_PACKAGE + ".codelenses..")
+    .layer("Commands").definedBy(ROOT_PACKAGE + ".commands..")
+    .layer("Completion").definedBy(ROOT_PACKAGE + ".completion..")
+    .layer("Color").definedBy(ROOT_PACKAGE + ".color..")
+    .layer("Databind").definedBy(ROOT_PACKAGE + ".databind..")
+    .layer("DocumentHighlight").definedBy(ROOT_PACKAGE + ".documenthighlight..")
+    .layer("DocumentLink").definedBy(ROOT_PACKAGE + ".documentlink..")
+    .layer("Folding").definedBy(ROOT_PACKAGE + ".folding..")
+    .layer("Hover").definedBy(ROOT_PACKAGE + ".hover..")
+    .layer("InlayHints").definedBy(ROOT_PACKAGE + ".inlayhints..")
+    .layer("Rename").definedBy(ROOT_PACKAGE + ".rename..")
+    .layer("SemanticTokens").definedBy(ROOT_PACKAGE + ".semantictokens..")
+
+    // Домены и узкие предметные пакеты
     .layer("Diagnostics").definedBy(ROOT_PACKAGE + ".diagnostics..")
     .layer("Context").definedBy(ROOT_PACKAGE + ".context..")
     .layer("References").definedBy(ROOT_PACKAGE + ".references..")
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
+    .layer("Cfg").definedBy(ROOT_PACKAGE + ".cfg..")
+    .layer("Jsonrpc").definedBy(ROOT_PACKAGE + ".jsonrpc..")
+    .layer("Recognizer").definedBy(ROOT_PACKAGE + ".recognizer..")
+    .layer("Formatting").definedBy(ROOT_PACKAGE + ".formatting..")
 
+    // Голова cli доступна только из корня.
     .whereLayer("CLI").mayOnlyBeAccessedByLayers("Application")
-    .whereLayer("Providers").mayOnlyBeAccessedByLayers("Lsp", "CLI", "Mcp")
 
-    .as("Слоистая архитектура: cli — только из Application (корня); providers — только из голов (lsp/cli/mcp)");
+    // Фасад providers — только из голов; поставщики фич — из providers (и из соседних фич,
+    // где фичи композируются друг с другом).
+    .whereLayer("Providers").mayOnlyBeAccessedByLayers("Lsp", "CLI", "Mcp")
+    .whereLayer("CodeActions").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("Color").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("Completion").mayOnlyBeAccessedByLayers("Providers", "Lsp")
+    .whereLayer("DocumentHighlight").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("DocumentLink").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("Folding").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("Rename").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("SemanticTokens").mayOnlyBeAccessedByLayers("Providers")
+    .whereLayer("CodeLenses").mayOnlyBeAccessedByLayers("Providers", "Lsp", "CodeActions", "Commands", "Databind")
+    .whereLayer("Commands").mayOnlyBeAccessedByLayers("Providers", "CodeLenses", "Databind")
+    .whereLayer("Databind").mayOnlyBeAccessedByLayers("CodeLenses", "Commands", "InlayHints")
+    .whereLayer("Hover").mayOnlyBeAccessedByLayers("Providers", "InlayHints")
+    .whereLayer("InlayHints").mayOnlyBeAccessedByLayers("Providers", "Lsp", "Commands", "Databind")
+
+    // Узкие предметные пакеты с единственным легитимным потребителем
+    .whereLayer("Cfg").mayOnlyBeAccessedByLayers("Diagnostics")
+    .whereLayer("Recognizer").mayOnlyBeAccessedByLayers("Diagnostics")
+    .whereLayer("Jsonrpc").mayOnlyBeAccessedByLayers("Lsp")
+    .whereLayer("Formatting").mayOnlyBeAccessedByLayers("Diagnostics", "Providers")
+
+    .as("Слоистая архитектура: головы (lsp/cli/mcp), фасад providers с поставщиками "
+      + "фич, домены и узкие предметные пакеты с фиксированными потребителями");
+
+  // --- Листовой пакет utils -----------------------------------------------------------------------
+  // utils — переиспользуемые хелперы (AST, диапазоны, строки, файлы) — обязан оставаться листом:
+  // он не зависит ни от одного пакета проекта вне самого utils. Хелперу, которому нужен доменный
+  // тип, место в этом домене, а не здесь.
+
+  @ArchTest
+  static final ArchRule utils_should_not_depend_on_project_packages = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".utils..")
+    .should().dependOnClassesThat(
+      resideInAPackage(ROOT_PACKAGE + "..")
+        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".utils..")))
+    .because("utils — листовой пакет: не зависит от доменных пакетов проекта");
+
+  // --- Ацикличность чистых доменов ----------------------------------------------------------------
+  // Ядро (configuration↔diagnostics↔context↔providers↔…) сейчас переплетено циклами и здесь не
+  // проверяется. Домены вне этого клубка уже ацикличны — фиксируем это, чтобы новый код не завёл
+  // цикл среди них. Пакеты ядра в срез не входят; aop тоже (его рёбра — артефакт compile-time
+  // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
+
+  static final Set<String> ACYCLIC_DOMAINS = Set.of(
+    "cfg", "cli", "color", "events", "folding", "formatting",
+    "jsonrpc", "mcp", "recognizer", "reporters", "utils", "websocket"
+  );
+
+  static final SliceAssignment ACYCLIC_DOMAIN_SLICES = new SliceAssignment() {
+    @Override
+    public SliceIdentifier getIdentifierOf(JavaClass javaClass) {
+      var prefix = ROOT_PACKAGE + ".";
+      var packageName = javaClass.getPackageName();
+      if (packageName.startsWith(prefix)) {
+        var rest = packageName.substring(prefix.length());
+        var dot = rest.indexOf('.');
+        var topLevel = dot < 0 ? rest : rest.substring(0, dot);
+        if (ACYCLIC_DOMAINS.contains(topLevel)) {
+          return SliceIdentifier.of(topLevel);
+        }
+      }
+      return SliceIdentifier.ignore();
+    }
+
+    @Override
+    public String getDescription() {
+      return "ацикличные доменные пакеты вне ядра";
+    }
+  };
+
+  @ArchTest
+  static final ArchRule acyclic_domains_stay_free_of_cycles = slices()
+    .assignedFrom(ACYCLIC_DOMAIN_SLICES)
+    .should().beFreeOfCycles();
 
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
