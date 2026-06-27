@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
-import com.github._1c_syntax.bsl.languageserver.databind.URITypeAdapter;
+import com.github._1c_syntax.bsl.languageserver.utils.URITypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
