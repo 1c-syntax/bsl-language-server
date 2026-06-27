@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782573211382,
+  "lastUpdate": 1782584035870,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39277,6 +39277,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.787615494941593",
             "extra": "mean: 288.5738426844279 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "add7379878bedd966d1e1062f5f09383f5de61a1",
+          "message": "Merge pull request #4220 from 1c-syntax/claude/move-typo-cache-to-diagnostics\n\nrefactor(infrastructure): decouple ehcache wiring from diagnostics",
+          "timestamp": "2026-06-27T19:39:02+02:00",
+          "tree_id": "7f2217bf4a0fb5bef690fa80d1227b18df9cdd7f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/add7379878bedd966d1e1062f5f09383f5de61a1"
+        },
+        "date": 1782584025196,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 279.53357489903766,
+            "unit": "sec",
+            "range": "stddev: 11.018278906285422",
+            "extra": "mean: 279.53357489903766 sec\nrounds: 3"
           }
         ]
       }
