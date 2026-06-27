@@ -39,7 +39,7 @@ public class CheckedWordsHolder {
    * @param word слово, статус которого запрашивается
    * @return WordStatus, указывающий, есть ли у слова ошибка, отсутствует ли ошибка, или слово отсутствует в кэше
    */
-  @Cacheable(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
+  @Cacheable(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "ehcacheCacheManager")
   public WordStatus getWordStatus(String lang, String word) {
     return WordStatus.MISSING;
   }
@@ -51,7 +51,7 @@ public class CheckedWordsHolder {
    * @param word слово, которое помечается как содержащее ошибку
    * @return сохранённый WordStatus, указывающий на наличие ошибки
    */
-  @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
+  @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "ehcacheCacheManager")
   public WordStatus markWordAsError(String lang, String word) {
     return WordStatus.HAS_ERROR;
   }
@@ -63,7 +63,7 @@ public class CheckedWordsHolder {
    * @param word слово, которое помечается как не содержащее ошибку
    * @return сохранённый WordStatus, указывающий на отсутствие ошибки
    */
-  @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
+  @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "ehcacheCacheManager")
   public WordStatus markWordAsNoError(String lang, String word) {
     return WordStatus.NO_ERROR;
   }
