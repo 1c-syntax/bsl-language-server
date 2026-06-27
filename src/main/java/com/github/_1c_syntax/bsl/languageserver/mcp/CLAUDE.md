@@ -26,7 +26,7 @@ Workspaces приходят от клиента через **MCP roots** (`McpRo
 folders; при `--mcp` оба источника (LSP folders + MCP roots) питают общий `ServerContextProvider`.
 Методы-инструменты помечены `@McpTool`.
 
-Инфраструктура: `McpServerInfoConfigurer` (имя/версия из `AutoServerInfo`),
+Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
 `McpWorkspaceBootstrap`/`McpWorkspaceResolver` (MCP roots → workspace), `McpRootsBootstrapper`/
 `McpRootsChangeConsumer` (запрос/синхронизация `roots/list`), `McpDocumentReader` (единый доступ к
 документу: `read()` — из кэша, `analyze()` — свежий AST + диагностики).

@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
-import com.github._1c_syntax.bsl.languageserver.lsp.AutoServerInfo;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.ai.mcp.server.common.autoconfigure.properties.McpServerProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -30,8 +30,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * Заполняет имя и версию MCP-сервера из {@link AutoServerInfo} — единого источника истины
- * (имя из {@code spring.application.name}, версия из манифеста JAR), вместо хардкода в properties.
+ * Заполняет имя и версию MCP-сервера из бина {@link ServerInfo} — единого источника идентичности
+ * сервера, вместо хардкода в properties.
  * <p>
  * Реализовано как пост-обработка {@link McpServerProperties} (а не через {@code McpSyncServerCustomizer}),
  * потому что слот кастомайзера в автоконфигурации один и уже занят servlet-транспортом.
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class McpServerInfoConfigurer implements BeanPostProcessor {
 
-  private final ObjectProvider<AutoServerInfo> serverInfoProvider;
+  private final ObjectProvider<ServerInfo> serverInfoProvider;
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
