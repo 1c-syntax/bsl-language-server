@@ -20,7 +20,7 @@ plugins {
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "6.13.0"
-    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
+    id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.24.0"
     id("org.sonarqube") version "7.3.1.8318"
