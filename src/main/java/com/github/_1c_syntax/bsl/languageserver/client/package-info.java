@@ -24,6 +24,6 @@
  * отчёт о прогрессе длительных операций.
  */
 @NullMarked
-package com.github._1c_syntax.bsl.languageserver.lsp.client;
+package com.github._1c_syntax.bsl.languageserver.client;
 
 import org.jspecify.annotations.NullMarked;
