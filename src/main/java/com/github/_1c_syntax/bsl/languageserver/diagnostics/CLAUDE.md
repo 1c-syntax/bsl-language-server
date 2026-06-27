@@ -45,8 +45,16 @@
 `activatedByDefault`, `compatibilityMode`, `tags`, `canLocateOnProject`, `lspSeverity` и др.
 Энумы: `DiagnosticType` (ERROR/CODE_SMELL/VULNERABILITY/SECURITY_HOTSPOT),
 `DiagnosticSeverity` (INFO…BLOCKER), `DiagnosticScope` (ALL/BSL/OS), `DiagnosticTag`,
-`DiagnosticCompatibilityMode`. `DiagnosticInfo` — рантайм-обёртка (i18n из `.properties`/`.md`,
-маппинг в LSP-severity и LSP-теги). `DiagnosticCode` — код = имя класса без суффикса `Diagnostic`.
+`DiagnosticCompatibilityMode`. `DiagnosticCode` — код = имя класса без суффикса `Diagnostic`.
+Подпакет `metadata/` — чистый словарь без зависимостей (аннотация + энумы), поэтому от него
+может зависеть и `configuration` (десериализация переопределений метаданных).
+
+## Рантайм-дескрипторы — `info/`
+
+`DiagnosticInfo` — рантайм-обёртка над метаданными (i18n из `.properties`/`.md`, маппинг в
+LSP-severity и LSP-теги); зависит от `configuration`. `DiagnosticParameterInfo` — описание
+параметра, извлекаемое рефлексией (включая суперклассы). Лежат отдельно от словаря `metadata/`,
+чтобы тот оставался листом без обратных зависимостей.
 
 ## Параметры
 
