@@ -291,8 +291,8 @@ class ArchitectureTest {
   // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
 
   static final Set<String> ACYCLIC_DOMAINS = Set.of(
-    "cfg", "cli", "color", "events", "folding", "formatting",
-    "jsonrpc", "mcp", "recognizer", "reporters", "utils", "websocket"
+    "cfg", "cli", "events", "jsonrpc", "mcp",
+    "recognizer", "reporters", "utils", "websocket"
   );
 
   static final SliceAssignment ACYCLIC_DOMAIN_SLICES = new SliceAssignment() {
