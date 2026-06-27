@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.commands.complexity;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.AbstractMethodComplexityCodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.DefaultCommandArguments;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -46,12 +45,5 @@ public class ToggleComplexityInlayHintsCommandArguments extends DefaultCommandAr
   public ToggleComplexityInlayHintsCommandArguments(URI uri, String id, String methodName) {
     super(uri, id);
     this.methodName = methodName;
-  }
-
-  public ToggleComplexityInlayHintsCommandArguments(
-    String id,
-    AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData data
-  ) {
-    this(data.getUri(), id, data.getMethodName());
   }
 }
