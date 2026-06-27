@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782584035870,
+  "lastUpdate": 1782598843573,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39308,6 +39308,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.018278906285422",
             "extra": "mean: 279.53357489903766 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4720d8e516f09bde8005196adac47e5fa0278ba3",
+          "message": "Merge pull request #4221 from 1c-syntax/claude/extract-diagnostics-info\n\nrefactor(diagnostics): extract runtime descriptors to diagnostics.info",
+          "timestamp": "2026-06-27T23:49:08+02:00",
+          "tree_id": "77c99e8b73cfad1ec8b869d0ab5d0b48eaacba74",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4720d8e516f09bde8005196adac47e5fa0278ba3"
+        },
+        "date": 1782598831138,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 288.47748430569965,
+            "unit": "sec",
+            "range": "stddev: 2.663492037702068",
+            "extra": "mean: 288.47748430569965 sec\nrounds: 3"
           }
         ]
       }
