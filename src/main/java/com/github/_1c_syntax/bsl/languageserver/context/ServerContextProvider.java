@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.languageserver.lsp.client.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;

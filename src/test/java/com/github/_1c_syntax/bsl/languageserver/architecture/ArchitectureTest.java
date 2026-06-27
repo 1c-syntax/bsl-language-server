@@ -196,7 +196,7 @@ class ArchitectureTest {
   //     — только из diagnostics; jsonrpc (DTO нестандартных LSP-запросов) — только из lsp; formatting
   //     (движок форматирования) — из diagnostics и providers.
   // Application задан точным именем (корень с bootstrap-классами MainApplication и BSLLSBinding), Lsp —
-  // точным именем пакета сервисов-голов, а состояние LSP-клиента — это нижний слой LspClient. Остальные
+  // точным именем пакета сервисов-голов; состояние LSP-клиента — отдельный листовой пакет client. Остальные
   // пакеты — абсолютными путями, иначе шаблон по имени diagnostics матчил бы и одноимённый пакет внутри
   // configuration. Ядро (configuration↔diagnostics↔context↔types↔…) переплетено циклами и здесь не
   // моделируется: у его пакетов нет фиксированного набора потребителей, который можно было бы закрепить.
@@ -211,7 +211,6 @@ class ArchitectureTest {
     // Точки входа и «головы»
     .layer("Application").definedBy(ROOT_PACKAGE)
     .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp")
-    .layer("LspClient").definedBy(ROOT_PACKAGE + ".lsp.client..")
     .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
     .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
     .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
@@ -291,7 +290,7 @@ class ArchitectureTest {
   // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
 
   static final Set<String> ACYCLIC_DOMAINS = Set.of(
-    "cfg", "cli", "databind", "events", "jsonrpc", "mcp",
+    "cfg", "cli", "client", "databind", "events", "jsonrpc", "mcp",
     "recognizer", "reporters", "utils", "websocket"
   );
 

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.rename;
 
-import com.github._1c_syntax.bsl.languageserver.lsp.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
