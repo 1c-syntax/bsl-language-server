@@ -291,7 +291,7 @@ class ArchitectureTest {
   // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
 
   static final Set<String> ACYCLIC_DOMAINS = Set.of(
-    "cfg", "cli", "events", "jsonrpc", "mcp",
+    "cfg", "cli", "databind", "events", "jsonrpc", "mcp",
     "recognizer", "reporters", "utils", "websocket"
   );
 
