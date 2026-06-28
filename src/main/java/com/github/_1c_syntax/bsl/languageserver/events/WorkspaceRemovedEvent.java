@@ -19,26 +19,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.events;
+package com.github._1c_syntax.bsl.languageserver.events;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import lombok.Getter;
-import org.eclipse.lsp4j.WorkspaceFolder;
 import org.springframework.context.ApplicationEvent;
 
 import java.io.Serial;
 import java.net.URI;
 
 /**
- * Событие, публикуемое ПОСЛЕ удаления workspace из провайдера.
+ * Событие, публикуемое ПОСЛЕ удаления workspace из провайдера контекстов сервера.
  * <p>
- * Событие генерируется {@link ServerContextProvider} ПОСЛЕ вызова метода
- * {@link ServerContextProvider#removeWorkspace(WorkspaceFolder)} и содержит URI workspace.
- * <p>
- * К моменту получения этого события контекст сервера уже удалён и недоступен.
- * Используйте {@link BeforeWorkspaceRemovedEvent} если нужен доступ к контексту.
+ * Несёт только URI удалённого workspace. К моменту рассылки события контекст
+ * сервера уже удалён; если нужен доступ к контексту — используйте
+ * {@link BeforeWorkspaceRemovedEvent}.
  *
- * @see ServerContextProvider#removeWorkspace(WorkspaceFolder)
  * @see BeforeWorkspaceRemovedEvent
  */
 @Getter
@@ -53,18 +48,13 @@ public class WorkspaceRemovedEvent extends ApplicationEvent {
   private final URI workspaceUri;
 
   /**
-   * Создает новое событие удаления workspace.
+   * Создаёт новое событие удаления workspace.
    *
-   * @param source провайдер контекстов сервера
+   * @param source       источник события (провайдер контекстов сервера)
    * @param workspaceUri URI корня удалённого workspace
    */
-  public WorkspaceRemovedEvent(ServerContextProvider source, URI workspaceUri) {
+  public WorkspaceRemovedEvent(Object source, URI workspaceUri) {
     super(source);
     this.workspaceUri = workspaceUri;
-  }
-
-  @Override
-  public ServerContextProvider getSource() {
-    return (ServerContextProvider) super.getSource();
   }
 }

@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.BeforeWorkspaceRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
@@ -35,6 +35,7 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -70,6 +71,13 @@ public class ConfigurationFileSystemWatcher {
 
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
+  /**
+   * Провайдер workspace-scoped конфигурации. Под выставленным {@link WorkspaceContextHolder}
+   * (на момент {@link WorkspaceAddedEvent}) {@code getObject()} возвращает конкретный экземпляр
+   * {@link LanguageServerConfiguration} для добавляемого workspace — тот же бин, что держит его
+   * {@code ServerContext}, но без зависимости конфигурации от пакета context.
+   */
+  private final ObjectProvider<LanguageServerConfiguration> workspaceConfigurationProvider;
 
   @SuppressWarnings("NullAway.Init")
   private WatchService watchService;
@@ -180,9 +188,9 @@ public class ConfigurationFileSystemWatcher {
   /**
    * Обработчик добавления нового workspace.
    * <p>
-   * Workspace-контекст уже установлен в {@link com.github._1c_syntax.bsl.languageserver.aop.EventPublisherAspect}
-   * перед публикацией {@link WorkspaceAddedEvent}, поэтому прямое обращение к workspace-scoped прокси
-   * через {@code event.getServerContext().getLanguageServerConfiguration()} корректно.
+   * На момент публикации {@link WorkspaceAddedEvent} workspace-контекст уже выставлен в
+   * {@link WorkspaceContextHolder}, поэтому {@code workspaceConfigurationProvider.getObject()}
+   * возвращает конкретный экземпляр конфигурации именно этого workspace.
    *
    * @param event Событие добавления workspace
    */
@@ -190,7 +198,7 @@ public class ConfigurationFileSystemWatcher {
   @Synchronized
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var workspaceUri = event.getWorkspaceUri();
-    var configuration = event.getServerContext().getLanguageServerConfiguration();
+    var configuration = workspaceConfigurationProvider.getObject();
     LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
     registerWorkspaceWatchService(workspaceUri, configuration);
   }

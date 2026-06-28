@@ -202,9 +202,9 @@ class ArchitectureTest {
   // поэтому он не нарушает полноту. websocket — лист без внутренних зависимостей.
   //
   // Известные циклы оставлены ОСОЗНАННО (правило их допускает, но они помечены как долг):
-  //   - Configuration↔Context: configuration читает рабочую область context, context читает
-  //     конфигурацию. Разрывается позже инверсией событий.
   //   - References↔Types: взаимные ссылки индексов. Разрывается позже.
+  // Цикл Configuration↔Context разорван: workspace-события «похудели» до URI и переехали в лист
+  // events, поэтому configuration больше не зависит от context (осталось только context→configuration).
   // Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило ниже
   // (acyclic_domains_stay_free_of_cycles).
   //
@@ -318,15 +318,16 @@ class ArchitectureTest {
       "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
-    // Домены-фундамент. Configuration↔Context и References↔Types — известные циклы (см. комментарий).
+    // Домены-фундамент. References↔Types — известный цикл (см. комментарий). Configuration больше
+    // НЕ зависит от Context (цикл разорван): её workspace-подписки идут через лист Events.
     .whereLayer("Configuration").mayOnlyAccessLayers(
-      "Context", "DiagnosticsMetadata", "Infrastructure", "Utils")
+      "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
     .whereLayer("Context").mayOnlyAccessLayers(
       "Client", "Configuration", "DiagnosticsMetadata", "Infrastructure", "Utils")
     .whereLayer("References").mayOnlyAccessLayers(
       "Configuration", "Context", "Infrastructure", "Types", "Utils")
     .whereLayer("Types").mayOnlyAccessLayers(
-      "Configuration", "Context", "Infrastructure", "References", "Utils")
+      "Configuration", "Context", "Events", "Infrastructure", "References", "Utils")
     .whereLayer("Cfg").mayOnlyAccessLayers("Utils")
     .whereLayer("Formatting").mayOnlyAccessLayers("Configuration", "Utils")
 
