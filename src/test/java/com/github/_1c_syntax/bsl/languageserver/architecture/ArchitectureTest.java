@@ -110,10 +110,11 @@ class ArchitectureTest {
   // --- Словарь метаданных diagnostics.metadata ----------------------------------------------------
   // diagnostics.metadata — чистый словарь объявления диагностик (аннотация @DiagnosticMetadata и
   // энумы). Он не зависит ни от одного пакета проекта (как utils — лист), поэтому от него безопасно
-  // зависит и движок диагностик, и слой configuration (десериализация переопределений метаданных из
-  // .bsl-language-server.json). Рантайм-обёртки, которым нужны configuration/BSLDiagnostic, живут в
-  // diagnostics.info, а не здесь. Эта пара правил держит границу «словарь vs движок» настоящей,
-  // чтобы configuration не втянул движок диагностик в обратное ребро (цикл configuration↔diagnostics).
+  // зависят и движок диагностик, и слои configuration/context (десериализация переопределений
+  // метаданных, чтение DiagnosticCode). Рантайм-обёртки, которым нужны configuration/BSLDiagnostic,
+  // живут в diagnostics.info, а не здесь. Доступ к самому движку (diagnostics, кроме metadata)
+  // ограничен слоистым правилом ниже (слой Diagnostics), поэтому metadata вынесен в отдельный
+  // листовой слой DiagnosticsMetadata — свободно доступный, как utils.
 
   @ArchTest
   static final ArchRule diagnostics_metadata_should_be_a_dependency_free_vocabulary = noClasses()
@@ -122,16 +123,7 @@ class ArchitectureTest {
       resideInAPackage(ROOT_PACKAGE + "..")
         .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
     .because("diagnostics.metadata — листовой словарь: не зависит от пакетов проекта, "
-      + "поэтому от него может зависеть configuration, не образуя цикл");
-
-  @ArchTest
-  static final ArchRule configuration_should_depend_on_diagnostics_only_via_metadata = noClasses()
-    .that().resideInAPackage(ROOT_PACKAGE + ".configuration..")
-    .should().dependOnClassesThat(
-      resideInAPackage(ROOT_PACKAGE + ".diagnostics..")
-        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
-    .because("configuration зависит только от словаря diagnostics.metadata, а не от движка "
-      + "диагностик: иначе замыкается прямое ребро configuration→diagnostics");
+      + "поэтому от него могут зависеть configuration/context, не образуя цикл");
 
   // --- Стандартные потоки -------------------------------------------------------------------------
   // Никто не пишет в стандартные потоки stdout и stderr. Исключения — лишь места, где стандартный
@@ -221,11 +213,14 @@ class ArchitectureTest {
   //   - узкие предметные пакеты с единственным потребителем: cfg (граф потока управления) и recognizer
   //     — только из diagnostics; jsonrpc (DTO нестандартных LSP-запросов) — только из lsp; formatting
   //     (движок форматирования) — из diagnostics и providers.
+  //   - движок диагностик (Diagnostics = всё diagnostics, кроме листа metadata) после инверсии
+  //     DiagnosticComputer имеет фиксированный набор потребителей (Application/codeactions/reporters)
+  //     и закреплён; словарь diagnostics.metadata вынесен в отдельный листовой слой DiagnosticsMetadata.
   // Application задан точным именем (корень с bootstrap-классами MainApplication и BSLLSBinding), Lsp —
   // точным именем пакета сервисов-голов; состояние LSP-клиента — отдельный листовой пакет client. Остальные
   // пакеты — абсолютными путями, иначе шаблон по имени diagnostics матчил бы и одноимённый пакет внутри
-  // configuration. Ядро (configuration↔diagnostics↔context↔types↔…) переплетено циклами и здесь не
-  // моделируется: у его пакетов нет фиксированного набора потребителей, который можно было бы закрепить.
+  // configuration. Остаток ядра (context↔references↔types, configuration) ещё переплетён циклами и
+  // потребительски не закреплён: у этих пакетов пока нет фиксированного набора потребителей.
   // Пакет websocket слоем не задан: его режим поднимает подкоманда cli через Spring
   // (@ConditionalOnWebApplication), без ссылок времени компиляции, поэтому слоистому правилу,
   // работающему по зависимостям компиляции, закреплять тут нечего.
@@ -258,7 +253,12 @@ class ArchitectureTest {
     .layer("SemanticTokens").definedBy(ROOT_PACKAGE + ".semantictokens..")
 
     // Домены и узкие предметные пакеты
-    .layer("Diagnostics").definedBy(ROOT_PACKAGE + ".diagnostics..")
+    // Diagnostics — движок (всё diagnostics, КРОМЕ листового словаря metadata); DiagnosticsMetadata —
+    // сам словарь, выделен отдельным слоем, чтобы зависимость на него не считалась обращением в движок.
+    .layer("Diagnostics").definedBy(
+      resideInAPackage(ROOT_PACKAGE + ".diagnostics..")
+        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
+    .layer("DiagnosticsMetadata").definedBy(ROOT_PACKAGE + ".diagnostics.metadata..")
     .layer("Context").definedBy(ROOT_PACKAGE + ".context..")
     .layer("References").definedBy(ROOT_PACKAGE + ".references..")
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
@@ -292,6 +292,19 @@ class ArchitectureTest {
     .whereLayer("Recognizer").mayOnlyBeAccessedByLayers("Diagnostics")
     .whereLayer("Jsonrpc").mayOnlyBeAccessedByLayers("Lsp")
     .whereLayer("Formatting").mayOnlyBeAccessedByLayers("Diagnostics", "Providers")
+
+    // Движок диагностик: после инверсии DiagnosticComputer у него фиксированный набор потребителей —
+    // корень (BSLLSBinding), code actions (quick fix) и репортёры. Словарь DiagnosticsMetadata
+    // вынесен отдельным слоем и свободно доступен, поэтому configuration/context зависят только от
+    // него, а не от движка (так заперт бывший цикл configuration↔diagnostics / context↔diagnostics).
+    .whereLayer("Diagnostics").mayOnlyBeAccessedByLayers("Application", "CodeActions", "Reporters")
+
+    // context — низкоуровневый фундамент: среди слоёв он вправе обращаться ТОЛЬКО к Configuration и к
+    // словарю DiagnosticsMetadata (резолв типа модуля держит сам context, исполнение диагностик
+    // инвертировано через интерфейс DiagnosticComputer). Любая зависимость в types/references/движок
+    // диагностик/провайдеры/головы — нарушение. Листовые foundation-пакеты (utils/infrastructure/
+    // client) слоями намеренно не заданы, поэтому в этот whitelist не входят.
+    .whereLayer("Context").mayOnlyAccessLayers("Configuration", "DiagnosticsMetadata")
 
     .as("Слоистая архитектура: головы (lsp/cli/mcp), фасад providers с поставщиками "
       + "фич, домены и узкие предметные пакеты с фиксированными потребителями");
