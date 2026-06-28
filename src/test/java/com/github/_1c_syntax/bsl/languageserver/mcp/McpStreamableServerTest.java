@@ -68,6 +68,26 @@ class McpStreamableServerTest {
   }
 
   @Test
+  void allToolsAreMarkedReadOnly() {
+    // Все инструменты только читают код и ничего не меняют — клиент (например, Claude) не должен
+    // считать их разрушающими и спрашивать подтверждение на каждый вызов (#4226).
+    var tools = mcpSyncServer.listTools();
+
+    assertThat(tools).isNotEmpty();
+    assertThat(tools).allSatisfy(tool -> {
+      assertThat(tool.annotations())
+        .as("tool '%s' must carry read-only annotations", tool.name())
+        .isNotNull();
+      assertThat(tool.annotations().readOnlyHint())
+        .as("tool '%s' must be read-only", tool.name())
+        .isTrue();
+      assertThat(tool.annotations().destructiveHint())
+        .as("tool '%s' must not be destructive", tool.name())
+        .isFalse();
+    });
+  }
+
+  @Test
   void streamableHttpEndpointHandlesInitialize() throws Exception {
     var requestBody = """
       {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26",\
