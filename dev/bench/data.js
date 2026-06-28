@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782635763119,
+  "lastUpdate": 1782651768942,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39432,6 +39432,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 12.287750212802912",
             "extra": "mean: 274.514822324117 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "141c63a8317c5195df35fdd3f81d06d17e9696db",
+          "message": "Merge pull request #4227 from 1c-syntax/claude/github-issue-4226-muqngh\n\nfix(mcp): пометить MCP-инструменты как read-only",
+          "timestamp": "2026-06-28T13:17:11+02:00",
+          "tree_id": "24b2a69f0b1d1dd170a3f51cb4ac17d32b3dccb6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/141c63a8317c5195df35fdd3f81d06d17e9696db"
+        },
+        "date": 1782651758651,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 293.5058617591858,
+            "unit": "sec",
+            "range": "stddev: 3.899541492951574",
+            "extra": "mean: 293.5058617591858 sec\nrounds: 3"
           }
         ]
       }
