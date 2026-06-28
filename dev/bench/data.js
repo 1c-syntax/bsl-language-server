@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782651768942,
+  "lastUpdate": 1782658118131,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39463,6 +39463,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.899541492951574",
             "extra": "mean: 293.5058617591858 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0df4435a220e3ebc9652a653e9ef87eba3b0aa5b",
+          "message": "Merge pull request #4225 from 1c-syntax/claude/archunit-lock-context-foundation\n\ntest(architecture): полная прескриптивная карта зависимостей пакетов + вынос BSLLSBinding в подпакет",
+          "timestamp": "2026-06-28T14:23:18+02:00",
+          "tree_id": "fec46b898b3ed82bf35c39446afe89dfc9fab385",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0df4435a220e3ebc9652a653e9ef87eba3b0aa5b"
+        },
+        "date": 1782658106687,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 262.89572930336,
+            "unit": "sec",
+            "range": "stddev: 11.551205958593252",
+            "extra": "mean: 262.89572930336 sec\nrounds: 3"
           }
         ]
       }
