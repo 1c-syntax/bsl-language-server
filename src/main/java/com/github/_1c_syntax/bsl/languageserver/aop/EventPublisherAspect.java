@@ -212,12 +212,8 @@ public class EventPublisherAspect {
     var uri = URI.create(workspaceFolder.getUri());
     // Публикуем только если контекст ещё существует — сам контекст в payload не передаём,
     // подписчики при необходимости резолвят его по URI через ServerContextProvider.
-    // Workspace-контекст выставляем на время публикации, чтобы событие шло в нужный
-    // Spring-контекст по URI (routing по identity ServerContext больше не применим).
     if (provider.getServerContextUnsafe(uri).isPresent()) {
-      WorkspaceContextHolder.run(uri, () ->
-        publishEvent(new BeforeWorkspaceRemovedEvent(provider, uri))
-      );
+      publishEvent(new BeforeWorkspaceRemovedEvent(provider, uri));
     }
   }
 
@@ -334,8 +330,9 @@ public class EventPublisherAspect {
       return serverContext;
     }
     // Workspace-события жизненного цикла контекст в payload не несут (source =
-    // ServerContextProvider); их роутинг идёт по URI из WorkspaceContextHolder,
-    // который аспект выставляет на время публикации (см. workspaceAdded/beforeWorkspaceRemoved).
+    // ServerContextProvider). WorkspaceAddedEvent роутится по URI из WorkspaceContextHolder
+    // (аспект выставляет его на время публикации); события удаления контекст-привязки не имеют
+    // и рассылаются во все контексты — их подписчики идемпотентны по URI.
     if (event instanceof OScriptLibraryIndexedEvent indexed) {
       return indexed.getServerContext();
     }

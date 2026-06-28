@@ -71,12 +71,7 @@ public class ConfigurationFileSystemWatcher {
 
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
-  /**
-   * Провайдер workspace-scoped конфигурации. Под выставленным {@link WorkspaceContextHolder}
-   * (на момент {@link WorkspaceAddedEvent}) {@code getObject()} возвращает конкретный экземпляр
-   * {@link LanguageServerConfiguration} для добавляемого workspace — тот же бин, что держит его
-   * {@code ServerContext}, но без зависимости конфигурации от пакета context.
-   */
+  /** Провайдер workspace-scoped конфигурации текущего (по {@link WorkspaceContextHolder}) workspace. */
   private final ObjectProvider<LanguageServerConfiguration> workspaceConfigurationProvider;
 
   @SuppressWarnings("NullAway.Init")
@@ -186,11 +181,7 @@ public class ConfigurationFileSystemWatcher {
   }
 
   /**
-   * Обработчик добавления нового workspace.
-   * <p>
-   * На момент публикации {@link WorkspaceAddedEvent} workspace-контекст уже выставлен в
-   * {@link WorkspaceContextHolder}, поэтому {@code workspaceConfigurationProvider.getObject()}
-   * возвращает конкретный экземпляр конфигурации именно этого workspace.
+   * Регистрирует слежение за файлом конфигурации добавленного workspace.
    *
    * @param event Событие добавления workspace
    */
@@ -198,6 +189,9 @@ public class ConfigurationFileSystemWatcher {
   @Synchronized
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var workspaceUri = event.getWorkspaceUri();
+    // workspace-контекст выставлен на время рассылки события, поэтому getObject() отдаёт
+    // конкретный экземпляр конфигурации именно этого workspace (тот же бин, что держит его
+    // ServerContext) — без зависимости configuration от пакета context.
     var configuration = workspaceConfigurationProvider.getObject();
     LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
     registerWorkspaceWatchService(workspaceUri, configuration);
