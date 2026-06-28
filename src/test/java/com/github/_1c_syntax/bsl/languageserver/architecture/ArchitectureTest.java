@@ -107,32 +107,6 @@ class ArchitectureTest {
     .should().resideInAPackage("..diagnostics..")
     .because("все реализации BSLDiagnostic живут в пакете diagnostics");
 
-  // --- Словарь метаданных diagnostics.metadata ----------------------------------------------------
-  // diagnostics.metadata — чистый словарь объявления диагностик (аннотация @DiagnosticMetadata и
-  // энумы). Он не зависит ни от одного пакета проекта (как utils — лист), поэтому от него безопасно
-  // зависит и движок диагностик, и слой configuration (десериализация переопределений метаданных из
-  // .bsl-language-server.json). Рантайм-обёртки, которым нужны configuration/BSLDiagnostic, живут в
-  // diagnostics.info, а не здесь. Эта пара правил держит границу «словарь vs движок» настоящей,
-  // чтобы configuration не втянул движок диагностик в обратное ребро (цикл configuration↔diagnostics).
-
-  @ArchTest
-  static final ArchRule diagnostics_metadata_should_be_a_dependency_free_vocabulary = noClasses()
-    .that().resideInAPackage(ROOT_PACKAGE + ".diagnostics.metadata..")
-    .should().dependOnClassesThat(
-      resideInAPackage(ROOT_PACKAGE + "..")
-        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
-    .because("diagnostics.metadata — листовой словарь: не зависит от пакетов проекта, "
-      + "поэтому от него может зависеть configuration, не образуя цикл");
-
-  @ArchTest
-  static final ArchRule configuration_should_depend_on_diagnostics_only_via_metadata = noClasses()
-    .that().resideInAPackage(ROOT_PACKAGE + ".configuration..")
-    .should().dependOnClassesThat(
-      resideInAPackage(ROOT_PACKAGE + ".diagnostics..")
-        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
-    .because("configuration зависит только от словаря diagnostics.metadata, а не от движка "
-      + "диагностик: иначе замыкается прямое ребро configuration→diagnostics");
-
   // --- Стандартные потоки -------------------------------------------------------------------------
   // Никто не пишет в стандартные потоки stdout и stderr. Исключения — лишь места, где стандартный
   // поток нужен по протоколу или природе процесса. Это транспорт LSP в классе
@@ -210,45 +184,58 @@ class ArchitectureTest {
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
-  // Правило фиксирует направление вызовов между пакетами по зависимостям времени компиляции (циклы
-  // оно не проверяет). Группы слоёв:
-  //   - головы: cli доступен только из Application (корня с MainApplication, подключающим подкоманды);
-  //   - возможности LSP: фасад providers доступен только из голов lsp/cli/mcp; поставщики отдельных
-  //     фич (codeactions, color, documenthighlight, documentlink, folding, rename, semantictokens) —
-  //     только из providers; презентационный кластер codelenses/commands/databind/hover/inlayhints
-  //     композируется внутри себя; а codelenses/completion/inlayhints вдобавок доступны из lsp,
-  //     который резолвит их Data-DTO в ответ на resolve-запросы протокола;
-  //   - узкие предметные пакеты с единственным потребителем: cfg (граф потока управления) и recognizer
-  //     — только из diagnostics; jsonrpc (DTO нестандартных LSP-запросов) — только из lsp; formatting
-  //     (движок форматирования) — из diagnostics и providers.
-  // Application задан точным именем (корень с bootstrap-классами MainApplication и BSLLSBinding), Lsp —
-  // точным именем пакета сервисов-голов; состояние LSP-клиента — отдельный листовой пакет client. Остальные
-  // пакеты — абсолютными путями, иначе шаблон по имени diagnostics матчил бы и одноимённый пакет внутри
-  // configuration. Ядро (configuration↔diagnostics↔context↔types↔…) переплетено циклами и здесь не
-  // моделируется: у его пакетов нет фиксированного набора потребителей, который можно было бы закрепить.
-  // Пакет websocket слоем не задан: его режим поднимает подкоманда cli через Spring
-  // (@ConditionalOnWebApplication), без ссылок времени компиляции, поэтому слоистому правилу,
-  // работающему по зависимостям компиляции, закреплять тут нечего.
+  // ПОЛНАЯ, БЕЗ ПРОБЕЛОВ карта разрешённых зависимостей между пакетами. Каждый пакет проекта —
+  // отдельный слой, и для КАЖДОГО задан положительный whitelist «от чего он вправе зависеть»
+  // (mayOnlyAccessLayers), либо «не зависит ни от чего» (mayNotAccessAnyLayer) для листьев. Списки
+  // выведены из РОЛИ пакета (на что он по замыслу опирается), а не из текущих import'ов, поэтому
+  // правило отлавливает и уже существующий код, нарушивший замысел, а не «проходит по построению».
+  //
+  // Полнота гарантируется двумя решениями:
+  //   1. Рассматриваются только зависимости внутрь самого проекта —
+  //      consideringOnlyDependenciesInAnyPackage(ROOT..). Внешние библиотеки (lsp4j, spring, antlr,
+  //      JDK) под правило не попадают; ВСЕ внутрипроектные рёбра — попадают.
+  //   2. Слоем объявлен каждый top-level пакет (плюс выделенный листовой слой DiagnosticsMetadata).
+  //      Поэтому любое ребро A→B между пакетами проекта проверяется outgoing-списком слоя A —
+  //      «дыр» вида feature→foundation, не покрытых ни одним списком, не остаётся.
+  // Единственный неназначенный пакет — aop (рёбра AspectJ compile-time weaving, не исходные
+  // зависимости): в байткоде в него никто не входит (ссылки на него — только в Javadoc @link),
+  // поэтому он не нарушает полноту. websocket — лист без внутренних зависимостей.
+  //
+  // Известные циклы оставлены ОСОЗНАННО (правило их допускает, но они помечены как долг):
+  //   - Configuration↔Context: configuration читает рабочую область context, context читает
+  //     конфигурацию. Разрывается позже инверсией событий.
+  //   - References↔Types: взаимные ссылки индексов. Разрывается позже.
+  // Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило ниже
+  // (acyclic_domains_stay_free_of_cycles).
+  //
+  // Замечание про inline-константы: codeactions и diagnostics ссылаются на DiagnosticProvider.SOURCE
+  // (public static final String) — javac встраивает значение, ребра в байткоде нет, поэтому Providers
+  // в их whitelist отсутствует (и не должен — фичи не зависят от фасада providers).
 
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
-    .consideringOnlyDependenciesInLayers()
+    .consideringOnlyDependenciesInAnyPackage(ROOT_PACKAGE + "..")
+    // Рёбра в пакет aop — артефакт AspectJ compile-time weaving (вплетённые вызовы аспектов в
+    // байткоде, исходных import'ов нет), а не проектные зависимости. Исключаем их, оставляя aop
+    // единственным неназначенным пакетом.
+    .ignoreDependency(DescribedPredicate.alwaysTrue(), resideInAPackage(ROOT_PACKAGE + ".aop.."))
 
-    // Точки входа и «головы»
+    // --- Слои: каждый top-level пакет проекта ---
+    // Точка входа и «головы»
     .layer("Application").definedBy(ROOT_PACKAGE)
-    .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp")
+    .layer("Lsp").definedBy(ROOT_PACKAGE + ".lsp..")
     .layer("Mcp").definedBy(ROOT_PACKAGE + ".mcp..")
-    .layer("CLI").definedBy(ROOT_PACKAGE + ".cli..")
-    .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
-
-    // Возможности LSP: фасад providers и поставщики отдельных фич
+    .layer("Cli").definedBy(ROOT_PACKAGE + ".cli..")
+    // Фасад LSP-возможностей и публичный фасад встраивания
     .layer("Providers").definedBy(ROOT_PACKAGE + ".providers..")
+    .layer("Binding").definedBy(ROOT_PACKAGE + ".binding..")
+    .layer("Reporters").definedBy(ROOT_PACKAGE + ".reporters..")
+    // Поставщики отдельных фич
     .layer("CodeActions").definedBy(ROOT_PACKAGE + ".codeactions..")
     .layer("CodeLenses").definedBy(ROOT_PACKAGE + ".codelenses..")
     .layer("Commands").definedBy(ROOT_PACKAGE + ".commands..")
     .layer("Completion").definedBy(ROOT_PACKAGE + ".completion..")
     .layer("Color").definedBy(ROOT_PACKAGE + ".color..")
-    .layer("Databind").definedBy(ROOT_PACKAGE + ".databind..")
     .layer("DocumentHighlight").definedBy(ROOT_PACKAGE + ".documenthighlight..")
     .layer("DocumentLink").definedBy(ROOT_PACKAGE + ".documentlink..")
     .layer("Folding").definedBy(ROOT_PACKAGE + ".folding..")
@@ -256,58 +243,106 @@ class ArchitectureTest {
     .layer("InlayHints").definedBy(ROOT_PACKAGE + ".inlayhints..")
     .layer("Rename").definedBy(ROOT_PACKAGE + ".rename..")
     .layer("SemanticTokens").definedBy(ROOT_PACKAGE + ".semantictokens..")
-
-    // Домены и узкие предметные пакеты
-    .layer("Diagnostics").definedBy(ROOT_PACKAGE + ".diagnostics..")
+    // Домены. Diagnostics — движок (всё diagnostics, КРОМЕ листового словаря metadata);
+    // DiagnosticsMetadata — сам словарь, выделен отдельным слоем-листом.
+    .layer("Diagnostics").definedBy(
+      resideInAPackage(ROOT_PACKAGE + ".diagnostics..")
+        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".diagnostics.metadata..")))
+    .layer("DiagnosticsMetadata").definedBy(ROOT_PACKAGE + ".diagnostics.metadata..")
     .layer("Context").definedBy(ROOT_PACKAGE + ".context..")
     .layer("References").definedBy(ROOT_PACKAGE + ".references..")
+    .layer("Types").definedBy(ROOT_PACKAGE + ".types..")
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
     .layer("Cfg").definedBy(ROOT_PACKAGE + ".cfg..")
+    .layer("Formatting").definedBy(ROOT_PACKAGE + ".formatting..")
+    // Листовые foundation-пакеты
+    .layer("Infrastructure").definedBy(ROOT_PACKAGE + ".infrastructure..")
+    .layer("Client").definedBy(ROOT_PACKAGE + ".client..")
+    .layer("Databind").definedBy(ROOT_PACKAGE + ".databind..")
+    .layer("Events").definedBy(ROOT_PACKAGE + ".events..")
     .layer("Jsonrpc").definedBy(ROOT_PACKAGE + ".jsonrpc..")
     .layer("Recognizer").definedBy(ROOT_PACKAGE + ".recognizer..")
-    .layer("Formatting").definedBy(ROOT_PACKAGE + ".formatting..")
+    .layer("Utils").definedBy(ROOT_PACKAGE + ".utils..")
+    .layer("Websocket").definedBy(ROOT_PACKAGE + ".websocket..")
 
-    // Голова cli доступна только из корня.
-    .whereLayer("CLI").mayOnlyBeAccessedByLayers("Application")
+    // --- Outgoing whitelist'ы: от чего каждый слой вправе зависеть ---
 
-    // Фасад providers — только из голов; поставщики фич — из providers (и из соседних фич,
-    // где фичи композируются друг с другом).
-    .whereLayer("Providers").mayOnlyBeAccessedByLayers("Lsp", "CLI", "Mcp")
-    .whereLayer("CodeActions").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("Color").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("Completion").mayOnlyBeAccessedByLayers("Providers", "Lsp")
-    .whereLayer("DocumentHighlight").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("DocumentLink").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("Folding").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("Rename").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("SemanticTokens").mayOnlyBeAccessedByLayers("Providers")
-    .whereLayer("CodeLenses").mayOnlyBeAccessedByLayers("Providers", "Lsp", "CodeActions", "Commands", "Databind")
-    .whereLayer("Commands").mayOnlyBeAccessedByLayers("Providers", "CodeLenses", "Databind")
-    .whereLayer("Databind").mayOnlyBeAccessedByLayers("CodeLenses", "Commands", "InlayHints")
-    .whereLayer("Hover").mayOnlyBeAccessedByLayers("Providers", "InlayHints")
-    .whereLayer("InlayHints").mayOnlyBeAccessedByLayers("Providers", "Lsp", "Commands", "Databind")
+    // Точка входа и головы
+    .whereLayer("Application").mayOnlyAccessLayers("Cli")
+    .whereLayer("Cli").mayOnlyAccessLayers(
+      "Configuration", "Context", "Infrastructure", "Mcp", "Providers", "Reporters", "Utils")
+    .whereLayer("Mcp").mayOnlyAccessLayers(
+      "Configuration", "Context", "Infrastructure", "Providers", "Types", "Utils")
+    // Lsp вдобавок резолвит протокольные Data-DTO (CodeLensData/CompletionData/InlayHintData)
+    // в ответ на resolve-запросы, поэтому зависит от соответствующих фич.
+    .whereLayer("Lsp").mayOnlyAccessLayers(
+      "Client", "CodeLenses", "Completion", "Configuration", "Context", "Events", "Infrastructure",
+      "InlayHints", "Jsonrpc", "Providers", "Utils")
 
-    // Узкие предметные пакеты с единственным легитимным потребителем
-    .whereLayer("Cfg").mayOnlyBeAccessedByLayers("Diagnostics")
-    .whereLayer("Recognizer").mayOnlyBeAccessedByLayers("Diagnostics")
-    .whereLayer("Jsonrpc").mayOnlyBeAccessedByLayers("Lsp")
-    .whereLayer("Formatting").mayOnlyBeAccessedByLayers("Diagnostics", "Providers")
+    // Фасад providers композирует все фичи и домены под собой
+    .whereLayer("Providers").mayOnlyAccessLayers(
+      "Client", "CodeActions", "CodeLenses", "Color", "Commands", "Completion", "Configuration",
+      "Context", "DocumentHighlight", "DocumentLink", "Events", "Folding", "Formatting", "Hover",
+      "Infrastructure", "InlayHints", "References", "Rename", "SemanticTokens", "Types", "Utils")
 
-    .as("Слоистая архитектура: головы (lsp/cli/mcp), фасад providers с поставщиками "
-      + "фич, домены и узкие предметные пакеты с фиксированными потребителями");
+    // Потребители движка диагностик: публичный фасад встраивания (binding, бывш. корневой BSLLSBinding,
+    // используется внешним SonarQube-плагином) и репортёры. Так заперт бывший цикл
+    // configuration↔diagnostics / context↔diagnostics — фундамент зависит лишь от словаря metadata.
+    .whereLayer("Binding").mayOnlyAccessLayers(
+      "Configuration", "Context", "Diagnostics", "DiagnosticsMetadata")
+    .whereLayer("Reporters").mayOnlyAccessLayers(
+      "Configuration", "Context", "Diagnostics", "DiagnosticsMetadata")
 
-  // --- Листовой пакет utils -----------------------------------------------------------------------
-  // utils — переиспользуемые хелперы (AST, диапазоны, строки, файлы) — обязан оставаться листом:
-  // он не зависит ни от одного пакета проекта вне самого utils. Хелперу, которому нужен доменный
-  // тип, место в этом домене, а не здесь.
+    // Поставщики отдельных фич
+    .whereLayer("CodeActions").mayOnlyAccessLayers(
+      "CodeLenses", "Configuration", "Context", "Diagnostics", "DiagnosticsMetadata", "Types", "Utils")
+    .whereLayer("CodeLenses").mayOnlyAccessLayers(
+      "Client", "Commands", "Configuration", "Context", "Databind", "Events", "Types")
+    .whereLayer("Commands").mayOnlyAccessLayers("Databind", "InlayHints")
+    .whereLayer("Completion").mayOnlyAccessLayers("Configuration", "Context", "Types")
+    .whereLayer("Color").mayOnlyAccessLayers("Configuration", "Context", "Utils")
+    .whereLayer("DocumentHighlight").mayOnlyAccessLayers("Context", "References", "Utils")
+    .whereLayer("DocumentLink").mayOnlyAccessLayers(
+      "Configuration", "Context", "DiagnosticsMetadata", "Types", "Utils")
+    .whereLayer("Folding").mayOnlyAccessLayers("Configuration", "Context", "Utils")
+    .whereLayer("Hover").mayOnlyAccessLayers("Configuration", "Context", "References", "Types")
+    .whereLayer("InlayHints").mayOnlyAccessLayers(
+      "Configuration", "Context", "Databind", "Hover", "References", "Types", "Utils")
+    .whereLayer("Rename").mayOnlyAccessLayers(
+      "Client", "Configuration", "Context", "Events", "References")
+    .whereLayer("SemanticTokens").mayOnlyAccessLayers(
+      "Configuration", "Context", "Events", "References", "Types", "Utils")
 
-  @ArchTest
-  static final ArchRule utils_should_not_depend_on_project_packages = noClasses()
-    .that().resideInAPackage(ROOT_PACKAGE + ".utils..")
-    .should().dependOnClassesThat(
-      resideInAPackage(ROOT_PACKAGE + "..")
-        .and(resideOutsideOfPackage(ROOT_PACKAGE + ".utils..")))
-    .because("utils — листовой пакет: не зависит от доменных пакетов проекта");
+    // Движок диагностик
+    .whereLayer("Diagnostics").mayOnlyAccessLayers(
+      "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
+      "Recognizer", "References", "Types", "Utils")
+
+    // Домены-фундамент. Configuration↔Context и References↔Types — известные циклы (см. комментарий).
+    .whereLayer("Configuration").mayOnlyAccessLayers(
+      "Context", "DiagnosticsMetadata", "Infrastructure", "Utils")
+    .whereLayer("Context").mayOnlyAccessLayers(
+      "Client", "Configuration", "DiagnosticsMetadata", "Infrastructure", "Utils")
+    .whereLayer("References").mayOnlyAccessLayers(
+      "Configuration", "Context", "Infrastructure", "Types", "Utils")
+    .whereLayer("Types").mayOnlyAccessLayers(
+      "Configuration", "Context", "Infrastructure", "References", "Utils")
+    .whereLayer("Cfg").mayOnlyAccessLayers("Utils")
+    .whereLayer("Formatting").mayOnlyAccessLayers("Configuration", "Utils")
+
+    // Листья: ни от чего внутри проекта не зависят
+    .whereLayer("Infrastructure").mayOnlyAccessLayers("Client")
+    .whereLayer("DiagnosticsMetadata").mayNotAccessAnyLayer()
+    .whereLayer("Client").mayNotAccessAnyLayer()
+    .whereLayer("Databind").mayNotAccessAnyLayer()
+    .whereLayer("Events").mayNotAccessAnyLayer()
+    .whereLayer("Jsonrpc").mayNotAccessAnyLayer()
+    .whereLayer("Recognizer").mayNotAccessAnyLayer()
+    .whereLayer("Utils").mayNotAccessAnyLayer()
+    .whereLayer("Websocket").mayNotAccessAnyLayer()
+
+    .as("Полная карта зависимостей: каждый пакет проекта — слой с положительным whitelist'ом "
+      + "разрешённых зависимостей, выведенным из его роли");
 
   // --- Ацикличность чистых доменов ----------------------------------------------------------------
   // Ядро (configuration↔diagnostics↔context↔providers↔…) сейчас переплетено циклами и здесь не
