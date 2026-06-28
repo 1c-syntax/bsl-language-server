@@ -35,7 +35,6 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -71,8 +70,8 @@ public class ConfigurationFileSystemWatcher {
 
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
-  /** Провайдер workspace-scoped конфигурации текущего (по {@link WorkspaceContextHolder}) workspace. */
-  private final ObjectProvider<LanguageServerConfiguration> workspaceConfigurationProvider;
+  /** Конфигурация текущего (по {@link WorkspaceContextHolder}) workspace — workspace-scoped прокси. */
+  private final LanguageServerConfiguration workspaceConfiguration;
 
   @SuppressWarnings("NullAway.Init")
   private WatchService watchService;
@@ -189,12 +188,10 @@ public class ConfigurationFileSystemWatcher {
   @Synchronized
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var workspaceUri = event.getWorkspaceUri();
-    // workspace-контекст выставлен на время рассылки события, поэтому getObject() отдаёт
-    // конкретный экземпляр конфигурации именно этого workspace (тот же бин, что держит его
-    // ServerContext) — без зависимости configuration от пакета context.
-    var configuration = workspaceConfigurationProvider.getObject();
+    // workspace-контекст выставлен на время рассылки события, поэтому прокси резолвится в
+    // конфигурацию именно этого workspace; чтение в watch() тоже идёт под WorkspaceContextHolder.run.
     LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
-    registerWorkspaceWatchService(workspaceUri, configuration);
+    registerWorkspaceWatchService(workspaceUri, workspaceConfiguration);
   }
 
   /**
