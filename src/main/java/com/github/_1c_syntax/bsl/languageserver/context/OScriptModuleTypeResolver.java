@@ -37,8 +37,8 @@ import java.util.concurrent.ConcurrentMap;
  * Используется как fallback для {@code DocumentContext.computeModuleType()}:
  * {@code Configuration.getModuleTypeByURI(uri)} ничего не знает о файлах
  * OneScript-библиотек и возвращает {@link ModuleType#UNKNOWN}. Этот резолвер
- * наполняется компонентом {@link OScriptLibraryIndex} в процессе индексации
- * библиотек и позволяет различать классы и модули OneScript на уровне
+ * наполняется компонентом {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex}
+ * в процессе индексации библиотек и позволяет различать классы и модули OneScript на уровне
  * {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext}.
  */
 @Component
