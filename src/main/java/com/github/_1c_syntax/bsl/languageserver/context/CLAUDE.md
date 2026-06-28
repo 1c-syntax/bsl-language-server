@@ -49,8 +49,10 @@
 
 - **`SymbolTreeComputer`** → `SymbolTree`; делегирует `ModuleSymbolComputer`,
   `MethodSymbolComputer`, `RegionVariableSymbolComputer`/`VariableSymbolComputer`.
-- **`DiagnosticComputer`** (Spring-компонент, **не** `Computer<T>`) — прогоняет все
-  `BSLDiagnostic` (параллельно), фильтрует по конфигурации и правилам подавления.
+- **`DiagnosticComputer`** — **интерфейс** (`compute(DocumentContext) → List<Diagnostic>`), не
+  `Computer<T>`. Реализация (`DefaultDiagnosticComputer`) живёт в пакете `diagnostics` и
+  прогоняет все `BSLDiagnostic` параллельно, фильтруя по конфигурации и правилам подавления.
+  Так `context` не зависит от движка диагностик (инверсия зависимости).
 - **`DiagnosticIgnoranceComputer`** → данные о подавлении (сканирует `// BSLLS:…-off`).
 - **`CyclomaticComplexityComputer`** / **`CognitiveComplexityComputer`** → `ComplexityData`.
 - **`QueryComputer`** → токенизированные SDBL-запросы; **`GitBlameComputer`** → git blame.
