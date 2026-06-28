@@ -21,78 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.beans.factory.annotation.Lookup;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
- * Вычислитель диагностик для документа.
- * <p>
- * Абстрактный класс, обеспечивающий параллельное вычисление диагностик
- * всеми зарегистрированными анализаторами с обработкой ошибок.
+ * Вычислитель диагностик документа: прогоняет зарегистрированные анализаторы и возвращает
+ * найденные проблемы в виде протокольных диагностик.
  */
-@Component
-@Slf4j
-@RequiredArgsConstructor
-public abstract class DiagnosticComputer {
-
-  private final LanguageServerConfiguration configuration;
-
-  @Qualifier("diagnosticComputerExecutor")
-  private final ExecutorService executor;
+public interface DiagnosticComputer {
 
   /**
    * Вычислить все диагностики для документа.
    *
-   * @param documentContext Контекст документа для анализа
-   * @return Список найденных диагностик
+   * @param documentContext контекст анализируемого документа
+   * @return список найденных диагностик
    */
-  public List<Diagnostic> compute(DocumentContext documentContext) {
-    return CompletableFuture
-      .supplyAsync(() -> internalCompute(documentContext), executor)
-      .join();
-  }
-
-  private List<Diagnostic> internalCompute(DocumentContext documentContext) {
-    DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
-
-    var ignoredAuthors = configuration.getDiagnosticsOptions().getIgnoredAuthors();
-    GitBlameComputer.Data gitBlameIgnorance = ignoredAuthors.isEmpty()
-      ? GitBlameComputer.Data.empty()
-      : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
-
-    return diagnostics(documentContext).parallelStream()
-      .flatMap((BSLDiagnostic diagnostic) -> {
-        try {
-          return diagnostic.getDiagnostics(documentContext).stream();
-        } catch (RuntimeException e) {
-          var message = "Diagnostic computation error.%nFile: %s%nDiagnostic: %s".formatted(
-            documentContext.getUri(),
-            diagnostic.getInfo().getCode()
-          );
-          LOGGER.error(message, e);
-
-          return Stream.empty();
-        }
-      })
-      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
-      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
-      .toList();
-
-  }
-
-  @Lookup("diagnostics")
-  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
+  List<Diagnostic> compute(DocumentContext documentContext);
 }
