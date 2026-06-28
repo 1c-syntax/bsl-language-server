@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782598843573,
+  "lastUpdate": 1782631400839,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39339,6 +39339,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.663492037702068",
             "extra": "mean: 288.47748430569965 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "53f1f82169e9b912355b6dec939e6bdf6334243c",
+          "message": "Merge pull request #4222 from 1c-syntax/claude/move-module-type-resolver-to-context\n\nrefactor(context): перенести OScriptModuleTypeResolver в context (разрыв context → types)",
+          "timestamp": "2026-06-28T07:04:36+02:00",
+          "tree_id": "cba34e745a80b5c600538c54e406566e74a41f74",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/53f1f82169e9b912355b6dec939e6bdf6334243c"
+        },
+        "date": 1782631390401,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.07273332277936,
+            "unit": "sec",
+            "range": "stddev: 4.784328525946742",
+            "extra": "mean: 284.07273332277936 sec\nrounds: 3"
           }
         ]
       }
