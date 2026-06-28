@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
@@ -62,9 +62,9 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   private boolean multilineTokenSupport;
 
   @EventListener
-  public void onClientCapabilitiesChanged(LanguageServerInitializeRequestReceivedEvent event) {
+  public void onClientCapabilitiesChanged(LanguageServerInitializedEvent event) {
     multilineTokenSupport = Optional.of(event)
-      .map(LanguageServerInitializeRequestReceivedEvent::getParams)
+      .map(LanguageServerInitializedEvent::getParams)
       .map(InitializeParams::getCapabilities)
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getSemanticTokens)

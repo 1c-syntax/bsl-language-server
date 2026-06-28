@@ -29,11 +29,12 @@ import org.springframework.context.ApplicationEvent;
 import java.io.Serial;
 
 /**
- * Описание события получения языковым сервером запроса initialize.
+ * Событие «языковой сервер инициализирован».
  * <p>
+ * Публикуется после обработки запроса {@code initialize} и несёт его {@link InitializeParams}.
  * В качестве источника события содержит ссылку на {@link LanguageServer}.
  */
-public class LanguageServerInitializeRequestReceivedEvent extends ApplicationEvent {
+public class LanguageServerInitializedEvent extends ApplicationEvent {
 
   @Serial
   private static final long serialVersionUID = 7153531865051478056L;
@@ -44,7 +45,7 @@ public class LanguageServerInitializeRequestReceivedEvent extends ApplicationEve
   @Getter
   private final transient InitializeParams params;
 
-  public LanguageServerInitializeRequestReceivedEvent(LanguageServer source, InitializeParams params) {
+  public LanguageServerInitializedEvent(LanguageServer source, InitializeParams params) {
     super(source);
     this.params = params;
   }

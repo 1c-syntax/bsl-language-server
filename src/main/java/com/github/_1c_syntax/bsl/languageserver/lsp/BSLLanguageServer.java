@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -153,7 +153,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private boolean didChangeWatchedFilesRelativePatternSupport;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Кэширует клиентские возможности {@code workspace.didChangeWatchedFiles.dynamicRegistration} и
    * {@code workspace.didChangeWatchedFiles.relativePatternSupport}, чтобы при последующей регистрации
@@ -162,7 +162,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * (когда возможности уже сохранены в {@link ClientCapabilitiesHolder}) и до {@code initialized},
    * поэтому к моменту регистрации флаги уже актуальны.
    */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     var didChangeWatchedFiles = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)

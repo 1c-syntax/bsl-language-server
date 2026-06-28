@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -944,7 +944,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Кэширует поддержку клиентом pull-модели диагностик, влияющую на способ публикации
    * диагностик при закрытии документа.
@@ -952,7 +952,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @param ignored Событие
    */
   @EventListener
-  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
+  public void handleInitializeEvent(LanguageServerInitializedEvent ignored) {
     clientSupportsPullDiagnostics = diagnosticProvider.supportsPullDiagnostics();
   }
 

@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -52,7 +52,7 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   private boolean clientIsSupported;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Анализирует тип подключенного клиента и управляет применимостью линзы.
    *
@@ -60,7 +60,7 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
    */
   @EventListener
   @CacheEvict(allEntries = true)
-  public void handleEvent(LanguageServerInitializeRequestReceivedEvent event) {
+  public void handleEvent(LanguageServerInitializedEvent event) {
     clientIsSupported = clientCapabilitiesHolder.isVsCodeLikeClient();
   }
 

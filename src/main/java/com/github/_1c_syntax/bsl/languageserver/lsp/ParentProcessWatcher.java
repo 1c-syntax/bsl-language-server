@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -41,14 +41,14 @@ public class ParentProcessWatcher {
   private long parentProcessId;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Анализирует параметры запроса и подготавливает данные для слежения за родительским процессом.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerInitializeRequestReceivedEvent event) {
+  public void handleEvent(LanguageServerInitializedEvent event) {
     var processId = event.getParams().getProcessId();
     if (processId == null) {
       return;
