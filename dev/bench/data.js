@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782633592392,
+  "lastUpdate": 1782635763119,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39401,6 +39401,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 16.241806767973834",
             "extra": "mean: 284.52619433403015 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "46be0602885724b975e37292a5511950cafd7ccc",
+          "message": "Merge pull request #4224 from 1c-syntax/claude/invert-diagnostic-computer\n\nrefactor(context): инвертировать DiagnosticComputer — убрать ребро context → diagnostics",
+          "timestamp": "2026-06-28T07:36:56+02:00",
+          "tree_id": "2f73d2aa371186cd2472bd0e0eb5743597423f4a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/46be0602885724b975e37292a5511950cafd7ccc"
+        },
+        "date": 1782635751415,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 274.514822324117,
+            "unit": "sec",
+            "range": "stddev: 12.287750212802912",
+            "extra": "mean: 274.514822324117 sec\nrounds: 3"
           }
         ]
       }
