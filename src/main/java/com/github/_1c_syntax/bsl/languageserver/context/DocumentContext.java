@@ -41,7 +41,6 @@ import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleTypeResolver;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;

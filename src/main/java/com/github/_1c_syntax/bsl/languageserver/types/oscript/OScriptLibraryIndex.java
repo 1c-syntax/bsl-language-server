@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.OScriptModuleTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
