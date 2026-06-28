@@ -106,7 +106,7 @@ public class GlobalMemberSearchTool {
     // Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false,
     // Read-only: only inspects 1C/OneScript code, never mutates anything. Hint clients so the
-    // tool is not treated as destructive (#4226).
+    // tool is not treated as destructive.
     annotations = @McpTool.McpAnnotations(
       readOnlyHint = true,
       destructiveHint = false,

@@ -62,7 +62,7 @@ public class AnalyzeFileTool {
     // https://github.com/spring-projects/spring-ai/issues/4487
     generateOutputSchema = false,
     // Read-only: only inspects 1C/OneScript code, never mutates anything. Hint clients so the
-    // tool is not treated as destructive (#4226).
+    // tool is not treated as destructive.
     annotations = @McpTool.McpAnnotations(
       readOnlyHint = true,
       destructiveHint = false,

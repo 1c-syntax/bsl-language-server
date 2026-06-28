@@ -70,7 +70,7 @@ class McpStreamableServerTest {
   @Test
   void allToolsAreMarkedReadOnly() {
     // Все инструменты только читают код и ничего не меняют — клиент (например, Claude) не должен
-    // считать их разрушающими и спрашивать подтверждение на каждый вызов (#4226).
+    // считать их разрушающими и спрашивать подтверждение на каждый вызов.
     var tools = mcpSyncServer.listTools();
 
     assertThat(tools).isNotEmpty();
