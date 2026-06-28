@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782631400839,
+  "lastUpdate": 1782633592392,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39370,6 +39370,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.784328525946742",
             "extra": "mean: 284.07273332277936 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e3fd3fd1460029fbc952f3326fdcb339e9b06923",
+          "message": "Merge pull request #4223 from 1c-syntax/claude/fix-javadoc-oscript-resolver-link\n\ndocs(context): починить сломанную javadoc-ссылку в OScriptModuleTypeResolver",
+          "timestamp": "2026-06-28T07:11:38+02:00",
+          "tree_id": "3e15af49217b9be992116a860628cb8f0a7b666b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e3fd3fd1460029fbc952f3326fdcb339e9b06923"
+        },
+        "date": 1782633583483,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.52619433403015,
+            "unit": "sec",
+            "range": "stddev: 16.241806767973834",
+            "extra": "mean: 284.52619433403015 sec\nrounds: 3"
           }
         ]
       }
