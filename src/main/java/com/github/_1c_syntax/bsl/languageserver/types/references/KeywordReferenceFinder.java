@@ -19,11 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.types.references;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.KeywordSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.AnnotationReferenceFinder;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceFinder;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
