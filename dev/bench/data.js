@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782658118131,
+  "lastUpdate": 1782720254608,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39494,6 +39494,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.551205958593252",
             "extra": "mean: 262.89572930336 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a7784a87f7d25650d729b68845e8a8526b2e8e01",
+          "message": "Merge pull request #4229 from 1c-syntax/claude/break-configuration-context-cycle\n\nrefactor(configuration): разорвать цикл configuration↔context через нейтральные workspace-события",
+          "timestamp": "2026-06-29T08:59:23+02:00",
+          "tree_id": "98267ba25d3d8c2449a481d742a3b05f98234cff",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a7784a87f7d25650d729b68845e8a8526b2e8e01"
+        },
+        "date": 1782720243818,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 267.25530497233075,
+            "unit": "sec",
+            "range": "stddev: 20.902186977436802",
+            "extra": "mean: 267.25530497233075 sec\nrounds: 3"
           }
         ]
       }
