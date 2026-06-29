@@ -70,7 +70,6 @@ public class ConfigurationFileSystemWatcher {
 
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
-  /** Конфигурация текущего (по {@link WorkspaceContextHolder}) workspace — workspace-scoped прокси. */
   private final LanguageServerConfiguration workspaceConfiguration;
 
   @SuppressWarnings("NullAway.Init")
