@@ -138,6 +138,7 @@ public class OScriptLibraryIndex {
    */
   public List<Path> reindex(ServerContext serverContext) {
     oScriptModuleTypeResolver.clear();
+    serverContext.clearOScriptLibrarySymbols();
     entriesByUri.clear();
     entriesByName.clear();
 
@@ -172,6 +173,8 @@ public class OScriptLibraryIndex {
       return;
     }
     oScriptModuleTypeResolver.unregister(uri);
+    serverContextProvider.getServerContext(uri)
+      .ifPresent(sc -> sc.removeOScriptLibrarySymbolsByUri(uri));
     for (var entry : entries) {
       entriesByName.remove(nameKey(entry.qualifiedName()));
     }
@@ -417,6 +420,10 @@ public class OScriptLibraryIndex {
     var entry = new LibraryEntry(uri, qualifiedName, kind, libOrigin, implicit);
     entriesByUri.computeIfAbsent(uri, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(entry);
     entriesByName.put(nameKey(qualifiedName), entry);
+
+    // Публикуем сущность в каталог ServerContext ДО добавления документа: при создании документа
+    // (createDocumentContext) он сразу проиндексируется в documentsByMDORef под своим lib-именем.
+    serverContext.registerOScriptLibrarySymbol(qualifiedName, moduleType, uri);
 
     // Добавляем .os-файл в ServerContext как обычный документ. SymbolTreeComputer,
     // ReferenceIndexFiller, OScriptModuleMembersProvider и прочие подхватят его
