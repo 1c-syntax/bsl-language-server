@@ -203,8 +203,6 @@ class ArchitectureTest {
   //
   // Известные циклы оставлены ОСОЗНАННО (правило их допускает, но они помечены как долг):
   //   - References↔Types: взаимные ссылки индексов. Разрывается позже.
-  // Цикл Configuration↔Context разорван: workspace-события «похудели» до URI и переехали в лист
-  // events, поэтому configuration больше не зависит от context (осталось только context→configuration).
   // Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило ниже
   // (acyclic_domains_stay_free_of_cycles).
   //
@@ -318,8 +316,7 @@ class ArchitectureTest {
       "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
-    // Домены-фундамент. References↔Types — известный цикл (см. комментарий). Configuration больше
-    // НЕ зависит от Context (цикл разорван): её workspace-подписки идут через лист Events.
+    // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
     .whereLayer("Configuration").mayOnlyAccessLayers(
       "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
     .whereLayer("Context").mayOnlyAccessLayers(
