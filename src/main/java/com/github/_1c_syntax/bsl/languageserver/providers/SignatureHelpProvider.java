@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -100,7 +100,7 @@ public final class SignatureHelpProvider {
   // documentation сигнатуры отдаётся как MarkupContent(MARKDOWN), иначе голой строкой (plaintext).
   private boolean markdownDocumentationSupport;
 
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     var signatureInformation = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)

@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Location;
@@ -68,8 +68,8 @@ class NavigationCommandBuilderTest {
     return builder;
   }
 
-  private static LanguageServerInitializeRequestReceivedEvent initializeEvent() {
-    return new LanguageServerInitializeRequestReceivedEvent(
+  private static LanguageServerInitializedEvent initializeEvent() {
+    return new LanguageServerInitializedEvent(
       mock(LanguageServer.class),
       new InitializeParams()
     );

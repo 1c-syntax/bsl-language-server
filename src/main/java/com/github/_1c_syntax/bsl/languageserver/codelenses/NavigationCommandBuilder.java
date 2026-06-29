@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Location;
@@ -71,13 +71,13 @@ public class NavigationCommandBuilder {
 
   /**
    * Закэшированный признак клиента на базе VS Code. Вычисляется один раз при
-   * получении {@link LanguageServerInitializeRequestReceivedEvent}, чтобы не
+   * получении {@link LanguageServerInitializedEvent}, чтобы не
    * читать {@link ClientCapabilitiesHolder} на каждый запрос линзы.
    */
   private boolean vsCodeLikeClient;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Один раз определяет и кэширует тип подключённого клиента: в момент события
    * {@link ClientCapabilitiesHolder} уже содержит {@code ClientInfo}.
@@ -85,7 +85,7 @@ public class NavigationCommandBuilder {
    * @param event Событие получения запроса инициализации.
    */
   @EventListener
-  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+  public void handleInitializeEvent(LanguageServerInitializedEvent event) {
     vsCodeLikeClient = clientCapabilitiesHolder.isVsCodeLikeClient();
   }
 

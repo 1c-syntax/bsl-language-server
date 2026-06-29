@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -87,14 +87,14 @@ public final class RenameProvider {
   private boolean prepareSupportDefaultBehavior;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Кэширует клиентскую возможность {@code textDocument.rename.prepareSupportDefaultBehavior},
    * сообщающую, что клиент умеет вычислять поведение переименования по умолчанию. Чтение
    * выполняется один раз на инициализацию, чтобы не обращаться к возможностям клиента на каждый
    * запрос {@code textDocument/prepareRename}.
    */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     prepareSupportDefaultBehavior = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)

@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
@@ -62,13 +62,13 @@ public class DefinitionProvider {
   private boolean linkSupport;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Кэширует клиентскую возможность {@code textDocument.definition.linkSupport},
    * влияющую на формат ответа навигации: при её отсутствии ответ {@link LocationLink}
    * понижается до {@link Location}.
    */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     linkSupport = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)

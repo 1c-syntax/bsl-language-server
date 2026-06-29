@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.SentryOptions;
@@ -82,14 +82,14 @@ public class SentryScopeConfigurer {
   }
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Добавляет теги с именем и версией клиента в Sentry scope.
    *
    * @param event Событие инициализации языкового сервера
    */
   @EventListener
-  public void onLanguageServerInitialize(LanguageServerInitializeRequestReceivedEvent event) {
+  public void onLanguageServerInitialize(LanguageServerInitializedEvent event) {
     var clientInfo = Optional.ofNullable(event.getParams().getClientInfo());
     var clientName = clientInfo
       .flatMap(info -> Optional.ofNullable(info.getName()))

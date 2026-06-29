@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -154,7 +154,7 @@ public final class CompletionProvider {
   // Если клиент не поддерживает — commitCharacters не задаём вовсе.
   private boolean commitCharactersSupport;
 
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     var completionItem = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)

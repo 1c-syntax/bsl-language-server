@@ -22,35 +22,38 @@
 package com.github._1c_syntax.bsl.languageserver.events;
 
 import lombok.Getter;
-import org.eclipse.lsp4j.InitializeParams;
-import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.ApplicationEvent;
 
 import java.io.Serial;
+import java.net.URI;
 
 /**
- * Описание события получения языковым сервером запроса initialize.
+ * Workspace вот-вот будет удалён из провайдера контекстов сервера (публикуется до удаления).
  * <p>
- * В качестве источника события содержит ссылку на {@link LanguageServer}.
+ * Полезная нагрузка — только URI удаляемого workspace. На момент рассылки контекст сервера
+ * ещё существует и доступен по этому URI.
+ *
+ * @see WorkspaceRemovedEvent
  */
-public class LanguageServerInitializeRequestReceivedEvent extends ApplicationEvent {
+@Getter
+public class BeforeWorkspaceRemovedEvent extends ApplicationEvent {
 
   @Serial
-  private static final long serialVersionUID = 7153531865051478056L;
+  private static final long serialVersionUID = 1L;
 
   /**
-   * Параметры вызванного запроса initialize.
+   * URI корня workspace.
    */
-  @Getter
-  private final transient InitializeParams params;
+  private final URI workspaceUri;
 
-  public LanguageServerInitializeRequestReceivedEvent(LanguageServer source, InitializeParams params) {
+  /**
+   * Создаёт новое событие перед удалением workspace.
+   *
+   * @param source       источник события (провайдер контекстов сервера)
+   * @param workspaceUri URI корня workspace
+   */
+  public BeforeWorkspaceRemovedEvent(Object source, URI workspaceUri) {
     super(source);
-    this.params = params;
-  }
-
-  @Override
-  public LanguageServer getSource() {
-    return (LanguageServer) super.getSource();
+    this.workspaceUri = workspaceUri;
   }
 }

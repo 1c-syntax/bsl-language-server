@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -122,14 +122,14 @@ public final class DiagnosticProvider {
   }
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Проверяет поддержку клиентом workspace/diagnostic/refresh.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+  public void handleInitializeEvent(LanguageServerInitializedEvent event) {
     clientSupportsRefresh = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)
       .map(WorkspaceClientCapabilities::getDiagnostics)

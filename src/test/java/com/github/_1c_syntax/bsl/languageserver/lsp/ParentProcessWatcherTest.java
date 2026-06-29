@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ class ParentProcessWatcherTest {
     var params = new InitializeParams();
     params.setProcessId(-1);
 
-    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+    var event = new LanguageServerInitializedEvent(languageServer, params);
     parentProcessWatcher.handleEvent(event);
 
     // when
@@ -65,7 +65,7 @@ class ParentProcessWatcherTest {
     var params = new InitializeParams();
     params.setProcessId((int) ProcessHandle.current().pid());
 
-    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+    var event = new LanguageServerInitializedEvent(languageServer, params);
     parentProcessWatcher.handleEvent(event);
 
     // when

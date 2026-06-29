@@ -24,8 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.OScriptModuleTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -81,6 +82,7 @@ public class OScriptLibraryIndex {
   private final LibConfigParser libConfigParser;
   private final ConventionalLibraryDiscovery conventionalLibraryDiscovery;
   private final OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  private final ServerContextProvider serverContextProvider;
   // Материализуем members-provider в том же workspace-scope: иначе его
   // @EventListener'ы не подпишутся до того, как мы начнём rebuildDocument().
   private final OScriptModuleMembersProvider oScriptModuleMembersProvider;
@@ -115,14 +117,15 @@ public class OScriptLibraryIndex {
 
   @EventListener
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
-    var serverContext = event.getServerContext();
+    var workspaceUri = event.getWorkspaceUri();
+    var serverContext = serverContextProvider.getServerContextUnsafe(workspaceUri).orElse(null);
     if (serverContext == null) {
       return;
     }
     try {
       reindex(serverContext);
     } catch (RuntimeException e) {
-      LOGGER.warn("OScript library indexing failed for workspace {}", event.getWorkspaceUri(), e);
+      LOGGER.warn("OScript library indexing failed for workspace {}", workspaceUri, e);
     }
   }
 

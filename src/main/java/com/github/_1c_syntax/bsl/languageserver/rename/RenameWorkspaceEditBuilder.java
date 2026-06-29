@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.rename;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.AnnotatedTextEdit;
@@ -67,13 +67,13 @@ public class RenameWorkspaceEditBuilder {
   private boolean changeAnnotationSupport;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Кэширует клиентские возможности {@code workspace.workspaceEdit.documentChanges} и
    * {@code workspace.workspaceEdit.changeAnnotationSupport}, влияющие на формат результата
    * переименования: при их отсутствии результат понижается до legacy changes-map без аннотаций.
    */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     var workspaceEditCapabilities = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)

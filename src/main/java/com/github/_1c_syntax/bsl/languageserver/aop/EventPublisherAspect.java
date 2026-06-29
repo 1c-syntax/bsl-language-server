@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
@@ -36,9 +35,10 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.BeforeWorkspaceRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.events.OScriptLibraryIndexedEvent;
@@ -186,7 +186,7 @@ public class EventPublisherAspect {
 
   @AfterReturning("Pointcuts.isLanguageServer() && Pointcuts.isInitializeCall() && args(initializeParams)")
   public void languageServerInitialize(JoinPoint joinPoint, InitializeParams initializeParams) {
-    var event = new LanguageServerInitializeRequestReceivedEvent(
+    var event = new LanguageServerInitializedEvent(
       (LanguageServer) joinPoint.getThis(),
       initializeParams
     );
@@ -194,20 +194,15 @@ public class EventPublisherAspect {
   }
 
   @AfterReturning(
-    pointcut = "Pointcuts.isServerContextProvider() && Pointcuts.isAddWorkspaceCall() && args(workspaceUri, *)",
-    returning = "serverContext"
+    "Pointcuts.isServerContextProvider() && Pointcuts.isAddWorkspaceCall() && args(workspaceUri, *)"
   )
-  public void workspaceAdded(JoinPoint joinPoint, URI workspaceUri, ServerContext serverContext) {
+  public void workspaceAdded(JoinPoint joinPoint, URI workspaceUri) {
     // Устанавливаем workspace-контекст перед публикацией события, чтобы все слушатели
     // WorkspaceAddedEvent автоматически получили корректный WorkspaceContextHolder.
     // К моменту вызова этого advice try-with-resources внутри addWorkspace() уже закрыт
     // и ThreadLocal сброшен — поэтому явно оборачиваем здесь, а не полагаемся на вызывающий код.
     WorkspaceContextHolder.run(workspaceUri, () ->
-      publishEvent(new WorkspaceAddedEvent(
-        (ServerContextProvider) joinPoint.getThis(),
-        workspaceUri,
-        serverContext
-      ))
+      publishEvent(new WorkspaceAddedEvent(joinPoint.getThis(), workspaceUri))
     );
   }
 
@@ -215,19 +210,17 @@ public class EventPublisherAspect {
   public void beforeWorkspaceRemoved(JoinPoint joinPoint, WorkspaceFolder workspaceFolder) {
     var provider = (ServerContextProvider) joinPoint.getThis();
     var uri = URI.create(workspaceFolder.getUri());
-    var serverContext = provider.getServerContextUnsafe(uri).orElse(null);
-    if (serverContext != null) {
-      publishEvent(new BeforeWorkspaceRemovedEvent(provider, uri, serverContext));
+    // Публикуем только если контекст ещё существует — сам контекст в payload не передаём,
+    // подписчики при необходимости резолвят его по URI через ServerContextProvider.
+    if (provider.getServerContextUnsafe(uri).isPresent()) {
+      publishEvent(new BeforeWorkspaceRemovedEvent(provider, uri));
     }
   }
 
   @After("Pointcuts.isServerContextProvider() && Pointcuts.isRemoveWorkspaceCall() && args(workspaceFolder)")
   public void workspaceRemoved(JoinPoint joinPoint, WorkspaceFolder workspaceFolder) {
     var uri = URI.create(workspaceFolder.getUri());
-    publishEvent(new WorkspaceRemovedEvent(
-      (ServerContextProvider) joinPoint.getThis(),
-      uri
-    ));
+    publishEvent(new WorkspaceRemovedEvent(joinPoint.getThis(), uri));
   }
 
   @AfterReturning(
@@ -336,14 +329,10 @@ public class EventPublisherAspect {
     if (src instanceof ServerContext serverContext) {
       return serverContext;
     }
-    // События workspace-жизненного цикла: source = ServerContextProvider, но они
-    // несут ServerContext в отдельном поле.
-    if (event instanceof WorkspaceAddedEvent addedWs) {
-      return addedWs.getServerContext();
-    }
-    if (event instanceof BeforeWorkspaceRemovedEvent beforeRemoved) {
-      return beforeRemoved.getServerContext();
-    }
+    // Workspace-события жизненного цикла контекст в payload не несут (source =
+    // ServerContextProvider). WorkspaceAddedEvent роутится по URI из WorkspaceContextHolder
+    // (аспект выставляет его на время публикации); события удаления контекст-привязки не имеют
+    // и рассылаются во все контексты — их подписчики идемпотентны по URI.
     if (event instanceof OScriptLibraryIndexedEvent indexed) {
       return indexed.getServerContext();
     }

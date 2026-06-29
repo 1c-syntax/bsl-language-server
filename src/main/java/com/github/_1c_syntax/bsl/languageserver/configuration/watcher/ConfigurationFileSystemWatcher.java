@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.BeforeWorkspaceRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
@@ -70,6 +70,7 @@ public class ConfigurationFileSystemWatcher {
 
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
+  private final LanguageServerConfiguration workspaceConfiguration;
 
   @SuppressWarnings("NullAway.Init")
   private WatchService watchService;
@@ -178,11 +179,7 @@ public class ConfigurationFileSystemWatcher {
   }
 
   /**
-   * Обработчик добавления нового workspace.
-   * <p>
-   * Workspace-контекст уже установлен в {@link com.github._1c_syntax.bsl.languageserver.aop.EventPublisherAspect}
-   * перед публикацией {@link WorkspaceAddedEvent}, поэтому прямое обращение к workspace-scoped прокси
-   * через {@code event.getServerContext().getLanguageServerConfiguration()} корректно.
+   * Регистрирует слежение за файлом конфигурации добавленного workspace.
    *
    * @param event Событие добавления workspace
    */
@@ -190,9 +187,10 @@ public class ConfigurationFileSystemWatcher {
   @Synchronized
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var workspaceUri = event.getWorkspaceUri();
-    var configuration = event.getServerContext().getLanguageServerConfiguration();
+    // workspace-контекст выставлен на время рассылки события, поэтому прокси резолвится в
+    // конфигурацию именно этого workspace; чтение в watch() тоже идёт под WorkspaceContextHolder.run.
     LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
-    registerWorkspaceWatchService(workspaceUri, configuration);
+    registerWorkspaceWatchService(workspaceUri, workspaceConfiguration);
   }
 
   /**

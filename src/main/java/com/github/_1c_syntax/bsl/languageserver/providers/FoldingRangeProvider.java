@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -65,7 +65,7 @@ public final class FoldingRangeProvider {
   private Integer rangeLimit;
 
   /**
-   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
    * Кэширует клиентские возможности секции {@code textDocument.foldingRange}:
    * <ul>
@@ -75,7 +75,7 @@ public final class FoldingRangeProvider {
    *   клиент. Отсутствие значения трактуется как отсутствие лимита.</li>
    * </ul>
    */
-  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
     var foldingRangeCapabilities = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)

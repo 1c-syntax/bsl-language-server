@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.events;
+package com.github._1c_syntax.bsl.languageserver.events;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.utils.Absolute;
@@ -70,20 +70,19 @@ class WorkspaceEventsTest {
   @Test
   void testWorkspaceAddedEventPublished() {
     // when
-    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
+    serverContextProvider.addWorkspace(workspaceUri);
 
     // then
     assertThat(eventCollector.getAddedEvents()).hasSize(1);
     var event = eventCollector.getAddedEvents().get(0);
     assertThat(event.getWorkspaceUri()).isEqualTo(workspaceUri);
-    assertThat(event.getServerContext()).isSameAs(serverContext);
     assertThat(event.getSource()).isSameAs(serverContextProvider);
   }
 
   @Test
   void testBeforeWorkspaceRemovedEventPublished() {
     // given
-    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
+    serverContextProvider.addWorkspace(workspaceUri);
     eventCollector.clear();
 
     // when
@@ -94,7 +93,6 @@ class WorkspaceEventsTest {
     assertThat(eventCollector.getBeforeRemovedEvents()).hasSize(1);
     var event = eventCollector.getBeforeRemovedEvents().get(0);
     assertThat(event.getWorkspaceUri()).isEqualTo(workspaceUri);
-    assertThat(event.getServerContext()).isSameAs(serverContext);
     assertThat(event.getSource()).isSameAs(serverContextProvider);
   }
 
@@ -134,9 +132,6 @@ class WorkspaceEventsTest {
 
     // Both events should have the same workspace URI
     assertThat(beforeEvent.getWorkspaceUri()).isEqualTo(afterEvent.getWorkspaceUri());
-
-    // BeforeRemoved event has access to serverContext, Removed event doesn't guarantee it
-    assertThat(beforeEvent.getServerContext()).isNotNull();
   }
 
   @TestConfiguration

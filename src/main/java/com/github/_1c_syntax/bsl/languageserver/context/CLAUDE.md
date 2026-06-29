@@ -61,8 +61,11 @@
 
 Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEvent`,
 `DocumentContextContentChangedEvent`, `ServerContextPopulatedEvent`,
-`Workspace(Before)Added/RemovedEvent`, `ConfigurationTypesRegisteredEvent`. Используются
-downstream-индексами (`references/`, `types/`) для инвалидации кэшей.
+`ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
+для инвалидации кэшей. События жизненного цикла workspace (`Workspace(Before)Added/RemovedEvent`)
+вынесены в корневой пакет `events` и «похудели» до URI (контекст в payload не носят), чтобы от них
+мог зависеть `configuration`, не образуя цикл `configuration↔context`; подписчики резолвят контекст
+сами через `ServerContextProvider`.
 
 **Эти события публикуются не вручную, а через AOP** — аспект `aop/EventPublisherAspect`
 (AspectJ compile-time weaving) перехватывает вызовы методов-мутаторов `ServerContext`/
