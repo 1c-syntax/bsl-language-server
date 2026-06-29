@@ -176,7 +176,7 @@ dependencies {
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.2")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
