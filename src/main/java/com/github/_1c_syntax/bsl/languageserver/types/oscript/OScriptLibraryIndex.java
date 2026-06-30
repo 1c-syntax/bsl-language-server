@@ -138,7 +138,9 @@ public class OScriptLibraryIndex {
    */
   public List<Path> reindex(ServerContext serverContext) {
     oScriptModuleTypeResolver.clear();
-    serverContext.clearOScriptLibrarySymbols();
+    // снимаем прежние регистрации lib-сущностей в ServerContext (каталог имён + documentsByMDORef)
+    entriesByName.values().forEach(entry ->
+      serverContext.removeOScriptLibrary(entry.qualifiedName(), moduleTypeOf(entry.kind())));
     entriesByUri.clear();
     entriesByName.clear();
 
@@ -173,10 +175,12 @@ public class OScriptLibraryIndex {
       return;
     }
     oScriptModuleTypeResolver.unregister(uri);
-    serverContextProvider.getServerContext(uri)
-      .ifPresent(sc -> sc.removeOScriptLibrarySymbolsByUri(uri));
+    var serverContext = serverContextProvider.getServerContext(uri).orElse(null);
     for (var entry : entries) {
       entriesByName.remove(nameKey(entry.qualifiedName()));
+      if (serverContext != null) {
+        serverContext.removeOScriptLibrary(entry.qualifiedName(), moduleTypeOf(entry.kind()));
+      }
     }
     oScriptModuleMembersProvider.unregister(uri);
   }
@@ -407,7 +411,7 @@ public class OScriptLibraryIndex {
     // OScriptModuleMembersProvider → TypeRegistry, и в completion-метки.
     var qualifiedName = Normalizer.normalize(rawQualifiedName, Normalizer.Form.NFC);
     var uri = Absolute.uri(osFile.toUri());
-    var moduleType = kind == EntryKind.CLASS ? ModuleType.OScriptClass : ModuleType.OScriptModule;
+    var moduleType = moduleTypeOf(kind);
     // Сначала сообщаем резолверу тип модуля — это нужно, чтобы при первом
     // событии DocumentContextContentChangedEvent документ уже знал свой
     // ModuleType (через DocumentContext.computeModuleType фолбэк).
@@ -421,16 +425,16 @@ public class OScriptLibraryIndex {
     entriesByUri.computeIfAbsent(uri, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(entry);
     entriesByName.put(nameKey(qualifiedName), entry);
 
-    // Публикуем сущность в каталог ServerContext ДО добавления документа: при создании документа
-    // (createDocumentContext) он сразу проиндексируется в documentsByMDORef под своим lib-именем.
-    serverContext.registerOScriptLibrarySymbol(qualifiedName, moduleType, uri);
-
     // Добавляем .os-файл в ServerContext как обычный документ. SymbolTreeComputer,
     // ReferenceIndexFiller, OScriptModuleMembersProvider и прочие подхватят его
     // через события.
     try {
       var dc = serverContext.addDocument(uri);
       serverContext.rebuildDocument(dc);
+      // Регистрируем сущность в каталоге имён ServerContext и индексируем документ в
+      // documentsByMDORef под каноничным именем — чтобы ReferenceIndexFiller резолвил
+      // ссылки на эту lib-сущность через ServerContext.getDocument(имя, moduleType).
+      serverContext.registerOScriptLibrary(qualifiedName, moduleType, dc);
       // Явный вызов: гарантирует регистрацию USER-типа в актуальном
       // workspace-scope (event-listener тоже сработает, но он не
       // обязан выполняться в том же scope/потоке, что и reindex).
@@ -443,6 +447,10 @@ public class OScriptLibraryIndex {
     } catch (RuntimeException e) {
       LOGGER.warn("Failed to load oscript library file: {}", osFile, e);
     }
+  }
+
+  private static ModuleType moduleTypeOf(EntryKind kind) {
+    return kind == EntryKind.CLASS ? ModuleType.OScriptClass : ModuleType.OScriptModule;
   }
 
   @Nullable
