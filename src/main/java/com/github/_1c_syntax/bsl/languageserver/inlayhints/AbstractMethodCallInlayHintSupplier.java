@@ -40,12 +40,15 @@ import java.util.Map;
  * <ul>
  *   <li>включаются/выключаются единым ключом {@code inlayHint.parameters.methodCall}
  *       (см. {@link #getConfigurationKeys()}): {@code methodCall: false} гасит оба
- *       сапплаера сразу;</li>
+ *       сапплаера сразу. Ключ имеет высший приоритет, после него — собственный
+ *       legacy-ключ сапплаера ({@code platformMethodCall} /
+ *       {@code sourceDefinedMethodCall}), который продолжает выключать только
+ *       свой сапплаер;</li>
  *   <li>читают вложенные флаги {@code showParametersWithTheSameName} и
- *       {@code showDefaultValues} из того же ключа.</li>
+ *       {@code showDefaultValues} из единого ключа {@code methodCall},
+ *       а для совместимости со старыми конфигами — также из legacy-ключа
+ *       {@code sourceDefinedMethodCall}.</li>
  * </ul>
- * Для совместимости с конфигами, написанными до объединения, и тут, и там
- * читается также legacy-ключ {@code sourceDefinedMethodCall}.
  *
  * @param <T> Конкретный тип данных хинта; зависит от того, откладывает ли
  *            наследник построение полей на резолв.
@@ -53,8 +56,10 @@ import java.util.Map;
 public abstract class AbstractMethodCallInlayHintSupplier<T extends InlayHintData>
   implements InlayHintSupplier<T> {
 
+  private static final String UNIFIED_CONFIG_KEY = "methodCall";
+
   private static final List<String> CONFIG_KEYS = List.of(
-    "methodCall",
+    UNIFIED_CONFIG_KEY,
     "sourceDefinedMethodCall"
   );
 
@@ -67,9 +72,17 @@ public abstract class AbstractMethodCallInlayHintSupplier<T extends InlayHintDat
     this.configuration = configuration;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Единый ключ {@code methodCall} (высший приоритет) плюс собственный
+   * legacy-ключ сапплаера ({@link #getId()}: {@code platformMethodCall} либо
+   * {@code sourceDefinedMethodCall}), чтобы старые конфиги продолжали выключать
+   * именно свой тип вызовов.
+   */
   @Override
   public List<String> getConfigurationKeys() {
-    return CONFIG_KEYS;
+    return List.of(UNIFIED_CONFIG_KEY, getId());
   }
 
   protected boolean showParametersWithTheSameName() {

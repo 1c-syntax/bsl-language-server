@@ -30,27 +30,29 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Юнит-тесты для {@link InlayHintsConfiguration#supplierIsEnabled(List, Map)}.
+ * Юнит-тесты для {@link InlayHintsConfiguration#supplierIsEnabled(Iterable, Map)}.
  */
 class InlayHintsConfigurationTest {
 
-  private static final List<String> METHOD_CALL_KEYS = List.of("methodCall", "sourceDefinedMethodCall");
+  // Ключи в порядке приоритета, как их отдаёт AbstractMethodCallInlayHintSupplier#getConfigurationKeys().
+  private static final List<String> SOURCE_DEFINED_KEYS = List.of("methodCall", "sourceDefinedMethodCall");
+  private static final List<String> PLATFORM_KEYS = List.of("methodCall", "platformMethodCall");
 
   @Test
   void enabledByDefaultWhenNoKeyPresent() {
-    assertThat(InlayHintsConfiguration.supplierIsEnabled(METHOD_CALL_KEYS, Map.of()))
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(SOURCE_DEFINED_KEYS, Map.of()))
       .isTrue();
   }
 
   @Test
-  void unifiedKeySetToFalseDisablesSupplier() {
-    // methodCall: false — основной кейс: гасит оба method-call сапплаера.
+  void unifiedKeySetToFalseDisablesBothSuppliers() {
+    // methodCall: false — основной кейс: гасит оба method-call сапплаера сразу.
     var parameters = Map.of(
       "methodCall", Either.<Boolean, Map<String, Object>>forLeft(false)
     );
 
-    assertThat(InlayHintsConfiguration.supplierIsEnabled(METHOD_CALL_KEYS, parameters))
-      .isFalse();
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(SOURCE_DEFINED_KEYS, parameters)).isFalse();
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(PLATFORM_KEYS, parameters)).isFalse();
   }
 
   @Test
@@ -60,19 +62,32 @@ class InlayHintsConfigurationTest {
       "methodCall", Either.<Boolean, Map<String, Object>>forRight(Map.of("showDefaultValues", false))
     );
 
-    assertThat(InlayHintsConfiguration.supplierIsEnabled(METHOD_CALL_KEYS, parameters))
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(SOURCE_DEFINED_KEYS, parameters))
       .isTrue();
   }
 
   @Test
-  void legacyKeySetToFalseDisablesSupplierWhenUnifiedKeyAbsent() {
-    // Совместимость: sourceDefinedMethodCall: false без methodCall — тоже выключает.
+  void legacySourceDefinedKeyDisablesOnlySourceDefinedSupplier() {
+    // sourceDefinedMethodCall: false без methodCall — гасит только source-defined,
+    // платформенный сапплаер не затрагивает (его legacy-ключ другой).
     var parameters = Map.of(
       "sourceDefinedMethodCall", Either.<Boolean, Map<String, Object>>forLeft(false)
     );
 
-    assertThat(InlayHintsConfiguration.supplierIsEnabled(METHOD_CALL_KEYS, parameters))
-      .isFalse();
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(SOURCE_DEFINED_KEYS, parameters)).isFalse();
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(PLATFORM_KEYS, parameters)).isTrue();
+  }
+
+  @Test
+  void legacyPlatformKeyDisablesOnlyPlatformSupplier() {
+    // platformMethodCall: false без methodCall — гасит только платформенный,
+    // source-defined не затрагивает (регрессия на обратную совместимость).
+    var parameters = Map.of(
+      "platformMethodCall", Either.<Boolean, Map<String, Object>>forLeft(false)
+    );
+
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(PLATFORM_KEYS, parameters)).isFalse();
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(SOURCE_DEFINED_KEYS, parameters)).isTrue();
   }
 
   @Test
@@ -80,10 +95,10 @@ class InlayHintsConfigurationTest {
     // methodCall присутствует — решает он, legacy-ключ игнорируется.
     var parameters = Map.of(
       "methodCall", Either.<Boolean, Map<String, Object>>forLeft(true),
-      "sourceDefinedMethodCall", Either.<Boolean, Map<String, Object>>forLeft(false)
+      "platformMethodCall", Either.<Boolean, Map<String, Object>>forLeft(false)
     );
 
-    assertThat(InlayHintsConfiguration.supplierIsEnabled(METHOD_CALL_KEYS, parameters))
+    assertThat(InlayHintsConfiguration.supplierIsEnabled(PLATFORM_KEYS, parameters))
       .isTrue();
   }
 

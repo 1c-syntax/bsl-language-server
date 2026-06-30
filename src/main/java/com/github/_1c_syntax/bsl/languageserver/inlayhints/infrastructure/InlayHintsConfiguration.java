@@ -89,7 +89,7 @@ public class InlayHintsConfiguration {
    * @return true если сапплаер включён
    */
   public static boolean supplierIsEnabled(
-    List<String> configurationKeys,
+    Iterable<String> configurationKeys,
     Map<String, Either<Boolean, Map<String, Object>>> parameters
   ) {
     for (var key : configurationKeys) {

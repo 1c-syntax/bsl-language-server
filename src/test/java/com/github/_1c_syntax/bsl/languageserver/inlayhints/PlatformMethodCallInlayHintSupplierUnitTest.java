@@ -78,11 +78,11 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
   }
 
   @Test
-  void configurationKeysAreUnifiedMethodCallKeys() {
-    // then — оба method-call сапплаера управляются единым ключом methodCall
-    // (с legacy-fallback на sourceDefinedMethodCall), а не собственным id.
+  void configurationKeysAreUnifiedKeyThenOwnLegacyKey() {
+    // then — единый ключ methodCall (высший приоритет), затем собственный
+    // legacy-ключ платформенного сапплаера platformMethodCall.
     assertThat(supplier.getConfigurationKeys())
-      .containsExactly("methodCall", "sourceDefinedMethodCall");
+      .containsExactly("methodCall", "platformMethodCall");
   }
 
   @Test
