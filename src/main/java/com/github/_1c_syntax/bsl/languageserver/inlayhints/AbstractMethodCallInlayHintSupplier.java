@@ -32,15 +32,20 @@ import java.util.Map;
  * ({@link SourceDefinedMethodCallInlayHintSupplier} и
  * {@link PlatformMethodCallInlayHintSupplier}).
  * <p>
- * Содержит общую логику чтения флагов {@code showParametersWithTheSameName}
- * и {@code showDefaultValues} из {@link LanguageServerConfiguration}: оба
- * сапплаера рендерят одни и те же подсказки (имя параметра рядом с
+ * Содержит общую логику чтения настроек из {@link LanguageServerConfiguration}:
+ * оба сапплаера рендерят одни и те же подсказки (имя параметра рядом с
  * передаваемым значением) и отличаются лишь источником метаданных метода —
  * пользователь не должен управлять «одним и тем же» поведением двумя
- * флагами для разных типов методов. Поэтому оба читают единый ключ конфига
- * {@code inlayHint.parameters.methodCall}; для совместимости с конфигами,
- * написанными до объединения, читается также legacy-ключ
- * {@code sourceDefinedMethodCall}.
+ * флагами для разных типов методов. Поэтому оба:
+ * <ul>
+ *   <li>включаются/выключаются единым ключом {@code inlayHint.parameters.methodCall}
+ *       (см. {@link #getConfigurationKeys()}): {@code methodCall: false} гасит оба
+ *       сапплаера сразу;</li>
+ *   <li>читают вложенные флаги {@code showParametersWithTheSameName} и
+ *       {@code showDefaultValues} из того же ключа.</li>
+ * </ul>
+ * Для совместимости с конфигами, написанными до объединения, и тут, и там
+ * читается также legacy-ключ {@code sourceDefinedMethodCall}.
  *
  * @param <T> Конкретный тип данных хинта; зависит от того, откладывает ли
  *            наследник построение полей на резолв.
@@ -60,6 +65,11 @@ public abstract class AbstractMethodCallInlayHintSupplier<T extends InlayHintDat
 
   protected AbstractMethodCallInlayHintSupplier(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
+  }
+
+  @Override
+  public List<String> getConfigurationKeys() {
+    return CONFIG_KEYS;
   }
 
   protected boolean showParametersWithTheSameName() {

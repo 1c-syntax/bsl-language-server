@@ -74,7 +74,7 @@ public class InlayHintProvider {
     var parameters = configuration.getInlayHintOptions().getParameters();
 
     return inlayHintSuppliersById.values().stream()
-      .filter(supplier -> InlayHintsConfiguration.supplierIsEnabled(supplier.getId(), parameters))
+      .filter(supplier -> InlayHintsConfiguration.supplierIsEnabled(supplier.getConfigurationKeys(), parameters))
       .map(supplier -> supplier.getInlayHints(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());

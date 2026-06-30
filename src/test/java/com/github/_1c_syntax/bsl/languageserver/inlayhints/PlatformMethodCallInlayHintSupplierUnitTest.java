@@ -78,6 +78,14 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
   }
 
   @Test
+  void configurationKeysAreUnifiedMethodCallKeys() {
+    // then — оба method-call сапплаера управляются единым ключом methodCall
+    // (с legacy-fallback на sourceDefinedMethodCall), а не собственным id.
+    assertThat(supplier.getConfigurationKeys())
+      .containsExactly("methodCall", "sourceDefinedMethodCall");
+  }
+
+  @Test
   void getInlayHintsWithNullAstReturnsEmpty() {
     // given — documentContext.getAst() возвращает null.
     when(documentContext.getAst()).thenReturn(null);
