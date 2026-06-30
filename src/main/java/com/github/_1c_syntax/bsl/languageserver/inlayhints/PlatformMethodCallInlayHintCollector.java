@@ -53,12 +53,12 @@ import java.util.List;
 
 /**
  * Inlay-hint'ы с именами параметров для вызовов ПЛАТФОРМЕННЫХ методов и
- * глобальных функций (по аналогии с {@link SourceDefinedMethodCallInlayHintSupplier},
+ * глобальных функций (по аналогии с {@link SourceDefinedMethodCallInlayHintCollector},
  * но для не-source-defined символов: {@code СтрНайти("a","b","",1)},
  * {@code Сообщение.Сообщить()}, {@code Новый Массив(5)} и т.п.).
  * <p>
- * Резолв члена выполняется через {@link TypeService#memberAt}, что
- * покрывает три кейса:
+ * Коллектор используется единым {@link MethodCallInlayHintSupplier}. Резолв члена
+ * выполняется через {@link TypeService#memberAt}, что покрывает три кейса:
  * <ul>
  *   <li>{@link BSLParser.GlobalMethodCallContext} — глобальная функция
  *       (СтрНайти, Сообщить, ПолучитьСообщенияПользователю …);</li>
@@ -69,18 +69,18 @@ import java.util.List;
  *       {@link TypeService#getConstructors}.</li>
  * </ul>
  * <p>
- * Source-defined вызовы покрываются другим supplier'ом и здесь
- * фильтруются — {@link TypeService#memberAt} для них возвращает
+ * Source-defined вызовы покрывает {@link SourceDefinedMethodCallInlayHintCollector}
+ * и здесь фильтруются — {@link TypeService#memberAt} для них возвращает
  * MemberDescriptor с непустым sourceSymbol.
  */
 @Component
-public class PlatformMethodCallInlayHintSupplier
-  extends AbstractMethodCallInlayHintSupplier<DefaultInlayHintData> {
+public class PlatformMethodCallInlayHintCollector
+  extends AbstractMethodCallInlayHintCollector {
 
   private final TypeService typeService;
   private final Resources resources;
 
-  public PlatformMethodCallInlayHintSupplier(
+  public PlatformMethodCallInlayHintCollector(
     LanguageServerConfiguration configuration,
     TypeService typeService,
     Resources resources
@@ -90,25 +90,10 @@ public class PlatformMethodCallInlayHintSupplier
     this.resources = resources;
   }
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Платформенные методы не имеют исходного расположения, поэтому хинты не несут
-   * ссылок и ничего не откладывают на резолв — используется дефолтный дата-класс
-   * {@link DefaultInlayHintData}.
-   *
-   * @return Класс {@link DefaultInlayHintData}.
-   */
-  @Override
-  public Class<DefaultInlayHintData> getInlayHintDataClass() {
-    return DefaultInlayHintData.class;
-  }
-
   private Language currentLanguage() {
     return configuration.getLanguage();
   }
 
-  @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var ast = documentContext.getAst();
     if (ast == null) {
@@ -142,7 +127,7 @@ public class PlatformMethodCallInlayHintSupplier
       var member = typeService.memberAt(documentContext, methodNamePosition)
         .map(TypeService.TypedMember::descriptor)
         .filter(m -> m.kind() == MemberKind.METHOD)
-        // Source-defined методы покрывает SourceDefinedMethodCallInlayHintSupplier.
+        // Source-defined методы покрывает SourceDefinedMethodCallInlayHintCollector.
         .filter(m -> m.sourceSymbol() == null)
         .orElse(null);
       if (member == null || member.signatures().isEmpty()) {
@@ -211,7 +196,7 @@ public class PlatformMethodCallInlayHintSupplier
       return;
     }
     // Конструкторы source-defined типов (OneScript-классы, ПриСозданииОбъекта)
-    // покрывает SourceDefinedMethodCallInlayHintSupplier — иначе подсказки
+    // покрывает SourceDefinedMethodCallInlayHintCollector — иначе подсказки
     // имён параметров задвоились бы. Здесь обрабатываем только платформенные.
     if (ref.kind() == TypeKind.USER) {
       return;

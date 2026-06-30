@@ -76,28 +76,17 @@ public class InlayHintsConfiguration {
   }
 
   /**
-   * Проверить, включён ли сапплаер по его ключам конфигурации.
-   * <p>
-   * Ключи просматриваются в порядке приоритета; решение принимает первый из них,
-   * присутствующий в {@code parameters}. Значение-объект (вложенные настройки)
-   * означает, что сапплаер включён. Если ни один ключ не задан — сапплаер включён
-   * по умолчанию.
+   * Проверить, включён ли сапплаер по его id.
    *
-   * @param configurationKeys ключи конфигурации сапплаера в порядке приоритета
-   *                          (см. {@link InlayHintSupplier#getConfigurationKeys()})
-   * @param parameters        параметры из конфигурации
+   * @param supplierId id сапплаера
+   * @param parameters параметры из конфигурации
    * @return true если сапплаер включён
    */
   public static boolean supplierIsEnabled(
-    Iterable<String> configurationKeys,
+    String supplierId,
     Map<String, Either<Boolean, Map<String, Object>>> parameters
   ) {
-    for (var key : configurationKeys) {
-      var supplierConfig = parameters.get(key);
-      if (supplierConfig != null) {
-        return supplierConfig.isRight() || supplierConfig.getLeft();
-      }
-    }
-    return true;
+    var supplierConfig = parameters.getOrDefault(supplierId, Either.forLeft(true));
+    return supplierConfig.isRight() || supplierConfig.getLeft();
   }
 }

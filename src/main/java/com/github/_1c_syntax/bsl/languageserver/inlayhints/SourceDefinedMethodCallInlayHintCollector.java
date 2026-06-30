@@ -46,7 +46,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Поставщик подсказок о параметрах вызываемого метода.
+ * Коллектор подсказок о параметрах вызываемого source-defined метода (используется
+ * единым {@link MethodCallInlayHintSupplier}).
  * <p>
  * Метка хинта рендерится не голой строкой, а единственной частью
  * {@link InlayHintLabelPart}, к которой привязывается ссылка
@@ -60,8 +61,8 @@ import java.util.List;
  * разрешения, у хинта нет, поэтому он не несёт {@code data}.
  */
 @Component
-public class SourceDefinedMethodCallInlayHintSupplier
-  extends AbstractMethodCallInlayHintSupplier<DefaultInlayHintData> {
+public class SourceDefinedMethodCallInlayHintCollector
+  extends AbstractMethodCallInlayHintCollector {
 
   // TODO: высчитать позицию хинта относительно последнего параметра.
   private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
@@ -69,7 +70,7 @@ public class SourceDefinedMethodCallInlayHintSupplier
   private final ReferenceIndex referenceIndex;
   private final DescriptionFormatter descriptionFormatter;
 
-  public SourceDefinedMethodCallInlayHintSupplier(
+  public SourceDefinedMethodCallInlayHintCollector(
     LanguageServerConfiguration configuration,
     ReferenceIndex referenceIndex,
     DescriptionFormatter descriptionFormatter
@@ -79,20 +80,6 @@ public class SourceDefinedMethodCallInlayHintSupplier
     this.descriptionFormatter = descriptionFormatter;
   }
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Хинт имени параметра проставляет ссылку части метки жадно и не откладывает
-   * полей на резолв — используется дефолтный дата-класс {@link DefaultInlayHintData}.
-   *
-   * @return Класс {@link DefaultInlayHintData}.
-   */
-  @Override
-  public Class<DefaultInlayHintData> getInlayHintDataClass() {
-    return DefaultInlayHintData.class;
-  }
-
-  @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
     var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()

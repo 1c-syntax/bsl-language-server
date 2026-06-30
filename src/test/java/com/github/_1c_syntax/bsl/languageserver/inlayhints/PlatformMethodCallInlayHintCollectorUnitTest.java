@@ -54,12 +54,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
- * Mockito-юнит для {@link PlatformMethodCallInlayHintSupplier} — покрывает
+ * Mockito-юнит для {@link PlatformMethodCallInlayHintCollector} — покрывает
  * пути без полной интеграции (null AST, defaults для конфигурации).
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class PlatformMethodCallInlayHintSupplierUnitTest {
+class PlatformMethodCallInlayHintCollectorUnitTest {
 
   @Mock
   private TypeService typeService;
@@ -70,19 +70,11 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
   @Mock
   private DocumentContext documentContext;
 
-  private PlatformMethodCallInlayHintSupplier supplier;
+  private PlatformMethodCallInlayHintCollector supplier;
 
   @BeforeEach
   void setUp() {
-    supplier = new PlatformMethodCallInlayHintSupplier(configuration, typeService, resources);
-  }
-
-  @Test
-  void configurationKeysAreUnifiedKeyThenOwnLegacyKey() {
-    // then — единый ключ methodCall (высший приоритет), затем собственный
-    // legacy-ключ платформенного сапплаера platformMethodCall.
-    assertThat(supplier.getConfigurationKeys())
-      .containsExactly("methodCall", "platformMethodCall");
+    supplier = new PlatformMethodCallInlayHintCollector(configuration, typeService, resources);
   }
 
   @Test

@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Большая фикстура с множеством платформенных конструкторов и вызовов —
- * подталкивает coverage в ExpressionTypeInferencer и PlatformMethodCallInlayHintSupplier.
+ * подталкивает coverage в ExpressionTypeInferencer и PlatformMethodCallInlayHintCollector.
  */
 @CleanupContextBeforeClassAndAfterClass
 class ComprehensiveInferenceTest extends AbstractServerContextAwareTest {

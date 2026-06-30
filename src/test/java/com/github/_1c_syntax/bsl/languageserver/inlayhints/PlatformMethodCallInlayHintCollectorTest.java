@@ -38,9 +38,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Интеграционные тесты для inlay-подсказок параметров платформенных
  * методов / глобальных функций / конструкторов
- * ({@link PlatformMethodCallInlayHintSupplier}).
+ * ({@link PlatformMethodCallInlayHintCollector}).
  */
-class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAwareTest {
+class PlatformMethodCallInlayHintCollectorTest extends AbstractServerContextAwareTest {
 
   private static final String FILE_PATH =
     "./src/test/resources/types/PlatformMethodInlayHints.bsl";
@@ -50,7 +50,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   private static final String CONSTRUCTOR_CALLER_PATH = CONSTRUCTOR_FIXTURE_DIR + "/src/Классы/Caller.os";
 
   @Autowired
-  private PlatformMethodCallInlayHintSupplier supplier;
+  private PlatformMethodCallInlayHintCollector supplier;
 
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
@@ -58,7 +58,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   @Test
   void noHintsForSourceDefinedOScriptConstructor() {
     // given — конструктор OneScript-класса (ПриСозданииОбъекта) source-defined и
-    // покрывается SourceDefinedMethodCallInlayHintSupplier'ом; платформенный
+    // покрывается SourceDefinedMethodCallInlayHintCollector'ом; платформенный
     // supplier не должен дублировать эти подсказки.
     initServerContext(java.nio.file.Path.of(CONSTRUCTOR_FIXTURE_DIR).toAbsolutePath());
     oScriptLibraryIndex.reindex(context);
@@ -173,7 +173,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   @Test
   void noHintsForSourceDefinedMethodCall() {
     // given — source-defined метод не должен получать подсказки от платформенного
-    // supplier'а (этим занимается SourceDefinedMethodCallInlayHintSupplier).
+    // supplier'а (этим занимается SourceDefinedMethodCallInlayHintCollector).
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContext(
       "Процедура МойМетод(Параметр)\nКонецПроцедуры\n\nМойМетод(1);\n"
