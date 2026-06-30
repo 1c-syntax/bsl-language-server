@@ -80,6 +80,7 @@ public class SourceDefinedMethodCallInlayHintCollector
     this.descriptionFormatter = descriptionFormatter;
   }
 
+  @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
     var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()

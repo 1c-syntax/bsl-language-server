@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.List;
@@ -55,6 +58,15 @@ public abstract class AbstractMethodCallInlayHintCollector {
   protected AbstractMethodCallInlayHintCollector(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
   }
+
+  /**
+   * Собрать inlay-hint'ы вызовов методов, покрываемых конкретным коллектором.
+   *
+   * @param documentContext Контекст документа, для которого считаются подсказки.
+   * @param params          Параметры запроса inlay hints.
+   * @return Список подсказок в документе.
+   */
+  public abstract List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params);
 
   protected boolean showParametersWithTheSameName() {
     return readFlag("showParametersWithTheSameName", DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME);

@@ -94,6 +94,7 @@ public class PlatformMethodCallInlayHintCollector
     return configuration.getLanguage();
   }
 
+  @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var ast = documentContext.getAst();
     if (ast == null) {

@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class SourceDefinedMethodCallInlayHintCollectorTest extends AbstractServerContextAwareTest {
 
-  private final static String FILE_PATH = "./src/test/resources/inlayhints/SourceDefinedMethodCallInlayHintSupplier.bsl";
+  private static final String FILE_PATH = "./src/test/resources/inlayhints/SourceDefinedMethodCallInlayHintSupplier.bsl";
 
   private static final String CONSTRUCTOR_FIXTURE_DIR =
     "src/test/resources/oscript-libraries/constructor-inlay-test";

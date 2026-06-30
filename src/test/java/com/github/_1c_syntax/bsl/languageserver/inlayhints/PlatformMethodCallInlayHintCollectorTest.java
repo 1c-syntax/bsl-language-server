@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -106,7 +107,7 @@ class PlatformMethodCallInlayHintCollectorTest extends AbstractServerContextAwar
       .allSatisfy(hint -> assertThat(hint.getKind()).isEqualTo(InlayHintKind.Parameter));
     assertThat(hints)
       .extracting(InlayHint::getLabel)
-      .extracting(either -> either.getLeft())
+      .extracting(Either::getLeft)
       .anyMatch(label -> label != null && !label.isBlank());
   }
 
