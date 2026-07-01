@@ -73,6 +73,10 @@ public class MdoRefBuilder {
     // осторожно! не менять на вызов documentContext.getMdoRef, а то зациклится
     var mdoRef = documentContext.getMdObject()
       .map(MD::getMdoRef)
+      // .os-файл library-сущности OneScript не имеет объекта метаданных: его mdoRef — каноничное
+      // имя библиотеки (зарегистрированное индексатором до добавления документа), чтобы он
+      // резолвился в documentsByMDORef единообразно с BSL-объектами.
+      .or(() -> documentContext.getServerContext().findOScriptLibraryName(documentContext.getUri()))
       .orElseGet(() -> documentContext.getUri().toString());
     return stringInterner.intern(mdoRef);
   }

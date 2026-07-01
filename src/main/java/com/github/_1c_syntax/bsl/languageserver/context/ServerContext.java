@@ -120,12 +120,22 @@ public class ServerContext {
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = new ConcurrentHashMap<>();
   /**
-   * Каталог библиотечных сущностей OneScript: {@code nameKey → (каноничное имя, тип модуля)}.
+   * Каталог библиотечных сущностей OneScript: {@code nameKey → (тип модуля, документ)}.
    * Наполняется извне (индексатором OneScript-библиотек) и служит резолву имени класса/модуля
-   * библиотеки в каноничное имя — аналогично тому, как {@link #findCommonModule(String)} резолвит
-   * общий модуль из метаданных конфигурации. Регистронезависимый (ключ — {@code nameKey}).
+   * библиотеки в документ .os-файла — аналогично тому, как {@link #findCommonModule(String)}
+   * резолвит общий модуль из метаданных конфигурации. Регистронезависимый (ключ — {@code nameKey});
+   * под несколькими именами (алиасами) может резолвиться один и тот же документ.
    */
   private final Map<String, OScriptLibrarySymbol> oscriptLibrariesByNameKey = new ConcurrentHashMap<>();
+  /**
+   * {@code URI .os-файла → каноничное имя} его library-сущности. Наполняется индексатором
+   * OneScript-библиотек <b>до</b> добавления документа в контекст, чтобы {@code mdoRef}
+   * такого документа вычислялся как имя библиотеки (см. {@link MdoRefBuilder}), а не как URI:
+   * тогда документ индексируется в {@link #documentsByMDORef} под своим именем и резолвится
+   * единообразно с BSL-объектами. Первое зарегистрированное имя выигрывает (у одного файла
+   * может быть несколько ролей — см. {@code OScriptModuleTypeResolver}).
+   */
+  private final Map<URI, String> oscriptLibraryNamesByUri = new ConcurrentHashMap<>();
   private final Map<URI, ReadWriteLock> documentLocks = new ConcurrentHashMap<>();
 
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
@@ -341,6 +351,7 @@ public class ServerContext {
     documentsByMDORef.clear();
     mdoRefs.clear();
     oscriptLibrariesByNameKey.clear();
+    oscriptLibraryNamesByUri.clear();
     documentLocks.clear();
     commonModuleCache.invalidateAll();
     configurationMetadata.clear();
@@ -481,67 +492,99 @@ public class ServerContext {
   }
 
   /**
-   * Зарегистрировать библиотечную сущность OneScript: занести её в каталог имён (для канонизации
-   * в {@link #findLibraryClass}/{@link #findLibraryModule}) и проиндексировать документ в
-   * {@code documentsByMDORef} под каноничным именем (чтобы он резолвился через
-   * {@link #getDocument(String, ModuleType)}). Вызывается индексатором OneScript-библиотек.
+   * Привязать {@code URI .os-файла} к каноничному имени его library-сущности <b>до</b>
+   * добавления документа в контекст. Нужно, чтобы {@code mdoRef} документа вычислился как имя
+   * библиотеки (см. {@link MdoRefBuilder}), а не как URI. Первое имя выигрывает: у одного файла
+   * может быть несколько ролей, но идентичность документа (mdoRef) должна быть стабильной.
    *
-   * @param qualifiedName    каноничное имя сущности
+   * @param uri           URI .os-файла (абсолютный, нормализованный)
+   * @param qualifiedName каноничное имя сущности
+   */
+  public void registerOScriptLibraryName(URI uri, String qualifiedName) {
+    oscriptLibraryNamesByUri.putIfAbsent(uri, qualifiedName);
+  }
+
+  /**
+   * Каноничное имя library-сущности OneScript, привязанное к URI через
+   * {@link #registerOScriptLibraryName}. Используется {@link MdoRefBuilder} при вычислении
+   * {@code mdoRef} .os-документов, у которых нет объекта метаданных.
+   *
+   * @param uri URI .os-файла
+   * @return каноничное имя либо {@code empty}
+   */
+  public Optional<String> findOScriptLibraryName(URI uri) {
+    return Optional.ofNullable(oscriptLibraryNamesByUri.get(uri));
+  }
+
+  /**
+   * Зарегистрировать библиотечную сущность OneScript: занести её в каталог имён (для резолва
+   * в {@link #findLibraryClass}/{@link #findLibraryModule}) и проиндексировать документ в
+   * {@code documentsByMDORef} под его {@code mdoRef} (= каноничным именем, см.
+   * {@link #registerOScriptLibraryName}), чтобы он резолвился через
+   * {@link #getDocument(String, ModuleType)}. Вызывается индексатором OneScript-библиотек.
+   *
+   * @param qualifiedName    каноничное имя сущности (алиас в каталоге имён)
    * @param moduleType       {@link ModuleType#OScriptClass} или {@link ModuleType#OScriptModule}
    * @param documentContext  документ .os-файла
    */
   public void registerOScriptLibrary(String qualifiedName, ModuleType moduleType, DocumentContext documentContext) {
-    oscriptLibrariesByNameKey.put(oscriptNameKey(qualifiedName), new OScriptLibrarySymbol(qualifiedName, moduleType));
+    oscriptLibrariesByNameKey.put(oscriptNameKey(qualifiedName), new OScriptLibrarySymbol(moduleType, documentContext));
     documentsByMDORef
-      .computeIfAbsent(qualifiedName, k -> Collections.synchronizedMap(new EnumMap<>(ModuleType.class)))
+      .computeIfAbsent(documentContext.getMdoRef(), k -> Collections.synchronizedMap(new EnumMap<>(ModuleType.class)))
       .put(moduleType, documentContext);
   }
 
   /**
-   * Снять регистрацию библиотечной сущности OneScript: из каталога имён и из
-   * {@code documentsByMDORef}. Вызывается индексатором при удалении файла/пере-индексации.
+   * Снять регистрацию библиотечной сущности OneScript: из каталога имён, из
+   * {@code documentsByMDORef} и из привязки {@code URI → имя}. Вызывается индексатором при
+   * удалении файла/пере-индексации.
    *
    * @param qualifiedName каноничное имя сущности
    * @param moduleType    тип модуля сущности
    */
   public void removeOScriptLibrary(String qualifiedName, ModuleType moduleType) {
-    oscriptLibrariesByNameKey.remove(oscriptNameKey(qualifiedName));
-    var group = documentsByMDORef.get(qualifiedName);
+    var symbol = oscriptLibrariesByNameKey.remove(oscriptNameKey(qualifiedName));
+    if (symbol == null) {
+      return;
+    }
+    var documentContext = symbol.documentContext();
+    var group = documentsByMDORef.get(documentContext.getMdoRef());
     if (group != null) {
       group.remove(moduleType);
       if (group.isEmpty()) {
-        documentsByMDORef.remove(qualifiedName);
+        documentsByMDORef.remove(documentContext.getMdoRef());
       }
     }
+    oscriptLibraryNamesByUri.remove(documentContext.getUri());
   }
 
   /**
-   * Найти каноничное имя зарегистрированного library-класса OneScript по имени из исходного кода.
+   * Найти документ зарегистрированного library-класса OneScript по имени из исходного кода.
    *
    * @param name имя из кода (произвольный регистр)
-   * @return каноничное имя класса либо {@code empty}
+   * @return документ .os-файла класса либо {@code empty}
    */
-  public Optional<String> findLibraryClass(String name) {
+  public Optional<DocumentContext> findLibraryClass(String name) {
     return findOScriptLibrarySymbol(name, ModuleType.OScriptClass);
   }
 
   /**
-   * Найти каноничное имя зарегистрированного library-модуля OneScript по имени из исходного кода.
+   * Найти документ зарегистрированного library-модуля OneScript по имени из исходного кода.
    *
    * @param name имя из кода (произвольный регистр)
-   * @return каноничное имя модуля либо {@code empty}
+   * @return документ .os-файла модуля либо {@code empty}
    */
-  public Optional<String> findLibraryModule(String name) {
+  public Optional<DocumentContext> findLibraryModule(String name) {
     return findOScriptLibrarySymbol(name, ModuleType.OScriptModule);
   }
 
-  private Optional<String> findOScriptLibrarySymbol(String name, ModuleType moduleType) {
+  private Optional<DocumentContext> findOScriptLibrarySymbol(String name, ModuleType moduleType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
     return Optional.ofNullable(oscriptLibrariesByNameKey.get(oscriptNameKey(name)))
       .filter(symbol -> symbol.moduleType() == moduleType)
-      .map(OScriptLibrarySymbol::qualifiedName);
+      .map(OScriptLibrarySymbol::documentContext);
   }
 
   /**
@@ -554,12 +597,12 @@ public class ServerContext {
   }
 
   /**
-   * Запись каталога библиотечных сущностей OneScript (для канонизации имени).
+   * Запись каталога библиотечных сущностей OneScript.
    *
-   * @param qualifiedName каноничное имя
-   * @param moduleType    тип модуля (класс/модуль)
+   * @param moduleType       тип модуля (класс/модуль)
+   * @param documentContext  документ .os-файла сущности
    */
-  public record OScriptLibrarySymbol(String qualifiedName, ModuleType moduleType) {
+  public record OScriptLibrarySymbol(ModuleType moduleType, DocumentContext documentContext) {
   }
 
   private DocumentContext createDocumentContext(URI uri) {

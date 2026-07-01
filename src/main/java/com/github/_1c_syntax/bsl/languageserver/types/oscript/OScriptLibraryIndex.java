@@ -425,6 +425,11 @@ public class OScriptLibraryIndex {
     entriesByUri.computeIfAbsent(uri, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(entry);
     entriesByName.put(nameKey(qualifiedName), entry);
 
+    // Привязываем URI → каноничное имя ДО addDocument: тогда mdoRef создаваемого документа
+    // вычислится как имя библиотеки (а не URI), и он проиндексируется в documentsByMDORef под
+    // своим именем — единообразно с BSL-объектами.
+    serverContext.registerOScriptLibraryName(uri, qualifiedName);
+
     // Добавляем .os-файл в ServerContext как обычный документ. SymbolTreeComputer,
     // ReferenceIndexFiller, OScriptModuleMembersProvider и прочие подхватят его
     // через события.
@@ -432,8 +437,8 @@ public class OScriptLibraryIndex {
       var dc = serverContext.addDocument(uri);
       serverContext.rebuildDocument(dc);
       // Регистрируем сущность в каталоге имён ServerContext и индексируем документ в
-      // documentsByMDORef под каноничным именем — чтобы ReferenceIndexFiller резолвил
-      // ссылки на эту lib-сущность через ServerContext.getDocument(имя, moduleType).
+      // documentsByMDORef под его mdoRef (= каноничным именем) — чтобы ReferenceIndexFiller
+      // резолвил ссылки на эту lib-сущность через ServerContext.getDocument(имя, moduleType).
       serverContext.registerOScriptLibrary(qualifiedName, moduleType, dc);
       // Явный вызов: гарантирует регистрацию USER-типа в актуальном
       // workspace-scope (event-listener тоже сработает, но он не

@@ -25,10 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
@@ -269,10 +267,11 @@ public class ReferenceIndexFiller {
       if (libClass.isEmpty()) {
         return;
       }
-      var mdoRef = libClass.get();
+      var libDocument = libClass.get();
+      var mdoRef = libDocument.getMdoRef();
       var range = Ranges.create(typeName.IDENTIFIER());
 
-      var ctor = libraryClassConstructor(mdoRef);
+      var ctor = libDocument.getSymbolTree().getConstructor();
       if (ctor.isPresent()) {
         index.addMethodCall(
           documentContext.getUri(),
@@ -291,12 +290,6 @@ public class ReferenceIndexFiller {
       }
     }
 
-    private Optional<ConstructorSymbol> libraryClassConstructor(String mdoRef) {
-      return documentContext.getServerContext().getDocument(mdoRef, ModuleType.OScriptClass)
-        .map(DocumentContext::getSymbolTree)
-        .flatMap(SymbolTree::getConstructor);
-    }
-
     /**
      * Если идентификатор соответствует имени зарегистрированного OneScript
      * library-модуля, регистрирует:
@@ -313,7 +306,7 @@ public class ReferenceIndexFiller {
       if (libModule.isEmpty()) {
         return;
       }
-      var mdoRef = libModule.get();
+      var mdoRef = libModule.get().getMdoRef();
 
       // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
       index.addModuleReference(
@@ -570,6 +563,7 @@ public class ReferenceIndexFiller {
       }
       return documentContext.getServerContext()
         .findLibraryClass(typeName.IDENTIFIER().getText())
+        .map(DocumentContext::getMdoRef)
         .orElse(null);
     }
 
