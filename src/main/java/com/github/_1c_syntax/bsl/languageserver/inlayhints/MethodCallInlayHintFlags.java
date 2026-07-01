@@ -22,28 +22,22 @@
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.InlayHint;
-import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * Базовый класс для коллекторов inlay-hint вызовов методов
- * ({@link SourceDefinedMethodCallInlayHintCollector} и
- * {@link PlatformMethodCallInlayHintCollector}), которыми пользуется единый
- * {@link MethodCallInlayHintSupplier}.
+ * Чтение вложенных флагов рендеринга подсказок вызовов методов
+ * ({@code showParametersWithTheSameName}, {@code showDefaultValues}) из конфигурации.
  * <p>
- * Содержит общую логику чтения вложенных флагов {@code showParametersWithTheSameName}
- * и {@code showDefaultValues} из {@link LanguageServerConfiguration}: оба коллектора
- * рендерят одни и те же подсказки (имя параметра рядом с передаваемым значением) и
+ * Оба коллектора ({@link SourceDefinedMethodCallInlayHintCollector} и
+ * {@link PlatformMethodCallInlayHintCollector}) рендерят одни и те же подсказки и
  * отличаются лишь источником метаданных метода, поэтому читают единый ключ конфига
  * {@code inlayHint.parameters.methodCall}; для совместимости со старыми конфигами
  * читается также legacy-ключ {@code sourceDefinedMethodCall}.
  */
-public abstract class AbstractMethodCallInlayHintCollector {
+final class MethodCallInlayHintFlags {
 
   private static final List<String> CONFIG_KEYS = List.of(
     "methodCall",
@@ -53,30 +47,19 @@ public abstract class AbstractMethodCallInlayHintCollector {
   private static final boolean DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME = false;
   private static final boolean DEFAULT_SHOW_DEFAULT_VALUES = true;
 
-  protected final LanguageServerConfiguration configuration;
-
-  protected AbstractMethodCallInlayHintCollector(LanguageServerConfiguration configuration) {
-    this.configuration = configuration;
+  private MethodCallInlayHintFlags() {
+    // utility class
   }
 
-  /**
-   * Собрать inlay-hint'ы вызовов методов, покрываемых конкретным коллектором.
-   *
-   * @param documentContext Контекст документа, для которого считаются подсказки.
-   * @param params          Параметры запроса inlay hints.
-   * @return Список подсказок в документе.
-   */
-  public abstract List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params);
-
-  protected boolean showParametersWithTheSameName() {
-    return readFlag("showParametersWithTheSameName", DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME);
+  static boolean showParametersWithTheSameName(LanguageServerConfiguration configuration) {
+    return readFlag(configuration, "showParametersWithTheSameName", DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME);
   }
 
-  protected boolean showDefaultValues() {
-    return readFlag("showDefaultValues", DEFAULT_SHOW_DEFAULT_VALUES);
+  static boolean showDefaultValues(LanguageServerConfiguration configuration) {
+    return readFlag(configuration, "showDefaultValues", DEFAULT_SHOW_DEFAULT_VALUES);
   }
 
-  private boolean readFlag(String name, boolean defaultValue) {
+  private static boolean readFlag(LanguageServerConfiguration configuration, String name, boolean defaultValue) {
     var parameters = configuration.getInlayHintOptions().getParameters();
     for (var key : CONFIG_KEYS) {
       Either<Boolean, Map<String, Object>> entry = parameters.get(key);

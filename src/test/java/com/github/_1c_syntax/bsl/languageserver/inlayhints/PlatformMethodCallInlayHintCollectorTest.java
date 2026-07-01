@@ -32,7 +32,12 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -158,17 +163,27 @@ class PlatformMethodCallInlayHintCollectorTest extends AbstractServerContextAwar
     assertThat(labels).contains("КоличествоЭлементов1:", "КоличествоЭлементов2:");
   }
 
-  @Test
-  void noHintsForEmptyAst() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("noHintScenarios")
+  void producesNoHints(String scenario, String code) {
     // given
     initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext(code);
 
     // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
 
     // then
     assertThat(hints).isEmpty();
+  }
+
+  private static Stream<Arguments> noHintScenarios() {
+    return Stream.of(
+      Arguments.of("пустой AST", ""),
+      Arguments.of("вызов без аргументов", "Сообщить();\n"),
+      Arguments.of("неизвестный тип конструктора", "Х = Новый СовершенноНеизвестныйТипX(1);\n"),
+      Arguments.of("вызов на нетипизированной переменной", "Перем X;\nX.НеизвестныйМетод(1, 2);\n")
+    );
   }
 
   @Test
@@ -201,49 +216,6 @@ class PlatformMethodCallInlayHintCollectorTest extends AbstractServerContextAwar
     var hints = supplier.getInlayHints(documentContext, params);
 
     // then — range покрывает только первый символ, ни один вызов не задет.
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
-  void noHintsForCallWithoutArguments() {
-    // given — Сообщить() без аргументов, paramList пуст.
-    initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext("Сообщить();\n");
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
-
-    // then
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
-  void noHintsForUnknownConstructorType() {
-    // given — Новый НесуществующийТип(arg) — typeService.resolve не находит.
-    initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext(
-      "Х = Новый СовершенноНеизвестныйТипX(1);\n"
-    );
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
-
-    // then
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
-  void noHintsForCallOnUntypedVariable() {
-    // given — у переменной нет инфер-типа, member не резолвится.
-    initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext(
-      "Перем X;\nX.НеизвестныйМетод(1, 2);\n"
-    );
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
-
-    // then
     assertThat(hints).isEmpty();
   }
 

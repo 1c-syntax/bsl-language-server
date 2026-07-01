@@ -74,7 +74,8 @@ class PlatformMethodCallInlayHintCollectorUnitTest {
 
   @BeforeEach
   void setUp() {
-    supplier = new PlatformMethodCallInlayHintCollector(configuration, typeService, resources);
+    var renderer = new PlatformMethodCallHintRenderer(configuration, resources);
+    supplier = new PlatformMethodCallInlayHintCollector(typeService, renderer);
   }
 
   @Test
@@ -93,8 +94,8 @@ class PlatformMethodCallInlayHintCollectorUnitTest {
 
   @Test
   void skippedArgumentShowsDefaultValueHint() {
-    // given — реальный AST вызова СтрНайти с пропущенным средним аргументом;
-    // сигнатура содержит средний параметр со значением по умолчанию.
+    // given — реальный AST вызова с пропущенным средним аргументом, сигнатура
+    // содержит средний параметр со значением по умолчанию.
     when(documentContext.getAst()).thenReturn(new BSLTokenizer("СтрНайти(\"a\",,\"b\");\n").getAst());
 
     var signature = SignatureDescriptor.of(List.of(
