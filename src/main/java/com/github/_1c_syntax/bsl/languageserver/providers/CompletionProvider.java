@@ -444,41 +444,14 @@ public final class CompletionProvider {
     // owner'а не получают: их описание (если есть, из JsDoc) лежит прямо в
     // MemberDescriptor и documentation строится сразу (eager), резолвить нечего.
     var owners = new LinkedHashMap<String, TypeRef>();
-    // Два прохода по всем ref'ам (а не один с чередованием поле/член внутри ref):
-    // сначала добавляются ВСЕ декларированные поля union-набора, затем ВСЕ члены
-    // типов. Иначе у union-ресивера бестиповый платформенный член одного ref мог
-    // быть добавлен раньше одноимённого задокументированного поля другого ref и
-    // затенить его через putIfAbsent — тот же баг #4206, но зависящий от порядка
-    // обхода ref'ов.
-    //
-    // Декларированные поля «открытого» объекта данных (Структура из
-    // Новый Структура("К1, К2"), ТЗ с описанными колонками из JsDoc, элемент
-    // Соответствия — КлючИЗначение с типами Ключ/Значение из JsDoc) идут ПЕРЕД
-    // членами: при совпадении имён задокументированное поле приоритетнее
-    // одноимённого дефолтного члена платформы (у которого типа нет). Иначе тип
+    // Два прохода по union-набору: сначала ВСЕ декларированные поля, затем ВСЕ
+    // члены типов. Порядок важен: задокументированное поле приоритетнее
+    // одноимённого дефолтного члена платформы (у которого типа нет), иначе тип
     // поля терялся бы в подсказке — например, у КлючИЗначение.Ключ / .Значение
-    // пропадали Строка / Число (#4206).
-    for (TypeRef ref : typeSet.refs()) {
-      var localFields = typeSet.getLocalFields(ref);
-      for (var entry : localFields.entrySet()) {
-        var fieldName = entry.getKey();
-        var field = entry.getValue();
-        // Полный TypeSet поля (с union/вложенными полями), как в
-        // DereferenceMemberMatcher, а не только головной ref.
-        var fieldTypes = !field.types().isEmpty() ? field.types() : TypeSet.of(TypeRef.UNKNOWN);
-        if (members.putIfAbsent(fieldName,
-          MemberDescriptor.property(fieldName, fieldTypes, field.description())) == null) {
-          localFieldNames.add(fieldName);
-        }
-      }
-    }
-    for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
-        if (members.putIfAbsent(member.name(), member) == null) {
-          owners.put(member.name(), ref);
-        }
-      }
-    }
+    // пропадали Строка / Число (#4206). Проходы вынесены в отдельные методы,
+    // чтобы гарантировать этот приоритет независимо от порядка обхода ref'ов.
+    collectDeclaredFields(typeSet, members, localFieldNames);
+    collectTypeMembers(typeSet, members, owners, fileType, scriptVariant);
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
@@ -500,6 +473,59 @@ public final class CompletionProvider {
       applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
     }
     return items;
+  }
+
+  /**
+   * Первый проход dot-completion: декларированные поля «открытого» объекта данных
+   * (Структура из {@code Новый Структура("К1, К2")}, ТЗ с описанными колонками из
+   * JsDoc, элемент Соответствия — {@code КлючИЗначение} с типами Ключ/Значение из
+   * JsDoc). Собираются ПЕРЕД членами типов ({@link #collectTypeMembers}), чтобы
+   * при совпадении имён задокументированное поле было приоритетнее одноимённого
+   * дефолтного члена платформы (у которого типа нет) — иначе тип поля терялся бы
+   * в подсказке (#4206).
+   *
+   * @param typeSet         тип(ы) ресивера слева от точки.
+   * @param members         аккумулятор членов по имени (заполняется через {@code putIfAbsent}).
+   * @param localFieldNames имена добавленных полей — для приоритетной корзины sortText.
+   */
+  private static void collectDeclaredFields(TypeSet typeSet, Map<String, MemberDescriptor> members,
+                                            Set<String> localFieldNames) {
+    for (TypeRef ref : typeSet.refs()) {
+      for (var entry : typeSet.getLocalFields(ref).entrySet()) {
+        var fieldName = entry.getKey();
+        var field = entry.getValue();
+        // Полный TypeSet поля (с union/вложенными полями), как в
+        // DereferenceMemberMatcher, а не только головной ref.
+        var fieldTypes = field.types().isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : field.types();
+        if (members.putIfAbsent(fieldName,
+          MemberDescriptor.property(fieldName, fieldTypes, field.description())) == null) {
+          localFieldNames.add(fieldName);
+        }
+      }
+    }
+  }
+
+  /**
+   * Второй проход dot-completion: канонические члены типов из реестра. Добавляются
+   * через {@code putIfAbsent} ПОСЛЕ полей ({@link #collectDeclaredFields}), поэтому
+   * не затеняют одноимённое задокументированное поле. Каждому впервые добавленному
+   * члену запоминается тип-владелец для отложенного восстановления документации.
+   *
+   * @param typeSet       тип(ы) ресивера слева от точки.
+   * @param members       аккумулятор членов по имени (заполняется через {@code putIfAbsent}).
+   * @param owners        тип-владелец каждого члена — для {@code completionItem/resolve}.
+   * @param fileType      тип файла-потребителя (BSL/OS).
+   * @param scriptVariant локаль скрипта для отбора написаний членов.
+   */
+  private void collectTypeMembers(TypeSet typeSet, Map<String, MemberDescriptor> members,
+                                  Map<String, TypeRef> owners, FileType fileType, Language scriptVariant) {
+    for (TypeRef ref : typeSet.refs()) {
+      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
+        if (members.putIfAbsent(member.name(), member) == null) {
+          owners.put(member.name(), ref);
+        }
+      }
+    }
   }
 
   /**
