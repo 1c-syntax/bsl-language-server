@@ -23,21 +23,20 @@ package com.github._1c_syntax.bsl.languageserver.documentlink;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.utils.NavigationLinks;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
-import com.github._1c_syntax.bsl.types.ModuleType;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentLink;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -45,18 +44,19 @@ import java.util.stream.Stream;
  * в описаниях символов.
  * <p>
  * В doc-комментарии символа BSL (метода либо переменной) допускается ссылка вида
- * {@code // См. ДругойМетод} (на метод того же модуля) либо {@code // См. ОбщийМодуль.Метод}
- * (на экспортный метод общего модуля). Сапплаер находит такие ссылки в описаниях
- * всех символов модуля, разрешает их в местоположение целевого метода и формирует
- * {@link DocumentLink} над текстом ссылки.
+ * {@code // См. ДругойМетод} (на метод того же модуля) либо {@code // См. Модуль.Метод}
+ * (на экспортный метод другого модуля — общего, менеджера и т.п.). Сапплаер находит
+ * такие ссылки в описаниях всех символов модуля, разрешает их в определение целевого
+ * метода через {@link TypeService} и формирует {@link DocumentLink} над текстом ссылки.
  * <p>
  * Ссылки, которые не удалось разрешить в существующий метод, пропускаются —
  * висячие (битые) ссылки не создаются.
  */
 @Component
+@RequiredArgsConstructor
 public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
 
-  private static final char MODULE_METHOD_SEPARATOR = '.';
+  private final TypeService typeService;
 
   @Override
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
@@ -83,7 +83,7 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
    * {@link VariableDescription} в {@link VariableDescription#getTrailingDescription()},
    * и его ссылки не попадают в {@code getLinks()} основного описания, поэтому обрабатываются явно.
    */
-  private static void addLinksFromDescription(
+  private void addLinksFromDescription(
     DocumentContext documentContext,
     SourceDefinedSymbolDescription description,
     List<DocumentLink> documentLinks
@@ -99,7 +99,7 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
     }
   }
 
-  private static void addLinkIfResolvable(
+  private void addLinkIfResolvable(
     DocumentContext documentContext,
     Hyperlink hyperlink,
     List<DocumentLink> documentLinks
@@ -109,77 +109,12 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
       return;
     }
 
-    resolveTarget(documentContext, reference)
+    typeService.resolveSeeReference(reference, documentContext)
       .ifPresent(target -> {
         var range = referenceRange(hyperlink, reference);
-        var documentLink = new DocumentLink(range, locationToTarget(target));
-        documentLinks.add(documentLink);
+        var navigationTarget = NavigationLinks.toTarget(target.getOwner().getUri(), target.getSelectionRange());
+        documentLinks.add(new DocumentLink(range, navigationTarget));
       });
-  }
-
-  /**
-   * Разрешает текст ссылки «См.» в местоположение целевого метода.
-   * <p>
-   * Ссылка «См.» приходит из текста doc-комментария — это голая строка имени,
-   * а не позиция в AST и не {@code Reference}. На текущей ветке {@code TypeService}
-   * умеет резолвить только по позиции/{@code Reference} ({@code memberAt},
-   * {@code typesAt(Reference)}) или возвращать {@code TypeRef} по имени
-   * ({@code resolve(name, fileType)}), но не источниковый символ/{@code Location}
-   * по имени. Поэтому имя метода резолвится напрямую через дерево символов модуля,
-   * а имя общего модуля — штатной идиомой {@code findCommonModule → getDocument}.
-   *
-   * @param documentContext контекст документа, в котором встретилась ссылка
-   * @param reference       текст ссылки: {@code ИмяМетода} или {@code ОбщийМодуль.Метод}
-   *
-   * @return местоположение объявления метода, если ссылка разрешима, иначе {@link Optional#empty()}
-   */
-  private static Optional<Location> resolveTarget(DocumentContext documentContext, String reference) {
-    var separatorIndex = reference.indexOf(MODULE_METHOD_SEPARATOR);
-    if (separatorIndex < 0) {
-      return resolveSameModuleMethod(documentContext, reference);
-    }
-
-    var moduleName = reference.substring(0, separatorIndex);
-    var methodName = reference.substring(separatorIndex + 1);
-    return resolveCommonModuleMethod(documentContext, moduleName, methodName);
-  }
-
-  private static Optional<Location> resolveSameModuleMethod(
-    DocumentContext documentContext,
-    String methodName
-  ) {
-    return documentContext.getSymbolTree()
-      .getMethodSymbol(methodName)
-      .map(SeeReferenceDocumentLinkSupplier::symbolLocation);
-  }
-
-  private static Optional<Location> resolveCommonModuleMethod(
-    DocumentContext documentContext,
-    String moduleName,
-    String methodName
-  ) {
-    if (moduleName.isEmpty() || methodName.isEmpty()) {
-      return Optional.empty();
-    }
-
-    return documentContext.getServerContext()
-      .findCommonModule(moduleName)
-      .map(commonModule -> commonModule.getMdoReference().getMdoRef())
-      .flatMap(mdoRef ->
-        documentContext.getServerContext().getDocument(mdoRef, ModuleType.CommonModule)
-      )
-      .flatMap(commonModuleDocument -> commonModuleDocument.getSymbolTree().getMethodSymbol(methodName))
-      .map(SeeReferenceDocumentLinkSupplier::symbolLocation);
-  }
-
-  private static Location symbolLocation(SourceDefinedSymbol symbol) {
-    return new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange());
-  }
-
-  private static String locationToTarget(Location location) {
-    var range = location.getRange();
-    var start = range.getStart();
-    return "%s#L%d,%d".formatted(location.getUri(), start.getLine() + 1, start.getCharacter() + 1);
   }
 
   /**

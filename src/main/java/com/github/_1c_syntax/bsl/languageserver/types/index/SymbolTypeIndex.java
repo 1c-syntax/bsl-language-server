@@ -69,6 +69,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SymbolTypeIndex {
 
+  /** Минимальное число сегментов квалифицированной ссылки ({@code Модуль.Метод}). */
+  private static final int MIN_QUALIFIED_SEGMENTS = 2;
+
   private final TypeRegistry typeRegistry;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
@@ -112,70 +115,122 @@ public class SymbolTypeIndex {
 
   /**
    * Развернуть hyperlink-ссылку {@code Модуль.Метод} / {@code Модуль.Метод.Параметр}
-   * через {@link TypeRegistry} и {@link TypeRegistry#getMembers}.
-   * <p>
-   * Алгоритм: от самого длинного префикса к короткому пробуем
-   * {@code TypeRegistry.resolve(prefix)}; остальные сегменты — имена членов
-   * (или параметра в случае последнего сегмента). Возвращает {@link TypeSet}
-   * c одним элементом или {@link TypeSet#EMPTY}, если ссылка не разворачивается.
+   * в тип. Проход по цепочке членов ({@link #resolveChain}) от самого длинного
+   * префикса к короткому; берётся тип возврата последнего члена (или типы
+   * параметра для записи {@code …Метод.Параметр}).
+   *
+   * @return {@link TypeSet} c одним элементом или {@link TypeSet#EMPTY}.
    */
   public TypeSet resolveHyperlink(String link, FileType fileType) {
     if (link == null || link.isBlank()) {
       return TypeSet.EMPTY;
     }
     var parts = link.split("\\.");
-    if (parts.length == 0) {
-      return TypeSet.EMPTY;
-    }
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
-      var head = String.join(".", List.of(parts).subList(0, prefixLen));
-      var headRef = typeRegistry.resolve(head, fileType).orElse(null);
-      if (headRef == null) {
+      var chain = resolveChain(parts, prefixLen, fileType);
+      if (chain == null) {
         continue;
       }
-      var resolved = walkMembers(headRef, parts, prefixLen, fileType);
-      if (resolved != null) {
-        return resolved;
+      if (chain.member() == null) {
+        return chain.parameterTypes();
+      }
+      var returnType = chain.member().returnType();
+      if (returnType.kind() != TypeKind.UNKNOWN) {
+        return TypeSet.of(returnType);
       }
     }
     return TypeSet.EMPTY;
   }
 
   /**
-   * Пройти по оставшимся сегментам ссылки, начиная с {@code parts[startIndex]},
-   * через members типа. Последний сегмент может оказаться именем параметра
-   * метода (записи вида {@code Модуль.Метод.Параметр}) — тогда возвращаются
-   * его типы.
+   * Разрешить квалифицированную {@code см.}-ссылку ({@code Модуль.Метод},
+   * {@code Справочники.X.Метод} и т.п.) в символ-определение цели.
+   * <p>
+   * Это тот же проход по цепочке членов, что и в {@link #resolveHyperlink}
+   * ({@link #resolveChain}), но у найденного члена берётся не тип, а
+   * символ-источник ({@link MemberDescriptor#getSourceSymbol()}) — единообразно
+   * для общих модулей, модулей менеджеров и прочих типов.
    *
-   * @return TypeSet, если все сегменты успешно разрешены; {@code null} при
-   *         неудаче (вызывающий может попробовать более короткий префикс).
+   * @return символ-определение цели ссылки, либо {@link Optional#empty()}, если
+   *         ссылка не разрешается или у члена нет source-defined источника.
+   */
+  public Optional<SourceDefinedSymbol> resolveReferenceSymbol(String link, FileType fileType) {
+    if (link.isBlank()) {
+      return Optional.empty();
+    }
+    var parts = link.split("\\.");
+    if (parts.length < MIN_QUALIFIED_SEGMENTS) {
+      return Optional.empty();
+    }
+    for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
+      var chain = resolveChain(parts, prefixLen, fileType);
+      if (chain != null && chain.member() != null
+        && chain.member().getSourceSymbol().orElse(null) instanceof SourceDefinedSymbol target) {
+        return Optional.of(target);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Результат прохода по цепочке членов ссылки: разрешённый последний
+   * {@code member}, либо (для записи {@code Модуль.Метод.Параметр}) типы параметра
+   * при {@code member == null}.
+   */
+  private record MemberChain(@Nullable MemberDescriptor member, TypeSet parameterTypes) {
+  }
+
+  /**
+   * Резолвит голову длиной {@code prefixLen} через {@link TypeRegistry} и проходит
+   * по оставшимся сегментам как по членам. Тип возврата члена используется лишь
+   * чтобы спуститься к следующему сегменту; тип/символ последнего сегмента
+   * извлекает вызывающий.
+   *
+   * @return цепочка членов, либо {@code null}, если голова или какой-то сегмент
+   *         не резолвятся (вызывающий пробует более короткий префикс).
    */
   @Nullable
-  private TypeSet walkMembers(TypeRef headRef, String[] parts, int startIndex, FileType fileType) {
-    TypeRef current = headRef;
+  private MemberChain resolveChain(String[] parts, int prefixLen, FileType fileType) {
+    var head = String.join(".", List.of(parts).subList(0, prefixLen));
+    var current = typeRegistry.resolve(head, fileType).orElse(null);
+    if (current == null) {
+      return null;
+    }
     MemberDescriptor lastMethod = null;
-    for (int i = startIndex; i < parts.length; i++) {
+    MemberDescriptor member = null;
+    for (int i = prefixLen; i < parts.length; i++) {
       var name = parts[i];
-      var member = findMember(current, name, fileType);
+      member = findMember(current, name, fileType);
       if (member == null) {
-        // Если предыдущий сегмент был method и текущее имя — параметр этого
-        // метода (запись вида Модуль.Метод.Параметр), вернём типы параметра.
+        // Модуль.Метод.Параметр: последний сегмент — имя параметра пред. метода.
         if (lastMethod != null && i == parts.length - 1) {
-          var paramTypes = parameterFromMember(lastMethod, name);
-          if (paramTypes != null && !paramTypes.isEmpty()) {
-            return paramTypes;
+          var parameterTypes = parameterFromMember(lastMethod, name);
+          if (parameterTypes != null && !parameterTypes.isEmpty()) {
+            return new MemberChain(null, parameterTypes);
           }
         }
         return null;
       }
-      var next = member.returnType();
-      if (next == null || next.kind() == TypeKind.UNKNOWN) {
-        return null;
+      if (i < parts.length - 1) {
+        var next = member.returnType();
+        if (next.kind() == TypeKind.UNKNOWN) {
+          // Тип возврата метода неизвестен — спускаться в его члены некуда,
+          // но последний сегмент всё ещё может быть именем параметра этого метода
+          // (Модуль.Метод.Параметр; у процедур и недокументированных функций
+          // тип возврата всегда UNKNOWN).
+          if (member.kind() == MemberKind.METHOD && i == parts.length - 2) {
+            var parameterTypes = parameterFromMember(member, parts[parts.length - 1]);
+            if (parameterTypes != null && !parameterTypes.isEmpty()) {
+              return new MemberChain(null, parameterTypes);
+            }
+          }
+          return null;
+        }
+        current = next;
+        lastMethod = member.kind() == MemberKind.METHOD ? member : null;
       }
-      current = next;
-      lastMethod = member.kind() == MemberKind.METHOD ? member : null;
     }
-    return TypeSet.of(current);
+    return new MemberChain(member, TypeSet.EMPTY);
   }
 
   @Nullable

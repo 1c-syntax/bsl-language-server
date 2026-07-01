@@ -295,15 +295,22 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private static String seeReferenceLabel(Set<Object> sources, Language lang) {
     var prefix = lang == Language.EN ? "See " : "См. ";
     var names = sources.stream()
-      .map(VariableSymbolMarkupContentBuilder::sourceName)
-      .filter(name -> !name.isBlank())
+      .map(VariableSymbolMarkupContentBuilder::sourceLink)
+      .filter(link -> !link.isBlank())
       .distinct()
+      .sorted()
       .collect(Collectors.joining(" | "));
     return names.isBlank() ? "" : (prefix + names);
   }
 
-  private static String sourceName(Object key) {
-    return key instanceof MethodSymbol method ? method.getName() : "";
+  /**
+   * Имя функции-источника {@code см.}-ссылки как markdown-гиперссылка на её
+   * определение; пустая строка, если источник не является символом с позицией.
+   */
+  private static String sourceLink(Object key) {
+    return key instanceof MethodSymbol method
+      ? SeeReferenceHyperlinks.toMarkdownLink(method.getName(), method)
+      : "";
   }
 
   /** markdown-метка типов значения поля: имена в кавычках, объединение через {@code |}. */
