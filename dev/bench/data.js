@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782720254608,
+  "lastUpdate": 1782897015474,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39525,6 +39525,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 20.902186977436802",
             "extra": "mean: 267.25530497233075 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "37f0dfbe855ea83150a33be3c2c1f050fde7405e",
+          "message": "Merge pull request #4234 from 1c-syntax/fix/inlayhint-methodcall-toggle\n\nfix(inlayhints): unify method-call suppliers under a single methodCall setting",
+          "timestamp": "2026-07-01T08:58:35+02:00",
+          "tree_id": "ab40c48a34aadfa2176f63814d028d096e7b0ee6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/37f0dfbe855ea83150a33be3c2c1f050fde7405e"
+        },
+        "date": 1782897004886,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 279.3072024186452,
+            "unit": "sec",
+            "range": "stddev: 6.800763878246615",
+            "extra": "mean: 279.3072024186452 sec\nrounds: 3"
           }
         ]
       }
