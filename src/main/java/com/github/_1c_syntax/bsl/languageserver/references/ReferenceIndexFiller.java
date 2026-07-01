@@ -25,12 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
@@ -85,7 +82,6 @@ public class ReferenceIndexFiller {
 
   private final ReferenceIndex index;
   private final LanguageServerConfiguration configuration;
-  private final OScriptLibraryIndex oScriptLibraryIndex;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -267,37 +263,31 @@ public class ReferenceIndexFiller {
         return;
       }
       var name = typeName.IDENTIFIER().getText();
-      var libUri = oScriptLibraryIndex.findClassUri(name);
-      if (libUri.isEmpty()) {
+      var libClass = documentContext.getServerContext().findLibraryClass(name);
+      if (libClass.isEmpty()) {
         return;
       }
-      var libMdoRef = libUri.get().toString();
-      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptClass);
+      var libDocument = libClass.get();
+      var mdoRef = libDocument.getMdoRef();
       var range = Ranges.create(typeName.IDENTIFIER());
 
-      var ctor = libraryClassConstructor(libUri.get());
+      var ctor = libDocument.getSymbolTree().getConstructor();
       if (ctor.isPresent()) {
         index.addMethodCall(
           documentContext.getUri(),
-          libMdoRef,
-          moduleType,
+          mdoRef,
+          ModuleType.OScriptClass,
           ctor.get().getName(),
           range
         );
       } else {
         index.addModuleReference(
           documentContext.getUri(),
-          libMdoRef,
-          moduleType,
+          mdoRef,
+          ModuleType.OScriptClass,
           range
         );
       }
-    }
-
-    private Optional<ConstructorSymbol> libraryClassConstructor(URI libUri) {
-      return Optional.ofNullable(documentContext.getServerContext().getDocument(libUri))
-        .map(DocumentContext::getSymbolTree)
-        .flatMap(SymbolTree::getConstructor);
     }
 
     /**
@@ -312,39 +302,25 @@ public class ReferenceIndexFiller {
       if (identifier == null) {
         return;
       }
-      var libUri = oScriptLibraryIndex.findModuleUri(identifier.getText());
-      if (libUri.isEmpty()) {
+      var libModule = documentContext.getServerContext().findLibraryModule(identifier.getText());
+      if (libModule.isEmpty()) {
         return;
       }
-      var libMdoRef = libUri.get().toString();
-      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptModule);
+      var mdoRef = libModule.get().getMdoRef();
 
       // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
       index.addModuleReference(
         documentContext.getUri(),
-        libMdoRef,
-        moduleType,
+        mdoRef,
+        ModuleType.OScriptModule,
         Ranges.create(identifier)
       );
 
       if (methodName.isPresent()) {
         var methodNameToken = methodName.get();
-        addMethodCall(libMdoRef, moduleType, Strings.trimQuotes(methodNameToken.getText()),
+        addMethodCall(mdoRef, ModuleType.OScriptModule, Strings.trimQuotes(methodNameToken.getText()),
           Ranges.create(methodNameToken));
       }
-    }
-
-    /**
-     * Возвращает фактический {@link ModuleType} документа библиотечного .os-файла.
-     * Один .os может быть зарегистрирован одновременно и как класс, и как модуль
-     * (см. {@link OScriptLibraryIndex}); чтобы ссылка корректно резолвилась через
-     * {@code ServerContext.getDocument(mdoRef, moduleType)}, используем тип
-     * фактически загруженного {@link DocumentContext}, а не «теоретический»
-     * тип из роли регистрации.
-     */
-    private ModuleType actualLibraryModuleType(java.net.URI libUri, ModuleType fallback) {
-      var dc = documentContext.getServerContext().getDocument(libUri);
-      return dc != null ? dc.getModuleType() : fallback;
     }
 
     /**
@@ -585,8 +561,9 @@ public class ReferenceIndexFiller {
       if (typeName == null || typeName.IDENTIFIER() == null) {
         return null;
       }
-      return oScriptLibraryIndex.findClassUri(typeName.IDENTIFIER().getText())
-        .map(java.net.URI::toString)
+      return documentContext.getServerContext()
+        .findLibraryClass(typeName.IDENTIFIER().getText())
+        .map(DocumentContext::getMdoRef)
         .orElse(null);
     }
 

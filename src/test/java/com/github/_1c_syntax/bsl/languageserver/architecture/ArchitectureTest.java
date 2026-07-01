@@ -201,10 +201,11 @@ class ArchitectureTest {
   // зависимости): в байткоде в него никто не входит (ссылки на него — только в Javadoc @link),
   // поэтому он не нарушает полноту. websocket — лист без внутренних зависимостей.
   //
-  // Известные циклы оставлены ОСОЗНАННО (правило их допускает, но они помечены как долг):
-  //   - References↔Types: взаимные ссылки индексов. Разрывается позже.
-  // Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило ниже
-  // (acyclic_domains_stay_free_of_cycles).
+  // Цикл References↔Types разорван: type-aware finder'ы переехали в types.references, а
+  // ReferenceIndexFiller резолвит library-сущности OneScript по mdoRef через ServerContext
+  // (каталог наполняет types), поэтому references больше не зависит от types — осталось только
+  // types→references. Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило
+  // ниже (acyclic_domains_stay_free_of_cycles).
   //
   // Замечание про inline-константы: codeactions и diagnostics ссылаются на DiagnosticProvider.SOURCE
   // (public static final String) — javac встраивает значение, ребра в байткоде нет, поэтому Providers
@@ -316,13 +317,14 @@ class ArchitectureTest {
       "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
-    // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
+    // Домены-фундамент. references — нижний слой разрешения имён, от types НЕ зависит;
+    // types выше и зависит от references (вывод типов опирается на разрешение имён).
     .whereLayer("Configuration").mayOnlyAccessLayers(
       "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
     .whereLayer("Context").mayOnlyAccessLayers(
       "Client", "Configuration", "DiagnosticsMetadata", "Infrastructure", "Utils")
     .whereLayer("References").mayOnlyAccessLayers(
-      "Configuration", "Context", "Infrastructure", "Types", "Utils")
+      "Configuration", "Context", "Infrastructure", "Utils")
     .whereLayer("Types").mayOnlyAccessLayers(
       "Configuration", "Context", "Events", "Infrastructure", "References", "Utils")
     .whereLayer("Cfg").mayOnlyAccessLayers("Utils")
