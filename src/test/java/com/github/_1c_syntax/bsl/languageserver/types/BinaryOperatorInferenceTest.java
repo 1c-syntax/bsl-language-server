@@ -159,9 +159,10 @@ class BinaryOperatorInferenceTest extends AbstractServerContextAwareTest {
     // Строку, а не терять тип (self-reference резолвится в накопленный тип).
     var documentContext = doc();
 
-    // when — позиция на операторе `+`, чтобы получить всё бинарное выражение.
+    // when — позиция внутри правой части: findExpressionContext поднимается до
+    // ближайшего expression-узла, то есть до всего бинарного `X + "..."`.
     var types = infer(documentContext, "ПолноеИмя = ПолноеИмя + \"Загадочное\"",
-      "ПолноеИмя = ПолноеИмя ".length());
+      "ПолноеИмя = ".length());
 
     // then
     assertThat(qnames(types)).containsExactly("Строка");
