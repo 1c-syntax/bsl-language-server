@@ -214,6 +214,16 @@ public class SymbolTypeIndex {
       if (i < parts.length - 1) {
         var next = member.returnType();
         if (next.kind() == TypeKind.UNKNOWN) {
+          // Тип возврата метода неизвестен — спускаться в его члены некуда,
+          // но последний сегмент всё ещё может быть именем параметра этого метода
+          // (Модуль.Метод.Параметр; у процедур и недокументированных функций
+          // тип возврата всегда UNKNOWN).
+          if (member.kind() == MemberKind.METHOD && i == parts.length - 2) {
+            var parameterTypes = parameterFromMember(member, parts[parts.length - 1]);
+            if (parameterTypes != null && !parameterTypes.isEmpty()) {
+              return new MemberChain(null, parameterTypes);
+            }
+          }
           return null;
         }
         current = next;

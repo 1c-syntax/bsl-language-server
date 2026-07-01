@@ -303,7 +303,7 @@ class ArchitectureTest {
     .whereLayer("DocumentLink").mayOnlyAccessLayers(
       "Configuration", "Context", "DiagnosticsMetadata", "Types", "Utils")
     .whereLayer("Folding").mayOnlyAccessLayers("Configuration", "Context", "Utils")
-    .whereLayer("Hover").mayOnlyAccessLayers("Configuration", "Context", "References", "Types")
+    .whereLayer("Hover").mayOnlyAccessLayers("Configuration", "Context", "References", "Types", "Utils")
     .whereLayer("InlayHints").mayOnlyAccessLayers(
       "Configuration", "Context", "Databind", "Hover", "References", "Types", "Utils")
     .whereLayer("Rename").mayOnlyAccessLayers(

@@ -126,6 +126,25 @@ class SymbolTypeIndexHyperlinkTest {
   }
 
   @Test
+  void resolveHyperlinkModuleMethodParameterResolvesWhenReturnTypeUnknown() {
+    // given — у метода тип возврата UNKNOWN (как у процедур и недокументированных
+    // функций), но последний сегмент — имя его параметра.
+    var param = new ParameterDescriptor(
+      BilingualString.of("Док"), TypeSet.of(ARRAY), false, BilingualString.EMPTY, "");
+    var method = MemberDescriptor.method("МояПроцедура",
+      List.of(new SignatureDescriptor(List.of(param), TypeRef.UNKNOWN, "")));
+    when(typeRegistry.resolve(eq("ОбщегоНазначения"), any(FileType.class)))
+      .thenReturn(Optional.of(MODULE));
+    when(typeRegistry.getMembers(eq(MODULE), any(FileType.class))).thenReturn(List.of(method));
+
+    // when — последний сегмент в ссылке = имя параметра
+    var result = index.resolveHyperlink("ОбщегоНазначения.МояПроцедура.Док", FileType.BSL);
+
+    // then
+    assertThat(result.refs()).containsExactly(ARRAY);
+  }
+
+  @Test
   void resolveHyperlinkReturnsEmptyWhenMemberNotFound() {
     // given
     when(typeRegistry.resolve(eq("ОбщегоНазначения"), any(FileType.class)))
