@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.SourceSymbolLinks;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbolLinks;
 
 /**
  * Создание markdown-гиперссылок на определения, на которые указывают
@@ -52,6 +52,6 @@ public final class SeeReferenceHyperlinks {
    * @return строка markdown-ссылки на определение {@code target}
    */
   public static String toMarkdownLink(String text, SourceDefinedSymbol target) {
-    return "[%s](%s)".formatted(text, SourceSymbolLinks.navigationTarget(target));
+    return "[%s](%s)".formatted(text, SourceDefinedSymbolLinks.navigationTarget(target));
   }
 }

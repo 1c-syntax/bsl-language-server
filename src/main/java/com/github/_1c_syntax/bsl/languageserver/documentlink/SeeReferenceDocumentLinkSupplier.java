@@ -24,9 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.documentlink;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbolLinks;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.SourceSymbolLinks;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
@@ -115,8 +115,8 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
     resolveTarget(documentContext, reference)
       .ifPresent(target -> {
         var range = referenceRange(hyperlink, reference);
-        var documentLink = new DocumentLink(range, SourceSymbolLinks.navigationTarget(target));
-        documentLinks.add(documentLink);
+        var navigationTarget = SourceDefinedSymbolLinks.navigationTarget(target);
+        documentLinks.add(new DocumentLink(range, navigationTarget));
       });
   }
 

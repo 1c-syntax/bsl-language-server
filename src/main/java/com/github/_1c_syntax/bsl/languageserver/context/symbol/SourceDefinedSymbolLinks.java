@@ -19,24 +19,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
-
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 /**
  * Построение навигационного таргета на определение символа для кликабельных
  * ссылок (document links, гиперссылки в hover и т.п.).
  */
-public final class SourceSymbolLinks {
+public final class SourceDefinedSymbolLinks {
 
-  private SourceSymbolLinks() {
+  private SourceDefinedSymbolLinks() {
     // utility class
   }
 
   /**
    * Навигационный таргет {@code uri#L<line>,<col>} на определение символа.
    * <p>
-   * Координаты — 1-based (как принято в подобных ссылках), позиция берётся из
+   * Координаты — 1-based (как принято в подобных ссылках); позиция берётся из
    * {@link SourceDefinedSymbol#getSelectionRange()} (имя символа). Клиенты,
    * поддерживающие такой фрагмент (VS Code и совместимые), открывают файл и
    * позиционируются на нужную строку.
