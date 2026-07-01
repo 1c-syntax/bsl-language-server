@@ -140,6 +140,47 @@ class BinaryOperatorInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void selfConcatenationVariableStaysString() {
+    // given — #4205: ПолноеИмя = ПолноеИмя + "..." не должно расширять тип
+    // переменной до "Строка, Число".
+    var documentContext = doc();
+
+    // when — тип переменной ПолноеИмя в месте использования (union по всем
+    // присваиваниям).
+    var types = infer(documentContext, "ИтогИмя = ПолноеИмя", "ИтогИмя = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void selfConcatenationExpressionIsString() {
+    // given — #4205: само выражение `ПолноеИмя + "..."` должно выводиться в
+    // Строку, а не терять тип (self-reference резолвится в накопленный тип).
+    var documentContext = doc();
+
+    // when — позиция на операторе `+`, чтобы получить всё бинарное выражение.
+    var types = infer(documentContext, "ПолноеИмя = ПолноеИмя + \"Загадочное\"",
+      "ПолноеИмя = ПолноеИмя ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void numericSelfAccumulatorStaysNumber() {
+    // given — обратная сторона #4205: числовой аккумулятор не должен внезапно
+    // стать Строкой — общая ветка `+` осталась прежней.
+    var documentContext = doc();
+
+    // when
+    var types = infer(documentContext, "ИтогСчёт = Счётчик", "ИтогСчёт = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Число");
+  }
+
+  @Test
   void ternaryProducesUnionOfBranches() {
     // given
     var documentContext = doc();
