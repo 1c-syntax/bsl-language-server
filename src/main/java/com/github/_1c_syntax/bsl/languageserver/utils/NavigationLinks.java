@@ -19,35 +19,36 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.utils;
+
+import org.eclipse.lsp4j.Range;
+
+import java.net.URI;
 
 /**
- * Построение навигационного таргета на определение символа для кликабельных
- * ссылок (document links, гиперссылки в hover и т.п.).
+ * Построение навигационных таргетов для кликабельных ссылок (document links,
+ * гиперссылки в hover): {@code uri#L<line>,<col>}.
  */
-public final class SourceDefinedSymbolLinks {
+public final class NavigationLinks {
 
-  private SourceDefinedSymbolLinks() {
+  private NavigationLinks() {
     // utility class
   }
 
   /**
-   * Навигационный таргет {@code uri#L<line>,<col>} на определение символа.
+   * Навигационный таргет {@code uri#L<line>,<col>} на начало диапазона.
    * <p>
-   * Координаты — 1-based (как принято в подобных ссылках); позиция берётся из
-   * {@link SourceDefinedSymbol#getSelectionRange()} (имя символа). Клиенты,
+   * Координаты — 1-based (как принято в подобных ссылках). Клиенты,
    * поддерживающие такой фрагмент (VS Code и совместимые), открывают файл и
    * позиционируются на нужную строку.
    *
-   * @param symbol символ-определение, на которое ведёт ссылка
+   * @param uri   URI документа
+   * @param range диапазон, на начало которого ведёт ссылка (обычно selectionRange
+   *              символа — имя определения)
    * @return строка таргета вида {@code uri#L<line>,<col>}
    */
-  public static String navigationTarget(SourceDefinedSymbol symbol) {
-    var start = symbol.getSelectionRange().getStart();
-    return "%s#L%d,%d".formatted(
-      symbol.getOwner().getUri(),
-      start.getLine() + 1,
-      start.getCharacter() + 1
-    );
+  public static String toTarget(URI uri, Range range) {
+    var start = range.getStart();
+    return "%s#L%d,%d".formatted(uri, start.getLine() + 1, start.getCharacter() + 1);
   }
 }
