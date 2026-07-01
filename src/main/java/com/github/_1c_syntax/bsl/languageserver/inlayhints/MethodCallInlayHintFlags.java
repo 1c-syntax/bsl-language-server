@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.inlayhints;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,15 +33,11 @@ import java.util.Map;
  * Оба коллектора ({@link SourceDefinedMethodCallInlayHintCollector} и
  * {@link PlatformMethodCallInlayHintCollector}) рендерят одни и те же подсказки и
  * отличаются лишь источником метаданных метода, поэтому читают единый ключ конфига
- * {@code inlayHint.parameters.methodCall}; для совместимости со старыми конфигами
- * читается также legacy-ключ {@code sourceDefinedMethodCall}.
+ * {@code inlayHint.parameters.methodCall}.
  */
 final class MethodCallInlayHintFlags {
 
-  private static final List<String> CONFIG_KEYS = List.of(
-    "methodCall",
-    "sourceDefinedMethodCall"
-  );
+  private static final String CONFIG_KEY = "methodCall";
 
   private static final boolean DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME = false;
   private static final boolean DEFAULT_SHOW_DEFAULT_VALUES = true;
@@ -60,14 +55,11 @@ final class MethodCallInlayHintFlags {
   }
 
   private static boolean readFlag(LanguageServerConfiguration configuration, String name, boolean defaultValue) {
-    var parameters = configuration.getInlayHintOptions().getParameters();
-    for (var key : CONFIG_KEYS) {
-      Either<Boolean, Map<String, Object>> entry = parameters.get(key);
-      if (entry != null && entry.isRight()) {
-        var value = entry.getRight().get(name);
-        if (value instanceof Boolean b) {
-          return b;
-        }
+    Either<Boolean, Map<String, Object>> entry = configuration.getInlayHintOptions().getParameters().get(CONFIG_KEY);
+    if (entry != null && entry.isRight()) {
+      var value = entry.getRight().get(name);
+      if (value instanceof Boolean b) {
+        return b;
       }
     }
     return defaultValue;

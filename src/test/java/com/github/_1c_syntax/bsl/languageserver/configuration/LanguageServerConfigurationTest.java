@@ -176,6 +176,8 @@ class LanguageServerConfigurationTest {
     assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);
     assertThat(diagnosticsOptions.getParameters()).isEmpty();
 
+    // Устаревший ключ sourceDefinedMethodCall больше не читается, но старый конфиг
+    // с ним по-прежнему грузится без ошибки — ключ просто попадает в map.
     assertThat(inlayHintOptions.getParameters())
       .containsEntry("sourceDefinedMethodCall", Either.forRight(Map.of("showParametersWithTheSameName", true)));
 
