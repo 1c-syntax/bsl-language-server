@@ -79,20 +79,6 @@ class PlatformMethodCallInlayHintCollectorUnitTest {
   }
 
   @Test
-  void getInlayHintsWithNullAstReturnsEmpty() {
-    // given — documentContext.getAst() возвращает null.
-    when(documentContext.getAst()).thenReturn(null);
-    var params = new InlayHintParams();
-    params.setRange(new Range(new Position(0, 0), new Position(0, 0)));
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, params);
-
-    // then — при отсутствии AST подсказок нет.
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
   void skippedArgumentShowsDefaultValueHint() {
     // given — реальный AST вызова с пропущенным средним аргументом, сигнатура
     // содержит средний параметр со значением по умолчанию.

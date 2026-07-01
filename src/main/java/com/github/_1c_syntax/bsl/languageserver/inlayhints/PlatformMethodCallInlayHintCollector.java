@@ -87,9 +87,6 @@ public class PlatformMethodCallInlayHintCollector {
 
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return List.of();
-    }
     var range = params.getRange();
     var result = new ArrayList<InlayHint>();
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall)) {
