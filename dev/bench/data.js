@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782897015474,
+  "lastUpdate": 1782926282749,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39556,6 +39556,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.800763878246615",
             "extra": "mean: 279.3072024186452 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "95516cfc4613c4cdfe7e397a6eb07dfab4f9ef18",
+          "message": "Merge pull request #4208 from 1c-syntax/claude/collection-autocomplete-bug-1zsoxe\n\nfix(completion): сохранять типы полей элемента Соответствия в автокомплите",
+          "timestamp": "2026-07-01T18:52:22+02:00",
+          "tree_id": "fac02fee2783ed28c6ee9491098b4a2ded669fdd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/95516cfc4613c4cdfe7e397a6eb07dfab4f9ef18"
+        },
+        "date": 1782926270070,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 260.96700557072955,
+            "unit": "sec",
+            "range": "stddev: 10.627261325166002",
+            "extra": "mean: 260.96700557072955 sec\nrounds: 3"
           }
         ]
       }
