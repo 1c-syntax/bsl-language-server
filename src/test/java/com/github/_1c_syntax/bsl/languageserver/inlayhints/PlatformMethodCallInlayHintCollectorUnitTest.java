@@ -54,12 +54,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
- * Mockito-юнит для {@link PlatformMethodCallInlayHintSupplier} — покрывает
+ * Mockito-юнит для {@link PlatformMethodCallInlayHintCollector} — покрывает
  * пути без полной интеграции (null AST, defaults для конфигурации).
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class PlatformMethodCallInlayHintSupplierUnitTest {
+class PlatformMethodCallInlayHintCollectorUnitTest {
 
   @Mock
   private TypeService typeService;
@@ -70,31 +70,18 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
   @Mock
   private DocumentContext documentContext;
 
-  private PlatformMethodCallInlayHintSupplier supplier;
+  private PlatformMethodCallInlayHintCollector supplier;
 
   @BeforeEach
   void setUp() {
-    supplier = new PlatformMethodCallInlayHintSupplier(configuration, typeService, resources);
-  }
-
-  @Test
-  void getInlayHintsWithNullAstReturnsEmpty() {
-    // given — documentContext.getAst() возвращает null.
-    when(documentContext.getAst()).thenReturn(null);
-    var params = new InlayHintParams();
-    params.setRange(new Range(new Position(0, 0), new Position(0, 0)));
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, params);
-
-    // then — при отсутствии AST подсказок нет.
-    assertThat(hints).isEmpty();
+    var renderer = new PlatformMethodCallHintRenderer(configuration, resources);
+    supplier = new PlatformMethodCallInlayHintCollector(typeService, renderer);
   }
 
   @Test
   void skippedArgumentShowsDefaultValueHint() {
-    // given — реальный AST вызова СтрНайти с пропущенным средним аргументом;
-    // сигнатура содержит средний параметр со значением по умолчанию.
+    // given — реальный AST вызова с пропущенным средним аргументом, сигнатура
+    // содержит средний параметр со значением по умолчанию.
     when(documentContext.getAst()).thenReturn(new BSLTokenizer("СтрНайти(\"a\",,\"b\");\n").getAst());
 
     var signature = SignatureDescriptor.of(List.of(

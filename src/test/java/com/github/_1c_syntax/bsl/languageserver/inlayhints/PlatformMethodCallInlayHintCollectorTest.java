@@ -30,17 +30,23 @@ import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Интеграционные тесты для inlay-подсказок параметров платформенных
  * методов / глобальных функций / конструкторов
- * ({@link PlatformMethodCallInlayHintSupplier}).
+ * ({@link PlatformMethodCallInlayHintCollector}).
  */
-class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAwareTest {
+class PlatformMethodCallInlayHintCollectorTest extends AbstractServerContextAwareTest {
 
   private static final String FILE_PATH =
     "./src/test/resources/types/PlatformMethodInlayHints.bsl";
@@ -50,7 +56,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   private static final String CONSTRUCTOR_CALLER_PATH = CONSTRUCTOR_FIXTURE_DIR + "/src/Классы/Caller.os";
 
   @Autowired
-  private PlatformMethodCallInlayHintSupplier supplier;
+  private PlatformMethodCallInlayHintCollector supplier;
 
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
@@ -58,7 +64,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   @Test
   void noHintsForSourceDefinedOScriptConstructor() {
     // given — конструктор OneScript-класса (ПриСозданииОбъекта) source-defined и
-    // покрывается SourceDefinedMethodCallInlayHintSupplier'ом; платформенный
+    // покрывается SourceDefinedMethodCallInlayHintCollector'ом; платформенный
     // supplier не должен дублировать эти подсказки.
     initServerContext(java.nio.file.Path.of(CONSTRUCTOR_FIXTURE_DIR).toAbsolutePath());
     oScriptLibraryIndex.reindex(context);
@@ -106,7 +112,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
       .allSatisfy(hint -> assertThat(hint.getKind()).isEqualTo(InlayHintKind.Parameter));
     assertThat(hints)
       .extracting(InlayHint::getLabel)
-      .extracting(either -> either.getLeft())
+      .extracting(Either::getLeft)
       .anyMatch(label -> label != null && !label.isBlank());
   }
 
@@ -157,11 +163,12 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
     assertThat(labels).contains("КоличествоЭлементов1:", "КоличествоЭлементов2:");
   }
 
-  @Test
-  void noHintsForEmptyAst() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("noHintScenarios")
+  void producesNoHints(String scenario, String code) {
     // given
     initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext(code);
 
     // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
@@ -170,10 +177,19 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
     assertThat(hints).isEmpty();
   }
 
+  private static Stream<Arguments> noHintScenarios() {
+    return Stream.of(
+      Arguments.of("пустой AST", ""),
+      Arguments.of("вызов без аргументов", "Сообщить();\n"),
+      Arguments.of("неизвестный тип конструктора", "Х = Новый СовершенноНеизвестныйТипX(1);\n"),
+      Arguments.of("вызов на нетипизированной переменной", "Перем X;\nX.НеизвестныйМетод(1, 2);\n")
+    );
+  }
+
   @Test
   void noHintsForSourceDefinedMethodCall() {
     // given — source-defined метод не должен получать подсказки от платформенного
-    // supplier'а (этим занимается SourceDefinedMethodCallInlayHintSupplier).
+    // supplier'а (этим занимается SourceDefinedMethodCallInlayHintCollector).
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContext(
       "Процедура МойМетод(Параметр)\nКонецПроцедуры\n\nМойМетод(1);\n"
@@ -200,49 +216,6 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
     var hints = supplier.getInlayHints(documentContext, params);
 
     // then — range покрывает только первый символ, ни один вызов не задет.
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
-  void noHintsForCallWithoutArguments() {
-    // given — Сообщить() без аргументов, paramList пуст.
-    initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext("Сообщить();\n");
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
-
-    // then
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
-  void noHintsForUnknownConstructorType() {
-    // given — Новый НесуществующийТип(arg) — typeService.resolve не находит.
-    initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext(
-      "Х = Новый СовершенноНеизвестныйТипX(1);\n"
-    );
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
-
-    // then
-    assertThat(hints).isEmpty();
-  }
-
-  @Test
-  void noHintsForCallOnUntypedVariable() {
-    // given — у переменной нет инфер-типа, member не резолвится.
-    initServerContext("./src/test/resources/types", false);
-    var documentContext = TestUtils.getDocumentContext(
-      "Перем X;\nX.НеизвестныйМетод(1, 2);\n"
-    );
-
-    // when
-    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
-
-    // then
     assertThat(hints).isEmpty();
   }
 

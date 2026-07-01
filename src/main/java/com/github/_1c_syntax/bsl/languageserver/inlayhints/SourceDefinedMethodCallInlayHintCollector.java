@@ -46,7 +46,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Поставщик подсказок о параметрах вызываемого метода.
+ * Коллектор подсказок о параметрах вызываемого source-defined метода (используется
+ * единым {@link MethodCallInlayHintSupplier}).
  * <p>
  * Метка хинта рендерится не голой строкой, а единственной частью
  * {@link InlayHintLabelPart}, к которой привязывается ссылка
@@ -60,39 +61,22 @@ import java.util.List;
  * разрешения, у хинта нет, поэтому он не несёт {@code data}.
  */
 @Component
-public class SourceDefinedMethodCallInlayHintSupplier
-  extends AbstractMethodCallInlayHintSupplier<DefaultInlayHintData> {
+public class SourceDefinedMethodCallInlayHintCollector {
 
-  // TODO: высчитать позицию хинта относительно последнего параметра.
-  private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
-
+  private final LanguageServerConfiguration configuration;
   private final ReferenceIndex referenceIndex;
   private final DescriptionFormatter descriptionFormatter;
 
-  public SourceDefinedMethodCallInlayHintSupplier(
+  public SourceDefinedMethodCallInlayHintCollector(
     LanguageServerConfiguration configuration,
     ReferenceIndex referenceIndex,
     DescriptionFormatter descriptionFormatter
   ) {
-    super(configuration);
+    this.configuration = configuration;
     this.referenceIndex = referenceIndex;
     this.descriptionFormatter = descriptionFormatter;
   }
 
-  /**
-   * {@inheritDoc}
-   * <p>
-   * Хинт имени параметра проставляет ссылку части метки жадно и не откладывает
-   * полей на резолв — используется дефолтный дата-класс {@link DefaultInlayHintData}.
-   *
-   * @return Класс {@link DefaultInlayHintData}.
-   */
-  @Override
-  public Class<DefaultInlayHintData> getInlayHintDataClass() {
-    return DefaultInlayHintData.class;
-  }
-
-  @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
     var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
@@ -132,19 +116,17 @@ public class SourceDefinedMethodCallInlayHintSupplier
     var targetUri = methodSymbol.getOwner().getUri().toString();
 
     var hints = new ArrayList<InlayHint>();
-    for (var i = 0; i < parameters.size(); i++) {
-
-      // todo: show all parameters (in config)?
-      if (callParams.size() < i + 1) {
-        break;
-      }
+    // Подсказки — только для фактически переданных аргументов (по последний из них).
+    var hintableCount = Math.min(parameters.size(), callParams.size());
+    for (var i = 0; i < hintableCount; i++) {
 
       var parameter = parameters.get(i);
       var callParam = callParams.get(i);
 
       var passedValue = callParam.getText();
 
-      if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
+      if (!MethodCallInlayHintFlags.showParametersWithTheSameName(configuration)
+        && Strings.CI.contains(passedValue, parameter.getName())) {
         continue;
       }
 
@@ -173,7 +155,7 @@ public class SourceDefinedMethodCallInlayHintSupplier
     var labelBuilder = new StringBuilder();
     labelBuilder.append(parameter.getName());
 
-    if (showDefaultValues()
+    if (MethodCallInlayHintFlags.showDefaultValues(configuration)
       && passedValue.isBlank()
       && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
     ) {

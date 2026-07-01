@@ -45,16 +45,16 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContextAwareTest {
+class SourceDefinedMethodCallInlayHintCollectorTest extends AbstractServerContextAwareTest {
 
-  private final static String FILE_PATH = "./src/test/resources/inlayhints/SourceDefinedMethodCallInlayHintSupplier.bsl";
+  private static final String FILE_PATH = "./src/test/resources/inlayhints/SourceDefinedMethodCallInlayHintSupplier.bsl";
 
   private static final String CONSTRUCTOR_FIXTURE_DIR =
     "src/test/resources/oscript-libraries/constructor-inlay-test";
   private static final String CONSTRUCTOR_CALLER_PATH = CONSTRUCTOR_FIXTURE_DIR + "/src/Классы/Caller.os";
 
   @Autowired
-  private SourceDefinedMethodCallInlayHintSupplier supplier;
+  private SourceDefinedMethodCallInlayHintCollector supplier;
 
   @Autowired
   private LanguageServerConfiguration configuration;
@@ -107,7 +107,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // given
     configuration.getInlayHintOptions().getParameters().put(
-      supplier.getId(),
+      "methodCall",
       Either.forRight(Map.of("showParametersWithTheSameName", true))
     );
 
@@ -208,7 +208,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // then
     assertThat(inlayHints)
-      .extracting(SourceDefinedMethodCallInlayHintSupplierTest::labelValue)
+      .extracting(SourceDefinedMethodCallInlayHintCollectorTest::labelValue)
       .containsExactly("Параметр (1)");
   }
 
@@ -235,7 +235,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // then — подсказка только для переданного первого довода.
     assertThat(inlayHints)
-      .extracting(SourceDefinedMethodCallInlayHintSupplierTest::labelValue)
+      .extracting(SourceDefinedMethodCallInlayHintCollectorTest::labelValue)
       .containsExactly("Первый:");
   }
 
@@ -283,7 +283,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContext
 
     // then
     assertThat(inlayHints)
-      .extracting(SourceDefinedMethodCallInlayHintSupplierTest::labelValue)
+      .extracting(SourceDefinedMethodCallInlayHintCollectorTest::labelValue)
       .contains("Первый (42)");
   }
 
