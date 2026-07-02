@@ -196,41 +196,44 @@ public class SymbolTypeIndex {
     if (current == null) {
       return null;
     }
+    var lastIndex = parts.length - 1;
     MemberDescriptor lastMethod = null;
-    MemberDescriptor member = null;
     for (int i = prefixLen; i < parts.length; i++) {
-      var name = parts[i];
-      member = findMember(current, name, fileType);
+      var member = findMember(current, parts[i], fileType);
       if (member == null) {
         // Модуль.Метод.Параметр: последний сегмент — имя параметра пред. метода.
-        if (lastMethod != null && i == parts.length - 1) {
-          var parameterTypes = parameterFromMember(lastMethod, name);
-          if (parameterTypes != null && !parameterTypes.isEmpty()) {
-            return new MemberChain(null, parameterTypes);
-          }
-        }
-        return null;
+        return i == lastIndex ? parameterChain(lastMethod, parts[i]) : null;
       }
-      if (i < parts.length - 1) {
-        var next = member.returnType();
-        if (next.kind() == TypeKind.UNKNOWN) {
-          // Тип возврата метода неизвестен — спускаться в его члены некуда,
-          // но последний сегмент всё ещё может быть именем параметра этого метода
-          // (Модуль.Метод.Параметр; у процедур и недокументированных функций
-          // тип возврата всегда UNKNOWN).
-          if (member.kind() == MemberKind.METHOD && i == parts.length - 2) {
-            var parameterTypes = parameterFromMember(member, parts[parts.length - 1]);
-            if (parameterTypes != null && !parameterTypes.isEmpty()) {
-              return new MemberChain(null, parameterTypes);
-            }
-          }
-          return null;
-        }
-        current = next;
-        lastMethod = member.kind() == MemberKind.METHOD ? member : null;
+      if (i == lastIndex) {
+        return new MemberChain(member, TypeSet.EMPTY);
       }
+      var next = member.returnType();
+      lastMethod = member.kind() == MemberKind.METHOD ? member : null;
+      if (next.kind() == TypeKind.UNKNOWN) {
+        // Спускаться в неизвестный тип возврата некуда (у процедур и
+        // недокументированных функций он всегда UNKNOWN), но следующий и
+        // последний сегмент ещё может быть именем параметра этого метода.
+        return i == lastIndex - 1 ? parameterChain(lastMethod, parts[i + 1]) : null;
+      }
+      current = next;
     }
-    return new MemberChain(member, TypeSet.EMPTY);
+    return null;
+  }
+
+  /**
+   * Цепочка для записи {@code …Метод.Параметр}: типы параметра {@code parameterName}
+   * метода {@code method}. {@code null}, если метод не задан (предыдущий сегмент — не
+   * метод) или у него нет такого параметра.
+   */
+  @Nullable
+  private static MemberChain parameterChain(@Nullable MemberDescriptor method, String parameterName) {
+    if (method == null) {
+      return null;
+    }
+    var parameterTypes = parameterFromMember(method, parameterName);
+    return parameterTypes != null && !parameterTypes.isEmpty()
+      ? new MemberChain(null, parameterTypes)
+      : null;
   }
 
   @Nullable
