@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.utils.NavigationLinks;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
@@ -308,9 +309,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    * определение; пустая строка, если источник не является символом с позицией.
    */
   private static String sourceLink(Object key) {
-    return key instanceof MethodSymbol method
-      ? SeeReferenceHyperlinks.toMarkdownLink(method.getName(), method)
-      : "";
+    if (!(key instanceof MethodSymbol method)) {
+      return "";
+    }
+    var target = NavigationLinks.toTarget(method.getOwner().getUri(), method.getSelectionRange());
+    return "[%s](%s)".formatted(method.getName(), target);
   }
 
   /** markdown-метка типов значения поля: имена в кавычках, объединение через {@code |}. */
