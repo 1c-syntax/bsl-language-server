@@ -282,28 +282,52 @@ public class TypeService {
   }
 
   /**
-   * Разрешить {@code см.}-ссылку из doc-комментария в символ-определение цели.
+   * Разрешить имя или квалифицированную ссылку в символ-определение того, что она
+   * обозначает.
    * <p>
-   * Неквалифицированная ссылка ({@code Метод}) ищется среди методов того же
-   * модуля; квалифицированная ({@code Модуль.Метод}, {@code Справочники.X.Метод}
-   * и т.п.) — тем же обходом цепочки членов, что и резолв типа по строке
-   * ({@link SymbolTypeIndex#resolveReferenceSymbol}), единообразно для общих
-   * модулей, модулей менеджеров и прочих типов.
+   * Ссылка не привязана к {@code См.}: это может быть метод, общий модуль, менеджер
+   * справочника/документа и вообще любой тип, имеющий отражение в виде модуля.
+   * <ul>
+   *   <li>неквалифицированное имя ({@code Метод}) — метод того же модуля (функция
+   *       или процедура);</li>
+   *   <li>квалифицированная ссылка на член ({@code Модуль.Метод},
+   *       {@code Справочники.X.Метод}, {@code Тип.Член}) — тем же обходом цепочки
+   *       членов, что и резолв типа по строке
+   *       ({@link SymbolTypeIndex#resolveReferenceSymbol}), единообразно для общих
+   *       модулей, модулей менеджеров и прочих типов;</li>
+   *   <li>имя типа целиком ({@code ОбщийМодуль}, {@code Справочники.Номенклатура}) —
+   *       его определяющий символ ({@link #definingSymbol}).</li>
+   * </ul>
    *
-   * @param reference         текст ссылки (без ключевого слова {@code См.}).
-   * @param requestingContext документ, в котором встретилась ссылка.
-   * @return символ-определение цели ссылки, либо {@code empty}.
+   * @param reference         имя/квалифицированная ссылка (например, текст
+   *                          {@code См.}-ссылки без ключевого слова).
+   * @param requestingContext документ, относительно которого резолвится ссылка.
+   * @return символ-определение цели, либо {@code empty}.
    */
-  public Optional<SourceDefinedSymbol> resolveSeeReference(String reference, DocumentContext requestingContext) {
+  public Optional<SourceDefinedSymbol> resolveDefinition(String reference, DocumentContext requestingContext) {
     if (reference.isBlank()) {
       return Optional.empty();
     }
+    var fileType = requestingContext.getFileType();
     if (reference.indexOf('.') < 0) {
-      return requestingContext.getSymbolTree()
+      // Метод того же модуля (функция или процедура) — по неквалифицированному имени.
+      var localMethod = requestingContext.getSymbolTree()
         .getMethodSymbol(reference)
         .map(SourceDefinedSymbol.class::cast);
+      if (localMethod.isPresent()) {
+        return localMethod;
+      }
+    } else {
+      // Квалифицированная ссылка на член (Модуль.Метод, Справочники.X.Метод,
+      // Тип.Член) — тем же обходом цепочки, что и резолв типа по строке.
+      var member = symbolTypeIndex.resolveReferenceSymbol(reference, fileType);
+      if (member.isPresent()) {
+        return member;
+      }
     }
-    return symbolTypeIndex.resolveReferenceSymbol(reference, requestingContext.getFileType());
+    // Ссылка на имя типа (общий модуль целиком, справочник и т.п.) — его
+    // определяющий символ. Тот же fallback на имя типа, что и у резолва типа по строке.
+    return resolve(reference, fileType).flatMap(typeRef -> definingSymbol(typeRef, requestingContext));
   }
 
   /**

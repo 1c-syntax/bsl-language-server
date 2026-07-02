@@ -109,7 +109,7 @@ public class SeeReferenceDocumentLinkSupplier implements DocumentLinkSupplier {
       return;
     }
 
-    typeService.resolveSeeReference(reference, documentContext)
+    typeService.resolveDefinition(reference, documentContext)
       .ifPresent(target -> {
         var range = referenceRange(hyperlink, reference);
         var navigationTarget = NavigationLinks.toTarget(target.getOwner().getUri(), target.getSelectionRange());

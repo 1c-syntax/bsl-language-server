@@ -119,6 +119,31 @@ class SeeReferenceDocumentLinkSupplierTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void testManagerTypeReferenceProducesLinkToManagerModule() {
+    // given — ссылка на сам тип менеджера (без метода): резолв не привязан к
+    // методам — тип, имеющий отражение в виде модуля, ведёт на модуль менеджера.
+    var content = """
+      // См. СправочникМенеджер.СправочникСМенеджером
+      Процедура Тест() Экспорт
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+    var managerModule = context
+      .getDocument("Catalog.СправочникСМенеджером", ModuleType.ManagerModule).orElseThrow();
+    var moduleSymbol = managerModule.getSymbolTree().getModule();
+
+    // when
+    var documentLinks = supplier.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .anySatisfy(documentLink ->
+        assertThat(documentLink.getTarget())
+          .isEqualTo(targetTarget(managerModule.getUri().toString(), moduleSymbol.getSelectionRange()))
+      );
+  }
+
+  @Test
   void testVariableDescriptionReferenceProducesLink() {
     // given
     var content = """
