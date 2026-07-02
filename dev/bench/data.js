@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782926282749,
+  "lastUpdate": 1783024220789,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39587,6 +39587,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.627261325166002",
             "extra": "mean: 260.96700557072955 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a54e857926c41293ed92bd3b43daa3e2415d9237",
+          "message": "Merge pull request #4239 from 1c-syntax/claude/string-concat-inference-bug-yfsylp\n\nfix(types): не расширять тип строки-аккумулятора до «Строка, Число» (#4205)",
+          "timestamp": "2026-07-02T21:53:33+02:00",
+          "tree_id": "4121a8a3f03e96397eda9a992511c2d05b89b925",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a54e857926c41293ed92bd3b43daa3e2415d9237"
+        },
+        "date": 1783024209361,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 273.44854005177814,
+            "unit": "sec",
+            "range": "stddev: 11.686527829956539",
+            "extra": "mean: 273.44854005177814 sec\nrounds: 3"
           }
         ]
       }
