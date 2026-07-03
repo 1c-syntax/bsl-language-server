@@ -78,8 +78,8 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
     try {
       var hover = hoverContent(mutualDoc(), "Контекст = ", 0);
       assertThat(hover)
-        .as("в EN-локали ссылка на цикле рендерится как `See Коробка`")
-        .contains("See Коробка");
+        .as("в EN-локали ссылка на цикле рендерится как гиперссылка `See [Коробка](…)`")
+        .containsPattern("See \\[Коробка]\\(\\S+#L\\d+,\\d+\\)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -140,10 +140,10 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
         .contains("Содержимое")
         .contains("Описание");
       assertThat(hover)
-        .as("на обрыве цикла поле `Содержимое - см. Коробка` сворачивается именно в `См. Коробка` "
-          + "(а не в источник уровнем глубже), #4204 п.2")
-        .contains("См. Коробка")
-        .doesNotContain("См. Контейнер");
+        .as("на обрыве цикла поле `Содержимое - см. Коробка` сворачивается в гиперссылку "
+          + "`См. [Коробка](…)` на её определение (а не на источник уровнем глубже), #4204 п.2")
+        .containsPattern("См\\. \\[Коробка]\\(\\S+#L\\d+,\\d+\\)")
+        .doesNotContain("[Контейнер]");
     });
   }
 
