@@ -133,11 +133,11 @@ class BSLLanguageServerTest {
     // when
     server.initialize(params).get();
 
-    // then — заведён дефолтный контекст, и untitled-документ в него маршрутизируется
-    assertThat(serverContextProvider.getAllContexts())
-      .containsKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+    // then — заведён дефолтный контекст, и untitled-документ маршрутизируется именно в него
+    var defaultContext = serverContextProvider.getAllContexts().get(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+    assertThat(defaultContext).isNotNull();
     assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
-      .isPresent();
+      .contains(defaultContext);
   }
 
   @Test
