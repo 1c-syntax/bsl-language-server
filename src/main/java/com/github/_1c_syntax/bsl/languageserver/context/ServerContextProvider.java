@@ -288,12 +288,13 @@ public class ServerContextProvider {
 
   /**
    * Получить главный контекст — первый зарегистрированный workspace (или дефолтный контекст
-   * в режиме одиночного файла).
+   * в режиме одиночного файла). Package-private: используется внутри
+   * {@link #resolveContextForDocument(URI)} и в тестах пакета.
    *
    * @return главный контекст сервера или пустой Optional,
    *         если не зарегистрирован ни один контекст
    */
-  public Optional<ServerContext> getPrimaryContext() {
+  Optional<ServerContext> getPrimaryContext() {
     var uri = primaryWorkspaceUri.get();
     if (uri == null) {
       return Optional.empty();
