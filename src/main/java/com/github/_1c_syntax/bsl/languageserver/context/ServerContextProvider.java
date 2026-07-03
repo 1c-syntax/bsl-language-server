@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Провайдер контекстов сервера для мульти-workspace окружения.
@@ -74,10 +75,9 @@ public class ServerContextProvider {
   /**
    * URI «главного» workspace — первого зарегистрированного контекста. Сюда маршрутизируются
    * документы, не относящиеся ни к одному корню (untitled-буферы, файлы вне папок проекта,
-   * одиночный файл). {@code null}, пока не зарегистрирован ни один контекст.
+   * одиночный файл). Хранит {@code null}, пока не зарегистрирован ни один контекст.
    */
-  @Nullable
-  private volatile URI primaryWorkspaceUri;
+  private final AtomicReference<@Nullable URI> primaryWorkspaceUri = new AtomicReference<>();
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextObjectProvider,
@@ -294,7 +294,7 @@ public class ServerContextProvider {
    *         если не зарегистрирован ни один контекст
    */
   public Optional<ServerContext> getPrimaryContext() {
-    var uri = primaryWorkspaceUri;
+    var uri = primaryWorkspaceUri.get();
     if (uri == null) {
       return Optional.empty();
     }
@@ -387,7 +387,7 @@ public class ServerContextProvider {
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );
     documentIndex.clear();
-    primaryWorkspaceUri = null;
+    primaryWorkspaceUri.set(null);
     LOGGER.debug("Cleared all workspaces");
   }
 
@@ -409,15 +409,13 @@ public class ServerContextProvider {
     documentIndex.remove(event.getUri());
   }
 
-  private synchronized void markPrimaryIfAbsent(URI workspaceUri) {
-    if (primaryWorkspaceUri == null) {
-      primaryWorkspaceUri = workspaceUri;
-    }
+  private void markPrimaryIfAbsent(URI workspaceUri) {
+    primaryWorkspaceUri.compareAndSet(null, workspaceUri);
   }
 
-  private synchronized void repointPrimaryIfRemoved(URI removedUri) {
-    if (removedUri.equals(primaryWorkspaceUri)) {
-      primaryWorkspaceUri = contexts.keySet().stream().findFirst().orElse(null);
+  private void repointPrimaryIfRemoved(URI removedUri) {
+    if (removedUri.equals(primaryWorkspaceUri.get())) {
+      primaryWorkspaceUri.set(contexts.keySet().stream().findFirst().orElse(null));
     }
   }
 
