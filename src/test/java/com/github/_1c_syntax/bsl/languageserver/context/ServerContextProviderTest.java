@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +39,14 @@ class ServerContextProviderTest {
 
   @Autowired
   private ServerContextProvider serverContextProvider;
+
+  @BeforeEach
+  void setUp() {
+    // Изоляция: serverContextProvider — общий синглтон, состояние (в т.ч. дефолтный контекст)
+    // может протечь из предыдущего теста, если его cleanup не отработал из-за упавшего ассерта.
+    // Начинаем каждый тест с чистого листа.
+    serverContextProvider.clear();
+  }
 
   @Test
   void testAddWorkspace() {
