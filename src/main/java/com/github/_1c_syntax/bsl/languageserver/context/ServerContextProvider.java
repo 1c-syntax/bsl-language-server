@@ -73,9 +73,11 @@ public class ServerContextProvider {
   private final Map<URI, ServerContext> documentIndex = new ConcurrentHashMap<>();
 
   /**
-   * URI «главного» workspace — первого зарегистрированного контекста. Сюда маршрутизируются
-   * документы, не относящиеся ни к одному корню (untitled-буферы, файлы вне папок проекта,
-   * одиночный файл). Хранит {@code null}, пока не зарегистрирован ни один контекст.
+   * URI «главного» workspace, в который маршрутизируются документы вне всех корней
+   * (untitled-буферы, файлы вне папок проекта, одиночный файл). Предпочтение — первому
+   * реальному workspace: синтетический дефолт становится главным лишь при отсутствии реальных
+   * папок и вытесняется, как только реальная папка добавляется (в т.ч. в рантайме через
+   * {@code didChangeWorkspaceFolders}). Хранит {@code null}, пока не зарегистрирован ни один контекст.
    */
   private final AtomicReference<@Nullable URI> primaryWorkspaceUri = new AtomicReference<>();
 
@@ -154,7 +156,7 @@ public class ServerContextProvider {
 
       contexts.put(workspaceUri, serverContext);
       workspaceRoots.put(workspaceUri, rootPath);
-      markPrimaryIfAbsent(workspaceUri);
+      promoteToPrimary(workspaceUri);
 
       return serverContext;
     }
@@ -410,14 +412,39 @@ public class ServerContextProvider {
     documentIndex.remove(event.getUri());
   }
 
+  /**
+   * Назначить главным дефолтный контекст, только если главный ещё не выбран
+   * (реальные папки при инициализации не пришли).
+   */
   private void markPrimaryIfAbsent(URI workspaceUri) {
     primaryWorkspaceUri.compareAndSet(null, workspaceUri);
   }
 
+  /**
+   * Назначить реальный workspace главным, если главного нет либо им сейчас является
+   * синтетический дефолт. Так первая реальная папка (в т.ч. добавленная в рантайме) вытесняет
+   * дефолт, а последующие реальные папки главного не меняют.
+   */
+  private void promoteToPrimary(URI workspaceUri) {
+    primaryWorkspaceUri.updateAndGet(current ->
+      (current == null || DEFAULT_WORKSPACE_URI.equals(current)) ? workspaceUri : current
+    );
+  }
+
+  /**
+   * Переназначить главный контекст при удалении текущего главного: предпочитаем оставшийся
+   * реальный workspace синтетическому дефолту, дефолт — как последний вариант.
+   */
   private void repointPrimaryIfRemoved(URI removedUri) {
-    if (removedUri.equals(primaryWorkspaceUri.get())) {
-      primaryWorkspaceUri.set(contexts.keySet().stream().findFirst().orElse(null));
-    }
+    primaryWorkspaceUri.updateAndGet(current -> {
+      if (!removedUri.equals(current)) {
+        return current;
+      }
+      return contexts.keySet().stream()
+        .filter(uri -> !DEFAULT_WORKSPACE_URI.equals(uri))
+        .findFirst()
+        .orElseGet(() -> contexts.containsKey(DEFAULT_WORKSPACE_URI) ? DEFAULT_WORKSPACE_URI : null);
+    });
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {

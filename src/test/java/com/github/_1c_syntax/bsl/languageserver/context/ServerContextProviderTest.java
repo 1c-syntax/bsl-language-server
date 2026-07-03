@@ -200,4 +200,66 @@ class ServerContextProviderTest {
     // then
     assertThat(resolved).isEmpty();
   }
+
+  @Test
+  void testAddingWorkspaceAtRuntimePromotesPrimaryFromDefault() {
+    // given — initialize(null): открыт одиночный файл, есть только дефолтный контекст, он же primary
+    var defaultContext = serverContextProvider.registerDefaultWorkspace();
+    assertThat(serverContextProvider.getPrimaryContext()).contains(defaultContext);
+
+    // when — в рантайме добавили реальную папку (didChangeWorkspaceFolders → addWorkspace)
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "runtime");
+    var workspaceContext = serverContextProvider.addWorkspace(workspaceFolder);
+
+    // then — primary «переезжает» с синтетического дефолта на реальную папку;
+    // untitled-буферы теперь маршрутизируются в неё (с конфигурацией), а не в пустой дефолт
+    assertThat(serverContextProvider.getPrimaryContext()).contains(workspaceContext);
+    assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
+      .contains(workspaceContext);
+    // дефолтный контекст остаётся — в нём мог остаться ранее открытый одиночный файл
+    assertThat(serverContextProvider.getAllContexts())
+      .containsKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+
+    // cleanup
+    serverContextProvider.clear();
+  }
+
+  @Test
+  void testRemovingRuntimeWorkspaceRepointsPrimaryBackToDefault() {
+    // given — дефолт + реальная папка; primary промоутнут на реальную
+    var defaultContext = serverContextProvider.registerDefaultWorkspace();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "runtime");
+    var workspaceContext = serverContextProvider.addWorkspace(workspaceFolder);
+    assertThat(serverContextProvider.getPrimaryContext()).contains(workspaceContext);
+
+    // when — папку убрали из рабочего пространства в рантайме
+    serverContextProvider.removeWorkspace(workspaceFolder);
+
+    // then — primary откатывается на оставшийся дефолтный контекст; untitled снова уходит в него
+    assertThat(serverContextProvider.getPrimaryContext()).contains(defaultContext);
+    assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
+      .contains(defaultContext);
+
+    // cleanup
+    serverContextProvider.clear();
+  }
+
+  @Test
+  void testFirstRuntimeWorkspaceStaysPrimaryWhenSecondAdded() {
+    // given — дефолт, затем в рантайме добавили папку X (primary → X)
+    serverContextProvider.registerDefaultWorkspace();
+    var folderX = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "X");
+    var contextX = serverContextProvider.addWorkspace(folderX);
+    assertThat(serverContextProvider.getPrimaryContext()).contains(contextX);
+
+    // when — добавили вторую папку Y
+    var folderY = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).getParent().toUri().toString(), "Y");
+    serverContextProvider.addWorkspace(folderY);
+
+    // then — primary остаётся на первой реальной папке, не «прыгает» на вторую
+    assertThat(serverContextProvider.getPrimaryContext()).contains(contextX);
+
+    // cleanup
+    serverContextProvider.clear();
+  }
 }

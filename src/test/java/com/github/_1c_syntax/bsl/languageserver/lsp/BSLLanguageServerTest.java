@@ -159,6 +159,23 @@ class BSLLanguageServerTest {
       .doesNotContainKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
   }
 
+  @Test
+  void addingWorkspaceFolderAfterEmptyInitializeRoutesUntitledToIt()
+    throws ExecutionException, InterruptedException {
+    // given — initialize без корней (одиночный файл): заведён дефолтный контекст
+    server.initialize(new InitializeParams()).get();
+    assertThat(serverContextProvider.getAllContexts())
+      .containsKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+
+    // when — папку добавили в рабочее пространство в рантайме (workspace/didChangeWorkspaceFolders)
+    var folder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "runtime");
+    var workspaceContext = serverContextProvider.addWorkspace(folder);
+
+    // then — untitled-документы уходят в реальную папку с конфигурацией, а не в пустой дефолт
+    assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
+      .contains(workspaceContext);
+  }
+
   @ParameterizedTest
   @EnumSource(value = TextDocumentSyncKind.class, names = {"Full", "None"})
   void initializeUsesTextDocumentSyncKindFromConfiguration(TextDocumentSyncKind syncKind, @TempDir Path tempDir)
