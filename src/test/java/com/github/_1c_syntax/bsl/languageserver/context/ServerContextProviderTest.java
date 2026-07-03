@@ -258,8 +258,8 @@ class ServerContextProviderTest {
     serverContextProvider.clear();
 
     // then — маршрутизация без главного контекста падает громко, а не молча возвращает пустоту
-    assertThatThrownBy(() ->
-      serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
+    var documentUri = URI.create("untitled:Untitled-1");
+    assertThatThrownBy(() -> serverContextProvider.resolveContextForDocument(documentUri))
       .isInstanceOf(IllegalStateException.class);
   }
 }
