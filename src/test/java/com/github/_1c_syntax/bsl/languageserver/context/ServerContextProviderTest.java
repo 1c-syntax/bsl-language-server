@@ -211,8 +211,8 @@ class ServerContextProviderTest {
     var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "runtime");
     var workspaceContext = serverContextProvider.addWorkspace(workspaceFolder);
 
-    // then — primary «переезжает» с синтетического дефолта на реальную папку;
-    // untitled-буферы теперь маршрутизируются в неё (с конфигурацией), а не в пустой дефолт
+    // then — primary переезжает с синтетического дефолта на реальную папку, и untitled-буферы
+    // теперь маршрутизируются в неё (с конфигурацией), а не в пустой дефолт
     assertThat(serverContextProvider.getPrimaryContext()).contains(workspaceContext);
     assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
       .contains(workspaceContext);

@@ -436,15 +436,14 @@ public class ServerContextProvider {
    * реальный workspace синтетическому дефолту, дефолт — как последний вариант.
    */
   private void repointPrimaryIfRemoved(URI removedUri) {
-    primaryWorkspaceUri.updateAndGet(current -> {
-      if (!removedUri.equals(current)) {
-        return current;
-      }
-      return contexts.keySet().stream()
-        .filter(uri -> !DEFAULT_WORKSPACE_URI.equals(uri))
-        .findFirst()
-        .orElseGet(() -> contexts.containsKey(DEFAULT_WORKSPACE_URI) ? DEFAULT_WORKSPACE_URI : null);
-    });
+    if (!removedUri.equals(primaryWorkspaceUri.get())) {
+      return;
+    }
+    var next = contexts.keySet().stream()
+      .filter(uri -> !DEFAULT_WORKSPACE_URI.equals(uri))
+      .findFirst()
+      .orElseGet(() -> contexts.containsKey(DEFAULT_WORKSPACE_URI) ? DEFAULT_WORKSPACE_URI : null);
+    primaryWorkspaceUri.set(next);
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {
