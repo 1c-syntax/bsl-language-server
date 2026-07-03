@@ -158,11 +158,6 @@ class BSLLanguageServerTest {
     assertThat(serverContextProvider.getAllContexts())
       .doesNotContainKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
   }
-  // Сценарий «добавление реальной папки в рантайме после initialize(null)» (в т.ч. вытеснение
-  // дефолта из primary и переезд маршрутизации untitled) покрыт на уровне провайдера —
-  // ServerContextProviderTest#testAddingWorkspaceAtRuntimePromotesPrimaryFromDefault и др.;
-  // здесь LSP-специфику (initialize без корней заводит дефолт) проверяет
-  // initializeWithoutWorkspaceRegistersDefaultWorkspace.
 
   @ParameterizedTest
   @EnumSource(value = TextDocumentSyncKind.class, names = {"Full", "None"})
