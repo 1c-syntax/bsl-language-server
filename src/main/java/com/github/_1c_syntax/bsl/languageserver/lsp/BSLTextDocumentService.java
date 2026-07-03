@@ -1149,6 +1149,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    */
   private @Nullable ServerContext getContextForDocument(String uriString) {
     var uri = Absolute.uri(uriString);
-    return serverContextProvider.getServerContext(uri).orElse(null);
+    return serverContextProvider.resolveContextForDocument(uri).orElse(null);
   }
 }

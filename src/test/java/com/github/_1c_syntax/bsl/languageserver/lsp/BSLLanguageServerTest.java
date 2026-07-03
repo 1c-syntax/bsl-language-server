@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;
@@ -56,6 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -84,6 +86,9 @@ class BSLLanguageServerTest {
 
   @Autowired
   private LanguageClientHolder languageClientHolder;
+
+  @Autowired
+  private ServerContextProvider serverContextProvider;
 
   @BeforeEach
   void setUp() {
@@ -118,6 +123,40 @@ class BSLLanguageServerTest {
     assertThat(initialize.getCapabilities().getTypeHierarchyProvider()).isNotNull();
     assertThat(initialize.getCapabilities().getImplementationProvider()).isNotNull();
     assertThat(initialize.getCapabilities().getLinkedEditingRangeProvider()).isNotNull();
+  }
+
+  @Test
+  void initializeWithoutWorkspaceRegistersDefaultWorkspace() throws ExecutionException, InterruptedException {
+    // given — клиент открыл одиночный файл: ни workspaceFolders, ни rootUri/rootPath
+    InitializeParams params = new InitializeParams();
+
+    // when
+    server.initialize(params).get();
+
+    // then — заведён дефолтный контекст, и untitled-документ в него маршрутизируется
+    assertThat(serverContextProvider.getAllContexts())
+      .containsKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+    assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
+      .isPresent();
+  }
+
+  @Test
+  void untitledDocumentRoutesToWorkspaceContext() throws ExecutionException, InterruptedException {
+    // given — открыта папка проекта
+    InitializeParams params = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    params.setWorkspaceFolders(List.of(workspaceFolder));
+    server.initialize(params).get();
+
+    // when — untitled-буфер не относится ни к одному корню
+    var context = serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1"));
+
+    // then — маршрутизируется в главный (первый) workspace, а не теряется;
+    // дефолтный контекст при наличии папок не создаётся
+    assertThat(context).isPresent();
+    assertThat(context.get().getConfigurationRoot()).isNotNull();
+    assertThat(serverContextProvider.getAllContexts())
+      .doesNotContainKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
   }
 
   @ParameterizedTest

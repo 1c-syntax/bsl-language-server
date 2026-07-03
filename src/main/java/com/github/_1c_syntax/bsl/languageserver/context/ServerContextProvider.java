@@ -53,6 +53,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ServerContextProvider {
 
+  /**
+   * Синтетический URI дефолтного («безворкспейсного») контекста. Создаётся, когда клиент
+   * при инициализации не прислал ни одной workspace folder, ни {@code rootUri}/{@code rootPath}
+   * (режим открытия одиночного файла или untitled-буфера). Схема не {@code file} — этот URI
+   * не должен попадать в код, приводящий URI к файловому пути ({@code Absolute.path},
+   * {@code Path.of}).
+   */
+  public static final URI DEFAULT_WORKSPACE_URI = URI.create("bsl-language-server:/default-workspace");
+  private static final String DEFAULT_WORKSPACE_NAME = "default";
+
   private final ObjectProvider<ServerContext> serverContextObjectProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
   private final WorkspaceBeanScope workspaceScope;
@@ -60,6 +70,14 @@ public class ServerContextProvider {
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
   private final Map<URI, ServerContext> documentIndex = new ConcurrentHashMap<>();
+
+  /**
+   * URI «главного» workspace — первого зарегистрированного контекста. Сюда маршрутизируются
+   * документы, не относящиеся ни к одному корню (untitled-буферы, файлы вне папок проекта,
+   * одиночный файл). {@code null}, пока не зарегистрирован ни один контекст.
+   */
+  @Nullable
+  private volatile URI primaryWorkspaceUri;
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextObjectProvider,
@@ -136,6 +154,44 @@ public class ServerContextProvider {
 
       contexts.put(workspaceUri, serverContext);
       workspaceRoots.put(workspaceUri, rootPath);
+      markPrimaryIfAbsent(workspaceUri);
+
+      return serverContext;
+    }
+  }
+
+  /**
+   * Создать дефолтный («безворкспейсный») контекст сервера.
+   * <p>
+   * Используется, когда при инициализации не переданы ни workspace folders, ни
+   * {@code rootUri}/{@code rootPath} (открыт одиночный файл или untitled-буфер). Контекст
+   * создаётся с {@code configurationRoot == null}, поэтому {@link ServerContext#populateContext()}
+   * ничего не сканирует. Документы, не попавшие ни в один workspace, маршрутизируются в него
+   * (или в первый добавленный workspace) — см. {@link #resolveContextForDocument(URI)}.
+   * <p>
+   * В отличие от {@link #addWorkspace(URI, String)}, метод намеренно не публикует
+   * {@code WorkspaceAddedEvent}: синтетический URI не является файловым, и подписчики,
+   * приводящие URI к пути (наблюдатели файлов конфигурации/библиотек), на нём падали бы.
+   *
+   * @return дефолтный контекст сервера (идемпотентно: повторные вызовы возвращают существующий)
+   */
+  public ServerContext registerDefaultWorkspace() {
+    var existing = contexts.get(DEFAULT_WORKSPACE_URI);
+    if (existing != null) {
+      return existing;
+    }
+
+    WorkspaceContextHolder.registerWorkspace(DEFAULT_WORKSPACE_URI, DEFAULT_WORKSPACE_NAME);
+
+    try (var ctx = WorkspaceContextHolder.forUri(DEFAULT_WORKSPACE_URI)) {
+      var serverContext = serverContextObjectProvider.getObject();
+
+      serverContext.setWorkspaceUri(DEFAULT_WORKSPACE_URI);
+      serverContext.setLanguageServerConfiguration(languageServerConfiguration);
+      // configurationRoot остаётся null: сканировать нечего, populateContext() выйдет сразу.
+
+      contexts.put(DEFAULT_WORKSPACE_URI, serverContext);
+      markPrimaryIfAbsent(DEFAULT_WORKSPACE_URI);
 
       return serverContext;
     }
@@ -166,6 +222,7 @@ public class ServerContextProvider {
 
     workspaceScope.removeWorkspace(uri);
     WorkspaceContextHolder.unregisterWorkspace(uri);
+    repointPrimaryIfRemoved(uri);
   }
 
   /**
@@ -206,6 +263,42 @@ public class ServerContextProvider {
       .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
       .findFirst()
       .map(contexts::get);
+  }
+
+  /**
+   * Определить контекст сервера для документа с фолбэком на главный workspace.
+   * <p>
+   * Сначала ищет владеющий контекст по правилам {@link #getServerContext(URI)} (индекс, затем
+   * префикс URI workspace). Если документ не относится ни к одному корню (untitled-буфер, файл
+   * вне папок проекта, одиночный файл), маршрутизирует его в главный контекст
+   * ({@link #getPrimaryContext()}). URI нормализуется через {@link Absolute#uri(URI)}.
+   *
+   * @param documentUri URI документа (будет нормализован)
+   * @return контекст сервера для документа или пустой Optional,
+   *         если не зарегистрирован ни один контекст
+   */
+  public Optional<ServerContext> resolveContextForDocument(URI documentUri) {
+    var normalizedUri = Absolute.uri(documentUri);
+    var direct = getServerContext(normalizedUri);
+    if (direct.isPresent()) {
+      return direct;
+    }
+    return getPrimaryContext();
+  }
+
+  /**
+   * Получить главный контекст — первый зарегистрированный workspace (или дефолтный контекст
+   * в режиме одиночного файла).
+   *
+   * @return главный контекст сервера или пустой Optional,
+   *         если не зарегистрирован ни один контекст
+   */
+  public Optional<ServerContext> getPrimaryContext() {
+    var uri = primaryWorkspaceUri;
+    if (uri == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(contexts.get(uri));
   }
 
   /**
@@ -294,6 +387,7 @@ public class ServerContextProvider {
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );
     documentIndex.clear();
+    primaryWorkspaceUri = null;
     LOGGER.debug("Cleared all workspaces");
   }
 
@@ -313,6 +407,18 @@ public class ServerContextProvider {
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     documentIndex.remove(event.getUri());
+  }
+
+  private synchronized void markPrimaryIfAbsent(URI workspaceUri) {
+    if (primaryWorkspaceUri == null) {
+      primaryWorkspaceUri = workspaceUri;
+    }
+  }
+
+  private synchronized void repointPrimaryIfRemoved(URI removedUri) {
+    if (removedUri.equals(primaryWorkspaceUri)) {
+      primaryWorkspaceUri = contexts.keySet().stream().findFirst().orElse(null);
+    }
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {

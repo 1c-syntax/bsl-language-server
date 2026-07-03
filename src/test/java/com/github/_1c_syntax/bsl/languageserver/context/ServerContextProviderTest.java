@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
+
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,5 +125,70 @@ class ServerContextProviderTest {
 
     // then
     assertThat(serverContextProvider.getAllContexts()).isEmpty();
+  }
+
+  @Test
+  void testRegisterDefaultWorkspace() {
+    // when
+    var defaultContext = serverContextProvider.registerDefaultWorkspace();
+
+    // then — контекст создан без корня: populateContext ничего не сканирует
+    assertThat(defaultContext).isNotNull();
+    assertThat(defaultContext.getConfigurationRoot()).isNull();
+    assertThat(serverContextProvider.getAllContexts())
+      .containsKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+    assertThat(serverContextProvider.getPrimaryContext()).contains(defaultContext);
+
+    // идемпотентность: повторный вызов возвращает тот же контекст
+    assertThat(serverContextProvider.registerDefaultWorkspace()).isSameAs(defaultContext);
+
+    // cleanup
+    serverContextProvider.clear();
+  }
+
+  @Test
+  void testResolveUntitledDocumentRoutesToDefaultWorkspace() {
+    // given — режим одиночного файла: зарегистрирован только дефолтный контекст
+    var defaultContext = serverContextProvider.registerDefaultWorkspace();
+
+    // when
+    var resolved = serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1"));
+
+    // then — untitled-документ маршрутизируется в дефолтный контекст
+    assertThat(resolved).contains(defaultContext);
+    // строгий поиск владельца документа фолбэка не делает
+    assertThat(serverContextProvider.getServerContext(Absolute.uri("untitled:Untitled-1"))).isEmpty();
+
+    // cleanup
+    serverContextProvider.clear();
+  }
+
+  @Test
+  void testResolveUntitledDocumentRoutesToFirstWorkspace() {
+    // given — есть реальный workspace, дефолтный контекст не создаётся
+    var workspaceUri = Absolute.path(PATH_TO_METADATA).toUri().toString();
+    var workspaceFolder = new WorkspaceFolder(workspaceUri, "test-workspace");
+    var workspaceContext = serverContextProvider.addWorkspace(workspaceFolder);
+
+    // when — untitled-буфер не относится ни к одному корню
+    var resolved = serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1"));
+
+    // then — маршрутизируется в главный (первый) workspace, а не теряется
+    assertThat(resolved).contains(workspaceContext);
+
+    // cleanup
+    serverContextProvider.removeWorkspace(workspaceFolder);
+  }
+
+  @Test
+  void testResolveContextForDocumentWithoutWorkspacesIsEmpty() {
+    // given — ни одного контекста
+    serverContextProvider.clear();
+
+    // when
+    var resolved = serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1"));
+
+    // then
+    assertThat(resolved).isEmpty();
   }
 }
