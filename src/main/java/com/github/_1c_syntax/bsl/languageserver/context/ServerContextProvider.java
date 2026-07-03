@@ -454,8 +454,8 @@ public class ServerContextProvider {
     if (!removedUri.equals(primaryWorkspaceUri.get())) {
       return;
     }
-    // contexts ещё содержит removedUri (вызов до удаления) — исключаем его явно;
-    // предпочитаем оставшийся реальный workspace синтетическому дефолту.
+    // Карта ещё содержит удаляемый workspace (вызов идёт до удаления) — исключаем его явно
+    // и предпочитаем оставшийся реальный workspace синтетическому дефолту
     var next = contexts.keySet().stream()
       .filter(uri -> !uri.equals(removedUri))
       .filter(uri -> !DEFAULT_WORKSPACE_URI.equals(uri))

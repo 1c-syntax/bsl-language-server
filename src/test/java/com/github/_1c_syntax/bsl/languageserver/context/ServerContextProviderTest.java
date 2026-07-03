@@ -33,6 +33,7 @@ import java.net.URI;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class ServerContextProviderTest {
@@ -249,5 +250,16 @@ class ServerContextProviderTest {
 
     // cleanup
     serverContextProvider.clear();
+  }
+
+  @Test
+  void testResolveContextForDocumentWithoutWorkspacesFailsLoudly() {
+    // given — ни одного контекста (обращение до initialize() или после shutdown())
+    serverContextProvider.clear();
+
+    // then — маршрутизация без главного контекста падает громко, а не молча возвращает пустоту
+    assertThatThrownBy(() ->
+      serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
+      .isInstanceOf(IllegalStateException.class);
   }
 }
