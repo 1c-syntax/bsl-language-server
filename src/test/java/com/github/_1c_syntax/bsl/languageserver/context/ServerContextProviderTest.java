@@ -190,18 +190,6 @@ class ServerContextProviderTest {
   }
 
   @Test
-  void testResolveContextForDocumentWithoutWorkspacesIsEmpty() {
-    // given — ни одного контекста
-    serverContextProvider.clear();
-
-    // when
-    var resolved = serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1"));
-
-    // then
-    assertThat(resolved).isEmpty();
-  }
-
-  @Test
   void testAddingWorkspaceAtRuntimePromotesPrimaryFromDefault() {
     // given — initialize(null): открыт одиночный файл, есть только дефолтный контекст, он же primary
     var defaultContext = serverContextProvider.registerDefaultWorkspace();

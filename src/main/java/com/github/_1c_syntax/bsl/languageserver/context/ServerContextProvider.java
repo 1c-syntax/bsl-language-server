@@ -206,6 +206,9 @@ public class ServerContextProvider {
    */
   public void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
+    // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
+    repointPrimaryBeforeRemoval(uri);
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
 
@@ -224,7 +227,6 @@ public class ServerContextProvider {
 
     workspaceScope.removeWorkspace(uri);
     WorkspaceContextHolder.unregisterWorkspace(uri);
-    repointPrimaryIfRemoved(uri);
   }
 
   /**
@@ -276,8 +278,9 @@ public class ServerContextProvider {
    * ({@link #getPrimaryContext()}). URI нормализуется через {@link Absolute#uri(URI)}.
    *
    * @param documentUri URI документа (будет нормализован)
-   * @return контекст сервера для документа или пустой Optional,
-   *         если не зарегистрирован ни один контекст
+   * @return контекст сервера для документа (Optional всегда непустой после {@code initialize()})
+   * @throws IllegalStateException если не зарегистрирован ни один контекст
+   *         (провайдер используется до {@code initialize()} или после {@code shutdown()})
    */
   public Optional<ServerContext> resolveContextForDocument(URI documentUri) {
     var normalizedUri = Absolute.uri(documentUri);
@@ -292,16 +295,28 @@ public class ServerContextProvider {
    * Получить главный контекст — первый зарегистрированный workspace (или дефолтный контекст
    * в режиме одиночного файла). Package-private: используется внутри
    * {@link #resolveContextForDocument(URI)} и в тестах пакета.
+   * <p>
+   * После {@code initialize()} главный контекст всегда выбран ({@code setConfigurationRoot}
+   * регистрирует либо реальные папки, либо дефолт), поэтому его отсутствие — нарушение
+   * инварианта, а не штатная ситуация: провайдер используется до {@code initialize()} или
+   * после {@code shutdown()}. Такое падаем громко, а не глотаем пустым результатом.
    *
-   * @return главный контекст сервера или пустой Optional,
-   *         если не зарегистрирован ни один контекст
+   * @return главный контекст сервера (Optional всегда непустой)
+   * @throws IllegalStateException если главный контекст не выбран или отсутствует в карте
    */
   Optional<ServerContext> getPrimaryContext() {
     var uri = primaryWorkspaceUri.get();
     if (uri == null) {
-      return Optional.empty();
+      throw new IllegalStateException(
+        "Главный workspace-контекст не выбран: ServerContextProvider используется до initialize() "
+          + "или после shutdown()."
+      );
     }
-    return Optional.ofNullable(contexts.get(uri));
+    var context = contexts.get(uri);
+    if (context == null) {
+      throw new IllegalStateException("Главный workspace-контекст отсутствует для URI: " + uri);
+    }
+    return Optional.of(context);
   }
 
   /**
@@ -435,14 +450,20 @@ public class ServerContextProvider {
    * Переназначить главный контекст при удалении текущего главного: предпочитаем оставшийся
    * реальный workspace синтетическому дефолту, дефолт — как последний вариант.
    */
-  private void repointPrimaryIfRemoved(URI removedUri) {
+  private void repointPrimaryBeforeRemoval(URI removedUri) {
     if (!removedUri.equals(primaryWorkspaceUri.get())) {
       return;
     }
+    // contexts ещё содержит removedUri (вызов до удаления) — исключаем его явно;
+    // предпочитаем оставшийся реальный workspace синтетическому дефолту.
     var next = contexts.keySet().stream()
+      .filter(uri -> !uri.equals(removedUri))
       .filter(uri -> !DEFAULT_WORKSPACE_URI.equals(uri))
       .findFirst()
-      .orElseGet(() -> contexts.containsKey(DEFAULT_WORKSPACE_URI) ? DEFAULT_WORKSPACE_URI : null);
+      .orElseGet(() ->
+        !DEFAULT_WORKSPACE_URI.equals(removedUri) && contexts.containsKey(DEFAULT_WORKSPACE_URI)
+          ? DEFAULT_WORKSPACE_URI : null
+      );
     primaryWorkspaceUri.set(next);
   }
 
