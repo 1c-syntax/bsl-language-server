@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783061476317,
+  "lastUpdate": 1783190479682,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39649,6 +39649,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.853041250386996",
             "extra": "mean: 279.0102753639221 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06612aec67ed795377bb3b5ebdb9273b00677a3c",
+          "message": "Merge pull request #4240 from 1c-syntax/claude/bsl-ls-file-mode-routing-3l4clt\n\nfix(lsp): анализ одиночного файла и untitled-документов без workspace",
+          "timestamp": "2026-07-04T20:15:51+02:00",
+          "tree_id": "533a20a40d8d300f6b6caaf5c1a1b989cc2affcb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/06612aec67ed795377bb3b5ebdb9273b00677a3c"
+        },
+        "date": 1783190466450,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 261.94902833302814,
+            "unit": "sec",
+            "range": "stddev: 15.781241015358848",
+            "extra": "mean: 261.94902833302814 sec\nrounds: 3"
           }
         ]
       }
