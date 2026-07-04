@@ -704,30 +704,6 @@
                         }
                     },
                     "$id": "#/definitions/inlayHintParameters/methodCall"
-                },
-                "sourceDefinedMethodCall": {
-                    "deprecated": true,
-                    "default": true,
-                    "type": [
-                        "boolean",
-                        "object"
-                    ],
-                    "title": "Deprecated: use `methodCall` (single setting for both source-defined and platform method calls).",
-                    "properties": {
-                        "showParametersWithTheSameName": {
-                            "description": "Show hints for parameters with names that are contained in passed value.",
-                            "default": false,
-                            "type": "boolean",
-                            "title": "Show hints for parameters with names that contains passed value."
-                        },
-                        "showDefaultValues": {
-                            "description": "Show hints with default values for non-passed parameters.",
-                            "default": true,
-                            "type": "boolean",
-                            "title": "Show hints with default values for non-passed parameters."
-                        }
-                    },
-                    "$id": "#/definitions/inlayHintParameters/sourceDefinedMethodCall"
                 }
             }
         }

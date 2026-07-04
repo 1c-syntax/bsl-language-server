@@ -1495,6 +1495,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#Locale-and-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locale and encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2319,6 +2330,12 @@
 <li>There is no need to start optimization of imports of the entire project, this is followed by maintainers. If, after optimizing imports, changed files appeared that did not change during the development process, you should notify the maintainers and roll back these changes.</li>
 </ul>
 </li>
+</ul>
+<h2 id="Locale-and-encoding">Locale and encoding<a class="headerlink" href="#Locale-and-encoding" title="Permanent link">&para;</a></h2>
+<p>The project is bilingual, and test fixtures include files with Cyrillic names (e.g. <code>Документ1.xml</code>). The JVM decodes file names using the system locale (<code>sun.jnu.encoding</code>): under <code>LC_CTYPE=POSIX</code>/<code>C</code> it falls back to ASCII and such fixtures cannot be read, breaking <code>processTestResources</code> and some tests. Run the build in a UTF-8 locale:</p>
+<ul>
+<li>Linux/macOS: <code>LANG=C.UTF-8 ./gradlew …</code> (or set a UTF-8 locale in your environment);</li>
+<li>Windows: use a UTF-8 console code page.</li>
 </ul>
 
 
