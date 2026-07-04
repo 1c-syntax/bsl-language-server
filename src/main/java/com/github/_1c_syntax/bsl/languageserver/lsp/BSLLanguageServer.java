@@ -231,6 +231,10 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
       var rootUri = resolveRootUri(params);
       if (rootUri == null) {
+        // Клиент не прислал ни folders, ни rootUri/rootPath — открыт одиночный файл или
+        // untitled-буфер. Заводим дефолтный контекст, чтобы такие документы можно было
+        // анализировать; иначе они не привяжутся ни к одному workspace и диагностики не пойдут.
+        serverContextProvider.registerDefaultWorkspace();
         return;
       }
       workspaceFolders = List.of(new WorkspaceFolder(rootUri, "root"));
@@ -338,7 +342,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * @return список наблюдателей за файлами для регистрации у клиента
    */
   private List<FileSystemWatcher> buildFileSystemWatchers(int watchKind) {
-    var workspaceRoots = serverContextProvider.getAllContexts().keySet();
+    // Только файловые корни: дефолтный («безворкспейсный») контекст имеет синтетический
+    // не-file URI, для которого относительный шаблон наблюдения не имеет смысла.
+    var workspaceRoots = serverContextProvider.getAllContexts().keySet().stream()
+      .filter(uri -> "file".equalsIgnoreCase(uri.getScheme()))
+      .toList();
 
     if (!hasDidChangeWatchedFilesRelativePatternSupport() || workspaceRoots.isEmpty()) {
       return WATCHED_FILE_PATTERNS.stream()

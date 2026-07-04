@@ -163,7 +163,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private static final long AWAIT_CLOSE = 30;
   private static final long AWAIT_FORCE_TERMINATION = 1;
-  private static final String NO_WORKSPACE_FOUND_MESSAGE = "No workspace found for document: {}";
 
   private final ServerContextProvider serverContextProvider;
   private final DiagnosticProvider diagnosticProvider;
@@ -704,10 +703,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var textDocumentItem = params.getTextDocument();
     var uri = Absolute.uri(textDocumentItem.getUri());
     var serverContext = getContextForDocument(textDocumentItem.getUri());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, uri);
-      return;
-    }
     var lock = serverContext.getDocumentLock(uri);
     lock.writeLock().lock();
 
@@ -748,10 +743,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     var uri = documentContext.getUri();
     var serverContext = getContextForDocument(params.getTextDocument().getUri());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, uri);
-      return;
-    }
 
     // Acquire read lock to ensure document is not being modified by addDocument/removeDocument
     var lock = serverContext.getDocumentLock(uri);
@@ -789,10 +780,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     var uri = documentContext.getUri();
     var serverContext = getContextForDocument(params.getTextDocument().getUri());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, uri);
-      return;
-    }
 
     // Remove and shutdown the executor for this document, waiting for all pending changes
     var docExecutor = documentExecutors.remove(uri);
@@ -1078,10 +1065,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     Integer version
   ) {
     var serverContext = getContextForDocument(documentContext.getUri().toString());
-    if (serverContext == null) {
-      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
-      return;
-    }
     serverContext.rebuildDocument(
       documentContext,
       newContent,
@@ -1125,10 +1108,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         cancelChecker -> {
           cancelChecker.checkCanceled();
           var serverContext = getContextForDocument(documentContext.getUri().toString());
-          if (serverContext == null) {
-            LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
-            return null;
-          }
           var lock = serverContext.getDocumentLock(documentContext.getUri());
           lock.readLock().lock();
           try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
@@ -1147,8 +1126,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @param uriString строковое представление URI документа
    * @return контекст сервера
    */
-  private @Nullable ServerContext getContextForDocument(String uriString) {
+  private ServerContext getContextForDocument(String uriString) {
     var uri = Absolute.uri(uriString);
-    return serverContextProvider.getServerContext(uri).orElse(null);
+    return serverContextProvider.resolveContextForDocument(uri);
   }
 }

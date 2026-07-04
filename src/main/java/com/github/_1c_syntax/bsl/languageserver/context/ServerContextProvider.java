@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Провайдер контекстов сервера для мульти-workspace окружения.
@@ -53,6 +54,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ServerContextProvider {
 
+  /**
+   * Синтетический URI дефолтного («безворкспейсного») контекста. Создаётся, когда клиент
+   * при инициализации не прислал ни одной workspace folder, ни {@code rootUri}/{@code rootPath}
+   * (режим открытия одиночного файла или untitled-буфера). Схема не {@code file} — этот URI
+   * не должен попадать в код, приводящий URI к файловому пути ({@code Absolute.path},
+   * {@code Path.of}).
+   */
+  public static final URI DEFAULT_WORKSPACE_URI = URI.create("bsl-language-server:/default-workspace");
+  private static final String DEFAULT_WORKSPACE_NAME = "default";
+
   private final ObjectProvider<ServerContext> serverContextObjectProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
   private final WorkspaceBeanScope workspaceScope;
@@ -60,6 +71,15 @@ public class ServerContextProvider {
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
   private final Map<URI, ServerContext> documentIndex = new ConcurrentHashMap<>();
+
+  /**
+   * URI «главного» workspace, в который маршрутизируются документы вне всех корней
+   * (untitled-буферы, файлы вне папок проекта, одиночный файл). Предпочтение — первому
+   * реальному workspace: синтетический дефолт становится главным лишь при отсутствии реальных
+   * папок и вытесняется, как только реальная папка добавляется (в т.ч. в рантайме через
+   * {@code didChangeWorkspaceFolders}). Хранит {@code null}, пока не зарегистрирован ни один контекст.
+   */
+  private final AtomicReference<@Nullable URI> primaryWorkspaceUri = new AtomicReference<>();
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextObjectProvider,
@@ -136,6 +156,44 @@ public class ServerContextProvider {
 
       contexts.put(workspaceUri, serverContext);
       workspaceRoots.put(workspaceUri, rootPath);
+      promoteToPrimary(workspaceUri);
+
+      return serverContext;
+    }
+  }
+
+  /**
+   * Создать дефолтный («безворкспейсный») контекст сервера.
+   * <p>
+   * Используется, когда при инициализации не переданы ни workspace folders, ни
+   * {@code rootUri}/{@code rootPath} (открыт одиночный файл или untitled-буфер). Контекст
+   * создаётся с {@code configurationRoot == null}, поэтому {@link ServerContext#populateContext()}
+   * ничего не сканирует. Документы, не попавшие ни в один workspace, маршрутизируются в него
+   * (или в первый добавленный workspace) — см. {@link #resolveContextForDocument(URI)}.
+   * <p>
+   * В отличие от {@link #addWorkspace(URI, String)}, метод намеренно не публикует
+   * {@code WorkspaceAddedEvent}: синтетический URI не является файловым, и подписчики,
+   * приводящие URI к пути (наблюдатели файлов конфигурации/библиотек), на нём падали бы.
+   *
+   * @return дефолтный контекст сервера (идемпотентно: повторные вызовы возвращают существующий)
+   */
+  public ServerContext registerDefaultWorkspace() {
+    var existing = contexts.get(DEFAULT_WORKSPACE_URI);
+    if (existing != null) {
+      return existing;
+    }
+
+    WorkspaceContextHolder.registerWorkspace(DEFAULT_WORKSPACE_URI, DEFAULT_WORKSPACE_NAME);
+
+    try (var ctx = WorkspaceContextHolder.forUri(DEFAULT_WORKSPACE_URI)) {
+      var serverContext = serverContextObjectProvider.getObject();
+
+      serverContext.setWorkspaceUri(DEFAULT_WORKSPACE_URI);
+      serverContext.setLanguageServerConfiguration(languageServerConfiguration);
+      // configurationRoot остаётся null: сканировать нечего, populateContext() выйдет сразу.
+
+      contexts.put(DEFAULT_WORKSPACE_URI, serverContext);
+      markPrimaryIfAbsent(DEFAULT_WORKSPACE_URI);
 
       return serverContext;
     }
@@ -148,6 +206,9 @@ public class ServerContextProvider {
    */
   public void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
+    // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
+    repointPrimaryBeforeRemoval(uri);
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
 
@@ -206,6 +267,52 @@ public class ServerContextProvider {
       .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
       .findFirst()
       .map(contexts::get);
+  }
+
+  /**
+   * Определить контекст сервера для документа с фолбэком на главный workspace.
+   * <p>
+   * Сначала ищет владеющий контекст по правилам {@link #getServerContext(URI)} (индекс, затем
+   * префикс URI workspace). Если документ не относится ни к одному корню (untitled-буфер, файл
+   * вне папок проекта, одиночный файл), маршрутизирует его в главный контекст
+   * ({@link #getPrimaryContext()}). URI нормализуется через {@link Absolute#uri(URI)}.
+   *
+   * @param documentUri URI документа (будет нормализован)
+   * @return контекст сервера для документа (никогда не {@code null})
+   * @throws IllegalStateException если не зарегистрирован ни один контекст
+   *         (провайдер используется до {@code initialize()} или после {@code shutdown()})
+   */
+  public ServerContext resolveContextForDocument(URI documentUri) {
+    var normalizedUri = Absolute.uri(documentUri);
+    return getServerContext(normalizedUri).orElseGet(this::getPrimaryContext);
+  }
+
+  /**
+   * Получить главный контекст — первый зарегистрированный workspace (или дефолтный контекст
+   * в режиме одиночного файла). Package-private: используется внутри
+   * {@link #resolveContextForDocument(URI)} и в тестах пакета.
+   * <p>
+   * После {@code initialize()} главный контекст всегда выбран ({@code setConfigurationRoot}
+   * регистрирует либо реальные папки, либо дефолт), поэтому его отсутствие — нарушение
+   * инварианта, а не штатная ситуация: провайдер используется до {@code initialize()} или
+   * после {@code shutdown()}. Такое падаем громко, а не глотаем пустым результатом.
+   *
+   * @return главный контекст сервера (никогда не {@code null})
+   * @throws IllegalStateException если главный контекст не выбран или отсутствует в карте
+   */
+  ServerContext getPrimaryContext() {
+    var uri = primaryWorkspaceUri.get();
+    if (uri == null) {
+      throw new IllegalStateException(
+        "Главный workspace-контекст не выбран: ServerContextProvider используется до initialize() "
+          + "или после shutdown()."
+      );
+    }
+    var context = contexts.get(uri);
+    if (context == null) {
+      throw new IllegalStateException("Главный workspace-контекст отсутствует для URI: " + uri);
+    }
+    return context;
   }
 
   /**
@@ -294,6 +401,7 @@ public class ServerContextProvider {
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );
     documentIndex.clear();
+    primaryWorkspaceUri.set(null);
     LOGGER.debug("Cleared all workspaces");
   }
 
@@ -313,6 +421,46 @@ public class ServerContextProvider {
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     documentIndex.remove(event.getUri());
+  }
+
+  /**
+   * Назначить главным дефолтный контекст, только если главный ещё не выбран
+   * (реальные папки при инициализации не пришли).
+   */
+  private void markPrimaryIfAbsent(URI workspaceUri) {
+    primaryWorkspaceUri.compareAndSet(null, workspaceUri);
+  }
+
+  /**
+   * Назначить реальный workspace главным, если главного нет либо им сейчас является
+   * синтетический дефолт. Так первая реальная папка (в т.ч. добавленная в рантайме) вытесняет
+   * дефолт, а последующие реальные папки главного не меняют.
+   */
+  private void promoteToPrimary(URI workspaceUri) {
+    primaryWorkspaceUri.updateAndGet(current ->
+      (current == null || DEFAULT_WORKSPACE_URI.equals(current)) ? workspaceUri : current
+    );
+  }
+
+  /**
+   * Переназначить главный контекст при удалении текущего главного: предпочитаем оставшийся
+   * реальный workspace синтетическому дефолту, дефолт — как последний вариант.
+   */
+  private void repointPrimaryBeforeRemoval(URI removedUri) {
+    if (!removedUri.equals(primaryWorkspaceUri.get())) {
+      return;
+    }
+    // Карта ещё содержит удаляемый workspace (вызов идёт до удаления) — исключаем его явно
+    // и предпочитаем оставшийся реальный workspace синтетическому дефолту
+    var next = contexts.keySet().stream()
+      .filter(uri -> !uri.equals(removedUri))
+      .filter(uri -> !DEFAULT_WORKSPACE_URI.equals(uri))
+      .findFirst()
+      .orElseGet(() ->
+        !DEFAULT_WORKSPACE_URI.equals(removedUri) && contexts.containsKey(DEFAULT_WORKSPACE_URI)
+          ? DEFAULT_WORKSPACE_URI : null
+      );
+    primaryWorkspaceUri.set(next);
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {
