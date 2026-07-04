@@ -24,10 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -53,6 +56,23 @@ public class InlayHintsConfiguration {
     return inlayHintSuppliers.stream()
       .map(inlayHintSupplier -> (InlayHintSupplier<InlayHintData>) inlayHintSupplier)
       .collect(Collectors.toMap(InlayHintSupplier::getId, Function.identity()));
+  }
+
+  /**
+   * Зарегистрировать классы данных inlay hints как полиморфные подтипы JsonMapper.
+   *
+   * @param inlayHintSuppliers Плоский список сапплаеров.
+   * @return Кастомайзер JsonMapper, регистрирующий подтипы по их идентификаторам.
+   */
+  @Bean
+  public JsonMapperBuilderCustomizer inlayHintJsonCustomizer(
+    Collection<InlayHintSupplier<? extends InlayHintData>> inlayHintSuppliers
+  ) {
+    List<NamedType> namedTypes = inlayHintSuppliers.stream()
+      .filter(supplier -> supplier.getInlayHintDataClass() != null)
+      .map(supplier -> new NamedType(supplier.getInlayHintDataClass(), supplier.getId()))
+      .toList();
+    return builder -> namedTypes.forEach(builder::registerSubtypes);
   }
 
   /**

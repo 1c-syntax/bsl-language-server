@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
+import com.github._1c_syntax.bsl.languageserver.MainApplication;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
@@ -80,7 +80,7 @@ class SmokyTest extends AbstractServerContextAwareTest {
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 

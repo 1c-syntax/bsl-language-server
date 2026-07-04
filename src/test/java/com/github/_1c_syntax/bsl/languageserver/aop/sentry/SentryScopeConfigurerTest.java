@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import io.sentry.Sentry;
 import io.sentry.SentryEvent;
@@ -85,7 +85,7 @@ class SentryScopeConfigurerTest {
     var initializeParams = new InitializeParams();
     initializeParams.setClientInfo(new ClientInfo("Test Client", "1.2.3"));
 
-    var event = new LanguageServerInitializeRequestReceivedEvent(
+    var event = new LanguageServerInitializedEvent(
       mock(LanguageServer.class),
       initializeParams
     );
@@ -107,7 +107,7 @@ class SentryScopeConfigurerTest {
     var initializeParams = new InitializeParams();
     // clientInfo is null by default
 
-    var event = new LanguageServerInitializeRequestReceivedEvent(
+    var event = new LanguageServerInitializedEvent(
       mock(LanguageServer.class),
       initializeParams
     );
@@ -132,7 +132,7 @@ class SentryScopeConfigurerTest {
     when(clientInfo.getVersion()).thenReturn(null);
     initializeParams.setClientInfo(clientInfo);
 
-    var event = new LanguageServerInitializeRequestReceivedEvent(
+    var event = new LanguageServerInitializedEvent(
       mock(LanguageServer.class),
       initializeParams
     );

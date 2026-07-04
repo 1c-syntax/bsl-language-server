@@ -409,4 +409,41 @@ public final class Trees {
     var start = tokenRange.getStart();
     return Positions.isBefore(start, position) || start.equals(position);
   }
+
+  /**
+   * Проверить равенство двух узлов синтаксического дерева.
+   *
+   * @param leftNode  Первый узел для сравнения
+   * @param rightNode Второй узел для сравнения
+   * @return true, если узлы эквивалентны
+   */
+  public static boolean equalNodes(Tree leftNode, Tree rightNode) {
+
+    if (leftNode.getChildCount() != rightNode.getChildCount()
+      || !leftNode.getClass().equals(rightNode.getClass())) {
+      return false;
+    }
+
+    if (leftNode instanceof TerminalNode node) {
+
+      int leftNodeType = node.getSymbol().getType();
+      int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
+
+      if (leftNodeType != rightNodeType
+        || (leftNodeType == BSLParser.STRING
+        && !leftNode.toString().equals(rightNode.toString()))
+        || (!leftNode.toString().equalsIgnoreCase(rightNode.toString()))) {
+        return false;
+      }
+
+    }
+
+    for (int i = 0; i < leftNode.getChildCount(); i++) {
+      if (!equalNodes(leftNode.getChild(i), rightNode.getChild(i))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

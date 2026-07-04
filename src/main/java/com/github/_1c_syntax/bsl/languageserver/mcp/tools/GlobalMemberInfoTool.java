@@ -83,7 +83,14 @@ public class GlobalMemberInfoTool {
       + "`Сообщить`/`Message`, global properties like `Метаданные`/`Metadata`, and system enums.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields.
     // Known upstream bug, open as of 2.0.0-M6.
-    generateOutputSchema = false)
+    generateOutputSchema = false,
+    // Read-only: only inspects 1C/OneScript code, never mutates anything. Hint clients so the
+    // tool is not treated as destructive.
+    annotations = @McpTool.McpAnnotations(
+      readOnlyHint = true,
+      destructiveHint = false,
+      idempotentHint = true,
+      openWorldHint = false))
   public Result globalMemberInfo(
     @McpToolParam(required = true, description = McpToolParams.GLOBAL_MEMBER_NAME)
     String name,

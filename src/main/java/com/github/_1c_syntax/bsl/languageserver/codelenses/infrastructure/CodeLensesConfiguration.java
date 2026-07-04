@@ -26,11 +26,13 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.OrderUtils;
+import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -84,6 +86,22 @@ public class CodeLensesConfiguration {
       .sorted(Comparator.comparing(o ->
         Objects.requireNonNullElse(OrderUtils.getOrder(o.getClass()), Ordered.LOWEST_PRECEDENCE)))
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Зарегистрировать классы данных линз как полиморфные подтипы JsonMapper.
+   *
+   * @param codeLensSuppliers Плоский список сапплаеров.
+   * @return Кастомайзер JsonMapper, регистрирующий подтипы по их идентификаторам.
+   */
+  @Bean
+  public JsonMapperBuilderCustomizer codeLensJsonCustomizer(
+    Collection<CodeLensSupplier<? extends CodeLensData>> codeLensSuppliers
+  ) {
+    List<NamedType> namedTypes = codeLensSuppliers.stream()
+      .map(supplier -> new NamedType(supplier.getCodeLensDataClass(), supplier.getId()))
+      .toList();
+    return builder -> namedTypes.forEach(builder::registerSubtypes);
   }
 
   private static boolean supplierIsEnabled(

@@ -282,6 +282,55 @@ public class TypeService {
   }
 
   /**
+   * Разрешить имя или квалифицированную ссылку в символ-определение того, что она
+   * обозначает.
+   * <p>
+   * Ссылка не привязана к {@code См.}: это может быть метод, общий модуль, менеджер
+   * справочника/документа и вообще любой тип, имеющий отражение в виде модуля.
+   * <ul>
+   *   <li>неквалифицированное имя ({@code Метод}) — метод того же модуля (функция
+   *       или процедура);</li>
+   *   <li>квалифицированная ссылка на член ({@code Модуль.Метод},
+   *       {@code Справочники.X.Метод}, {@code Тип.Член}) — тем же обходом цепочки
+   *       членов, что и резолв типа по строке
+   *       ({@link SymbolTypeIndex#resolveReferenceSymbol}), единообразно для общих
+   *       модулей, модулей менеджеров и прочих типов;</li>
+   *   <li>имя типа целиком ({@code ОбщийМодуль}, {@code Справочники.Номенклатура}) —
+   *       его определяющий символ ({@link #definingSymbol}).</li>
+   * </ul>
+   *
+   * @param reference         имя/квалифицированная ссылка (например, текст
+   *                          {@code См.}-ссылки без ключевого слова).
+   * @param requestingContext документ, относительно которого резолвится ссылка.
+   * @return символ-определение цели, либо {@code empty}.
+   */
+  public Optional<SourceDefinedSymbol> resolveDefinition(String reference, DocumentContext requestingContext) {
+    if (reference.isBlank()) {
+      return Optional.empty();
+    }
+    var fileType = requestingContext.getFileType();
+    if (reference.indexOf('.') < 0) {
+      // Метод того же модуля (функция или процедура) — по неквалифицированному имени.
+      var localMethod = requestingContext.getSymbolTree()
+        .getMethodSymbol(reference)
+        .map(SourceDefinedSymbol.class::cast);
+      if (localMethod.isPresent()) {
+        return localMethod;
+      }
+    } else {
+      // Квалифицированная ссылка на член (Модуль.Метод, Справочники.X.Метод,
+      // Тип.Член) — тем же обходом цепочки, что и резолв типа по строке.
+      var member = symbolTypeIndex.resolveReferenceSymbol(reference, fileType);
+      if (member.isPresent()) {
+        return member;
+      }
+    }
+    // Ссылка на имя типа (общий модуль целиком, справочник и т.п.) — его
+    // определяющий символ. Тот же fallback на имя типа, что и у резолва типа по строке.
+    return resolve(reference, fileType).flatMap(typeRef -> definingSymbol(typeRef, requestingContext));
+  }
+
+  /**
    * Для символа-модуля OneScript-класса предпочесть символ конструктора
    * {@code ПриСозданииОбъекта}, если он есть; иначе вернуть сам символ-модуль
    * без изменений.

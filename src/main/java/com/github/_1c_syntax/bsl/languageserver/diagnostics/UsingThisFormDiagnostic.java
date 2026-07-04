@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -142,7 +141,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
       newTextEdits.add(getQuickFixText(diagnostic, documentContext));
     }
 
-    return CodeActionProvider.createCodeActions(
+    return QuickFixProvider.createCodeActions(
       newTextEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

@@ -43,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class InlayHintPatternsTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private PlatformMethodCallInlayHintSupplier supplier;
+  private PlatformMethodCallInlayHintCollector supplier;
 
   @Test
   void hintsForGlobalFunctionWithMultipleArgs() {

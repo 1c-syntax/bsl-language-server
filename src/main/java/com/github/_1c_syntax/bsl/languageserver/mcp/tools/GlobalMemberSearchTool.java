@@ -104,7 +104,14 @@ public class GlobalMemberSearchTool {
       + "`global_member_info` for a single member by exact name.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields.
     // Known upstream bug, open as of 2.0.0-M6.
-    generateOutputSchema = false)
+    generateOutputSchema = false,
+    // Read-only: only inspects 1C/OneScript code, never mutates anything. Hint clients so the
+    // tool is not treated as destructive.
+    annotations = @McpTool.McpAnnotations(
+      readOnlyHint = true,
+      destructiveHint = false,
+      idempotentHint = true,
+      openWorldHint = false))
   public Result globalMemberSearch(
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,

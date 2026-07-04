@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.formatting.BslFormatter;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -68,7 +68,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagno
     defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
   )
   private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
-  private final FormatProvider formatProvider;
+  private final BslFormatter formatter;
 
   private final List<BinaryOperationNode> binaryOperations = new ArrayList<>();
   private BSLParser.ExpressionContext expressionContext;
@@ -194,7 +194,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagno
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
-    return formatProvider.getNewText(
+    return formatter.getNewText(
       tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
 
   }

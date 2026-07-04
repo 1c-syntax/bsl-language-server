@@ -86,4 +86,7 @@ bsl-language-server_*.zip
 /.idea/material_theme_project_new.xml
 .bsl-ls-cache/
 __pycache__/
-.claude/
+# Локальное состояние Claude Code игнорируем, но общий settings.json (env-локаль и т.п.)
+# держим под версионным контролем — он нужен веб-сессиям всех контрибьюторов.
+.claude/*
+!.claude/settings.json

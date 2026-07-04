@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.FileCodeBlockBeforeSubContext;
@@ -209,6 +208,6 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
       .map(parseTree -> (BSLParser.GlobalMethodCallContext) parseTree)
       .filter(globalMethodCall -> DELETE_FROM_TEMP_STORAGE_PATTERN.matcher(globalMethodCall.methodName().getText())
         .matches())
-      .anyMatch(globalMethodCall -> DiagnosticHelper.equalNodes(sourceCallCtx, globalMethodCall.doCall()));
+      .anyMatch(globalMethodCall -> Trees.equalNodes(sourceCallCtx, globalMethodCall.doCall()));
   }
 }

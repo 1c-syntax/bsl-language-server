@@ -72,6 +72,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -738,7 +739,9 @@ public class ExpressionTypeInferencer {
     }
     var symbol = maybeSymbol.get();
     if (!ctx.visited.add(symbol)) {
-      return TypeSet.EMPTY;
+      // Цикл: для переменной-аккумулятора возвращаем накопленный к этому моменту
+      // тип (см. inProgress), для прочих символов — пусто, как и раньше.
+      return ctx.inProgress.getOrDefault(symbol, TypeSet.EMPTY);
     }
     try {
       if (symbol instanceof MethodSymbol method) {
@@ -772,6 +775,38 @@ public class ExpressionTypeInferencer {
       return cached;
     }
 
+    // Повторный вход в инференс той же переменной (self-reference в одном из её
+    // присваиваний) — возвращаем накопленный к этому моменту тип, а не гоняем
+    // тело второй раз (иначе частичный результат затёр бы себя и потерялся, #4205).
+    var partial = ctx.inProgress.get(variable);
+    if (partial != null) {
+      return partial;
+    }
+    ctx.inProgress.put(variable, TypeSet.EMPTY);
+    try {
+      var acc = inferVariableInternal(variable, ctx);
+      // Кэшируем только «чистый корень» инференса (visited содержит максимум саму
+      // переменную). Вложенный вызов (внутри инференса другой переменной, visited
+      // ≥ 2) мог быть усечён цикл-гардом и зависит от порядка обхода — его результат
+      // некорректно переиспользовать как самостоятельный. Перф от этого не страдает:
+      // горячий путь (ресивер member-доступа) — всегда корень, а вложенные выводы
+      // и так покрыты кэшем своего корня.
+      if (ctx.visited.size() <= 1) {
+        inferredVariableTypeIndex.put(variable, acc);
+      }
+      return acc;
+    } finally {
+      ctx.inProgress.remove(variable);
+    }
+  }
+
+  /**
+   * Тело инференса переменной без кэш-обвязки. По мере объединения присваиваний
+   * публикует растущий {@code acc} в {@link InferenceContext#inProgress}, чтобы
+   * self-reference (например, {@code Строка = Строка + "..."}) резолвился в уже
+   * известный тип из предыдущих присваиваний, а не в {@link TypeSet#EMPTY}.
+   */
+  private TypeSet inferVariableInternal(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
     TypeSet acc = TypeSet.EMPTY;
     Set<Position> visitedPositions = new HashSet<>();
@@ -781,10 +816,12 @@ public class ExpressionTypeInferencer {
     }
 
     acc = acc.union(typesFromVariableTrailingComment(variable));
+    ctx.inProgress.put(variable, acc);
 
     var declarationStart = variable.getSelectionRange().getStart();
     if (visitedPositions.add(declarationStart)) {
       acc = acc.union(inferFromDefinitionPosition(owner, declarationStart, ctx));
+      ctx.inProgress.put(variable, acc);
     }
     for (var occurrence : referenceIndex.getReferencesTo(variable)) {
       if (occurrence.occurrenceType() != OccurrenceType.DEFINITION) {
@@ -793,6 +830,7 @@ public class ExpressionTypeInferencer {
       var start = occurrence.selectionRange().getStart();
       if (visitedPositions.add(start)) {
         acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
+        ctx.inProgress.put(variable, acc);
       }
     }
     acc = acc.union(autumnInjectedType(variable));
@@ -800,16 +838,6 @@ public class ExpressionTypeInferencer {
     acc = attachDefaultElementTypes(acc);
     acc = accumulateStructureInsertFields(variable, acc, ctx);
     acc = accumulateValueTableColumnFields(variable, acc, ctx);
-
-    // Кэшируем только «чистый корень» инференса (visited содержит максимум саму
-    // переменную). Вложенный вызов (внутри инференса другой переменной, visited
-    // ≥ 2) мог быть усечён цикл-гардом и зависит от порядка обхода — его результат
-    // некорректно переиспользовать как самостоятельный. Перф от этого не страдает:
-    // горячий путь (ресивер member-доступа) — всегда корень, а вложенные выводы
-    // и так покрыты кэшем своего корня.
-    if (ctx.visited.size() <= 1) {
-      inferredVariableTypeIndex.put(variable, acc);
-    }
     return acc;
   }
 
@@ -1438,6 +1466,13 @@ public class ExpressionTypeInferencer {
   static final class InferenceContext {
     final DocumentContext documentContext;
     final Set<SourceDefinedSymbol> visited = new HashSet<>();
+    /**
+     * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
+     * завершён. Self-reference (например, {@code Строка = Строка + "..."}) резолвится
+     * в это частичное значение вместо {@link TypeSet#EMPTY}, что даёт one-pass
+     * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
+     */
+    final Map<SourceDefinedSymbol, TypeSet> inProgress = new HashMap<>();
     int depth;
 
     InferenceContext(DocumentContext documentContext) {

@@ -62,7 +62,14 @@ public class DocumentSymbolsTool {
     // fields (here — nullable symbol detail). Known upstream bug, open as of 2.0.0-M6:
     // https://github.com/spring-projects/spring-ai/issues/4825
     // https://github.com/spring-projects/spring-ai/issues/4487
-    generateOutputSchema = false)
+    generateOutputSchema = false,
+    // Read-only: only inspects 1C/OneScript code, never mutates anything. Hint clients so the
+    // tool is not treated as destructive.
+    annotations = @McpTool.McpAnnotations(
+      readOnlyHint = true,
+      destructiveHint = false,
+      idempotentHint = true,
+      openWorldHint = false))
   public Result documentSymbols(
     @McpToolParam(required = true, description = McpToolParams.FILE)
     String file

@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComple
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -78,8 +78,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
 
       var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
       var arguments = new ToggleComplexityInlayHintsCommandArguments(
+        data.getUri(),
         commandSupplier.getId(),
-        data
+        data.getMethodName()
       );
 
       var command = commandSupplier.createCommand(title, arguments);

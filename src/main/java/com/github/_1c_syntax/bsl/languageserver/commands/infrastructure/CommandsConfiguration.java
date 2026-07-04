@@ -23,10 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.commands.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -52,6 +55,22 @@ public class CommandsConfiguration {
     return commandSuppliers.stream()
       .map(commandSupplier -> (CommandSupplier<CommandArguments>) commandSupplier)
       .collect(Collectors.toMap(CommandSupplier::getId, Function.identity()));
+  }
+
+  /**
+   * Зарегистрировать классы аргументов команд как полиморфные подтипы JsonMapper.
+   *
+   * @param commandSuppliers Плоский список сапплаеров.
+   * @return Кастомайзер JsonMapper, регистрирующий подтипы по их идентификаторам.
+   */
+  @Bean
+  public JsonMapperBuilderCustomizer commandJsonCustomizer(
+    Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers
+  ) {
+    List<NamedType> namedTypes = commandSuppliers.stream()
+      .map(supplier -> new NamedType(supplier.getCommandArgumentsClass(), supplier.getId()))
+      .toList();
+    return builder -> namedTypes.forEach(builder::registerSubtypes);
   }
 
 }

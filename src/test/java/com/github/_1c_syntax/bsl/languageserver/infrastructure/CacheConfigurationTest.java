@@ -21,10 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.Status;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
@@ -45,6 +46,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CacheConfigurationTest {
 
+  private static final String CACHE_NAME = "testCache";
+  private static final List<EhcacheRegistrar> REGISTRARS = List.of(new TestRegistrar());
+
   private CacheConfiguration cacheConfiguration;
   private CacheManager ehcacheManager;
   private final List<CacheManager> additionalManagers = new ArrayList<>();
@@ -58,18 +62,18 @@ class CacheConfigurationTest {
       .toArray(CompletableFuture[]::new);
     CompletableFuture.allOf(closeFutures).join();
     additionalManagers.clear();
-    
+
     // Close main manager
     closeManager(ehcacheManager);
     ehcacheManager = null;
-    
+
     // Clean up temporary directories after closing all managers
     for (Path tempDir : tempDirectories) {
       deleteDirectorySilently(tempDir);
     }
     tempDirectories.clear();
   }
-  
+
   private void closeManager(CacheManager manager) {
     if (manager != null && manager.getStatus() != Status.UNINITIALIZED) {
       try {
@@ -80,7 +84,7 @@ class CacheConfigurationTest {
       }
     }
   }
-  
+
   /**
    * Рекурсивно удаляет директорию, игнорируя ошибки доступа к файлам.
    * Используется для очистки временных директорий после закрытия EhCache менеджеров.
@@ -89,7 +93,7 @@ class CacheConfigurationTest {
     if (directory == null || !Files.exists(directory)) {
       return;
     }
-    
+
     try {
       Files.walkFileTree(directory, new SimpleFileVisitor<>() {
         @Override
@@ -125,7 +129,8 @@ class CacheConfigurationTest {
     // when
     ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
-      "createInMemoryEhcacheManager"
+      "createInMemoryEhcacheManager",
+      REGISTRARS
     );
 
     // then
@@ -133,12 +138,12 @@ class CacheConfigurationTest {
     assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
     // Verify cache is created and accessible
-    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    Cache<String, String> cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);
     assertThat(cache).isNotNull();
 
     // Verify cache works
-    cache.put("test", WordStatus.NO_ERROR);
-    assertThat(cache.get("test")).isEqualTo(WordStatus.NO_ERROR);
+    cache.put("test", "noError");
+    assertThat(cache.get("test")).isEqualTo("noError");
   }
 
   @Test
@@ -157,7 +162,8 @@ class CacheConfigurationTest {
       "createEhcacheManagerWithRetry",
       cachePathProvider,
       basePath,
-      fullPath
+      fullPath,
+      REGISTRARS
     );
 
     // then
@@ -165,7 +171,7 @@ class CacheConfigurationTest {
     assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
     // Verify cache is created
-    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    Cache<String, String> cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);
     assertThat(cache).isNotNull();
   }
 
@@ -183,11 +189,12 @@ class CacheConfigurationTest {
     for (int i = 0; i < 10; i++) {
       var cachePath = cachePathProvider.getCachePath(basePath, fullPath, i);
       Files.createDirectories(cachePath);
-      
+
       CacheManager lockedManager = (CacheManager) ReflectionTestUtils.invokeMethod(
         cacheConfiguration,
-        "createEhcacheManager",
-        cachePath
+        "createPersistentEhcacheManager",
+        cachePath,
+        REGISTRARS
       );
       additionalManagers.add(lockedManager);
     }
@@ -198,7 +205,8 @@ class CacheConfigurationTest {
       "createEhcacheManagerWithRetry",
       cachePathProvider,
       basePath,
-      fullPath
+      fullPath,
+      REGISTRARS
     );
 
     // then
@@ -206,11 +214,11 @@ class CacheConfigurationTest {
     assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
     // Verify cache is created and works
-    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    Cache<String, String> cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);
     assertThat(cache).isNotNull();
-    
-    cache.put("test", WordStatus.NO_ERROR);
-    assertThat(cache.get("test")).isEqualTo(WordStatus.NO_ERROR);
+
+    cache.put("test", "noError");
+    assertThat(cache.get("test")).isEqualTo("noError");
   }
 
   @Test
@@ -225,8 +233,9 @@ class CacheConfigurationTest {
     // when
     ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
-      "createEhcacheManager",
-      cachePath
+      "createPersistentEhcacheManager",
+      cachePath,
+      REGISTRARS
     );
 
     // then
@@ -234,12 +243,12 @@ class CacheConfigurationTest {
     assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
     // Verify cache is created with persistence
-    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    Cache<String, String> cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);
     assertThat(cache).isNotNull();
 
     // Verify cache works
-    cache.put("persistentKey", WordStatus.HAS_ERROR);
-    assertThat(cache.get("persistentKey")).isEqualTo(WordStatus.HAS_ERROR);
+    cache.put("persistentKey", "hasError");
+    assertThat(cache.get("persistentKey")).isEqualTo("hasError");
   }
 
   @Test
@@ -250,29 +259,58 @@ class CacheConfigurationTest {
     // when
     ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
-      "createInMemoryEhcacheManager"
+      "createInMemoryEhcacheManager",
+      REGISTRARS
     );
 
     // then
-    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
-    cache.put("key1", WordStatus.NO_ERROR);
-    cache.put("key2", WordStatus.HAS_ERROR);
+    Cache<String, String> cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);
+    cache.put("key1", "noError");
+    cache.put("key2", "hasError");
 
-    assertThat(cache.get("key1")).isEqualTo(WordStatus.NO_ERROR);
-    assertThat(cache.get("key2")).isEqualTo(WordStatus.HAS_ERROR);
+    assertThat(cache.get("key1")).isEqualTo("noError");
+    assertThat(cache.get("key2")).isEqualTo("hasError");
 
     // Close and recreate - data should be lost
     ehcacheManager.close();
 
     ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
-      "createInMemoryEhcacheManager"
+      "createInMemoryEhcacheManager",
+      REGISTRARS
     );
 
-    cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
-    
+    cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);
+
     // Data should not persist
     assertThat(cache.get("key1")).isNull();
     assertThat(cache.get("key2")).isNull();
+  }
+
+  /**
+   * Универсальный реестр для проверки механики менеджера без привязки к конкретному домену.
+   */
+  private static final class TestRegistrar implements EhcacheRegistrar {
+    @Override
+    public String cacheName() {
+      return CACHE_NAME;
+    }
+
+    @Override
+    public Class<?> keyType() {
+      return String.class;
+    }
+
+    @Override
+    public Class<?> valueType() {
+      return String.class;
+    }
+
+    @Override
+    public org.ehcache.config.CacheConfiguration<String, String> configuration(ResourcePoolsBuilder resourcePools) {
+      return CacheConfigurationBuilder
+        .newCacheConfigurationBuilder(String.class, String.class, resourcePools)
+        .build();
+    }
   }
 }

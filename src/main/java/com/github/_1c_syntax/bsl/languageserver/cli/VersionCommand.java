@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Spec;
 
 import java.util.concurrent.Callable;
 
@@ -45,13 +47,16 @@ public class VersionCommand implements Callable<Integer> {
 
   private final ServerInfo serverInfo;
 
+  @Spec
+  private CommandSpec spec;
+
   public Integer call() {
     String version = serverInfo.getVersion();
-    if (version.isEmpty()) {
+    if (version == null || version.isEmpty()) {
       return 1;
     }
 
-    System.out.printf(
+    spec.commandLine().getOut().printf(
       "version: %s%n",
       version
     );

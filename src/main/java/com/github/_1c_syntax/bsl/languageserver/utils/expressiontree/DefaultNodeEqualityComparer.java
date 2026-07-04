@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 
 import java.util.List;
 
@@ -115,10 +115,10 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
   }
 
   protected boolean identifiersEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
-    return DiagnosticHelper.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
+    return Trees.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
   }
 
   protected boolean literalsEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
-    return DiagnosticHelper.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
+    return Trees.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
   }
 }

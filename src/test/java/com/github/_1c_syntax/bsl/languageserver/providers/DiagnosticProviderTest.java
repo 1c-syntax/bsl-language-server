@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
-import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Diagnostic;
@@ -167,7 +167,7 @@ class DiagnosticProviderTest {
     capabilities.setWorkspace(workspace);
     params.setCapabilities(capabilities);
     
-    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+    var event = new LanguageServerInitializedEvent(languageServer, params);
 
     // when-then
     assertThatCode(() -> diagnosticProvider.handleInitializeEvent(event))
@@ -184,7 +184,7 @@ class DiagnosticProviderTest {
     capabilities.setWorkspace(workspace);
     params.setCapabilities(capabilities);
     
-    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+    var event = new LanguageServerInitializedEvent(languageServer, params);
 
     // when-then
     assertThatCode(() -> diagnosticProvider.handleInitializeEvent(event))
@@ -302,7 +302,7 @@ class DiagnosticProviderTest {
     var params = new InitializeParams();
     params.setCapabilities(capabilities);
     diagnosticProvider.handleInitializeEvent(
-      new LanguageServerInitializeRequestReceivedEvent(languageServer, params)
+      new LanguageServerInitializedEvent(languageServer, params)
     );
   }
 }
