@@ -278,17 +278,13 @@ public class ServerContextProvider {
    * ({@link #getPrimaryContext()}). URI нормализуется через {@link Absolute#uri(URI)}.
    *
    * @param documentUri URI документа (будет нормализован)
-   * @return контекст сервера для документа (Optional всегда непустой после {@code initialize()})
+   * @return контекст сервера для документа (никогда не {@code null})
    * @throws IllegalStateException если не зарегистрирован ни один контекст
    *         (провайдер используется до {@code initialize()} или после {@code shutdown()})
    */
-  public Optional<ServerContext> resolveContextForDocument(URI documentUri) {
+  public ServerContext resolveContextForDocument(URI documentUri) {
     var normalizedUri = Absolute.uri(documentUri);
-    var direct = getServerContext(normalizedUri);
-    if (direct.isPresent()) {
-      return direct;
-    }
-    return getPrimaryContext();
+    return getServerContext(normalizedUri).orElseGet(this::getPrimaryContext);
   }
 
   /**
@@ -301,10 +297,10 @@ public class ServerContextProvider {
    * инварианта, а не штатная ситуация: провайдер используется до {@code initialize()} или
    * после {@code shutdown()}. Такое падаем громко, а не глотаем пустым результатом.
    *
-   * @return главный контекст сервера (Optional всегда непустой)
+   * @return главный контекст сервера (никогда не {@code null})
    * @throws IllegalStateException если главный контекст не выбран или отсутствует в карте
    */
-  Optional<ServerContext> getPrimaryContext() {
+  ServerContext getPrimaryContext() {
     var uri = primaryWorkspaceUri.get();
     if (uri == null) {
       throw new IllegalStateException(
@@ -316,7 +312,7 @@ public class ServerContextProvider {
     if (context == null) {
       throw new IllegalStateException("Главный workspace-контекст отсутствует для URI: " + uri);
     }
-    return Optional.of(context);
+    return context;
   }
 
   /**

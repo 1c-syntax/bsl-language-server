@@ -137,7 +137,7 @@ class BSLLanguageServerTest {
     var defaultContext = serverContextProvider.getAllContexts().get(ServerContextProvider.DEFAULT_WORKSPACE_URI);
     assertThat(defaultContext).isNotNull();
     assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:Untitled-1")))
-      .contains(defaultContext);
+      .isSameAs(defaultContext);
   }
 
   @Test
@@ -153,8 +153,7 @@ class BSLLanguageServerTest {
 
     // then — маршрутизируется в главный (первый) workspace, а не теряется;
     // дефолтный контекст при наличии папок не создаётся
-    assertThat(context).isPresent();
-    assertThat(context.get().getConfigurationRoot()).isNotNull();
+    assertThat(context.getConfigurationRoot()).isNotNull();
     assertThat(serverContextProvider.getAllContexts())
       .doesNotContainKey(ServerContextProvider.DEFAULT_WORKSPACE_URI);
   }
