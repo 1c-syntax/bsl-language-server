@@ -117,8 +117,6 @@ public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
     CaseInsensitivePattern.compile("--server\\..*"),
     // Опции команды по умолчанию (lsp), допустимые без явного указания команды: `--mcp`, `--mcp-path`.
     CaseInsensitivePattern.compile("--mcp(-path)?(=.*)?"),
-    // Отладочные флаги Spring Boot; пропускаются только вместе с ENABLE_DEBUG_OPTION
-    // (иначе снимаются ещё в guardSpringDebugMode до старта контекста).
     CaseInsensitivePattern.compile("--debug(=.*)?"),
     CaseInsensitivePattern.compile("--trace(=.*)?")
   );
