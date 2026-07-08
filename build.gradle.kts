@@ -97,7 +97,7 @@ dependencies {
 
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.37.2")
-    api("io.github.1c-syntax:utils:0.8.0")
+    api("io.github.1c-syntax:utils:0.9.0")
     api("io.github.1c-syntax:mdclasses:0.19.1")
     api("io.github.1c-syntax:bsl-common-library:0.12.1")
     api("io.github.1c-syntax:supportconf:0.17.1")
