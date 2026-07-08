@@ -65,6 +65,71 @@ class MainApplicationModeTest {
   }
 
   @Test
+  void debugFlagsStrippedWithoutOptIn() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(new String[]{"analyze", "--debug", "--trace"});
+
+      assertThat(result).containsExactly("analyze");
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+      assertThat(System.getProperty("trace")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void debugFlagsKeptWithOptIn() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(
+        new String[]{"analyze", "--debug", MainApplication.ENABLE_DEBUG_OPTION + "=true"});
+
+      // Флаг оставлен, а сама опция-подтверждение убрана из аргументов.
+      assertThat(result).containsExactly("analyze", "--debug");
+      assertThat(System.getProperty("debug")).isNull();
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void optInWithFalseValueDoesNotEnableDebug() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(
+        new String[]{"--debug", MainApplication.ENABLE_DEBUG_OPTION + "=false"});
+
+      assertThat(result).isEmpty();
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void guardIsNoOpWithoutDebugRequest() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(new String[]{"analyze", "--srcDir", "."});
+
+      assertThat(result).containsExactly("analyze", "--srcDir", ".");
+      // Без запроса на отладку глобальное состояние не трогаем.
+      assertThat(System.getProperty("debug")).isNull();
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
   void mcpEndpointPathAppliedOnlyForMcpHttp() {
     System.clearProperty(MCP_ENDPOINT_PROPERTY);
     try {
