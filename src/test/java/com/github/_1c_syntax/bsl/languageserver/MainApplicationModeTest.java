@@ -130,6 +130,23 @@ class MainApplicationModeTest {
   }
 
   @Test
+  void debugFromSystemPropertyForcedOff() {
+    // Запрос на отладку без флага командной строки — через свойство debug (как relaxed-binding DEBUG).
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      System.setProperty("debug", "true");
+      var result = MainApplication.guardSpringDebugMode(new String[]{"analyze"});
+
+      assertThat(result).containsExactly("analyze");
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
   void mcpEndpointPathAppliedOnlyForMcpHttp() {
     System.clearProperty(MCP_ENDPOINT_PROPERTY);
     try {
