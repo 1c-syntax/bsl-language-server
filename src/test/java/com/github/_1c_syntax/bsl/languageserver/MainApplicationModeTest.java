@@ -88,8 +88,9 @@ class MainApplicationModeTest {
       var result = MainApplication.guardSpringDebugMode(
         new String[]{"analyze", "--debug", MainApplication.ENABLE_DEBUG_OPTION + "=true"});
 
-      // Флаг оставлен, а сама опция-подтверждение убрана из аргументов.
-      assertThat(result).containsExactly("analyze", "--debug");
+      // При осознанном включении аргументы отдаются как есть, свойства не трогаются.
+      assertThat(result)
+        .containsExactly("analyze", "--debug", MainApplication.ENABLE_DEBUG_OPTION + "=true");
       assertThat(System.getProperty("debug")).isNull();
     } finally {
       System.clearProperty("debug");
@@ -105,7 +106,8 @@ class MainApplicationModeTest {
       var result = MainApplication.guardSpringDebugMode(
         new String[]{"--debug", MainApplication.ENABLE_DEBUG_OPTION + "=false"});
 
-      assertThat(result).isEmpty();
+      // =false не включает отладку: флаг --debug снят, свойство debug принудительно false.
+      assertThat(result).containsExactly(MainApplication.ENABLE_DEBUG_OPTION + "=false");
       assertThat(System.getProperty("debug")).isEqualTo("false");
     } finally {
       System.clearProperty("debug");
@@ -114,15 +116,16 @@ class MainApplicationModeTest {
   }
 
   @Test
-  void guardIsNoOpWithoutDebugRequest() {
+  void nonDebugArgsPassThroughWithDebugForcedOff() {
     System.clearProperty("debug");
     System.clearProperty("trace");
     try {
       var result = MainApplication.guardSpringDebugMode(new String[]{"analyze", "--srcDir", "."});
 
+      // Обычные аргументы не меняются, но без опт-ина отладка всё равно гасится.
       assertThat(result).containsExactly("analyze", "--srcDir", ".");
-      // Без запроса на отладку глобальное состояние не трогаем.
-      assertThat(System.getProperty("debug")).isNull();
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+      assertThat(System.getProperty("trace")).isEqualTo("false");
     } finally {
       System.clearProperty("debug");
       System.clearProperty("trace");

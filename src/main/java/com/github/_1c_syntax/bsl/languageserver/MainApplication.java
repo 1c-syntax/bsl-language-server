@@ -94,6 +94,14 @@ public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
    */
   static final String ENABLE_DEBUG_OPTION = "--enable-debug-i-know-what-i-am-doing";
 
+  /** {@link #ENABLE_DEBUG_OPTION} с необязательным значением; группа 1 — значение ({@code null}, если его нет). */
+  private static final Pattern ENABLE_DEBUG_OPTION_PATTERN =
+    CaseInsensitivePattern.compile(Pattern.quote(ENABLE_DEBUG_OPTION) + "(?:=(.*))?");
+
+  /** Отладочные флаги Spring Boot: {@code --debug}/{@code --trace} с необязательным {@code =value}. */
+  private static final Pattern DEBUG_TRACE_FLAG_PATTERN =
+    CaseInsensitivePattern.compile("--(?:debug|trace)(?:=.*)?");
+
   @Option(
     names = {"-h", "--help"},
     usageHelp = true,
@@ -117,8 +125,8 @@ public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
     CaseInsensitivePattern.compile("--server\\..*"),
     // Опции команды по умолчанию (lsp), допустимые без явного указания команды: `--mcp`, `--mcp-path`.
     CaseInsensitivePattern.compile("--mcp(-path)?(=.*)?"),
-    CaseInsensitivePattern.compile("--debug(=.*)?"),
-    CaseInsensitivePattern.compile("--trace(=.*)?")
+    DEBUG_TRACE_FLAG_PATTERN,
+    ENABLE_DEBUG_OPTION_PATTERN
   );
 
   private final CommandLine.IFactory picocliFactory;
@@ -274,72 +282,43 @@ public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
    * канал протокола. При этом {@code DEBUG} — распространённое имя переменной среды, её легко
    * выставить в окружении случайно, а переименовать/отключить ключ на уровне Spring Boot нельзя.
    * <p>
-   * Поэтому отладка включается только при явной передаче {@link #ENABLE_DEBUG_OPTION} в командной
-   * строке. Без неё запрос на отладку нейтрализуется до старта контекста: флаги {@code --debug}/
-   * {@code --trace} убираются из аргументов, а свойства {@code debug}/{@code trace} принудительно
-   * выставляются в {@code false} (системное свойство приоритетнее переменной среды), чтобы случайно
-   * заданный {@code DEBUG} не сработал.
+   * Поэтому при явной передаче {@link #ENABLE_DEBUG_OPTION} аргументы отдаются как есть. Иначе
+   * отладка гасится до старта контекста: свойства {@code debug}/{@code trace} принудительно
+   * выставляются в {@code false} (системное свойство приоритетнее переменной среды, поэтому случайно
+   * заданный {@code DEBUG}/{@code TRACE} тоже не сработает), а флаги {@code --debug}/{@code --trace}
+   * убираются из аргументов.
    *
    * @param args исходные аргументы командной строки
-   * @return аргументы без {@link #ENABLE_DEBUG_OPTION} и (если отладка не разрешена) без флагов
+   * @return исходные аргументы при осознанном включении; иначе — аргументы без флагов
    *   {@code --debug}/{@code --trace}
    */
   static String[] guardSpringDebugMode(String[] args) {
-    var withoutOptIn = removeArgs(args, MainApplication::isDebugOptInArg);
     if (hasDebugOptIn(args)) {
-      // Пользователь осознанно включил отладку — пропускаем флаги как есть.
-      return withoutOptIn;
+      // Пользователь осознанно включил отладку — аргументы не трогаем.
+      return args;
     }
 
-    var cleaned = removeArgs(withoutOptIn, MainApplication::isDebugOrTraceFlag);
-    var strippedFlag = cleaned.length != withoutOptIn.length;
+    System.setProperty("debug", "false");
+    System.setProperty("trace", "false");
 
-    if (strippedFlag || debugRequestedFromEnvironment()) {
-      // Системное свойство приоритетнее переменной среды — так гасится случайный DEBUG/TRACE.
-      System.setProperty("debug", "false");
-      System.setProperty("trace", "false");
+    var cleaned = removeArgs(args, arg -> DEBUG_TRACE_FLAG_PATTERN.matcher(arg).matches());
+    if (cleaned.length != args.length) {
       System.err.println(
-        "Ignoring debug/trace request: it turns on verbose Spring Boot debug logging that can "
-          + "corrupt the LSP stdout channel. Pass " + ENABLE_DEBUG_OPTION + "=true to enable it "
-          + "intentionally.");
+        "Ignoring --debug/--trace: verbose Spring Boot debug logging can corrupt the LSP stdout "
+          + "channel. Pass " + ENABLE_DEBUG_OPTION + "=true to enable it intentionally.");
     }
-
     return cleaned;
   }
 
   private static boolean hasDebugOptIn(String[] args) {
     for (var arg : args) {
-      if (arg.equalsIgnoreCase(ENABLE_DEBUG_OPTION)) {
+      var matcher = ENABLE_DEBUG_OPTION_PATTERN.matcher(arg);
+      // Голый флаг (значение null) и =true включают отладку; =false — нет.
+      if (matcher.matches() && !"false".equalsIgnoreCase(matcher.group(1))) {
         return true;
-      }
-      if (isDebugOptInArg(arg)) {
-        return isEnabled(arg.substring(ENABLE_DEBUG_OPTION.length() + 1));
       }
     }
     return false;
-  }
-
-  private static boolean isDebugOptInArg(String arg) {
-    return arg.equalsIgnoreCase(ENABLE_DEBUG_OPTION)
-      || arg.regionMatches(true, 0, ENABLE_DEBUG_OPTION + "=", 0, ENABLE_DEBUG_OPTION.length() + 1);
-  }
-
-  private static boolean isDebugOrTraceFlag(String arg) {
-    return arg.equalsIgnoreCase("--debug") || arg.regionMatches(true, 0, "--debug=", 0, 8)
-      || arg.equalsIgnoreCase("--trace") || arg.regionMatches(true, 0, "--trace=", 0, 8);
-  }
-
-  private static boolean debugRequestedFromEnvironment() {
-    return isEnabled(System.getenv("DEBUG")) || isEnabled(System.getenv("TRACE"))
-      || isEnabled(System.getProperty("debug")) || isEnabled(System.getProperty("trace"));
-  }
-
-  /**
-   * Значение считается включающим отладку по правилам Spring Boot: задано и не равно {@code false}
-   * (пустая строка, как у флага {@code --debug} без значения, тоже включает).
-   */
-  private static boolean isEnabled(@Nullable String value) {
-    return value != null && !value.equalsIgnoreCase("false");
   }
 
   private static String[] removeArgs(String[] args, Predicate<String> drop) {
