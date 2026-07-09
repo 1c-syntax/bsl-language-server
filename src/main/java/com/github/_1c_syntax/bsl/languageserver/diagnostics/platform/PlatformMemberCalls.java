@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 
@@ -67,19 +68,31 @@ public final class PlatformMemberCalls {
                                           TypeService typeService) {
     var ast = documentContext.getAst();
     var result = new ArrayList<TypedMember>();
-    collectGlobalCalls(ast, documentContext, typeService, result);
-    collectVersionedMembers(ast, documentContext, typeService, result);
+    // Один обход AST на все три вида сайтов (раньше — три отдельных
+    // findAllRuleNodes, каждый — полный обход дерева).
+    for (var node : Trees.findAllRuleNodes(ast,
+      BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall, BSLParser.RULE_accessProperty)) {
+      collectSite(node, documentContext, typeService, result);
+    }
     return result;
   }
 
-  /** Глобальные вызовы — резолв дёшев (без инференса), без pre-filter'а по имени. */
-  private static void collectGlobalCalls(BSLParser.FileContext ast, DocumentContext documentContext,
-                                         TypeService typeService, List<TypedMember> sink) {
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_globalMethodCall)) {
-      var methodName = ((BSLParser.GlobalMethodCallContext) node).methodName();
+  /** Резолв одного сайта вызова/обращения в зависимости от вида продукции. */
+  private static void collectSite(ParserRuleContext node, DocumentContext documentContext,
+                                  TypeService typeService, List<TypedMember> sink) {
+    if (node instanceof BSLParser.GlobalMethodCallContext globalCall) {
+      // Глобальные вызовы — резолв дёшев (без инференса), без pre-filter'а по имени.
+      var methodName = globalCall.methodName();
       if (methodName != null) {
         resolveInto(sink, documentContext, typeService, methodName.IDENTIFIER());
       }
+    } else if (node instanceof BSLParser.MethodCallContext methodCall) {
+      var methodName = methodCall.methodName();
+      if (methodName != null) {
+        resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink);
+      }
+    } else if (node instanceof BSLParser.AccessPropertyContext accessProperty) {
+      resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, sink);
     }
   }
 
@@ -103,28 +116,11 @@ public final class PlatformMemberCalls {
   }
 
   /**
-   * Члены типов (метод/свойство) — с pre-filter'ом по имени.
-   * Включает версионные ({@link TypeService#isVersionedMemberName}) и
-   * следующие 1С-конвенции «устарело» (префикс «Удалить»). Остальные
-   * имена не резолвятся, чтобы не тратить инференс на каждый узел.
+   * Члены типов (метод/свойство) — с pre-filter'ом по имени. Резолвятся только
+   * версионные ({@link TypeService#isVersionedMemberName}) и следующие
+   * 1С-конвенции «устарело» (префикс «Удалить»); остальные имена пропускаются,
+   * чтобы не тратить инференс на каждый узел.
    */
-  private static void collectVersionedMembers(BSLParser.FileContext ast, DocumentContext documentContext,
-                                              TypeService typeService,
-                                              List<TypedMember> sink) {
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_methodCall)) {
-      var methodName = ((BSLParser.MethodCallContext) node).methodName();
-      if (methodName != null) {
-        resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink);
-      }
-    }
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
-      var identifier = ((BSLParser.AccessPropertyContext) node).IDENTIFIER();
-      if (identifier != null) {
-        resolveCandidate(identifier, documentContext, typeService, sink);
-      }
-    }
-  }
-
   private static void resolveCandidate(@Nullable TerminalNode terminal, DocumentContext documentContext,
                                        TypeService typeService,
                                        List<TypedMember> sink) {
