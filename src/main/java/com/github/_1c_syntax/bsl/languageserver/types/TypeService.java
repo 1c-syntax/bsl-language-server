@@ -497,6 +497,14 @@ public class TypeService {
   }
 
   /**
+   * Вариант {@link #memberAt(DocumentContext, Position)} от уже известного
+   * терминала — без спуска по AST к позиции (см. {@link #membersAt(DocumentContext, TerminalNode)}).
+   */
+  public Optional<TypedMember> memberAt(DocumentContext documentContext, TerminalNode terminal) {
+    return membersAt(documentContext, terminal).stream().findFirst();
+  }
+
+  /**
    * То же, что {@link #memberAt(DocumentContext, Position)}, но возвращает
    * <b>все</b> члены-кандидаты, когда тип ресивера выведен как union из
    * нескольких типов (например, переменная присваивается значениями разных
@@ -605,6 +613,29 @@ public class TypeService {
   }
 
   /**
+   * Вариант {@link #unknownMemberReceiverAt(DocumentContext, Position)} от уже
+   * известного терминала-члена — без спуска по AST к позиции. Поведение
+   * идентично позиционному: сперва терминальный dereference-инференс ресивера,
+   * а если он пуст — fallback висячей точки по позиции (редкий путь), позицию
+   * для него берём из терминала.
+   */
+  public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, TerminalNode terminal) {
+    // Члены и типы ресивера — за один инференс (иначе membersAt + receiverTypesAt
+    // выводят один и тот же left дважды; на больших модулях это доминирует).
+    var match = dereferenceMatcher.matchWithReceiverAt(terminal, documentContext);
+    if (!match.members().isEmpty()) {
+      return Optional.empty();
+    }
+    var receiver = match.receiverTypes();
+    if (receiver.isEmpty()) {
+      receiver = receiverEndBeforeDot(documentContext, Ranges.create(terminal).getStart())
+        .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd))
+        .orElse(TypeSet.EMPTY);
+    }
+    return allConcrete(receiver) ? Optional.of(receiver) : Optional.empty();
+  }
+
+  /**
    * Голый вызов {@code Имя(...)}, который не резолвится ни в глобальную функцию/
    * свойство/перечисление платформы или конфигурации, ни в source-defined символ
    * (метод/переменная текущего модуля). Вероятный вызов несуществующего метода.
@@ -619,6 +650,16 @@ public class TypeService {
   public boolean isUnknownGlobalAt(DocumentContext documentContext, Position position) {
     return membersAt(documentContext, position).isEmpty()
       && referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
+  }
+
+  /**
+   * Вариант {@link #isUnknownGlobalAt(DocumentContext, Position)} от уже
+   * известного терминала-имени — без спуска по AST к позиции. Позиция для
+   * поиска ссылки берётся из терминала.
+   */
+  public boolean isUnknownGlobalAt(DocumentContext documentContext, TerminalNode terminal) {
+    return membersAt(documentContext, terminal).isEmpty()
+      && referenceResolver.findReference(documentContext.getUri(), Ranges.create(terminal).getStart()).isEmpty();
   }
 
   /**
