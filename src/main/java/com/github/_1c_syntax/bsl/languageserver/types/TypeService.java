@@ -515,7 +515,7 @@ public class TypeService {
     if (terminal == null) {
       return List.of();
     }
-    return membersAt(documentContext, terminal, position);
+    return membersAt(documentContext, terminal);
   }
 
   /**
@@ -523,15 +523,13 @@ public class TypeService {
    * когда терминал-идентификатор уже известен вызывающему (например, получен
    * при обходе AST). Избавляет от повторного спуска по дереву ради поиска
    * терминала по позиции — на больших модулях это доминирующая стоимость.
-   * {@code position} должна указывать на {@code terminal} (его начало).
    * Не-идентификаторный терминал даёт пустой список (как и поиск по позиции).
    *
    * @param documentContext контекст документа.
    * @param terminal терминал-идентификатор члена/имени.
-   * @param position позиция терминала (начало идентификатора).
-   * @return все члены-кандидаты в позиции; пустой список, если члена нет.
+   * @return все члены-кандидаты для терминала; пустой список, если члена нет.
    */
-  public List<TypedMember> membersAt(DocumentContext documentContext, TerminalNode terminal, Position position) {
+  public List<TypedMember> membersAt(DocumentContext documentContext, TerminalNode terminal) {
     if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
       return List.of();
     }
@@ -543,7 +541,7 @@ public class TypeService {
         return List.of(bare.get());
       }
     }
-    return dereferenceMatcher.matchAt(terminal, documentContext, position);
+    return dereferenceMatcher.matchAt(terminal, documentContext);
   }
 
   /**
@@ -642,7 +640,7 @@ public class TypeService {
    */
   public TypeSet receiverTypesAt(DocumentContext documentContext, Position position) {
     var viaMember = identifierTerminalAt(documentContext, position)
-      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, position, terminal))
+      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, terminal))
       .orElse(TypeSet.EMPTY);
     if (!viaMember.isEmpty()) {
       return viaMember;

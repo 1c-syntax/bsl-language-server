@@ -42,7 +42,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCall
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -71,8 +70,8 @@ public class DereferenceMemberMatcher {
    * тип-владелец из union'а ресивера; пустой список, если выражение/тип
    * ресивера не резолвятся.
    */
-  public List<TypedMember> matchAt(TerminalNode terminal, DocumentContext documentContext, Position position) {
-    var dereference = findDereferenceTree(documentContext, position, terminal);
+  public List<TypedMember> matchAt(TerminalNode terminal, DocumentContext documentContext) {
+    var dereference = findDereferenceTree(terminal);
     if (dereference == null) {
       return List.of();
     }
@@ -84,22 +83,20 @@ public class DereferenceMemberMatcher {
   }
 
   /**
-   * Типы ресивера в позиции для выражения {@code ресивер.член}: инферит
-   * {@code left} и возвращает {@code TypeSet}. Empty, если AST или dereference
-   * не локализуются.
+   * Типы ресивера для выражения {@code ресивер.член} в позиции терминала:
+   * инферит {@code left} и возвращает {@code TypeSet}. Empty, если dereference
+   * не локализуется.
    */
-  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, Position position,
-                                           TerminalNode terminal) {
-    var dereference = findDereferenceTree(documentContext, position, terminal);
+  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, TerminalNode terminal) {
+    var dereference = findDereferenceTree(terminal);
     if (dereference == null) {
       return Optional.empty();
     }
     return Optional.of(inferencer.infer(dereference.getLeft(), documentContext));
   }
 
-  private static @Nullable BinaryOperationNode findDereferenceTree(DocumentContext documentContext, Position position,
-                                                         TerminalNode terminal) {
-    var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
+  private static @Nullable BinaryOperationNode findDereferenceTree(TerminalNode terminal) {
+    var expression = ExpressionAtPosition.findExpressionTree(terminal).orElse(null);
     if (expression == null) {
       return null;
     }
