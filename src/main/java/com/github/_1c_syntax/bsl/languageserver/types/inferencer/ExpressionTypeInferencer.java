@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
@@ -111,6 +112,7 @@ public class ExpressionTypeInferencer {
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
   private final InferredVariableTypeIndex inferredVariableTypeIndex;
+  private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
@@ -170,9 +172,26 @@ public class ExpressionTypeInferencer {
     if (node == null || ctx.depth >= MAX_DEPTH) {
       return TypeSet.EMPTY;
     }
+
+    // Кэшируем результат узла только для «чистого корня» инференса — вне
+    // рекурсии символов (visited/inProgress пусты). Это гарантирует и
+    // контекст-независимость результата, и принадлежность узла текущему
+    // документу (кросс-модульный спуск всегда идёт уже после резолва символа,
+    // т.е. при непустом visited), поэтому ключ по URI корректен.
+    var cacheKey = ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
+      ? node.getRepresentingAst()
+      : null;
+    var uri = ctx.documentContext.getUri();
+    if (cacheKey != null) {
+      var cached = inferredExpressionTypeIndex.get(uri, cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
     ctx.depth++;
     try {
-      return switch (node.getNodeType()) {
+      var result = switch (node.getNodeType()) {
         case LITERAL -> inferLiteral(node);
         case IDENTIFIER -> inferIdentifier(node, ctx);
         case CALL -> inferCall(node, ctx);
@@ -181,6 +200,10 @@ public class ExpressionTypeInferencer {
         case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
         case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
       };
+      if (cacheKey != null) {
+        inferredExpressionTypeIndex.put(uri, cacheKey, result);
+      }
+      return result;
     } finally {
       ctx.depth--;
     }
