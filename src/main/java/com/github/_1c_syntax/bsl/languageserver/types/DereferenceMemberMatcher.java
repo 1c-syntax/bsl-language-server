@@ -83,6 +83,35 @@ public class DereferenceMemberMatcher {
   }
 
   /**
+   * Резолв члена + типы ресивера за ОДИН инференс — для потребителей, которым
+   * нужно и то, и другое (диагностика неизвестного члена). Раздельный вызов
+   * {@link #matchAt} + {@link #receiverTypesAt} инферит {@code left} дважды;
+   * здесь ресивер выводится один раз.
+   *
+   * @param terminal терминал-член ({@code ресивер.член}).
+   * @param documentContext контекст документа.
+   * @return члены-кандидаты и типы ресивера; {@link MemberMatch#EMPTY}, если
+   *     выражение/тип ресивера не резолвятся.
+   */
+  public MemberMatch matchWithReceiverAt(TerminalNode terminal, DocumentContext documentContext) {
+    var dereference = findDereferenceTree(terminal);
+    if (dereference == null) {
+      return MemberMatch.EMPTY;
+    }
+    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
+    if (leftTypes.isEmpty()) {
+      return MemberMatch.EMPTY;
+    }
+    var members = matchMembers(terminal, documentContext, dereference.getRight(), leftTypes);
+    return new MemberMatch(members, leftTypes);
+  }
+
+  /** Результат {@link #matchWithReceiverAt}: члены-кандидаты и типы ресивера. */
+  public record MemberMatch(List<TypedMember> members, TypeSet receiverTypes) {
+    static final MemberMatch EMPTY = new MemberMatch(List.of(), TypeSet.EMPTY);
+  }
+
+  /**
    * Типы ресивера для выражения {@code ресивер.член} в позиции терминала:
    * инферит {@code left} и возвращает {@code TypeSet}. Empty, если dereference
    * не локализуется.

@@ -94,7 +94,7 @@ class PlatformMethodCallInlayHintCollectorUnitTest {
 
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(configuration.getInlayHintOptions()).thenReturn(new InlayHintOptions());
-    when(typeService.memberAt(any(), any())).thenReturn(Optional.of(typedMember));
+    when(typeService.memberAt(any(), any(Position.class))).thenReturn(Optional.of(typedMember));
     when(typeService.expressionTypesAt(any(), any())).thenReturn(TypeSet.EMPTY);
 
     var params = new InlayHintParams();
@@ -124,7 +124,7 @@ class PlatformMethodCallInlayHintCollectorUnitTest {
 
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(configuration.getInlayHintOptions()).thenReturn(new InlayHintOptions());
-    when(typeService.memberAt(any(), any())).thenReturn(Optional.of(typedMember));
+    when(typeService.memberAt(any(), any(Position.class))).thenReturn(Optional.of(typedMember));
     when(typeService.expressionTypesAt(any(), any())).thenReturn(TypeSet.EMPTY);
 
     var params = new InlayHintParams();

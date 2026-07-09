@@ -31,9 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.Position;
 
 import java.util.stream.Collectors;
 
@@ -74,9 +72,9 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     var methodName = ctx.methodName();
     if (methodName != null) {
-      var token = methodName.getStart();
-      if (typeService.isUnknownGlobalAt(documentContext, positionOf(token))) {
-        diagnosticStorage.addDiagnostic(methodName, info.getMessage(token.getText()));
+      var identifier = methodName.IDENTIFIER();
+      if (identifier != null && typeService.isUnknownGlobalAt(documentContext, identifier)) {
+        diagnosticStorage.addDiagnostic(methodName, info.getMessage(identifier.getText()));
       }
     }
     return super.visitGlobalMethodCall(ctx);
@@ -86,9 +84,12 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
     var methodName = ctx.methodName();
     if (methodName != null) {
-      var token = methodName.getStart();
-      typeService.unknownMemberReceiverAt(documentContext, positionOf(token))
-        .ifPresent(types -> diagnosticStorage.addDiagnostic(methodName, memberMessage(token.getText(), types)));
+      var identifier = methodName.IDENTIFIER();
+      if (identifier != null) {
+        typeService.unknownMemberReceiverAt(documentContext, identifier)
+          .ifPresent(types ->
+            diagnosticStorage.addDiagnostic(methodName, memberMessage(identifier.getText(), types)));
+      }
     }
     return super.visitMethodCall(ctx);
   }
@@ -97,9 +98,9 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
     var identifier = ctx.IDENTIFIER();
     if (identifier != null) {
-      var token = identifier.getSymbol();
-      typeService.unknownMemberReceiverAt(documentContext, positionOf(token))
-        .ifPresent(types -> diagnosticStorage.addDiagnostic(identifier, memberMessage(token.getText(), types)));
+      typeService.unknownMemberReceiverAt(documentContext, identifier)
+        .ifPresent(types ->
+          diagnosticStorage.addDiagnostic(identifier, memberMessage(identifier.getText(), types)));
     }
     return super.visitAccessProperty(ctx);
   }
@@ -114,9 +115,5 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
       .distinct()
       .collect(Collectors.joining(", "));
     return info.getResourceString("memberMessage", memberName, typeNames);
-  }
-
-  private static Position positionOf(Token token) {
-    return new Position(token.getLine() - 1, token.getCharPositionInLine());
   }
 }
