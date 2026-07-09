@@ -515,6 +515,26 @@ public class TypeService {
     if (terminal == null) {
       return List.of();
     }
+    return membersAt(documentContext, terminal, position);
+  }
+
+  /**
+   * То же, что {@link #membersAt(DocumentContext, Position)}, но для случая,
+   * когда терминал-идентификатор уже известен вызывающему (например, получен
+   * при обходе AST). Избавляет от повторного спуска по дереву ради поиска
+   * терминала по позиции — на больших модулях это доминирующая стоимость.
+   * {@code position} должна указывать на {@code terminal} (его начало).
+   * Не-идентификаторный терминал даёт пустой список (как и поиск по позиции).
+   *
+   * @param documentContext контекст документа.
+   * @param terminal терминал-идентификатор члена/имени.
+   * @param position позиция терминала (начало идентификатора).
+   * @return все члены-кандидаты в позиции; пустой список, если члена нет.
+   */
+  public List<TypedMember> membersAt(DocumentContext documentContext, TerminalNode terminal, Position position) {
+    if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
+      return List.of();
+    }
     // Случай глобальной функции / свойства / library-модуля (например,
     // КодировкаТекста, ФС) — резолвится напрямую, без инференса ресивера.
     if (!isAccessorIdentifier(terminal)) {

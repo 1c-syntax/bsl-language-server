@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
@@ -79,7 +79,7 @@ public final class PlatformMemberCalls {
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_globalMethodCall)) {
       var methodName = ((BSLParser.GlobalMethodCallContext) node).methodName();
       if (methodName != null) {
-        resolveInto(sink, documentContext, typeService, methodName.getStart());
+        resolveInto(sink, documentContext, typeService, methodName.IDENTIFIER());
       }
     }
   }
@@ -115,37 +115,39 @@ public final class PlatformMemberCalls {
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_methodCall)) {
       var methodName = ((BSLParser.MethodCallContext) node).methodName();
       if (methodName != null) {
-        resolveCandidate(methodName.getStart(), documentContext, typeService, sink);
+        resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink);
       }
     }
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
       var identifier = ((BSLParser.AccessPropertyContext) node).IDENTIFIER();
       if (identifier != null) {
-        resolveCandidate(identifier.getSymbol(), documentContext, typeService, sink);
+        resolveCandidate(identifier, documentContext, typeService, sink);
       }
     }
   }
 
-  private static void resolveCandidate(@Nullable Token token, DocumentContext documentContext,
+  private static void resolveCandidate(@Nullable TerminalNode terminal, DocumentContext documentContext,
                                        TypeService typeService,
                                        List<TypedMember> sink) {
-    if (token == null) {
+    if (terminal == null) {
       return;
     }
-    var text = token.getText();
+    var text = terminal.getText();
     if (typeService.isVersionedMemberName(text) || hasDeletedPrefix(text)) {
-      resolveInto(sink, documentContext, typeService, token);
+      resolveInto(sink, documentContext, typeService, terminal);
     }
   }
 
   private static void resolveInto(List<TypedMember> sink, DocumentContext documentContext,
-                                  TypeService typeService, @Nullable Token token) {
-    if (token == null) {
+                                  TypeService typeService, @Nullable TerminalNode terminal) {
+    if (terminal == null) {
       return;
     }
-    // Позиция начала идентификатора входит в его токен (start-inclusive),
-    // этого достаточно для membersAt.
+    var token = terminal.getSymbol();
+    // Позиция начала идентификатора входит в его токен (start-inclusive).
+    // Терминал уже на руках — передаём его напрямую, минуя повторный спуск
+    // по AST для поиска терминала по позиции (доминирует на больших модулях).
     var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    sink.addAll(typeService.membersAt(documentContext, position));
+    sink.addAll(typeService.membersAt(documentContext, terminal, position));
   }
 }
