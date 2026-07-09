@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -143,11 +142,8 @@ public final class PlatformMemberCalls {
     if (terminal == null) {
       return;
     }
-    var token = terminal.getSymbol();
-    // Позиция начала идентификатора входит в его токен (start-inclusive).
-    // Терминал уже на руках — передаём его напрямую, минуя повторный спуск
-    // по AST для поиска терминала по позиции (доминирует на больших модулях).
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    sink.addAll(typeService.membersAt(documentContext, terminal, position));
+    // Терминал уже на руках из обхода — передаём его напрямую, минуя повторный
+    // спуск по AST для поиска терминала по позиции (доминирует на больших модулях).
+    sink.addAll(typeService.membersAt(documentContext, terminal));
   }
 }
