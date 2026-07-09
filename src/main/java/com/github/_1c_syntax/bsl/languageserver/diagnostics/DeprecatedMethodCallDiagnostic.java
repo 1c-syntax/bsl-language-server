@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @DiagnosticMetadata(
@@ -60,8 +62,13 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     checkUserDefinedMethods();
-    checkPlatformMembers();
-    checkDeletedPrefixMembers();
+
+    // Сбор платформенных членов по всем сайтам вызовов — один раз на модуль;
+    // обе проверки ниже работают по одному и тому же списку (раньше каждая
+    // независимо пересобирала его, удваивая обход AST и резолв членов).
+    var platformMemberCalls = PlatformMemberCalls.collect(documentContext, typeService);
+    checkPlatformMembers(platformMemberCalls);
+    checkDeletedPrefixMembers(platformMemberCalls);
   }
 
   /**
@@ -86,10 +93,10 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
    * ({@code target >= deprecatedSinceVersion}). Срабатывает, если хотя бы один
    * из возможных типов-владельцев ресивера делает член устаревшим.
    */
-  private void checkPlatformMembers() {
+  private void checkPlatformMembers(List<TypedMember> platformMemberCalls) {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var reported = new HashSet<Range>();
-    for (var member : PlatformMemberCalls.collect(documentContext, typeService)) {
+    for (var member : platformMemberCalls) {
       var metadata = member.descriptor().metadata();
       if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)
         && reported.add(member.range())) {
@@ -110,9 +117,9 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
    * версии платформы и наличия HBK-меты. Только {@link MemberKind#PROPERTY} —
    * action-методы вроде {@code УдалитьФайл()} (METHOD) сюда не попадают.
    */
-  private void checkDeletedPrefixMembers() {
+  private void checkDeletedPrefixMembers(List<TypedMember> platformMemberCalls) {
     var reported = new HashSet<Range>();
-    for (var member : PlatformMemberCalls.collect(documentContext, typeService)) {
+    for (var member : platformMemberCalls) {
       if (member.descriptor().kind() != MemberKind.PROPERTY) {
         continue;
       }
