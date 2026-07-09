@@ -22,11 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -43,6 +46,15 @@ public class LocationRepository {
   private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
 
   /**
+   * Вторичный индекс вхождений по строке их расположения — для O(1)-поиска
+   * вхождения в позиции ({@link #findByPosition}) вместо линейного скана всего
+   * набора вхождений документа. На одной строке может быть несколько вхождений
+   * (разные колонки), поэтому значение — множество, разводимое по колонкам через
+   * {@link Ranges#containsPosition} в {@link #findByPosition}.
+   */
+  private final Map<URI, Map<Integer, Set<SymbolOccurrence>>> locationsByLine = new ConcurrentHashMap<>();
+
+  /**
    * Получить все обращения к символам в указанном URI.
    *
    * @param uri URI документа, в котором необходимо найти обращения к символам.
@@ -53,13 +65,52 @@ public class LocationRepository {
   }
 
   /**
+   * Найти вхождение к символу, чей диапазон накрывает позицию. O(1)-lookup по
+   * строке через {@link #locationsByLine}; при нескольких вхождениях на строке
+   * разводит по колонке через {@link Ranges#containsPosition}. Диапазоны
+   * вхождений непересекающиеся, поэтому совпадение максимум одно.
+   *
+   * @param uri      URI документа.
+   * @param position позиция.
+   * @return вхождение в позиции либо empty.
+   */
+  public Optional<SymbolOccurrence> findByPosition(URI uri, Position position) {
+    var byLine = locationsByLine.get(uri);
+    if (byLine == null) {
+      return Optional.empty();
+    }
+    var bucket = byLine.get(position.getLine());
+    if (bucket == null) {
+      return Optional.empty();
+    }
+    for (var symbolOccurrence : bucket) {
+      if (matches(symbolOccurrence, position)) {
+        return Optional.of(symbolOccurrence);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static boolean matches(SymbolOccurrence symbolOccurrence, Position position) {
+    var location = symbolOccurrence.location();
+    return Ranges.containsPosition(
+      location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
+      position);
+  }
+
+  /**
    * Обновить данные о расположении обращения к символу.
    *
    * @param symbolOccurrence Обращение к символу.
    */
   public void updateLocation(SymbolOccurrence symbolOccurrence) {
-    locations.computeIfAbsent(symbolOccurrence.location().uri(), uri -> ConcurrentHashMap.newKeySet())
+    var location = symbolOccurrence.location();
+    locations.computeIfAbsent(location.uri(), uri -> ConcurrentHashMap.newKeySet())
       .add(symbolOccurrence);
+    var byLine = locationsByLine.computeIfAbsent(location.uri(), uri -> new ConcurrentHashMap<>());
+    for (var line = location.startLine(); line <= location.endLine(); line++) {
+      byLine.computeIfAbsent(line, l -> ConcurrentHashMap.newKeySet()).add(symbolOccurrence);
+    }
   }
 
   /**
@@ -69,5 +120,6 @@ public class LocationRepository {
    */
   public void delete(URI uri) {
     locations.remove(uri);
+    locationsByLine.remove(uri);
   }
 }
