@@ -46,6 +46,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -614,25 +615,59 @@ public class TypeService {
 
   /**
    * Вариант {@link #unknownMemberReceiverAt(DocumentContext, Position)} от уже
-   * известного терминала-члена — без спуска по AST к позиции. Поведение
-   * идентично позиционному: сперва терминальный dereference-инференс ресивера,
-   * а если он пуст — fallback висячей точки по позиции (редкий путь), позицию
-   * для него берём из терминала.
+   * известного терминала-члена — без спуска по AST к позиции.
+   * <p>
+   * Тип ресивера выводится за один проход через dereference-инференс
+   * ({@link DereferenceMemberMatcher#matchWithReceiverAt}). Если он пуст, ресивер
+   * добирается по <b>завершающему идентификатору</b> ресивера (перед точкой),
+   * резолвленному терминально через индекс ссылок. Тип охватывающего выражения
+   * ({@code expressionTypesAt}) здесь <b>намеренно не используется</b>: он накрыл
+   * бы всё {@code Ресивер.Член} и вернул тип операции (например {@code Булево} у
+   * сравнения {@code Ресивер.Член = …}), из-за чего член проверялся бы у неверного
+   * типа — ложное срабатывание. Такой fallback уместен лишь для висячей точки
+   * ({@code Ресивер.|}) в completion, но не для диагностики с завершённым членом.
    */
   public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, TerminalNode terminal) {
-    // Члены и типы ресивера — за один инференс (иначе membersAt + receiverTypesAt
-    // выводят один и тот же left дважды; на больших модулях это доминирует).
     var match = dereferenceMatcher.matchWithReceiverAt(terminal, documentContext);
     if (!match.members().isEmpty()) {
       return Optional.empty();
     }
     var receiver = match.receiverTypes();
     if (receiver.isEmpty()) {
-      receiver = receiverEndBeforeDot(documentContext, Ranges.create(terminal).getStart())
-        .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd))
+      receiver = receiverEndIdentifier(terminal)
+        .flatMap(receiverEnd -> referenceResolver.findReference(documentContext.getUri(), receiverEnd))
+        .map(this::typesAt)
         .orElse(TypeSet.EMPTY);
     }
     return allConcrete(receiver) ? Optional.of(receiver) : Optional.empty();
+  }
+
+  /**
+   * Завершающий идентификатор ресивера для члена {@code Ресивер.Член}: последний
+   * именованный сегмент перед точкой члена. По AST-цепочке доступа — предыдущий
+   * {@code accessProperty} того же {@link BSLParser.ComplexIdentifierContext} (для
+   * {@code А.Б.В|} это {@code Б}), либо головной {@code IDENTIFIER} для первого
+   * члена ({@code А.Б|} → {@code А}). Пусто, если ресивер оканчивается вызовом или
+   * индексом (не именованный символ — по индексу ссылок не резолвится).
+   */
+  private static Optional<TerminalNode> receiverEndIdentifier(TerminalNode member) {
+    ParseTree node = member.getParent();
+    while (node != null && !(node instanceof BSLParser.ModifierContext)) {
+      node = node.getParent();
+    }
+    if (node == null || !(node.getParent() instanceof BSLParser.ComplexIdentifierContext chain)) {
+      return Optional.empty();
+    }
+    var modifiers = chain.modifier();
+    var index = modifiers.indexOf(node);
+    if (index < 0) {
+      return Optional.empty();
+    }
+    if (index == 0) {
+      return Optional.ofNullable(chain.IDENTIFIER());
+    }
+    var previous = modifiers.get(index - 1).accessProperty();
+    return previous == null ? Optional.empty() : Optional.ofNullable(previous.IDENTIFIER());
   }
 
   /**
