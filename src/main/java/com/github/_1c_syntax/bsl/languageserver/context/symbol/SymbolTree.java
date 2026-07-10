@@ -165,9 +165,12 @@ public class SymbolTree {
 
     Range subNameRange = Ranges.create(subNameNode);
 
-    return getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange))
-      .findAny();
+    // subNameRange == selectionRange метода, поэтому ищем через O(1)-индекс
+    // селекшн-рейнджей (тот же, что и findSymbolBySelectionRange), а не линейным
+    // сканом getMethods() с Range.equals на каждом.
+    return findSymbolBySelectionRange(subNameRange.getStart())
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast);
   }
 
   /**
@@ -204,9 +207,12 @@ public class SymbolTree {
 
     Range variableNameRange = Ranges.create(varNameNode);
 
-    return getVariables().stream()
-      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange))
-      .findAny();
+    // variableNameRange == selectionRange переменной, поэтому ищем через
+    // O(1)-индекс селекшн-рейнджей, а не линейным сканом getVariables() с
+    // Range.equals на каждом.
+    return findSymbolBySelectionRange(variableNameRange.getStart())
+      .filter(VariableSymbol.class::isInstance)
+      .map(VariableSymbol.class::cast);
   }
 
   /**
