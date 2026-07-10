@@ -168,9 +168,15 @@ public class SymbolTree {
     // subNameRange == selectionRange метода, поэтому ищем через O(1)-индекс
     // селекшн-рейнджей (тот же, что и findSymbolBySelectionRange), а не линейным
     // сканом getMethods() с Range.equals на каждом.
+    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
+    // объявления, а произвольный/ошибочный контекст (напр. ctx.getParent()),
+    // старт которого может попасть в selectionRange соседнего символа. Прежний
+    // скан для таких возвращал пусто (точное равенство не выполнялось) —
+    // сохраняем это, иначе резолвится «лишний» метод.
     return findSymbolBySelectionRange(subNameRange.getStart())
       .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast);
+      .map(MethodSymbol.class::cast)
+      .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange));
   }
 
   /**
@@ -210,9 +216,14 @@ public class SymbolTree {
     // variableNameRange == selectionRange переменной, поэтому ищем через
     // O(1)-индекс селекшн-рейнджей, а не линейным сканом getVariables() с
     // Range.equals на каждом.
+    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
+    // объявления, а произвольный/ошибочный контекст, старт которого может
+    // попасть в selectionRange соседнего символа. Прежний скан для таких
+    // возвращал пусто — сохраняем это, иначе резолвится «лишняя» переменная.
     return findSymbolBySelectionRange(variableNameRange.getStart())
       .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast);
+      .map(VariableSymbol.class::cast)
+      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange));
   }
 
   /**
