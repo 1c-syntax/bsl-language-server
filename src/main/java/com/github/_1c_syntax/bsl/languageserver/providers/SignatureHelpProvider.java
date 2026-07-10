@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
@@ -281,7 +282,7 @@ public final class SignatureHelpProvider {
         continue;
       }
       var start = arg.getStart();
-      var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
+      var position = Positions.create(start);
       result.add(typeService.expressionTypesAt(documentContext, position));
     }
     return result;
@@ -425,7 +426,7 @@ public final class SignatureHelpProvider {
     }
     // тип ресивера — по позиции имени метода
     var memberToken = mc.methodName().IDENTIFIER().getSymbol();
-    var memberPos = new Position(memberToken.getLine() - 1, memberToken.getCharPositionInLine());
+    var memberPos = Positions.create(memberToken);
     var typeSet = typeService.receiverTypesAt(documentContext, memberPos);
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, documentContext.getFileType())) {

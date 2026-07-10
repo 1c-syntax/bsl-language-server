@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -94,7 +95,7 @@ public class SelectionRangeProvider {
   @Nullable
   private static TerminalNode findTerminalNodeAtPosition(ParserRuleContext ast, Position position) {
     var node = Trees.findTerminalNodeContainsPosition(ast, position).orElse(null);
-    if (node != null && !Ranges.create(node).getStart().equals(position)) {
+    if (node != null && !Positions.create(node).equals(position)) {
       return node;
     }
 
@@ -111,7 +112,7 @@ public class SelectionRangeProvider {
 
     var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
     return Trees.findTerminalNodeContainsPosition(ast, positionInsideToken)
-      .filter(terminalNode -> Ranges.create(terminalNode).getEnd().equals(position));
+      .filter(terminalNode -> Positions.createEnd(terminalNode).equals(position));
   }
 
   @Nullable
