@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 
@@ -55,6 +55,6 @@ public interface ReferenceFinder {
    * @return данные ссылки.
    */
   default Optional<Reference> findReference(URI uri, TerminalNode terminal) {
-    return findReference(uri, Ranges.create(terminal).getStart());
+    return findReference(uri, Positions.create(terminal));
   }
 }
