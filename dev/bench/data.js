@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783686802516,
+  "lastUpdate": 1783691455680,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39959,6 +39959,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9355089220637673",
             "extra": "mean: 108.04165935516357 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "177538202860672dea35a66a65ea6cb8537a7968",
+          "message": "Merge pull request #4257 from 1c-syntax/claude/perf-empty-statement-skip-descent\n\nperf(diagnostics): не спускаться в простые операторы в EmptyStatement",
+          "timestamp": "2026-07-10T13:02:53+02:00",
+          "tree_id": "5528b1f054a3bb166b7a76c13a83a89229b8e216",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/177538202860672dea35a66a65ea6cb8537a7968"
+        },
+        "date": 1783691444342,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.95729994773865,
+            "unit": "sec",
+            "range": "stddev: 2.306991342186343",
+            "extra": "mean: 105.95729994773865 sec\nrounds: 3"
           }
         ]
       }
