@@ -23,6 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -92,6 +95,45 @@ class SymbolTreeTest {
 
     // позиция на несуществующей строке — empty.
     assertThat(symbolTree.findSymbolBySelectionRange(new Position(999, 0))).isEmpty();
+  }
+
+  @Test
+  void getMethodSymbolAndGetVariableSymbolResolveByDeclarationContext() {
+    // given — модуль с переменной уровня модуля и процедурой с локальной переменной.
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем ПеременнаяМодуля;
+      Процедура Тест()
+          Перем ЛокальнаяПеременная;
+      КонецПроцедуры
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var ast = documentContext.getAst();
+
+    // when/then — по контексту объявления метода резолвится именно его символ.
+    var subContext = (BSLParser.SubContext) firstRuleNode(ast, BSLParser.RULE_sub);
+    assertThat(symbolTree.getMethodSymbol(subContext))
+      .map(MethodSymbol::getName)
+      .contains("Тест");
+
+    // when/then — по контексту объявления переменной модуля резолвится её символ.
+    var moduleVarDeclaration =
+      (BSLParser.ModuleVarDeclarationContext) firstRuleNode(ast, BSLParser.RULE_moduleVarDeclaration);
+    assertThat(symbolTree.getVariableSymbol(moduleVarDeclaration))
+      .map(VariableSymbol::getName)
+      .contains("ПеременнаяМодуля");
+
+    // when/then — по контексту объявления локальной переменной резолвится её символ.
+    var subVarDeclaration =
+      (BSLParser.SubVarDeclarationContext) firstRuleNode(ast, BSLParser.RULE_subVarDeclaration);
+    assertThat(symbolTree.getVariableSymbol(subVarDeclaration))
+      .map(VariableSymbol::getName)
+      .contains("ЛокальнаяПеременная");
+  }
+
+  private static ParseTree firstRuleNode(ParseTree ast, int ruleIndex) {
+    return Trees.<ParseTree>findAllRuleNodes(ast, ruleIndex).stream()
+      .findFirst()
+      .orElseThrow();
   }
 
   private static SourceDefinedSymbol variable(SymbolTree symbolTree, String name) {
