@@ -36,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
@@ -109,7 +108,9 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       return;
     }
 
-    var signatures = referenceResolver.findReference(documentContext.getUri(), typeNamePosition(typeName))
+    // typeName.IDENTIFIER() уже проверен на null выше; терминальный путь резолвера
+    // поднимается от терминала до newExpression, а не спускается от корня по позиции.
+    var signatures = referenceResolver.findReference(documentContext.getUri(), typeName.IDENTIFIER())
       .map(reference -> parameterSignatures(reference.symbol()))
       .orElseGet(List::of);
     if (signatures.isEmpty()) {
@@ -189,12 +190,6 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       arguments[i] = parameters.get(i).expression() != null;
     }
     return arguments;
-  }
-
-  private static Position typeNamePosition(BSLParser.TypeNameContext typeName) {
-    var token = typeName.IDENTIFIER().getSymbol();
-    // Token start is sufficient: the resolver looks for a position within the identifier.
-    return new Position(token.getLine() - 1, token.getCharPositionInLine());
   }
 
   private static class MethodCall {
