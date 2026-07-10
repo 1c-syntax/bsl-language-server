@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783679564229,
+  "lastUpdate": 1783680994941,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39866,6 +39866,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.8077066734308254",
             "extra": "mean: 126.85386411348979 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ccd515604ea84daabddc6f917cc9b97a8f62d8a2",
+          "message": "Merge pull request #4254 from 1c-syntax/claude/perf-fix-unknown-member-receiver\n\nfix(diagnostics): не подменять тип ресивера типом охватывающего выражения в UnknownMember",
+          "timestamp": "2026-07-10T09:54:47+02:00",
+          "tree_id": "d537c8c46981e74afad0c35f0e77e80aef9b130f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ccd515604ea84daabddc6f917cc9b97a8f62d8a2"
+        },
+        "date": 1783680983567,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.47151478131612,
+            "unit": "sec",
+            "range": "stddev: 2.9708364428161804",
+            "extra": "mean: 108.47151478131612 sec\nrounds: 3"
           }
         ]
       }
