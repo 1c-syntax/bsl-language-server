@@ -37,7 +37,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
@@ -109,15 +108,7 @@ public class ReferenceIndex {
    * @return данные ссылки.
    */
   public Optional<Reference> getReference(URI uri, Position position) {
-    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter((SymbolOccurrence symbolOccurrence) -> {
-        var location = symbolOccurrence.location();
-        return Ranges.containsPosition(
-          location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
-          position);
-      })
-      .findAny()
-      .flatMap(this::buildReference);
+    return locationRepository.findByPosition(uri, position).flatMap(this::buildReference);
   }
 
   /**

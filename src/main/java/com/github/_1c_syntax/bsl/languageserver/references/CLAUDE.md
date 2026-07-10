@@ -43,7 +43,9 @@ call hierarchy. См. корневой [CLAUDE.md](../../../../../../../../../CL
   интернируется, `Comparable`. **`SymbolOccurrence`** — одно вхождение
   (`OccurrenceType` REFERENCE|DEFINITION + symbol + `Location`). **`Location`** — URI + диапазон.
 - Репозитории (workspace-scoped): `SymbolOccurrenceRepository` (Symbol → отсортированное
-  множество вхождений), `LocationRepository` (URI → вхождения), `AnnotationRepository`.
+  множество вхождений), `LocationRepository` (URI → вхождения; плюс вторичный line-индекс
+  `URI → строка → вхождения` для O(1) `findByPosition`, на котором стоит `ReferenceIndex.getReference`),
+  `AnnotationRepository`.
 
 ## Правки в этом каталоге
 
