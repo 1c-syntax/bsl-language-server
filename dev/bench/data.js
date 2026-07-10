@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783691455680,
+  "lastUpdate": 1783695927219,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39990,6 +39990,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.306991342186343",
             "extra": "mean: 105.95729994773865 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0bd6d38c594f2fd1c94716b895412a3686a8b57f",
+          "message": "Merge pull request #4258 from 1c-syntax/claude/perf-terminal-finder-position-alloc\n\nperf(references): хелпер Positions и отказ от лишних Range при взятии позиции",
+          "timestamp": "2026-07-10T16:38:33+02:00",
+          "tree_id": "281f61e0e0046676902e2feebf44368d109f4ab1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0bd6d38c594f2fd1c94716b895412a3686a8b57f"
+        },
+        "date": 1783695916138,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.05249778429668,
+            "unit": "sec",
+            "range": "stddev: 2.4191480552251234",
+            "extra": "mean: 106.05249778429668 sec\nrounds: 3"
           }
         ]
       }
