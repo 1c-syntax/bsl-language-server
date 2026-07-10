@@ -36,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
@@ -105,11 +104,15 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   private void checkConstructorCall(BSLParser.NewExpressionContext ctx) {
     var typeName = ctx.typeName();
-    if (typeName == null || typeName.IDENTIFIER() == null) {
+    if (typeName == null) {
+      return;
+    }
+    var typeNameIdentifier = typeName.IDENTIFIER();
+    if (typeNameIdentifier == null) {
       return;
     }
 
-    var signatures = referenceResolver.findReference(documentContext.getUri(), typeNamePosition(typeName))
+    var signatures = referenceResolver.findReference(documentContext.getUri(), typeNameIdentifier)
       .map(reference -> parameterSignatures(reference.symbol()))
       .orElseGet(List::of);
     if (signatures.isEmpty()) {
@@ -189,12 +192,6 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       arguments[i] = parameters.get(i).expression() != null;
     }
     return arguments;
-  }
-
-  private static Position typeNamePosition(BSLParser.TypeNameContext typeName) {
-    var token = typeName.IDENTIFIER().getSymbol();
-    // Token start is sufficient: the resolver looks for a position within the identifier.
-    return new Position(token.getLine() - 1, token.getCharPositionInLine());
   }
 
   private static class MethodCall {
