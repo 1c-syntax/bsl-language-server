@@ -104,13 +104,15 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   private void checkConstructorCall(BSLParser.NewExpressionContext ctx) {
     var typeName = ctx.typeName();
-    if (typeName == null || typeName.IDENTIFIER() == null) {
+    if (typeName == null) {
+      return;
+    }
+    var typeNameIdentifier = typeName.IDENTIFIER();
+    if (typeNameIdentifier == null) {
       return;
     }
 
-    // typeName.IDENTIFIER() уже проверен на null выше; терминальный путь резолвера
-    // поднимается от терминала до newExpression, а не спускается от корня по позиции.
-    var signatures = referenceResolver.findReference(documentContext.getUri(), typeName.IDENTIFIER())
+    var signatures = referenceResolver.findReference(documentContext.getUri(), typeNameIdentifier)
       .map(reference -> parameterSignatures(reference.symbol()))
       .orElseGet(List::of);
     if (signatures.isEmpty()) {
