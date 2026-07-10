@@ -62,6 +62,13 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
       diagnosticStorage.addDiagnostic(ctx);
     }
 
+    // Вложенные операторы возможны только внутри compoundStatement (если/пока/для/попытка):
+    // codeBlock грамматики встречается лишь там. В простых операторах (присваивание, вызов,
+    // preprocessor, «;») вложенных statement'ов нет — спускаться в их выражения незачем.
+    if (ctx.compoundStatement() == null) {
+      return ctx;
+    }
+
     return super.visitStatement(ctx);
   }
 
