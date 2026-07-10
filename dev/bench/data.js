@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783673022032,
+  "lastUpdate": 1783676407290,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39804,6 +39804,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.039452829435772",
             "extra": "mean: 178.66501442591348 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd19f2b2b3d23d05569de1da90c43121a531be4b",
+          "message": "Merge pull request #4250 from 1c-syntax/claude/perf-terminal-based-type-resolution\n\nperf(types): резолв членов по терминалу вместо повторного спуска по AST",
+          "timestamp": "2026-07-10T09:29:07+02:00",
+          "tree_id": "741e9f1abdb5fa90b03f8a69df6ccfc67e004fc2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cd19f2b2b3d23d05569de1da90c43121a531be4b"
+        },
+        "date": 1783676396467,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 133.45781938234964,
+            "unit": "sec",
+            "range": "stddev: 2.537198890460035",
+            "extra": "mean: 133.45781938234964 sec\nrounds: 3"
           }
         ]
       }
