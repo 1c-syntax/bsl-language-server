@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783683868926,
+  "lastUpdate": 1783686802516,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39928,6 +39928,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.154019242469688",
             "extra": "mean: 108.98689850171407 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf1cb4e1e66d4869fb844a37e5093312d92ee92d",
+          "message": "Merge pull request #4255 from 1c-syntax/claude/perf-symboltree-selectionrange-lookup\n\nperf(context): резолв символов объявления через индекс selection-range",
+          "timestamp": "2026-07-10T12:13:03+02:00",
+          "tree_id": "062c86ecafc4bc2b9ad074c5244b8b167708f393",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bf1cb4e1e66d4869fb844a37e5093312d92ee92d"
+        },
+        "date": 1783686792165,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.04165935516357,
+            "unit": "sec",
+            "range": "stddev: 1.9355089220637673",
+            "extra": "mean: 108.04165935516357 sec\nrounds: 3"
           }
         ]
       }
