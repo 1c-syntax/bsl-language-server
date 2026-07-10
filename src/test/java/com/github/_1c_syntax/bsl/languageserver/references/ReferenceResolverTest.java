@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +81,66 @@ class ReferenceResolverTest {
     assertThat(optionalReference)
       .isEmpty()
     ;
+  }
+
+  @Test
+  void testTerminalDispatchDelegatesToPositionFindersByDefault() {
+    // given: finders реализуют только позиционный метод — терминальный вызов
+    // должен через default-делегат резолвиться по стартовой позиции терминала.
+    var uri = FAKE_DOCUMENT_URI;
+
+    // when: терминал на первой строке (0-based line 1) — матчит firstLineReferenceFinder
+    var hit = referenceResolver.findReference(uri, terminalAt(2, 0));
+
+    // then
+    assertThat(hit)
+      .isPresent()
+      .hasValueSatisfying(reference -> assertThat(reference.uri()).isEqualTo(uri));
+
+    // when: терминал на третьей строке — ни один finder не матчит
+    var miss = referenceResolver.findReference(uri, terminalAt(3, 0));
+
+    // then
+    assertThat(miss).isEmpty();
+  }
+
+  @Test
+  void testTerminalDispatchPrefersTerminalOverride() {
+    // given: finder, переопределяющий терминальный метод; позиционный — пустой,
+    // чтобы доказать, что терминальный путь идёт через override, а не спуск по позиции.
+    var uri = FAKE_DOCUMENT_URI;
+    var terminalAware = new ReferenceFinder() {
+      @Override
+      public Optional<Reference> findReference(URI ref, Position position) {
+        return Optional.empty();
+      }
+
+      @Override
+      public Optional<Reference> findReference(URI ref, TerminalNode terminal) {
+        var reference = mock(Reference.class);
+        when(reference.uri()).thenReturn(ref);
+        return Optional.of(reference);
+      }
+    };
+    var resolver = new ReferenceResolver(List.of(terminalAware));
+
+    // when / then: терминальный путь резолвится
+    assertThat(resolver.findReference(uri, terminalAt(0, 0)))
+      .isPresent()
+      .hasValueSatisfying(reference -> assertThat(reference.uri()).isEqualTo(uri));
+
+    // а позиционный путь того же finder'а — пуст (override только терминальный)
+    assertThat(resolver.findReference(uri, new Position(0, 0))).isEmpty();
+  }
+
+  private static TerminalNode terminalAt(int line, int charPositionInLine) {
+    var token = mock(Token.class);
+    when(token.getLine()).thenReturn(line);
+    when(token.getCharPositionInLine()).thenReturn(charPositionInLine);
+    when(token.getText()).thenReturn("x");
+    var terminal = mock(TerminalNode.class);
+    when(terminal.getSymbol()).thenReturn(token);
+    return terminal;
   }
 
   @TestConfiguration
