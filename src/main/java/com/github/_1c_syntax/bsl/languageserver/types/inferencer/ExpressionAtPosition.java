@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
@@ -164,8 +165,21 @@ public class ExpressionAtPosition {
       return Optional.empty();
     }
     return Trees.findTerminalNodeContainsPosition(ast, position)
-      .map(terminal -> terminal.getParent() instanceof ParserRuleContext prc ? prc : null)
-      .map(rule -> ExpressionAtPosition.<T>ancestorOrSelf(rule, ruleIndex));
+      .flatMap(terminal -> enclosingRule(terminal, ruleIndex));
+  }
+
+  /**
+   * Тот же поиск охватывающего правила, что и {@link #findEnclosingRule}, но от
+   * уже известного терминала: вместо спуска по AST от корня к позиции
+   * поднимаемся вверх от {@code terminal} ({@link #ancestorOrSelf}). Спуск по
+   * позиции на больших модулях — доминирующая стоимость, а терминал зачастую
+   * уже есть у вызывающего.
+   */
+  private static <T extends ParserRuleContext> Optional<T> enclosingRule(TerminalNode terminal, int ruleIndex) {
+    if (!(terminal.getParent() instanceof ParserRuleContext prc)) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(ExpressionAtPosition.<T>ancestorOrSelf(prc, ruleIndex));
   }
 
   /**
@@ -203,19 +217,41 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var exprCtx = findExpressionContext(documentContext, position);
+    var ast = safeGetAst(documentContext);
+    if (ast == null) {
+      return Optional.empty();
+    }
+    // Резолвим терминал по позиции один раз, дальше — подъём вверх по каждой из
+    // четырёх продукций-кандидатов. Раньше спуск по позиции повторялся для
+    // каждой (до четырёх полных обходов AST на один идентификатор).
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .flatMap(ExpressionAtPosition::findExpressionTree);
+  }
+
+  /**
+   * Вариант {@link #findExpressionTree(DocumentContext, Position)} от уже
+   * известного терминала — без спуска по AST к позиции. Перебирает те же
+   * четыре продукции-кандидата (expression → complexIdentifier → callStatement
+   * → lValue), поднимаясь вверх от терминала.
+   */
+  public static Optional<BslExpression> findExpressionTree(TerminalNode terminal) {
+    var exprCtx = ExpressionAtPosition.<BSLParser.ExpressionContext>enclosingRule(
+      terminal, BSLParser.RULE_expression);
     if (exprCtx.isPresent()) {
       return exprCtx.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
-    var complexIdent = findComplexIdentifierContext(documentContext, position);
+    var complexIdent = ExpressionAtPosition.<BSLParser.ComplexIdentifierContext>enclosingRule(
+      terminal, BSLParser.RULE_complexIdentifier);
     if (complexIdent.isPresent()) {
       return complexIdent.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
-    var callStmt = findCallStatementContext(documentContext, position);
+    var callStmt = ExpressionAtPosition.<BSLParser.CallStatementContext>enclosingRule(
+      terminal, BSLParser.RULE_callStatement);
     if (callStmt.isPresent()) {
       return callStmt.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
-    var lValue = findLValueContext(documentContext, position);
+    var lValue = ExpressionAtPosition.<BSLParser.LValueContext>enclosingRule(
+      terminal, BSLParser.RULE_lValue);
     if (lValue.isPresent()) {
       return lValue.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
