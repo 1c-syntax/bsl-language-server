@@ -178,7 +178,7 @@ public class LinkedEditingRangeProvider {
     var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
     return Trees.findTerminalNodeContainsPosition(ast, positionInsideToken)
       .filter(terminalNode -> Positions.createEnd(terminalNode).equals(position))
-      .map(terminalNode -> Positions.create(terminalNode));
+      .map(Positions::create);
   }
 
   /**
