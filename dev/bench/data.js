@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783680994941,
+  "lastUpdate": 1783683868926,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39897,6 +39897,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.9708364428161804",
             "extra": "mean: 108.47151478131612 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b09bee98c5ca373520a07b744312484d8e070401",
+          "message": "Merge pull request #4256 from 1c-syntax/claude/perf-missed-required-parameter-terminal\n\nperf(diagnostics): резолв типа конструктора через терминальный путь ReferenceFinder",
+          "timestamp": "2026-07-10T11:58:02+02:00",
+          "tree_id": "88e53ea18db53f218c49dfb5950b0ee3ab4c72ef",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b09bee98c5ca373520a07b744312484d8e070401"
+        },
+        "date": 1783683857820,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.98689850171407,
+            "unit": "sec",
+            "range": "stddev: 4.154019242469688",
+            "extra": "mean: 108.98689850171407 sec\nrounds: 3"
           }
         ]
       }
