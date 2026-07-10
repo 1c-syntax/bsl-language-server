@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783671284055,
+  "lastUpdate": 1783673022032,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39773,6 +39773,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5035933773584791",
             "extra": "mean: 202.37935034434 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c58ba80e69a2a0bbd9c78dda1885bd0cd35c6d23",
+          "message": "Merge pull request #4251 from 1c-syntax/claude/perf-expression-inference-cache\n\nperf(types): мемоизация инференса узла выражения в пределах прохода по документу",
+          "timestamp": "2026-07-10T08:34:09+02:00",
+          "tree_id": "4f866a99b386101eb140eacd288ebb8c90cd6089",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c58ba80e69a2a0bbd9c78dda1885bd0cd35c6d23"
+        },
+        "date": 1783673011983,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 178.66501442591348,
+            "unit": "sec",
+            "range": "stddev: 2.039452829435772",
+            "extra": "mean: 178.66501442591348 sec\nrounds: 3"
           }
         ]
       }
