@@ -54,7 +54,7 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
     DocumentContext document = maybeDocument.get();
     SymbolTree symbolTree = document.getSymbolTree();
-    return symbolTree.findSymbolByNamePosition(position)
+    return symbolTree.findSymbolBySelectionRange(position)
       .map(sourceDefinedSymbol -> new Reference(
         symbolTree.getModule(),
         sourceDefinedSymbol,

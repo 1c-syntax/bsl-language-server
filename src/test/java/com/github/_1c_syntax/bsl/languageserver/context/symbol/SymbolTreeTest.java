@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SymbolTreeTest {
 
   @Test
-  void findSymbolByNamePositionResolvesEveryDeclarationName() {
+  void findSymbolBySelectionRangeResolvesEveryDeclarationName() {
     // given — модуль с областью, двумя переменными на одной строке и методом.
     var documentContext = TestUtils.getDocumentContext("""
       #Область МояОбласть
@@ -48,14 +48,14 @@ class SymbolTreeTest {
     // прежним линейным сканом getChildrenFlat().filter(containsPosition)).
     for (var symbol : symbolTree.getChildrenFlat()) {
       var nameStart = symbol.getSelectionRange().getStart();
-      assertThat(symbolTree.findSymbolByNamePosition(nameStart))
+      assertThat(symbolTree.findSymbolBySelectionRange(nameStart))
         .as("символ на начале своего имени: %s", symbol.getName())
         .contains(symbol);
     }
   }
 
   @Test
-  void findSymbolByNamePositionDisambiguatesTwoDeclarationsOnSameLine() {
+  void findSymbolBySelectionRangeDisambiguatesTwoDeclarationsOnSameLine() {
     // given — два объявления переменных на одной строке в разных колонках.
     var documentContext = TestUtils.getDocumentContext("""
       Перем ПеременнаяА, ПеременнаяБ;
@@ -69,12 +69,12 @@ class SymbolTreeTest {
       .isEqualTo(varB.getSelectionRange().getStart().getLine());
 
     // then — по колонке имени возвращается нужная переменная, а не первая по порядку.
-    assertThat(symbolTree.findSymbolByNamePosition(varA.getSelectionRange().getStart())).contains(varA);
-    assertThat(symbolTree.findSymbolByNamePosition(varB.getSelectionRange().getStart())).contains(varB);
+    assertThat(symbolTree.findSymbolBySelectionRange(varA.getSelectionRange().getStart())).contains(varA);
+    assertThat(symbolTree.findSymbolBySelectionRange(varB.getSelectionRange().getStart())).contains(varB);
   }
 
   @Test
-  void findSymbolByNamePositionEmptyWhenNotOnDeclaration() {
+  void findSymbolBySelectionRangeEmptyWhenNotOnDeclaration() {
     // given
     var documentContext = TestUtils.getDocumentContext("""
       Процедура Тест()
@@ -88,10 +88,10 @@ class SymbolTreeTest {
     // символа (имя метода начинается в колонке 10) → empty.
     var onKeyword = new Position(0, 0);
     assertThat(Ranges.containsPosition(method.getSelectionRange(), onKeyword)).isFalse();
-    assertThat(symbolTree.findSymbolByNamePosition(onKeyword)).isEmpty();
+    assertThat(symbolTree.findSymbolBySelectionRange(onKeyword)).isEmpty();
 
     // позиция на несуществующей строке — empty.
-    assertThat(symbolTree.findSymbolByNamePosition(new Position(999, 0))).isEmpty();
+    assertThat(symbolTree.findSymbolBySelectionRange(new Position(999, 0))).isEmpty();
   }
 
   private static SourceDefinedSymbol variable(SymbolTree symbolTree, String name) {

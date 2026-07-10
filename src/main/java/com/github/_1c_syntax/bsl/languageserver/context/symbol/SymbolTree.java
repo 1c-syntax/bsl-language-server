@@ -244,7 +244,7 @@ public class SymbolTree {
    * @param position позиция в документе.
    * @return символ, на объявлении которого стоит позиция, либо empty.
    */
-  public Optional<SourceDefinedSymbol> findSymbolByNamePosition(Position position) {
+  public Optional<SourceDefinedSymbol> findSymbolBySelectionRange(Position position) {
     var bucket = getSymbolsBySelectionLine().get(position.getLine());
     if (bucket == null) {
       return Optional.empty();
