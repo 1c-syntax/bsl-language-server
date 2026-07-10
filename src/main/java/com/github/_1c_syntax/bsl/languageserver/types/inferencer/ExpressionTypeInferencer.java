@@ -230,11 +230,9 @@ public class ExpressionTypeInferencer {
     if (!(ast instanceof TerminalNode terminal)) {
       return TypeSet.EMPTY;
     }
-    var token = terminal.getSymbol();
-    // Стартовая колонка токена — гарантированно внутри [start, end) диапазона
-    // идентификатора (для half-open контракта ReferenceIndex.containsPosition).
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    var resolved = resolveReferenceAt(ctx, position);
+    // Терминал идентификатора уже под рукой — резолвим по нему, без спуска по AST
+    // от корня к позиции в reference-finder'ах.
+    var resolved = resolveReferenceAt(ctx, terminal);
     if (!resolved.isEmpty()) {
       return resolved;
     }
@@ -467,10 +465,9 @@ public class ExpressionTypeInferencer {
     if (name == null) {
       return TypeSet.EMPTY;
     }
-    var token = name.getSymbol();
-    // Старт токена внутри [start, end) — корректно для half-open ReferenceIndex.containsPosition.
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    var reference = referenceResolver.findReference(ctx.documentContext.getUri(), position);
+    // Терминал имени вызова уже под рукой — резолвим по нему, без спуска по AST
+    // от корня к позиции в reference-finder'ах.
+    var reference = referenceResolver.findReference(ctx.documentContext.getUri(), name);
     if (reference.isEmpty()) {
       // Резолвер не нашёл ссылку — например, для глобальной функции без
       // токена, который мы успели проиндексировать. Пробуем по имени
@@ -728,6 +725,12 @@ public class ExpressionTypeInferencer {
 
   private TypeSet resolveReferenceAt(InferenceContext ctx, Position position) {
     return referenceResolver.findReference(ctx.documentContext.getUri(), position)
+      .map(reference -> resolveReference(reference, ctx))
+      .orElse(TypeSet.EMPTY);
+  }
+
+  private TypeSet resolveReferenceAt(InferenceContext ctx, TerminalNode terminal) {
+    return referenceResolver.findReference(ctx.documentContext.getUri(), terminal)
       .map(reference -> resolveReference(reference, ctx))
       .orElse(TypeSet.EMPTY);
   }

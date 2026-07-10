@@ -21,12 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -60,19 +63,35 @@ public class PlatformMemberReferenceFinder implements ReferenceFinder {
     // Горячий путь inferencer/hover — без захвата per-document RWLock.
     return serverContextProvider.getDocumentUnsafeNoLock(uri)
       .flatMap(document -> typeService.memberAt(document, position)
-        .map(member -> new Reference(
-          document.getSymbolTree().getModule(),
-          new PlatformMemberSymbol(
-            member.descriptor().name(),
-            member.owner(),
-            member.descriptor(),
-            member.callArgCount(),
-            member.argTypes()
-          ),
-          uri,
-          member.range(),
-          OccurrenceType.REFERENCE
-        ))
-      );
+        .map(member -> toReference(document, uri, member)));
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Резолвит член по терминалу через {@link TypeService#memberAt(DocumentContext,
+   * TerminalNode)} — без спуска по AST от корня к позиции.
+   */
+  @Override
+  public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+      .flatMap(document -> typeService.memberAt(document, terminal)
+        .map(member -> toReference(document, uri, member)));
+  }
+
+  private static Reference toReference(DocumentContext document, URI uri, TypedMember member) {
+    return new Reference(
+      document.getSymbolTree().getModule(),
+      new PlatformMemberSymbol(
+        member.descriptor().name(),
+        member.owner(),
+        member.descriptor(),
+        member.callArgCount(),
+        member.argTypes()
+      ),
+      uri,
+      member.range(),
+      OccurrenceType.REFERENCE
+    );
   }
 }

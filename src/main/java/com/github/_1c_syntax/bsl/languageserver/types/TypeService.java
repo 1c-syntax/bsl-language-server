@@ -654,12 +654,13 @@ public class TypeService {
 
   /**
    * Вариант {@link #isUnknownGlobalAt(DocumentContext, Position)} от уже
-   * известного терминала-имени — без спуска по AST к позиции. Позиция для
-   * поиска ссылки берётся из терминала.
+   * известного терминала-имени — без спуска по AST к позиции. Терминал
+   * прокидывается и в {@link ReferenceResolver}, чтобы reference-finder'ы тоже
+   * резолвили его подъёмом, а не спуском от корня.
    */
   public boolean isUnknownGlobalAt(DocumentContext documentContext, TerminalNode terminal) {
     return membersAt(documentContext, terminal).isEmpty()
-      && referenceResolver.findReference(documentContext.getUri(), Ranges.create(terminal).getStart()).isEmpty();
+      && referenceResolver.findReference(documentContext.getUri(), terminal).isEmpty();
   }
 
   /**

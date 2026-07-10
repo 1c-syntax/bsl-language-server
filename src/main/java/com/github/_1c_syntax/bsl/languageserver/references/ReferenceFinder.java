@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 
 import java.net.URI;
@@ -39,4 +41,20 @@ public interface ReferenceFinder {
    * @return данные ссылки.
    */
   Optional<Reference> findReference(URI uri, Position position);
+
+  /**
+   * Поиск символа по уже известному терминалу-идентификатору — без спуска по AST
+   * от корня к позиции. Реализация по умолчанию делегирует в
+   * {@link #findReference(URI, Position)} по стартовой позиции терминала (полное
+   * поведенческое соответствие позиционному варианту). Finder'ы, чья стоимость —
+   * именно этот спуск ({@code findTerminalNodeContainsPosition} и аналоги),
+   * переопределяют метод на подъём вверх от {@code terminal}.
+   *
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
+   * @param terminal терминал-идентификатор под курсором.
+   * @return данные ссылки.
+   */
+  default Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    return findReference(uri, Ranges.create(terminal).getStart());
+  }
 }
