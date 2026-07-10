@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783676407290,
+  "lastUpdate": 1783679564229,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -39835,6 +39835,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.537198890460035",
             "extra": "mean: 133.45781938234964 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "23ec6c1fe4dc8bce5ca83068868cffe83e75ac08",
+          "message": "Merge pull request #4253 from 1c-syntax/claude/perf-terminal-reference-finder\n\nperf(references): terminal-aware резолюция ссылок вместо повторного спуска по AST",
+          "timestamp": "2026-07-10T09:40:45+02:00",
+          "tree_id": "8cb9fde121f542317bc02517229733b173f00dc1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/23ec6c1fe4dc8bce5ca83068868cffe83e75ac08"
+        },
+        "date": 1783679551426,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 126.85386411348979,
+            "unit": "sec",
+            "range": "stddev: 3.8077066734308254",
+            "extra": "mean: 126.85386411348979 sec\nrounds: 3"
           }
         ]
       }
