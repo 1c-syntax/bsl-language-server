@@ -28,7 +28,7 @@ import org.eclipse.lsp4j.SymbolKind;
 /**
  * Synthetic-символ BSL-keyword'а ({@code Если}, {@code Истина}, {@code Цикл}…).
  * <p>
- * Создаётся on-the-fly в {@link com.github._1c_syntax.bsl.languageserver.references.KeywordReferenceFinder}
+ * Создаётся on-the-fly в {@link com.github._1c_syntax.bsl.languageserver.types.references.KeywordReferenceFinder}
  * при попадании курсора на keyword-токен — keyword'ы не являются
  * source-defined-символами и не лежат в symbol-tree модуля, но участвуют
  * в общем reference/hover-flow на правах обычного {@link Symbol}.
