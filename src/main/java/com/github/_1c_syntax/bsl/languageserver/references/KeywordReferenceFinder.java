@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.KeywordSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -81,7 +80,7 @@ public class KeywordReferenceFinder implements ReferenceFinder {
       return Optional.empty();
     }
     return Trees.findTerminalNodeContainsPosition(ast, position)
-      .flatMap(terminal -> buildReference(uri, documentContext, terminal));
+      .flatMap(terminal -> findReference(uri, terminal));
   }
 
   /**
@@ -92,15 +91,11 @@ public class KeywordReferenceFinder implements ReferenceFinder {
    */
   @Override
   public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
-    var documentContext = serverContextProvider.getDocumentNoLock(uri).orElse(null);
-    if (documentContext == null) {
+    if (!isKeywordToken(terminal)) {
       return Optional.empty();
     }
-    return buildReference(uri, documentContext, terminal);
-  }
-
-  private Optional<Reference> buildReference(URI uri, DocumentContext documentContext, TerminalNode terminal) {
-    if (!isKeywordToken(terminal)) {
+    var documentContext = serverContextProvider.getDocumentNoLock(uri).orElse(null);
+    if (documentContext == null) {
       return Optional.empty();
     }
 

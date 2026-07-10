@@ -723,12 +723,6 @@ public class ExpressionTypeInferencer {
   // Reference resolution
   // ---------------------------------------------------------------------------
 
-  private TypeSet resolveReferenceAt(InferenceContext ctx, Position position) {
-    return referenceResolver.findReference(ctx.documentContext.getUri(), position)
-      .map(reference -> resolveReference(reference, ctx))
-      .orElse(TypeSet.EMPTY);
-  }
-
   private TypeSet resolveReferenceAt(InferenceContext ctx, TerminalNode terminal) {
     return referenceResolver.findReference(ctx.documentContext.getUri(), terminal)
       .map(reference -> resolveReference(reference, ctx))

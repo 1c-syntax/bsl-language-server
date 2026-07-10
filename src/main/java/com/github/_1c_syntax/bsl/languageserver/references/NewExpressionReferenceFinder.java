@@ -77,11 +77,12 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
    */
   @Override
   public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    var nex = enclosingNewExpression(terminal);
+    if (nex == null) {
+      return Optional.empty();
+    }
     return serverContextProvider.getDocumentUnsafeNoLock(uri)
-      .flatMap(document -> {
-        var nex = enclosingNewExpression(terminal);
-        return nex == null ? Optional.<Reference>empty() : buildReference(document, uri, nex);
-      });
+      .flatMap(document -> buildReference(document, uri, nex));
   }
 
   private Optional<Reference> findReference(DocumentContext document, URI uri, Position position) {
