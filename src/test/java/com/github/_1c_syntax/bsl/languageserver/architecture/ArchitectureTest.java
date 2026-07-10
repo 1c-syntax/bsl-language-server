@@ -110,15 +110,18 @@ class ArchitectureTest {
   // --- Стандартные потоки -------------------------------------------------------------------------
   // Никто не пишет в стандартные потоки stdout и stderr. Исключения — лишь места, где стандартный
   // поток нужен по протоколу или природе процесса. Это транспорт LSP в классе
-  // LanguageServerLauncherConfiguration, транспорт MCP по stdio в классе McpStdioConfiguration и
+  // LanguageServerLauncherConfiguration, транспорт MCP по stdio в классе McpStdioConfiguration,
   // аварийный fallback в классе ParentProcessWatcher на завершении процесса, когда логгер уже
-  // недоступен. Новый класс с такой потребностью добавляется в список исключений осознанно, через ревью.
+  // недоступен, и гвард отладочного режима в MainApplication, срабатывающий в main() ещё до
+  // конфигурации логирования (в stderr, чтобы не задеть stdout-канал LSP). Новый класс с такой
+  // потребностью добавляется в список исключений осознанно, через ревью.
 
   @ArchTest
   static final ArchRule no_classes_should_access_standard_streams = noClasses()
     .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".cli.lsp.LanguageServerLauncherConfiguration")
     .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".mcp.McpStdioConfiguration")
     .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".lsp.ParentProcessWatcher")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".MainApplication")
     .should(ACCESS_STANDARD_STREAMS)
     .because("вывод в стандартные потоки допустим только в транспортных точках и аварийном "
       + "fallback из списка выше; остальной код пишет через slf4j");

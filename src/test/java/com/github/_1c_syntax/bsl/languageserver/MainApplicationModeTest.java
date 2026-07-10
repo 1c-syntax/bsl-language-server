@@ -65,6 +65,91 @@ class MainApplicationModeTest {
   }
 
   @Test
+  void debugFlagsStrippedWithoutOptIn() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(new String[]{"analyze", "--debug", "--trace"});
+
+      assertThat(result).containsExactly("analyze");
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+      assertThat(System.getProperty("trace")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void debugFlagsKeptWithOptIn() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(
+        new String[]{"analyze", "--debug", MainApplication.ENABLE_DEBUG_OPTION + "=true"});
+
+      // При осознанном включении аргументы отдаются как есть, свойства не трогаются.
+      assertThat(result)
+        .containsExactly("analyze", "--debug", MainApplication.ENABLE_DEBUG_OPTION + "=true");
+      assertThat(System.getProperty("debug")).isNull();
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void optInWithFalseValueDoesNotEnableDebug() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(
+        new String[]{"--debug", MainApplication.ENABLE_DEBUG_OPTION + "=false"});
+
+      // =false не включает отладку: флаг --debug снят, свойство debug принудительно false.
+      assertThat(result).containsExactly(MainApplication.ENABLE_DEBUG_OPTION + "=false");
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void nonDebugArgsPassThroughWithDebugForcedOff() {
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      var result = MainApplication.guardSpringDebugMode(new String[]{"analyze", "--srcDir", "."});
+
+      // Обычные аргументы не меняются, но без опт-ина отладка всё равно гасится.
+      assertThat(result).containsExactly("analyze", "--srcDir", ".");
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+      assertThat(System.getProperty("trace")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
+  void debugFromSystemPropertyForcedOff() {
+    // Запрос на отладку без флага командной строки — через свойство debug (как relaxed-binding DEBUG).
+    System.clearProperty("debug");
+    System.clearProperty("trace");
+    try {
+      System.setProperty("debug", "true");
+      var result = MainApplication.guardSpringDebugMode(new String[]{"analyze"});
+
+      assertThat(result).containsExactly("analyze");
+      assertThat(System.getProperty("debug")).isEqualTo("false");
+    } finally {
+      System.clearProperty("debug");
+      System.clearProperty("trace");
+    }
+  }
+
+  @Test
   void mcpEndpointPathAppliedOnlyForMcpHttp() {
     System.clearProperty(MCP_ENDPOINT_PROPERTY);
     try {
