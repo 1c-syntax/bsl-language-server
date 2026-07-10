@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -33,6 +34,7 @@ import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -85,6 +87,20 @@ public class SymbolTree {
   // TODO: value = AccessLevel.PRIVATE после окончания тестирования производительности
   @Getter(lazy = true)
   Map<SourceDefinedSymbol, Map<String, VariableSymbol>> variablesByName = createVariablesByName();
+
+  /**
+   * Индекс символов по строке их {@code selectionRange} (диапазона имени в
+   * объявлении) для быстрого поиска «символ, чьё имя стоит в позиции».
+   * Заменяет линейный скан {@link #getChildrenFlat()} в
+   * {@code SourceDefinedSymbolDeclarationReferenceFinder} на O(1)-lookup по
+   * строке. На одной строке может быть несколько объявлений (разные колонки) —
+   * поэтому значение это список, разводимый по колонкам через
+   * {@link Ranges#containsPosition}. Порядок в бакете — как в
+   * {@code getChildrenFlat()} (pre-order DFS), чтобы сохранить tie-break
+   * {@code findFirst} прежнего скана.
+   */
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  Map<Integer, List<SourceDefinedSymbol>> symbolsBySelectionLine = createSymbolsBySelectionLine();
 
   /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
@@ -219,6 +235,28 @@ public class SymbolTree {
     return findSymbolAtPosition(module, position);
   }
 
+  /**
+   * Символ, чьё имя ({@code selectionRange}) накрывает позицию — то есть позиция
+   * стоит на объявлении символа. O(1)-lookup по строке через
+   * {@link #getSymbolsBySelectionLine()}; при нескольких объявлениях на строке
+   * возвращает первый по порядку {@code getChildrenFlat()} накрывающий символ.
+   *
+   * @param position позиция в документе.
+   * @return символ, на объявлении которого стоит позиция, либо empty.
+   */
+  public Optional<SourceDefinedSymbol> findSymbolBySelectionRange(Position position) {
+    var bucket = getSymbolsBySelectionLine().get(position.getLine());
+    if (bucket == null) {
+      return Optional.empty();
+    }
+    for (var symbol : bucket) {
+      if (Ranges.containsPosition(symbol.getSelectionRange(), position)) {
+        return Optional.of(symbol);
+      }
+    }
+    return Optional.empty();
+  }
+
   private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
     // Ищем среди детей символ, содержащий позицию
     for (var child : parent.getChildren()) {
@@ -280,6 +318,29 @@ public class SymbolTree {
           () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
         )
       );
+  }
+
+  private Map<Integer, List<SourceDefinedSymbol>> createSymbolsBySelectionLine() {
+    Map<Integer, List<SourceDefinedSymbol>> byLine = new HashMap<>();
+    for (var symbol : getChildrenFlat()) {
+      var selectionRange = symbol.getSelectionRange();
+      if (selectionRange == null) {
+        continue;
+      }
+      // selectionRange имени обычно однострочен, но индексируем по всем строкам,
+      // которые он покрывает, — чтобы поиск оставался точной заменой линейного
+      // скана даже для (редкого) многострочного диапазона.
+      var startLine = selectionRange.getStart().getLine();
+      var endLine = selectionRange.getEnd().getLine();
+      for (var line = startLine; line <= endLine; line++) {
+        byLine.computeIfAbsent(line, k -> new ArrayList<>()).add(symbol);
+      }
+    }
+    // Списки строятся один раз и больше не растут — освобождаем лишнюю ёмкость.
+    for (var bucket : byLine.values()) {
+      ((ArrayList<SourceDefinedSymbol>) bucket).trimToSize();
+    }
+    return byLine;
   }
 
   private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {
