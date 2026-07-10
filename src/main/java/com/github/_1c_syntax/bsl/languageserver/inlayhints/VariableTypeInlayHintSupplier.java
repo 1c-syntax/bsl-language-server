@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -119,7 +120,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     }
     var identifier = maybeIdentifier.get();
 
-    var namePosition = Ranges.create(identifier).getEnd();
+    var namePosition = Positions.createEnd(identifier);
     if (!Ranges.containsPosition(range, namePosition)) {
       return Optional.empty();
     }

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -66,5 +67,36 @@ public final class Positions {
    */
   public Position create(@Nullable TerminalNode terminalNode) {
     return terminalNode == null ? create(0, 0) : create(terminalNode.getSymbol());
+  }
+
+  /**
+   * Начальная позиция контекста правила парсера (по стартовому токену).
+   *
+   * @param ruleContext контекст правила
+   * @return позиция начала контекста
+   */
+  public Position create(ParserRuleContext ruleContext) {
+    return create(ruleContext.getStart());
+  }
+
+  /**
+   * Конечная позиция токена. Соответствует концу {@link Ranges#create(Token)}:
+   * {@code charPositionInLine + длина текста токена}.
+   *
+   * @param token токен
+   * @return позиция конца токена
+   */
+  public Position createEnd(Token token) {
+    return create(token.getLine() - 1, token.getCharPositionInLine() + token.getText().length());
+  }
+
+  /**
+   * Конечная позиция терминального узла.
+   *
+   * @param terminalNode терминальный узел; {@code null} трактуется как пустая позиция (0,0)
+   * @return позиция конца узла
+   */
+  public Position createEnd(@Nullable TerminalNode terminalNode) {
+    return terminalNode == null ? create(0, 0) : createEnd(terminalNode.getSymbol());
   }
 }

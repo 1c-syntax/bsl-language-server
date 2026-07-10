@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.eclipse.lsp4j.Position;
@@ -63,6 +64,37 @@ class PositionsTest {
   @Test
   void createFromNullTerminalNodeIsEmpty() {
     assertThat(Positions.create((TerminalNode) null)).isEqualTo(new Position(0, 0));
+  }
+
+  @Test
+  void createFromRuleContext() {
+    var ctx = new ParserRuleContext(null, -1);
+    ctx.start = token();
+    ctx.stop = token();
+
+    assertThat(Positions.create(ctx)).isEqualTo(new Position(4, 6));
+    assertThat(Positions.create(ctx)).isEqualTo(Ranges.create(ctx).getStart());
+  }
+
+  @Test
+  void createEndFromToken() {
+    var token = token();
+
+    // Парити с прежним Ranges.create(token).getEnd(): колонка + длина текста.
+    assertThat(Positions.createEnd(token)).isEqualTo(new Position(4, 6 + "Идентификатор".length()));
+    assertThat(Positions.createEnd(token)).isEqualTo(Ranges.create(token).getEnd());
+  }
+
+  @Test
+  void createEndFromTerminalNode() {
+    TerminalNode terminal = new TerminalNodeImpl(token());
+
+    assertThat(Positions.createEnd(terminal)).isEqualTo(Ranges.create(terminal).getEnd());
+  }
+
+  @Test
+  void createEndFromNullTerminalNodeIsEmpty() {
+    assertThat(Positions.createEnd((TerminalNode) null)).isEqualTo(new Position(0, 0));
   }
 
   private static CommonToken token() {

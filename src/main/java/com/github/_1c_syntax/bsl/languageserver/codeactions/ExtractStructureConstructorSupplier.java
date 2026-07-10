@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
@@ -127,7 +128,7 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
     var constructorEdit = new TextEdit(Ranges.create(doCall), "()");
     changes.add(constructorEdit);
 
-    var indentSize = Ranges.create(lValue).getStart().getCharacter();
+    var indentSize = Positions.create(lValue).getCharacter();
 
     var rparenRange = Ranges.create(doCall.RPAREN());
     var constructorLine = rparenRange.getEnd().getLine();

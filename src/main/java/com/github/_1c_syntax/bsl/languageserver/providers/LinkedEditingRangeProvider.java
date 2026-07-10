@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -177,8 +177,8 @@ public class LinkedEditingRangeProvider {
     ParserRuleContext ast = documentContext.getAst();
     var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
     return Trees.findTerminalNodeContainsPosition(ast, positionInsideToken)
-      .filter(terminalNode -> Ranges.create(terminalNode).getEnd().equals(position))
-      .map(terminalNode -> Ranges.create(terminalNode).getStart());
+      .filter(terminalNode -> Positions.createEnd(terminalNode).equals(position))
+      .map(terminalNode -> Positions.create(terminalNode));
   }
 
   /**
