@@ -183,8 +183,8 @@ public class ReferenceIndex {
     var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .collect(Collectors.toCollection(HashSet::new));
     for (var occurrence : Set.copyOf(newOccurrences)) {
-      // remove == true — вхождение уже в индексе, оставляем как есть;
-      // остаток stale после цикла — ровно то, что нужно удалить.
+      // Успешное удаление из stale означает, что вхождение уже есть в индексе —
+      // оставляем его как есть; остаток stale после цикла подлежит удалению.
       if (!stale.remove(occurrence)) {
         saveOccurrence(occurrence);
       }
@@ -299,23 +299,25 @@ public class ReferenceIndex {
                                String variableName,
                                Range range,
                                boolean definition) {
-    saveOccurrence(variableUsageOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, definition));
+    var occurrenceType = definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE;
+    saveOccurrence(variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
   }
 
   /**
    * Построить вхождение «обращение к переменной» без записи в индекс.
    * <p>
-   * Параметры — как у {@link #addVariableUsage(URI, String, ModuleType, String, String, Range, boolean)}.
+   * Параметры — как у {@link #addVariableUsage(URI, String, ModuleType, String, String, Range, boolean)},
+   * вид вхождения задаётся явно.
    *
    * @return построенное вхождение.
    */
-  public SymbolOccurrence variableUsageOccurrence(URI uri,
-                                                  String mdoRef,
-                                                  ModuleType moduleType,
-                                                  String methodName,
-                                                  String variableName,
-                                                  Range range,
-                                                  boolean definition) {
+  public SymbolOccurrence variableOccurrence(URI uri,
+                                             String mdoRef,
+                                             ModuleType moduleType,
+                                             String methodName,
+                                             String variableName,
+                                             Range range,
+                                             OccurrenceType occurrenceType) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
@@ -331,7 +333,7 @@ public class ReferenceIndex {
     var location = new Location(uri, range);
 
     return SymbolOccurrence.builder()
-      .occurrenceType(definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
+      .occurrenceType(occurrenceType)
       .symbol(symbol)
       .location(location)
       .build();

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
@@ -147,7 +148,7 @@ public class ReferenceIndexFiller {
   }
 
   private static long contentFingerprint(String content) {
-    return ((long) content.length() << 32) ^ (content.hashCode() & 0xFFFFFFFFL);
+    return ((long) content.length() << Integer.SIZE) ^ (content.hashCode() & 0xFFFFFFFFL);
   }
 
   /**
@@ -160,7 +161,7 @@ public class ReferenceIndexFiller {
     void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range);
 
     void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                          String variableName, Range range, boolean definition);
+                          String variableName, Range range, OccurrenceType occurrenceType);
   }
 
   /**
@@ -183,8 +184,8 @@ public class ReferenceIndexFiller {
 
     @Override
     public void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                                 String variableName, Range range, boolean definition) {
-      batch.add(index.variableUsageOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, definition));
+                                 String variableName, Range range, OccurrenceType occurrenceType) {
+      batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
     }
   }
 
@@ -849,7 +850,7 @@ public class ReferenceIndexFiller {
         methodName,
         variableName,
         range,
-        !usage
+        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION
       );
     }
 

@@ -29,9 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -95,9 +93,8 @@ class ReferenceIndexRaceStressTest {
     var stop = new AtomicBoolean();
 
     var pool = Executors.newFixedThreadPool(READERS);
-    var readers = new ArrayList<Future<?>>();
     for (var r = 0; r < READERS; r++) {
-      readers.add(pool.submit(() -> {
+      pool.execute(() -> {
         try (var ignored = WorkspaceContextHolder.forUri(workspaceUri, workspaceName)) {
           while (!stop.get()) {
             var used = referenceIndex.getReferencesTo(targetVariable(documentContext)).stream()
@@ -109,7 +106,7 @@ class ReferenceIndexRaceStressTest {
             }
           }
         }
-      }));
+      });
     }
 
     try {
