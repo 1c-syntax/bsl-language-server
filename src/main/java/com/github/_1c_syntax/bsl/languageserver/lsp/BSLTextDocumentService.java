@@ -29,11 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTree;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTreeParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.TextDocumentProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
@@ -133,11 +131,8 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
-import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
-import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
-import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -164,7 +159,7 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
+public class BSLTextDocumentService implements TextDocumentService, TextDocumentProtocolExtension {
 
   private static final long AWAIT_CLOSE = 30;
   private static final long AWAIT_FORCE_TERMINATION = 1;
@@ -192,7 +187,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final SignatureHelpProvider signatureHelpProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
   private final LinkedEditingRangeProvider linkedEditingRangeProvider;
-  private final ConfigurationTreeBuilder configurationTreeBuilder;
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("textDocumentServiceExecutor")
@@ -886,30 +880,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         return new Diagnostics(diagnostics, documentContext.getVersion());
       }
     );
-  }
-
-  @Override
-  public CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params) {
-    var workspaceUri = params.workspaceUri();
-    var workspaceName = params.workspaceName();
-    var hasUri = workspaceUri != null && !workspaceUri.isBlank();
-    var hasName = workspaceName != null && !workspaceName.isBlank();
-
-    if (!hasUri && !hasName) {
-      return failedFuture(ResponseErrorCode.InvalidParams,
-        "Не задан идентификатор рабочей области: требуется workspaceUri или workspaceName");
-    }
-
-    return configurationTreeBuilder.getConfigurationTree(params)
-      .map(CompletableFuture::completedFuture)
-      .orElseGet(() -> failedFuture(ResponseErrorCode.InvalidParams,
-        "Рабочая область не найдена: " + (hasUri ? workspaceUri : workspaceName)));
-  }
-
-  private static <T> CompletableFuture<T> failedFuture(ResponseErrorCode code, String message) {
-    var future = new CompletableFuture<T>();
-    future.completeExceptionally(new ResponseErrorException(new ResponseError(code, message, null)));
-    return future;
   }
 
   @Override

@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.lsp;
+package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTreeParams;
@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.mdclasses.ConfigurationExtension;
 import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.support.ConfigurationExtensionPurpose;
 import com.github._1c_syntax.bsl.types.MultiLanguageString;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,23 +42,21 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
+class ConfigurationTreeProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private ConfigurationTreeBuilder builder;
+  private ConfigurationTreeProvider provider;
 
   @Test
-  void returnsConfigurationTreeWithObjectsAndAttributes() {
+  void returnsConfigurationTreeWithObjectsAndAttributes() throws Exception {
     // given
     initServerContext(TestUtils.PATH_TO_METADATA, false);
     var params = new ConfigurationTreeParams(context.getWorkspaceUri().toString(), null);
 
     // when
-    var result = builder.getConfigurationTree(params);
+    var tree = provider.configurationTree(params).get();
 
     // then
-    assertThat(result).isPresent();
-    var tree = result.orElseThrow();
     assertThat(tree.extensions()).isEmpty();
 
     var configuration = tree.configuration();
@@ -75,31 +75,36 @@ class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void returnsEmptyWhenWorkspaceIsUnknown() {
-    // given
-    initServerContext(TestUtils.PATH_TO_METADATA, false);
-    var params = new ConfigurationTreeParams("file:///no/such/workspace", null);
-
-    // when
-    var result = builder.getConfigurationTree(params);
-
-    // then
-    assertThat(result).isEmpty();
-  }
-
-  @Test
-  void resolvesWorkspaceByName() {
+  void resolvesWorkspaceByName() throws Exception {
     // given
     initServerContext(TestUtils.PATH_TO_METADATA, false);
     var params = new ConfigurationTreeParams(null, "designer");
 
     // when
-    var result = builder.getConfigurationTree(params);
+    var tree = provider.configurationTree(params).get();
 
     // then
-    assertThat(result).isPresent();
-    assertThat(result.orElseThrow().configuration().kind())
-      .isEqualTo(MdClassNode.KIND_CONFIGURATION);
+    assertThat(tree.configuration().kind()).isEqualTo(MdClassNode.KIND_CONFIGURATION);
+  }
+
+  @Test
+  void failsWithInvalidParamsWhenWorkspaceIsUnknown() {
+    // given
+    initServerContext(TestUtils.PATH_TO_METADATA, false);
+    var params = new ConfigurationTreeParams("file:///no/such/workspace", null);
+
+    // when / then
+    assertThat(invalidParamsCodeOf(params)).isEqualTo(ResponseErrorCode.InvalidParams.getValue());
+  }
+
+  @Test
+  void failsWithInvalidParamsWhenNoWorkspaceIdentifierProvided() {
+    // given
+    initServerContext(TestUtils.PATH_TO_METADATA, false);
+    var params = new ConfigurationTreeParams(null, null);
+
+    // when / then
+    assertThat(invalidParamsCodeOf(params)).isEqualTo(ResponseErrorCode.InvalidParams.getValue());
   }
 
   @Test
@@ -118,7 +123,7 @@ class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
       .build();
 
     // when
-    var tree = builder.buildTree("file:///workspace", solution);
+    var tree = ConfigurationTreeProvider.buildTree("file:///workspace", solution);
 
     // then
     assertThat(tree.configuration().kind()).isEqualTo(MdClassNode.KIND_CONFIGURATION);
@@ -130,5 +135,18 @@ class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
     assertThat(extensionNode.namePrefix()).isEqualTo("абв_");
     assertThat(extensionNode.purpose()).isEqualTo(ConfigurationExtensionPurpose.CUSTOMIZATION.name());
     assertThat(extensionNode.objects()).isEmpty();
+  }
+
+  /**
+   * Прогоняет запрос, ожидает {@link ResponseErrorException} (LSP4J сам обернёт его в JSON-RPC
+   * ответ) и возвращает её код ошибки.
+   */
+  private int invalidParamsCodeOf(ConfigurationTreeParams params) {
+    try {
+      provider.configurationTree(params);
+      throw new AssertionError("Ожидалось исключение ResponseErrorException, но запрос завершился успешно");
+    } catch (ResponseErrorException e) {
+      return e.getResponseError().getCode();
+    }
   }
 }

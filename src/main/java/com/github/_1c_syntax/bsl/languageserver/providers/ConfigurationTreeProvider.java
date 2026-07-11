@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.lsp;
+package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
@@ -35,6 +35,9 @@ import com.github._1c_syntax.bsl.mdo.support.AttributeKind;
 import com.github._1c_syntax.bsl.types.MultiLanguageString;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -43,9 +46,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * Строит дерево конфигурации рабочей области в разрезе основной конфигурации и её расширений.
+ * Провайдер дерева конфигурации рабочей области в разрезе основной конфигурации и её расширений
+ * (расширение протокола {@code workspace/x-configurationTree}).
  * <p>
  * View над {@link com.github._1c_syntax.bsl.mdclasses.Solution}: раздельно перечисляет объекты
  * метаданных верхнего уровня базовой конфигурации и каждого расширения с их именами, синонимами,
@@ -53,19 +58,41 @@ import java.util.Optional;
  */
 @Component
 @RequiredArgsConstructor
-public class ConfigurationTreeBuilder {
+public class ConfigurationTreeProvider {
 
   private final ServerContextProvider serverContextProvider;
 
   /**
    * Построить дерево конфигурации для указанной параметрами рабочей области.
+   * <p>
+   * Идентификатор рабочей области обязателен. Если не задан ни {@code workspaceUri}, ни
+   * {@code workspaceName}, либо рабочая область не найдена, возвращает future, завершённый
+   * ошибкой JSON-RPC {@link ResponseErrorCode#InvalidParams}.
    *
    * @param params параметры запроса (обязателен {@code workspaceUri} либо {@code workspaceName})
-   * @return дерево конфигурации, или {@link Optional#empty()}, если рабочая область не найдена
-   *         (в т.ч. если идентификатор не задан)
+   * @return future с деревом конфигурации, либо завершённый ошибкой при невалидных параметрах
+   *         или ненайденной рабочей области
    */
-  public Optional<ConfigurationTree> getConfigurationTree(ConfigurationTreeParams params) {
-    return resolveContext(params).map(this::buildTree);
+  public CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params) {
+    var workspaceUri = params.workspaceUri();
+    var workspaceName = params.workspaceName();
+    var hasUri = workspaceUri != null && !workspaceUri.isBlank();
+    var hasName = workspaceName != null && !workspaceName.isBlank();
+
+    if (!hasUri && !hasName) {
+      throw invalidParams("Не задан идентификатор рабочей области: требуется workspaceUri или workspaceName");
+    }
+
+    // Исключение оборачивается в JSON-RPC ответ самим LSP4J (RemoteEndpoint#exceptionToErrorObject).
+    var tree = resolveContext(params)
+      .map(context -> buildTree(context.getWorkspaceUri().toString(), context.getSolution()))
+      .orElseThrow(() ->
+        invalidParams("Рабочая область не найдена: " + (hasUri ? workspaceUri : workspaceName)));
+    return CompletableFuture.completedFuture(tree);
+  }
+
+  private static ResponseErrorException invalidParams(String message) {
+    return new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
   }
 
   private Optional<ServerContext> resolveContext(ConfigurationTreeParams params) {
@@ -88,10 +115,6 @@ public class ConfigurationTreeBuilder {
     return Optional.empty();
   }
 
-  private ConfigurationTree buildTree(ServerContext context) {
-    return buildTree(context.getWorkspaceUri().toString(), context.getSolution());
-  }
-
   /**
    * Построить дерево конфигурации из решения. Выделено для тестируемости в отрыве от
    * {@link ServerContext}.
@@ -100,7 +123,7 @@ public class ConfigurationTreeBuilder {
    * @param solution     решение (базовая конфигурация и её расширения)
    * @return дерево конфигурации
    */
-  ConfigurationTree buildTree(String workspaceUri, Solution solution) {
+  static ConfigurationTree buildTree(String workspaceUri, Solution solution) {
     var base = solution.getBaseConfiguration();
     var configurationNode = toMdClassNode(
       base.getName(),
@@ -125,7 +148,7 @@ public class ConfigurationTreeBuilder {
     return new ConfigurationTree(workspaceUri, configurationNode, extensions);
   }
 
-  private MdClassNode toMdClassNode(
+  private static MdClassNode toMdClassNode(
     String name,
     MultiLanguageString synonym,
     List<MD> children,
@@ -134,12 +157,12 @@ public class ConfigurationTreeBuilder {
     @Nullable String namePrefix
   ) {
     var objects = children.stream()
-      .map(this::toObjectNode)
+      .map(ConfigurationTreeProvider::toObjectNode)
       .toList();
     return new MdClassNode(name, synonymText(synonym), kind, purpose, namePrefix, objects);
   }
 
-  private MetadataObjectNode toObjectNode(MD md) {
+  private static MetadataObjectNode toObjectNode(MD md) {
     var attributes = new ArrayList<AttributeNode>();
     var standardAttributes = new ArrayList<AttributeNode>();
 

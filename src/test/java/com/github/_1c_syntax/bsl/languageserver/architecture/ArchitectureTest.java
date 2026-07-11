@@ -280,11 +280,12 @@ class ArchitectureTest {
       "Client", "CodeLenses", "Completion", "Configuration", "Context", "Events", "Infrastructure",
       "InlayHints", "Jsonrpc", "Providers", "Utils")
 
-    // Фасад providers композирует все фичи и домены под собой
+    // Фасад providers композирует все фичи и домены под собой. Jsonrpc — DTO расширений протокола,
+    // которые провайдеры отдают наружу (например, ConfigurationTreeProvider → ConfigurationTree).
     .whereLayer("Providers").mayOnlyAccessLayers(
       "Client", "CodeActions", "CodeLenses", "Color", "Commands", "Completion", "Configuration",
       "Context", "DocumentHighlight", "DocumentLink", "Events", "Folding", "Formatting", "Hover",
-      "Infrastructure", "InlayHints", "References", "Rename", "SemanticTokens", "Types", "Utils")
+      "Infrastructure", "InlayHints", "Jsonrpc", "References", "Rename", "SemanticTokens", "Types", "Utils")
 
     // Потребители движка диагностик: публичный фасад встраивания (binding, бывш. корневой BSLLSBinding,
     // используется внешним SonarQube-плагином) и репортёры. Так заперт бывший цикл

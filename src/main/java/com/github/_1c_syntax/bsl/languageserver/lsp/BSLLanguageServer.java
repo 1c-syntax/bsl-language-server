@@ -30,7 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTree;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTreeParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.TextDocumentProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.WorkspaceProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
@@ -125,7 +126,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
+public class BSLLanguageServer implements LanguageServer, TextDocumentProtocolExtension, WorkspaceProtocolExtension {
 
   /**
    * Glob-шаблоны файлов рабочей области, за изменениями которых наблюдает клиент.
@@ -401,11 +402,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   /**
    * {@inheritDoc}
    * <p>
-   * См. {@link BSLTextDocumentService#configurationTree(ConfigurationTreeParams)}
+   * См. {@link BSLWorkspaceService#configurationTree(ConfigurationTreeParams)}
    */
   @Override
   public CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params) {
-    return textDocumentService.configurationTree(params);
+    return workspaceService.configurationTree(params);
   }
 
   @Override
