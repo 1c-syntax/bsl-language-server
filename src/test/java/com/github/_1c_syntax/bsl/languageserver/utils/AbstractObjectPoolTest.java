@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 class AbstractObjectPoolTest {
@@ -126,6 +127,12 @@ class AbstractObjectPoolTest {
     assertThat(received.get()).isNotNull();
     assertThat(pool.created.get()).isEqualTo(2);
     assertThat(wasInterrupted.get()).isTrue();
+  }
+
+  @Test
+  void nonPositiveMaxSizeIsRejected() {
+    assertThatThrownBy(() -> new CountingPool(0))
+      .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

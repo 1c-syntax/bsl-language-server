@@ -69,9 +69,12 @@ public abstract class AbstractObjectPool<T> {
 
   /**
    * @param maxSize максимальное суммарное количество объектов пула
-   *                (доступных и выданных).
+   *                (доступных и выданных); не меньше 1.
    */
   protected AbstractObjectPool(int maxSize) {
+    if (maxSize < 1) {
+      throw new IllegalArgumentException("maxSize must be >= 1, got: " + maxSize);
+    }
     this.maxSize = maxSize;
   }
 
