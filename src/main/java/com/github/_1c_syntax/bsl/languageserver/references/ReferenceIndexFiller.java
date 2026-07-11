@@ -138,13 +138,18 @@ public class ReferenceIndexFiller {
    * прежнее содержимое индекса остаётся нетронутым.
    */
   public void fill(DocumentContext documentContext) {
+    // Снимок содержимого берётся ДО чтения AST: если конкурентное перестроение
+    // документа вклинится в процесс индексации, отпечаток останется от той версии,
+    // что не новее проиндексированной, и следующее событие переиндексирует документ
+    // (лишний fill безопасен, «залипание» устаревшего индекса — нет).
+    var content = documentContext.getContent();
     var batch = new ArrayList<SymbolOccurrence>();
     var sink = new BatchingSink(batch);
     var documentContextAst = documentContext.getAst();
     new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     index.replaceReferences(documentContext.getUri(), batch);
-    filledContentFingerprints.put(documentContext.getUri(), contentFingerprint(documentContext.getContent()));
+    filledContentFingerprints.put(documentContext.getUri(), contentFingerprint(content));
   }
 
   private static long contentFingerprint(String content) {

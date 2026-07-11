@@ -24,9 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -362,7 +360,7 @@ public class ReferenceIndex {
         var occurrenceType = symbolOccurrence.occurrenceType();
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
-      .filter(ReferenceIndex::isReferenceAccessible);
+      .filter(ReferenceAccessibility::isAccessible);
   }
 
   private static Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {
@@ -401,28 +399,4 @@ public class ReferenceIndex {
       .orElseThrow();
   }
 
-  private static boolean isReferenceAccessible(Reference reference) {
-    if (!reference.isSourceDefinedSymbolReference()) {
-      return true;
-    }
-
-    var to = reference.getSourceDefinedSymbol().orElseThrow();
-    var from = reference.from();
-    if (to.getOwner().equals(from.getOwner())) {
-      return true;
-    }
-
-    // Конструктор OneScript-класса (ПриСозданииОбъекта/OnObjectCreate) по
-    // convention'у объявляется без `Экспорт`, но фактически вызывается извне
-    // через `Новый ИмяКласса()` — поэтому такая ссылка всегда accessible.
-    if (to instanceof ConstructorSymbol) {
-      return true;
-    }
-
-    if (to instanceof Exportable exportable) {
-      return exportable.isExport();
-    }
-
-    return true;
-  }
 }

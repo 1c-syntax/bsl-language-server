@@ -90,6 +90,7 @@ class ReferenceIndexRaceStressTest {
       .anyMatch(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE);
 
     var falsePositives = new AtomicInteger();
+    var readerErrors = new AtomicInteger();
     var stop = new AtomicBoolean();
 
     var pool = Executors.newFixedThreadPool(READERS);
@@ -105,6 +106,11 @@ class ReferenceIndexRaceStressTest {
               return;
             }
           }
+        } catch (RuntimeException e) {
+          // Исключение читателя — тоже дефект конкурентного доступа:
+          // не глотаем, а проваливаем тест через счётчик.
+          readerErrors.incrementAndGet();
+          throw e;
         }
       });
     }
@@ -124,6 +130,9 @@ class ReferenceIndexRaceStressTest {
       assertThat(terminated).isTrue();
     }
 
+    assertThat(readerErrors.get())
+      .withFailMessage("%d поток(ов) завершились исключением при чтении индекса", readerErrors.get())
+      .isZero();
     assertThat(falsePositives.get())
       .withFailMessage(
         "%d поток(ов) увидели «переменная А не используется», хотя `Б = А` есть в каждом варианте содержимого",
