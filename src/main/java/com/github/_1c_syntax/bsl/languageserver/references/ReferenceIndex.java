@@ -178,7 +178,7 @@ public class ReferenceIndex {
    * @param newOccurrences Новый набор вхождений (дубликаты допускаются:
    *                       повторная запись вхождения — идемпотентный no-op).
    */
-  public void replaceReferences(URI uri, List<SymbolOccurrence> newOccurrences) {
+  public void replaceReferences(URI uri, Iterable<SymbolOccurrence> newOccurrences) {
     var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .collect(Collectors.toCollection(HashSet::new));
     for (var occurrence : newOccurrences) {
