@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 class AbstractObjectPoolTest {
 
@@ -117,9 +118,7 @@ class AbstractObjectPoolTest {
     waiter.start();
 
     // Дождаться входа в ожидание и прервать
-    while (waiter.getState() != Thread.State.WAITING) {
-      TimeUnit.MILLISECONDS.sleep(10);
-    }
+    await().atMost(5, TimeUnit.SECONDS).until(() -> waiter.getState() == Thread.State.WAITING);
     waiter.interrupt();
     waiter.join(TimeUnit.SECONDS.toMillis(5));
 
