@@ -35,6 +35,11 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Конфигурация исполнителей для обработки асинхронных задач.
@@ -106,10 +111,15 @@ public class ExecutorConfiguration {
     return createSharedForkJoinExecutorService("compute-configuration-");
   }
 
+  // diagnosticComputerExecutor — обычный ThreadPoolExecutor, а не ForkJoinPool: диагностики одного
+  // документа сабмитятся отдельными задачами, а вызывающая сторона собирает результат через
+  // Future.get(). Блокировка на get() обычного пула не проходит через ForkJoinPool.managedBlock,
+  // поэтому вызов из воркера ForkJoinPool (пакетный analyze, анализ проекта при старте) не плодит
+  // компенсирующие потоки. Контекст workspace несёт ContextPropagatingExecutorService (per-task).
   @Bean(destroyMethod = "shutdown")
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService diagnosticComputerExecutor() {
-    return createWorkspaceForkJoinPool("diagnostic-computer-");
+    return createWorkspaceBoundedPool("diagnostic-computer-");
   }
 
   @Bean(destroyMethod = "shutdown")
@@ -150,10 +160,41 @@ public class ExecutorConfiguration {
     return new ContextPropagatingExecutorService(pool);
   }
 
+  private static ExecutorService createWorkspaceBoundedPool(String prefix) {
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      throw new IllegalStateException("Workspace context is not set when creating executor");
+    }
+    var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
+      .orElse("default");
+    var parallelism = ForkJoinPool.getCommonPoolParallelism();
+    var factory = new NamedThreadFactory(prefix + workspaceName + "-");
+    var pool = new ThreadPoolExecutor(
+      parallelism, parallelism,
+      0L, TimeUnit.MILLISECONDS,
+      new LinkedBlockingQueue<>(),
+      factory
+    );
+    return new ContextPropagatingExecutorService(pool);
+  }
+
   private static ExecutorService createSharedForkJoinExecutorService(String threadNamePrefix) {
     var factory = new NamedForkJoinWorkerThreadFactory(threadNamePrefix);
     var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     return new ContextPropagatingExecutorService(pool);
+  }
+
+  private record NamedThreadFactory(String prefix, AtomicInteger index) implements ThreadFactory {
+    NamedThreadFactory(String prefix) {
+      this(prefix, new AtomicInteger());
+    }
+
+    @Override
+    public Thread newThread(Runnable runnable) {
+      var thread = new Thread(runnable, prefix + index.getAndIncrement());
+      thread.setDaemon(true);
+      return thread;
+    }
   }
 
   private record NamedForkJoinWorkerThreadFactory(String prefix) implements ForkJoinPool.ForkJoinWorkerThreadFactory {
