@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
@@ -143,8 +144,8 @@ public class AnalyzeCommand implements Callable<Integer> {
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerContextProvider serverContextProvider;
   private final LanguageServerConfiguration configuration;
-  @Qualifier("cliExecutor")
-  private final ExecutorService cliExecutor;
+  @Qualifier("analyzeExecutor")
+  private final ExecutorService analyzeExecutor;
 
   private ServerContext serverContext;
 
@@ -184,25 +185,14 @@ public class AnalyzeCommand implements Callable<Integer> {
 
       List<FileInfo> fileInfos;
       if (silentMode) {
-        fileInfos = cliExecutor.submit(() ->
-          files.parallelStream()
-            .map((File file) -> getFileInfoFromFile(workspaceDir, file))
-            .toList()
-        ).get();
+        fileInfos = analyzeFiles(files, workspaceDir, null);
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
           .setTaskName("Analyzing files...")
           .setInitialMax(files.size())
           .setStyle(ProgressBarStyle.ASCII)
           .build()) {
-          fileInfos = cliExecutor.submit(() ->
-            files.parallelStream()
-              .map((File file) -> {
-                pb.step();
-                return getFileInfoFromFile(workspaceDir, file);
-              })
-              .toList()
-          ).get();
+          fileInfos = analyzeFiles(files, workspaceDir, pb);
         }
       }
 
@@ -220,6 +210,28 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   public String[] getReportersOptions() {
     return reportersOptions.clone();
+  }
+
+  private List<FileInfo> analyzeFiles(List<File> files, Path workspaceDir, @Nullable ProgressBar progressBar)
+    throws InterruptedException, ExecutionException {
+    // Каждый документ — отдельная задача на bounded analyzeExecutor: число одновременно
+    // материализованных DocumentContext ограничено размером пула (см. ExecutorConfiguration),
+    // а не «плывёт» из-за компенсации потоков ForkJoinPool на блокирующем join диагностик.
+    var futures = files.stream()
+      .map((File file) -> analyzeExecutor.submit(() -> {
+        var fileInfo = getFileInfoFromFile(workspaceDir, file);
+        if (progressBar != null) {
+          progressBar.step();
+        }
+        return fileInfo;
+      }))
+      .toList();
+
+    var fileInfos = new ArrayList<FileInfo>(futures.size());
+    for (var future : futures) {
+      fileInfos.add(future.get());
+    }
+    return fileInfos;
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
