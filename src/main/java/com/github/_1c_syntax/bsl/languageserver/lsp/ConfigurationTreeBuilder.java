@@ -71,13 +71,13 @@ public class ConfigurationTreeBuilder {
   private Optional<ServerContext> resolveContext(ConfigurationTreeParams params) {
     var contexts = serverContextProvider.getAllContexts();
 
-    var workspaceUri = params.getWorkspaceUri();
+    var workspaceUri = params.workspaceUri();
     if (workspaceUri != null && !workspaceUri.isBlank()) {
       var normalized = Absolute.uri(workspaceUri);
       return Optional.ofNullable(contexts.get(normalized));
     }
 
-    var workspaceName = params.getWorkspaceName();
+    var workspaceName = params.workspaceName();
     if (workspaceName != null && !workspaceName.isBlank()) {
       return contexts.entrySet().stream()
         .filter(entry -> workspaceName.equals(extractWorkspaceName(entry.getKey())))

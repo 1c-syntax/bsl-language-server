@@ -21,21 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.Value;
-
 /**
  * Узел реквизита (или стандартного реквизита) объекта метаданных в дереве конфигурации.
+ *
+ * @param name    Имя реквизита.
+ * @param synonym Синоним реквизита (пустая строка, если синоним не задан).
  */
-@Value
-public class AttributeNode {
-
-  /**
-   * Имя реквизита.
-   */
-  String name;
-
-  /**
-   * Синоним реквизита (пустая строка, если синоним не задан).
-   */
-  String synonym;
+public record AttributeNode(String name, String synonym) {
 }

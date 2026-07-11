@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.Value;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -29,9 +28,23 @@ import java.util.List;
 /**
  * Узел конфигурации или расширения в дереве конфигурации: содержит объекты метаданных
  * верхнего уровня соответствующего контейнера.
+ *
+ * @param name       Имя конфигурации или расширения.
+ * @param synonym    Синоним конфигурации или расширения (пустая строка, если синоним не задан).
+ * @param kind       Вид контейнера: {@link #KIND_CONFIGURATION} или {@link #KIND_EXTENSION}.
+ * @param purpose    Назначение расширения (например, {@code CUSTOMIZATION}, {@code ADD_ON},
+ *                   {@code PATCH}). {@code null} для основной конфигурации.
+ * @param namePrefix Префикс имён объектов расширения. {@code null} для основной конфигурации.
+ * @param objects    Объекты метаданных верхнего уровня, принадлежащие контейнеру.
  */
-@Value
-public class MdClassNode {
+public record MdClassNode(
+  String name,
+  String synonym,
+  String kind,
+  @Nullable String purpose,
+  @Nullable String namePrefix,
+  List<MetadataObjectNode> objects
+) {
 
   /**
    * Значение {@link #kind} для основной конфигурации.
@@ -42,37 +55,4 @@ public class MdClassNode {
    * Значение {@link #kind} для расширения конфигурации.
    */
   public static final String KIND_EXTENSION = "EXTENSION";
-
-  /**
-   * Имя конфигурации или расширения.
-   */
-  String name;
-
-  /**
-   * Синоним конфигурации или расширения (пустая строка, если синоним не задан).
-   */
-  String synonym;
-
-  /**
-   * Вид контейнера: {@link #KIND_CONFIGURATION} или {@link #KIND_EXTENSION}.
-   */
-  String kind;
-
-  /**
-   * Назначение расширения (например, <code>CUSTOMIZATION</code>, <code>ADD_ON</code>,
-   * <code>PATCH</code>). {@code null} для основной конфигурации.
-   */
-  @Nullable
-  String purpose;
-
-  /**
-   * Префикс имён объектов расширения. {@code null} для основной конфигурации.
-   */
-  @Nullable
-  String namePrefix;
-
-  /**
-   * Объекты метаданных верхнего уровня, принадлежащие контейнеру.
-   */
-  List<MetadataObjectNode> objects;
 }

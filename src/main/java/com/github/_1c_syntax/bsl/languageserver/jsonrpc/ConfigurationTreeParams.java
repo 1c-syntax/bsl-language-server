@@ -21,39 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Параметры запроса <code>workspace/x-configurationTree</code>.
  * <br>
- * Идентификатор рабочей области обязателен: должен быть задан {@link #workspaceUri}
- * либо {@link #workspaceName} (при указании обоих приоритет у {@link #workspaceUri}).
+ * Идентификатор рабочей области обязателен: должен быть задан {@code workspaceUri}
+ * либо {@code workspaceName} (при указании обоих приоритет у {@code workspaceUri}).
+ *
+ * @param workspaceUri  URI корня рабочей области, для которой строится дерево конфигурации.
+ * @param workspaceName Имя рабочей области, для которой строится дерево конфигурации
+ *                      (используется, если {@code workspaceUri} не задан).
  */
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
-public class ConfigurationTreeParams {
-
-  /**
-   * URI корня рабочей области, для которой строится дерево конфигурации.
-   */
-  @Nullable
-  private String workspaceUri;
-
-  /**
-   * Имя рабочей области, для которой строится дерево конфигурации.
-   * <br>
-   * Используется, если {@link #workspaceUri} не задан.
-   */
-  @Nullable
-  private String workspaceName;
+public record ConfigurationTreeParams(
+  @Nullable String workspaceUri,
+  @Nullable String workspaceName
+) {
 }

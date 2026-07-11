@@ -57,21 +57,21 @@ class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
     // then
     assertThat(result).isPresent();
     var tree = result.orElseThrow();
-    assertThat(tree.getExtensions()).isEmpty();
+    assertThat(tree.extensions()).isEmpty();
 
-    var configuration = tree.getConfiguration();
-    assertThat(configuration.getKind()).isEqualTo(MdClassNode.KIND_CONFIGURATION);
-    assertThat(configuration.getObjects())
-      .extracting(MetadataObjectNode::getName)
+    var configuration = tree.configuration();
+    assertThat(configuration.kind()).isEqualTo(MdClassNode.KIND_CONFIGURATION);
+    assertThat(configuration.objects())
+      .extracting(MetadataObjectNode::name)
       .contains("Справочник1", "Документ1");
 
-    var catalog = configuration.getObjects().stream()
-      .filter(object -> object.getName().equals("Справочник1"))
+    var catalog = configuration.objects().stream()
+      .filter(object -> object.name().equals("Справочник1"))
       .findFirst()
       .orElseThrow();
 
-    assertThat(catalog.getAttributes()).isNotEmpty();
-    assertThat(catalog.getStandardAttributes()).isNotEmpty();
+    assertThat(catalog.attributes()).isNotEmpty();
+    assertThat(catalog.standardAttributes()).isNotEmpty();
   }
 
   @Test
@@ -98,7 +98,7 @@ class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(result).isPresent();
-    assertThat(result.orElseThrow().getConfiguration().getKind())
+    assertThat(result.orElseThrow().configuration().kind())
       .isEqualTo(MdClassNode.KIND_CONFIGURATION);
   }
 
@@ -121,14 +121,14 @@ class ConfigurationTreeBuilderTest extends AbstractServerContextAwareTest {
     var tree = builder.buildTree("file:///workspace", solution);
 
     // then
-    assertThat(tree.getConfiguration().getKind()).isEqualTo(MdClassNode.KIND_CONFIGURATION);
-    assertThat(tree.getExtensions()).hasSize(1);
+    assertThat(tree.configuration().kind()).isEqualTo(MdClassNode.KIND_CONFIGURATION);
+    assertThat(tree.extensions()).hasSize(1);
 
-    var extensionNode = tree.getExtensions().get(0);
-    assertThat(extensionNode.getKind()).isEqualTo(MdClassNode.KIND_EXTENSION);
-    assertThat(extensionNode.getName()).isEqualTo("РасширениеABC");
-    assertThat(extensionNode.getNamePrefix()).isEqualTo("абв_");
-    assertThat(extensionNode.getPurpose()).isEqualTo(ConfigurationExtensionPurpose.CUSTOMIZATION.name());
-    assertThat(extensionNode.getObjects()).isEmpty();
+    var extensionNode = tree.extensions().get(0);
+    assertThat(extensionNode.kind()).isEqualTo(MdClassNode.KIND_EXTENSION);
+    assertThat(extensionNode.name()).isEqualTo("РасширениеABC");
+    assertThat(extensionNode.namePrefix()).isEqualTo("абв_");
+    assertThat(extensionNode.purpose()).isEqualTo(ConfigurationExtensionPurpose.CUSTOMIZATION.name());
+    assertThat(extensionNode.objects()).isEmpty();
   }
 }

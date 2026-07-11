@@ -890,8 +890,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params) {
-    var workspaceUri = params.getWorkspaceUri();
-    var workspaceName = params.getWorkspaceName();
+    var workspaceUri = params.workspaceUri();
+    var workspaceName = params.workspaceName();
     var hasUri = workspaceUri != null && !workspaceUri.isBlank();
     var hasName = workspaceName != null && !workspaceName.isBlank();
 

@@ -21,30 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.Value;
-
 import java.util.List;
 
 /**
  * Ответ на запрос <code>workspace/x-configurationTree</code>.
  * <br>
  * Дерево конфигурации рабочей области в разрезе основной конфигурации и её расширений.
+ *
+ * @param workspaceUri  URI корня рабочей области, для которой построено дерево.
+ * @param configuration Узел основной конфигурации.
+ * @param extensions    Узлы расширений конфигурации (пустой список, если расширений нет).
  */
-@Value
-public class ConfigurationTree {
-
-  /**
-   * URI корня рабочей области, для которой построено дерево.
-   */
-  String workspaceUri;
-
-  /**
-   * Узел основной конфигурации.
-   */
-  MdClassNode configuration;
-
-  /**
-   * Узлы расширений конфигурации (пустой список, если расширений нет).
-   */
-  List<MdClassNode> extensions;
+public record ConfigurationTree(
+  String workspaceUri,
+  MdClassNode configuration,
+  List<MdClassNode> extensions
+) {
 }

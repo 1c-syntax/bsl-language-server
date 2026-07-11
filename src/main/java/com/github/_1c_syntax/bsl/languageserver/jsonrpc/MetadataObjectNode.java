@@ -21,43 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.Value;
-
 import java.util.List;
 
 /**
  * Узел объекта метаданных верхнего уровня в дереве конфигурации: имя, синоним, тип и реквизиты.
+ *
+ * @param name               Имя объекта метаданных.
+ * @param synonym            Синоним объекта метаданных (пустая строка, если синоним не задан).
+ * @param mdoType            Тип объекта метаданных (например, {@code CATALOG}, {@code DOCUMENT}).
+ * @param mdoRef             Ссылка на объект метаданных (mdoRef).
+ * @param attributes         Реквизиты объекта (без стандартных реквизитов).
+ * @param standardAttributes Стандартные реквизиты объекта.
  */
-@Value
-public class MetadataObjectNode {
-
-  /**
-   * Имя объекта метаданных.
-   */
-  String name;
-
-  /**
-   * Синоним объекта метаданных (пустая строка, если синоним не задан).
-   */
-  String synonym;
-
-  /**
-   * Тип объекта метаданных (например, <code>CATALOG</code>, <code>DOCUMENT</code>).
-   */
-  String mdoType;
-
-  /**
-   * Ссылка на объект метаданных (mdoRef).
-   */
-  String mdoRef;
-
-  /**
-   * Реквизиты объекта (без стандартных реквизитов).
-   */
-  List<AttributeNode> attributes;
-
-  /**
-   * Стандартные реквизиты объекта.
-   */
-  List<AttributeNode> standardAttributes;
+public record MetadataObjectNode(
+  String name,
+  String synonym,
+  String mdoType,
+  String mdoRef,
+  List<AttributeNode> attributes,
+  List<AttributeNode> standardAttributes
+) {
 }
