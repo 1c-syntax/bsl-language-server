@@ -46,9 +46,12 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -164,6 +167,35 @@ public class ReferenceIndex {
   }
 
   /**
+   * Атомарно заменить все обращения к символам, расположенные в документе, на новый набор.
+   * <p>
+   * В отличие от пары {@code clearReferences + addXxx} не оставляет окна, в котором
+   * индекс документа пуст: сначала добавляются недостающие вхождения, затем удаляются
+   * устаревшие (разность старого и нового наборов). Конкурентные читатели в любой момент
+   * видят как минимум пересечение старого и нового наборов — «пропажа» ссылок на
+   * существующие символы (и, как следствие, ложные срабатывания диагностик
+   * неиспользуемых переменных/методов) исключена.
+   *
+   * @param uri            URI документа, чьи вхождения заменяются.
+   * @param newOccurrences Новый набор вхождений (дубликаты допускаются и схлопываются).
+   */
+  public void replaceReferences(URI uri, Collection<SymbolOccurrence> newOccurrences) {
+    var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .collect(Collectors.toCollection(HashSet::new));
+    for (var occurrence : Set.copyOf(newOccurrences)) {
+      // remove == true — вхождение уже в индексе, оставляем как есть;
+      // остаток stale после цикла — ровно то, что нужно удалить.
+      if (!stale.remove(occurrence)) {
+        saveOccurrence(occurrence);
+      }
+    }
+    if (!stale.isEmpty()) {
+      symbolOccurrenceRepository.deleteAll(stale);
+      locationRepository.deleteAll(uri, stale);
+    }
+  }
+
+  /**
    * Добавить вызов метода в индекс.
    *
    * @param uri        URI документа, откуда произошел вызов.
@@ -173,6 +205,18 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+    saveOccurrence(methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
+  }
+
+  /**
+   * Построить вхождение «вызов метода» без записи в индекс.
+   * <p>
+   * Параметры — как у {@link #addMethodCall(URI, String, ModuleType, String, Range)}.
+   *
+   * @return построенное вхождение.
+   */
+  public SymbolOccurrence methodCallOccurrence(URI uri, String mdoRef, ModuleType moduleType,
+                                               String symbolName, Range range) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
@@ -185,13 +229,11 @@ public class ReferenceIndex {
       .intern();
 
     var location = new Location(uri, range);
-    var symbolOccurrence = SymbolOccurrence.builder()
+    return SymbolOccurrence.builder()
       .occurrenceType(OccurrenceType.REFERENCE)
       .symbol(symbol)
       .location(location)
       .build();
-
-    saveOccurrence(symbolOccurrence);
   }
 
   /**
@@ -207,6 +249,17 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к модулю.
    */
   public void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+    saveOccurrence(moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
+  }
+
+  /**
+   * Построить вхождение «ссылка на модуль» без записи в индекс.
+   * <p>
+   * Параметры — как у {@link #addModuleReference(URI, String, ModuleType, Range)}.
+   *
+   * @return построенное вхождение.
+   */
+  public SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range) {
     var symbolName = stringInterner.intern(
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
@@ -221,13 +274,11 @@ public class ReferenceIndex {
       .intern();
 
     var location = new Location(uri, range);
-    var symbolOccurrence = SymbolOccurrence.builder()
+    return SymbolOccurrence.builder()
       .occurrenceType(OccurrenceType.REFERENCE)
       .symbol(symbol)
       .location(location)
       .build();
-
-    saveOccurrence(symbolOccurrence);
   }
 
   /**
@@ -248,6 +299,23 @@ public class ReferenceIndex {
                                String variableName,
                                Range range,
                                boolean definition) {
+    saveOccurrence(variableUsageOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, definition));
+  }
+
+  /**
+   * Построить вхождение «обращение к переменной» без записи в индекс.
+   * <p>
+   * Параметры — как у {@link #addVariableUsage(URI, String, ModuleType, String, String, Range, boolean)}.
+   *
+   * @return построенное вхождение.
+   */
+  public SymbolOccurrence variableUsageOccurrence(URI uri,
+                                                  String mdoRef,
+                                                  ModuleType moduleType,
+                                                  String methodName,
+                                                  String variableName,
+                                                  Range range,
+                                                  boolean definition) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
@@ -262,13 +330,11 @@ public class ReferenceIndex {
 
     var location = new Location(uri, range);
 
-    var symbolOccurrence = SymbolOccurrence.builder()
+    return SymbolOccurrence.builder()
       .occurrenceType(definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE)
       .symbol(symbol)
       .location(location)
       .build();
-
-    saveOccurrence(symbolOccurrence);
   }
 
   private void saveOccurrence(SymbolOccurrence symbolOccurrence) {
