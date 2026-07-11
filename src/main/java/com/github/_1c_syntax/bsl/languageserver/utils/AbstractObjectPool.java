@@ -50,6 +50,10 @@ import java.util.Set;
 
 /**
  * Generic object pool.
+ * <p>
+ * Может быть ограничен по количеству создаваемых объектов: при достижении
+ * лимита {@link #checkOut()} блокируется до возврата объекта через
+ * {@link #checkIn(Object)}.
  *
  * @param <T> Type T of Object in the Pool
  */
@@ -57,13 +61,42 @@ public abstract class AbstractObjectPool<T> {
 
   private final Set<T> available = new HashSet<>();
   private final Set<T> inUse = new HashSet<>();
+  private final int maxSize;
+
+  protected AbstractObjectPool() {
+    this(Integer.MAX_VALUE);
+  }
+
+  /**
+   * @param maxSize максимальное суммарное количество объектов пула
+   *                (доступных и выданных); не меньше 1.
+   */
+  protected AbstractObjectPool(int maxSize) {
+    if (maxSize < 1) {
+      throw new IllegalArgumentException("maxSize must be >= 1, got: " + maxSize);
+    }
+    this.maxSize = maxSize;
+  }
 
   protected abstract T create();
 
   /**
    * Checkout object from pool.
+   * <p>
+   * Если пул пуст и лимит объектов исчерпан — ждёт возврата объекта.
+   * Прерывание потока во время ожидания не прерывает выдачу: флаг прерывания
+   * восстанавливается, а прерванный поток получает объект сверх лимита
+   * (пул может временно превысить {@code maxSize} на число прерванных ожидающих).
    */
   public synchronized T checkOut() {
+    while (available.isEmpty() && inUse.size() >= maxSize) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      }
+    }
     if (available.isEmpty()) {
       available.add(create());
     }
@@ -76,6 +109,7 @@ public abstract class AbstractObjectPool<T> {
   public synchronized void checkIn(T instance) {
     inUse.remove(instance);
     available.add(instance);
+    notifyAll();
   }
 
   @Override

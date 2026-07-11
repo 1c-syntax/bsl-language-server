@@ -22,17 +22,31 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
 import com.github._1c_syntax.bsl.languageserver.utils.AbstractObjectPool;
-import lombok.AllArgsConstructor;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.rules.Rule;
 
 import java.util.function.Predicate;
 
-@AllArgsConstructor
+/**
+ * Пул экземпляров {@link JLanguageTool} для одного языка.
+ * <p>
+ * Пул ограничен: каждый экземпляр при создании загружает собственную копию
+ * полного набора правил языка (десятки мегабайт на инстанс, отключение правил
+ * память не освобождает), поэтому рост пула до числа потоков анализа
+ * недопустим по памяти. При исчерпании лимита {@link #checkOut()} ждёт
+ * возврата экземпляра.
+ */
 public class JLanguageToolPool extends AbstractObjectPool<JLanguageTool> {
 
+  private static final int MAX_POOL_SIZE = 4;
+
   private final Language language;
+
+  public JLanguageToolPool(Language language) {
+    super(Math.min(MAX_POOL_SIZE, Runtime.getRuntime().availableProcessors()));
+    this.language = language;
+  }
 
   @Override
   protected JLanguageTool create() {
