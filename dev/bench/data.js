@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783700102558,
+  "lastUpdate": 1783798568985,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40052,6 +40052,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.1088025622454323",
             "extra": "mean: 107.54995028177898 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c0d5747b4da216a4f77470b05e1fa4a4cc361d21",
+          "message": "Merge pull request #4260 from 1c-syntax/perf/jlanguagetool-pool-cap\n\nperf(diagnostics): ограничение пула JLanguageTool",
+          "timestamp": "2026-07-11T21:12:56+02:00",
+          "tree_id": "bb4400c8ddffa47686ffcfde7d0fa597a86e7f65",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c0d5747b4da216a4f77470b05e1fa4a4cc361d21"
+        },
+        "date": 1783798556134,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.81741555531819,
+            "unit": "sec",
+            "range": "stddev: 4.201467252804068",
+            "extra": "mean: 105.81741555531819 sec\nrounds: 3"
           }
         ]
       }
