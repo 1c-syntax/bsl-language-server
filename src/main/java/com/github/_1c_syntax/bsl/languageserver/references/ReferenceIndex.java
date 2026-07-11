@@ -46,12 +46,10 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -177,12 +175,13 @@ public class ReferenceIndex {
    * неиспользуемых переменных/методов) исключена.
    *
    * @param uri            URI документа, чьи вхождения заменяются.
-   * @param newOccurrences Новый набор вхождений (дубликаты допускаются и схлопываются).
+   * @param newOccurrences Новый набор вхождений (дубликаты допускаются:
+   *                       повторная запись вхождения — идемпотентный no-op).
    */
-  public void replaceReferences(URI uri, Collection<SymbolOccurrence> newOccurrences) {
+  public void replaceReferences(URI uri, List<SymbolOccurrence> newOccurrences) {
     var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .collect(Collectors.toCollection(HashSet::new));
-    for (var occurrence : Set.copyOf(newOccurrences)) {
+    for (var occurrence : newOccurrences) {
       // Успешное удаление из stale означает, что вхождение уже есть в индексе —
       // оставляем его как есть; остаток stale после цикла подлежит удалению.
       if (!stale.remove(occurrence)) {
