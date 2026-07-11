@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTree;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTreeParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -394,6 +396,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   @Override
   public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
     return textDocumentService.diagnostics(params);
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * См. {@link BSLTextDocumentService#configurationTree(ConfigurationTreeParams)}
+   */
+  @Override
+  public CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params) {
+    return textDocumentService.configurationTree(params);
   }
 
   @Override

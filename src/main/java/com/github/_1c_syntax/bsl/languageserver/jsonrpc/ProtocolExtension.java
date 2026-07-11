@@ -44,4 +44,19 @@ public interface ProtocolExtension {
   )
   CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params);
 
+  /**
+   * Запрос на построение дерева конфигурации рабочей области (расширение протокола).
+   * <p>
+   * Возвращает объекты метаданных верхнего уровня в разрезе основной конфигурации и её
+   * расширений: с именами, синонимами, реквизитами и стандартными реквизитами.
+   *
+   * @param params Параметры запроса (обязателен {@code workspaceUri} либо {@code workspaceName}).
+   * @return Дерево конфигурации рабочей области.
+   */
+  @JsonRequest(
+    value = "workspace/x-configurationTree",
+    useSegment = false
+  )
+  CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params);
+
 }

@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -105,7 +106,7 @@ public class ServerContext {
   private URI workspaceUri;
 
   private final Map<URI, DocumentContext> documents = new ConcurrentHashMap<>();
-  private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Lazy<Solution> solution = new Lazy<>(this::computeSolution);
   @Nullable
   @Setter
   @Getter
@@ -318,7 +319,7 @@ public class ServerContext {
    * Open-документы сначала «закрываются» сбросом {@code openedDocuments}, чтобы
    * {@link #removeDocument(URI)} не падал на guard'е «document is opened».
    * После — финальная очистка карт, не привязанных к конкретному URI
-   * ({@code configurationMetadata}).
+   * ({@code solution}).
    */
   public void clear() {
     openedDocuments.clear();
@@ -333,7 +334,7 @@ public class ServerContext {
     mdoRefs.clear();
     documentLocks.clear();
     commonModuleCache.invalidateAll();
-    configurationMetadata.clear();
+    solution.clear();
   }
 
   /**
@@ -449,7 +450,21 @@ public class ServerContext {
   }
 
   public CF getConfiguration() {
-    return configurationMetadata.getOrCompute();
+    return solution.getOrCompute().getMergedConfiguration();
+  }
+
+  /**
+   * Получить решение (конфигурацию с расширениями) рабочей области.
+   * <p>
+   * В отличие от {@link #getConfiguration()}, который отдаёт смёрженную конфигурацию как {@link CF},
+   * возвращает {@link Solution} с раздельным доступом к базовой конфигурации
+   * ({@link Solution#getBaseConfiguration()}) и списку расширений ({@link Solution#getExtensions()}).
+   *
+   * @return решение рабочей области (никогда не {@code null}; {@link Solution#EMPTY}, если
+   *         корень конфигурации не задан или метаданные не удалось прочитать)
+   */
+  public Solution getSolution() {
+    return solution.getOrCompute();
   }
 
   /**
@@ -479,30 +494,30 @@ public class ServerContext {
     return documentContext;
   }
 
-  private CF computeConfigurationMetadata() {
+  private Solution computeSolution() {
     if (configurationRoot == null) {
-      return (CF) MDClasses.createConfiguration();
+      return Solution.EMPTY;
     }
 
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    CF configuration;
+    Solution result;
     try {
-      configuration = (CF) computeConfigurationExecutor.submit(
+      result = computeConfigurationExecutor.submit(
         () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
-      configuration = (CF) MDClasses.createConfiguration();
+      result = Solution.EMPTY;
     } catch (InterruptedException e) {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
-      configuration = (CF) MDClasses.createConfiguration();
+      result = Solution.EMPTY;
       Thread.currentThread().interrupt();
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
 
-    return configuration;
+    return result;
   }
 
   /**
