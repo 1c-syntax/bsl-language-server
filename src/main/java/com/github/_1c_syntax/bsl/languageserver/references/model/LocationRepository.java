@@ -27,7 +27,9 @@ import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -40,19 +42,34 @@ import java.util.stream.Stream;
 @Component
 @WorkspaceScope
 public class LocationRepository {
+
+  private static final SymbolOccurrence[] EMPTY_OCCURRENCES = new SymbolOccurrence[0];
+
+  /**
+   * Порядок вхождений по началу диапазона. Диапазоны вхождений непересекающиеся,
+   * поэтому порядок тотален и однозначен.
+   */
+  private static final Comparator<SymbolOccurrence> BY_RANGE_START = Comparator
+    .comparingInt((SymbolOccurrence occurrence) -> occurrence.location().startLine())
+    .thenComparingInt(occurrence -> occurrence.location().startCharacter());
+
   /**
    * Список обращений к символу, сгруппированный по URI.
    */
   private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
 
   /**
-   * Вторичный индекс вхождений по строке их расположения — для O(1)-поиска
-   * вхождения в позиции ({@link #findByPosition}) вместо линейного скана всего
-   * набора вхождений документа. На одной строке может быть несколько вхождений
-   * (разные колонки), поэтому значение — множество, разводимое по колонкам через
-   * {@link Ranges#containsPosition} в {@link #findByPosition}.
+   * Вторичный индекс для {@link #findByPosition}: отсортированный по началу
+   * диапазона снимок вхождений документа. Позволяет искать вхождение в позиции
+   * бинарным поиском без построения карты «строка → множество вхождений»
+   * (карта с per-строчными множествами на больших проектах доминировала в
+   * потреблении памяти индексом ссылок).
+   * <p>
+   * Снимок ленивый: сбрасывается при любом изменении вхождений URI
+   * ({@link #updateLocation}, {@link #delete}) и пересобирается при первом
+   * следующем поиске.
    */
-  private final Map<URI, Map<Integer, Set<SymbolOccurrence>>> locationsByLine = new ConcurrentHashMap<>();
+  private final Map<URI, SymbolOccurrence[]> sortedOccurrences = new ConcurrentHashMap<>();
 
   /**
    * Получить все обращения к символам в указанном URI.
@@ -65,30 +82,53 @@ public class LocationRepository {
   }
 
   /**
-   * Найти вхождение к символу, чей диапазон накрывает позицию. O(1)-lookup по
-   * строке через {@link #locationsByLine}; при нескольких вхождениях на строке
-   * разводит по колонке через {@link Ranges#containsPosition}. Диапазоны
-   * вхождений непересекающиеся, поэтому совпадение максимум одно.
+   * Найти вхождение к символу, чей диапазон накрывает позицию. Бинарный поиск
+   * по отсортированному снимку вхождений документа: диапазоны вхождений
+   * непересекающиеся, поэтому единственный кандидат — вхождение с наибольшим
+   * началом диапазона, не превосходящим позицию.
    *
    * @param uri      URI документа.
    * @param position позиция.
    * @return вхождение в позиции либо empty.
    */
   public Optional<SymbolOccurrence> findByPosition(URI uri, Position position) {
-    var byLine = locationsByLine.get(uri);
-    if (byLine == null) {
-      return Optional.empty();
-    }
-    var bucket = byLine.get(position.getLine());
-    if (bucket == null) {
-      return Optional.empty();
-    }
-    for (var symbolOccurrence : bucket) {
-      if (matches(symbolOccurrence, position)) {
-        return Optional.of(symbolOccurrence);
-      }
+    var sorted = sortedOccurrences.computeIfAbsent(uri, this::sortedSnapshot);
+    var index = lastStartingAtOrBefore(sorted, position);
+    if (index >= 0 && matches(sorted[index], position)) {
+      return Optional.of(sorted[index]);
     }
     return Optional.empty();
+  }
+
+  private SymbolOccurrence[] sortedSnapshot(URI uri) {
+    var snapshot = locations.getOrDefault(uri, Collections.emptySet()).toArray(EMPTY_OCCURRENCES);
+    Arrays.sort(snapshot, BY_RANGE_START);
+    return snapshot;
+  }
+
+  /**
+   * Индекс последнего вхождения, чей диапазон начинается не позже позиции,
+   * либо {@code -1}, если все вхождения начинаются позже.
+   */
+  private static int lastStartingAtOrBefore(SymbolOccurrence[] sorted, Position position) {
+    var low = 0;
+    var high = sorted.length - 1;
+    var found = -1;
+    while (low <= high) {
+      var mid = (low + high) >>> 1;
+      if (startsAfter(sorted[mid].location(), position)) {
+        high = mid - 1;
+      } else {
+        found = mid;
+        low = mid + 1;
+      }
+    }
+    return found;
+  }
+
+  private static boolean startsAfter(Location location, Position position) {
+    return location.startLine() > position.getLine()
+      || (location.startLine() == position.getLine() && location.startCharacter() > position.getCharacter());
   }
 
   private static boolean matches(SymbolOccurrence symbolOccurrence, Position position) {
@@ -107,10 +147,7 @@ public class LocationRepository {
     var location = symbolOccurrence.location();
     locations.computeIfAbsent(location.uri(), uri -> ConcurrentHashMap.newKeySet())
       .add(symbolOccurrence);
-    var byLine = locationsByLine.computeIfAbsent(location.uri(), uri -> new ConcurrentHashMap<>());
-    for (var line = location.startLine(); line <= location.endLine(); line++) {
-      byLine.computeIfAbsent(line, l -> ConcurrentHashMap.newKeySet()).add(symbolOccurrence);
-    }
+    sortedOccurrences.remove(location.uri());
   }
 
   /**
@@ -120,6 +157,6 @@ public class LocationRepository {
    */
   public void delete(URI uri) {
     locations.remove(uri);
-    locationsByLine.remove(uri);
+    sortedOccurrences.remove(uri);
   }
 }
