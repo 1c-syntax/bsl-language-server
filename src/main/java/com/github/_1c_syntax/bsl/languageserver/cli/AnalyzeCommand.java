@@ -228,8 +228,16 @@ public class AnalyzeCommand implements Callable<Integer> {
       .toList();
 
     var fileInfos = new ArrayList<FileInfo>(futures.size());
-    for (var future : futures) {
-      fileInfos.add(future.get());
+    try {
+      for (var future : futures) {
+        fileInfos.add(future.get());
+      }
+    } catch (InterruptedException | ExecutionException e) {
+      // Отменяем ещё не стартовавшие задачи (running не прерываем — обработка
+      // документа не гарантированно interruption-safe), чтобы после решения об
+      // ошибке batch не продолжал материализовать документы.
+      futures.forEach(future -> future.cancel(false));
+      throw e;
     }
     return fileInfos;
   }

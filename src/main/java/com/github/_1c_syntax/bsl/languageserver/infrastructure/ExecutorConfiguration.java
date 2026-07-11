@@ -158,26 +158,16 @@ public class ExecutorConfiguration {
   }
 
   private static ExecutorService createWorkspaceForkJoinPool(String prefix) {
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      throw new IllegalStateException("Workspace context is not set when creating ForkJoinPool");
-    }
-    var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
-      .orElse("default");
-    var factory = new WorkspaceAwareFJWTFactory(workspaceUri, workspaceName, prefix);
+    var workspace = resolveWorkspaceContext();
+    var factory = new WorkspaceAwareFJWTFactory(workspace.uri(), workspace.name(), prefix);
     var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     return new ContextPropagatingExecutorService(pool);
   }
 
   private static ExecutorService createWorkspaceBoundedPool(String prefix) {
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      throw new IllegalStateException("Workspace context is not set when creating executor");
-    }
-    var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
-      .orElse("default");
+    var workspace = resolveWorkspaceContext();
     var parallelism = ForkJoinPool.getCommonPoolParallelism();
-    var factory = new NamedThreadFactory(prefix + workspaceName + "-");
+    var factory = new NamedThreadFactory(prefix + workspace.name() + "-");
     var pool = new ThreadPoolExecutor(
       parallelism, parallelism,
       0L, TimeUnit.MILLISECONDS,
@@ -185,6 +175,19 @@ public class ExecutorConfiguration {
       factory
     );
     return new ContextPropagatingExecutorService(pool);
+  }
+
+  private static WorkspaceContext resolveWorkspaceContext() {
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      throw new IllegalStateException("Workspace context is not set when creating executor");
+    }
+    var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
+      .orElse("default");
+    return new WorkspaceContext(workspaceUri, workspaceName);
+  }
+
+  private record WorkspaceContext(URI uri, String name) {
   }
 
   private static ExecutorService createSharedForkJoinExecutorService(String threadNamePrefix) {
