@@ -82,19 +82,17 @@ public abstract class AbstractObjectPool<T> {
    * <p>
    * Если пул пуст и лимит объектов исчерпан — ждёт возврата объекта.
    * Прерывание потока во время ожидания не прерывает выдачу: флаг прерывания
-   * восстанавливается перед возвратом.
+   * восстанавливается, а прерванный поток получает объект сверх лимита
+   * (пул может временно превысить {@code maxSize} на число прерванных ожидающих).
    */
   public synchronized T checkOut() {
-    var interrupted = false;
     while (available.isEmpty() && inUse.size() >= maxSize) {
       try {
         wait();
       } catch (InterruptedException e) {
-        interrupted = true;
+        Thread.currentThread().interrupt();
+        break;
       }
-    }
-    if (interrupted) {
-      Thread.currentThread().interrupt();
     }
     if (available.isEmpty()) {
       available.add(create());
@@ -108,7 +106,7 @@ public abstract class AbstractObjectPool<T> {
   public synchronized void checkIn(T instance) {
     inUse.remove(instance);
     available.add(instance);
-    notify();
+    notifyAll();
   }
 
   @Override
