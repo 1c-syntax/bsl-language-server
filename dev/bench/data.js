@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783799931572,
+  "lastUpdate": 1783845338629,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40114,6 +40114,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.074738930967755",
             "extra": "mean: 102.58033076922099 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "280a06ec8a04c502bf06106cc27d0cde18a718fb",
+          "message": "Merge pull request #4264 from 1c-syntax/claude/perf-diagnostic-computer-executor\n\nperf(diagnostics): считать диагностики на bounded-пуле вместо ForkJoinPool",
+          "timestamp": "2026-07-12T09:45:51+02:00",
+          "tree_id": "d6dac8efb0e6afad99c00e90fe33176a2f9c4c30",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/280a06ec8a04c502bf06106cc27d0cde18a718fb"
+        },
+        "date": 1783845328768,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 103.57469701766968,
+            "unit": "sec",
+            "range": "stddev: 2.4693205207574906",
+            "extra": "mean: 103.57469701766968 sec\nrounds: 3"
           }
         ]
       }
