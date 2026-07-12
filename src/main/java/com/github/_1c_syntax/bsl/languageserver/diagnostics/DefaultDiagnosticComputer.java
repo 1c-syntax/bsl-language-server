@@ -46,10 +46,7 @@ import java.util.function.Predicate;
  * с обработкой ошибок и фильтрацией по правилам подавления и игнорируемым авторам.
  * <p>
  * Каждый анализатор — отдельная задача на {@code diagnosticComputerExecutor}; результаты
- * собираются через {@link Future#get()}. Блокировка на {@code get()} обычного пула, в отличие от
- * {@code parallelStream()} на {@code ForkJoinPool} с блокирующим {@code join()}, не запускает
- * managed-blocking компенсацию, поэтому вызов из воркера {@code ForkJoinPool} (пакетный анализ,
- * анализ проекта при старте) не плодит компенсирующие потоки и живые {@code DocumentContext}.
+ * собираются через {@link Future#get()}.
  */
 @Component
 @Slf4j
@@ -63,6 +60,9 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
 
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
+    // Сбор через Future.get() обычного пула, а не parallelStream() на ForkJoinPool с блокирующим
+    // join(): блокировка на get() не проходит через ForkJoinPool.managedBlock, поэтому блокирующий
+    // вызов из воркера ForkJoinPool не плодит компенсирующие потоки и живые DocumentContext.
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     var ignoredAuthors = configuration.getDiagnosticsOptions().getIgnoredAuthors();

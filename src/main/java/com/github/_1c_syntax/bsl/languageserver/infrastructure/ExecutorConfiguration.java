@@ -119,7 +119,7 @@ public class ExecutorConfiguration {
   @Bean(destroyMethod = "shutdown")
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService diagnosticComputerExecutor() {
-    return createWorkspaceBoundedPool("diagnostic-computer-");
+    return createWorkspaceExecutorService("diagnostic-computer-");
   }
 
   @Bean(destroyMethod = "shutdown")
@@ -160,7 +160,7 @@ public class ExecutorConfiguration {
     return new ContextPropagatingExecutorService(pool);
   }
 
-  private static ExecutorService createWorkspaceBoundedPool(String prefix) {
+  private static ExecutorService createWorkspaceExecutorService(String prefix) {
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
       throw new IllegalStateException("Workspace context is not set when creating executor");
