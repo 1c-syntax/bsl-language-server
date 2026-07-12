@@ -34,16 +34,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * Реализация {@link DiagnosticComputer} по умолчанию.
  * <p>
  * Параллельно вычисляет диагностики всеми зарегистрированными анализаторами {@link BSLDiagnostic}
  * с обработкой ошибок и фильтрацией по правилам подавления и игнорируемым авторам.
+ * <p>
+ * Каждый анализатор — отдельная задача на {@code diagnosticComputerExecutor}; результаты
+ * собираются через {@link Future#get()}.
  */
 @Component
 @Slf4j
@@ -57,12 +60,9 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
 
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
-    return CompletableFuture
-      .supplyAsync(() -> internalCompute(documentContext), executor)
-      .join();
-  }
-
-  private List<Diagnostic> internalCompute(DocumentContext documentContext) {
+    // Сбор через Future.get() обычного пула, а не parallelStream() на ForkJoinPool с блокирующим
+    // join(): блокировка на get() не проходит через ForkJoinPool.managedBlock, поэтому блокирующий
+    // вызов из воркера ForkJoinPool не плодит компенсирующие потоки и живые DocumentContext.
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     var ignoredAuthors = configuration.getDiagnosticsOptions().getIgnoredAuthors();
@@ -70,24 +70,42 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    return diagnostics(documentContext).parallelStream()
-      .flatMap((BSLDiagnostic diagnostic) -> {
-        try {
-          return diagnostic.getDiagnostics(documentContext).stream();
-        } catch (RuntimeException e) {
-          var message = "Diagnostic computation error.%nFile: %s%nDiagnostic: %s".formatted(
-            documentContext.getUri(),
-            diagnostic.getInfo().getCode()
-          );
-          LOGGER.error(message, e);
+    var futures = diagnostics(documentContext).stream()
+      .map((BSLDiagnostic diagnostic) ->
+        executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
+      .toList();
 
-          return Stream.empty();
-        }
-      })
+    return futures.stream()
+      .map(DefaultDiagnosticComputer::getUninterruptibly)
+      .flatMap(List::stream)
       .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
       .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
       .toList();
+  }
 
+  private List<Diagnostic> safeGetDiagnostics(BSLDiagnostic diagnostic, DocumentContext documentContext) {
+    try {
+      return diagnostic.getDiagnostics(documentContext);
+    } catch (RuntimeException e) {
+      var message = "Diagnostic computation error.%nFile: %s%nDiagnostic: %s".formatted(
+        documentContext.getUri(),
+        diagnostic.getInfo().getCode()
+      );
+      LOGGER.error(message, e);
+
+      return List.of();
+    }
+  }
+
+  private static List<Diagnostic> getUninterruptibly(Future<List<Diagnostic>> future) {
+    try {
+      return future.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while computing diagnostics", e);
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Error computing diagnostics", e);
+    }
   }
 
   @Lookup("diagnostics")
