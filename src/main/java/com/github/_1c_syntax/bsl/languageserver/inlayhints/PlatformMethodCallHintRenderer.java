@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
@@ -202,7 +203,7 @@ public class PlatformMethodCallHintRenderer {
 
   private static Position positionOf(BSLParser.CallParamContext callParam) {
     var token = callParam.getStart();
-    return new Position(token.getLine() - 1, token.getCharPositionInLine());
+    return Positions.create(token);
   }
 
   private boolean showDefaultValues() {

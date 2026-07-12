@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
@@ -111,6 +112,7 @@ public class ExpressionTypeInferencer {
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
   private final InferredVariableTypeIndex inferredVariableTypeIndex;
+  private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
@@ -170,9 +172,26 @@ public class ExpressionTypeInferencer {
     if (node == null || ctx.depth >= MAX_DEPTH) {
       return TypeSet.EMPTY;
     }
+
+    // Кэшируем результат узла только для «чистого корня» инференса — вне
+    // рекурсии символов (visited/inProgress пусты). Это гарантирует и
+    // контекст-независимость результата, и принадлежность узла текущему
+    // документу (кросс-модульный спуск всегда идёт уже после резолва символа,
+    // т.е. при непустом visited), поэтому ключ по URI корректен.
+    var cacheKey = ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
+      ? node.getRepresentingAst()
+      : null;
+    var uri = ctx.documentContext.getUri();
+    if (cacheKey != null) {
+      var cached = inferredExpressionTypeIndex.get(uri, cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
     ctx.depth++;
     try {
-      return switch (node.getNodeType()) {
+      var result = switch (node.getNodeType()) {
         case LITERAL -> inferLiteral(node);
         case IDENTIFIER -> inferIdentifier(node, ctx);
         case CALL -> inferCall(node, ctx);
@@ -181,6 +200,10 @@ public class ExpressionTypeInferencer {
         case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
         case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
       };
+      if (cacheKey != null) {
+        inferredExpressionTypeIndex.put(uri, cacheKey, result);
+      }
+      return result;
     } finally {
       ctx.depth--;
     }
@@ -230,11 +253,9 @@ public class ExpressionTypeInferencer {
     if (!(ast instanceof TerminalNode terminal)) {
       return TypeSet.EMPTY;
     }
-    var token = terminal.getSymbol();
-    // Стартовая колонка токена — гарантированно внутри [start, end) диапазона
-    // идентификатора (для half-open контракта ReferenceIndex.containsPosition).
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    var resolved = resolveReferenceAt(ctx, position);
+    // Терминал идентификатора уже под рукой — резолвим по нему, без спуска по AST
+    // от корня к позиции в reference-finder'ах.
+    var resolved = resolveReferenceAt(ctx, terminal);
     if (!resolved.isEmpty()) {
       return resolved;
     }
@@ -467,10 +488,9 @@ public class ExpressionTypeInferencer {
     if (name == null) {
       return TypeSet.EMPTY;
     }
-    var token = name.getSymbol();
-    // Старт токена внутри [start, end) — корректно для half-open ReferenceIndex.containsPosition.
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    var reference = referenceResolver.findReference(ctx.documentContext.getUri(), position);
+    // Терминал имени вызова уже под рукой — резолвим по нему, без спуска по AST
+    // от корня к позиции в reference-finder'ах.
+    var reference = referenceResolver.findReference(ctx.documentContext.getUri(), name);
     if (reference.isEmpty()) {
       // Резолвер не нашёл ссылку — например, для глобальной функции без
       // токена, который мы успели проиндексировать. Пробуем по имени
@@ -726,8 +746,8 @@ public class ExpressionTypeInferencer {
   // Reference resolution
   // ---------------------------------------------------------------------------
 
-  private TypeSet resolveReferenceAt(InferenceContext ctx, Position position) {
-    return referenceResolver.findReference(ctx.documentContext.getUri(), position)
+  private TypeSet resolveReferenceAt(InferenceContext ctx, TerminalNode terminal) {
+    return referenceResolver.findReference(ctx.documentContext.getUri(), terminal)
       .map(reference -> resolveReference(reference, ctx))
       .orElse(TypeSet.EMPTY);
   }

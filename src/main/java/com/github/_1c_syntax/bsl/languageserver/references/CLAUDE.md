@@ -24,15 +24,23 @@ call hierarchy. См. корневой [CLAUDE.md](../../../../../../../../../CL
 ## Резолюция под курсором
 
 - **`ReferenceResolver`** — диспетчер: по очереди (по `@Order`) опрашивает `ReferenceFinder`'ы,
-  возвращает первое совпадение. Метод `findReference(URI, Position)`.
-- **`ReferenceFinder`** (`Optional<Reference> findReference(uri, position)`) — реализации:
+  возвращает первое совпадение. Две точки входа: `findReference(URI, Position)` и
+  `findReference(URI, TerminalNode)` — одинаковый порядок и семантика первого совпадения.
+- **`ReferenceFinder`** — SPI с двумя сигнатурами: обязательная `findReference(uri, Position)` и
+  **терминальная** `findReference(uri, TerminalNode)`. Терминальная по умолчанию делегирует в
+  позиционную по стартовой позиции терминала (обратная совместимость); finder'ы, чья стоимость —
+  спуск по AST от корня к позиции (`findTerminalNodeContainsPosition` и аналоги), **переопределяют**
+  её на подъём от терминала. Когда у вызывающего терминал уже под рукой (инференсер, диагностики),
+  предпочитай терминальный путь — он снимает повторный спуск. Реализации:
   - `ReferenceIndexReferenceFinder` — делегат к `ReferenceIndex.getReference()` (сорсовые символы);
   - `SourceDefinedSymbolDeclarationReferenceFinder` — попадание курсора в диапазон объявления;
-  - `NewExpressionReferenceFinder` — `Новый Тип(...)` → конструктор через `TypeService`;
+  - `NewExpressionReferenceFinder` — `Новый Тип(...)` → конструктор через `TypeService`
+    (терминальный путь — подъём до объемлющего `newExpression`);
   - `PlatformMemberReferenceFinder` — платформенные/конфигурационные члены через
-    `TypeService.memberAt()` → `PlatformMemberSymbol`;
+    `TypeService.memberAt()` → `PlatformMemberSymbol` (терминальный путь — `memberAt(terminal)`);
   - `AnnotationReferenceFinder` — аннотации (.os), синтетический `AnnotationSymbol`;
-  - `KeywordReferenceFinder` — ключевые слова BSL, синтетический `KeywordSymbol`.
+  - `KeywordReferenceFinder` — ключевые слова BSL, синтетический `KeywordSymbol`
+    (терминальный путь — прямо от терминала).
 
 ## Модель — `model/`
 
@@ -43,7 +51,9 @@ call hierarchy. См. корневой [CLAUDE.md](../../../../../../../../../CL
   интернируется, `Comparable`. **`SymbolOccurrence`** — одно вхождение
   (`OccurrenceType` REFERENCE|DEFINITION + symbol + `Location`). **`Location`** — URI + диапазон.
 - Репозитории (workspace-scoped): `SymbolOccurrenceRepository` (Symbol → отсортированное
-  множество вхождений), `LocationRepository` (URI → вхождения), `AnnotationRepository`.
+  множество вхождений), `LocationRepository` (URI → вхождения; плюс вторичный line-индекс
+  `URI → строка → вхождения` для O(1) `findByPosition`, на котором стоит `ReferenceIndex.getReference`),
+  `AnnotationRepository`.
 
 ## Правки в этом каталоге
 

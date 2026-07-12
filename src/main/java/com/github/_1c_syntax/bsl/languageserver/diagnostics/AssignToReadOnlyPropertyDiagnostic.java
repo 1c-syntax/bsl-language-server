@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -54,7 +53,7 @@ import java.util.Optional;
  *   <li>{@link TypeService#hasAnyReadOnlyMember()} — глобальный гейт.
  *       Без HBK / без accessMode-данных диагностика моментально no-op.</li>
  *   <li>{@link TypeService#memberAt(com.github._1c_syntax.bsl.languageserver.context.DocumentContext,
- *       Position)} — точный резолв member'а с учётом инференции типа
+ *       TerminalNode)} — точный резолв member'а с учётом инференции типа
  *       ресивера (глобальное свойство, локальная переменная, цепочка
  *       аксессоров). Резолв bilingual: read-only находится независимо от
  *       того, на каком языке (ru/en) записано имя свойства.</li>
@@ -110,7 +109,7 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
     if (propertyId == null) {
       return Optional.empty();
     }
-    var member = typeService.memberAt(documentContext, positionInside(propertyId))
+    var member = typeService.memberAt(documentContext, propertyId)
       .map(TypedMember::descriptor)
       .orElse(null);
     if (member == null || member.kind() != MemberKind.PROPERTY
@@ -118,12 +117,5 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
       return Optional.empty();
     }
     return Optional.of(propertyId);
-  }
-
-  private static Position positionInside(TerminalNode terminal) {
-    var token = terminal.getSymbol();
-    var col = token.getCharPositionInLine();
-    var len = token.getText().length();
-    return new Position(token.getLine() - 1, col + Math.max(0, len / 2));
   }
 }

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +52,24 @@ public class ReferenceResolver {
   public Optional<Reference> findReference(URI uri, Position position) {
     return finders.stream()
       .map(referenceFinder -> referenceFinder.findReference(uri, position))
+      .flatMap(Optional::stream)
+      .findFirst();
+  }
+
+  /**
+   * Поиск символа по уже известному терминалу-идентификатору. Опрашивает
+   * {@link ReferenceFinder}'ы в том же порядке ({@code @Order}) и с той же
+   * семантикой первого совпадения, что и {@link #findReference(URI, Position)},
+   * но передаёт терминал — finder'ы с дорогим спуском по AST резолвят его
+   * подъёмом вверх, а не спуском от корня к позиции.
+   *
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
+   * @param terminal терминал-идентификатор под курсором.
+   * @return данные ссылки.
+   */
+  public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    return finders.stream()
+      .map(referenceFinder -> referenceFinder.findReference(uri, terminal))
       .flatMap(Optional::stream)
       .findFirst();
   }

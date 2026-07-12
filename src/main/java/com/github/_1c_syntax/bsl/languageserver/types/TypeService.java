@@ -46,6 +46,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -497,6 +498,14 @@ public class TypeService {
   }
 
   /**
+   * Вариант {@link #memberAt(DocumentContext, Position)} от уже известного
+   * терминала — без спуска по AST к позиции (см. {@link #membersAt(DocumentContext, TerminalNode)}).
+   */
+  public Optional<TypedMember> memberAt(DocumentContext documentContext, TerminalNode terminal) {
+    return membersAt(documentContext, terminal).stream().findFirst();
+  }
+
+  /**
    * То же, что {@link #memberAt(DocumentContext, Position)}, но возвращает
    * <b>все</b> члены-кандидаты, когда тип ресивера выведен как union из
    * нескольких типов (например, переменная присваивается значениями разных
@@ -515,6 +524,24 @@ public class TypeService {
     if (terminal == null) {
       return List.of();
     }
+    return membersAt(documentContext, terminal);
+  }
+
+  /**
+   * То же, что {@link #membersAt(DocumentContext, Position)}, но для случая,
+   * когда терминал-идентификатор уже известен вызывающему (например, получен
+   * при обходе AST). Избавляет от повторного спуска по дереву ради поиска
+   * терминала по позиции — на больших модулях это доминирующая стоимость.
+   * Не-идентификаторный терминал даёт пустой список (как и поиск по позиции).
+   *
+   * @param documentContext контекст документа.
+   * @param terminal терминал-идентификатор члена/имени.
+   * @return все члены-кандидаты для терминала; пустой список, если члена нет.
+   */
+  public List<TypedMember> membersAt(DocumentContext documentContext, TerminalNode terminal) {
+    if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
+      return List.of();
+    }
     // Случай глобальной функции / свойства / library-модуля (например,
     // КодировкаТекста, ФС) — резолвится напрямую, без инференса ресивера.
     if (!isAccessorIdentifier(terminal)) {
@@ -523,7 +550,7 @@ public class TypeService {
         return List.of(bare.get());
       }
     }
-    return dereferenceMatcher.matchAt(terminal, documentContext, position);
+    return dereferenceMatcher.matchAt(terminal, documentContext);
   }
 
   /**
@@ -587,6 +614,63 @@ public class TypeService {
   }
 
   /**
+   * Вариант {@link #unknownMemberReceiverAt(DocumentContext, Position)} от уже
+   * известного терминала-члена — без спуска по AST к позиции.
+   * <p>
+   * Тип ресивера выводится за один проход через dereference-инференс
+   * ({@link DereferenceMemberMatcher#matchWithReceiverAt}). Если он пуст, ресивер
+   * добирается по <b>завершающему идентификатору</b> ресивера (перед точкой),
+   * резолвленному терминально через индекс ссылок. Тип охватывающего выражения
+   * ({@code expressionTypesAt}) здесь <b>намеренно не используется</b>: он накрыл
+   * бы всё {@code Ресивер.Член} и вернул тип операции (например {@code Булево} у
+   * сравнения {@code Ресивер.Член = …}), из-за чего член проверялся бы у неверного
+   * типа — ложное срабатывание. Такой fallback уместен лишь для висячей точки
+   * ({@code Ресивер.|}) в completion, но не для диагностики с завершённым членом.
+   */
+  public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, TerminalNode terminal) {
+    var match = dereferenceMatcher.matchWithReceiverAt(terminal, documentContext);
+    if (!match.members().isEmpty()) {
+      return Optional.empty();
+    }
+    var receiver = match.receiverTypes();
+    if (receiver.isEmpty()) {
+      receiver = receiverEndIdentifier(terminal)
+        .flatMap(receiverEnd -> referenceResolver.findReference(documentContext.getUri(), receiverEnd))
+        .map(this::typesAt)
+        .orElse(TypeSet.EMPTY);
+    }
+    return allConcrete(receiver) ? Optional.of(receiver) : Optional.empty();
+  }
+
+  /**
+   * Завершающий идентификатор ресивера для члена {@code Ресивер.Член}: последний
+   * именованный сегмент перед точкой члена. По AST-цепочке доступа — предыдущий
+   * {@code accessProperty} того же {@link BSLParser.ComplexIdentifierContext} (для
+   * {@code А.Б.В|} это {@code Б}), либо головной {@code IDENTIFIER} для первого
+   * члена ({@code А.Б|} → {@code А}). Пусто, если ресивер оканчивается вызовом или
+   * индексом (не именованный символ — по индексу ссылок не резолвится).
+   */
+  private static Optional<TerminalNode> receiverEndIdentifier(TerminalNode member) {
+    ParseTree node = member.getParent();
+    while (node != null && !(node instanceof BSLParser.ModifierContext)) {
+      node = node.getParent();
+    }
+    if (node == null || !(node.getParent() instanceof BSLParser.ComplexIdentifierContext chain)) {
+      return Optional.empty();
+    }
+    var modifiers = chain.modifier();
+    var index = modifiers.indexOf(node);
+    if (index < 0) {
+      return Optional.empty();
+    }
+    if (index == 0) {
+      return Optional.ofNullable(chain.IDENTIFIER());
+    }
+    var previous = modifiers.get(index - 1).accessProperty();
+    return previous == null ? Optional.empty() : Optional.ofNullable(previous.IDENTIFIER());
+  }
+
+  /**
    * Голый вызов {@code Имя(...)}, который не резолвится ни в глобальную функцию/
    * свойство/перечисление платформы или конфигурации, ни в source-defined символ
    * (метод/переменная текущего модуля). Вероятный вызов несуществующего метода.
@@ -601,6 +685,17 @@ public class TypeService {
   public boolean isUnknownGlobalAt(DocumentContext documentContext, Position position) {
     return membersAt(documentContext, position).isEmpty()
       && referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
+  }
+
+  /**
+   * Вариант {@link #isUnknownGlobalAt(DocumentContext, Position)} от уже
+   * известного терминала-имени — без спуска по AST к позиции. Терминал
+   * прокидывается и в {@link ReferenceResolver}, чтобы reference-finder'ы тоже
+   * резолвили его подъёмом, а не спуском от корня.
+   */
+  public boolean isUnknownGlobalAt(DocumentContext documentContext, TerminalNode terminal) {
+    return membersAt(documentContext, terminal).isEmpty()
+      && referenceResolver.findReference(documentContext.getUri(), terminal).isEmpty();
   }
 
   /**
@@ -622,7 +717,7 @@ public class TypeService {
    */
   public TypeSet receiverTypesAt(DocumentContext documentContext, Position position) {
     var viaMember = identifierTerminalAt(documentContext, position)
-      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, position, terminal))
+      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, terminal))
       .orElse(TypeSet.EMPTY);
     if (!viaMember.isEmpty()) {
       return viaMember;

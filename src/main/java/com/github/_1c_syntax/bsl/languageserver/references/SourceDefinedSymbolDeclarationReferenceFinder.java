@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.springframework.core.annotation.Order;
@@ -55,16 +54,13 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
     DocumentContext document = maybeDocument.get();
     SymbolTree symbolTree = document.getSymbolTree();
-    return symbolTree.getChildrenFlat()
-      .stream()
-      .filter(sourceDefinedSymbol -> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
+    return symbolTree.findSymbolBySelectionRange(position)
       .map(sourceDefinedSymbol -> new Reference(
         symbolTree.getModule(),
         sourceDefinedSymbol,
         uri,
         sourceDefinedSymbol.getSelectionRange(),
         OccurrenceType.DEFINITION)
-      )
-      .findFirst();
+      );
   }
 }

@@ -129,7 +129,7 @@ class DefinitionProviderUnitTest {
 
   private static DefinitionProvider providerReturning(Reference reference, boolean linkSupport) {
     var referenceResolver = mock(ReferenceResolver.class);
-    when(referenceResolver.findReference(any(), any())).thenReturn(Optional.of(reference));
+    when(referenceResolver.findReference(any(), any(Position.class))).thenReturn(Optional.of(reference));
 
     var capabilitiesHolder = mock(ClientCapabilitiesHolder.class);
     var provider = new DefinitionProvider(referenceResolver, capabilitiesHolder);

@@ -40,10 +40,14 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // Срабатывания: опечатка в члене типа Массив (Добвить) и неизвестный
-    // голый вызов. Существующий Массив.Добавить, глобальный Сообщить и
-    // литеральные ключи Структуры (ИмяОбъекта/СтароеИмяОбъекта/Успешно) — нет.
-    assertThat(diagnostics).hasSize(2);
+    // Позитивы: опечатка в члене типа Массив (Добвить), неизвестный голый вызов
+    // и несуществующий член конкретного ресивера внутри сравнения (НетТакогоМетода).
+    // Негативы (молчит): существующий Массив.Добавить, глобальный Сообщить,
+    // литеральные ключи Структуры (ИмяОбъекта/СтароеИмяОбъекта/Успешно) и —
+    // ключевое для fix ложных срабатываний — обращение к члену у ресивера без
+    // выводимого типа внутри сравнения (Параметр.НекийМетод/НекоеСвойство): тип
+    // ресивера НЕ должен подменяться типом охватывающего выражения (Булево).
+    assertThat(diagnostics).hasSize(3);
 
     var messages = diagnostics.stream()
       .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
@@ -53,6 +57,11 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
       // типа ресивера в сообщение (отдельный memberMessage от глобального).
       .anyMatch(m -> m.contains("Добвить") && m.contains("Массив"))
       .anyMatch(m -> m.contains("НесуществующийГлобальныйМетод"))
-      .noneMatch(m -> m.contains("ИмяОбъекта") || m.contains("Успешно"));
+      // Позитив: несуществующий член конкретного ресивера в контексте сравнения
+      // ловится (сравнение не прячет реальный unknown).
+      .anyMatch(m -> m.contains("НетТакогоМетода") && m.contains("Массив"))
+      .noneMatch(m -> m.contains("ИмяОбъекта") || m.contains("Успешно"))
+      // Негатив (fix ложных срабатываний): нетипизированный ресивер в сравнении.
+      .noneMatch(m -> m.contains("НекийМетод") || m.contains("НекоеСвойство"));
   }
 }

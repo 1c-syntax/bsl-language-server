@@ -28,12 +28,15 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.ConstructorCallSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -66,6 +69,22 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
       .flatMap(document -> findReference(document, uri, position));
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Терминал имени типа уже локализован — поднимается от него до объемлющего
+   * {@code newExpression} вместо спуска по AST от корня к позиции.
+   */
+  @Override
+  public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    var nex = enclosingNewExpression(terminal);
+    if (nex == null) {
+      return Optional.empty();
+    }
+    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+      .flatMap(document -> buildReference(document, uri, nex));
+  }
+
   private Optional<Reference> findReference(DocumentContext document, URI uri, Position position) {
     BSLParser.FileContext ast;
     try {
@@ -78,10 +97,15 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
       return Optional.empty();
     }
     var typeNameCtx = nex.get().typeName();
-    if (typeNameCtx == null) {
+    if (typeNameCtx == null || !encloses(typeNameCtx, position)) {
       return Optional.empty();
     }
-    if (!encloses(typeNameCtx, position)) {
+    return buildReference(document, uri, nex.get());
+  }
+
+  private Optional<Reference> buildReference(DocumentContext document, URI uri, BSLParser.NewExpressionContext nex) {
+    var typeNameCtx = nex.typeName();
+    if (typeNameCtx == null) {
       return Optional.empty();
     }
     var typeName = typeNameCtx.getText();
@@ -92,7 +116,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     }
     var ref = refOpt.get();
     var ctors = typeService.getConstructors(ref, fileType);
-    int argCount = countNewExpressionArgs(nex.get());
+    int argCount = countNewExpressionArgs(nex);
     var range = tokenRange(typeNameCtx);
     return Optional.of(new Reference(
       document.getSymbolTree().getModule(),
@@ -101,6 +125,31 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
       range,
       OccurrenceType.REFERENCE
     ));
+  }
+
+  /**
+   * Объемлющее выражение {@code Новый Тип(...)} для терминала имени типа: подъём
+   * от терминала до ближайшего {@code typeName}, а от него — до
+   * {@code newExpression}. {@code null}, если терминал не является именем типа в
+   * конструкторе (тогда семантика совпадает с позиционным путём, требующим
+   * непустой {@code typeName}).
+   */
+  private static BSLParser.@Nullable NewExpressionContext enclosingNewExpression(TerminalNode terminal) {
+    if (!(terminal.getParent() instanceof ParserRuleContext prc)) {
+      return null;
+    }
+    var typeName = ancestorOrSelfByRule(prc, BSLParser.RULE_typeName);
+    if (typeName == null) {
+      return null;
+    }
+    return Trees.getAncestorByRuleIndex(typeName, BSLParser.RULE_newExpression);
+  }
+
+  private static @Nullable ParserRuleContext ancestorOrSelfByRule(ParserRuleContext node, int ruleIndex) {
+    if (node.getRuleIndex() == ruleIndex) {
+      return node;
+    }
+    return Trees.getAncestorByRuleIndex(node, ruleIndex);
   }
 
   private static int countNewExpressionArgs(BSLParser.NewExpressionContext nex) {

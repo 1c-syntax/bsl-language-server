@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -180,7 +181,7 @@ public class PlatformMethodCallInlayHintCollector {
         continue;
       }
       var start = arg.getStart();
-      var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
+      var position = Positions.create(start);
       result.add(typeService.expressionTypesAt(documentContext, position));
     }
     return result;
@@ -267,7 +268,7 @@ public class PlatformMethodCallInlayHintCollector {
   }
 
   private static Position positionOf(Token token) {
-    return new Position(token.getLine() - 1, token.getCharPositionInLine());
+    return Positions.create(token);
   }
 
   /**

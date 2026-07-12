@@ -79,12 +79,23 @@ public class KeywordReferenceFinder implements ReferenceFinder {
     } catch (NullPointerException e) {
       return Optional.empty();
     }
-    var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (terminalOpt.isEmpty()) {
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .flatMap(terminal -> findReference(uri, terminal));
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Терминал уже под рукой — спуск по AST к позиции не нужен, keyword-символ
+   * строится прямо от {@code terminal}.
+   */
+  @Override
+  public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    if (!isKeywordToken(terminal)) {
       return Optional.empty();
     }
-    var terminal = terminalOpt.get();
-    if (!isKeywordToken(terminal)) {
+    var documentContext = serverContextProvider.getDocumentNoLock(uri).orElse(null);
+    if (documentContext == null) {
       return Optional.empty();
     }
 
