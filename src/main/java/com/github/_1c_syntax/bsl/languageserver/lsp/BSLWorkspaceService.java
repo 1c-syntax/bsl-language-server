@@ -306,6 +306,26 @@ public class BSLWorkspaceService implements WorkspaceService {
   }
 
   /**
+   * Перечитывает документ с диска и освобождает его вторичные данные под верхнеуровневым
+   * локом документа — как в остальных писателях (didOpen, {@code DocumentChangeExecutor},
+   * MCP): перестроение и синхронная переиндексация ссылок по событию rebuild не должны
+   * пересекаться с конкурентными читателями/писателями этого документа.
+   *
+   * @param context         контекст сервера
+   * @param documentContext контекст документа
+   */
+  private static void rebuildAndClearUnderLock(ServerContext context, DocumentContext documentContext) {
+    var lock = context.getDocumentLock(documentContext.getUri());
+    lock.writeLock().lock();
+    try {
+      context.rebuildDocument(documentContext);
+      context.tryClearDocument(documentContext);
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  /**
    * Обрабатывает событие создания нового файла в файловой системе.
    * <p>
    * Добавляет файл в контекст сервера. Если файл не открыт в редакторе,
@@ -332,8 +352,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      context.rebuildDocument(documentContext);
-      context.tryClearDocument(documentContext);
+      rebuildAndClearUnderLock(context, documentContext);
     }
   }
 
@@ -359,8 +378,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
       var isDocumentOpened = context.isDocumentOpened(documentContext);
       if (!isDocumentOpened) {
-        context.rebuildDocument(documentContext);
-        context.tryClearDocument(documentContext);
+        rebuildAndClearUnderLock(context, documentContext);
       }
     }
   }
@@ -416,8 +434,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      context.rebuildDocument(documentContext);
-      context.tryClearDocument(documentContext);
+      rebuildAndClearUnderLock(context, documentContext);
     }
   }
 

@@ -109,10 +109,6 @@ public class ReferenceIndexFiller {
       return;
     }
     fill(documentContext);
-    // Диагностики, вычисленные конкурентно между перестроением документа и завершением
-    // fill, могли увидеть рассинхрон «новый AST — старый индекс» и закэшироваться.
-    // Сбрасываем кэш: следующий запрос пересчитает их по согласованному состоянию.
-    documentContext.clearDiagnostics();
   }
 
   /**
@@ -157,39 +153,24 @@ public class ReferenceIndexFiller {
   }
 
   /**
-   * Приёмник обращений к символам, найденных при обходе AST.
-   * Абстрагирует финдеры от способа записи в индекс.
-   */
-  private interface ReferenceSink {
-    void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range);
-
-    void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range);
-
-    void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                          String variableName, Range range, OccurrenceType occurrenceType);
-  }
-
-  /**
-   * Копит построенные вхождения в буфер для последующей атомарной публикации.
+   * Приёмник обращений к символам, найденных файндерами при обходе AST:
+   * копит построенные вхождения в буфер для последующей атомарной публикации.
    */
   @RequiredArgsConstructor
-  private final class BatchingSink implements ReferenceSink {
+  private final class BatchingSink {
 
     private final List<SymbolOccurrence> batch;
 
-    @Override
-    public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+    void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
       batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
     }
 
-    @Override
-    public void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+    void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
       batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
     }
 
-    @Override
-    public void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                                 String variableName, Range range, OccurrenceType occurrenceType) {
+    void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
+                          String variableName, Range range, OccurrenceType occurrenceType) {
       batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
     }
   }
@@ -198,7 +179,7 @@ public class ReferenceIndexFiller {
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final ReferenceSink sink;
+    private final BatchingSink sink;
     private final ModuleReference.ParsedAccessors parsedAccessors =
       ModuleReference.parseAccessors(configuration.getReferencesOptions().getCommonModuleAccessors());
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
@@ -533,7 +514,7 @@ public class ReferenceIndexFiller {
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final ReferenceSink sink;
+    private final BatchingSink sink;
     private final ModuleReference.ParsedAccessors parsedAccessors;
     @SuppressWarnings("NullAway.Init")
     private @Nullable SourceDefinedSymbol currentScope;
@@ -541,7 +522,7 @@ public class ReferenceIndexFiller {
     /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
     private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
 
-    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, ReferenceSink sink) {
+    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
       this.sink = sink;
       this.parsedAccessors = ModuleReference.parseAccessors(

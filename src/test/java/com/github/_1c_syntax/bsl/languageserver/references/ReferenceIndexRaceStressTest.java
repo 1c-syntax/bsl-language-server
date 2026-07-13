@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -140,8 +142,7 @@ class ReferenceIndexRaceStressTest {
       .isZero();
   }
 
-  private static com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol targetVariable(
-    com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext) {
+  private static VariableSymbol targetVariable(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getVariables().stream()
       .filter(v -> v.getName().equals("А"))
       .findFirst().orElseThrow();
