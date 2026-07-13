@@ -201,7 +201,7 @@ public class ReferenceIndex {
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
-  public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+  protected void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     saveOccurrence(methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
   }
 
@@ -212,8 +212,8 @@ public class ReferenceIndex {
    *
    * @return построенное вхождение.
    */
-  public SymbolOccurrence methodCallOccurrence(URI uri, String mdoRef, ModuleType moduleType,
-                                               String symbolName, Range range) {
+  protected SymbolOccurrence methodCallOccurrence(URI uri, String mdoRef, ModuleType moduleType,
+                                                  String symbolName, Range range) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
@@ -245,7 +245,7 @@ public class ReferenceIndex {
    * @param moduleType Тип модуля (например, {@link ModuleType#CommonModule}).
    * @param range      Диапазон, в котором происходит обращение к модулю.
    */
-  public void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+  protected void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
     saveOccurrence(moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
   }
 
@@ -256,7 +256,7 @@ public class ReferenceIndex {
    *
    * @return построенное вхождение.
    */
-  public SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+  protected SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range) {
     var symbolName = stringInterner.intern(
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
@@ -289,13 +289,13 @@ public class ReferenceIndex {
    * @param range        Диапазон, в котором происходит обращение к символу.
    * @param definition   Признак обновления значения переменной.
    */
-  public void addVariableUsage(URI uri,
-                               String mdoRef,
-                               ModuleType moduleType,
-                               String methodName,
-                               String variableName,
-                               Range range,
-                               boolean definition) {
+  protected void addVariableUsage(URI uri,
+                                  String mdoRef,
+                                  ModuleType moduleType,
+                                  String methodName,
+                                  String variableName,
+                                  Range range,
+                                  boolean definition) {
     var occurrenceType = definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE;
     saveOccurrence(variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
   }
@@ -308,13 +308,13 @@ public class ReferenceIndex {
    *
    * @return построенное вхождение.
    */
-  public SymbolOccurrence variableOccurrence(URI uri,
-                                             String mdoRef,
-                                             ModuleType moduleType,
-                                             String methodName,
-                                             String variableName,
-                                             Range range,
-                                             OccurrenceType occurrenceType) {
+  protected SymbolOccurrence variableOccurrence(URI uri,
+                                                String mdoRef,
+                                                ModuleType moduleType,
+                                                String methodName,
+                                                String variableName,
+                                                Range range,
+                                                OccurrenceType occurrenceType) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
