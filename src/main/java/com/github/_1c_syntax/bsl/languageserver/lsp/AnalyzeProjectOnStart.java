@@ -74,10 +74,20 @@ public class AnalyzeProjectOnStart {
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
           progress.tick();
 
-          serverContext.rebuildDocument(documentContext);
-          diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+          // Работа с документом — под его верхнеуровневым локом, как в остальных
+          // писателях (didOpen, DocumentChangeExecutor, MCP): перестроение,
+          // синхронная переиндексация ссылок по событию rebuild и очистка не должны
+          // пересекаться с конкурентными читателями/писателями этого документа.
+          var lock = serverContext.getDocumentLock(documentContext.getUri());
+          lock.writeLock().lock();
+          try {
+            serverContext.rebuildDocument(documentContext);
+            diagnosticProvider.computeAndPublishDiagnostics(documentContext);
 
-          serverContext.tryClearDocument(documentContext);
+            serverContext.tryClearDocument(documentContext);
+          } finally {
+            lock.writeLock().unlock();
+          }
         })
       ).get();
 

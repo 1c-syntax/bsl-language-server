@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -157,6 +158,21 @@ public class LocationRepository {
    */
   public void delete(URI uri) {
     locations.remove(uri);
+    sortedOccurrences.remove(uri);
+  }
+
+  /**
+   * Удалить перечисленные обращения к символам, расположенные в указанном URI.
+   * Остальные обращения документа не затрагиваются.
+   *
+   * @param uri         URI документа.
+   * @param occurrences Удаляемые обращения.
+   */
+  public void deleteAll(URI uri, Collection<SymbolOccurrence> occurrences) {
+    var uriLocations = locations.get(uri);
+    if (uriLocations != null) {
+      uriLocations.removeAll(occurrences);
+    }
     sortedOccurrences.remove(uri);
   }
 }
