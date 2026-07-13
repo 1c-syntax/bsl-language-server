@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783873777912,
+  "lastUpdate": 1783954339397,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40176,6 +40176,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.056761379062825",
             "extra": "mean: 103.44965235392253 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "316ff7587610c4b5736ceed006a2ff3223c7d96b",
+          "message": "Merge pull request #4261 from 1c-syntax/fix/reference-index-fill-race\n\nfix(references): атомарная переиндексация и обновление индекса замороженных документов",
+          "timestamp": "2026-07-13T16:29:36+02:00",
+          "tree_id": "2fa4b6dbd02b33e8b8c291b67e0836369984f2f9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/316ff7587610c4b5736ceed006a2ff3223c7d96b"
+        },
+        "date": 1783954327660,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 103.1993437608083,
+            "unit": "sec",
+            "range": "stddev: 3.2636972451752384",
+            "extra": "mean: 103.1993437608083 sec\nrounds: 3"
           }
         ]
       }
