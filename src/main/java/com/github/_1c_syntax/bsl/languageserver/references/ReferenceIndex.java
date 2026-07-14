@@ -45,6 +45,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -179,37 +180,32 @@ public class ReferenceIndex {
   public void replaceReferences(URI uri, Iterable<SymbolOccurrence> newOccurrences) {
     var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .collect(Collectors.toCollection(HashSet::new));
+    var replacement = new LinkedHashSet<SymbolOccurrence>();
     for (var occurrence : newOccurrences) {
+      replacement.add(occurrence);
       // Успешное удаление из stale означает, что вхождение уже есть в индексе —
-      // оставляем его как есть; остаток stale после цикла подлежит удалению.
+      // символьную сторону не трогаем; остаток stale после цикла подлежит удалению.
       if (!stale.remove(occurrence)) {
-        saveOccurrence(occurrence);
+        symbolOccurrenceRepository.save(occurrence);
       }
     }
     if (!stale.isEmpty()) {
       symbolOccurrenceRepository.deleteAll(stale);
-      locationRepository.deleteAll(uri, stale);
     }
+    // Сторона расположений заменяется целиком одним атомарным swap-ом полного
+    // набора вхождений документа — плотнее (массив вместо concurrent-множества)
+    // и без «пустого окна» для читателей.
+    locationRepository.replaceOccurrences(uri, replacement);
   }
 
   /**
-   * Добавить вызов метода в индекс.
+   * Построить вхождение «вызов метода» без записи в индекс.
    *
    * @param uri        URI документа, откуда произошел вызов.
    * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
-   */
-  protected void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-    saveOccurrence(methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
-  }
-
-  /**
-   * Построить вхождение «вызов метода» без записи в индекс.
-   * <p>
-   * Параметры — как у {@link #addMethodCall(URI, String, ModuleType, String, Range)}.
-   *
    * @return построенное вхождение.
    */
   protected SymbolOccurrence methodCallOccurrence(URI uri, String mdoRef, ModuleType moduleType,
@@ -234,7 +230,7 @@ public class ReferenceIndex {
   }
 
   /**
-   * Добавить ссылку на модуль в индекс.
+   * Построить вхождение «ссылка на модуль» без записи в индекс.
    * <p>
    * Имя символа вычисляется детерминированно из {@code mdoRef} и {@code moduleType}
    * ({@link ModuleSymbol#nameOf}) и совпадает с {@link ModuleSymbol#getName()}, поэтому
@@ -244,16 +240,6 @@ public class ReferenceIndex {
    * @param mdoRef     Ссылка на объект-метаданных модуля (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля (например, {@link ModuleType#CommonModule}).
    * @param range      Диапазон, в котором происходит обращение к модулю.
-   */
-  protected void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
-    saveOccurrence(moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
-  }
-
-  /**
-   * Построить вхождение «ссылка на модуль» без записи в индекс.
-   * <p>
-   * Параметры — как у {@link #addModuleReference(URI, String, ModuleType, Range)}.
-   *
    * @return построенное вхождение.
    */
   protected SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range) {
@@ -279,33 +265,16 @@ public class ReferenceIndex {
   }
 
   /**
-   * Добавить обращение к переменной в индекс.
-   *
-   * @param uri          URI документа, откуда произошел вызов.
-   * @param mdoRef       Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
-   * @param moduleType   Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
-   * @param methodName   Имя метода, к которому относиться перменная. Пустой если переменная относиться к модулю.
-   * @param variableName Имя переменной, к которой происходит обращение.
-   * @param range        Диапазон, в котором происходит обращение к символу.
-   * @param definition   Признак обновления значения переменной.
-   */
-  protected void addVariableUsage(URI uri,
-                                  String mdoRef,
-                                  ModuleType moduleType,
-                                  String methodName,
-                                  String variableName,
-                                  Range range,
-                                  boolean definition) {
-    var occurrenceType = definition ? OccurrenceType.DEFINITION : OccurrenceType.REFERENCE;
-    saveOccurrence(variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
-  }
-
-  /**
    * Построить вхождение «обращение к переменной» без записи в индекс.
-   * <p>
-   * Параметры — как у {@link #addVariableUsage(URI, String, ModuleType, String, String, Range, boolean)},
-   * вид вхождения задаётся явно.
+   * Вид вхождения ({@link OccurrenceType}) задаётся явно.
    *
+   * @param uri            URI документа, откуда произошел вызов.
+   * @param mdoRef         Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType     Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
+   * @param methodName     Имя метода, к которому относится переменная. Пустой, если переменная относится к модулю.
+   * @param variableName   Имя переменной, к которой происходит обращение.
+   * @param range          Диапазон, в котором происходит обращение к символу.
+   * @param occurrenceType Вид обращения к символу.
    * @return построенное вхождение.
    */
   protected SymbolOccurrence variableOccurrence(URI uri,
@@ -334,11 +303,6 @@ public class ReferenceIndex {
       .symbol(symbol)
       .location(location)
       .build();
-  }
-
-  private void saveOccurrence(SymbolOccurrence symbolOccurrence) {
-    symbolOccurrenceRepository.save(symbolOccurrence);
-    locationRepository.updateLocation(symbolOccurrence);
   }
 
   private Optional<Reference> buildReference(
