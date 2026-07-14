@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.info;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import lombok.Getter;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -59,9 +58,9 @@ public final class DiagnosticParameterInfo {
       value = Float.parseFloat(valueToCast);
     } else if (type == String.class) {
       value = valueToCast;
-    } else if (type == Either.class) {
+    } else if (type == List.class) {
       // Параметр-список: внешнее (config/SonarQube) представление по умолчанию — строка через запятую.
-      // В Either значение оборачивается при применении конфигурации (см. DiagnosticHelper).
+      // В List значение разбирается при применении конфигурации (см. DiagnosticHelper).
       value = valueToCast;
     } else {
       throw new IllegalArgumentException("Unsupported diagnostic parameter type " + type);

@@ -26,10 +26,10 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -125,7 +125,7 @@ public final class DiagnosticHelper {
     types.add(Boolean.class);
     types.add(Float.class);
     types.add(String.class);
-    types.add(Either.class);
+    types.add(List.class);
 
     diagnostic.getInfo().getParameters().stream()
       .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())
@@ -145,21 +145,21 @@ public final class DiagnosticHelper {
   /**
    * Приводит значение параметра из конфигурации к типу целевого поля диагностики.
    * <p>
-   * Для полей типа {@link Either}{@code <String, List<String>>} значение может прийти
-   * как строка (список через разделитель — например, из SonarQube UI) либо как JSON-массив
-   * (десериализуется Jackson в {@link List}). Строка оборачивается в левую ветвь,
-   * массив — в правую. Для остальных полей значение возвращается без изменений.
+   * Для полей типа {@link List} значение может прийти как строка (элементы через запятую —
+   * например, из SonarQube UI) либо как JSON-массив (десериализуется Jackson в {@link List}).
+   * В обоих случаях возвращается {@code List<String>}. Для остальных полей значение
+   * возвращается без изменений.
    *
    * @param field Целевое поле диагностики
    * @param value Значение из конфигурации ({@code String}, {@code List} и т.п.)
    * @return Значение, пригодное для присвоения полю
    */
   private static Object castParameterValue(Field field, Object value) {
-    if (Either.class.isAssignableFrom(field.getType())) {
+    if (List.class.isAssignableFrom(field.getType())) {
       if (value instanceof List<?> list) {
-        return Either.forRight(list.stream().map(String::valueOf).toList());
+        return list.stream().map(String::valueOf).toList();
       }
-      return Either.forLeft(String.valueOf(value));
+      return asStringList(String.valueOf(value));
     }
     return value;
   }
@@ -185,24 +185,17 @@ public final class DiagnosticHelper {
   }
 
   /**
-   * Разворачивает значение параметра-списка в список строк.
+   * Разбирает строку с элементами через запятую в список строк.
    * <p>
-   * Левая ветвь {@link Either} — строка с элементами через запятую (форма, приходящая из SonarQube UI
-   * и из «старых» конфигов); правая ветвь — уже готовый список (из JSON-массива). Элементы обрезаются
-   * по краям от пробелов; пустые элементы отбрасываются.
+   * Используется как для значения параметра-списка из конфигурации в строковой форме
+   * (SonarQube UI, «старые» конфиги), так и для инициализации поля значением по умолчанию.
+   * Элементы обрезаются по краям от пробелов; пустые элементы отбрасываются.
    *
-   * @param value Значение параметра: строка через запятую либо список строк
+   * @param value Строка с элементами через запятую
    * @return Список строк без пустых элементов
    */
-  public static List<String> asStringList(Either<String, List<String>> value) {
-    List<String> source;
-    if (value.isRight()) {
-      source = value.getRight();
-    } else {
-      source = List.of(value.getLeft().split(","));
-    }
-
-    return source.stream()
+  public static List<String> asStringList(String value) {
+    return Arrays.stream(value.split(","))
       .map(String::trim)
       .filter(element -> !element.isEmpty())
       .toList();

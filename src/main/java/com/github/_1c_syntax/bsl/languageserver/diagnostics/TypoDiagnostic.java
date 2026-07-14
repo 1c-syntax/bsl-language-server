@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Languages;
 import org.languagetool.rules.RuleMatch;
@@ -107,9 +106,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private int minWordLength = DEFAULT_MIN_WORD_LENGTH;
 
   @DiagnosticParameter(
-    type = Either.class
+    type = List.class
   )
-  private Either<String, List<String>> userWordsToIgnore = Either.forLeft(DEFAULT_USER_WORDS_TO_IGNORE);
+  private List<String> userWordsToIgnore = DiagnosticHelper.asStringList(DEFAULT_USER_WORDS_TO_IGNORE);
 
   /**
    * Готовый список слов для игнорирования
@@ -131,7 +130,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private Set<String> makeWordsToIgnore() {
     var delimiter = ',';
     var exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
-    var userWords = String.join(String.valueOf(delimiter), DiagnosticHelper.asStringList(userWordsToIgnore));
+    var userWords = String.join(String.valueOf(delimiter), userWordsToIgnore);
     if (!userWords.isEmpty()) {
       exceptions += delimiter + SPACES_PATTERN.matcher(userWords).replaceAll("");
     }
