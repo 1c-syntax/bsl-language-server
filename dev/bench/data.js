@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783954339397,
+  "lastUpdate": 1784061391780,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40207,6 +40207,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.2636972451752384",
             "extra": "mean: 103.1993437608083 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "abac190c89041e1c192b4d99744e7fd95d5674e2",
+          "message": "Merge pull request #4271 from 1c-syntax/perf/location-repository-arrays\n\nperf(references): массивы вместо concurrent-множеств в LocationRepository (−305 МиБ, чтение 42×, индексация 37×)",
+          "timestamp": "2026-07-14T22:13:23+02:00",
+          "tree_id": "17219efca4902928da09755a6f8aa8eabf6cbf96",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/abac190c89041e1c192b4d99744e7fd95d5674e2"
+        },
+        "date": 1784061379020,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.90272688865662,
+            "unit": "sec",
+            "range": "stddev: 1.3945652885973245",
+            "extra": "mean: 101.90272688865662 sec\nrounds: 3"
           }
         ]
       }
