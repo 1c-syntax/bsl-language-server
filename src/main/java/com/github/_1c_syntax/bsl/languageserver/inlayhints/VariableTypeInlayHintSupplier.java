@@ -55,8 +55,10 @@ import java.util.Optional;
  * <p>
  * Если имя переменной уже содержит имя выведенного типа (например
  * {@code Массив = ...} или {@code МассивТоваров = ...} с типом {@code Массив}),
- * подсказка лишь дублирует видимое в имени и подавляется — по аналогии с
- * подавлением подсказок имён параметров с совпадающим именем аргумента.
+ * подсказка лишь дублирует видимое в имени и по умолчанию подавляется — по аналогии
+ * с подавлением подсказок имён параметров с совпадающим именем аргумента. Поведение
+ * отключается флагом конфигурации {@code inlayHint.parameters.variableType.showTypeWithTheSameName}
+ * ({@link VariableTypeInlayHintFlags}; по умолчанию {@code false} — подавлять).
  * <p>
  * Метка хинта рендерится единственной частью {@link InlayHintLabelPart}: когда
  * выведенный тип объявлен в исходниках рабочей области (общий модуль, модуль
@@ -143,10 +145,12 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
 
     // Имя переменной уже несёт имя типа (напр. «Массив = ...» с выведенным типом
     // «Массив» или «МассивТоваров = ...» с типом «Массив») — подсказка лишь дублирует
-    // то, что видно в имени, и только шумит: не строим её. По аналогии с подавлением
-    // подсказок имён параметров с совпадающим именем аргумента.
+    // то, что видно в имени, и только шумит: по умолчанию не строим её. Поведение
+    // отключается флагом showTypeWithTheSameName — по аналогии с подавлением подсказок
+    // имён параметров с совпадающим именем аргумента (showParametersWithTheSameName).
     var variableName = identifier.getText();
-    if (Strings.CI.contains(variableName, typeName)) {
+    if (!VariableTypeInlayHintFlags.showTypeWithTheSameName(configuration)
+      && Strings.CI.contains(variableName, typeName)) {
       return Optional.empty();
     }
 

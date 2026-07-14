@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -29,10 +30,12 @@ import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,6 +47,9 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private VariableTypeInlayHintSupplier supplier;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   private static String labelValue(InlayHint inlayHint) {
     return inlayHint.getLabel().getRight().getFirst().getValue();
@@ -138,6 +144,43 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
     // имеют тип «Массив», уже видимый в имени переменной (в т.ч. в другом регистре) —
     // подсказок нет; «Источник = Новый Массив()» — конструктор, тоже без подсказки
     assertThat(inlayHints).isEmpty();
+  }
+
+  @Test
+  void testHintForNameContainingTypeWhenFlagEnabled() {
+
+    // given
+    // флаг showTypeWithTheSameName=true отключает подавление — подсказка типа
+    // показывается, даже если имя переменной уже содержит имя типа
+    configuration.getInlayHintOptions().getParameters().put(
+      "variableType",
+      Either.forRight(Map.of("showTypeWithTheSameName", true))
+    );
+
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+      	Источник = Новый Массив();
+      	Массив = Источник;
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    // «Массив = Источник» имеет тип «Массив»; при включённом флаге подсказка не подавляется
+    assertThat(inlayHints)
+      .hasSize(1)
+      .first()
+      .satisfies(inlayHint -> {
+        assertThat(labelValue(inlayHint)).isEqualTo(": Массив");
+        // строка «Массив = Источник» (0-based) — вторая строка тела процедуры
+        assertThat(inlayHint.getPosition().getLine()).isEqualTo(2);
+      });
   }
 
   @Test
