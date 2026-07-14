@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.references.model.Location;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -228,12 +227,7 @@ public class ReferenceIndex {
       .build()
       .intern();
 
-    var location = new Location(uri, range);
-    return SymbolOccurrence.builder()
-      .occurrenceType(OccurrenceType.REFERENCE)
-      .symbol(symbol)
-      .location(location)
-      .build();
+    return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
 
   /**
@@ -263,12 +257,7 @@ public class ReferenceIndex {
       .build()
       .intern();
 
-    var location = new Location(uri, range);
-    return SymbolOccurrence.builder()
-      .occurrenceType(OccurrenceType.REFERENCE)
-      .symbol(symbol)
-      .location(location)
-      .build();
+    return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
 
   /**
@@ -303,20 +292,14 @@ public class ReferenceIndex {
       .build()
       .intern();
 
-    var location = new Location(uri, range);
-
-    return SymbolOccurrence.builder()
-      .occurrenceType(occurrenceType)
-      .symbol(symbol)
-      .location(location)
-      .build();
+    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }
 
   private Optional<Reference> buildReference(
     SymbolOccurrence symbolOccurrence
   ) {
 
-    var uri = symbolOccurrence.location().uri();
+    var uri = symbolOccurrence.uri();
 
     var serverContextOpt = serverContextProvider.getServerContext(uri);
     if (serverContextOpt.isEmpty()) {
@@ -327,7 +310,7 @@ public class ReferenceIndex {
     return getSourceDefinedSymbol(serverContext, symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
         var from = getFromSymbol(serverContext, symbolOccurrence);
-        var range = symbolOccurrence.location().getRange();
+        var range = symbolOccurrence.range();
         var occurrenceType = symbolOccurrence.occurrenceType();
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
@@ -361,8 +344,8 @@ public class ReferenceIndex {
   }
 
   private static SourceDefinedSymbol getFromSymbol(ServerContext serverContext, SymbolOccurrence symbolOccurrence) {
-    var uri = symbolOccurrence.location().uri();
-    var position = symbolOccurrence.location().getStart();
+    var uri = symbolOccurrence.uri();
+    var position = symbolOccurrence.startPosition();
 
     return Optional.ofNullable(serverContext.getDocumentNoLock(uri))
       .map(DocumentContext::getSymbolTree)

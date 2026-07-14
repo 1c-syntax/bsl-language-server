@@ -49,8 +49,8 @@ public class LocationRepository {
    * поэтому порядок тотален и однозначен.
    */
   private static final Comparator<SymbolOccurrence> BY_RANGE_START = Comparator
-    .comparingInt((SymbolOccurrence occurrence) -> occurrence.location().startLine())
-    .thenComparingInt(occurrence -> occurrence.location().startCharacter());
+    .comparingInt(SymbolOccurrence::startLine)
+    .thenComparingInt(SymbolOccurrence::startCharacter);
 
   /**
    * Вхождения документа, сгруппированные по URI.
@@ -121,7 +121,7 @@ public class LocationRepository {
     var found = -1;
     while (low <= high) {
       var mid = (low + high) >>> 1;
-      if (startsAfter(sorted[mid].location(), position)) {
+      if (startsAfter(sorted[mid], position)) {
         high = mid - 1;
       } else {
         found = mid;
@@ -131,15 +131,15 @@ public class LocationRepository {
     return found;
   }
 
-  private static boolean startsAfter(Location location, Position position) {
-    return location.startLine() > position.getLine()
-      || (location.startLine() == position.getLine() && location.startCharacter() > position.getCharacter());
+  private static boolean startsAfter(SymbolOccurrence occurrence, Position position) {
+    return occurrence.startLine() > position.getLine()
+      || (occurrence.startLine() == position.getLine() && occurrence.startCharacter() > position.getCharacter());
   }
 
   private static boolean matches(SymbolOccurrence symbolOccurrence, Position position) {
-    var location = symbolOccurrence.location();
     return Ranges.containsPosition(
-      location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
+      symbolOccurrence.startLine(), symbolOccurrence.startCharacter(),
+      symbolOccurrence.endLine(), symbolOccurrence.endCharacter(),
       position);
   }
 
