@@ -154,12 +154,15 @@ public final class DiagnosticHelper {
    * @param value Значение из конфигурации ({@code String}, {@code List} и т.п.)
    * @return Значение, пригодное для присвоения полю
    */
-  private static Object castParameterValue(Field field, Object value) {
+  private static Object castParameterValue(Field field, @Nullable Object value) {
+    if (value == null) {
+      return null;
+    }
     if (List.class.isAssignableFrom(field.getType())) {
       if (value instanceof List<?> list) {
         return list.stream().map(String::valueOf).toList();
       }
-      return asStringList(String.valueOf(value));
+      return asStringList(value.toString());
     }
     return value;
   }
