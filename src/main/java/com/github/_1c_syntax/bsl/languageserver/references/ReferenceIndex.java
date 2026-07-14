@@ -45,6 +45,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -179,17 +180,22 @@ public class ReferenceIndex {
   public void replaceReferences(URI uri, Iterable<SymbolOccurrence> newOccurrences) {
     var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .collect(Collectors.toCollection(HashSet::new));
+    var replacement = new LinkedHashSet<SymbolOccurrence>();
     for (var occurrence : newOccurrences) {
+      replacement.add(occurrence);
       // Успешное удаление из stale означает, что вхождение уже есть в индексе —
-      // оставляем его как есть; остаток stale после цикла подлежит удалению.
+      // символьную сторону не трогаем; остаток stale после цикла подлежит удалению.
       if (!stale.remove(occurrence)) {
-        saveOccurrence(occurrence);
+        symbolOccurrenceRepository.save(occurrence);
       }
     }
     if (!stale.isEmpty()) {
       symbolOccurrenceRepository.deleteAll(stale);
-      locationRepository.deleteAll(uri, stale);
     }
+    // Сторона расположений заменяется целиком одним атомарным swap-ом полного
+    // набора вхождений документа — плотнее (массив вместо concurrent-множества)
+    // и без «пустого окна» для читателей.
+    locationRepository.replaceOccurrences(uri, replacement);
   }
 
   /**
