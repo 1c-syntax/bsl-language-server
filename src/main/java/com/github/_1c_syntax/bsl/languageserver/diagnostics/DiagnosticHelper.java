@@ -154,7 +154,7 @@ public final class DiagnosticHelper {
    * @param value Значение из конфигурации ({@code String}, {@code List} и т.п.)
    * @return Значение, пригодное для присвоения полю
    */
-  private static Object castParameterValue(Field field, @Nullable Object value) {
+  private static @Nullable Object castParameterValue(Field field, @Nullable Object value) {
     if (value == null) {
       return null;
     }
