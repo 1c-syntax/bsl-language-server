@@ -29,11 +29,9 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -55,9 +53,16 @@ public class LocationRepository {
     .thenComparingInt(occurrence -> occurrence.location().startCharacter());
 
   /**
-   * Список обращений к символу, сгруппированный по URI.
+   * Вхождения документа, сгруппированные по URI.
+   * <p>
+   * Значение — неизменяемый массив {@code SymbolOccurrence[]}, а не concurrent-множество:
+   * вхождения одного документа пишутся одним потоком (перестроение документа сериализовано),
+   * а полный набор заменяется атомарным swap-ом ссылки ({@link #replaceOccurrences}), поэтому
+   * конкурентные читатели всегда видят согласованный снимок. Массив вместо
+   * {@code ConcurrentHashMap.newKeySet()} убирает ~1 Node на каждое вхождение (на больших
+   * проектах — миллионы узлов и сотни МБ).
    */
-  private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
+  private final Map<URI, SymbolOccurrence[]> locations = new ConcurrentHashMap<>();
 
   /**
    * Вторичный индекс для {@link #findByPosition}: отсортированный по началу
@@ -67,8 +72,8 @@ public class LocationRepository {
    * потреблении памяти индексом ссылок).
    * <p>
    * Снимок ленивый: сбрасывается при любом изменении вхождений URI
-   * ({@link #updateLocation}, {@link #delete}) и пересобирается при первом
-   * следующем поиске.
+   * ({@link #replaceOccurrences}, {@link #updateLocation}, {@link #deleteAll},
+   * {@link #delete}) и пересобирается при первом следующем поиске.
    */
   private final Map<URI, SymbolOccurrence[]> sortedOccurrences = new ConcurrentHashMap<>();
 
@@ -79,7 +84,7 @@ public class LocationRepository {
    * @return Список найденных обращений к символам.
    */
   public Stream<SymbolOccurrence> getSymbolOccurrencesByLocationUri(URI uri) {
-    return locations.getOrDefault(uri, Collections.emptySet()).stream();
+    return Arrays.stream(locations.getOrDefault(uri, EMPTY_OCCURRENCES));
   }
 
   /**
@@ -102,7 +107,7 @@ public class LocationRepository {
   }
 
   private SymbolOccurrence[] sortedSnapshot(URI uri) {
-    var snapshot = locations.getOrDefault(uri, Collections.emptySet()).toArray(EMPTY_OCCURRENCES);
+    var snapshot = locations.getOrDefault(uri, EMPTY_OCCURRENCES).clone();
     Arrays.sort(snapshot, BY_RANGE_START);
     return snapshot;
   }
@@ -140,15 +145,38 @@ public class LocationRepository {
   }
 
   /**
-   * Обновить данные о расположении обращения к символу.
+   * Заменить полный набор вхождений документа. Основной путь записи: перестроение
+   * документа собирает набор в буфер и заменяет его целиком одним атомарным swap-ом.
+   *
+   * @param uri         URI документа.
+   * @param occurrences Новый набор вхождений документа (без дубликатов).
+   */
+  public void replaceOccurrences(URI uri, Collection<SymbolOccurrence> occurrences) {
+    if (occurrences.isEmpty()) {
+      locations.remove(uri);
+    } else {
+      locations.put(uri, occurrences.toArray(EMPTY_OCCURRENCES));
+    }
+    sortedOccurrences.remove(uri);
+  }
+
+  /**
+   * Добавить одиночное вхождение к символу (гранулярный путь записи). Дубликат по
+   * {@code equals} игнорируется — семантика множества сохраняется.
    *
    * @param symbolOccurrence Обращение к символу.
    */
   public void updateLocation(SymbolOccurrence symbolOccurrence) {
-    var location = symbolOccurrence.location();
-    locations.computeIfAbsent(location.uri(), uri -> ConcurrentHashMap.newKeySet())
-      .add(symbolOccurrence);
-    sortedOccurrences.remove(location.uri());
+    var uri = symbolOccurrence.location().uri();
+    locations.merge(uri, new SymbolOccurrence[]{symbolOccurrence}, (existing, added) -> {
+      if (contains(existing, added[0])) {
+        return existing;
+      }
+      var updated = Arrays.copyOf(existing, existing.length + 1);
+      updated[existing.length] = added[0];
+      return updated;
+    });
+    sortedOccurrences.remove(uri);
   }
 
   /**
@@ -169,10 +197,21 @@ public class LocationRepository {
    * @param occurrences Удаляемые обращения.
    */
   public void deleteAll(URI uri, Collection<SymbolOccurrence> occurrences) {
-    var uriLocations = locations.get(uri);
-    if (uriLocations != null) {
-      uriLocations.removeAll(occurrences);
-    }
+    locations.computeIfPresent(uri, (u, existing) -> {
+      var remaining = Arrays.stream(existing)
+        .filter(occurrence -> !occurrences.contains(occurrence))
+        .toArray(SymbolOccurrence[]::new);
+      return remaining.length == 0 ? null : remaining;
+    });
     sortedOccurrences.remove(uri);
+  }
+
+  private static boolean contains(SymbolOccurrence[] array, SymbolOccurrence occurrence) {
+    for (var element : array) {
+      if (element.equals(occurrence)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
