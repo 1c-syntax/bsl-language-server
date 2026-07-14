@@ -390,10 +390,11 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       // given - workspace 1 is already initialized with PATH_TO_METADATA in @BeforeEach
       // Manually add a reference to workspace 1's repos to verify isolation
       var workspace1Uri = context.getDocuments().keySet().iterator().next();
-      referenceIndex.addMethodCall(
+      var occurrence = referenceIndex.methodCallOccurrence(
         workspace1Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
         Ranges.create(0, 0, 10)
       );
+      referenceIndex.replaceReferences(workspace1Uri, java.util.List.of(occurrence));
 
       // Build the same Symbol key used for both workspaces
       var symbolDto = com.github._1c_syntax.bsl.languageserver.references.model.Symbol.builder()

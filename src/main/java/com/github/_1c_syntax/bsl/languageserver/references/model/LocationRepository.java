@@ -72,8 +72,7 @@ public class LocationRepository {
    * потреблении памяти индексом ссылок).
    * <p>
    * Снимок ленивый: сбрасывается при любом изменении вхождений URI
-   * ({@link #replaceOccurrences}, {@link #updateLocation}, {@link #deleteAll},
-   * {@link #delete}) и пересобирается при первом следующем поиске.
+   * ({@link #replaceOccurrences}, {@link #delete}) и пересобирается при первом следующем поиске.
    */
   private final Map<URI, SymbolOccurrence[]> sortedOccurrences = new ConcurrentHashMap<>();
 
@@ -161,25 +160,6 @@ public class LocationRepository {
   }
 
   /**
-   * Добавить одиночное вхождение к символу (гранулярный путь записи). Дубликат по
-   * {@code equals} игнорируется — семантика множества сохраняется.
-   *
-   * @param symbolOccurrence Обращение к символу.
-   */
-  public void updateLocation(SymbolOccurrence symbolOccurrence) {
-    var uri = symbolOccurrence.location().uri();
-    locations.merge(uri, new SymbolOccurrence[]{symbolOccurrence}, (existing, added) -> {
-      if (contains(existing, added[0])) {
-        return existing;
-      }
-      var updated = Arrays.copyOf(existing, existing.length + 1);
-      updated[existing.length] = added[0];
-      return updated;
-    });
-    sortedOccurrences.remove(uri);
-  }
-
-  /**
    * Удалить сохраненные расположения обращений к символам в указанном URI.
    *
    * @param uri URI документа для удаления расположений.
@@ -187,31 +167,5 @@ public class LocationRepository {
   public void delete(URI uri) {
     locations.remove(uri);
     sortedOccurrences.remove(uri);
-  }
-
-  /**
-   * Удалить перечисленные обращения к символам, расположенные в указанном URI.
-   * Остальные обращения документа не затрагиваются.
-   *
-   * @param uri         URI документа.
-   * @param occurrences Удаляемые обращения.
-   */
-  public void deleteAll(URI uri, Collection<SymbolOccurrence> occurrences) {
-    locations.computeIfPresent(uri, (u, existing) -> {
-      var remaining = Arrays.stream(existing)
-        .filter(occurrence -> !occurrences.contains(occurrence))
-        .toArray(SymbolOccurrence[]::new);
-      return remaining.length == 0 ? null : remaining;
-    });
-    sortedOccurrences.remove(uri);
-  }
-
-  private static boolean contains(SymbolOccurrence[] array, SymbolOccurrence occurrence) {
-    for (var element : array) {
-      if (element.equals(occurrence)) {
-        return true;
-      }
-    }
-    return false;
   }
 }
