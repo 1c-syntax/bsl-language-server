@@ -125,14 +125,11 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
       return Optional.empty();
     }
     var identifier = maybeIdentifier.get();
-
     var namePosition = Positions.createEnd(identifier);
-    if (!Ranges.containsPosition(range, namePosition)) {
-      return Optional.empty();
-    }
 
     var expression = assignment.expression();
-    if (expression == null || isTrivialLiteral(expression) || isNewExpression(expression)) {
+    if (!Ranges.containsPosition(range, namePosition)
+      || expression == null || isTrivialLiteral(expression) || isNewExpression(expression)) {
       return Optional.empty();
     }
 

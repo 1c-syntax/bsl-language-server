@@ -114,13 +114,15 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
   void testNoHintWhenVariableNameContainsTypeName() {
 
     // given
-    // имя переменной уже содержит имя выведенного типа («Массив»/«МассивИсточник»),
-    // подсказка типа лишь дублировала бы видимое в имени — не строится
+    // имя переменной уже содержит имя выведенного типа («Массив»/«МассивИсточник»,
+    // а также «массивОстатков» — совпадение регистронезависимо), подсказка типа лишь
+    // дублировала бы видимое в имени — не строится
     var documentContext = TestUtils.getDocumentContext("""
       Процедура Тест()
       	Источник = Новый Массив();
       	Массив = Источник;
       	МассивИсточник = Источник;
+      	массивОстатков = Источник;
       КонецПроцедуры
       """);
     var method = documentContext.getSymbolTree().getMethods().getFirst();
@@ -132,9 +134,9 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
     List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
 
     // then
-    // «Массив = Источник» и «МассивИсточник = Источник» имеют тип «Массив», уже
-    // видимый в имени переменной — подсказок нет; «Источник = Новый Массив()» —
-    // конструктор, тоже без подсказки
+    // «Массив = Источник», «МассивИсточник = Источник» и «массивОстатков = Источник»
+    // имеют тип «Массив», уже видимый в имени переменной (в т.ч. в другом регистре) —
+    // подсказок нет; «Источник = Новый Массив()» — конструктор, тоже без подсказки
     assertThat(inlayHints).isEmpty();
   }
 
