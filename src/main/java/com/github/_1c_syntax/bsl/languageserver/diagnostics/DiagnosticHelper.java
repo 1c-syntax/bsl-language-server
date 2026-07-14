@@ -125,6 +125,7 @@ public final class DiagnosticHelper {
     types.add(Boolean.class);
     types.add(Float.class);
     types.add(String.class);
+    types.add(Either.class);
 
     diagnostic.getInfo().getParameters().stream()
       .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())

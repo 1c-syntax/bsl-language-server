@@ -107,7 +107,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private int minWordLength = DEFAULT_MIN_WORD_LENGTH;
 
   @DiagnosticParameter(
-    type = String.class
+    type = Either.class
   )
   private Either<String, List<String>> userWordsToIgnore = Either.forLeft(DEFAULT_USER_WORDS_TO_IGNORE);
 
