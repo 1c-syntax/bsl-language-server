@@ -38,6 +38,7 @@ import com.contrastsecurity.sarif.SarifSchema210;
 import com.contrastsecurity.sarif.Tool;
 import com.contrastsecurity.sarif.ToolComponent;
 import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
@@ -121,8 +122,11 @@ public class SarifReporter extends AbstractDiagnosticReporter {
     // на крупной конфигурации — миллионы) сериализуются по мере обхода и не удерживаются в
     // памяти целиком. Так исключается построение второго полного графа Result/Location/Region
     // поверх уже вычисленных диагностик — главный источник пикового потребления памяти при
-    // генерации SARIF (см. issue #4248).
-    var mapper = new JsonMapper();
+    // генерации SARIF (см. issue #4248). Отступы (INDENT_OUTPUT) сохранены: файл на миллионы
+    // результатов иначе — одна строка на сотни МБ, которую не открыть в редакторе.
+    var mapper = JsonMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build();
 
     try (
       var out = new BufferedOutputStream(new FileOutputStream(reportFile));
