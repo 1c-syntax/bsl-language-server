@@ -34,11 +34,10 @@ import com.contrastsecurity.sarif.ReportingConfiguration;
 import com.contrastsecurity.sarif.ReportingDescriptor;
 import com.contrastsecurity.sarif.ReportingDescriptorReference;
 import com.contrastsecurity.sarif.Result;
-import com.contrastsecurity.sarif.Run;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.contrastsecurity.sarif.Tool;
 import com.contrastsecurity.sarif.ToolComponent;
-import tools.jackson.databind.SerializationFeature;
+import tools.jackson.core.JsonGenerator;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
@@ -57,10 +56,11 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -115,41 +115,57 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var report = createReport(analysisInfo);
-
-    var mapper = JsonMapper.builder()
-      .enable(SerializationFeature.INDENT_OUTPUT)
-      .build();
-
     var reportFile = new File(outputDir.toFile(), "./bsl-ls.sarif");
-    mapper.writeValue(reportFile, report);
+
+    // Отчёт формируется потоково через JsonGenerator: результаты (по одному на диагностику,
+    // на крупной конфигурации — миллионы) сериализуются по мере обхода и не удерживаются в
+    // памяти целиком. Так исключается построение второго полного графа Result/Location/Region
+    // поверх уже вычисленных диагностик — главный источник пикового потребления памяти при
+    // генерации SARIF (см. issue #4248).
+    var mapper = new JsonMapper();
+
+    try (
+      var out = new BufferedOutputStream(new FileOutputStream(reportFile));
+      var gen = mapper.createGenerator(out)
+    ) {
+      gen.writeStartObject();
+      gen.writeName("$schema");
+      gen.writeString("https://json.schemastore.org/sarif-2.1.0.json");
+      gen.writeName("version");
+      gen.writePOJO(SarifSchema210.Version._2_1_0);
+      gen.writeName("runs");
+      gen.writeStartArray();
+      writeRun(gen, analysisInfo);
+      gen.writeEndArray();
+      gen.writeEndObject();
+    }
+
     LOGGER.info("SARIF report saved to {}", reportFile.getAbsolutePath());
   }
 
-  private SarifSchema210 createReport(AnalysisInfo analysisInfo) {
-    var schema = URI.create(
-      "https://json.schemastore.org/sarif-2.1.0.json"
-    );
-    var run = createRun(analysisInfo);
-
-    return new SarifSchema210()
-      .with$schema(schema)
-      .withVersion(SarifSchema210.Version._2_1_0)
-      .withRuns(List.of(run));
-  }
-
-  private Run createRun(AnalysisInfo analysisInfo) {
-    var tool = createTool(configuration);
-    var invocation = createInvocation(configuration);
-    var results = createResults(analysisInfo);
-
-    return new Run()
-      .withTool(tool)
-      .withInvocations(List.of(invocation))
-      .withLanguage(configuration.getLanguage().getLanguageCode())
-      .withDefaultEncoding("UTF-8")
-      .withDefaultSourceLanguage("BSL")
-      .withResults(results);
+  private void writeRun(JsonGenerator gen, AnalysisInfo analysisInfo) {
+    gen.writeStartObject();
+    gen.writeName("tool");
+    gen.writePOJO(createTool(configuration));
+    gen.writeName("invocations");
+    gen.writePOJO(List.of(createInvocation(configuration)));
+    gen.writeName("language");
+    gen.writeString(configuration.getLanguage().getLanguageCode());
+    gen.writeName("defaultEncoding");
+    gen.writeString("UTF-8");
+    gen.writeName("defaultSourceLanguage");
+    gen.writeString("BSL");
+    gen.writeName("results");
+    gen.writeStartArray();
+    for (FileInfo fileInfo : analysisInfo.fileinfos()) {
+      // uri вычисляется один раз на файл, а не на каждую диагностику
+      var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
+      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
+        gen.writePOJO(createResult(uri, diagnostic));
+      }
+    }
+    gen.writeEndArray();
+    gen.writeEndObject();
   }
 
   private static Invocation createInvocation(LanguageServerConfiguration configuration) {
@@ -238,26 +254,14 @@ public class SarifReporter extends AbstractDiagnosticReporter {
       .withProperties(properties);
   }
 
-  private static List<Result> createResults(AnalysisInfo analysisInfo) {
-    var results = new ArrayList<Result>();
+  private static Result createResult(String uri, Diagnostic diagnostic) {
+    var messageText = DiagnosticMessage.getStringValue(diagnostic.getMessage());
 
-    analysisInfo.fileinfos().forEach(fileInfo ->
-      fileInfo.getDiagnostics().stream()
-        .map(diagnostic -> createResult(fileInfo, diagnostic))
-        .collect(Collectors.toCollection(() -> results))
-    );
-
-    return results;
-  }
-
-  private static Result createResult(FileInfo fileInfo, Diagnostic diagnostic) {
-    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
-
-    var message = new Message().withText(DiagnosticMessage.getStringValue(diagnostic.getMessage()));
+    var message = new Message().withText(messageText);
     var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
     var level = severityToResultLevel.get(diagnostic.getSeverity());
     var analysisTarget = new ArtifactLocation().withUri(uri);
-    var locations = List.of(createLocation(DiagnosticMessage.getStringValue(diagnostic.getMessage()), uri, diagnostic.getRange()));
+    var locations = List.of(createLocation(messageText, uri, diagnostic.getRange()));
     var relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
       .stream()
       .flatMap(Collection::stream)
