@@ -85,8 +85,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
     final var methodSymbol = document.get()
       .getSymbolTree().getMethodSymbol(symbol.symbolName());
-    final var location = symbolOccurrence.location();
-    final var locationRange = location.getRange();
+    final var locationRange = symbolOccurrence.range();
     if (methodSymbol.isEmpty()) {
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
       return Optional.of(

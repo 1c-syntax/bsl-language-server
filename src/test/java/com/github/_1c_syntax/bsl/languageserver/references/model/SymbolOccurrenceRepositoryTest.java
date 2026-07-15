@@ -50,11 +50,7 @@ class SymbolOccurrenceRepositoryTest {
   private final SymbolOccurrenceRepository repository = new SymbolOccurrenceRepository();
 
   private static SymbolOccurrence occurrence(int line) {
-    return SymbolOccurrence.builder()
-      .occurrenceType(OccurrenceType.REFERENCE)
-      .symbol(SYMBOL)
-      .location(new Location(DOC_URI, Ranges.create(line, 0, line, 5)))
-      .build();
+    return SymbolOccurrence.of(OccurrenceType.REFERENCE, SYMBOL, DOC_URI, Ranges.create(line, 0, line, 5));
   }
 
   @Test
