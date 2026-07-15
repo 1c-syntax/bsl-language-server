@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.TextDocumentProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
@@ -159,7 +159,7 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
+public class BSLTextDocumentService implements TextDocumentService, TextDocumentProtocolExtension {
 
   private static final long AWAIT_CLOSE = 30;
   private static final long AWAIT_FORCE_TERMINATION = 1;

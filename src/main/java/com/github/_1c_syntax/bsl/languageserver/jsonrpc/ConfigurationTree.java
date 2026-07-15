@@ -21,27 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
-
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
 
 /**
- * Расширения протокола LSP для BSL Language Server.
- * <p>
- * Содержит дополнительные методы JSON-RPC, не входящие в стандартную спецификацию LSP.
+ * Ответ на запрос <code>workspace/x-configurationTree</code>.
+ * <br>
+ * Дерево конфигурации рабочей области в разрезе основной конфигурации и её расширений.
+ *
+ * @param workspaceUri  URI корня рабочей области, для которой построено дерево.
+ * @param configuration Узел основной конфигурации.
+ * @param extensions    Узлы расширений конфигурации (пустой список, если расширений нет).
  */
-public interface ProtocolExtension {
-
-  /**
-   * Запрос на вычисление диагностик для документа (расширение протокола).
-   *
-   * @param params Параметры запроса.
-   * @return Список рассчитанных диагностик.
-   */
-  @JsonRequest(
-    value = "textDocument/x-diagnostics",
-    useSegment = false
-  )
-  CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params);
-
+public record ConfigurationTree(
+  String workspaceUri,
+  MdClassNode configuration,
+  List<MdClassNode> extensions
+) {
 }

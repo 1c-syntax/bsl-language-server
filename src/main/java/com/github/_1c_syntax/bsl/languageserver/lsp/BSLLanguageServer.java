@@ -26,9 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTree;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ConfigurationTreeParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.TextDocumentProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.WorkspaceProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
@@ -123,7 +126,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
+public class BSLLanguageServer implements LanguageServer, TextDocumentProtocolExtension, WorkspaceProtocolExtension {
 
   /**
    * Glob-шаблоны файлов рабочей области, за изменениями которых наблюдает клиент.
@@ -394,6 +397,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   @Override
   public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
     return textDocumentService.diagnostics(params);
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * См. {@link BSLWorkspaceService#configurationTree(ConfigurationTreeParams)}
+   */
+  @Override
+  public CompletableFuture<ConfigurationTree> configurationTree(ConfigurationTreeParams params) {
+    return workspaceService.configurationTree(params);
   }
 
   @Override
