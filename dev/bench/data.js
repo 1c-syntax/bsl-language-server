@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784107561232,
+  "lastUpdate": 1784114518956,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40300,6 +40300,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0399895604106415",
             "extra": "mean: 100.43761555353801 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4800e23f1d25e1441dd895489a95cf2dbc40c421",
+          "message": "Merge pull request #4272 from 1c-syntax/perf/symbol-occurrence-compact\n\nperf(references): компактное хранение обращений + пакетная запись (−375 МиБ)",
+          "timestamp": "2026-07-15T12:22:38+02:00",
+          "tree_id": "c249b6986e7eb39b2da1c6602edb2c3bac6664ad",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4800e23f1d25e1441dd895489a95cf2dbc40c421"
+        },
+        "date": 1784114508866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.50281500816345,
+            "unit": "sec",
+            "range": "stddev: 1.4820857173164075",
+            "extra": "mean: 101.50281500816345 sec\nrounds: 3"
           }
         ]
       }
