@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784120397872,
+  "lastUpdate": 1784121681343,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40393,6 +40393,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.811279528266037",
             "extra": "mean: 90.77684156099956 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "308c22e956ae37f55d164c5fdedd6f24953c2c4d",
+          "message": "Merge pull request #4267 from 1c-syntax/claude/issue-4247-0meqa7\n\nfix(inlayhints): не показывать тип переменной, если имя уже несёт имя типа",
+          "timestamp": "2026-07-15T13:32:52+02:00",
+          "tree_id": "decbccc76c62694d05263e47be49df1bb1aa1993",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/308c22e956ae37f55d164c5fdedd6f24953c2c4d"
+        },
+        "date": 1784121669653,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.68694400787354,
+            "unit": "sec",
+            "range": "stddev: 1.1757467926229932",
+            "extra": "mean: 90.68694400787354 sec\nrounds: 3"
           }
         ]
       }
