@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784114518956,
+  "lastUpdate": 1784119068429,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40331,6 +40331,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4820857173164075",
             "extra": "mean: 101.50281500816345 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39757fdaf179733daa906b7c831a312bf402f4ff",
+          "message": "Merge pull request #4270 from 1c-syntax/perf/flatten-location-into-occurrence\n\nperf(references): слить Location в SymbolOccurrence (−~85 МиБ)",
+          "timestamp": "2026-07-15T13:28:27+02:00",
+          "tree_id": "897000a3d5485d00a1bcc1fefdebc9557b62e4c8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/39757fdaf179733daa906b7c831a312bf402f4ff"
+        },
+        "date": 1784119056295,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.46587459246318,
+            "unit": "sec",
+            "range": "stddev: 3.7708628947348517",
+            "extra": "mean: 101.46587459246318 sec\nrounds: 3"
           }
         ]
       }
