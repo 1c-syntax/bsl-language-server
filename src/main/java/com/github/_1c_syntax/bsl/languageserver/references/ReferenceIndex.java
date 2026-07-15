@@ -44,6 +44,8 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -181,14 +183,19 @@ public class ReferenceIndex {
     var stale = locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .collect(Collectors.toCollection(HashSet::new));
     var replacement = new LinkedHashSet<SymbolOccurrence>();
+    var newBySymbol = new HashMap<Symbol, List<SymbolOccurrence>>();
     for (var occurrence : newOccurrences) {
-      replacement.add(occurrence);
+      if (!replacement.add(occurrence)) {
+        continue; // дубликат в пачке документа — обрабатываем ровно один раз
+      }
       // Успешное удаление из stale означает, что вхождение уже есть в индексе —
-      // символьную сторону не трогаем; остаток stale после цикла подлежит удалению.
+      // недостающие группируем по символу и добавляем пачкой (одно копирование
+      // массива символа на документ вместо копирования на каждое обращение).
       if (!stale.remove(occurrence)) {
-        symbolOccurrenceRepository.save(occurrence);
+        newBySymbol.computeIfAbsent(occurrence.symbol(), symbol -> new ArrayList<>()).add(occurrence);
       }
     }
+    newBySymbol.forEach(symbolOccurrenceRepository::saveAll);
     if (!stale.isEmpty()) {
       symbolOccurrenceRepository.deleteAll(stale);
     }
