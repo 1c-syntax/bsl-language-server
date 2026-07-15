@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784119068429,
+  "lastUpdate": 1784120397872,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40362,6 +40362,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.7708628947348517",
             "extra": "mean: 101.46587459246318 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b23c99a4aa80d50cf1e8fbb74cde9d2a66781f4c",
+          "message": "Merge pull request #4275 from 1c-syntax/perf/sarif-analyze-memory\n\nperf: снизить память и время генерации SARIF (analyze) — #4248",
+          "timestamp": "2026-07-15T13:31:50+02:00",
+          "tree_id": "6e1f51fcacba60908e773ef189fc3665c79eeba9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b23c99a4aa80d50cf1e8fbb74cde9d2a66781f4c"
+        },
+        "date": 1784120387249,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.77684156099956,
+            "unit": "sec",
+            "range": "stddev: 3.811279528266037",
+            "extra": "mean: 90.77684156099956 sec\nrounds: 3"
           }
         ]
       }
