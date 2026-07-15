@@ -234,6 +234,12 @@ public class AnalyzeCommand implements Callable<Integer> {
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
+    // Документ был "заморожен" в populateContext ради переиспользования вторичных данных
+    // (сложность, метрики, данные подавления) в LSP-режиме. В пакетном анализе после
+    // построения FileInfo эти данные больше не нужны — размораживаем документ, чтобы
+    // tryClearDocument реально освободил их и они не накапливались на всю конфигурацию
+    // (см. issue #4248: рост памяти в фазе анализа до OOM).
+    documentContext.unfreezeComputedData();
     serverContext.tryClearDocument(documentContext);
 
     return fileInfo;
