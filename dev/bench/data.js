@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784061391780,
+  "lastUpdate": 1784096526386,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40238,6 +40238,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3945652885973245",
             "extra": "mean: 101.90272688865662 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6419ab17d69ae19cf814b69d7a8301335dcf90d5",
+          "message": "Merge pull request #4273 from 1c-syntax/fix/mcp-analyze-file-autumn-deadlock\n\nfix(mcp): устранить дедлок analyze_file на .os-классах Autumn",
+          "timestamp": "2026-07-15T07:59:24+02:00",
+          "tree_id": "348a8f1e471bc0e75eafff2734d09c392b927255",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6419ab17d69ae19cf814b69d7a8301335dcf90d5"
+        },
+        "date": 1784096515763,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.71196007728577,
+            "unit": "sec",
+            "range": "stddev: 2.4969471759832027",
+            "extra": "mean: 101.71196007728577 sec\nrounds: 3"
           }
         ]
       }
