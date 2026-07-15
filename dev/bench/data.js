@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784096526386,
+  "lastUpdate": 1784107561232,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40269,6 +40269,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.4969471759832027",
             "extra": "mean: 101.71196007728577 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c4fb3b710896e4d6783069a82f0823416f0d4e92",
+          "message": "Merge pull request #4274 from 1c-syntax/fix/incremental-text-change-benchmark\n\nfix(jmh): IncrementalTextChangeBenchmark в пакет lsp (чинит compileJmhJava)",
+          "timestamp": "2026-07-15T10:52:39+02:00",
+          "tree_id": "f0f44bafd5919e889a395647c3d845e167c6df9a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c4fb3b710896e4d6783069a82f0823416f0d4e92"
+        },
+        "date": 1784107549943,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 100.43761555353801,
+            "unit": "sec",
+            "range": "stddev: 1.0399895604106415",
+            "extra": "mean: 100.43761555353801 sec\nrounds: 3"
           }
         ]
       }
