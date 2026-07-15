@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784121681343,
+  "lastUpdate": 1784138351162,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40424,6 +40424,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1757467926229932",
             "extra": "mean: 90.68694400787354 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ea47125c69439003f3f8fa2bd6baad5d9369850",
+          "message": "Merge pull request #4276 from 1c-syntax/perf/symboloccurrence-short-based\n\nperf(references): компактный SymbolOccurrence через short-координаты",
+          "timestamp": "2026-07-15T19:35:29+02:00",
+          "tree_id": "25e77c88eb9dc0d3966201f09b830cd9a99eabcf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3ea47125c69439003f3f8fa2bd6baad5d9369850"
+        },
+        "date": 1784138338743,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.79980301856995,
+            "unit": "sec",
+            "range": "stddev: 2.424296279731936",
+            "extra": "mean: 91.79980301856995 sec\nrounds: 3"
           }
         ]
       }
