@@ -35,19 +35,27 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import io.modelcontextprotocol.spec.McpSchema.Root;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * Проверяет MCP-инструменты поверх общего {@code ServerContextProvider}.
@@ -96,6 +104,13 @@ class McpToolsTest {
   private GlobalMemberSearchTool globalMemberSearchTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
+  @Autowired
+  private McpDocumentReader documentReader;
+  @Autowired
+  private TypeService typeService;
+  @Autowired
+  @Qualifier("diagnosticComputerExecutor")
+  private ExecutorService diagnosticComputerExecutor;
 
   @BeforeEach
   void indexWorkspace() {
@@ -109,6 +124,46 @@ class McpToolsTest {
     assertThat(result.file()).isEqualTo(FILE);
     assertThat(result.diagnostics()).isNotNull();
     assertThat(result.diagnosticsCount()).isEqualTo(result.diagnostics().size());
+  }
+
+  @Test
+  void analyzeDoesNotDeadlockWhenActionTriggersAutumnIndexBuild() {
+    // Регресс на дедлок MCP-инструмента analyze_file на .os-классах фреймворка «ОСень».
+    // Разбор держит блокировку документа на запись, пока считаются диагностики (на отдельном пуле).
+    // Вывод типа внедрённого через ОСень бина запускает ленивую сборку Autumn-индекса, а она
+    // реентрантно берёт блокировку того же документа на чтение — под чужой записью это вечный дедлок.
+    // Кросс-поточность обязательна: на потоке-владельце записи то же чтение переиспользовало бы
+    // блокировку и баг бы не проявился. Пул берём тот же, чтобы пробросить контекст рабочего пространства.
+    var autumnDir = "src/test/resources/mcp/autumn-deadlock";
+    var autumnFile = autumnDir + "/src/Приложение.os";
+    workspaceBootstrap.index(Absolute.path(autumnDir));
+
+    var types = assertTimeoutPreemptively(Duration.ofSeconds(60),
+      () -> documentReader.analyze(autumnFile, document -> {
+        var lines = document.getContentList();
+        var line = -1;
+        for (var i = 0; i < lines.length; i++) {
+          if (lines[i].contains("Возврат Логгер")) {
+            line = i;
+          }
+        }
+        assertThat(line).as("строка с обращением к внедрённому бину не найдена в фикстуре").isNotEqualTo(-1);
+        var position = new Position(line, lines[line].indexOf("Логгер") + 1);
+        try {
+          return diagnosticComputerExecutor
+            .submit(() -> typeService.expressionTypesAt(document, position))
+            .get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException(e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException(e);
+        }
+      }));
+
+    // Проверяем не только отсутствие дедлока, но и что вывод типа реально дошёл до Autumn-резолва:
+    // получатель `Логгер` резолвится в одноимённый желудь (иначе цепочка до сборки индекса не дошла бы).
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName).contains("Логгер");
   }
 
   @Test
