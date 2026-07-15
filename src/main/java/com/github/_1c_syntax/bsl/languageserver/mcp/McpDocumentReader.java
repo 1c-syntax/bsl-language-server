@@ -30,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.net.URI;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
 
 /**
@@ -108,18 +110,50 @@ public class McpDocumentReader {
     }
 
     // Нужна сборка: новый документ либо инструмент, которому требуется свежий AST.
+    return buildAndAnalyze(serverContext, lock, uri, action);
+  }
+
+  // AST строим и освобождаем под writeLock, но само действие выполняем под readLock: диагностики и
+  // ленивые индексы (например, Autumn) реентрантно читают документы через ServerContext.getDocument
+  // (readLock). Под writeLock того же документа это приводило к дедлоку, когда рабочий поток
+  // диагностики читал сам анализируемый файл. Ветка read-доступа в access даёт ту же гарантию.
+  private static <T> T buildAndAnalyze(ServerContext serverContext, ReadWriteLock lock, URI uri,
+                                       Function<DocumentContext, T> action) {
     lock.writeLock().lock();
+    var writeHeld = true;
     try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
       var documentContext = serverContext.addDocument(uri);
       serverContext.rebuildDocument(documentContext);
+
+      // Понижение блокировки: берём readLock, не отпуская writeLock (без окна), затем
+      // отпускаем writeLock — свежий AST не может быть очищен другим потоком до чтения.
+      lock.readLock().lock();
+      lock.writeLock().unlock();
+      writeHeld = false;
       try {
         return action.apply(documentContext);
       } finally {
-        // Освобождаем AST, построенный под этот запрос, чтобы память не росла без границ
-        // (как в AnalyzeCommand). tryClearDocument пропускает документы, открытые в редакторе,
-        // поэтому live-буферы LSP не затрагиваются; глобальный индекс ссылок переживает очистку.
-        serverContext.tryClearDocument(documentContext);
+        lock.readLock().unlock();
+        clearDocumentQuietly(serverContext, lock, documentContext);
       }
+    } finally {
+      // Страховка: writeLock ещё держится, если addDocument/rebuildDocument бросили до понижения.
+      if (writeHeld) {
+        lock.writeLock().unlock();
+      }
+    }
+  }
+
+  // Освобождаем AST, построенный под этот запрос, чтобы память не росла без границ (как в
+  // AnalyzeCommand). Между отпусканием readLock вызывающей стороной и этим захватом writeLock есть
+  // краткое окно, но очистка — best-effort управление памятью (tryClearDocument пропускает открытые
+  // в редакторе документы, live-буферы LSP не затрагиваются, глобальный индекс ссылок переживает
+  // очистку), поэтому гонка безвредна.
+  private static void clearDocumentQuietly(ServerContext serverContext, ReadWriteLock lock,
+                                           DocumentContext documentContext) {
+    lock.writeLock().lock();
+    try {
+      serverContext.tryClearDocument(documentContext);
     } finally {
       lock.writeLock().unlock();
     }
