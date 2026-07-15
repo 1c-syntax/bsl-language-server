@@ -234,6 +234,15 @@ public class AnalyzeCommand implements Callable<Integer> {
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
+    // Документ заморожен в populateContext: между populate и вычислением диагностик файл не
+    // меняется, поэтому заморозка бережёт уже построенные ленивые данные от очистки/пересчёта
+    // (флаг влияет только на очистку). Здесь все чтения (getDiagnostics/getMetrics/getMdoRef)
+    // уже выполнены и захвачены в FileInfo, документ дальше не используется — размораживаем
+    // ПЕРЕД финальной очисткой, чтобы tryClearDocument освободил вторичные данные
+    // (сложность/метрики/подавления), а не держал их на всю конфигурацию (см. issue #4248).
+    // Саму заморозку это не отменяет: разморозка только на финальном clear, оптимизация
+    // populate -> diagnostics не затрагивается.
+    documentContext.unfreezeComputedData();
     serverContext.tryClearDocument(documentContext);
 
     return fileInfo;
