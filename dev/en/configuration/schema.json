@@ -680,6 +680,14 @@
                         "object"
                     ],
                     "title": "Show inferred type of variables in assignments as inlay hints.",
+                    "properties": {
+                        "showTypeWithTheSameName": {
+                            "description": "Show type hints when the variable name already contains the inferred type name.",
+                            "default": false,
+                            "type": "boolean",
+                            "title": "Show type hints when the variable name already contains the type name."
+                        }
+                    },
                     "$id": "#/definitions/inlayHintParameters/variableType"
                 },
                 "methodCall": {
