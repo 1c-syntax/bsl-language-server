@@ -88,11 +88,8 @@ class JsonReporterTest {
   }
 
   @Test
-  void metricCalculationRequired() {
-    // given
-    JsonReporter reporter = new JsonReporter();
-
-    // when-then
-    Assertions.assertThat(reporter.isMetricCalculationRequired()).isTrue();
+  void requiresMetricCalculation() {
+    // json сериализует FileInfo.metrics в отчёт
+    Assertions.assertThat(new JsonReporter().isMetricCalculationRequired()).isTrue();
   }
 }

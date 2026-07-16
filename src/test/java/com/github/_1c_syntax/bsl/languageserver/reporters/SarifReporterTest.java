@@ -155,4 +155,9 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
 
   }
 
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(reporter.isMetricCalculationRequired()).isFalse();
+  }
+
 }

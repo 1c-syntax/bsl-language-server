@@ -95,12 +95,8 @@ class TSLintReporterTest {
   }
 
   @Test
-  void metricCalculationNotRequiredByDefault() {
-    // given
-    TSLintReporter reporter = new TSLintReporter();
-
-    // when-then
+  void doesNotRequireMetricCalculation() {
     // tslint не переопределяет флаг — используется значение по умолчанию из интерфейса
-    assertThat(reporter.isMetricCalculationRequired()).isFalse();
+    assertThat(new TSLintReporter().isMetricCalculationRequired()).isFalse();
   }
 }
