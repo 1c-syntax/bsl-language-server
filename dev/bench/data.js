@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784138351162,
+  "lastUpdate": 1784180145549,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40455,6 +40455,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.424296279731936",
             "extra": "mean: 91.79980301856995 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ef1aaeffed498f8879616c9b647a7867e5bbd90a",
+          "message": "Merge pull request #4277 from 1c-syntax/build/bump-mdclasses-0.20.0\n\nbuild(deps): bump mdclasses to 0.20.0 (+ Solution v2 API adaptation)",
+          "timestamp": "2026-07-16T07:23:39+02:00",
+          "tree_id": "ef99f6e3cd4e1579399c9e655c7d14c92ddcf97e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ef1aaeffed498f8879616c9b647a7867e5bbd90a"
+        },
+        "date": 1784180133911,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.7127115726471,
+            "unit": "sec",
+            "range": "stddev: 2.2603885382185402",
+            "extra": "mean: 90.7127115726471 sec\nrounds: 3"
           }
         ]
       }
