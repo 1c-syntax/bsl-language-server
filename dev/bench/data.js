@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784180145549,
+  "lastUpdate": 1784201968478,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40486,6 +40486,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.2603885382185402",
             "extra": "mean: 90.7127115726471 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "70f73aa63da98850fb4574333f28c279d7006f79",
+          "message": "Merge pull request #4278 from 1c-syntax/claude/reporter-metric-calculation-fldux6\n\nperf(reporters): вычислять метрики документов только при необходимости",
+          "timestamp": "2026-07-16T13:17:22+02:00",
+          "tree_id": "02fd232507fc9b8874562fa93a3c43c9c29a9967",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/70f73aa63da98850fb4574333f28c279d7006f79"
+        },
+        "date": 1784201956175,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.78232391675313,
+            "unit": "sec",
+            "range": "stddev: 2.131847974546551",
+            "extra": "mean: 92.78232391675313 sec\nrounds: 3"
           }
         ]
       }
