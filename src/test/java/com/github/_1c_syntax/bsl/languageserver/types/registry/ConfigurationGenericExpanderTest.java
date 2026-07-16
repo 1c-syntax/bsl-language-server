@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -76,7 +77,8 @@ class ConfigurationGenericExpanderTest {
       var configuration = Mockito.mock(Configuration.class);
       Mockito.when(configuration.isEmpty()).thenReturn(true);
       var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var registry = new TypeRegistry(List.of(),

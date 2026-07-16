@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.mdo.children.ObjectTabularSection;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.MD;
 import org.junit.jupiter.api.AfterEach;
@@ -109,7 +110,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.getChildrenByMdoRef()).thenReturn(Map.of(document.getMdoReference(), document));
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var workspaceUri = TEST_WORKSPACE;
     var serverProvider = Mockito.mock(ServerContextProvider.class);
@@ -234,7 +236,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.getChildrenByMdoRef()).thenReturn(Map.of(document.getMdoReference(), document));
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
@@ -313,7 +316,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.getChildrenByMdoRef()).thenReturn(Map.of(document.getMdoReference(), document));
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
@@ -352,7 +356,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.getChildrenByMdoRef()).thenReturn(Map.of(document.getMdoReference(), document));
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
@@ -386,7 +391,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.getChildrenByMdoRef()).thenReturn(Map.of(document.getMdoReference(), document));
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
@@ -416,7 +422,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.getChildrenByMdoRef()).thenReturn(Map.of());
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
@@ -439,7 +446,8 @@ class MetadataCollectionSpecializerUnitTest {
     when(configuration.isEmpty()).thenReturn(true);
 
     var serverContext = Mockito.mock(ServerContext.class);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var workspaceUri = TEST_WORKSPACE;
     var serverProvider = Mockito.mock(ServerContextProvider.class);

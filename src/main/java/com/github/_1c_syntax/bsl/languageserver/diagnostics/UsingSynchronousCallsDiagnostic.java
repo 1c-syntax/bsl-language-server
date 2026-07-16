@@ -129,7 +129,7 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    var configuration = documentContext.getServerContext().getConfiguration();
+    var configuration = documentContext.getServerContext().getConfiguration().getMergedConfiguration();
     // если использование синхронных вызовов разрешено (без предупреждения), то
     // ничего не диагностируется
     if (configuration instanceof Configuration cf && cf.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
