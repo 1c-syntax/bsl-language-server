@@ -25,7 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.mdclasses.CF;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import org.junit.jupiter.api.Test;
 
@@ -146,9 +147,10 @@ class PlatformMemberVersionsTest {
     when(config.getV8PlatformOptions()).thenReturn(v8opts);
     when(v8opts.getTargetVersion()).thenReturn("");
     var serverContext = mock(ServerContext.class);
-    var mdConfig = mock(CF.class);
+    var mdConfig = mock(Configuration.class);
     when(doc.getServerContext()).thenReturn(serverContext);
-    when(serverContext.getConfiguration()).thenReturn(mdConfig);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(mdConfig).build());
     var configMode = new CompatibilityMode("8.3.14");
     when(mdConfig.getCompatibilityMode()).thenReturn(configMode);
 

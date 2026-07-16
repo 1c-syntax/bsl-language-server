@@ -26,9 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
-import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -105,7 +105,7 @@ public class ServerContext {
   private URI workspaceUri;
 
   private final Map<URI, DocumentContext> documents = new ConcurrentHashMap<>();
-  private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Lazy<Solution> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @Nullable
   @Setter
   @Getter
@@ -448,7 +448,7 @@ public class ServerContext {
     documentContext.clearSecondaryData();
   }
 
-  public CF getConfiguration() {
+  public Solution getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
@@ -479,24 +479,24 @@ public class ServerContext {
     return documentContext;
   }
 
-  private CF computeConfigurationMetadata() {
+  private Solution computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return (CF) MDClasses.createConfiguration();
+      return Solution.EMPTY;
     }
 
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    CF configuration;
+    Solution configuration;
     try {
-      configuration = (CF) computeConfigurationExecutor.submit(
+      configuration = computeConfigurationExecutor.submit(
         () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
-      configuration = (CF) MDClasses.createConfiguration();
+      configuration = Solution.EMPTY;
     } catch (InterruptedException e) {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
-      configuration = (CF) MDClasses.createConfiguration();
+      configuration = Solution.EMPTY;
       Thread.currentThread().interrupt();
     }
 
