@@ -443,8 +443,9 @@ public class TypeRegistry {
    * @param fileType язык, в котором он виден без префикса.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
-    globalPropertyTypes.get(fileType).add(ref);
-    membersEpoch.incrementAndGet();
+    if (globalPropertyTypes.get(fileType).add(ref)) {
+      membersEpoch.incrementAndGet();
+    }
   }
 
   /**
@@ -456,9 +457,13 @@ public class TypeRegistry {
    * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    globalPropertyTypes.get(fileType).add(ref);
     globalPropertySymbols.put(ref, new WeakReference<>(declaration));
-    membersEpoch.incrementAndGet();
+    if (globalPropertyTypes.get(fileType).add(ref)) {
+      membersEpoch.incrementAndGet();
+    }
+    // Повторная пометка (правка уже зарегистрированного модуля) обновляет только
+    // symbol-источник; инвалидацию memo GLOBAL_CONTEXT-члена и name-индекса, куда
+    // символ уже вошёл, выполняет вызывающий провайдер точечно.
   }
 
   /**
@@ -571,14 +576,39 @@ public class TypeRegistry {
   }
 
   /**
-   * Сбросить memo {@link #getMembers}. Member-source'ы конфигурационных модулей и
-   * OScript-библиотек лениво читают символьное дерево документа и меняют вывод при
-   * правке без ре-регистрации источника — поэтому при любом изменении содержимого
-   * документа memo надо инвалидировать.
+   * Сбросить memo {@link #getMembers} на изменение содержимого OScript-документа.
+   * <p>
+   * Member-source'ы лениво читают символьное дерево документа и меняют вывод при
+   * правке без ре-регистрации источника, поэтому memo надо инвалидировать. Для
+   * OScript инвалидация широкая (эпоха), потому что типы связаны межфайловым
+   * наследованием ({@code &Расширяет}): правка родителя меняет унаследованные
+   * члены наследника в другом документе. Для BSL member-source конфигурационного
+   * модуля самодостаточен в пределах документа — там инвалидация точечная, по
+   * затронутому типу (см. {@code ConfigurationModuleMembersProvider}), поэтому
+   * глобальную эпоху на BSL-правках не дёргаем (иначе на пакетном анализе каждый
+   * {@code rebuildDocument} сносил бы memo всех типов).
+   *
+   * @param event событие изменения содержимого документа.
    */
   @EventListener
   public void invalidateMembersCache(DocumentContextContentChangedEvent event) {
-    membersEpoch.incrementAndGet();
+    if (event.getSource().getFileType() == FileType.OS) {
+      membersEpoch.incrementAndGet();
+    }
+  }
+
+  /**
+   * Точечно сбросить memo {@link #getMembers} для одного типа во всех языках —
+   * без сдвига глобальной эпохи (кэши прочих типов остаются валидными).
+   * Применяется при правке содержимого документа, чьи member-source'ы читают
+   * только этот тип (BSL-модуль как источник членов своего типа-обёртки).
+   *
+   * @param ref тип, memo членов которого нужно пересобрать.
+   */
+  public void invalidateMembers(TypeRef ref) {
+    for (var fileType : FileType.values()) {
+      membersCache.remove(new MembersKey(ref, fileType));
+    }
   }
 
   /**
