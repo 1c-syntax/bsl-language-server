@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
@@ -86,6 +87,13 @@ class ReportersAggregatorTest {
     // then
     // FIXME How test logger?
     // assertThat(outContent.toString()).containsIgnoringCase("Analysis date: ");
+  }
+
+  @Test
+  void metricCalculationNotRequiredForConsoleReporter() {
+    // given filteredReporters = [console] (see Configuration below)
+    // when-then
+    Assertions.assertThat(aggregator.isMetricCalculationRequired()).isFalse();
   }
 
   @TestConfiguration

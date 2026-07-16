@@ -46,4 +46,17 @@ public interface DiagnosticReporter {
    * @param outputDir Директория для сохранения отчета
    */
   void report(AnalysisInfo analysisInfo, Path outputDir);
+
+  /**
+   * Признак того, что репортеру для формирования отчета необходимы метрики документов.
+   * <p>
+   * Значение по умолчанию — {@code false}. Переопределяется в {@code true} только теми
+   * репортерами, которые действительно сохраняют метрики в отчет. Это позволяет пропустить
+   * вычисление метрик, если ни один из активных репортеров их не использует.
+   *
+   * @return {@code true}, если репортеру нужны метрики документов, иначе {@code false}
+   */
+  default boolean isMetricCalculationRequired() {
+    return false;
+  }
 }

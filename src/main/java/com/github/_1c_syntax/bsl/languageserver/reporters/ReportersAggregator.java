@@ -62,6 +62,19 @@ public class ReportersAggregator {
   }
 
   /**
+   * Определить, требуется ли вычисление метрик документов для активных репортеров.
+   * <p>
+   * Возвращает {@code true}, если хотя бы один из активных (отфильтрованных по опции
+   * {@code --reporter}) репортеров заявляет о необходимости метрик. Позволяет вызывающей
+   * стороне пропустить вычисление метрик, когда ни один отчет их не использует.
+   *
+   * @return {@code true}, если хотя бы одному активному репортеру нужны метрики
+   */
+  public boolean isMetricCalculationRequired() {
+    return filteredReporters.stream().anyMatch(DiagnosticReporter::isMetricCalculationRequired);
+  }
+
+  /**
    * Получить список ключей всех доступных репортеров.
    *
    * @return Список ключей репортеров
