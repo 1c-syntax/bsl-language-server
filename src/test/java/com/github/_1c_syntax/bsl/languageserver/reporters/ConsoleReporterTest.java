@@ -38,6 +38,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
 class ConsoleReporterTest {
 
@@ -81,5 +83,11 @@ class ConsoleReporterTest {
     // FIXME How test logger?
     // assertThat(outContent.toString()).containsIgnoringCase("Analysis date: ");
 
+  }
+
+  @Test
+  void requiresMetricCalculation() {
+    // console печатает FileInfo целиком (включая метрики) в вывод
+    assertThat(new ConsoleReporter().isMetricCalculationRequired()).isTrue();
   }
 }

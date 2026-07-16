@@ -93,4 +93,10 @@ class TSLintReporterTest {
     assertThat(report).hasSize(1);
 
   }
+
+  @Test
+  void doesNotRequireMetricCalculation() {
+    // tslint не переопределяет флаг — используется значение по умолчанию из интерфейса
+    assertThat(new TSLintReporter().isMetricCalculationRequired()).isFalse();
+  }
 }

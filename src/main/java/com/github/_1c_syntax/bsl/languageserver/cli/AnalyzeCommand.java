@@ -182,11 +182,15 @@ public class AnalyzeCommand implements Callable<Integer> {
 
       serverContext.populateContext(files);
 
+      // Метрики вычисляются лениво и стоят дорого. Считаем их только если хотя бы одному
+      // активному репортеру они действительно нужны (см. ReportersAggregator).
+      var metricCalculationRequired = aggregator.isMetricCalculationRequired();
+
       List<FileInfo> fileInfos;
       if (silentMode) {
         fileInfos = cliExecutor.submit(() ->
           files.parallelStream()
-            .map((File file) -> getFileInfoFromFile(workspaceDir, file))
+            .map((File file) -> getFileInfoFromFile(workspaceDir, file, metricCalculationRequired))
             .toList()
         ).get();
       } else {
@@ -199,7 +203,7 @@ public class AnalyzeCommand implements Callable<Integer> {
             files.parallelStream()
               .map((File file) -> {
                 pb.step();
-                return getFileInfoFromFile(workspaceDir, file);
+                return getFileInfoFromFile(workspaceDir, file, metricCalculationRequired);
               })
               .toList()
           ).get();
@@ -222,13 +226,13 @@ public class AnalyzeCommand implements Callable<Integer> {
     return reportersOptions.clone();
   }
 
-  private FileInfo getFileInfoFromFile(Path srcDir, File file) {
+  private FileInfo getFileInfoFromFile(Path srcDir, File file, boolean metricCalculationRequired) {
     var documentContext = serverContext.addDocument(Absolute.uri(file));
     serverContext.rebuildDocument(documentContext);
 
     var filePath = srcDir.relativize(Absolute.path(file));
     var diagnostics = documentContext.getDiagnostics();
-    var metrics = documentContext.getMetrics();
+    var metrics = metricCalculationRequired ? documentContext.getMetrics() : null;
     var mdoRef = documentContext.getMdoRef();
 
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
@@ -236,8 +240,9 @@ public class AnalyzeCommand implements Callable<Integer> {
     // clean up AST after diagnostic computing to free up RAM.
     // Документ заморожен в populateContext: между populate и вычислением диагностик файл не
     // меняется, поэтому заморозка бережёт уже построенные ленивые данные от очистки/пересчёта
-    // (флаг влияет только на очистку). Здесь все чтения (getDiagnostics/getMetrics/getMdoRef)
-    // уже выполнены и захвачены в FileInfo, документ дальше не используется — размораживаем
+    // (флаг влияет только на очистку). Здесь все нужные чтения (getDiagnostics, getMdoRef и,
+    // при необходимости, getMetrics) уже выполнены и захвачены в FileInfo, документ дальше не
+    // используется — размораживаем
     // ПЕРЕД финальной очисткой, чтобы tryClearDocument освободил вторичные данные
     // (сложность/метрики/подавления), а не держал их на всю конфигурацию (см. issue #4248).
     // Саму заморозку это не отменяет: разморозка только на финальном clear, оптимизация

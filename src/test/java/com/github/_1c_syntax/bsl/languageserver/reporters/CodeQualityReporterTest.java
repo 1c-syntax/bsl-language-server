@@ -100,4 +100,9 @@ class CodeQualityReporterTest extends AbstractServerContextAwareTest {
     assertThat(report).hasSize(1);
 
   }
+
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(reporter.isMetricCalculationRequired()).isFalse();
+  }
 }

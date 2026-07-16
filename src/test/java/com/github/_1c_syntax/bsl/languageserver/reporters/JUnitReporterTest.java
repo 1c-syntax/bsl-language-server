@@ -108,4 +108,9 @@ class JUnitReporterTest {
     assertThat(report).isNotNull();
 
   }
+
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(new JUnitReporter().isMetricCalculationRequired()).isFalse();
+  }
 }

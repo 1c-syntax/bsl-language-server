@@ -21,6 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
+import com.github._1c_syntax.bsl.languageserver.reporters.JsonReporter;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -32,6 +37,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,6 +51,9 @@ class AnalyzeCommandTest {
 
   @Autowired
   private AnalyzeCommand analyzeCommand;
+
+  @Autowired
+  private ReportersAggregator aggregator;
 
   @TempDir
   Path tempDir;
@@ -118,6 +128,72 @@ class AnalyzeCommandTest {
 
     // then
     assertThat(exitCode).isZero();
+  }
+
+  /** Активен репортер, требующий метрики (json) — метрики вычисляются для каждого файла. */
+  @Test
+  void metricsComputedWhenActiveReporterRequiresThem() {
+    // given: capturing (метрики не нужны) + json (метрики нужны) -> агрегатор требует метрики
+    var capturingReporter = new CapturingReporter();
+    prepareAnalysis(capturingReporter, new JsonReporter());
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+    assertThat(capturingReporter.captured())
+      .isNotEmpty()
+      .allSatisfy(fileInfo -> assertThat(fileInfo.getMetrics()).isNotNull());
+  }
+
+  /** Активен только репортер, не требующий метрики — вычисление метрик пропускается. */
+  @Test
+  void metricsSkippedWhenNoActiveReporterRequiresThem() {
+    // given: только capturing (метрики не нужны)
+    var capturingReporter = new CapturingReporter();
+    prepareAnalysis(capturingReporter);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+    assertThat(capturingReporter.captured())
+      .isNotEmpty()
+      .allSatisfy(fileInfo -> assertThat(fileInfo.getMetrics()).isNull());
+  }
+
+  private void prepareAnalysis(DiagnosticReporter... activeReporters) {
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+    // Бин filteredReporters ленивый и в тесте резолвится один раз, поэтому набор активных
+    // репортеров задаём агрегатору напрямую — детерминированно для каждого сценария.
+    ReflectionTestUtils.setField(aggregator, "filteredReporters", List.of(activeReporters));
+  }
+
+  /** Тестовый репортер: не требует метрик и сохраняет полученные {@link FileInfo} для проверок. */
+  private static class CapturingReporter implements DiagnosticReporter {
+
+    private final List<FileInfo> captured = new CopyOnWriteArrayList<>();
+
+    @Override
+    public String key() {
+      return "capturing";
+    }
+
+    @Override
+    public void report(AnalysisInfo analysisInfo, Path outputDir) {
+      captured.clear();
+      captured.addAll(analysisInfo.fileinfos());
+    }
+
+    List<FileInfo> captured() {
+      return captured;
+    }
   }
 
   /** Возвращает абсолютный путь к тестовому конфигу с {@code excludePaths}. */
