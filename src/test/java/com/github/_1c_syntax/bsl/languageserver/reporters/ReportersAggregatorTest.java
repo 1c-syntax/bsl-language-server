@@ -90,10 +90,10 @@ class ReportersAggregatorTest {
   }
 
   @Test
-  void metricCalculationNotRequiredForConsoleReporter() {
-    // given filteredReporters = [console] (see Configuration below)
+  void metricCalculationRequiredForConsoleReporter() {
+    // given filteredReporters = [console] (see Configuration below); console требует метрики
     // when-then
-    Assertions.assertThat(aggregator.isMetricCalculationRequired()).isFalse();
+    Assertions.assertThat(aggregator.isMetricCalculationRequired()).isTrue();
   }
 
   @TestConfiguration

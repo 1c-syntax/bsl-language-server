@@ -85,11 +85,12 @@ class ConsoleReporterTest {
   }
 
   @Test
-  void metricCalculationNotRequiredByDefault() {
+  void metricCalculationRequired() {
     // given
     ConsoleReporter reporter = new ConsoleReporter();
 
     // when-then
-    Assertions.assertThat(reporter.isMetricCalculationRequired()).isFalse();
+    // console печатает FileInfo целиком (включая метрики) в лог, поэтому метрики нужны
+    Assertions.assertThat(reporter.isMetricCalculationRequired()).isTrue();
   }
 }
