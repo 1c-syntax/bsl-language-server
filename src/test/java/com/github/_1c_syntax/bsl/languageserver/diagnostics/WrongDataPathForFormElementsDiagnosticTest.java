@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.Form;
@@ -28,7 +29,6 @@ import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -39,7 +39,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-@DirtiesContext
+@CleanupContextBeforeClassAndAfterClass
 class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<WrongDataPathForFormElementsDiagnostic> {
 
   public static final String PATH_TO_ELEMENT_MODULE_FILE = "/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl";

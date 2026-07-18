@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
-@DirtiesContext
+@CleanupContextBeforeClassAndAfterClass
 class MissingEventSubscriptionHandlerDiagnosticTest extends AbstractDiagnosticTest<MissingEventSubscriptionHandlerDiagnostic> {
   MissingEventSubscriptionHandlerDiagnosticTest() {
     super(MissingEventSubscriptionHandlerDiagnostic.class);
