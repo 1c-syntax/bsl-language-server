@@ -172,7 +172,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // test utils
-    testImplementation("com.github.hazendaz.jmockit:jmockit:2.2.0")
+    testImplementation("com.github.hazendaz.jmockit:jmockit:2.3.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
