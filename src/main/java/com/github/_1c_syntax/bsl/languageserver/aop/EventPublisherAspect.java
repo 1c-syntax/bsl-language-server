@@ -241,17 +241,41 @@ public class EventPublisherAspect {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;
     }
-    // Если установлен workspace-контекст, событие принадлежит конкретному
-    // workspace и должно идти только в Spring-контекст-владельца этого workspace.
+    var serverContext = extractServerContext(event);
+    var workspaceUri = serverContext == null ? null : serverContext.getWorkspaceUri();
+    if (workspaceUri == null || WorkspaceContextHolder.get() != null) {
+      dispatchEvent(contexts, serverContext, event);
+      return;
+    }
+    // На текущем потоке workspace-контекст не установлен (например, didClose приходит
+    // с потока LSP4J без WorkspaceContextHolder) — восполняем его из workspace источника
+    // события на время рассылки, иначе workspace-scoped @EventListener-бины (индексы
+    // ссылок/типов и т.п.) падают ScopeNotActiveException и теряют событие. Уже
+    // установленный контекст не переопределяем: вызывающий код (и тестовая
+    // инфраструктура) выставляет его осознанно.
+    WorkspaceContextHolder.run(
+      workspaceUri,
+      WorkspaceContextHolder.nameForUri(workspaceUri),
+      () -> dispatchEvent(contexts, serverContext, event)
+    );
+  }
+
+  private void dispatchEvent(
+    ApplicationContext[] contexts,
+    @Nullable ServerContext serverContext,
+    ApplicationEvent event
+  ) {
+    // Если определяется владелец, событие принадлежит конкретному workspace и должно
+    // идти только в Spring-контекст-владельца этого workspace.
     // В тестах это критично: несколько Spring-контекстов с разными @SpringBootTest-
     // конфигурациями висят в TestContext-кэше и зарегистрированы в JVM-singleton
     // аспекте. Если рассылать во ВСЕ, listener'ы non-owning контекстов создают
     // workspace-scoped beans под текущий WSCH-URI и затрагивают чужое состояние —
     // в боевом сценарии это маловероятно (один LS = один контекст), но в тестах
-    // ломает соседние тест-классы. Когда WSCH не установлен (глобальные события
+    // ломает соседние тест-классы. Когда владелец не определяется (глобальные события
     // вроде {@link GlobalLanguageServerConfigurationChangedEvent} или Initialize),
     // рассылаем во все — у них нет workspace-привязки.
-    var owner = findOwningContext(contexts, event);
+    var owner = findOwningContext(contexts, serverContext);
     if (owner != null) {
       try {
         owner.publishEvent(event);
@@ -278,9 +302,8 @@ public class EventPublisherAspect {
    * если владелец не определяется (тогда вызывающий рассылает во все контексты).
    */
   private static @Nullable ApplicationContext findOwningContext(
-    ApplicationContext[] contexts, ApplicationEvent event
+    ApplicationContext[] contexts, @Nullable ServerContext serverContext
   ) {
-    var serverContext = extractServerContext(event);
     if (serverContext != null) {
       for (var ctx : contexts) {
         try {

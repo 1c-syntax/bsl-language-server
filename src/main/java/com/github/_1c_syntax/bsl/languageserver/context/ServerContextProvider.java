@@ -134,7 +134,7 @@ public class ServerContextProvider {
 
     var rootPath = Absolute.path(workspaceUri);
 
-    var name = workspaceName != null ? workspaceName : extractWorkspaceName(workspaceUri);
+    var name = workspaceName != null ? workspaceName : WorkspaceContextHolder.nameForUri(workspaceUri);
     WorkspaceContextHolder.registerWorkspace(workspaceUri, name);
 
     // Set workspace context for scoped bean resolution
@@ -219,7 +219,7 @@ public class ServerContextProvider {
     // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
     // (для async-propagated workspace'ов запись там может отсутствовать).
     if (serverContext != null) {
-      var name = extractWorkspaceName(uri);
+      var name = WorkspaceContextHolder.nameForUri(uri);
       try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
         serverContext.clear();
       }
@@ -461,18 +461,6 @@ public class ServerContextProvider {
           ? DEFAULT_WORKSPACE_URI : null
       );
     primaryWorkspaceUri.set(next);
-  }
-
-  private static String extractWorkspaceName(URI workspaceUri) {
-    var path = workspaceUri.getPath();
-    if (path == null) {
-      return workspaceUri.toString();
-    }
-    while (path.endsWith("/")) {
-      path = path.substring(0, path.length() - 1);
-    }
-    var lastSlash = path.lastIndexOf('/');
-    return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
   }
 
 }

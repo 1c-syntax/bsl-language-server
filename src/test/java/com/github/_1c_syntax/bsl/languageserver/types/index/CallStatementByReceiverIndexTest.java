@@ -26,8 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -90,6 +92,40 @@ class CallStatementByReceiverIndexTest extends AbstractServerContextAwareTest {
 
     // then — оба вызова сгруппированы под одним ресивером.
     assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(2);
+  }
+
+  @Test
+  void clearsOnCloseFromThreadWithoutWorkspaceContext() throws InterruptedException {
+    // given — документ с ресивером ТЗ; запросы к индексу идут в workspace документа.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          ТЗ.Колонки.Добавить("Имя");
+      КонецПроцедуры
+      """);
+    var uri = documentContext.getUri();
+    var serverContext = documentContext.getServerContext();
+    WorkspaceContextHolder.set(serverContext.getWorkspaceUri());
+
+    assertThat(index.byReceiver(uri, documentContext.getAst(), "ТЗ")).hasSize(1);
+
+    // второй документ без ТЗ — его AST играет роль «свежего» дерева первого после закрытия.
+    var otherUri = Absolute.path("src/test/resources/empty-workspace/fake-uri-other.bsl").toUri();
+    var otherDocument = TestUtils.getDocumentContext(otherUri, """
+      Процедура Тест()
+          Сообщить("без ресивера");
+      КонецПроцедуры
+      """, serverContext);
+    var freshAst = otherDocument.getAst();
+
+    // when — документ закрывается с потока без workspace-контекста
+    // (так textDocument/didClose приходит с потока LSP4J).
+    var closer = new Thread(() -> serverContext.closeDocument(documentContext));
+    closer.start();
+    closer.join();
+
+    // then — событие закрытия дошло до workspace-scoped слушателя: индекс по URI сброшен
+    // и пересобирается по переданному AST, а не отдаёт узлы старого дерева.
+    assertThat(index.byReceiver(uri, freshAst, "ТЗ")).isEmpty();
   }
 
   private void assertAllReceivers(URI uri, BSLParser.FileContext ast) {

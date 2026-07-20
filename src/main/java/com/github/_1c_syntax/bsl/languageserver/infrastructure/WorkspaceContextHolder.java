@@ -83,6 +83,34 @@ public final class WorkspaceContextHolder {
   }
 
   /**
+   * Имя workspace для URI: зарегистрированное через {@link #registerWorkspace(URI, String)},
+   * а если workspace не зарегистрирован — последний сегмент пути URI.
+   * <p>
+   * В отличие от {@link #set(URI)} не требует предварительной регистрации, поэтому
+   * подходит для установки контекста на «чужих» потоках (async-propagated workspace'ы
+   * могут отсутствовать в реестре имён).
+   *
+   * @param workspaceUri URI workspace
+   * @return имя workspace
+   */
+  public static String nameForUri(URI workspaceUri) {
+    var name = WORKSPACE_NAMES.get(workspaceUri);
+    return name != null ? name : deriveNameFromUri(workspaceUri);
+  }
+
+  private static String deriveNameFromUri(URI workspaceUri) {
+    var path = workspaceUri.getPath();
+    if (path == null) {
+      return workspaceUri.toString();
+    }
+    while (path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
+    }
+    var lastSlash = path.lastIndexOf('/');
+    return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+  }
+
+  /**
    * Создать AutoCloseable-контекст workspace с URI и именем.
    * При закрытии восстанавливает предыдущее значение ThreadLocal.
    */
