@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -180,6 +181,29 @@ class EventHandlerResolverTest {
 
     assertThat(resolver.lookupContract(doc, "ОбработкаКоманды")).isPresent();
     assertThat(resolver.lookupContract(doc, "ЧтоТоЕщё")).isEmpty();
+  }
+
+  @Test
+  void ownerTypeEventResolvesByEnglishAliasNotJustRuPrimaryName() {
+    var objectRef = new TypeRef(TypeKind.CONFIGURATION, "ДокументОбъект.Заказ");
+    Mockito.when(typeRegistry.resolve("ДокументОбъект.Заказ")).thenReturn(Optional.of(objectRef));
+    var eventDescriptor = MemberDescriptor.event(
+        "ПередЗаписью", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))
+      .withBilingualName(BilingualString.of("ПередЗаписью", "BeforeWrite"));
+    Mockito.when(typeRegistry.getMembers(Mockito.eq(objectRef), Mockito.any()))
+      .thenReturn(List.of(eventDescriptor));
+
+    var document = com.github._1c_syntax.bsl.mdo.Document.builder().name("Заказ").build();
+    var doc = Mockito.mock(DocumentContext.class);
+    Mockito.when(doc.getModuleType()).thenReturn(ModuleType.ObjectModule);
+    Mockito.when(doc.getMdObject()).thenReturn(Optional.of(document));
+    Mockito.when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ПередЗаписью")).isPresent();
+    assertThat(resolver.lookupContract(doc, "BeforeWrite")).isPresent();
+    assertThat(resolver.lookupContract(doc, "beforewrite")).isPresent();
+    assertThat(resolver.lookupContract(doc, "СлучайноеИмя")).isEmpty();
   }
 
   @Test
