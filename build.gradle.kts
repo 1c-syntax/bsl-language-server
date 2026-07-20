@@ -42,21 +42,21 @@ gitVersioning.apply {
     refs {
         describeTagFirstParent = false
         tag("v(?<tagVersion>[0-9].*)") {
-            version = $$"${ref.tagVersion}${dirty}"
+            version = "\${ref.tagVersion}\${dirty}"
         }
 
         branch("develop") {
-            version = $$"${describe.tag.version}." +
-                    $$"${describe.distance}-SNAPSHOT${dirty}"
+            version = "\${describe.tag.version}." +
+                    "\${describe.distance}-SNAPSHOT\${dirty}"
         }
 
         branch(".+") {
-            version = $$"${ref}-${commit.short}${dirty}"
+            version = "\${ref}-\${commit.short}\${dirty}"
         }
     }
 
     rev {
-        version = $$"${commit.short}${dirty}"
+        version = "\${commit.short}\${dirty}"
     }
 }
 
