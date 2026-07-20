@@ -112,6 +112,14 @@ public class GlobalScopeProvider {
   /** Эпоха-кэшированный name-индекс членов GLOBAL_CONTEXT (см. {@link #globalMember}). */
   private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
   /**
+   * Поколение name-индекса: {@link #invalidateNameIndex} инкрементирует его, а
+   * {@link #globalMember} вшивает поколение в {@link GlobalIndex} и отвергает публикацию
+   * из устаревшего поколения. Защищает от гонки, когда параллельная пересборка индекса
+   * с устаревшими членами {@code GLOBAL_CONTEXT} публикуется уже после инвалидации
+   * (при точечной инвалидации BSL-правкой эпоха членов не двигается).
+   */
+  private final AtomicLong nameIndexGeneration = new AtomicLong();
+  /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
    * для общих модулей, {@code OScriptModuleMembersProvider} для library-модулей) синхронно
@@ -170,10 +178,12 @@ public class GlobalScopeProvider {
    * Нужен, когда содержимое глобального члена изменилось без сдвига эпохи членов
    * реестра — например, при правке общего модуля (BSL): его member-source в
    * {@code GLOBAL_CONTEXT} обновляют точечно ({@link TypeRegistry#invalidateMembers}),
-   * а не через эпоху, поэтому индекс надо освежить отдельно.
+   * а не через эпоху, поэтому индекс надо освежить отдельно. Инвалидация — через
+   * инкремент поколения (а не сброс ссылки в {@code null}): это отвергает и текущий
+   * индекс, и устаревший индекс параллельной пересборки, публикуемой после инвалидации.
    */
   public void invalidateNameIndex() {
-    globalIndexRef.set(null);
+    nameIndexGeneration.incrementAndGet();
   }
 
   /**
@@ -193,9 +203,10 @@ public class GlobalScopeProvider {
       return Optional.empty();
     }
     var epoch = typeRegistry.membersEpoch();
+    var generation = nameIndexGeneration.get();
     var index = globalIndexRef.get();
-    if (index == null || index.epoch() != epoch) {
-      index = new GlobalIndex(epoch, Map.of(
+    if (index == null || index.epoch() != epoch || index.generation() != generation) {
+      index = new GlobalIndex(epoch, generation, Map.of(
         FileType.BSL, globalNameIndex(FileType.BSL),
         FileType.OS, globalNameIndex(FileType.OS)));
       globalIndexRef.set(index);
@@ -279,7 +290,7 @@ public class GlobalScopeProvider {
   }
 
   /** Эпоха-кэшированный индекс имён членов GLOBAL_CONTEXT в разрезе языка. */
-  private record GlobalIndex(long epoch, Map<FileType, Map<String, MemberDescriptor>> byName) {
+  private record GlobalIndex(long epoch, long generation, Map<FileType, Map<String, MemberDescriptor>> byName) {
   }
 
   /**

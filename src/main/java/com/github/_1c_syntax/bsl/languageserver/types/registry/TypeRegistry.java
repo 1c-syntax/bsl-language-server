@@ -128,6 +128,15 @@ public class TypeRegistry {
    */
   private final AtomicLong membersEpoch = new AtomicLong();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
+  /**
+   * Пер-типовые поколения memo членов: точечная инвалидация ({@link #invalidateMembers})
+   * инкрементирует поколение ключа, а {@link #getMembers} штампует им запись кэша и
+   * отвергает публикацию из устаревшего поколения. Защищает от гонки, когда параллельный
+   * незавершённый {@code computeMembers} публикует устаревший результат уже ПОСЛЕ
+   * инвалидации (эпоха при точечной инвалидации не двигается). Ключи заводятся только для
+   * реально инвалидированных типов — для нетронутых поколение по умолчанию {@code 0}.
+   */
+  private final Map<MembersKey, Long> membersGeneration = new ConcurrentHashMap<>();
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
@@ -141,7 +150,7 @@ public class TypeRegistry {
     }
   }
 
-  private record CachedMembers(long epoch, List<MemberDescriptor> members) {
+  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
   }
 
   /** Пустой контейнер с разрезами по всем языкам. */
@@ -389,12 +398,16 @@ public class TypeRegistry {
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
     var epoch = membersEpoch.get();
     var key = new MembersKey(ref, fileType);
+    var generation = membersGeneration.getOrDefault(key, 0L);
     var cached = membersCache.get(key);
-    if (cached != null && cached.epoch() == epoch) {
+    if (cached != null && cached.epoch() == epoch && cached.generation() == generation) {
       return cached.members();
     }
     var members = computeMembers(ref, fileType);
-    membersCache.put(key, new CachedMembers(epoch, members));
+    // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
+    // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
+    // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
+    membersCache.put(key, new CachedMembers(epoch, generation, members));
     return members;
   }
 
@@ -602,12 +615,17 @@ public class TypeRegistry {
    * без сдвига глобальной эпохи (кэши прочих типов остаются валидными).
    * Применяется при правке содержимого документа, чьи member-source'ы читают
    * только этот тип (BSL-модуль как источник членов своего типа-обёртки).
+   * <p>
+   * Инвалидация — через инкремент пер-типового поколения ({@link #membersGeneration}),
+   * а не удаление записи: это отвергает и уже закэшированный результат, и устаревший
+   * результат параллельного незавершённого {@code computeMembers}, который допишется
+   * в кэш уже после инвалидации. Запись выселяется перезаписью при следующем чтении.
    *
    * @param ref тип, memo членов которого нужно пересобрать.
    */
   public void invalidateMembers(TypeRef ref) {
     for (var fileType : FileType.values()) {
-      membersCache.remove(new MembersKey(ref, fileType));
+      membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
     }
   }
 

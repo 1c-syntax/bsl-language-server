@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -143,6 +144,32 @@ class TypeRegistryScopedSourcesTest {
       .extracting(MemberDescriptor::name).containsExactly("A2");
     assertThat(typeRegistry.getMembers(refB, FileType.BSL))
       .extracting(MemberDescriptor::name).containsExactly("B1");
+  }
+
+  @Test
+  void staleInFlightComputeIsRejectedAfterInvalidation() {
+    // given — источник, который ВО ВРЕМЯ первого вычисления сам инициирует инвалидацию
+    // (имитация параллельной правки, прошедшей после снятия поколения, но до записи в кэш)
+    var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйГонкаПоколения");
+    var value = new AtomicReference<>("stale");
+    var invalidateWhileComputing = new AtomicBoolean(false);
+    typeRegistry.registerMemberSource(ref, () -> {
+      if (invalidateWhileComputing.getAndSet(false)) {
+        typeRegistry.invalidateMembers(ref);
+      }
+      return List.of(MemberDescriptor.property(value.get(), TypeRef.UNKNOWN, ""));
+    }, FileType.BSL);
+
+    // when — вычисление снимает поколение G, внутри него проходит инвалидация (G→G+1),
+    // устаревший результат дописывается в кэш под поколением G
+    invalidateWhileComputing.set(true);
+    typeRegistry.getMembers(ref, FileType.BSL);
+    value.set("fresh");
+
+    // then — следующее чтение видит рассинхрон поколения и пересобирает свежий результат,
+    // а не отдаёт устаревшую запись
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("fresh");
   }
 
   @Test

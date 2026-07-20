@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -61,7 +62,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     var arrayType = typeRegistry.resolve("Массив").orElseThrow();
 
     assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
-      .extracting(member -> member.name()).contains("НеУстаревшаяПроцедура");
+      .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
     var arrayMembersBefore = typeRegistry.getMembers(arrayType, FileType.BSL);
     assertThat(arrayMembersBefore).isNotEmpty();
 
@@ -73,7 +74,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(typeRegistry.getMembers(arrayType, FileType.BSL)).isSameAs(arrayMembersBefore);
     // а члены самого отредактированного модуля пересобираются и остаются корректными
     assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
-      .extracting(member -> member.name()).contains("НеУстаревшаяПроцедура");
+      .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
   }
 
   @Test
