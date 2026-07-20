@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
@@ -321,6 +322,51 @@ class BSLTextDocumentServiceTest {
     DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didClose(params);
+  }
+
+  /**
+   * Воспроизводит warning из рантайма: didClose приходит с потока диспетчеризации LSP4J
+   * без установленного workspace-контекста, из-за чего workspace-scoped proxy beans
+   * (per-URI индексы) не резолвятся в @EventListener при ServerContextDocumentClosedEvent
+   * и молча теряют событие закрытия документа.
+   */
+  @Test
+  void didClose_setsWorkspaceContextForEventListeners() throws IOException {
+    // given — открытый документ
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    var listener = new SmartApplicationListener() {
+      @Override
+      public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+        return ServerContextDocumentClosedEvent.class.isAssignableFrom(eventType);
+      }
+
+      @Override
+      public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+      }
+
+      @Override
+      public void onApplicationEvent(ApplicationEvent event) {
+        capturedWorkspaceUri.compareAndSet(null, WorkspaceContextHolder.get());
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+
+    try {
+      var params = new DidCloseTextDocumentParams(getTextDocumentIdentifier());
+      textDocumentService.didClose(params);
+
+      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      assertThat(capturedWorkspaceUri.get())
+        .as("Workspace context must be set when ServerContextDocumentClosedEvent fires during didClose "
+          + "(otherwise workspace-scoped per-URI indexes cannot be resolved and miss the event)")
+        .isNotNull()
+        .isEqualTo(expectedWorkspaceUri);
+    } finally {
+      applicationContext.removeApplicationListener(listener);
+    }
   }
 
   @Test
