@@ -27,9 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,6 +47,9 @@ class CallStatementByReceiverIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ApplicationEventPublisher eventPublisher;
+
+  @Autowired
+  private BSLTextDocumentService textDocumentService;
 
   @Test
   void groupsCallStatementsByReceiverAndClearsOnEvents() {
@@ -95,7 +100,7 @@ class CallStatementByReceiverIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void clearsOnCloseFromThreadWithoutWorkspaceContext() throws InterruptedException {
+  void clearsOnDidCloseFromThreadWithoutWorkspaceContext() throws InterruptedException {
     // given — документ с ресивером ТЗ; запросы к индексу идут в workspace документа.
     var documentContext = TestUtils.getDocumentContext("""
       Процедура Тест()
@@ -117,9 +122,10 @@ class CallStatementByReceiverIndexTest extends AbstractServerContextAwareTest {
       """, serverContext);
     var freshAst = otherDocument.getAst();
 
-    // when — документ закрывается с потока без workspace-контекста
-    // (так textDocument/didClose приходит с потока LSP4J).
-    var closer = new Thread(() -> serverContext.closeDocument(documentContext));
+    // when — textDocument/didClose приходит с потока LSP4J, на котором
+    // workspace-контекст не установлен.
+    var params = new DidCloseTextDocumentParams(TestUtils.getTextDocumentIdentifier(uri));
+    var closer = new Thread(() -> textDocumentService.didClose(params));
     closer.start();
     closer.join();
 
