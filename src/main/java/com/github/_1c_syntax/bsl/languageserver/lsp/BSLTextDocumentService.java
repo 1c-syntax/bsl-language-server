@@ -157,6 +157,8 @@ import java.util.function.Supplier;
  * а также предоставляет функции навигации, редактирования и анализа кода.
  */
 @Component
+// S5673: имя повторяет реализуемый LSP4J-интерфейс TextDocumentService, это не слой сервисов — @Component намеренный
+@SuppressWarnings("java:S5673")
 @RequiredArgsConstructor
 @Slf4j
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
