@@ -41,6 +41,11 @@ public class JsonReporter implements DiagnosticReporter {
   }
 
   @Override
+  public boolean isMetricCalculationRequired() {
+    return true;
+  }
+
+  @Override
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     JsonMapper mapper = new AnalysisInfoJsonMapper();
 

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintLabelPart;
@@ -51,6 +52,13 @@ import java.util.Optional;
  * выводится и нетривиален (не {@code Произвольный}/{@code any} и не очевиден
  * из литерала), показывает подсказку {@link InlayHintKind#Type} сразу после
  * имени переменной — например {@code Контрагент: Массив = Новый Массив()}.
+ * <p>
+ * Если имя переменной уже содержит имя выведенного типа (например
+ * {@code Массив = ...} или {@code МассивТоваров = ...} с типом {@code Массив}),
+ * подсказка лишь дублирует видимое в имени и по умолчанию подавляется — по аналогии
+ * с подавлением подсказок имён параметров с совпадающим именем аргумента. Поведение
+ * отключается флагом конфигурации {@code inlayHint.parameters.variableType.showTypeWithTheSameName}
+ * ({@link VariableTypeInlayHintFlags}; по умолчанию {@code false} — подавлять).
  * <p>
  * Метка хинта рендерится единственной частью {@link InlayHintLabelPart}: когда
  * выведенный тип объявлен в исходниках рабочей области (общий модуль, модуль
@@ -119,14 +127,11 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
       return Optional.empty();
     }
     var identifier = maybeIdentifier.get();
-
     var namePosition = Positions.createEnd(identifier);
-    if (!Ranges.containsPosition(range, namePosition)) {
-      return Optional.empty();
-    }
 
     var expression = assignment.expression();
-    if (expression == null || isTrivialLiteral(expression) || isNewExpression(expression)) {
+    if (!Ranges.containsPosition(range, namePosition)
+      || expression == null || isTrivialLiteral(expression) || isNewExpression(expression)) {
       return Optional.empty();
     }
 
@@ -137,6 +142,17 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     var inferredType = maybeInferredType.get();
 
     var typeName = typeService.displayName(inferredType, configuration.getLanguage());
+
+    // Имя переменной уже несёт имя типа (напр. «Массив = ...» с выведенным типом
+    // «Массив» или «МассивТоваров = ...» с типом «Массив») — подсказка лишь дублирует
+    // то, что видно в имени, и только шумит: по умолчанию не строим её. Поведение
+    // отключается флагом showTypeWithTheSameName — по аналогии с подавлением подсказок
+    // имён параметров с совпадающим именем аргумента (showParametersWithTheSameName).
+    var variableName = identifier.getText();
+    if (!VariableTypeInlayHintFlags.showTypeWithTheSameName(configuration)
+      && Strings.CI.contains(variableName, typeName)) {
+      return Optional.empty();
+    }
 
     var inlayHint = new InlayHint();
     inlayHint.setKind(InlayHintKind.Type);

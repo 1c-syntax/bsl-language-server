@@ -56,7 +56,7 @@ class LocationRepositoryTest extends AbstractServerContextAwareTest {
 
     // then — для начала каждого вхождения индекс даёт тот же результат, что линейный скан.
     for (var occurrence : occurrences) {
-      var position = new Position(occurrence.location().startLine(), occurrence.location().startCharacter());
+      var position = new Position(occurrence.startLine(), occurrence.startCharacter());
       assertThat(locationRepository.findByPosition(uri, position))
         .as("парити со сканом в позиции %s", position)
         .isEqualTo(linearScan(uri, position));
@@ -78,14 +78,14 @@ class LocationRepositoryTest extends AbstractServerContextAwareTest {
     // берём два разных вхождения на одной строке «Б = А + А;».
     var line = 2;
     var onLine = locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter(o -> o.location().startLine() == line)
+      .filter(o -> o.startLine() == line)
       .distinct()
       .collect(Collectors.toList());
     assertThat(onLine).as("минимум два вхождения на строке").hasSizeGreaterThanOrEqualTo(2);
 
     // then — по колонке каждого возвращается именно оно.
     for (var occurrence : onLine) {
-      var position = new Position(line, occurrence.location().startCharacter());
+      var position = new Position(line, occurrence.startCharacter());
       assertThat(locationRepository.findByPosition(uri, position)).contains(occurrence);
     }
   }
@@ -109,7 +109,7 @@ class LocationRepositoryTest extends AbstractServerContextAwareTest {
     // после delete индекс по URI очищен.
     var anyOccurrence = locationRepository.getSymbolOccurrencesByLocationUri(uri).findFirst().orElseThrow();
     var onOccurrence = new Position(
-      anyOccurrence.location().startLine(), anyOccurrence.location().startCharacter());
+      anyOccurrence.startLine(), anyOccurrence.startCharacter());
     assertThat(locationRepository.findByPosition(uri, onOccurrence)).isPresent();
 
     locationRepository.delete(uri);
@@ -119,8 +119,8 @@ class LocationRepositoryTest extends AbstractServerContextAwareTest {
   private Optional<SymbolOccurrence> linearScan(URI uri, Position position) {
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .filter(o -> {
-        var l = o.location();
-        return Ranges.containsPosition(l.startLine(), l.startCharacter(), l.endLine(), l.endCharacter(), position);
+        return Ranges.containsPosition(
+          o.startLine(), o.startCharacter(), o.endLine(), o.endCharacter(), position);
       })
       .findAny();
   }

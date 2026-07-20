@@ -65,7 +65,7 @@ public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
   }
 
   private void checkProperties(Range range) {
-    var configuration = documentContext.getServerContext().getConfiguration();
+    var configuration = documentContext.getServerContext().getConfiguration().getMergedConfiguration();
     if (configuration instanceof Configuration cf) { // у расширения нет таких атрибутов
       if (!cf.isUseManagedFormInOrdinaryApplication()) {
         diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));

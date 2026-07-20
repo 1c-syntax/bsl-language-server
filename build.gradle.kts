@@ -19,7 +19,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.54.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.14.0"
+    id("io.sentry.jvm.gradle") version "6.15.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.25.0"
@@ -98,7 +98,7 @@ dependencies {
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.37.2")
     api("io.github.1c-syntax:utils:0.9.0")
-    api("io.github.1c-syntax:mdclasses:0.19.1")
+    api("io.github.1c-syntax:mdclasses:0.20.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.1")
     api("io.github.1c-syntax:supportconf:0.17.1")
     api("io.github.1c-syntax:bsl-context:0.7.0")

@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.AccountingRegister;
 import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
@@ -144,7 +145,8 @@ class ConfigurationTypesProviderHelpersTest {
       var configuration = Mockito.mock(com.github._1c_syntax.bsl.mdclasses.Configuration.class);
       Mockito.when(configuration.isEmpty()).thenReturn(true);
       var serverContext = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var p = newProviderWith(serverProvider);
@@ -172,7 +174,8 @@ class ConfigurationTypesProviderHelpersTest {
       Mockito.when(configuration.getChildrenByMdoRef())
         .thenReturn(java.util.Map.of(catalog.getMdoReference(), catalog));
       var serverContext = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
@@ -207,7 +210,8 @@ class ConfigurationTypesProviderHelpersTest {
       Mockito.when(configuration.getChildrenByMdoRef())
         .thenReturn(java.util.Map.of(paletteColor.getMdoReference(), paletteColor));
       var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
@@ -252,7 +256,8 @@ class ConfigurationTypesProviderHelpersTest {
       Mockito.when(configuration.isEmpty()).thenReturn(false);
       Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(children);
       var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
@@ -293,7 +298,8 @@ class ConfigurationTypesProviderHelpersTest {
       Mockito.when(configuration.isEmpty()).thenReturn(false);
       Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(java.util.Map.of());
       var serverContext = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var p = newProviderWith(serverProvider);
@@ -846,7 +852,8 @@ class ConfigurationTypesProviderHelpersTest {
       Mockito.when(configuration.isEmpty()).thenReturn(false);
       Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(children);
       var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));

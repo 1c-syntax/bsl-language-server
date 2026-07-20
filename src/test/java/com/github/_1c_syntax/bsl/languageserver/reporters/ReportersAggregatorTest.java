@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +37,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -43,6 +45,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {"spring.main.allow-bean-definition-overriding=true"})
 @ActiveProfiles("reportersAggregator")
@@ -86,6 +90,42 @@ class ReportersAggregatorTest {
     // then
     // FIXME How test logger?
     // assertThat(outContent.toString()).containsIgnoringCase("Analysis date: ");
+  }
+
+  /**
+   * Проверка агрегирования признака необходимости метрик по активным репортерам.
+   * Набор активных репортеров задаётся напрямую, без Spring-контекста.
+   */
+  @Nested
+  class IsMetricCalculationRequired {
+
+    @Test
+    void falseWhenNoActiveReporters() {
+      assertThat(aggregatorWith().isMetricCalculationRequired()).isFalse();
+    }
+
+    @Test
+    void falseWhenNoActiveReporterRequiresMetrics() {
+      assertThat(aggregatorWith(new TSLintReporter(), new JUnitReporter()).isMetricCalculationRequired())
+        .isFalse();
+    }
+
+    @Test
+    void trueWhenAnyActiveReporterRequiresMetrics() {
+      assertThat(aggregatorWith(new TSLintReporter(), new JsonReporter()).isMetricCalculationRequired())
+        .isTrue();
+    }
+
+    @Test
+    void trueForConsoleReporter() {
+      assertThat(aggregatorWith(new ConsoleReporter()).isMetricCalculationRequired()).isTrue();
+    }
+
+    private ReportersAggregator aggregatorWith(DiagnosticReporter... reporters) {
+      var localAggregator = new ReportersAggregator();
+      ReflectionTestUtils.setField(localAggregator, "filteredReporters", List.of(reporters));
+      return localAggregator;
+    }
   }
 
   @TestConfiguration

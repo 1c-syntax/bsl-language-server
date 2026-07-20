@@ -30,6 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
@@ -55,6 +57,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -64,6 +67,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -87,10 +91,21 @@ public class ReferenceIndexFiller {
   private final LanguageServerConfiguration configuration;
   private final OScriptLibraryIndex oScriptLibraryIndex;
 
+  /**
+   * Отпечаток содержимого, для которого документ был проиндексирован в последний раз.
+   * Позволяет пропускать переиндексацию при повторном перестроении документа с тем же
+   * содержимым (например, второй rebuild того же файла в пакетном анализе) и при этом
+   * гарантированно переиндексировать документ, чьё содержимое реально изменилось —
+   * независимо от признака заморозки вычисленных данных.
+   */
+  private final Map<URI, Long> filledContentFingerprints = new ConcurrentHashMap<>();
+
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
-    if (documentContext.isComputedDataFrozen()) {
+    var previousFingerprint = filledContentFingerprints.get(documentContext.getUri());
+    if (previousFingerprint != null && previousFingerprint == contentFingerprint(documentContext.getContent())) {
+      // Содержимое не менялось с последней индексации — индекс актуален.
       return;
     }
     fill(documentContext);
@@ -106,20 +121,65 @@ public class ReferenceIndexFiller {
    */
   @EventListener
   public void handleEvent(ServerContextDocumentRemovedEvent event) {
+    filledContentFingerprints.remove(event.getUri());
     index.clearReferences(event.getUri());
   }
 
+  /**
+   * Переиндексировать обращения к символам, расположенные в документе.
+   * <p>
+   * Новый набор вхождений собирается в буфер и применяется атомарной заменой
+   * ({@link ReferenceIndex#replaceReferences}): конкурентные читатели ни в какой момент
+   * не видят «пустой» индекс документа. Если обход AST завершился исключением,
+   * прежнее содержимое индекса остаётся нетронутым.
+   */
   public void fill(DocumentContext documentContext) {
-    index.clearReferences(documentContext.getUri());
+    // Снимок содержимого берётся ДО чтения AST: если конкурентное перестроение
+    // документа вклинится в процесс индексации, отпечаток останется от той версии,
+    // что не новее проиндексированной, и следующее событие переиндексирует документ
+    // (лишний fill безопасен, «залипание» устаревшего индекса — нет).
+    var content = documentContext.getContent();
+    var batch = new ArrayList<SymbolOccurrence>();
+    var sink = new BatchingSink(batch);
     var documentContextAst = documentContext.getAst();
-    new MethodSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
-    new VariableSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
+    new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    index.replaceReferences(documentContext.getUri(), batch);
+    filledContentFingerprints.put(documentContext.getUri(), contentFingerprint(content));
+  }
+
+  private static long contentFingerprint(String content) {
+    return ((long) content.length() << Integer.SIZE) ^ (content.hashCode() & 0xFFFFFFFFL);
+  }
+
+  /**
+   * Приёмник обращений к символам, найденных файндерами при обходе AST:
+   * копит построенные вхождения в буфер для последующей атомарной публикации.
+   */
+  @RequiredArgsConstructor
+  private final class BatchingSink {
+
+    private final List<SymbolOccurrence> batch;
+
+    void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+      batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
+    }
+
+    void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+      batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
+    }
+
+    void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
+                          String variableName, Range range, OccurrenceType occurrenceType) {
+      batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+    }
   }
 
   @RequiredArgsConstructor
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private final BatchingSink sink;
     private final ModuleReference.ParsedAccessors parsedAccessors =
       ModuleReference.parseAccessors(configuration.getReferencesOptions().getCommonModuleAccessors());
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
@@ -277,7 +337,7 @@ public class ReferenceIndexFiller {
 
       var ctor = libraryClassConstructor(libUri.get());
       if (ctor.isPresent()) {
-        index.addMethodCall(
+        sink.addMethodCall(
           documentContext.getUri(),
           libMdoRef,
           moduleType,
@@ -285,7 +345,7 @@ public class ReferenceIndexFiller {
           range
         );
       } else {
-        index.addModuleReference(
+        sink.addModuleReference(
           documentContext.getUri(),
           libMdoRef,
           moduleType,
@@ -320,7 +380,7 @@ public class ReferenceIndexFiller {
       var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptModule);
 
       // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
-      index.addModuleReference(
+      sink.addModuleReference(
         documentContext.getUri(),
         libMdoRef,
         moduleType,
@@ -362,7 +422,7 @@ public class ReferenceIndexFiller {
       documentContext.getServerContext()
         .findCommonModule(identifierText)
         .ifPresent(commonModule ->
-          index.addModuleReference(
+          sink.addModuleReference(
             documentContext.getUri(),
             commonModule.getMdoReference().getMdoRef(),
             ModuleType.CommonModule,
@@ -372,7 +432,7 @@ public class ReferenceIndexFiller {
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
-      index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+      sink.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
     }
 
     /**
@@ -454,6 +514,7 @@ public class ReferenceIndexFiller {
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private final BatchingSink sink;
     private final ModuleReference.ParsedAccessors parsedAccessors;
     @SuppressWarnings("NullAway.Init")
     private @Nullable SourceDefinedSymbol currentScope;
@@ -461,8 +522,9 @@ public class ReferenceIndexFiller {
     /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
     private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
 
-    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
+    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
+      this.sink = sink;
       this.parsedAccessors = ModuleReference.parseAccessors(
         configuration.getReferencesOptions().getCommonModuleAccessors()
       );
@@ -767,14 +829,14 @@ public class ReferenceIndexFiller {
         methodName = methodSymbol.get().getName();
       }
 
-      index.addVariableUsage(
+      sink.addVariableUsage(
         documentContext.getUri(),
         documentContext.getMdoRef(),
         documentContext.getModuleType(),
         methodName,
         variableName,
         range,
-        !usage
+        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION
       );
     }
 
@@ -792,7 +854,7 @@ public class ReferenceIndexFiller {
       if (methodCall != null && methodCall.methodName() != null) {
         var methodNameToken = methodCall.methodName().IDENTIFIER();
         if (methodNameToken != null) {
-          index.addMethodCall(
+          sink.addMethodCall(
             documentContext.getUri(),
             mdoRef,
             ModuleType.CommonModule,
@@ -817,7 +879,7 @@ public class ReferenceIndexFiller {
       if (methodCall != null && methodCall.methodName() != null) {
         var methodNameToken = methodCall.methodName().IDENTIFIER();
         if (methodNameToken != null) {
-          index.addMethodCall(
+          sink.addMethodCall(
             documentContext.getUri(),
             libClassUri,
             ModuleType.OScriptClass,

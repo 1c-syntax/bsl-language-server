@@ -208,7 +208,22 @@ public final class DiagnosticProvider {
       return;
     }
     LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
-    opened.forEach(this::computeAndPublishDiagnostics);
+    opened.forEach(this::computeAndPublishDiagnosticsUnderLock);
+  }
+
+  /**
+   * Вычислить и опубликовать диагностики под read-локом документа: пересчёт не должен
+   * пересекаться с конкурентным перестроением документа и синхронной переиндексацией
+   * ссылок (писатели — didOpen, {@code DocumentChangeExecutor} — держат write-лок).
+   */
+  private void computeAndPublishDiagnosticsUnderLock(DocumentContext documentContext) {
+    var lock = documentContext.getServerContext().getDocumentLock(documentContext.getUri());
+    lock.readLock().lock();
+    try {
+      computeAndPublishDiagnostics(documentContext);
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {

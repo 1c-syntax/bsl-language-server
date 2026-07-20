@@ -135,4 +135,9 @@ class GenericReporterTest extends AbstractServerContextAwareTest {
     assertThat(report.getIssues().get(1).getSeverity()).isEqualTo(firstInfo.getSeverity().name());
   }
 
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(reporter.isMetricCalculationRequired()).isFalse();
+  }
+
 }

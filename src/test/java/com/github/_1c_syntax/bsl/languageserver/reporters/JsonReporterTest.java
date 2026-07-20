@@ -86,4 +86,10 @@ class JsonReporterTest {
     Assertions.assertThat(report.fileinfos()).hasSize(1);
 
   }
+
+  @Test
+  void requiresMetricCalculation() {
+    // json сериализует FileInfo.metrics в отчёт
+    Assertions.assertThat(new JsonReporter().isMetricCalculationRequired()).isTrue();
+  }
 }
