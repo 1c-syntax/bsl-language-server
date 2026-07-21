@@ -166,9 +166,10 @@ public class GlobalScopeProvider {
    * Резолв безпрефиксного имени в член глобальной области — синтетического типа
    * {@link TypeRegistry#GLOBAL_CONTEXT} (глобальная функция-метод либо глобальное
    * свойство: перечисление, менеджер коллекции, общий/library-модуль). Быстрый
-   * lookup по name-индексу, пересобираемому при смене эпохи членов
-   * ({@link TypeRegistry#membersEpoch()}). Единая абстракция доступа
-   * к глобальной области; {@link TypeRegistry} остаётся хранилищем типов.
+   * lookup по name-индексу, который пересобирается, когда {@code getMembers} отдаёт
+   * новые наборы членов {@code GLOBAL_CONTEXT} (то есть после любой их инвалидации).
+   * Единая абстракция доступа к глобальной области; {@link TypeRegistry} остаётся
+   * хранилищем типов.
    *
    * @param name     имя (регистронезависимо, ru/en).
    * @param fileType язык файла-потребителя.
@@ -187,10 +188,15 @@ public class GlobalScopeProvider {
     var osSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.OS);
     var index = globalIndexRef.get();
     if (index == null || index.bslSource() != bslSource || index.osSource() != osSource) {
-      index = new GlobalIndex(bslSource, osSource, Map.of(
+      var rebuilt = new GlobalIndex(bslSource, osSource, Map.of(
         FileType.BSL, globalNameIndex(bslSource),
         FileType.OS, globalNameIndex(osSource)));
-      globalIndexRef.set(index);
+      // CAS, а не set: параллельный поток мог опубликовать индекс по более свежим наборам,
+      // и затирать его своим не нужно — иначе следующее чтение увидит рассинхрон и зря
+      // пересоберёт индекс. Собранный здесь экземпляр всё равно валиден для этого вызова:
+      // он построен ровно из тех наборов, которые мы прочитали выше.
+      globalIndexRef.compareAndSet(index, rebuilt);
+      index = rebuilt;
     }
     return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
   }
@@ -256,7 +262,8 @@ public class GlobalScopeProvider {
   }
 
   private Map<String, MemberDescriptor> globalNameIndex(Collection<MemberDescriptor> members) {
-    var map = new HashMap<String, MemberDescriptor>();
+    // до двух записей на член (ru и en) — задаём ёмкость сразу, чтобы не рехэшировать
+    var map = HashMap.<String, MemberDescriptor>newHashMap(members.size() * 2);
     for (var member : members) {
       var ru = member.bilingualName().ru();
       var en = member.bilingualName().en();

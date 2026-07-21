@@ -61,7 +61,8 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
       .orElseThrow();
     var arrayType = typeRegistry.resolve("Массив").orElseThrow();
 
-    assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
+    var moduleMembersBefore = typeRegistry.getMembers(moduleType, FileType.BSL);
+    assertThat(moduleMembersBefore)
       .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
     var arrayMembersBefore = typeRegistry.getMembers(arrayType, FileType.BSL);
     assertThat(arrayMembersBefore).isNotEmpty();
@@ -72,8 +73,11 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     // then — memo несвязанного типа не тронуто (тот же экземпляр списка): инвалидация
     // точечная, глобальная эпоха на BSL-правке не двигается (иначе Массив пересобрался бы)
     assertThat(typeRegistry.getMembers(arrayType, FileType.BSL)).isSameAs(arrayMembersBefore);
-    // а члены самого отредактированного модуля пересобираются и остаются корректными
-    assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
+    // а memo самого отредактированного модуля именно пересобрано — новый экземпляр списка,
+    // а не тот же самый (проверка только по содержимому прошла бы и без инвалидации)
+    var moduleMembersAfter = typeRegistry.getMembers(moduleType, FileType.BSL);
+    assertThat(moduleMembersAfter).isNotSameAs(moduleMembersBefore);
+    assertThat(moduleMembersAfter)
       .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
   }
 
