@@ -68,9 +68,12 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   }
 
   private static void checkByDefault(List<Diagnostic> diagnostics) {
-    assertThat(diagnostics).hasSize(2);
+    // ПриСозданииОбъекта (66, 10, 28) — здесь не событие: это имя события OScript-класса,
+    // а не CommonModule/ObjectModule, поэтому метод действительно неиспользуемый.
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(1, 10, 24)
+      .hasRange(66, 10, 28)
       .hasRange(70, 10, 41)
     ;
   }
@@ -97,11 +100,12 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
     List<Diagnostic> diagnostics = getDiagnostics(dc);
 
     // then
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(1, 10, 24)
       .hasRange(60, 10, 40)
       .hasRange(63, 10, 39)
+      .hasRange(66, 10, 28)
     ;
   }
 
@@ -119,6 +123,34 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
 
     // then
     checkByDefault(diagnostics);
+  }
+
+  @Test
+  void testOScriptClassConstructorEventNotFlaggedByRuName() {
+    var content = """
+      Процедура ПриСозданииОбъекта(Знач Параметр)
+      КонецПроцедуры
+      """;
+    var dc = spy(TestUtils.getDocumentContext(content));
+    when(dc.getModuleType()).thenReturn(ModuleType.OScriptClass);
+
+    List<Diagnostic> diagnostics = getDiagnostics(dc);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testOScriptClassConstructorEventNotFlaggedByEnName() {
+    var content = """
+      Процедура OnObjectCreate(Знач Параметр)
+      КонецПроцедуры
+      """;
+    var dc = spy(TestUtils.getDocumentContext(content));
+    when(dc.getModuleType()).thenReturn(ModuleType.OScriptClass);
+
+    List<Diagnostic> diagnostics = getDiagnostics(dc);
+
+    assertThat(diagnostics).isEmpty();
   }
 
   private void getObjectModuleDocumentContext() {
