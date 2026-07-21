@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784527898416,
+  "lastUpdate": 1784612281497,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40548,6 +40548,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.334531670933012",
             "extra": "mean: 92.8145779768626 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f4616cda8a216789ee40529ed857e614b9e2ea25",
+          "message": "Merge pull request #4287 from 1c-syntax/fix/unused-local-method-en-event-names\n\nfix(diagnostics): UnusedLocalMethod FP на английских именах стандартных обработчиков",
+          "timestamp": "2026-07-21T07:26:35+02:00",
+          "tree_id": "bf95d3d63e5974b82c1a9c2c0a6ca315d49bf3fe",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f4616cda8a216789ee40529ed857e614b9e2ea25"
+        },
+        "date": 1784612267866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.29732886950175,
+            "unit": "sec",
+            "range": "stddev: 3.0204782495130167",
+            "extra": "mean: 94.29732886950175 sec\nrounds: 3"
           }
         ]
       }
