@@ -65,7 +65,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -109,16 +108,8 @@ public class GlobalScopeProvider {
    * {@code GlobalScopeProvider → TypeRegistry}, без цикла.
    */
   private final TypeRegistry typeRegistry;
-  /** Эпоха-кэшированный name-индекс членов GLOBAL_CONTEXT (см. {@link #globalMember}). */
+  /** Name-индекс членов GLOBAL_CONTEXT, кэшированный по наборам-источникам (см. {@link #globalMember}). */
   private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
-  /**
-   * Поколение name-индекса: {@link #invalidateNameIndex} инкрементирует его, а
-   * {@link #globalMember} вшивает поколение в {@link GlobalIndex} и отвергает публикацию
-   * из устаревшего поколения. Защищает от гонки, когда параллельная пересборка индекса
-   * с устаревшими членами {@code GLOBAL_CONTEXT} публикуется уже после инвалидации
-   * (при точечной инвалидации BSL-правкой эпоха членов не двигается).
-   */
-  private final AtomicLong nameIndexGeneration = new AtomicLong();
   /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
@@ -172,21 +163,6 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Точечно сбросить эпоха-кэшированный name-индекс глобальной области: следующий
-   * {@link #globalMember} пересоберёт его из актуальных членов {@code GLOBAL_CONTEXT}.
-   * <p>
-   * Нужен, когда содержимое глобального члена изменилось без сдвига эпохи членов
-   * реестра — например, при правке общего модуля (BSL): его member-source в
-   * {@code GLOBAL_CONTEXT} обновляют точечно ({@link TypeRegistry#invalidateMembers}),
-   * а не через эпоху, поэтому индекс надо освежить отдельно. Инвалидация — через
-   * инкремент поколения (а не сброс ссылки в {@code null}): это отвергает и текущий
-   * индекс, и устаревший индекс параллельной пересборки, публикуемой после инвалидации.
-   */
-  public void invalidateNameIndex() {
-    nameIndexGeneration.incrementAndGet();
-  }
-
-  /**
    * Резолв безпрефиксного имени в член глобальной области — синтетического типа
    * {@link TypeRegistry#GLOBAL_CONTEXT} (глобальная функция-метод либо глобальное
    * свойство: перечисление, менеджер коллекции, общий/library-модуль). Быстрый
@@ -202,13 +178,18 @@ public class GlobalScopeProvider {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    var epoch = typeRegistry.membersEpoch();
-    var generation = nameIndexGeneration.get();
+    // Индекс — производная от членов GLOBAL_CONTEXT, поэтому его актуальность определяется
+    // самими наборами-источниками: getMembers отдаёт тот же экземпляр списка, пока memo живо,
+    // и новый — после любой инвалидации (эпоха или пер-типовое поколение). Отдельный счётчик
+    // поколения индекса не нужен: сверки идентичности источников достаточно, и она же
+    // отбрасывает индекс, собранный параллельно из устаревших членов.
+    var bslSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+    var osSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.OS);
     var index = globalIndexRef.get();
-    if (index == null || index.epoch() != epoch || index.generation() != generation) {
-      index = new GlobalIndex(epoch, generation, Map.of(
-        FileType.BSL, globalNameIndex(FileType.BSL),
-        FileType.OS, globalNameIndex(FileType.OS)));
+    if (index == null || index.bslSource() != bslSource || index.osSource() != osSource) {
+      index = new GlobalIndex(bslSource, osSource, Map.of(
+        FileType.BSL, globalNameIndex(bslSource),
+        FileType.OS, globalNameIndex(osSource)));
       globalIndexRef.set(index);
     }
     return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
@@ -274,9 +255,9 @@ public class GlobalScopeProvider {
     return result;
   }
 
-  private Map<String, MemberDescriptor> globalNameIndex(FileType fileType) {
+  private Map<String, MemberDescriptor> globalNameIndex(Collection<MemberDescriptor> members) {
     var map = new HashMap<String, MemberDescriptor>();
-    for (var member : typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, fileType)) {
+    for (var member : members) {
       var ru = member.bilingualName().ru();
       var en = member.bilingualName().en();
       if (!ru.isBlank()) {
@@ -289,8 +270,13 @@ public class GlobalScopeProvider {
     return map;
   }
 
-  /** Эпоха-кэшированный индекс имён членов GLOBAL_CONTEXT в разрезе языка. */
-  private record GlobalIndex(long epoch, long generation, Map<FileType, Map<String, MemberDescriptor>> byName) {
+  /**
+   * Индекс имён членов GLOBAL_CONTEXT в разрезе языка вместе с наборами-источниками,
+   * из которых он собран: сверка их идентичности и есть критерий актуальности индекса.
+   */
+  private record GlobalIndex(Collection<MemberDescriptor> bslSource,
+                             Collection<MemberDescriptor> osSource,
+                             Map<FileType, Map<String, MemberDescriptor>> byName) {
   }
 
   /**
