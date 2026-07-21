@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -49,7 +48,6 @@ import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -526,20 +524,6 @@ public class TypeRegistry {
   }
 
   /**
-   * Версия данных о членах типов: монотонный счётчик, инкрементируемый при любой
-   * мутации member-источников/оверрайдов и при изменении документов. Потребители
-   * (например, {@link GlobalScopeProvider} для name-индекса глобальной области)
-   * используют его как ключ инвалидации своих кэшей. Резолв глобальной области сам
-   * по себе — не дело {@code TypeRegistry} (хранилища типов); это абстракция
-   * {@code GlobalScopeProvider}.
-   *
-   * @return текущая эпоха членов.
-   */
-  public long membersEpoch() {
-    return membersEpoch.get();
-  }
-
-  /**
    * Имя резолвится в платформенный/конфигурационный тип с конструктором —
    * т.е. это имя типа для {@code Новый}/типовой позиции ({@code Структура},
    * {@code ТаблицаЗначений}), а не глобальное значение. Ось type-name отдельно
@@ -586,28 +570,6 @@ public class TypeRegistry {
       }
     }
     return sources == null ? List.of() : sources;
-  }
-
-  /**
-   * Сбросить memo {@link #getMembers} на изменение содержимого OScript-документа.
-   * <p>
-   * Member-source'ы лениво читают символьное дерево документа и меняют вывод при
-   * правке без ре-регистрации источника, поэтому memo надо инвалидировать. Для
-   * OScript инвалидация широкая (эпоха), потому что типы связаны межфайловым
-   * наследованием ({@code &Расширяет}): правка родителя меняет унаследованные
-   * члены наследника в другом документе. Для BSL member-source конфигурационного
-   * модуля самодостаточен в пределах документа — там инвалидация точечная, по
-   * затронутому типу (см. {@code ConfigurationModuleMembersProvider}), поэтому
-   * глобальную эпоху на BSL-правках не дёргаем (иначе на пакетном анализе каждый
-   * {@code rebuildDocument} сносил бы memo всех типов).
-   *
-   * @param event событие изменения содержимого документа.
-   */
-  @EventListener
-  public void invalidateMembersCache(DocumentContextContentChangedEvent event) {
-    if (event.getSource().getFileType() == FileType.OS) {
-      membersEpoch.incrementAndGet();
-    }
   }
 
   /**
