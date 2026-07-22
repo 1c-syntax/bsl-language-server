@@ -123,8 +123,8 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
       if (insideStructureOrCorrespondence(context)) {
         return false;
       }
-      if (insideReturnStatement(context)) {
-        return true;
+      if (insideReturnStatement(context) && isNumericExpression(context)) {
+        return false;
       }
       return !isNumericExpression(context) || insideCallParam(context);
     }

@@ -46,7 +46,7 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(27, 34, 35)
       .hasRange(33, 37, 38)
       .hasRange(34, 37, 38)
-      .hasRange(44, 12, 14);
+      .hasRange(55, 16, 18);
   }
 
   @Test
@@ -65,7 +65,7 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(23, 24, 26)
       .hasRange(33, 37, 38)
       .hasRange(34, 37, 38)
-      .hasRange(44, 12, 14);
+      .hasRange(55, 16, 18);
   }
 
   @Test
@@ -87,9 +87,9 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(27, 34, 35)
       .hasRange(33, 37, 38)
       .hasRange(34, 37, 38)
-      .hasRange(44, 12, 14)
       .hasRange(49, 32, 34)
-      .hasRange(50, 18, 20);
+      .hasRange(50, 18, 20)
+      .hasRange(55, 16, 18);
   }
 
 }
