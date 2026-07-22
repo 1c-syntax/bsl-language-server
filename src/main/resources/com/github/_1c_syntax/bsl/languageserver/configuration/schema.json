@@ -203,6 +203,9 @@
                 "FieldsFromJoinsWithoutIsNull": {
                     "$ref": "parameters-schema.json#/definitions/FieldsFromJoinsWithoutIsNull"
                 },
+                "FileDbIndexKeyLengthExceeded": {
+                    "$ref": "parameters-schema.json#/definitions/FileDbIndexKeyLengthExceeded"
+                },
                 "FileSystemAccess": {
                     "$ref": "parameters-schema.json#/definitions/FileSystemAccess"
                 },
@@ -797,7 +800,7 @@
                             "$id": "#/properties/codeLens/testRunner/resultPattern",
                             "type": "string",
                             "title": "Regular expression to parse test runner output for method names.",
-                            "default": "^[^<]*Имя\\sтеста\\s<([^>]+)>.*"
+                            "default": "^[^<]*\u0418\u043c\u044f\\s\u0442\u0435\u0441\u0442\u0430\\s<([^>]+)>.*"
                         },
                         "runTestArguments": {
                             "$id": "#/properties/codeLens/testRunner/runTestArguments",

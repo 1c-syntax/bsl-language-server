@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.11">
+    <InformationRegister uuid="55555555-5555-5555-5555-555555555555">
+        <Properties>
+            <Name>ВалидныйРегистрСКороткимиИзмерениями</Name>
+        </Properties>
+        <ChildObjects>
+            <Dimension uuid="66666666-6666-6666-6666-666666666666">
+                <Properties>
+                    <Name>КороткоеИзмерение</Name>
+                    <Type>
+                        <v8:Type>xs:string</v8:Type>
+                        <v8:StringQualifiers>
+                            <v8:Length>10</v8:Length>
+                            <v8:AllowedLength>Variable</v8:AllowedLength>
+                        </v8:StringQualifiers>
+                    </Type>
+                </Properties>
+            </Dimension>
+        </ChildObjects>
+    </InformationRegister>
+</MetaDataObject>
