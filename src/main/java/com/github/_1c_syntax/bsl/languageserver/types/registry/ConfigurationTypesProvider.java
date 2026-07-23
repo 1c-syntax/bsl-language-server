@@ -27,7 +27,8 @@ import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatingEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
@@ -60,7 +61,11 @@ import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -70,6 +75,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -125,21 +131,69 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  @Qualifier("workspaceServiceExecutor")
+  private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
-
+  /**
+   * Регистрирует типы конфигурации по добавлению workspace'а — раньше, чем начнут строиться
+   * деревья символов {@code .bsl}-файлов. В LSP {@code configurationRoot} (= URI workspace) уже
+   * установлен к моменту {@link WorkspaceAddedEvent} (см. {@code ServerContextProvider#addWorkspace}),
+   * а публикация .bsl-файлов идёт только после клиентского {@code initialized} — то есть заведомо
+   * позже; поэтому всё, что при построении дерева опирается на типы (например, классификация
+   * обработчиков событий), считается верно уже с первого прохода, без реактивного пересчёта.
+   * В CLI/MCP рут на этот момент ещё не задан ({@code getConfiguration} пуст) — там регистрация
+   * идёт на {@link ServerContextPopulatingEvent} (см. ниже).
+   * <p>
+   * {@code @Order(HIGHEST_PRECEDENCE)}: у {@link WorkspaceAddedEvent} несколько синхронных
+   * слушателей (Spring вызывает их один за другим на одном потоке); {@code
+   * OScriptLibraryIndex#handleWorkspaceAdded} делает небыстрый полный обход дерева workspace'а в
+   * поисках OneScript-библиотек и без явного порядка мог бы отработать раньше, задержав регистрацию
+   * типов конфигурации на всё своё время без причины (эти два слушателя друг от друга не зависят).
+   */
   @EventListener
-  public void handleEvent(ServerContextPopulatedEvent event) {
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void handleEvent(WorkspaceAddedEvent event) {
     tryRegister();
   }
 
   /**
-   * Идемпотентная регистрация. Вызывается при заполнении ServerContext (после
-   * того как платформенные generic-типы загружены через {@code BslContextPlatformTypesProvider}
-   * — это критично для {@code registerFamilySpecializations}, который ищет
-   * generic'и по familyCore и без них пропускает специализации). Повторные
-   * вызовы — no-op.
+   * Регистрация ПЕРЕД построением деревьев в {@code populateContext} — путь для CLI/MCP
+   * ({@code analyze}/{@code format}/MCP), где {@code configurationRoot} задаётся уже ПОСЛЕ
+   * {@code addWorkspace} ({@code addWorkspace} → {@code setConfigurationRoot} →
+   * {@code populateContext}), поэтому ранняя регистрация на {@link WorkspaceAddedEvent} видит
+   * пустую конфигурацию. Иначе деревья построились бы без типов, и всё типозависимое в них
+   * (та же классификация обработчиков событий) осталось бы неверным до первой правки файла.
+   * К этому моменту {@code configurationRoot} уже задан (populate без него невозможен),
+   * а деревья ещё не строились.
+   * В LSP — идемпотентный no-op (типы уже зарегистрированы на {@link WorkspaceAddedEvent}).
+   *
+   * @param event событие начала наполнения контекста сервера.
+   */
+  @EventListener
+  public void handleEvent(ServerContextPopulatingEvent event) {
+    tryRegister();
+  }
+
+  /**
+   * Идемпотентная регистрация. Вызывается по добавлению workspace'а (см. {@link #handleEvent}).
+   * Повторные вызовы — no-op.
+   * <p>
+   * Платформенные generic-типы (СП, HBK) и метаданные конфигурации (Configuration.xml проекта) —
+   * независимые источники, поэтому загружаются параллельно: {@code typeRegistry.ensureInitialized()}
+   * форсирует {@code TypeRegistry.bootstrap()} (тот самый момент, когда реально читается СП) в
+   * фоне, пока текущий поток проверяет {@code serverContext.getConfiguration()}. Ждём завершения
+   * прогрева ({@link CompletableFuture#join()}) непосредственно перед {@link #register}, которому
+   * {@code registerFamilySpecializations} ищет generic'и по familyCore и без них пропускает
+   * специализации — раньше этого момента порядок не важен.
+   * <p>
+   * Прогрев обязательно запускается через {@link #platformTypesWarmupExecutor}, а не «голым»
+   * {@link CompletableFuture#runAsync(Runnable)} (это ушло бы в {@code ForkJoinPool.commonPool()}):
+   * в исполняемом fat-jar воркеры common pool получают {@code contextClassLoader}, отличный от
+   * classloader'а Spring Boot Launcher'а, из-за чего {@code ClassPathResource}-загрузка встроенных
+   * JSON-описаний (глобальные члены, ключевые слова и т.п. в {@code TypeRegistry.bootstrap()})
+   * падает с {@code FileNotFoundException} на классе, лежащем внутри {@code BOOT-INF/classes}.
    */
   public @Nullable ServerContext tryRegister() {
     if (registered.get()) {
@@ -150,7 +204,20 @@ public class ConfigurationTypesProvider {
       return null;
     }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null || serverContext.getConfiguration().isEmpty()) {
+    if (serverContext == null) {
+      return null;
+    }
+
+    var platformTypesWarmup = CompletableFuture.runAsync(() -> {
+      try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
+        typeRegistry.ensureInitialized();
+      }
+    }, platformTypesWarmupExecutor).exceptionally(e -> {
+      LOGGER.warn("Failed to warm up platform types for workspace {}", workspaceUri, e);
+      return null;
+    });
+
+    if (serverContext.getConfiguration().isEmpty()) {
       return null;
     }
     if (!registered.compareAndSet(false, true)) {
@@ -159,6 +226,7 @@ public class ConfigurationTypesProvider {
     var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
+    platformTypesWarmup.join();
     register(children);
     serviceModuleEventRegistrar.register(children);
     return serverContext;
