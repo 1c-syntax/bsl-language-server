@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784823811631,
+  "lastUpdate": 1784831408174,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40641,6 +40641,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7232079926799249",
             "extra": "mean: 92.46025395393372 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0cacc433732d424aace0d3d27601adb58ada1859",
+          "message": "Merge pull request #4296 from 1c-syntax/fix/pin-tccl-during-context-startup\n\nfix(binding): pin thread context classloader during context startup",
+          "timestamp": "2026-07-23T20:07:22+02:00",
+          "tree_id": "5b3f02a4d243327086aa4cc644ba81145a10c682",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0cacc433732d424aace0d3d27601adb58ada1859"
+        },
+        "date": 1784831395738,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.22408898671468,
+            "unit": "sec",
+            "range": "stddev: 2.0055729107500686",
+            "extra": "mean: 91.22408898671468 sec\nrounds: 3"
           }
         ]
       }
