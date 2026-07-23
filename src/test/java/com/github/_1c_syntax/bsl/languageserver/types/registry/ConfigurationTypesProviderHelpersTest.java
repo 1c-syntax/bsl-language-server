@@ -198,6 +198,55 @@ class ConfigurationTypesProviderHelpersTest {
     }
   }
 
+  /**
+   * Отчёт (как и обработка) — object-only тип: объектная обёртка у него есть, а
+   * ссылочного типа нет. Раньше такие MDO целиком выпадали из
+   * {@code registerObjectAndRefTypes}, и члены их объектного типа (реквизиты,
+   * табличные части) не регистрировались нигде.
+   */
+  @Test
+  void tryRegister_withReportChild_registersObjectTypeWithoutRefType() {
+    var workspaceUri = java.net.URI.create("file:///test-cfg-report/");
+    WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
+    WorkspaceContextHolder.set(workspaceUri);
+    try {
+      var report = (MD) com.github._1c_syntax.bsl.mdo.Report.builder().name("Продажи").build();
+      var configuration = Mockito.mock(Configuration.class);
+      Mockito.when(configuration.isEmpty()).thenReturn(false);
+      Mockito.when(configuration.getChildrenByMdoRef())
+        .thenReturn(java.util.Map.of(report.getMdoReference(), report));
+      var serverContext = Mockito.mock(
+        com.github._1c_syntax.bsl.languageserver.context.ServerContext.class);
+      Mockito.when(serverContext.getConfiguration())
+        .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      var serverProvider = Mockito.mock(
+        com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
+      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+
+      var registry = new TypeRegistry(List.of(), Mockito.mock(MemberMetadataIndex.class));
+      var globalScope = Mockito.mock(GlobalScopeProvider.class);
+      var lsConfig = Mockito.mock(
+        com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
+      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
+        new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry),
+        new SimpleAsyncTaskExecutor());
+
+      provider.tryRegister();
+
+      var groupRu = report.getMdoType().fullName().getRu();
+      assertThat(registry.resolve(groupRu + "Объект.Продажи"))
+        .as("объектная обёртка отчёта нужна модулю объекта — её реквизиты это его члены")
+        .isPresent();
+      assertThat(registry.resolve(groupRu + "Ссылка.Продажи"))
+        .as("отчёт не ссылочный объект конфигурации — ссылочный тип регистрировать нельзя")
+        .isEmpty();
+    } finally {
+      WorkspaceContextHolder.clear();
+      WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
+    }
+  }
+
   @Test
   void tryRegister_withPaletteColorChild_registersManager() {
     var workspaceUri = java.net.URI.create("file:///test-cfg-palette/");

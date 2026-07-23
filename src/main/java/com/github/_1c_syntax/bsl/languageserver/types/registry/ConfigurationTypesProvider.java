@@ -399,7 +399,10 @@ public class ConfigurationTypesProvider {
     return collections;
   }
 
-  /** MDOType'ы, у которых есть «объектная» обёртка (СправочникОбъект.X / ДокументОбъект.X / ...). */
+  /**
+   * MDOType'ы, у которых есть и «объектная», и «ссылочная» обёртки
+   * ({@code СправочникОбъект.X} + {@code СправочникСсылка.X} / {@code ДокументОбъект.X} + ...).
+   */
   private static final Set<MDOType> OBJECT_TYPES = Set.of(
     MDOType.CATALOG,
     MDOType.DOCUMENT,
@@ -412,19 +415,35 @@ public class ConfigurationTypesProvider {
   );
 
   /**
-   * Зарегистрировать «объектную» и «ссылочную» обёртки метаобъекта (например,
-   * {@code СправочникОбъект.X}, {@code СправочникСсылка.X}) и навесить на них
-   * членов из реквизитов метаданных.
+   * MDOType'ы, у которых есть «объектная» обёртка ({@code ОтчётОбъект.X},
+   * {@code ОбработкаОбъект.X}), но НЕТ ссылочного типа (это не ссылочные объекты
+   * конфигурации). Их реквизиты — такие же члены объектного типа, как у справочника
+   * или документа, но ссылочный тип для них не регистрируем.
+   */
+  private static final Set<MDOType> OBJECT_ONLY_TYPES = Set.of(
+    MDOType.REPORT,
+    MDOType.DATA_PROCESSOR
+  );
+
+  /**
+   * Зарегистрировать «объектную» (и, для ссылочных объектов, «ссылочную») обёртку
+   * метаобъекта (например, {@code СправочникОбъект.X} + {@code СправочникСсылка.X};
+   * для отчёта/обработки — только {@code ОтчётОбъект.X}/{@code ОбработкаОбъект.X})
+   * и навесить на них членов из реквизитов метаданных и табличных частей.
    * <p>
-   * Сейчас обрабатываются только атрибуты (как PROPERTY). Табчасти — отдельная
-   * задача (требуют регистрации СправочникТабличнаяЧастьСтрока.X.Y типа).
+   * Реквизиты (включая стандартные) регистрируются как PROPERTY; табличные части —
+   * см. {@link #registerTabularSections}. Object-only типы (отчёт/обработка)
+   * получают только объектную обёртку — ссылочного типа у них нет.
    */
   private void registerObjectAndRefTypes(MD md,
                                          MDOType mdoType,
                                          String name,
                                          MultiName fullName,
                                          List<CommonAttribute> commonAttributes) {
-    if (!OBJECT_TYPES.contains(mdoType)) {
+    var hasRefType = OBJECT_TYPES.contains(mdoType);
+    // Отчёт/обработка: объектная обёртка есть, ссылочного типа нет — их реквизиты
+    // регистрируем как члены объектного типа, но без Ссылка-обёртки.
+    if (!hasRefType && !OBJECT_ONLY_TYPES.contains(mdoType)) {
       return;
     }
     var fullRu = fullName.getRu();
@@ -453,37 +472,8 @@ public class ConfigurationTypesProvider {
     var objectEn = fullEn.isBlank() ? "" : (fullEn + "Object." + name);
     var objectRef = registerWithAlias(objectRu, objectEn);
 
-    var refRu = fullRu + "Ссылка." + name;
-    var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
-    var refRef = registerWithAlias(refRu, refEn);
-
-    // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
-    // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
-    // — тип реквизита справочника).
-    var singularRu = fullRu + "." + name;
-    if (!singularRu.equals(refRu)) {
-      typeRegistry.registerConfigurationTypeAlias(singularRu, refRef);
-    }
-    if (!fullEn.isBlank()) {
-      var singularEn = fullEn + "." + name;
-      if (!singularEn.equals(refEn)) {
-        typeRegistry.registerConfigurationTypeAlias(singularEn, refRef);
-      }
-    }
-
-    // У platform-generic'ов Object и Ref на одних и тех же стандартных
-    // реквизитах разные accessMode (например, Дата мутабельна на Объекте,
-    // но read-only на Ссылке). Поэтому собираем метаданные раздельно по
-    // семействам и регистрируем разные MemberSource'ы — описания общие
-    // и шарятся через collectPlatformMemberDescriptions.
-    MemberSource refSource = () -> {
-      var fresh = new ArrayList<MemberDescriptor>();
-      fresh.addAll(buildAttributeMembers(capturedAttributes,
-        collectPlatformMemberDescriptions(capturedFullRu),
-        collectPlatformMemberMetadata(capturedFullRu + "Ссылка")));
-      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
-      return fresh;
-    };
+    // Объектный тип есть у всех обрабатываемых здесь MDOType (в т.ч. object-only
+    // отчёта/обработки): его реквизиты — члены этого типа.
     MemberSource objectSource = () -> {
       var fresh = new ArrayList<MemberDescriptor>();
       fresh.addAll(buildAttributeMembers(capturedAttributes,
@@ -493,11 +483,47 @@ public class ConfigurationTypesProvider {
       return fresh;
     };
     typeRegistry.registerMemberSource(objectRef, objectSource, FileType.BSL);
-    typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
 
-    // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
-    // признаки учёта и флаги учёта субконто для плана счетов.
-    registerMdoSpecificAttributeMembers(md, objectRef, refRef);
+    // Ссылочный тип и связанные с ним источники — только для ссылочных объектов
+    // (отчёт/обработка ссылочного типа не имеют).
+    if (hasRefType) {
+      var refRu = fullRu + "Ссылка." + name;
+      var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
+      var refRef = registerWithAlias(refRu, refEn);
+
+      // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
+      // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
+      // — тип реквизита справочника).
+      var singularRu = fullRu + "." + name;
+      if (!singularRu.equals(refRu)) {
+        typeRegistry.registerConfigurationTypeAlias(singularRu, refRef);
+      }
+      if (!fullEn.isBlank()) {
+        var singularEn = fullEn + "." + name;
+        if (!singularEn.equals(refEn)) {
+          typeRegistry.registerConfigurationTypeAlias(singularEn, refRef);
+        }
+      }
+
+      // У platform-generic'ов Object и Ref на одних и тех же стандартных
+      // реквизитах разные accessMode (например, Дата мутабельна на Объекте,
+      // но read-only на Ссылке). Поэтому собираем метаданные раздельно по
+      // семействам и регистрируем разные MemberSource'ы — описания общие
+      // и шарятся через collectPlatformMemberDescriptions.
+      MemberSource refSource = () -> {
+        var fresh = new ArrayList<MemberDescriptor>();
+        fresh.addAll(buildAttributeMembers(capturedAttributes,
+          collectPlatformMemberDescriptions(capturedFullRu),
+          collectPlatformMemberMetadata(capturedFullRu + "Ссылка")));
+        fresh.addAll(buildCommonAttributeMembers(capturedCommon));
+        return fresh;
+      };
+      typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
+
+      // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
+      // признаки учёта и флаги учёта субконто для плана счетов.
+      registerMdoSpecificAttributeMembers(md, objectRef, refRef);
+    }
 
     // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
     // и добавляем member <TS-name> на объектный тип.
