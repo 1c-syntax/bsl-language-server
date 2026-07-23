@@ -127,6 +127,18 @@ public class BSLLSBinding {
   }
 
   private static ConfigurableApplicationContext createContext() {
-    return getApplication().run();
+    // An embedder may run with a thread context classloader that does not expose this
+    // library's classes (an isolating classloader). micrometer's ContextRegistry discovers
+    // its ThreadLocalAccessor SPI via ServiceLoader on the context classloader during
+    // startup (while the context-propagating task decorator is built), so pin the context
+    // classloader to this library's own classloader for the duration of the boot.
+    var currentThread = Thread.currentThread();
+    var originalClassLoader = currentThread.getContextClassLoader();
+    currentThread.setContextClassLoader(BSLLSBinding.class.getClassLoader());
+    try {
+      return getApplication().run();
+    } finally {
+      currentThread.setContextClassLoader(originalClassLoader);
+    }
   }
 }
