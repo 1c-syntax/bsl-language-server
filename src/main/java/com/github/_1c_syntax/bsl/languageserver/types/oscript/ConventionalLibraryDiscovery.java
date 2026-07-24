@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -31,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -82,50 +82,71 @@ public class ConventionalLibraryDiscovery {
   }
 
   /**
-   * Найти все convention-based библиотеки указанного workspace.
+   * Результат единого обхода дерева workspace: найденные {@code lib.config}-манифесты
+   * и convention/flat-библиотеки.
    *
-   * @param serverContext       workspace-контекст
-   * @param libConfigManifests  пути к уже найденным {@code lib.config}; их
-   *                            каталоги исключаются из конвенционального обхода
+   * @param libConfigs             абсолютные нормализованные пути к {@code lib.config}
+   * @param conventionalLibraries  convention/flat-библиотеки (без тех, что управляются
+   *                               {@code lib.config})
    */
-  public List<ConventionalLibrary> discover(ServerContext serverContext, Collection<Path> libConfigManifests) {
-    var skip = new HashSet<Path>();
-    for (var manifest : libConfigManifests) {
-      var parent = manifest.getParent();
-      if (parent != null) {
-        skip.add(parent.toAbsolutePath().normalize());
-      }
-    }
-
-    var result = new ArrayList<ConventionalLibrary>();
-    var visited = new HashSet<Path>();
-    for (var root : libConfigDiscovery.getRoots(serverContext)) {
-      collectFromRoot(root, skip, visited, result);
-    }
-    return result;
+  public record DiscoveryResult(List<Path> libConfigs, List<ConventionalLibrary> conventionalLibraries) {
   }
 
-  private void collectFromRoot(Path root, Set<Path> skip, Set<Path> visited, List<ConventionalLibrary> sink) {
-    if (!Files.isDirectory(root)) {
-      return;
+  /**
+   * Найти за ОДИН обход дерева workspace и {@code lib.config}-манифесты, и
+   * convention/flat-библиотеки.
+   * <p>
+   * Раньше это были два независимых полных обхода (отдельный поиск {@code lib.config}
+   * и отдельный convention-обход); на больших конфигурациях каждый стоил секунды.
+   * Здесь дерево обходится однократно: каждый каталог читается один раз, а
+   * {@code lib.config} и convention-каталоги определяются из того же листинга.
+   * <p>
+   * Семантика сохранена относительно прежней пары обходов:
+   * <ul>
+   *   <li>{@code lib.config} собираются на всю глубину {@value #MAX_DEPTH} и НЕ
+   *       прерывают спуск (в т.ч. находятся вложенные под уже обнаруженной
+   *       библиотекой);</li>
+   *   <li>каталог с {@code lib.config} и всё его поддерево исключаются из
+   *       convention/flat-регистрации (библиотеку индексирует
+   *       {@link LibConfigDiscovery}/{@link LibConfigParser});</li>
+   *   <li>convention-каталог ({@code Классы}/{@code Модули}) и flat-каталог на
+   *       вложенном уровне — завершённая библиотека: глубже как отдельные
+   *       библиотеки не регистрируются (но спуск продолжается ради вложенных
+   *       {@code lib.config});</li>
+   *   <li>{@code oscript_modules} пропускается на любой глубине.</li>
+   * </ul>
+   *
+   * @param serverContext workspace-контекст
+   * @return манифесты и convention/flat-библиотеки
+   */
+  public DiscoveryResult discoverAll(ServerContext serverContext) {
+    var libConfigs = new LinkedHashSet<Path>();
+    var conventional = new ArrayList<ConventionalLibrary>();
+    var visited = new HashSet<Path>();
+    for (var root : libConfigDiscovery.getRoots(serverContext)) {
+      if (Files.isDirectory(root)) {
+        walk(root, visited, libConfigs, conventional, 0, false);
+      }
     }
-    walk(root, skip, visited, sink, 0);
+    return new DiscoveryResult(new ArrayList<>(libConfigs), conventional);
   }
 
   /**
    * Содержимое каталога, прочитанное за один проход: непосредственные
-   * подкаталоги (по имени) и {@code .os}-файлы в самом каталоге. Один каталог
-   * читается ровно один раз, поэтому convention-обход больше не делает ни
-   * повторных листингов, ни слепых {@code isDirectory}-проб по несуществующим
-   * {@code Классы}/{@code Модули}/{@code src} — они выводятся из этого листинга.
+   * подкаталоги (по имени), {@code .os}-файлы в самом каталоге и {@code lib.config}
+   * (если есть). Один каталог читается ровно один раз, поэтому обход больше не
+   * делает ни повторных листингов, ни слепых {@code isDirectory}-проб по
+   * несуществующим {@code Классы}/{@code Модули}/{@code src} — всё выводится из
+   * этого листинга.
    */
-  private record DirContents(Map<String, Path> subdirs, List<Path> osFiles) {
-    static final DirContents EMPTY = new DirContents(Map.of(), List.of());
+  private record DirContents(Map<String, Path> subdirs, List<Path> osFiles, @Nullable Path libConfig) {
+    static final DirContents EMPTY = new DirContents(Map.of(), List.of(), null);
   }
 
   private static DirContents readDir(Path dir) {
     var subdirs = new LinkedHashMap<String, Path>();
     var osFiles = new ArrayList<Path>();
+    Path libConfig = null;
     try (var stream = Files.newDirectoryStream(dir)) {
       for (var entry : stream) {
         BasicFileAttributes attrs;
@@ -137,54 +158,78 @@ public class ConventionalLibraryDiscovery {
         }
         if (attrs.isDirectory()) {
           subdirs.put(entry.getFileName().toString(), entry);
-        } else if (attrs.isRegularFile()
-          && entry.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(OS_SUFFIX)) {
-          osFiles.add(entry);
+        } else if (attrs.isRegularFile()) {
+          var name = entry.getFileName().toString().toLowerCase(Locale.ROOT);
+          if (libConfig == null && LibConfigDiscovery.LIB_CONFIG_FILENAME.equals(name)) {
+            libConfig = entry.toAbsolutePath().normalize();
+          } else if (name.endsWith(OS_SUFFIX)) {
+            osFiles.add(entry);
+          }
         }
       }
     } catch (IOException e) {
       LOGGER.debug("Skipping unreadable directory while scanning conventional libraries: {}", dir, e);
       return DirContents.EMPTY;
     }
-    return new DirContents(subdirs, osFiles);
+    return new DirContents(subdirs, osFiles, libConfig);
   }
 
-  private static void walk(Path dir, Set<Path> skip, Set<Path> visited,
-                           List<ConventionalLibrary> sink, int depth) {
+  /**
+   * Единый обход. {@code suppressed} означает, что текущее поддерево уже
+   * «занято» (лежит под {@code lib.config}-каталогом или под уже
+   * зарегистрированной convention/flat-библиотекой): convention/flat-регистрация
+   * здесь не выполняется, но спуск продолжается ради вложенных {@code lib.config}.
+   */
+  private static void walk(Path dir, Set<Path> visited, Set<Path> libConfigs,
+                           List<ConventionalLibrary> conventional, int depth, boolean suppressed) {
     var normalized = dir.toAbsolutePath().normalize();
-    if (!visited.add(normalized) || skip.contains(normalized)) {
+    if (!visited.add(normalized)) {
       return;
     }
 
     var contents = readDir(normalized);
-    // src читаем один раз: он нужен и для convention-каталогов (src/Классы), и
-    // для flat-скриптов (плоские .os в src).
-    var srcPath = contents.subdirs().get(SRC_PREFIX);
-    var srcContents = srcPath == null ? DirContents.EMPTY : readDir(srcPath);
-
-    // Сильный сигнал: convention-каталоги Классы/Модули (в т.ч. под src). Это
-    // завершённая библиотека — внутрь не спускаемся.
-    var classFiles = collectConventionalOsFiles(contents, srcContents, CLASS_DIRS);
-    var moduleFiles = collectConventionalOsFiles(contents, srcContents, MODULE_DIRS);
-    if (!classFiles.isEmpty() || !moduleFiles.isEmpty()) {
-      sink.add(new ConventionalLibrary(normalized, classFiles, moduleFiles));
-      return;
+    // lib.config собирается на всю глубину MAX_DEPTH (файл лежит на уровне depth+1).
+    if (contents.libConfig() != null && depth < MAX_DEPTH) {
+      libConfigs.add(contents.libConfig());
     }
 
-    // Слабый сигнал (третий способ подключения): плоские .os прямо в каталоге
-    // (и в его src). Регистрируем их как flat-библиотеку, но на корневом уровне
-    // (depth == 0) НЕ прекращаем обход: рядом с потребляющим скриптом (плоский
-    // .os в корне workspace) может лежать каталог-библиотека, подключаемая
-    // относительным путём #Использовать "<dir>". На вложенных уровнях flat-каталог
-    // по-прежнему считаем завершённой библиотекой и внутрь не спускаемся.
-    var flatModules = new LinkedHashSet<Path>();
-    flatModules.addAll(contents.osFiles());
-    flatModules.addAll(srcContents.osFiles());
-    var registeredFlat = !flatModules.isEmpty();
-    if (registeredFlat) {
-      sink.add(new ConventionalLibrary(normalized, List.of(), List.copyOf(flatModules)));
-      if (depth > 0) {
-        return;
+    // Каталог с lib.config (и всё его поддерево) не участвует в convention/flat —
+    // его индексирует lib.config-путь.
+    var conventionallySuppressed = suppressed || contents.libConfig() != null;
+    var childSuppressed = conventionallySuppressed;
+    var flatAtRoot = false;
+
+    if (!conventionallySuppressed) {
+      // src читаем один раз: он нужен и для convention-каталогов (src/Классы), и
+      // для flat-скриптов (плоские .os в src).
+      var srcPath = contents.subdirs().get(SRC_PREFIX);
+      var srcContents = srcPath == null ? DirContents.EMPTY : readDir(srcPath);
+
+      // Сильный сигнал: convention-каталоги Классы/Модули (в т.ч. под src). Это
+      // завершённая библиотека — глубже как отдельные библиотеки не регистрируем.
+      var classFiles = collectConventionalOsFiles(contents, srcContents, CLASS_DIRS);
+      var moduleFiles = collectConventionalOsFiles(contents, srcContents, MODULE_DIRS);
+      if (!classFiles.isEmpty() || !moduleFiles.isEmpty()) {
+        conventional.add(new ConventionalLibrary(normalized, classFiles, moduleFiles));
+        childSuppressed = true;
+      } else {
+        // Слабый сигнал (третий способ подключения): плоские .os прямо в каталоге
+        // (и в его src). Регистрируем как flat-библиотеку, но на корневом уровне
+        // (depth == 0) НЕ прекращаем обход: рядом с потребляющим скриптом (плоский
+        // .os в корне workspace) может лежать каталог-библиотека, подключаемая
+        // относительным путём #Использовать "<dir>". На вложенных уровнях flat-каталог
+        // считаем завершённой библиотекой.
+        var flatModules = new LinkedHashSet<Path>();
+        flatModules.addAll(contents.osFiles());
+        flatModules.addAll(srcContents.osFiles());
+        if (!flatModules.isEmpty()) {
+          conventional.add(new ConventionalLibrary(normalized, List.of(), List.copyOf(flatModules)));
+          if (depth > 0) {
+            childSuppressed = true;
+          } else {
+            flatAtRoot = true;
+          }
+        }
       }
     }
 
@@ -195,18 +240,16 @@ public class ConventionalLibraryDiscovery {
     for (var child : contents.subdirs().entrySet()) {
       var name = child.getKey();
       // Не заходим в oscript_modules уже обходимого каталога — транзитивные
-      // зависимости не должны переоткрываться convention-discovery'ем как
-      // отдельные библиотеки. Корневой workspace/oscript_modules/<lib>
-      // обрабатывается отдельно через addOscriptModulesChildren.
+      // зависимости не должны переоткрываться как отдельные библиотеки. Корневой
+      // workspace/oscript_modules/<lib> обрабатывается отдельно через
+      // addOscriptModulesChildren (как отдельный корень).
       if (LibConfigDiscovery.OSCRIPT_MODULES_DIRNAME.equals(name)) {
         continue;
       }
-      // Если каталог зарегистрирован как flat-библиотека, его подкаталог src уже
-      // включён в неё (плоские .os из src) — повторно не открываем.
-      if (registeredFlat && SRC_PREFIX.equals(name)) {
-        continue;
-      }
-      walk(child.getValue(), skip, visited, sink, depth + 1);
+      // src flat-каталога уровня 0 уже включён в flat-библиотеку — как отдельную
+      // библиотеку его не регистрируем, но спускаемся ради вложенных lib.config.
+      var childSup = childSuppressed || (flatAtRoot && SRC_PREFIX.equals(name));
+      walk(child.getValue(), visited, libConfigs, conventional, depth + 1, childSup);
     }
   }
 

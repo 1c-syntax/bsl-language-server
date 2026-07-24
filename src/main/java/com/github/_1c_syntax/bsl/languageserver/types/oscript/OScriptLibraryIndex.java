@@ -78,7 +78,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class OScriptLibraryIndex {
 
-  private final LibConfigDiscovery libConfigDiscovery;
   private final LibConfigParser libConfigParser;
   private final ConventionalLibraryDiscovery conventionalLibraryDiscovery;
   private final OScriptModuleTypeResolver oScriptModuleTypeResolver;
@@ -141,7 +140,10 @@ public class OScriptLibraryIndex {
     entriesByUri.clear();
     entriesByName.clear();
 
-    var configs = libConfigDiscovery.discover(serverContext);
+    // Единый обход дерева: и lib.config-манифесты, и convention/flat-библиотеки.
+    var discovery = conventionalLibraryDiscovery.discoverAll(serverContext);
+
+    var configs = discovery.libConfigs();
     if (!configs.isEmpty()) {
       LOGGER.debug("Indexing {} OneScript library manifest(s)", configs.size());
       for (var libConfigPath : configs) {
@@ -149,7 +151,7 @@ public class OScriptLibraryIndex {
       }
     }
 
-    var conventional = conventionalLibraryDiscovery.discover(serverContext, configs);
+    var conventional = discovery.conventionalLibraries();
     if (!conventional.isEmpty()) {
       LOGGER.debug("Indexing {} convention-based OneScript librar(y/ies)", conventional.size());
       for (var lib : conventional) {
