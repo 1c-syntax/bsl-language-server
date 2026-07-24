@@ -171,7 +171,9 @@ public class AnalyzeCommand implements Callable<Integer> {
     // workspace). Обновляем workspace-scoped конфигурацию ДО addWorkspace, чтобы тот сам
     // подхватил из неё configurationRoot (см. ServerContextProvider#addWorkspace) и типы
     // конфигурации зарегистрировались уже на WorkspaceAddedEvent — без отдельного события.
-    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri(), srcDir.toString())) {
+    // Регистрируем workspace заранее (addWorkspace перерегистрирует его идемпотентно).
+    WorkspaceContextHolder.registerWorkspace(srcDir.toUri(), srcDir.getFileName().toString());
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
       configuration.update(configurationFile);
     }
 
