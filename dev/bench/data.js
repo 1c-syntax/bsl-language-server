@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784896415699,
+  "lastUpdate": 1784931539608,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40703,6 +40703,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.6597846702559536",
             "extra": "mean: 94.07799585660298 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f9b316569d5681b8ac4a67607d8eba0530d612f2",
+          "message": "Merge pull request #4299 from 1c-syntax/fix/type-registry-member-dedup\n\nfix(types): одноимённые свойство и метод типа не вытесняют друг друга",
+          "timestamp": "2026-07-24T23:56:28+02:00",
+          "tree_id": "a5ab9fce17faadc0bad2a1034e9d15858ca82c17",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f9b316569d5681b8ac4a67607d8eba0530d612f2"
+        },
+        "date": 1784931527423,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.76844000816345,
+            "unit": "sec",
+            "range": "stddev: 2.8407264691772443",
+            "extra": "mean: 93.76844000816345 sec\nrounds: 3"
           }
         ]
       }
