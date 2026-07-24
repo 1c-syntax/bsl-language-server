@@ -168,8 +168,8 @@ class ConfigurationTypesProviderHelpersTest {
     var workspaceUri = java.net.URI.create("file:///test-cfg-cat/");
     com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
       .registerWorkspace(workspaceUri, "t");
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.set(workspaceUri);
-    try {
+    try (var ignored = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
+      .forUri(workspaceUri)) {
       var catalog = (com.github._1c_syntax.bsl.mdo.MD)
         com.github._1c_syntax.bsl.mdo.Catalog.builder().name("Контрагенты").build();
       var configuration = Mockito.mock(com.github._1c_syntax.bsl.mdclasses.Configuration.class);
@@ -194,7 +194,6 @@ class ConfigurationTypesProviderHelpersTest {
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
       assertThat(registry.resolve("СправочникМенеджер.Контрагенты")).isPresent();
     } finally {
-      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.clear();
       com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
         .unregisterWorkspace(workspaceUri);
     }
@@ -251,8 +250,7 @@ class ConfigurationTypesProviderHelpersTest {
   void tryRegister_withPaletteColorChild_registersManager() {
     var workspaceUri = java.net.URI.create("file:///test-cfg-palette/");
     WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
-    WorkspaceContextHolder.set(workspaceUri);
-    try {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       var paletteColor = (MD) com.github._1c_syntax.bsl.mdo.PaletteColor.builder()
         .name("ПервичныйЦвет").build();
       var configuration = Mockito.mock(Configuration.class);
@@ -279,7 +277,6 @@ class ConfigurationTypesProviderHelpersTest {
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
     } finally {
-      WorkspaceContextHolder.clear();
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
     }
   }
@@ -288,8 +285,7 @@ class ConfigurationTypesProviderHelpersTest {
   void tryRegister_withMultipleMdoTypes_registersAll() {
     var workspaceUri = java.net.URI.create("file:///test-cfg-all/");
     WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
-    WorkspaceContextHolder.set(workspaceUri);
-    try {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       var enumValue = EnumValue.builder().name("Юридическое").build();
       var children = new java.util.LinkedHashMap<com.github._1c_syntax.bsl.types.MdoReference, MD>();
       addMd(children, Catalog.builder().name("Контрагенты").build());
@@ -329,7 +325,6 @@ class ConfigurationTypesProviderHelpersTest {
       // и регистрации catalog'а (уже проверено в tryRegister_withCatalogChild).
       assertThat(registry).isNotNull();
     } finally {
-      WorkspaceContextHolder.clear();
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
     }
   }
@@ -882,8 +877,7 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.function.BiConsumer<TypeRegistry, ConfigurationTypesProvider> assertion) {
     var workspaceUri = java.net.URI.create(workspaceUriStr);
     WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
-    WorkspaceContextHolder.set(workspaceUri);
-    try {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       var packTypes = new java.util.ArrayList<TypePackProvider.TypeDecl>(typeDecls);
       PlatformTypesProvider pack = new PlatformTypesProvider() {
         @Override
@@ -918,7 +912,6 @@ class ConfigurationTypesProviderHelpersTest {
         new SimpleAsyncTaskExecutor());
       assertion.accept(registry, provider);
     } finally {
-      WorkspaceContextHolder.clear();
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
     }
   }

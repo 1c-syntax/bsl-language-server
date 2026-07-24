@@ -217,17 +217,13 @@ public class ConfigurationTypesProvider {
    * Побочный эффект помимо регистрации: форсирует инициализацию платформенных generic-типов
    * ({@code TypeRegistry.bootstrap()}). Она нужна {@code registerFamilySpecializations},
    * который ищет generic'и по familyCore и без них молча пропускает специализации, и
-   * выполняется на {@link #platformTypesWarmupExecutor} параллельно чтению конфигурации —
-   * это независимые источники. Собственный executor обязателен: воркеры
-   * {@code ForkJoinPool.commonPool()} в исполняемом fat-jar получают чужой
-   * {@code contextClassLoader}, из-за чего загрузка встроенных JSON-описаний падает
-   * с {@code FileNotFoundException}.
+   * выполняется на {@link #platformTypesWarmupExecutor} параллельно обходу детей конфигурации.
+   * Собственный executor обязателен: воркеры {@code ForkJoinPool.commonPool()} в исполняемом
+   * fat-jar получают чужой {@code contextClassLoader}, из-за чего загрузка встроенных
+   * JSON-описаний падает с {@code FileNotFoundException}.
    *
    * @return контекст сервера, если регистрация действительно выполнена; иначе {@code null}.
    */
-  // S1941: объявление прогрева намеренно стоит до чтения конфигурации — в этом и смысл
-  // параллельности, перенос ближе к join() её убьёт.
-  @SuppressWarnings("java:S1941")
   public @Nullable ServerContext tryRegister() {
     if (registered.get()) {
       return null;
@@ -239,7 +235,13 @@ public class ConfigurationTypesProvider {
     if (serverContext == null) {
       return null;
     }
+    if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
+      return null;
+    }
 
+    // Прогрев платформенных generic-типов запускаем только после выигранного CAS: он нужен
+    // register()/registerFamilySpecializations и выполняется на выделенном executor'е
+    // (корректный contextClassLoader в fat-jar) параллельно обходу детей конфигурации.
     var platformTypesWarmup = CompletableFuture.runAsync(() -> {
       try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
         typeRegistry.ensureInitialized();
@@ -249,9 +251,6 @@ public class ConfigurationTypesProvider {
       return null;
     });
 
-    if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
-      return null;
-    }
     var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());

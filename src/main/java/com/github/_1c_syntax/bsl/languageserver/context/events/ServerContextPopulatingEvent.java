@@ -46,14 +46,8 @@ public class ServerContextPopulatingEvent extends ApplicationEvent {
   @Serial
   private static final long serialVersionUID = -4485675935728156709L;
 
-  private ServerContextPopulatingEvent(ServerContext source) {
+  public ServerContextPopulatingEvent(ServerContext source) {
     super(source);
-  }
-
-  /** Фабричный метод. Public-конструктор намеренно не предоставляется, чтобы класс
-   *  не воспринимался Spring/линтерами как кандидат на @Autowire. */
-  public static ServerContextPopulatingEvent of(ServerContext source) {
-    return new ServerContextPopulatingEvent(source);
   }
 
   @Override

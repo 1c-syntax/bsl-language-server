@@ -144,7 +144,7 @@ public class EventPublisherAspect {
 
   @Before("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
   public void serverContextPopulating(JoinPoint joinPoint, Collection<File> files) {
-    publishEvent(ServerContextPopulatingEvent.of((ServerContext) joinPoint.getThis()));
+    publishEvent(new ServerContextPopulatingEvent((ServerContext) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
