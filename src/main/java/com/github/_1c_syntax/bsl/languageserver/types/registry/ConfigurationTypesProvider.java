@@ -757,15 +757,27 @@ public class ConfigurationTypesProvider {
   static @Nullable RegisterChildren registerChildrenOf(MD md) {
     return switch (md) {
       case InformationRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
+        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
       case AccumulationRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
+        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
       case AccountingRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
+        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
       case CalculationRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
+        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
       default -> null;
     };
+  }
+
+  /**
+   * Отфильтровывает {@link StandardAttribute} (Период/Регистратор/Активность/…):
+   * {@code getAttributes()} регистра возвращает их вперемешку с собственными
+   * реквизитами, но они уже приходят как обычные bilingual-члены generic-типа
+   * записи ({@code РегистрХХХЗапись.<Имя>}) из bsl-context — без фильтра
+   * плейсхолдер {@code <Имя реквизита>} материализовал бы их второй раз,
+   * одноязычными (под английским написанием).
+   */
+  private static List<? extends Attribute> customAttributesOf(List<? extends Attribute> attributes) {
+    return attributes.stream().filter(a -> !(a instanceof StandardAttribute)).toList();
   }
 
   /**
