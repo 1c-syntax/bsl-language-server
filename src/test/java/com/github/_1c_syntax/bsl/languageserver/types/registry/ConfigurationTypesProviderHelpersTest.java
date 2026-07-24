@@ -63,13 +63,16 @@ import com.github._1c_syntax.bsl.mdo.children.Resource;
 import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
 import com.github._1c_syntax.bsl.mdo.children.WebServiceOperationParameter;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -151,17 +154,17 @@ class ConfigurationTypesProviderHelpersTest {
       .registerWorkspace(workspaceUri, "t");
     WorkspaceContextHolder.set(workspaceUri);
     try {
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(true);
-      var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(true);
+      var serverContext = mock(ServerContext.class);
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      var serverProvider = mock(ServerContextProvider.class);
+      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var p = newProviderWith(serverProvider);
       p.tryRegister();
-      Mockito.verify(configuration).isEmpty();
-      Mockito.verify(configuration, Mockito.never()).getChildrenByMdoRef();
+      verify(configuration).isEmpty();
+      verify(configuration, never()).getChildrenByMdoRef();
     } finally {
       WorkspaceContextHolder.clear();
       WorkspaceContextHolder
@@ -178,23 +181,23 @@ class ConfigurationTypesProviderHelpersTest {
       .forUri(workspaceUri)) {
       var catalog = (MD)
         Catalog.builder().name("Контрагенты").build();
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(false);
-      Mockito.when(configuration.getChildrenByMdoRef())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(false);
+      when(configuration.getChildrenByMdoRef())
         .thenReturn(java.util.Map.of(catalog.getMdoReference(), catalog));
-      var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      var serverContext = mock(ServerContext.class);
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      var serverProvider = mock(ServerContextProvider.class);
+      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(MemberMetadataIndex.class));
-      var globalScope = Mockito.mock(GlobalScopeProvider.class);
-      var lsConfig = Mockito.mock(
+        mock(MemberMetadataIndex.class));
+      var globalScope = mock(GlobalScopeProvider.class);
+      var lsConfig = mock(
         LanguageServerConfiguration.class);
-      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+      var mcs = mock(MetadataCollectionSpecializer.class);
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
@@ -235,7 +238,7 @@ class ConfigurationTypesProviderHelpersTest {
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-        new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+        new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
 
@@ -258,25 +261,25 @@ class ConfigurationTypesProviderHelpersTest {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       var paletteColor = (MD) PaletteColor.builder()
         .name("ПервичныйЦвет").build();
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(false);
-      Mockito.when(configuration.getChildrenByMdoRef())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(false);
+      when(configuration.getChildrenByMdoRef())
         .thenReturn(java.util.Map.of(paletteColor.getMdoReference(), paletteColor));
-      var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      var serverContext = mock(ServerContext.class);
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts())
+      var serverProvider = mock(ServerContextProvider.class);
+      when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(MemberMetadataIndex.class));
-      var globalScope = Mockito.mock(GlobalScopeProvider.class);
-      var lsConfig = Mockito.mock(
+        mock(MemberMetadataIndex.class));
+      var globalScope = mock(GlobalScopeProvider.class);
+      var lsConfig = mock(
         LanguageServerConfiguration.class);
-      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+      var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
@@ -303,23 +306,23 @@ class ConfigurationTypesProviderHelpersTest {
       addMd(children, CalculationRegister.builder().name("Начисления").build());
       addMd(children, ChartOfAccounts.builder().name("Основной").build());
 
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(false);
-      Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(children);
-      var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(false);
+      when(configuration.getChildrenByMdoRef()).thenReturn(children);
+      var serverContext = mock(ServerContext.class);
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts())
+      var serverProvider = mock(ServerContextProvider.class);
+      when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(MemberMetadataIndex.class));
-      var globalScope = Mockito.mock(GlobalScopeProvider.class);
-      var lsConfig = Mockito.mock(
+        mock(MemberMetadataIndex.class));
+      var globalScope = mock(GlobalScopeProvider.class);
+      var lsConfig = mock(
         LanguageServerConfiguration.class);
-      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+      var mcs = mock(MetadataCollectionSpecializer.class);
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
 
@@ -344,19 +347,19 @@ class ConfigurationTypesProviderHelpersTest {
       .registerWorkspace(workspaceUri, "t");
     WorkspaceContextHolder.set(workspaceUri);
     try {
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(false);
-      Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(java.util.Map.of());
-      var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(false);
+      when(configuration.getChildrenByMdoRef()).thenReturn(java.util.Map.of());
+      var serverContext = mock(ServerContext.class);
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      var serverProvider = mock(ServerContextProvider.class);
+      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var p = newProviderWith(serverProvider);
       p.tryRegister();
       p.tryRegister();
       // Идемпотентность: второй вызов раннее выходит и не читает children повторно.
-      Mockito.verify(configuration, Mockito.times(1)).getChildrenByMdoRef();
+      verify(configuration, times(1)).getChildrenByMdoRef();
     } finally {
       WorkspaceContextHolder.clear();
       WorkspaceContextHolder
@@ -367,20 +370,20 @@ class ConfigurationTypesProviderHelpersTest {
   private static ConfigurationTypesProvider newProviderWith(
       ServerContextProvider serverProvider) {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
-    var globalScope = Mockito.mock(GlobalScopeProvider.class);
-    var lsConfig = Mockito.mock(
+      mock(MemberMetadataIndex.class));
+    var globalScope = mock(GlobalScopeProvider.class);
+    var lsConfig = mock(
       LanguageServerConfiguration.class);
-    var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+    var mcs = mock(MetadataCollectionSpecializer.class);
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
   }
 
   // === memberPlaceholderName ===
 
   @Test
   void memberPlaceholderName_typeWithGenericMember_extractsPlaceholder() {
-    var memberIndex = Mockito.mock(MemberMetadataIndex.class);
+    var memberIndex = mock(MemberMetadataIndex.class);
     var registry = new TypeRegistry(List.of(), memberIndex);
     var ref = registry.registerConfigurationType("ПеречислениеМенеджер.X");
     var generic = MemberDescriptor.genericProperty("<Имя значения>",
@@ -894,24 +897,24 @@ class ConfigurationTypesProviderHelpersTest {
         }
       };
       var rawRegistry = new TypeRegistry(List.of(pack),
-        Mockito.mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class));
       rawRegistry.bootstrap();
       var registry = registryFn.apply(rawRegistry);
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(false);
-      Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(children);
-      var serverContext = Mockito.mock(ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(false);
+      when(configuration.getChildrenByMdoRef()).thenReturn(children);
+      var serverContext = mock(ServerContext.class);
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts())
+      var serverProvider = mock(ServerContextProvider.class);
+      when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
-      var globalScope = Mockito.mock(GlobalScopeProvider.class);
-      var lsConfig = Mockito.mock(
+      var globalScope = mock(GlobalScopeProvider.class);
+      var lsConfig = mock(
         LanguageServerConfiguration.class);
-      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+      var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry));
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
       assertion.accept(registry, provider);
     } finally {
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
@@ -921,7 +924,7 @@ class ConfigurationTypesProviderHelpersTest {
   @Test
   void memberPlaceholderName_noGenericMember_returnsEmpty() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class));
     var ref = registry.registerConfigurationType("Тип");
     var regular = MemberDescriptor.property("Регулярный",
       new TypeRef(TypeKind.PLATFORM, "Строка"));

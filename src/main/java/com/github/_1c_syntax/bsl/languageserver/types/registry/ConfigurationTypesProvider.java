@@ -60,9 +60,11 @@ import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -73,6 +75,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -174,6 +177,8 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  @Qualifier("platformTypesWarmupExecutor")
+  private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
@@ -198,7 +203,11 @@ public class ConfigurationTypesProvider {
    * <p>
    * Побочный эффект помимо регистрации: форсирует инициализацию платформенных generic-типов
    * ({@code TypeRegistry.bootstrap()}). Она нужна {@code registerFamilySpecializations},
-   * который ищет generic'и по familyCore и без них молча пропускает специализации.
+   * который ищет generic'и по familyCore и без них молча пропускает специализации, и
+   * выполняется на {@link #platformTypesWarmupExecutor} параллельно чтению конфигурации —
+   * это независимые источники. Собственный executor обязателен: воркеры общего
+   * {@code ForkJoinPool} в исполняемом fat-jar получают чужой {@code contextClassLoader},
+   * из-за чего загрузка встроенных JSON-описаний падает с {@code FileNotFoundException}.
    *
    * @return контекст сервера, если регистрация действительно выполнена; иначе {@code null}.
    */
@@ -213,15 +222,25 @@ public class ConfigurationTypesProvider {
     if (serverContext == null) {
       return null;
     }
+
+    // Прогрев платформенных generic-типов запускаем параллельно чтению конфигурации
+    // (независимые источники) на выделенном executor'е — не на общем ForkJoinPool.
+    var platformTypesWarmup = CompletableFuture.runAsync(() -> {
+      try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
+        typeRegistry.ensureInitialized();
+      }
+    }, platformTypesWarmupExecutor).exceptionally((Throwable e) -> {
+      LOGGER.warn("Failed to warm up platform types for workspace {}", workspaceUri, e);
+      return null;
+    });
+
     if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
-    // Платформенные generic-типы нужны register()/registerFamilySpecializations — форсируем
-    // их инициализацию до регистрации (текущий поток несёт корректный contextClassLoader).
-    typeRegistry.ensureInitialized();
     var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
+    platformTypesWarmup.join();
     register(children);
     serviceModuleEventRegistrar.register(children);
     return serverContext;

@@ -90,6 +90,15 @@ public class ExecutorConfiguration {
     return createVirtualThreadExecutor(compositeTaskDecorator, "workspace-service-");
   }
 
+  // Прогрев платформенных типов при регистрации конфигурации (ConfigurationTypesProvider):
+  // выделенный executor, а не commonPool (его воркеры в fat-jar получают чужой
+  // contextClassLoader и не читают встроенные JSON-описания) и не workspaceServiceExecutor
+  // (тот занят обработкой запросов BSLWorkspaceService).
+  @Bean
+  public AsyncTaskExecutor platformTypesWarmupExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "platform-types-warmup-");
+  }
+
   @Bean
   public AsyncTaskExecutor sentryExecutor(TaskDecorator compositeTaskDecorator) {
     return createVirtualThreadExecutor(compositeTaskDecorator, "sentry-");
