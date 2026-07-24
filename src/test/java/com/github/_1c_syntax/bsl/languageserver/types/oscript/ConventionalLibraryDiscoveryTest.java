@@ -51,7 +51,7 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
   private OScriptLibraryIndex index;
 
   @Autowired
-  private ConventionalLibraryDiscovery conventionalLibraryDiscovery;
+  private OScriptLibraryScanner oScriptLibraryScanner;
 
   @Autowired
   private TypeRegistry typeRegistry;
@@ -223,7 +223,7 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void discoverAllFindsLibConfigManifestsRecursively(@TempDir Path tempDir) throws IOException {
+  void scanFindsLibConfigManifestsRecursively(@TempDir Path tempDir) throws IOException {
     // given — lib.config у корня и глубоко вложенный
     var libConfig = tempDir.resolve("oscript-libs/mylib/lib.config");
     Files.createDirectories(libConfig.getParent());
@@ -234,7 +234,7 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
 
     // when
-    var libConfigs = conventionalLibraryDiscovery.discoverAll(context).libConfigs();
+    var libConfigs = oScriptLibraryScanner.scan(context).libConfigs();
 
     // then
     assertThat(libConfigs).contains(
@@ -243,7 +243,7 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void discoverAllDeduplicatesLibConfigPaths(@TempDir Path tempDir) throws IOException {
+  void scanDeduplicatesLibConfigPaths(@TempDir Path tempDir) throws IOException {
     // given
     var libConfig = tempDir.resolve("lib/lib.config");
     Files.createDirectories(libConfig.getParent());
@@ -251,21 +251,21 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
 
     // when
-    var libConfigs = conventionalLibraryDiscovery.discoverAll(context).libConfigs();
+    var libConfigs = oScriptLibraryScanner.scan(context).libConfigs();
 
     // then
     assertThat(libConfigs).containsOnlyOnce(libConfig.toAbsolutePath().normalize());
   }
 
   @Test
-  void discoverAllReturnsEmptyForMissingWorkspace(@TempDir Path parent) {
+  void scanReturnsEmptyForMissingWorkspace(@TempDir Path parent) {
     // given — корень workspace не существует
     var missing = parent.resolve("not-exist");
     var serverContext = mock(ServerContext.class);
     when(serverContext.getConfigurationRoot()).thenReturn(missing);
 
     // when
-    var result = conventionalLibraryDiscovery.discoverAll(serverContext);
+    var result = oScriptLibraryScanner.scan(serverContext);
 
     // then
     assertThat(result.libConfigs()).isEmpty();

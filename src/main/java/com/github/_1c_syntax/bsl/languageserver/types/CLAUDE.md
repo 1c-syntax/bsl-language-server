@@ -50,8 +50,10 @@ hover, completion, signature help и ряд диагностик. См. корн
 - **`symbol/`** — обёртки несорсовых сущностей: **`PlatformMemberSymbol`** (член платформенного/
   конфигурационного типа или глобал, несёт `MemberDescriptor`), **`ConstructorCallSymbol`**.
 - **`oscript/`** — источники типов OneScript: `OScriptLibraryIndex`, `OScriptModuleMembersProvider`
-  (регистрирует USER-типы и члены .os), обнаружение библиотек (`ConventionalLibraryDiscovery`,
-  `LibConfigDiscovery`, `LibConfigParser`); подпакеты `extends_/` (наследование классов:
+  (регистрирует USER-типы и члены .os), обнаружение библиотек за один обход дерева
+  (`OScriptLibraryScanner` поверх корней из `OScriptLibraryRootResolver`; `DirContents` —
+  примитив чтения каталога; `ConventionalLibraryDiscovery` — распознавание по соглашению;
+  `LibConfigParser` — разбор `lib.config`); подпакеты `extends_/` (наследование классов:
   `OScriptExtends`, `TypeRelationIndex`), `annotations/`, `autumn/` (DI-фреймворк Autumn).
 - **`util/`** — `SignatureSelection` (выбор перегрузки по числу/типам аргументов).
 

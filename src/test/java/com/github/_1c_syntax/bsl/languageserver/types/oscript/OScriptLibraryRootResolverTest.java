@@ -37,10 +37,10 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @CleanupContextBeforeClassAndAfterClass
-class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
+class OScriptLibraryRootResolverTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private LibConfigDiscovery discovery;
+  private OScriptLibraryRootResolver discovery;
 
   @Autowired
   private LanguageServerConfiguration configuration;

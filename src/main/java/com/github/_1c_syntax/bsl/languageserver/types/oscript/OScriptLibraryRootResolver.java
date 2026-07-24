@@ -40,9 +40,8 @@ import java.util.Set;
 /**
  * Корни для поиска OneScript-библиотек и общие для подсистемы константы.
  * <p>
- * Сам обход дерева (поиск {@code lib.config} и convention/flat-библиотек)
- * выполняет {@link ConventionalLibraryDiscovery} за один проход; этот компонент
- * лишь вычисляет набор корней, от которых обход стартует:
+ * Сам обход дерева выполняет {@link OScriptLibraryScanner} за один проход; этот
+ * компонент лишь вычисляет набор корней, от которых обход стартует:
  * <ol>
  *   <li>Корень workspace, а также каждый непосредственный подкаталог
  *       {@code oscript_modules} (как отдельный корень локальной зависимости).</li>
@@ -56,10 +55,7 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LibConfigDiscovery {
-
-  /** Имя файла-манифеста. */
-  public static final String LIB_CONFIG_FILENAME = "lib.config";
+public class OScriptLibraryRootResolver {
 
   /** Имя стандартного каталога локальных OneScript-зависимостей. */
   public static final String OSCRIPT_MODULES_DIRNAME = "oscript_modules";

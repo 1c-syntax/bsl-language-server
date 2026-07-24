@@ -96,7 +96,7 @@ class ConventionalLibraryImplicitDiscoveryTest extends AbstractServerContextAwar
     // then
     assertThat(index.findByName("TransConv"))
       .as("oscript_modules внутри обнаруженной convention-библиотеки не должен индексироваться " +
-        "ни через ConventionalLibraryDiscovery.walk, ни через collectImplicitEntries")
+        "ни через OScriptLibraryScanner, ни через collectImplicitEntries")
       .isEmpty();
   }
 }
