@@ -69,6 +69,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,6 +90,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Расширение членов (реквизиты, табчасти, методы из ObjectModule/ManagerModule)
  * выполняется отдельным провайдером — {@code ConfigurationModuleMembersProvider}.
+ *
+ * <h2>Когда регистрируются типы</h2>
+ *
+ * Инвариант: типы должны быть зарегистрированы <b>до</b> построения первого дерева символов.
+ * Всё, что при построении дерева опирается на типы, считается один раз и кэшируется в дереве,
+ * поэтому запоздавшая регистрация результат уже не исправит — он останется неверным до
+ * следующей перестройки документа.
+ * <p>
+ * Регистрация идемпотентна и подписана на два события, потому что момент готовности
+ * конфигурации у разных «голов» разный:
+ * <ul>
+ *   <li>{@link WorkspaceAddedEvent} — путь LSP: {@code configurationRoot} (= URI workspace)
+ *       известен уже здесь, то есть до того, как клиент пришлёт {@code didOpen};</li>
+ *   <li>{@link ServerContextPopulatingEvent} — путь CLI/MCP: там {@code configurationRoot}
+ *       задаётся уже после добавления workspace'а, поэтому на первом событии конфигурация
+ *       ещё пуста. Событие публикуется перед наполнением контекста, когда рут уже задан,
+ *       а деревья ещё не строились.</li>
+ * </ul>
+ * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно
+ * ({@link Ordered#HIGHEST_PRECEDENCE}): Spring вызывает их последовательно на одном потоке,
+ * а {@code OScriptLibraryIndex} делает полный обход дерева workspace'а (на больших проектах
+ * это секунды). От регистрации типов он не зависит, поэтому ждать его незачем.
  */
 @Component
 @WorkspaceScope
@@ -124,6 +147,32 @@ public class ConfigurationTypesProvider {
     MDOType.PALETTE_COLOR
   );
 
+  /**
+   * MDOType'ы, у которых есть и «объектная», и «ссылочная» обёртки
+   * ({@code СправочникОбъект.X} + {@code СправочникСсылка.X} / {@code ДокументОбъект.X} + ...).
+   */
+  private static final Set<MDOType> OBJECT_TYPES = EnumSet.of(
+    MDOType.CATALOG,
+    MDOType.DOCUMENT,
+    MDOType.CHART_OF_CHARACTERISTIC_TYPES,
+    MDOType.CHART_OF_ACCOUNTS,
+    MDOType.CHART_OF_CALCULATION_TYPES,
+    MDOType.BUSINESS_PROCESS,
+    MDOType.TASK,
+    MDOType.EXCHANGE_PLAN
+  );
+
+  /**
+   * MDOType'ы, у которых есть «объектная» обёртка ({@code ОтчётОбъект.X},
+   * {@code ОбработкаОбъект.X}), но НЕТ ссылочного типа (это не ссылочные объекты
+   * конфигурации). Их реквизиты — такие же члены объектного типа, как у справочника
+   * или документа, но ссылочный тип для них не регистрируем.
+   */
+  private static final Set<MDOType> OBJECT_ONLY_TYPES = EnumSet.of(
+    MDOType.REPORT,
+    MDOType.DATA_PROCESSOR
+  );
+
   private final TypeRegistry typeRegistry;
   private final ServerContextProvider serverContextProvider;
   private final GlobalScopeProvider globalScopeProvider;
@@ -137,20 +186,9 @@ public class ConfigurationTypesProvider {
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   /**
-   * Регистрирует типы конфигурации по добавлению workspace'а — раньше, чем начнут строиться
-   * деревья символов {@code .bsl}-файлов. В LSP {@code configurationRoot} (= URI workspace) уже
-   * установлен к моменту {@link WorkspaceAddedEvent} (см. {@code ServerContextProvider#addWorkspace}),
-   * а публикация .bsl-файлов идёт только после клиентского {@code initialized} — то есть заведомо
-   * позже; поэтому всё, что при построении дерева опирается на типы (например, классификация
-   * обработчиков событий), считается верно уже с первого прохода, без реактивного пересчёта.
-   * В CLI/MCP рут на этот момент ещё не задан ({@code getConfiguration} пуст) — там регистрация
-   * идёт на {@link ServerContextPopulatingEvent} (см. ниже).
-   * <p>
-   * {@code @Order(HIGHEST_PRECEDENCE)}: у {@link WorkspaceAddedEvent} несколько синхронных
-   * слушателей (Spring вызывает их один за другим на одном потоке); {@code
-   * OScriptLibraryIndex#handleWorkspaceAdded} делает небыстрый полный обход дерева workspace'а в
-   * поисках OneScript-библиотек и без явного порядка мог бы отработать раньше, задержав регистрацию
-   * типов конфигурации на всё своё время без причины (эти два слушателя друг от друга не зависят).
+   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
+   *
+   * @param event событие добавления workspace'а.
    */
   @EventListener
   @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -159,15 +197,7 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Регистрация ПЕРЕД построением деревьев в {@code populateContext} — путь для CLI/MCP
-   * ({@code analyze}/{@code format}/MCP), где {@code configurationRoot} задаётся уже ПОСЛЕ
-   * {@code addWorkspace} ({@code addWorkspace} → {@code setConfigurationRoot} →
-   * {@code populateContext}), поэтому ранняя регистрация на {@link WorkspaceAddedEvent} видит
-   * пустую конфигурацию. Иначе деревья построились бы без типов, и всё типозависимое в них
-   * (та же классификация обработчиков событий) осталось бы неверным до первой правки файла.
-   * К этому моменту {@code configurationRoot} уже задан (populate без него невозможен),
-   * а деревья ещё не строились.
-   * В LSP — идемпотентный no-op (типы уже зарегистрированы на {@link WorkspaceAddedEvent}).
+   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
    *
    * @param event событие начала наполнения контекста сервера.
    */
@@ -177,33 +207,35 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Идемпотентная регистрация. Вызывается по добавлению workspace'а (см. {@link #handleEvent}).
-   * Повторные вызовы — no-op.
+   * Регистрирует конфигурационные типы workspace'а, взятого из
+   * {@link WorkspaceContextHolder}, и события его служебных модулей.
    * <p>
-   * Платформенные generic-типы (СП, HBK) и метаданные конфигурации (Configuration.xml проекта) —
-   * независимые источники, поэтому загружаются параллельно: {@code typeRegistry.ensureInitialized()}
-   * форсирует {@code TypeRegistry.bootstrap()} (тот самый момент, когда реально читается СП) в
-   * фоне, пока текущий поток проверяет {@code serverContext.getConfiguration()}. Ждём завершения
-   * прогрева ({@link CompletableFuture#join()}) непосредственно перед {@link #register}, которому
-   * {@code registerFamilySpecializations} ищет generic'и по familyCore и без них пропускает
-   * специализации — раньше этого момента порядок не важен.
+   * Идемпотентно: фактическая регистрация выполняется не более одного раза на экземпляр,
+   * повторные вызовы — no-op. No-op также, если workspace не определён, неизвестен
+   * провайдеру контекстов или его конфигурация пуста.
    * <p>
-   * Прогрев обязательно запускается через {@link #platformTypesWarmupExecutor}, а не «голым»
-   * {@link CompletableFuture#runAsync(Runnable)} (это ушло бы в {@code ForkJoinPool.commonPool()}):
-   * в исполняемом fat-jar воркеры common pool получают {@code contextClassLoader}, отличный от
-   * classloader'а Spring Boot Launcher'а, из-за чего {@code ClassPathResource}-загрузка встроенных
-   * JSON-описаний (глобальные члены, ключевые слова и т.п. в {@code TypeRegistry.bootstrap()})
-   * падает с {@code FileNotFoundException} на классе, лежащем внутри {@code BOOT-INF/classes}.
+   * Побочный эффект помимо регистрации: форсирует инициализацию платформенных generic-типов
+   * ({@code TypeRegistry.bootstrap()}). Она нужна {@code registerFamilySpecializations},
+   * который ищет generic'и по familyCore и без них молча пропускает специализации, и
+   * выполняется на {@link #platformTypesWarmupExecutor} параллельно чтению конфигурации —
+   * это независимые источники. Собственный executor обязателен: воркеры
+   * {@code ForkJoinPool.commonPool()} в исполняемом fat-jar получают чужой
+   * {@code contextClassLoader}, из-за чего загрузка встроенных JSON-описаний падает
+   * с {@code FileNotFoundException}.
+   *
+   * @return контекст сервера, если регистрация действительно выполнена; иначе {@code null}.
    */
+  // S1941: объявление прогрева намеренно стоит до чтения конфигурации — в этом и смысл
+  // параллельности, перенос ближе к join() её убьёт.
+  @SuppressWarnings("java:S1941")
   public @Nullable ServerContext tryRegister() {
     if (registered.get()) {
       return null;
     }
     var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      return null;
-    }
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    var serverContext = workspaceUri == null
+      ? null
+      : serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext == null) {
       return null;
     }
@@ -212,15 +244,12 @@ public class ConfigurationTypesProvider {
       try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
         typeRegistry.ensureInitialized();
       }
-    }, platformTypesWarmupExecutor).exceptionally(e -> {
+    }, platformTypesWarmupExecutor).exceptionally((Throwable e) -> {
       LOGGER.warn("Failed to warm up platform types for workspace {}", workspaceUri, e);
       return null;
     });
 
-    if (serverContext.getConfiguration().isEmpty()) {
-      return null;
-    }
-    if (!registered.compareAndSet(false, true)) {
+    if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
     var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
@@ -400,32 +429,6 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * MDOType'ы, у которых есть и «объектная», и «ссылочная» обёртки
-   * ({@code СправочникОбъект.X} + {@code СправочникСсылка.X} / {@code ДокументОбъект.X} + ...).
-   */
-  private static final Set<MDOType> OBJECT_TYPES = Set.of(
-    MDOType.CATALOG,
-    MDOType.DOCUMENT,
-    MDOType.CHART_OF_CHARACTERISTIC_TYPES,
-    MDOType.CHART_OF_ACCOUNTS,
-    MDOType.CHART_OF_CALCULATION_TYPES,
-    MDOType.BUSINESS_PROCESS,
-    MDOType.TASK,
-    MDOType.EXCHANGE_PLAN
-  );
-
-  /**
-   * MDOType'ы, у которых есть «объектная» обёртка ({@code ОтчётОбъект.X},
-   * {@code ОбработкаОбъект.X}), но НЕТ ссылочного типа (это не ссылочные объекты
-   * конфигурации). Их реквизиты — такие же члены объектного типа, как у справочника
-   * или документа, но ссылочный тип для них не регистрируем.
-   */
-  private static final Set<MDOType> OBJECT_ONLY_TYPES = Set.of(
-    MDOType.REPORT,
-    MDOType.DATA_PROCESSOR
-  );
-
-  /**
    * Зарегистрировать «объектную» (и, для ссылочных объектов, «ссылочную») обёртку
    * метаобъекта (например, {@code СправочникОбъект.X} + {@code СправочникСсылка.X};
    * для отчёта/обработки — только {@code ОтчётОбъект.X}/{@code ОбработкаОбъект.X})
@@ -487,47 +490,63 @@ public class ConfigurationTypesProvider {
     // Ссылочный тип и связанные с ним источники — только для ссылочных объектов
     // (отчёт/обработка ссылочного типа не имеют).
     if (hasRefType) {
-      var refRu = fullRu + "Ссылка." + name;
-      var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
-      var refRef = registerWithAlias(refRu, refEn);
-
-      // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
-      // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
-      // — тип реквизита справочника).
-      var singularRu = fullRu + "." + name;
-      if (!singularRu.equals(refRu)) {
-        typeRegistry.registerConfigurationTypeAlias(singularRu, refRef);
-      }
-      if (!fullEn.isBlank()) {
-        var singularEn = fullEn + "." + name;
-        if (!singularEn.equals(refEn)) {
-          typeRegistry.registerConfigurationTypeAlias(singularEn, refRef);
-        }
-      }
-
-      // У platform-generic'ов Object и Ref на одних и тех же стандартных
-      // реквизитах разные accessMode (например, Дата мутабельна на Объекте,
-      // но read-only на Ссылке). Поэтому собираем метаданные раздельно по
-      // семействам и регистрируем разные MemberSource'ы — описания общие
-      // и шарятся через collectPlatformMemberDescriptions.
-      MemberSource refSource = () -> {
-        var fresh = new ArrayList<MemberDescriptor>();
-        fresh.addAll(buildAttributeMembers(capturedAttributes,
-          collectPlatformMemberDescriptions(capturedFullRu),
-          collectPlatformMemberMetadata(capturedFullRu + "Ссылка")));
-        fresh.addAll(buildCommonAttributeMembers(capturedCommon));
-        return fresh;
-      };
-      typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
-
-      // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
-      // признаки учёта и флаги учёта субконто для плана счетов.
-      registerMdoSpecificAttributeMembers(md, objectRef, refRef);
+      registerRefType(md, name, fullName, objectRef, capturedAttributes, capturedCommon);
     }
 
     // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
     // и добавляем member <TS-name> на объектный тип.
     registerTabularSections(md, name, fullRu, fullEn, objectRef);
+  }
+
+  /**
+   * Регистрирует «ссылочную» обёртку метаобъекта ({@code СправочникСсылка.X}), её
+   * singular-алиас ({@code Справочник.X}) и источник членов из тех же реквизитов, что и
+   * у объектной обёртки, но с метаданными ссылочного семейства.
+   * <p>
+   * Метаданные берутся раздельно по семействам, потому что у platform-generic'ов Object и Ref
+   * на одних и тех же стандартных реквизитах разные accessMode (например, Дата мутабельна на
+   * объекте и read-only на ссылке); описания при этом общие.
+   */
+  private void registerRefType(MD md,
+                               String name,
+                               MultiName fullName,
+                               TypeRef objectRef,
+                               List<? extends Attribute> attributes,
+                               List<CommonAttribute> commonAttributes) {
+    var fullRu = fullName.getRu();
+    var fullEn = fullName.getEn();
+
+    var refRu = fullRu + "Ссылка." + name;
+    var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
+    var refRef = registerWithAlias(refRu, refEn);
+
+    // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
+    // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
+    // — тип реквизита справочника).
+    var singularRu = fullRu + "." + name;
+    if (!singularRu.equals(refRu)) {
+      typeRegistry.registerConfigurationTypeAlias(singularRu, refRef);
+    }
+    if (!fullEn.isBlank()) {
+      var singularEn = fullEn + "." + name;
+      if (!singularEn.equals(refEn)) {
+        typeRegistry.registerConfigurationTypeAlias(singularEn, refRef);
+      }
+    }
+
+    MemberSource refSource = () -> {
+      var fresh = new ArrayList<MemberDescriptor>();
+      fresh.addAll(buildAttributeMembers(attributes,
+        collectPlatformMemberDescriptions(fullRu),
+        collectPlatformMemberMetadata(fullRu + "Ссылка")));
+      fresh.addAll(buildCommonAttributeMembers(commonAttributes));
+      return fresh;
+    };
+    typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
+
+    // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
+    // признаки учёта и флаги учёта субконто для плана счетов.
+    registerMdoSpecificAttributeMembers(md, objectRef, refRef);
   }
 
   /**

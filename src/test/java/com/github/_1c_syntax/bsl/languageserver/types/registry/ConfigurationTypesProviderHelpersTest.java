@@ -64,6 +64,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit-тесты на pure-static helpers {@link ConfigurationTypesProvider} —
@@ -208,26 +210,25 @@ class ConfigurationTypesProviderHelpersTest {
   void tryRegister_withReportChild_registersObjectTypeWithoutRefType() {
     var workspaceUri = java.net.URI.create("file:///test-cfg-report/");
     WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
-    WorkspaceContextHolder.set(workspaceUri);
-    try {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       var report = (MD) com.github._1c_syntax.bsl.mdo.Report.builder().name("Продажи").build();
-      var configuration = Mockito.mock(Configuration.class);
-      Mockito.when(configuration.isEmpty()).thenReturn(false);
-      Mockito.when(configuration.getChildrenByMdoRef())
+      var configuration = mock(Configuration.class);
+      when(configuration.isEmpty()).thenReturn(false);
+      when(configuration.getChildrenByMdoRef())
         .thenReturn(java.util.Map.of(report.getMdoReference(), report));
-      var serverContext = Mockito.mock(
+      var serverContext = mock(
         com.github._1c_syntax.bsl.languageserver.context.ServerContext.class);
-      Mockito.when(serverContext.getConfiguration())
+      when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-      var serverProvider = Mockito.mock(
+      var serverProvider = mock(
         com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
-      var registry = new TypeRegistry(List.of(), Mockito.mock(MemberMetadataIndex.class));
-      var globalScope = Mockito.mock(GlobalScopeProvider.class);
-      var lsConfig = Mockito.mock(
+      var registry = new TypeRegistry(List.of(), mock(MemberMetadataIndex.class));
+      var globalScope = mock(GlobalScopeProvider.class);
+      var lsConfig = mock(
         com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
-      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+      var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
         new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry),
         new SimpleAsyncTaskExecutor());
@@ -242,7 +243,6 @@ class ConfigurationTypesProviderHelpersTest {
         .as("отчёт не ссылочный объект конфигурации — ссылочный тип регистрировать нельзя")
         .isEmpty();
     } finally {
-      WorkspaceContextHolder.clear();
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
     }
   }
