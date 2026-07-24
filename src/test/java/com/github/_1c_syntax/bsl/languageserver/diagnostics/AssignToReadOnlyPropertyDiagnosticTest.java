@@ -120,6 +120,56 @@ class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<Assi
   }
 
   @Test
+  void detectsBareAssignmentToReadOnlySelfMemberInObjectModule() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    // Голое присваивание стандартному реквизиту Ссылка — обращение к read-only
+    // self-члену СправочникОбъект.Справочник1, а не к отдельной переменной.
+    var content = """
+      Процедура Тест()
+      	Ссылка = 3;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var diagnostics = getDiagnostics(documentContext);
+      assertThat(diagnostics)
+        .as("голое присваивание read-only реквизиту Ссылка объекта должно подсвечиваться")
+        .hasSize(1);
+      assertThat(DiagnosticMessage.getStringValue(diagnostics.get(0).getMessage()))
+        .contains("Ссылка");
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void noAssignmentWhenReadOnlyNameShadowedByLocalVariable() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    // Локальная переменная Ссылка затеняет self-реквизит — присваивание идёт
+    // переменной, read-only-проверка неприменима, false positive недопустим.
+    var content = """
+      Процедура Тест()
+      	Перем Ссылка;
+      	Ссылка = 3;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      assertThat(getDiagnostics(documentContext))
+        .as("затенённое локальной переменной имя не должно давать read-only-замечание")
+        .isEmpty();
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
   void readOnlyIndexBuiltFromJsonFallback() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

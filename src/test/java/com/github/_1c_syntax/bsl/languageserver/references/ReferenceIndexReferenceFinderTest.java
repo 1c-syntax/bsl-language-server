@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -162,6 +165,126 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(optionalReference).isEmpty();
+  }
+
+  @Test
+  void bareAssignmentToOwnAttributeIsNotResolvedAsDynamicVariable() {
+    // Присваивание без Перем одноимённому реквизиту объекта — это запись в реквизит
+    // (self-член), а не отдельная динамическая переменная. Голый self-член индексируется
+    // (ReferenceIndexFiller) как обращение к PlatformMemberSymbol, поэтому finder резолвит
+    // его напрямую через индекс — единообразно с definition/hover, а не как переменную.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        Реквизит1 = "А";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(1, 3));
+
+      assertThat(reference)
+        .as("голый self-реквизит резолвится в self-член (PlatformMemberSymbol), не в переменную")
+        .isPresent()
+        .hasValueSatisfying(ref -> {
+          assertThat(ref.isSourceDefinedSymbolReference()).isFalse();
+          assertThat(ref.symbol()).isInstanceOf(PlatformMemberSymbol.class);
+        });
+    } finally {
+      // Тест подменяет контент реального модуля из общей фикстуры (нужен
+      // настоящий self-тип) — контекст между тестами класса переиспользуется
+      // (initServerContextOnce), поэтому явно возвращаем документ к состоянию
+      // на диске, иначе следующий тест увидит эту подмену.
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void explicitlyDeclaredVariableStillShadowsSameNamedAttribute() {
+    // А вот с явным Перем — это уже настоящая локальная переменная модуля,
+    // она перекрывает одноимённый реквизит: finder должен резолвить её как обычно.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Перем Реквизит1;
+
+      Процедура Тест()
+        Реквизит1 = "А";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(3, 3));
+
+      assertThat(reference)
+        .as("явно объявленная (Перем) переменная должна резолвиться как обычно, self-свойство её не перекрывает")
+        .isPresent()
+        .hasValueSatisfying(ref -> assertThat(ref.symbol()).isInstanceOfSatisfying(VariableSymbol.class,
+          variable -> assertThat(variable.getKind()).isEqualTo(VariableKind.MODULE)));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void bareAssignmentToNonAttributeNameResolvesAsOrdinaryDynamicVariable() {
+    // DYNAMIC-переменная (без Перем), но её имя не совпадает ни с одним
+    // self-членом — isDynamicVariableShadowedBySelfMember возвращает false,
+    // finder должен вернуть ссылку на саму DYNAMIC-переменную без изменений.
+    // Позиция — на ВТОРОМ (читающем) вхождении: первое (объявляющее)
+    // присваивание в ReferenceIndex не попадает как usage вовсе
+    // (см. ReferenceIndexFiller#notVariableInitialization), поэтому для
+    // непустого результата нужно повторное обращение.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        МояЛокальная = "А";
+        Х = МояЛокальная;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(2, 6));
+
+      assertThat(reference)
+        .as("DYNAMIC-переменная, не перекрытая self-членом, резолвится как обычно")
+        .isPresent()
+        .hasValueSatisfying(ref -> assertThat(ref.symbol()).isInstanceOfSatisfying(VariableSymbol.class,
+          variable -> assertThat(variable.getKind()).isEqualTo(VariableKind.DYNAMIC)));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void forEachLoopVariableMatchingSelfAttributeResolvesAsVariableNotSelfMember() {
+    // Регресс [code-review]: голое присваивание одноимённому реквизиту подавляет
+    // фантомную переменную, но переменная цикла Для Каждого — реальное объявление и
+    // подавляться НЕ должна, даже если её имя совпадает со стандартным реквизитом
+    // объекта (Ссылка). Иначе обращение к ней внутри цикла резолвилось бы в self-член.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        Для Каждого Ссылка Из Новый Массив Цикл
+          Х = Ссылка;
+        КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(2, 8));
+
+      assertThat(reference)
+        .as("переменная цикла Для Каждого должна резолвиться как переменная, не как self-член")
+        .isPresent()
+        .hasValueSatisfying(ref -> assertThat(ref.symbol()).isInstanceOfSatisfying(VariableSymbol.class,
+          variable -> assertThat(variable.getKind()).isEqualTo(VariableKind.DYNAMIC)));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
   }
 
 }

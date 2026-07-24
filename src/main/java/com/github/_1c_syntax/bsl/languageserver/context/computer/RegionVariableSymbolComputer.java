@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -62,8 +63,9 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
 
   public RegionVariableSymbolComputer(DocumentContext documentContext,
                                       ModuleSymbol module,
-                                      List<? extends MethodSymbol> methods) {
-    super(documentContext, module, methods);
+                                      List<? extends MethodSymbol> methods,
+                                      SelfMemberClassifier selfMemberClassifier) {
+    super(documentContext, module, methods, selfMemberClassifier);
     this.documentContext = documentContext;
   }
 

@@ -40,7 +40,10 @@ import java.util.Optional;
 
 /**
  * Подсвечивает присваивание значению в свойство, у которого режим доступа —
- * {@link AccessMode#READ}.
+ * {@link AccessMode#READ}. Покрывает и дотовый доступ ({@code получатель.Свойство = …}),
+ * и голое обращение к self-члену типа модуля ({@code Свойство = …} — например, присваивание
+ * стандартному реквизиту {@code Ссылка} в модуле объекта), кроме случая, когда имя затенено
+ * одноимённой локальной переменной/параметром.
  * <p>
  * Источник информации о режиме доступа — синтакс-помощник платформы 1С
  * (через {@code bsl-context}) или JSON-fallback. Метаданные пробрасываются
@@ -101,11 +104,10 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
       return Optional.empty();
     }
     var lValue = ctx.lValue();
-    if (lValue == null || lValue.acceptor() == null) {
+    if (lValue == null) {
       return Optional.empty();
     }
-    var accessProperty = lValue.acceptor().accessProperty();
-    var propertyId = accessProperty == null ? null : accessProperty.IDENTIFIER();
+    var propertyId = assignedPropertyId(lValue);
     if (propertyId == null) {
       return Optional.empty();
     }
@@ -117,5 +119,27 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
       return Optional.empty();
     }
     return Optional.of(propertyId);
+  }
+
+  /**
+   * Терминал присваиваемого свойства:
+   * <ul>
+   *   <li>дотовый доступ {@code получатель.Свойство} — идентификатор после точки;</li>
+   *   <li>голый идентификатор {@code Свойство} — обращение к self-члену типа модуля
+   *       (реквизиту объекта/набора записей/менеджера). Затенение одноимённой
+   *       локальной переменной/параметром здесь не проверяется — его учитывает сам
+   *       резолв self-члена ({@code TypeService.resolveSelfMember}): затенённое имя
+   *       членом не считается, поэтому {@link TypeService#memberAt} ниже вернёт empty.</li>
+   * </ul>
+   *
+   * @return терминал-идентификатор свойства, либо {@code null}, если lValue им не является.
+   */
+  private static @Nullable TerminalNode assignedPropertyId(BSLParser.LValueContext lValue) {
+    var acceptor = lValue.acceptor();
+    if (acceptor != null) {
+      var accessProperty = acceptor.accessProperty();
+      return accessProperty == null ? null : accessProperty.IDENTIFIER();
+    }
+    return lValue.IDENTIFIER();
   }
 }

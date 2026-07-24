@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -72,6 +73,45 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     assertThat(overlaps)
       .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
       .isEmpty();
+  }
+
+  @Test
+  void bareAssignmentToSelfAttributeDoesNotOverlapWithVariableToken() {
+    // Регрессия: бесскобочное обращение к одноимённому реквизиту без Перем.
+    // Раньше присваивание заводило фантомную DYNAMIC VariableSymbol (см.
+    // VariableSymbolComputer#visitLValue), которую SymbolsSemanticTokensSupplier красил
+    // как переменную, а тот же диапазон отдельный сапплаер красил как self-свойство —
+    // два токена на одном участке ломали дельта-кодированный поток (порча съезжала на
+    // все последующие токены файла). Теперь фантом не создаётся (SelfMemberClassifier),
+    // self-члены индексируются (ReferenceIndexFiller) и красятся единственный раз
+    // SymbolsSemanticTokensSupplier — пересечений быть не должно. Чтения ДО присваивания
+    // в сценарии — намеренно: именно такой порядок провоцировал артефакт.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура ПриЗаписи(Отказ)
+        А = ВерсияДанных;
+        Б = Реквизит1;
+
+        ВерсияДанных = "1";
+        Реквизит1 = ТекущаяДатаСеанса();
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var allTokens = provider.collectTokens(documentContext);
+      var lines = documentContext.getContentList();
+      var overlaps = TokenOverlaps.findOverlaps(allTokens,
+        line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+      assertThat(overlaps)
+        .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+        .isEmpty();
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
   }
 
   private String describe(List<TokenOverlaps.TokenOverlap> overlaps, DocumentContext documentContext) {

@@ -25,7 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CompletionCapabilities;
@@ -40,15 +47,23 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 class CompletionProviderTest extends AbstractServerContextAwareTest {
 
@@ -61,10 +76,19 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   @Autowired
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
+  @MockitoBean
+  private EventHandlerResolver eventHandlerResolver;
+
   @AfterEach
   void resetClientCapabilities() {
     clientCapabilitiesHolder.setCapabilities(null);
     completionProvider.handleInitializeEvent();
+  }
+
+  @BeforeEach
+  void resetEventHandlerResolver() {
+    when(eventHandlerResolver.lookupContract(any(), anyString()))
+      .thenReturn(Optional.empty());
   }
 
   private void enableSnippetSupport(boolean enabled) {
@@ -246,6 +270,303 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         "ПредопределённыйЭлемент2",
         "ПредопределённаяГруппа",
         "ВложенныйЭлемент");
+  }
+
+  @Test
+  void noDotCompletionInsideCatalogObjectModuleOffersSelfMembers() {
+    // Внутри модуля объекта справочника платформенные методы объекта
+    // (Записать/Заблокировать) и собственные реквизиты (Реквизит1) доступны
+    // без квалификатора (неявный ЭтотОбъект) — completion должен их предлагать.
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // начало пустой строки внутри модуля — пустой префикс, без точки
+    params.setPosition(new Position(8, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("в модуле объекта справочника без квалификатора должны предлагаться "
+        + "платформенные методы объекта и собственные реквизиты")
+      .extracting(CompletionItem::getLabel)
+      .contains("Записать", "Заблокировать", "Реквизит1");
+  }
+
+  @Test
+  void noDotCompletionInsideManagerModuleOffersManagerSelfMembersButNotObjectMembers() {
+    // Внутри модуля менеджера справочника платформенные методы САМОГО МЕНЕДЖЕРА
+    // (НайтиПоКоду/НайтиПоНаименованию/СоздатьЭлемент — члены
+    // СправочникМенеджер.Справочник1) вызываются без квалификатора — completion
+    // должен их предлагать. А вот члены ОБЪЕКТА справочника
+    // (Записать/Заблокировать/Реквизит1 — СправочникОбъект.Справочник1, другой
+    // тип) внутри менеджера недоступны и предлагаться не должны. ЭтотОбъект
+    // тоже: в отличие от Object/RecordSet-модулей, у СправочникМенеджер/
+    // ДокументМенеджер этого свойства нет в реальном синтакс-помощнике
+    // (проверено по bsl-context) — менеджер не объект-инстанс.
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ManagerModule.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(8, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("в модуле менеджера должны предлагаться платформенные методы менеджера, но не объекта")
+      .extracting(CompletionItem::getLabel)
+      .contains("НайтиПоКоду", "НайтиПоНаименованию", "СоздатьЭлемент")
+      .doesNotContain("Записать", "Заблокировать", "Реквизит1", "ЭтотОбъект");
+  }
+
+  @Test
+  void noDotCompletionOffersThisObjectInsideObjectModule() {
+    // given: ЭтотОбъект/ThisObject — зарезервированное self-свойство модуля
+    // объекта, реальный член платформенного типа СправочникОбъект (см.
+    // builtin-platform-types.json) — должно предлагаться как отдельный пункт
+    // completion, а не только его члены (Записать и т.п.).
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(8, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then: ЭтотОбъект должен встречаться ровно один раз (единственный источник —
+    // платформенный тип СправочникОбъект, никакого отдельного дубля).
+    assertThat(items)
+      .filteredOn(it -> "ЭтотОбъект".equals(it.getLabel()))
+      .as("ЭтотОбъект не должен дублироваться")
+      .hasSize(1);
+    assertThat(items)
+      .as("в модуле объекта должно предлагаться само имя ЭтотОбъект/ThisObject")
+      .extracting(CompletionItem::getLabel)
+      .contains("ЭтотОбъект");
+  }
+
+  @Test
+  void noDotCompletionKeepsSelfMethodWhenLocalVariableHasTheSameName() {
+    // Локальная переменная модульного уровня "Записать" не должна вытеснять
+    // одноимённый self-МЕТОД объекта (платформенный Записать()) — это разные
+    // члены (свойство vs метод), у каждого свой "мешок" дедупликации: голая
+    // ссылка "Записать" резолвится в переменную, а вызов "Записать(...)" —
+    // в платформенный метод (разные пространства имён BSL).
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var realObjectModuleUri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = "Перем Записать;\n";
+    var documentContext = TestUtils.getDocumentContext(realObjectModuleUri, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then — оба члена присутствуют: и локальная переменная, и self-метод.
+    assertThat(items)
+      .as("одноимённая локальная переменная не должна скрывать self-метод того же имени")
+      .extracting(CompletionItem::getLabel)
+      .contains("Записать");
+    assertThat(items)
+      .filteredOn(it -> "Записать".equals(it.getLabel()))
+      .as("должны быть ровно два разных пункта \"Записать\": переменная и self-метод")
+      .extracting(CompletionItem::getKind)
+      .containsExactlyInAnyOrder(CompletionItemKind.Variable, CompletionItemKind.Method);
+  }
+
+  @Test
+  void dotCompletionAfterBareThisObjectIdentifierResolvesToOwnType() {
+    // given: ЭтотОбъект/ThisObject нигде не объявлен как переменная — тип
+    // голого идентификатора выводится через self-member lookup. Фикстура уже
+    // содержит `ThisObject.Ctor();` в #Region Initialize (строка 57).
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка 57 (1-based) = `ThisObject.Ctor();` — позиция сразу после точки
+    // (0-based line 56, "ThisObject." — 11 символов)
+    params.setPosition(new Position(56, 11));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then: голый идентификатор ThisObject должен резолвиться в self-тип
+    // объекта справочника — dot-completion после него отдаёт платформенные
+    // методы объекта.
+    assertThat(items)
+      .as("ThisObject как голый идентификатор должен резолвиться в тип СправочникОбъект.Справочник1")
+      .extracting(CompletionItem::getLabel)
+      .contains("Записать", "Заблокировать");
+  }
+
+  @Test
+  void noDotCompletionOffersThisObjectInsideCommonModule() {
+    // given: платформа признаёт ЭтотОбъект в общих модулях начиная с версии
+    // 8.3.3 (см. docs/diagnostics/ThisObjectAssign.md, ThisObjectAssignDiagnostic).
+    // Реальный платформенный тип ОбщийМодуль (единственный, неспециализируемый
+    // по имени — см. ConfigurationModuleMembersProvider.commonModulePlatformMembers)
+    // даёт это свойство через тот же getMembers(), что и у модуля объекта.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then: ровно один раз (ЭтотОбъект специализирован на тип ЭТОГО модуля, а не
+    // остался с обобщённым возвращаемым типом ОбщийМодуль).
+    assertThat(items)
+      .filteredOn(it -> "ЭтотОбъект".equals(it.getLabel()))
+      .hasSize(1);
+    assertThat(items)
+      .as("в общем модуле (8.3.3+) должно предлагаться ЭтотОбъект/ThisObject")
+      .extracting(CompletionItem::getLabel)
+      .contains("ЭтотОбъект");
+  }
+
+  @Test
+  void noDotCompletionRanksEventHandlerMethodBelowRegularLocalMethod() {
+    // given: локальный метод, у которого есть контракт платформенного события,
+    // ранжируется как self-член: он редко вызывается вручную и не должен
+    // теснить обычные локальные процедуры/функции документа.
+    // Имена подобраны намеренно "в лоб алфавиту" (А — первая буква, Я —
+    // последняя): если бы обработчик события ошибочно получил ту же корзину
+    // (BUCKET_LOCAL), что и обычный метод, чисто алфавитное сравнение sortText
+    // дало бы "АСобытие" < "ЯвнаяПроцедура" — и assertion ниже упал бы, поймав
+    // регресс. С прежними именами ("ПередЗаписью"/"ОбычнаяПроцедура") тест
+    // проходил бы даже при таком регрессе — по случайному совпадению
+    // алфавитного порядка (П > О и без разницы корзин).
+    when(eventHandlerResolver.lookupContract(any(), eq("АСобытие")))
+      .thenReturn(Optional.of(MemberDescriptor.event("АСобытие", "", List.of())));
+
+    var src = """
+      Процедура АСобытие(Отказ)
+      КонецПроцедуры
+
+      Процедура ЯвнаяПроцедура()
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var eventHandlerItem = items.stream()
+      .filter(it -> "АСобытие".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("АСобытие должен попасть в completion"));
+    var regularMethodItem = items.stream()
+      .filter(it -> "ЯвнаяПроцедура".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("ЯвнаяПроцедура должна попасть в completion"));
+
+    assertThat(eventHandlerItem.getSortText())
+      .as("обработчик платформенного события должен ранжироваться ниже обычного локального метода")
+      .isGreaterThan(regularMethodItem.getSortText());
+  }
+
+  @Test
+  void noDotCompletionShowsInferredTypeForEventHandlerParameter() {
+    // given: тип параметра обработчика события известен из контракта события —
+    // должен показываться в detail пункта completion, а не оставаться пустым
+    // просто потому, что параметр — локальная переменная без типизирующего
+    // doc-комментария.
+    var contract = MemberDescriptor.event("ОбработкаЗаполнения", "",
+      List.of(new SignatureDescriptor(
+        List.of(new ParameterDescriptor("ДанныеЗаполнения", TypeSet.of(new TypeRef(TypeKind.PLATFORM, "Структура")),
+          false, "", "")),
+        TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(any(), eq("ОбработкаЗаполнения")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ОбработкаЗаполнения(ДанныеЗаполнения, СтандартнаяОбработка)
+
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var item = items.stream()
+      .filter(it -> "ДанныеЗаполнения".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("ДанныеЗаполнения должен попасть в completion"));
+    assertThat(item.getDetail())
+      .as("тип параметра обработчика события должен показываться в completion")
+      .isEqualTo("Структура");
+  }
+
+  @Test
+  void noDotCompletionOffersOnlyOwnMethodParametersNotOtherMethodsParameters() {
+    // given: параметры и локальные переменные ДРУГИХ методов документа не
+    // должны предлагаться внутри текущего метода — видны только параметры/
+    // локальные переменные самого метода плюс модульный уровень.
+    var src = """
+      Перем МодульнаяПеременная;
+
+      Процедура Процедура1(Парам1)
+
+      КонецПроцедуры
+
+      Процедура Процедура2(Парам2)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // пустая строка внутри тела Процедура1
+    params.setPosition(new Position(3, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .as("виден модульный уровень и параметр своего метода, но не параметр чужого метода")
+      .contains("МодульнаяПеременная", "Парам1")
+      .doesNotContain("Парам2");
   }
 
   @Test

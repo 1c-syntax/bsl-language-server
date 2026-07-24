@@ -62,10 +62,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReferenceIndex {
 
+  /**
+   * Маркер {@code scopeName} для вхождений неквалифицированных self-членов
+   * (реквизитов/платформенных методов self-типа модуля). По нему
+   * {@link #buildReference} реконструирует {@code PlatformMemberSymbol} через
+   * {@link SelfMemberReferenceResolver}, а не ищет source-defined символ в дереве.
+   * Не пересекается с реальными именами методов (у source-символов scopeName — имя
+   * охватывающего метода либо пусто).
+   */
+  public static final String SELF_MEMBER_SCOPE = "$self";
+
   private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
+  private final SelfMemberReferenceResolver selfMemberReferenceResolver;
 
   /**
    * Получить ссылки на символ.
@@ -95,6 +106,30 @@ public class ReferenceIndex {
       .build();
 
     return symbolOccurrenceRepository.getAllBySymbol(symbolDto)
+      .stream()
+      .map(this::buildReference)
+      .flatMap(Optional::stream)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Все вхождения того же символа, что и вхождение под курсором {@code position}.
+   * <p>
+   * В отличие от {@link #getReferencesTo(SourceDefinedSymbol)}, работает по ключу самого
+   * вхождения, поэтому находит ссылки и на символы без source-defined представления —
+   * например, на неквалифицированные self-члены (их вхождения помечены
+   * {@link #SELF_MEMBER_SCOPE}). Если под курсором вхождения нет — пусто.
+   *
+   * @param uri      URI документа.
+   * @param position позиция курсора на одном из вхождений символа.
+   * @return все вхождения символа под курсором.
+   */
+  public List<Reference> getReferencesTo(URI uri, Position position) {
+    var occurrence = locationRepository.findByPosition(uri, position).orElse(null);
+    if (occurrence == null) {
+      return List.of();
+    }
+    return symbolOccurrenceRepository.getAllBySymbol(occurrence.symbol())
       .stream()
       .map(this::buildReference)
       .flatMap(Optional::stream)
@@ -295,6 +330,38 @@ public class ReferenceIndex {
     return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }
 
+  /**
+   * Построить вхождение «обращение к неквалифицированному self-члену» (реквизиту/
+   * платформенному методу self-типа модуля) без записи в индекс. Ключ помечается
+   * {@link #SELF_MEMBER_SCOPE}, по которому {@link #buildReference} реконструирует
+   * {@code PlatformMemberSymbol} через {@link SelfMemberReferenceResolver}.
+   *
+   * @param uri            URI документа, где встречен self-член.
+   * @param mdoRef         mdoRef документа (self-тип — это его собственный тип модуля).
+   * @param moduleType     тип модуля документа.
+   * @param symbolKind     вид: {@link SymbolKind#Method} (вызов) / {@link SymbolKind#Property} (ссылка).
+   * @param name           имя self-члена.
+   * @param range          диапазон обращения.
+   * @param occurrenceType вид обращения.
+   * @return построенное вхождение.
+   */
+  protected SymbolOccurrence selfMemberOccurrence(URI uri, String mdoRef, ModuleType moduleType,
+                                                  SymbolKind symbolKind, String name, Range range,
+                                                  OccurrenceType occurrenceType) {
+    var nameCanonical = stringInterner.intern(name.toLowerCase(Locale.ENGLISH));
+
+    var symbol = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName(SELF_MEMBER_SCOPE)
+      .symbolKind(symbolKind)
+      .symbolName(nameCanonical)
+      .build()
+      .intern();
+
+    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
+  }
+
   private Optional<Reference> buildReference(
     SymbolOccurrence symbolOccurrence
   ) {
@@ -307,6 +374,10 @@ public class ReferenceIndex {
     }
     var serverContext = serverContextOpt.get();
 
+    if (SELF_MEMBER_SCOPE.equals(symbolOccurrence.symbol().scopeName())) {
+      return buildSelfMemberReference(serverContext, symbolOccurrence);
+    }
+
     return getSourceDefinedSymbol(serverContext, symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
         var from = getFromSymbol(serverContext, symbolOccurrence);
@@ -315,6 +386,28 @@ public class ReferenceIndex {
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceAccessibility::isAccessible);
+  }
+
+  /**
+   * Реконструировать {@code Reference} для вхождения self-члена: цель — синтетический
+   * {@code PlatformMemberSymbol}, собранный {@link SelfMemberReferenceResolver} по
+   * self-типу документа и имени/виду члена. Если self-типа нет или член не найден
+   * (конфигурационные типы ещё не зарегистрированы) — empty; корректная подсветка/
+   * резолв восстановятся при переиндексации на {@code ConfigurationTypesRegisteredEvent}.
+   */
+  private Optional<Reference> buildSelfMemberReference(ServerContext serverContext, SymbolOccurrence occurrence) {
+    var document = serverContext.getDocumentNoLock(occurrence.uri());
+    if (document == null) {
+      return Optional.empty();
+    }
+    return selfMemberReferenceResolver
+      .resolveSelfMember(document, occurrence.symbol().symbolKind(), occurrence.symbol().symbolName())
+      .map(memberSymbol -> new Reference(
+        getFromSymbol(serverContext, occurrence),
+        memberSymbol,
+        occurrence.uri(),
+        occurrence.range(),
+        occurrence.occurrenceType()));
   }
 
   private static Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {

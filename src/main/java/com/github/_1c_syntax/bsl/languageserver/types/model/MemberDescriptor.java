@@ -234,6 +234,12 @@ public record MemberDescriptor(
       signatures, sourceSymbol, generic, metadata, async, newStandardLibrary);
   }
 
+  /** Копия дескриптора с подменёнными возвращаемыми типами. */
+  public MemberDescriptor withReturnTypes(TypeSet newReturnTypes) {
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, newReturnTypes,
+      signatures, sourceSymbol, generic, metadata, async, standardLibrary);
+  }
+
   /** Копия дескриптора с подменёнными сигнатурами. */
   public MemberDescriptor withSignatures(List<SignatureDescriptor> newSignatures) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,

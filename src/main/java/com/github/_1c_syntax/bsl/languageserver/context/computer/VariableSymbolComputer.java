@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
@@ -65,16 +66,20 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private final DocumentContext documentContext;
   private final ModuleSymbol module;
   private final Map<Range, SourceDefinedSymbol> methods;
+  private final SelfMemberClassifier selfMemberClassifier;
   private final Set<VariableSymbol> variables = new HashSet<>();
   private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   private SourceDefinedSymbol currentMethod;
 
-  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<? extends MethodSymbol> methods) {
+  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,
+                                List<? extends MethodSymbol> methods,
+                                SelfMemberClassifier selfMemberClassifier) {
     this.documentContext = documentContext;
     this.module = module;
     this.methods = methods.stream().collect(toMap(MethodSymbol::getSubNameRange, Function.identity()));
+    this.selfMemberClassifier = selfMemberClassifier;
     this.currentMethod = module;
   }
 
@@ -177,6 +182,13 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       || ctx.IDENTIFIER() == null
       || currentMethodVariables.containsKey(ctx.getText())
       || moduleVariables.containsKey(ctx.getText())
+      // Голое присваивание одноимённому self-реквизиту (без Перем) — это обращение к
+      // реквизиту объекта/набора записей/менеджера, а не отдельная переменная: символ не
+      // заводим. Имя резолвит self-член machinery (инференсер, PlatformMemberReferenceFinder,
+      // индексация в ReferenceIndexFiller, подсветка SymbolsSemanticTokensSupplier). Проверка
+      // здесь, а не в общем updateVariablesCache: переменные цикла Для/Для Каждого — реальные
+      // объявления и НЕ должны подавляться, даже если их имя совпадает с реквизитом.
+      || selfMemberClassifier.isBareSelfProperty(documentContext, ctx.IDENTIFIER().getText())
     ) {
       return ctx;
     }

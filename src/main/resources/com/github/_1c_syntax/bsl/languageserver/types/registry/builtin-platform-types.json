@@ -2536,6 +2536,8 @@
       },
       {
         "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
         "kind": "PROPERTY",
         "returnType": "СправочникОбъект.<Имя справочника>"
       },
@@ -2978,6 +2980,8 @@
       },
       {
         "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
         "kind": "PROPERTY",
         "returnType": "ФормаКлиентскогоПриложения"
       },
@@ -3317,6 +3321,8 @@
       },
       {
         "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
         "kind": "PROPERTY",
         "returnType": "СправочникОбъект.<Имя справочника>",
         "accessMode": "READ"
@@ -3757,6 +3763,8 @@
       },
       {
         "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
         "kind": "PROPERTY",
         "returnType": "ДокументОбъект.<Имя документа>",
         "accessMode": "READ"
@@ -4124,6 +4132,23 @@
         "recommendedReplacements": [
           "ОписаниеПалитрыЦветов.УстановитьПалитру"
         ]
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ОбщийМодуль",
+    "nameRu": "ОбщийМодуль",
+    "nameEn": "CommonModule",
+    "members": [
+      {
+        "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
+        "kind": "PROPERTY",
+        "returnType": "ОбщийМодуль",
+        "sinceVersion": "8.3.3",
+        "description": "Ссылка на текущий общий модуль."
       }
     ]
   }

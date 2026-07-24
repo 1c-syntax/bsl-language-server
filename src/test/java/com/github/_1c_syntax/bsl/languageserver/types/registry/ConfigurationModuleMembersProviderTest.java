@@ -132,6 +132,40 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void commonModuleThisObjectIsSpecializedToOwnTypeNotGenericCommonModule() {
+    // given: платформенный тип ОбщийМодуль (builtin-platform-types.json — или
+    // реальный HBK) даёт ЭтотОбъект с обобщённым returnType «ОбщийМодуль».
+    // ConfigurationModuleMembersProvider.commonModulePlatformMembers должен
+    // специализировать его на тип ЭТОГО КОНКРЕТНОГО модуля, иначе dot-completion
+    // после ЭтотОбъект. не показал бы собственные экспортные методы модуля.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
+      + "ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    var ownRef = globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow())
+      .orElseThrow();
+
+    var members = typeRegistry.getMembers(ownRef, FileType.BSL);
+    var thisObject = members.stream()
+      .filter(m -> "ЭтотОбъект".equals(m.name()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("ЭтотОбъект должен быть членом типа общего модуля"));
+
+    assertThat(thisObject.kind()).isEqualTo(MemberKind.PROPERTY);
+    assertThat(thisObject.returnType())
+      .as("ЭтотОбъект должен указывать на тип ЭТОГО модуля, а не на обобщённый ОбщийМодуль")
+      .isEqualTo(ownRef);
+
+    // generic-плейсхолдер <Имя процедуры или функции> отфильтрован — собственные
+    // экспортные методы модуля даёт другой источник (collectModuleMembers).
+    assertThat(members)
+      .extracting(m -> m.name())
+      .noneMatch(name -> name.contains("<"));
+  }
+
+  @Test
   void registersCommonModuleAsGlobalContextMember() {
     // given: workspace c общим модулем, его DocumentContext прогрет
     initServerContext(PATH_TO_METADATA);

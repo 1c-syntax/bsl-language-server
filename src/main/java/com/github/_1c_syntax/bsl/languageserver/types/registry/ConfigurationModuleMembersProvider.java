@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
@@ -33,18 +34,22 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * Расширяет платформенные типы менеджеров/объектов/наборов записей
@@ -72,6 +77,14 @@ public class ConfigurationModuleMembersProvider {
     ModuleType.ValueManagerModule, "МенеджерЗначения"
   );
 
+  /**
+   * Платформенный тип общего модуля синтакс-помощника — единственный,
+   * неспециализируемый по имени (в отличие от {@code СправочникОбъект.<Имя>}
+   * и т.п.): все общие модули структурно одинаковы, различаются только
+   * значением.
+   */
+  private static final String COMMON_MODULE_PLATFORM_TYPE_NAME = "ОбщийМодуль";
+
   private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_EN = Map.of(
     ModuleType.ManagerModule, "Manager",
     ModuleType.ObjectModule, "Object",
@@ -86,10 +99,50 @@ public class ConfigurationModuleMembersProvider {
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
 
+  // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeByUri,
+  // от которого зависит self-member проход индексатора. Без явного порядка filler мог
+  // отработать раньше и пропустить self-члены (см. ReferenceIndexFiller).
+  @Order(100)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
     register(documentContext);
+  }
+
+  /**
+   * RU-qualifiedName self-типа модуля по его метаданным — та же специализация, что
+   * регистрирует {@link #register} ({@code СправочникОбъект.Контрагенты},
+   * {@code ДокументНаборЗаписей.…}; для общего модуля — имя модуля). Чистая функция
+   * без побочных эффектов и без опоры на {@code moduleTypeByUri}.
+   * <p>
+   * Нужна, чтобы резолвить self-тип <b>из метаданных напрямую</b> на первой сборке
+   * дерева символов — до того как {@link #register} (слушатель
+   * {@code DocumentContextContentChangedEvent}) наполнит {@code moduleTypeByUri}:
+   * дерево строится внутри {@code DocumentContext.rebuild}, а событие публикуется
+   * AOP уже после возврата из него, поэтому кэш на момент классификации self-членов
+   * ещё пуст (см. {@code TypeService#findSelfMember}, аналогично
+   * {@code EventHandlerResolver#resolveOwnerType}).
+   *
+   * @param moduleType вид модуля документа.
+   * @param mdObject   MD-объект документа.
+   * @return RU-qualifiedName self-типа; empty, если модуль не несёт self-тип или
+   *   части имени не заполнены.
+   */
+  public static Optional<String> selfTypeQualifiedName(ModuleType moduleType, MD mdObject) {
+    if (moduleType == ModuleType.CommonModule) {
+      var name = mdObject.getName();
+      return name == null || name.isBlank() ? Optional.empty() : Optional.of(name);
+    }
+    var wrapperSuffix = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
+    if (wrapperSuffix == null) {
+      return Optional.empty();
+    }
+    var groupNameRu = mdObject.getMdoType().fullName().getRu();
+    var name = mdObject.getName();
+    if (groupNameRu == null || groupNameRu.isBlank() || name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(groupNameRu + wrapperSuffix + "." + name);
   }
 
   private void register(DocumentContext documentContext) {
@@ -173,7 +226,51 @@ public class ConfigurationModuleMembersProvider {
     }
 
     typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerMemberSource(ref, () -> commonModulePlatformMembers(ref), FileType.BSL);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
+  }
+
+  /**
+   * Платформенные члены общего модуля (сейчас — только {@code ЭтотОбъект}) из
+   * реального типа {@value #COMMON_MODULE_PLATFORM_TYPE_NAME} синтакс-помощника
+   * (HBK либо JSON-фолбек — обычный {@link TypeRegistry#getMembers}). Если тип
+   * не зарегистрирован ни там, ни там — возвращает пусто.
+   * <p>
+   * {@code ЭтотОбъект} специализируется на {@code selfRef} (тип конкретного
+   * общего модуля), а не остаётся с обобщённым возвращаемым типом
+   * {@code ОбщийМодуль}: иначе dot-completion после {@code ЭтотОбъект.} не
+   * показывал бы собственные экспортные методы этого модуля (их даёт
+   * {@link #collectModuleMembers}, зарегистрированный на тот же {@code selfRef}).
+   * <p>
+   * Generic-плейсхолдер {@code <Имя процедуры или функции>} отфильтровывается
+   * по тексту имени, а не по флагу {@code generic} — bsl-context его методам
+   * не проставляет (в отличие от свойств).
+   */
+  private List<MemberDescriptor> commonModulePlatformMembers(TypeRef selfRef) {
+    var genericRefOpt = typeRegistry.resolve(COMMON_MODULE_PLATFORM_TYPE_NAME, FileType.BSL);
+    if (genericRefOpt.isEmpty()) {
+      return List.of();
+    }
+    var genericRef = genericRefOpt.get();
+    // Общий модуль, буквально названный "ОбщийМодуль", резолвится в сам платформенный
+    // generic-тип: selfRef == genericRef. Специализировать тип на самом себе нельзя, а
+    // getMembers(genericRef) здесь ушёл бы обратно в этот же источник → бесконечная
+    // рекурсия (StackOverflowError). Платформенные члены у него и так уже есть — выходим.
+    if (genericRef.equals(selfRef)) {
+      return List.of();
+    }
+    var members = typeRegistry.getMembers(genericRef, FileType.BSL);
+    var result = new ArrayList<MemberDescriptor>(members.size());
+    for (var member : members) {
+      if (!ContextNames.placeholders(member.name()).isEmpty()) {
+        continue;
+      }
+      if (member.returnTypes().refs().contains(genericRef)) {
+        member = member.withReturnTypes(TypeSet.of(selfRef));
+      }
+      result.add(member);
+    }
+    return result;
   }
 
   /**
@@ -184,16 +281,13 @@ public class ConfigurationModuleMembersProvider {
    * {@link MemberTypeFromCommentResolver}.
    */
   private List<MemberDescriptor> collectModuleMembers(DocumentContext documentContext) {
-    var members = new ArrayList<MemberDescriptor>();
-    documentContext.getSymbolTree().getMethods().stream()
+    var methodMembers = documentContext.getSymbolTree().getMethods().stream()
       .filter(MethodSymbol::isExport)
-      .map(this::toMethodMember)
-      .forEach(members::add);
-    documentContext.getSymbolTree().getVariables().stream()
+      .map(this::toMethodMember);
+    var variableMembers = documentContext.getSymbolTree().getVariables().stream()
       .filter(VariableSymbol::isExport)
-      .map(this::toVariableMember)
-      .forEach(members::add);
-    return members;
+      .map(this::toVariableMember);
+    return Stream.concat(methodMembers, variableMembers).toList();
   }
 
   private MemberDescriptor toVariableMember(VariableSymbol variable) {

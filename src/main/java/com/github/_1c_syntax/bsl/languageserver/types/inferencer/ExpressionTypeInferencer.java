@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -254,29 +255,61 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     // Терминал идентификатора уже под рукой — резолвим по нему, без спуска по AST
-    // от корня к позиции в reference-finder'ах.
-    var resolved = resolveReferenceAt(ctx, terminal);
-    if (!resolved.isEmpty()) {
-      return resolved;
+    // от корня к позиции в reference-finder'ах. resolveReference возвращает
+    // Optional.empty(), когда ссылка нашлась, но указывает на вид символа, тип
+    // которого этот метод не берётся выводить (например, ModuleSymbol
+    // модуля-аксессора общего модуля — его типизирует globalProperty ниже) —
+    // тогда падаем на self-свойство/глобал, как и при отсутствии ссылки вовсе.
+    // А вот когда ссылка указывает на переменную/метод/self-член, но её тип
+    // честно не выводится (например, локальная переменная без единого
+    // присваивания) — resolveReference возвращает Optional.of(EMPTY), и ЭТОТ
+    // результат подменять self-свойством того же имени нельзя.
+    var viaReference = referenceResolver.findReference(ctx.documentContext.getUri(), terminal)
+      .flatMap(ref -> resolveReference(ref, ctx));
+    if (viaReference.isPresent()) {
+      return viaReference.get();
     }
     var text = terminal.getText();
     if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
-    // Неявное поле родителя библиотеки extends: фреймворк создаёт _ОбъектРодитель
-    // в собранном объекте, в исходниках наследника оно не объявлено — типизируем
-    // его родительским классом, чтобы _ОбъектРодитель.МетодБазы() резолвился.
-    if (ExtendsAnnotations.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(text)
-      && ctx.documentContext.getFileType() == FileType.OS) {
-      var parent = parentClassType(ctx.documentContext);
-      if (!parent.isEmpty()) {
-        return parent;
-      }
+    // Неквалифицированное обращение к свойству self-типа текущего модуля:
+    // внутри модуля объекта/менеджера/набора записей/общего модуля к своим
+    // реквизитам обращаются без явного получателя. Self-тип — тот же, что
+    // регистрирует GlobalScopeProvider.indexModuleType для dot-completion, так
+    // что набор доступных свойств для каждого типа модуля не нужно перечислять
+    // отдельно. Только {@code PROPERTY}: голый идентификатор без вызова не
+    // может ссылаться на метод (вызов метода резолвится в inferCall/inferMethodCall).
+    return inferImplicitExtendsParentField(text, ctx)
+      .or(() -> selfMemberReturnTypes(ctx, text, MemberKind.PROPERTY))
+      .orElseGet(() -> globalPropertyReturnTypes(text, ctx));
+  }
+
+  /**
+   * Неявное поле родителя библиотеки extends: фреймворк создаёт _ОбъектРодитель
+   * в собранном объекте, в исходниках наследника оно не объявлено — типизируем
+   * его родительским классом, чтобы _ОбъектРодитель.МетодБазы() резолвился.
+   *
+   * @return тип родителя; {@code Optional.empty()}, если имя — не это неявное
+   *     поле, файл не OScript-класс, либо тип родителя не выводится (тогда
+   *     резолв продолжается self-свойством/глобальным свойством).
+   */
+  private Optional<TypeSet> inferImplicitExtendsParentField(String text, InferenceContext ctx) {
+    if (!ExtendsAnnotations.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(text)
+      || ctx.documentContext.getFileType() != FileType.OS) {
+      return Optional.empty();
     }
-    // Глобальная область: платформенные глобалы, library-модули, common-модули —
-    // все приходят как глобальные свойства.
-    // Только PROPERTY: голое имя глобальной функции (METHOD) — не значение, а
-    // имена типов для `Новый` (Структура) вообще не члены контекста.
+    var parent = parentClassType(ctx.documentContext);
+    return parent.isEmpty() ? Optional.empty() : Optional.of(parent);
+  }
+
+  /**
+   * Глобальная область: платформенные глобалы, library-модули, common-модули —
+   * все приходят как глобальные свойства. Только {@code PROPERTY}: голое имя
+   * глобальной функции ({@code METHOD}) — не значение, а имена типов для
+   * {@code Новый} (Структура) вообще не члены контекста.
+   */
+  private TypeSet globalPropertyReturnTypes(String text, InferenceContext ctx) {
     return globalScopeProvider.globalProperty(text, ctx.documentContext.getFileType())
       .map(MemberDescriptor::returnTypes)
       .filter(types -> types.refs().stream().anyMatch(ref -> !ref.equals(TypeRef.UNKNOWN)))
@@ -489,26 +522,52 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     // Терминал имени вызова уже под рукой — резолвим по нему, без спуска по AST
-    // от корня к позиции в reference-finder'ах.
+    // от корня к позиции в reference-finder'ах. Для имени, не попавшего в
+    // индекс ссылок проекта (платформенная глобальная функция, неквалифицированный
+    // вызов self-метода модуля), reference остаётся пустым Optional — шаг 1
+    // ниже тогда пуст, и резолвинг продолжается шагами 2/3.
     var reference = referenceResolver.findReference(ctx.documentContext.getUri(), name);
-    if (reference.isEmpty()) {
-      // Резолвер не нашёл ссылку — например, для глобальной функции без
-      // токена, который мы успели проиндексировать. Пробуем по имени
-      // через GlobalScopeProvider напрямую.
-      return globalFunctionReturnTypes(name.getText(), ctx);
-    }
-    // 1. Источник-источник в проекте — это MethodSymbol.
-    var sourceDefinedReturn = reference
+    // 1. Источник-источник в проекте — это MethodSymbol. Если ссылка резолвится
+    //    именно в него, доверяем результату целиком — даже честно пустому
+    //    (процедура или функция без объявленного типа возврата) — и НЕ падаем
+    //    дальше на глобальную функцию/self-член с тем же именем: совпадение
+    //    имени не делает их одним и тем же символом (см. resolveReference в
+    //    inferIdentifier — тот же принцип для голых идентификаторов).
+    var localMethod = reference
       .flatMap(Reference::getSourceDefinedSymbol)
       .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
-      .map(symbolTypeIndex::getDeclaredReturnTypes);
-    if (sourceDefinedReturn.isPresent() && !sourceDefinedReturn.get().isEmpty()) {
-      return sourceDefinedReturn.get();
+      .map(MethodSymbol.class::cast);
+    if (localMethod.isPresent()) {
+      return symbolTypeIndex.getDeclaredReturnTypes(localMethod.get());
     }
     // 2. Платформенная глобальная функция (СтрНайти и т.п.) — через
     //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
-    return globalFunctionReturnTypes(name.getText(), ctx);
+    var globalReturn = globalFunctionReturnTypes(name.getText(), ctx);
+    if (!globalReturn.isEmpty()) {
+      return globalReturn;
+    }
+    // 3. Неквалифицированный вызов платформенного метода self-типа модуля.
+    //    Тот же self-тип, что и в inferIdentifier для свойств, здесь —
+    //    MemberKind.METHOD.
+    return selfMemberReturnTypes(ctx, name.getText(), MemberKind.METHOD)
+      .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Возвращаемые типы self-члена текущего модуля с заданными видом и именем.
+   * Продублирован через реестр напрямую, потому что инференсер не может зависеть от
+   * фасада {@code TypeService} (тот сам делегирует инференсеру). В отличие от
+   * {@code TypeService#findSelfMember} берёт self-тип только из кэша
+   * {@code moduleTypeByUri}, без fallback на метаданные: инференс идёт уже после
+   * наполнения кэша и при построении дерева символов не вызывается.
+   *
+   * @return типы значения self-члена; empty, если self-типа у документа нет
+   *     или член с таким видом/именем не найден.
+   */
+  private Optional<TypeSet> selfMemberReturnTypes(InferenceContext ctx, String name, MemberKind kind) {
+    return globalScopeProvider.moduleTypeByUri(ctx.documentContext.getUri())
+      .flatMap(ref -> typeRegistry.findMember(ref, kind, name, ctx.documentContext.getFileType()))
+      .map(MemberDescriptor::returnTypes);
   }
 
   /**
@@ -746,31 +805,35 @@ public class ExpressionTypeInferencer {
   // Reference resolution
   // ---------------------------------------------------------------------------
 
-  private TypeSet resolveReferenceAt(InferenceContext ctx, TerminalNode terminal) {
-    return referenceResolver.findReference(ctx.documentContext.getUri(), terminal)
-      .map(reference -> resolveReference(reference, ctx))
-      .orElse(TypeSet.EMPTY);
-  }
-
-  private TypeSet resolveReference(Reference reference, InferenceContext ctx) {
-    var maybeSymbol = reference.getSourceDefinedSymbol();
-    if (maybeSymbol.isEmpty()) {
-      return TypeSet.EMPTY;
+  /**
+   * @return {@code Optional.empty()}, если ссылка указывает на вид символа,
+   *     тип которого этот метод не берётся выводить (например,
+   *     {@code ModuleSymbol} модуля-аксессора общего модуля) — вызывающий
+   *     тогда сам решает, на что упасть дальше. Для переменной/метода/
+   *     self-члена результат всегда присутствует, даже если сам тип — пустой
+   *     {@link TypeSet#EMPTY} (честно невыведенный тип — не «символ не тот»).
+   */
+  private Optional<TypeSet> resolveReference(Reference reference, InferenceContext ctx) {
+    var target = reference.symbol();
+    if (target instanceof PlatformMemberSymbol platformMember) {
+      // Синтетический символ (self-свойство/метод, глобал) — не SourceDefinedSymbol,
+      // тип берём напрямую из его MemberDescriptor.
+      return Optional.of(platformMember.getDescriptor().returnTypes());
     }
-    var symbol = maybeSymbol.get();
+    if (!(target instanceof MethodSymbol) && !(target instanceof VariableSymbol)) {
+      return Optional.empty();
+    }
+    var symbol = (SourceDefinedSymbol) target;
     if (!ctx.visited.add(symbol)) {
       // Цикл: для переменной-аккумулятора возвращаем накопленный к этому моменту
       // тип (см. inProgress), для прочих символов — пусто, как и раньше.
-      return ctx.inProgress.getOrDefault(symbol, TypeSet.EMPTY);
+      return Optional.of(ctx.inProgress.getOrDefault(symbol, TypeSet.EMPTY));
     }
     try {
       if (symbol instanceof MethodSymbol method) {
-        return symbolTypeIndex.getDeclaredReturnTypes(method);
+        return Optional.of(symbolTypeIndex.getDeclaredReturnTypes(method));
       }
-      if (symbol instanceof VariableSymbol variable) {
-        return inferVariable(variable, ctx);
-      }
-      return TypeSet.EMPTY;
+      return Optional.of(inferVariable((VariableSymbol) symbol, ctx));
     } finally {
       ctx.visited.remove(symbol);
     }

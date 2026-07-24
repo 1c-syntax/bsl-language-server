@@ -410,8 +410,14 @@ public final class SignatureHelpProvider {
     if (local.isPresent()) {
       return local;
     }
-    // Fallback: глобальная функция.
-    return globalScopeProvider.globalFunction(methodName, documentContext.getFileType());
+    // Глобальная функция.
+    var global = globalScopeProvider.globalFunction(methodName, documentContext.getFileType());
+    if (global.isPresent()) {
+      return global;
+    }
+    // Неквалифицированный вызов платформенного метода self-типа текущего
+    // модуля (тот же self-тип, что у dot-completion и hover).
+    return typeService.findSelfMember(documentContext, methodName, MemberKind.METHOD);
   }
 
   private Optional<MemberDescriptor> resolveAccessCall(
