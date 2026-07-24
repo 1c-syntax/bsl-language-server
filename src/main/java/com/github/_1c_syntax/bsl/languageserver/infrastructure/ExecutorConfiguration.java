@@ -91,6 +91,11 @@ public class ExecutorConfiguration {
   }
 
   @Bean
+  public AsyncTaskExecutor platformTypesWarmupExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "platform-types-warmup-");
+  }
+
+  @Bean
   public AsyncTaskExecutor sentryExecutor(TaskDecorator compositeTaskDecorator) {
     return createVirtualThreadExecutor(compositeTaskDecorator, "sentry-");
   }

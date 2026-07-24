@@ -27,13 +27,10 @@ import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
-import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
@@ -49,13 +46,6 @@ import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
-import com.github._1c_syntax.bsl.mdo.HTTPService;
-import com.github._1c_syntax.bsl.mdo.IntegrationService;
-import com.github._1c_syntax.bsl.mdo.WebService;
-import com.github._1c_syntax.bsl.mdo.children.HTTPServiceMethod;
-import com.github._1c_syntax.bsl.mdo.children.IntegrationServiceChannel;
-import com.github._1c_syntax.bsl.mdo.children.WebServiceOperation;
-import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.MDObject;
@@ -63,7 +53,6 @@ import com.github._1c_syntax.bsl.mdo.PredefinedDataOwner;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.mdo.children.PredefinedValue;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
-import com.github._1c_syntax.bsl.mdo.support.TemplateType;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MultiName;
 import com.github._1c_syntax.bsl.types.ValueType;
@@ -71,18 +60,23 @@ import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  * Регистрирует {@link com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType}
@@ -95,6 +89,26 @@ import java.util.stream.Collectors;
  * <p>
  * Расширение членов (реквизиты, табчасти, методы из ObjectModule/ManagerModule)
  * выполняется отдельным провайдером — {@code ConfigurationModuleMembersProvider}.
+ *
+ * <h2>Когда регистрируются типы</h2>
+ *
+ * Инвариант: типы должны быть зарегистрированы <b>до</b> построения первого дерева символов.
+ * Всё, что при построении дерева опирается на типы, считается один раз и кэшируется в дереве,
+ * поэтому запоздавшая регистрация результат уже не исправит — он останется неверным до
+ * следующей перестройки документа.
+ * <p>
+ * Регистрация идемпотентна и подписана на {@link WorkspaceAddedEvent}: к этому моменту
+ * {@code configurationRoot} у контекста уже установлен — {@code addWorkspace} подхватывает его
+ * из workspace-scoped конфигурации (см. {@code ServerContextProvider#addWorkspace}), поэтому
+ * вызывающему достаточно обновить конфигурацию до {@code addWorkspace}. Деревья символов на
+ * этот момент ещё не строились: в LSP публикация {@code .bsl}-файлов идёт только после
+ * клиентского {@code initialized}, в CLI/MCP наполнение контекста ({@code populateContext})
+ * выполняется уже после {@code addWorkspace}.
+ * <p>
+ * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно
+ * ({@link Ordered#HIGHEST_PRECEDENCE}): Spring вызывает их последовательно на одном потоке,
+ * а {@code OScriptLibraryIndex} делает полный обход дерева workspace'а (на больших проектах
+ * это секунды). От регистрации типов он не зависит, поэтому ждать его незачем.
  */
 @Component
 @WorkspaceScope
@@ -130,6 +144,32 @@ public class ConfigurationTypesProvider {
     MDOType.PALETTE_COLOR
   );
 
+  /**
+   * MDOType'ы, у которых есть и «объектная», и «ссылочная» обёртки
+   * ({@code СправочникОбъект.X} + {@code СправочникСсылка.X} / {@code ДокументОбъект.X} + ...).
+   */
+  private static final Set<MDOType> OBJECT_TYPES = EnumSet.of(
+    MDOType.CATALOG,
+    MDOType.DOCUMENT,
+    MDOType.CHART_OF_CHARACTERISTIC_TYPES,
+    MDOType.CHART_OF_ACCOUNTS,
+    MDOType.CHART_OF_CALCULATION_TYPES,
+    MDOType.BUSINESS_PROCESS,
+    MDOType.TASK,
+    MDOType.EXCHANGE_PLAN
+  );
+
+  /**
+   * MDOType'ы, у которых есть «объектная» обёртка ({@code ОтчётОбъект.X},
+   * {@code ОбработкаОбъект.X}), но НЕТ ссылочного типа (это не ссылочные объекты
+   * конфигурации). Их реквизиты — такие же члены объектного типа, как у справочника
+   * или документа, но ссылочный тип для них не регистрируем.
+   */
+  private static final Set<MDOType> OBJECT_ONLY_TYPES = EnumSet.of(
+    MDOType.REPORT,
+    MDOType.DATA_PROCESSOR
+  );
+
   private final TypeRegistry typeRegistry;
   private final ServerContextProvider serverContextProvider;
   private final GlobalScopeProvider globalScopeProvider;
@@ -137,40 +177,70 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  @Qualifier("platformTypesWarmupExecutor")
+  private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
-
+  /**
+   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
+   *
+   * @param event событие добавления workspace'а.
+   */
   @EventListener
-  public void handleEvent(ServerContextPopulatedEvent event) {
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void handleEvent(WorkspaceAddedEvent event) {
     tryRegister();
   }
 
   /**
-   * Идемпотентная регистрация. Вызывается при заполнении ServerContext (после
-   * того как платформенные generic-типы загружены через {@code BslContextPlatformTypesProvider}
-   * — это критично для {@code registerFamilySpecializations}, который ищет
-   * generic'и по familyCore и без них пропускает специализации). Повторные
-   * вызовы — no-op.
+   * Регистрирует конфигурационные типы workspace'а, взятого из
+   * {@link WorkspaceContextHolder}, и события его служебных модулей.
+   * <p>
+   * Идемпотентно: фактическая регистрация выполняется не более одного раза на экземпляр,
+   * повторные вызовы — no-op. No-op также, если конфигурация workspace'а ещё пуста
+   * (у голого «безворкспейсного» контекста {@code configurationRoot == null}).
+   * <p>
+   * Побочный эффект помимо регистрации: форсирует инициализацию платформенных generic-типов
+   * ({@code TypeRegistry.bootstrap()}). Она нужна {@code registerFamilySpecializations},
+   * который ищет generic'и по familyCore и без них молча пропускает специализации, и
+   * выполняется на {@link #platformTypesWarmupExecutor} параллельно чтению конфигурации —
+   * это независимые источники. Собственный executor обязателен: воркеры общего
+   * {@code ForkJoinPool} в исполняемом fat-jar получают чужой {@code contextClassLoader},
+   * из-за чего загрузка встроенных JSON-описаний падает с {@code FileNotFoundException}.
+   *
+   * @return контекст сервера, если регистрация действительно выполнена; иначе {@code null}.
    */
   public @Nullable ServerContext tryRegister() {
     if (registered.get()) {
       return null;
     }
+    // workspaceUri установлен всегда: tryRegister зовётся только из обработчика
+    // WorkspaceAddedEvent, а событие публикуется под workspace-контекстом.
     var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      return null;
-    }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null || serverContext.getConfiguration().isEmpty()) {
+    if (serverContext == null) {
       return null;
     }
-    if (!registered.compareAndSet(false, true)) {
+
+    // Прогрев платформенных generic-типов запускаем параллельно чтению конфигурации
+    // (независимые источники) на выделенном executor'е — не на общем ForkJoinPool.
+    var platformTypesWarmup = CompletableFuture.runAsync(() -> {
+      try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
+        typeRegistry.ensureInitialized();
+      }
+    }, platformTypesWarmupExecutor).exceptionally((Throwable e) -> {
+      LOGGER.warn("Failed to warm up platform types for workspace {}", workspaceUri, e);
+      return null;
+    });
+
+    if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
     var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
+    platformTypesWarmup.join();
     register(children);
     serviceModuleEventRegistrar.register(children);
     return serverContext;
@@ -343,32 +413,25 @@ public class ConfigurationTypesProvider {
     return collections;
   }
 
-  /** MDOType'ы, у которых есть «объектная» обёртка (СправочникОбъект.X / ДокументОбъект.X / ...). */
-  private static final Set<MDOType> OBJECT_TYPES = Set.of(
-    MDOType.CATALOG,
-    MDOType.DOCUMENT,
-    MDOType.CHART_OF_CHARACTERISTIC_TYPES,
-    MDOType.CHART_OF_ACCOUNTS,
-    MDOType.CHART_OF_CALCULATION_TYPES,
-    MDOType.BUSINESS_PROCESS,
-    MDOType.TASK,
-    MDOType.EXCHANGE_PLAN
-  );
-
   /**
-   * Зарегистрировать «объектную» и «ссылочную» обёртки метаобъекта (например,
-   * {@code СправочникОбъект.X}, {@code СправочникСсылка.X}) и навесить на них
-   * членов из реквизитов метаданных.
+   * Зарегистрировать «объектную» (и, для ссылочных объектов, «ссылочную») обёртку
+   * метаобъекта (например, {@code СправочникОбъект.X} + {@code СправочникСсылка.X};
+   * для отчёта/обработки — только {@code ОтчётОбъект.X}/{@code ОбработкаОбъект.X})
+   * и навесить на них членов из реквизитов метаданных и табличных частей.
    * <p>
-   * Сейчас обрабатываются только атрибуты (как PROPERTY). Табчасти — отдельная
-   * задача (требуют регистрации СправочникТабличнаяЧастьСтрока.X.Y типа).
+   * Реквизиты (включая стандартные) регистрируются как PROPERTY; табличные части —
+   * см. {@link #registerTabularSections}. Object-only типы (отчёт/обработка)
+   * получают только объектную обёртку — ссылочного типа у них нет.
    */
   private void registerObjectAndRefTypes(MD md,
                                          MDOType mdoType,
                                          String name,
                                          MultiName fullName,
                                          List<CommonAttribute> commonAttributes) {
-    if (!OBJECT_TYPES.contains(mdoType)) {
+    var hasRefType = OBJECT_TYPES.contains(mdoType);
+    // Отчёт/обработка: объектная обёртка есть, ссылочного типа нет — их реквизиты
+    // регистрируем как члены объектного типа, но без Ссылка-обёртки.
+    if (!hasRefType && !OBJECT_ONLY_TYPES.contains(mdoType)) {
       return;
     }
     var fullRu = fullName.getRu();
@@ -397,6 +460,47 @@ public class ConfigurationTypesProvider {
     var objectEn = fullEn.isBlank() ? "" : (fullEn + "Object." + name);
     var objectRef = registerWithAlias(objectRu, objectEn);
 
+    // Объектный тип есть у всех обрабатываемых здесь MDOType (в т.ч. object-only
+    // отчёта/обработки): его реквизиты — члены этого типа.
+    MemberSource objectSource = () -> {
+      var fresh = new ArrayList<MemberDescriptor>();
+      fresh.addAll(buildAttributeMembers(capturedAttributes,
+        collectPlatformMemberDescriptions(capturedFullRu),
+        collectPlatformMemberMetadata(capturedFullRu + "Объект")));
+      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
+      return fresh;
+    };
+    typeRegistry.registerMemberSource(objectRef, objectSource, FileType.BSL);
+
+    // Ссылочный тип и связанные с ним источники — только для ссылочных объектов
+    // (отчёт/обработка ссылочного типа не имеют).
+    if (hasRefType) {
+      registerRefType(md, name, fullName, objectRef, capturedAttributes, capturedCommon);
+    }
+
+    // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
+    // и добавляем member <TS-name> на объектный тип.
+    registerTabularSections(md, name, fullRu, fullEn, objectRef);
+  }
+
+  /**
+   * Регистрирует «ссылочную» обёртку метаобъекта ({@code СправочникСсылка.X}), её
+   * singular-алиас ({@code Справочник.X}) и источник членов из тех же реквизитов, что и
+   * у объектной обёртки, но с метаданными ссылочного семейства.
+   * <p>
+   * Метаданные берутся раздельно по семействам, потому что у platform-generic'ов Object и Ref
+   * на одних и тех же стандартных реквизитах разные accessMode (например, Дата мутабельна на
+   * объекте и read-only на ссылке); описания при этом общие.
+   */
+  private void registerRefType(MD md,
+                               String name,
+                               MultiName fullName,
+                               TypeRef objectRef,
+                               List<? extends Attribute> attributes,
+                               List<CommonAttribute> commonAttributes) {
+    var fullRu = fullName.getRu();
+    var fullEn = fullName.getEn();
+
     var refRu = fullRu + "Ссылка." + name;
     var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
     var refRef = registerWithAlias(refRu, refEn);
@@ -415,37 +519,19 @@ public class ConfigurationTypesProvider {
       }
     }
 
-    // У platform-generic'ов Object и Ref на одних и тех же стандартных
-    // реквизитах разные accessMode (например, Дата мутабельна на Объекте,
-    // но read-only на Ссылке). Поэтому собираем метаданные раздельно по
-    // семействам и регистрируем разные MemberSource'ы — описания общие
-    // и шарятся через collectPlatformMemberDescriptions.
     MemberSource refSource = () -> {
       var fresh = new ArrayList<MemberDescriptor>();
-      fresh.addAll(buildAttributeMembers(capturedAttributes,
-        collectPlatformMemberDescriptions(capturedFullRu),
-        collectPlatformMemberMetadata(capturedFullRu + "Ссылка")));
-      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
+      fresh.addAll(buildAttributeMembers(attributes,
+        collectPlatformMemberDescriptions(fullRu),
+        collectPlatformMemberMetadata(fullRu + "Ссылка")));
+      fresh.addAll(buildCommonAttributeMembers(commonAttributes));
       return fresh;
     };
-    MemberSource objectSource = () -> {
-      var fresh = new ArrayList<MemberDescriptor>();
-      fresh.addAll(buildAttributeMembers(capturedAttributes,
-        collectPlatformMemberDescriptions(capturedFullRu),
-        collectPlatformMemberMetadata(capturedFullRu + "Объект")));
-      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
-      return fresh;
-    };
-    typeRegistry.registerMemberSource(objectRef, objectSource, FileType.BSL);
     typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
 
     // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
     // признаки учёта и флаги учёта субконто для плана счетов.
     registerMdoSpecificAttributeMembers(md, objectRef, refRef);
-
-    // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
-    // и добавляем member <TS-name> на объектный тип.
-    registerTabularSections(md, name, fullRu, fullEn, objectRef);
   }
 
   /**

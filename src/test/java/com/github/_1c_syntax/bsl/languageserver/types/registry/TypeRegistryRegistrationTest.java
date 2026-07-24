@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -102,6 +105,39 @@ class TypeRegistryRegistrationTest {
     assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.OS))
       .as("конфигурационные типы недоступны в OS")
       .isEmpty();
+  }
+
+  @Test
+  void registerConfigurationTypeReusesRefAlreadyTakenByAnotherKind() {
+    // given — имя уже занято НЕ конфигурационным типом: так платформенная специализация
+    // (ОтчетОбъект.<Имя>) появляется раньше, чем модуль объекта до-регистрирует свои члены
+    var existing = typeRegistry.registerUserType("ОтчетОбъект.Продажи", declaration, FileType.BSL);
+
+    // when
+    var ref = typeRegistry.registerConfigurationType("ОтчетОбъект.Продажи");
+
+    // then — тот же ref, второго типа с тем же именем не появляется
+    assertThat(ref)
+      .as("одно qualifiedName — один TypeRef")
+      .isEqualTo(existing);
+    assertThat(typeRegistry.resolve("ОтчетОбъект.Продажи")).contains(existing);
+  }
+
+  @Test
+  void registerConfigurationTypeKeepsMembersRegisteredOnExistingRef() {
+    // given — у типа уже есть члены (события и встроенные реквизиты платформенного типа)
+    var existing = typeRegistry.registerUserType("ОтчетОбъект.Отгрузки", declaration, FileType.BSL);
+    typeRegistry.registerMemberSource(existing,
+      () -> List.of(MemberDescriptor.property("КомпоновщикНастроек")), FileType.BSL);
+
+    // when — модуль объекта до-регистрирует тот же тип
+    var ref = typeRegistry.registerConfigurationType("ОтчетОбъект.Отгрузки");
+
+    // then — члены достижимы по возвращённому ref'у: источники не разъехались по двум типам
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL))
+      .as("getMembers собирает источники строго по своему ref — при втором ref'е члены терялись")
+      .extracting(MemberDescriptor::name)
+      .contains("КомпоновщикНастроек");
   }
 
   @Test

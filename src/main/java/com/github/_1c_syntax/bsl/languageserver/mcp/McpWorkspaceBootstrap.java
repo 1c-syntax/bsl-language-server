@@ -61,9 +61,6 @@ public class McpWorkspaceBootstrap {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       configuration.update(new File(""));
 
-      var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-      serverContext.setConfigurationRoot(configurationPath);
-
       var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
       serverContext.populateContext(files);
       LOGGER.info("Indexed {} files in workspace `{}`", files.size(), srcDir);

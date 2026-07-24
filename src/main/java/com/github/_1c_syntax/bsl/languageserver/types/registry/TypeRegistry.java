@@ -927,8 +927,30 @@ public class TypeRegistry {
   /**
    * Зарегистрировать конфигурационный тип (Справочники.X, Документы.X и т.д.).
    * Конфигурационные типы всегда BSL-only.
+   * <p>
+   * Инвариант «одно qualifiedName ↔ один {@link TypeRef}»: если имя уже
+   * зарезолвлено в канонический тип (например, платформенную специализацию
+   * {@code ОтчётОбъект.<Имя>}, которую завёл {@link #registerSpecialization}
+   * с kind'ом generic'а = {@link TypeKind#PLATFORM}), — <b>переиспользуем</b> его,
+   * а не плодим отдельный {@link TypeKind#CONFIGURATION}-ref с тем же именем.
+   * Иначе второй ref перекрыл бы первый в {@code aliasIndex}, а member-source'ы
+   * разбрелись бы по двум разным ref'ам: {@link #getMembers} собирает источники
+   * строго по своему ref (см. {@code resolveMemberSources}) и не досбирает чужие,
+   * из-за чего, например, события и встроенные реквизиты платформенного типа стали
+   * бы недостижимы после того, как модуль объекта до-регистрировал свои члены. Тот
+   * же resolve-or-intern уже делает {@link #registerSpecialization(String, TypeRef,
+   * Map, FileType)} — так обе стороны сходятся на один ref независимо от порядка
+   * регистрации.
    */
   public TypeRef registerConfigurationType(String qualifiedName) {
+    var existing = resolve(qualifiedName).orElse(null);
+    if (existing != null) {
+      // Имя уже занято каноническим типом — садимся на него, лишь дорегистрируя
+      // BSL-видимость (конфигурационные члены всегда BSL). Не перетираем types-запись
+      // существующего типа: его kind/описание/конструкторы остаются как есть.
+      registerFileType(existing, FileType.BSL);
+      return existing;
+    }
     var ref = intern(TypeKind.CONFIGURATION, qualifiedName);
     types.put(ref, new ConfigurationType(ref));
     addAlias(qualifiedName, ref);
