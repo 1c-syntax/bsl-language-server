@@ -29,15 +29,17 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Convention-based fallback для OneScript-библиотек без {@code lib.config}.
@@ -110,101 +112,125 @@ public class ConventionalLibraryDiscovery {
     walk(root, skip, visited, sink, 0);
   }
 
+  /**
+   * Содержимое каталога, прочитанное за один проход: непосредственные
+   * подкаталоги (по имени) и {@code .os}-файлы в самом каталоге. Один каталог
+   * читается ровно один раз, поэтому convention-обход больше не делает ни
+   * повторных листингов, ни слепых {@code isDirectory}-проб по несуществующим
+   * {@code Классы}/{@code Модули}/{@code src} — они выводятся из этого листинга.
+   */
+  private record DirContents(Map<String, Path> subdirs, List<Path> osFiles) {
+    static final DirContents EMPTY = new DirContents(Map.of(), List.of());
+  }
+
+  private static DirContents readDir(Path dir) {
+    var subdirs = new LinkedHashMap<String, Path>();
+    var osFiles = new ArrayList<Path>();
+    try (var stream = Files.newDirectoryStream(dir)) {
+      for (var entry : stream) {
+        BasicFileAttributes attrs;
+        try {
+          attrs = Files.readAttributes(entry, BasicFileAttributes.class);
+        } catch (IOException e) {
+          LOGGER.debug("Skipping unreadable entry while scanning conventional libraries: {}", entry, e);
+          continue;
+        }
+        if (attrs.isDirectory()) {
+          subdirs.put(entry.getFileName().toString(), entry);
+        } else if (attrs.isRegularFile()
+          && entry.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(OS_SUFFIX)) {
+          osFiles.add(entry);
+        }
+      }
+    } catch (IOException e) {
+      LOGGER.debug("Skipping unreadable directory while scanning conventional libraries: {}", dir, e);
+      return DirContents.EMPTY;
+    }
+    return new DirContents(subdirs, osFiles);
+  }
+
   private static void walk(Path dir, Set<Path> skip, Set<Path> visited,
                            List<ConventionalLibrary> sink, int depth) {
     var normalized = dir.toAbsolutePath().normalize();
     if (!visited.add(normalized) || skip.contains(normalized)) {
       return;
     }
-    // Сильный сигнал: convention-каталоги Классы/Модули. Это завершённая
-    // библиотека — внутрь не спускаемся.
-    if (tryRegisterConventional(normalized, sink)) {
+
+    var contents = readDir(normalized);
+    // src читаем один раз: он нужен и для convention-каталогов (src/Классы), и
+    // для flat-скриптов (плоские .os в src).
+    var srcPath = contents.subdirs().get(SRC_PREFIX);
+    var srcContents = srcPath == null ? DirContents.EMPTY : readDir(srcPath);
+
+    // Сильный сигнал: convention-каталоги Классы/Модули (в т.ч. под src). Это
+    // завершённая библиотека — внутрь не спускаемся.
+    var classFiles = collectConventionalOsFiles(contents, srcContents, CLASS_DIRS);
+    var moduleFiles = collectConventionalOsFiles(contents, srcContents, MODULE_DIRS);
+    if (!classFiles.isEmpty() || !moduleFiles.isEmpty()) {
+      sink.add(new ConventionalLibrary(normalized, classFiles, moduleFiles));
       return;
     }
-    // Слабый сигнал (третий способ подключения): плоские .os прямо в каталоге.
-    // Регистрируем их как flat-библиотеку, но на корневом уровне (depth == 0)
-    // НЕ прекращаем обход: рядом с потребляющим скриптом (плоский .os в корне
-    // workspace) может лежать каталог-библиотека, подключаемая относительным
-    // путём #Использовать "<dir>". На вложенных уровнях flat-каталог по-прежнему
-    // считаем завершённой библиотекой и внутрь не спускаемся.
-    var registeredFlat = tryRegisterFlat(normalized, sink);
-    if (registeredFlat && depth > 0) {
-      return;
+
+    // Слабый сигнал (третий способ подключения): плоские .os прямо в каталоге
+    // (и в его src). Регистрируем их как flat-библиотеку, но на корневом уровне
+    // (depth == 0) НЕ прекращаем обход: рядом с потребляющим скриптом (плоский
+    // .os в корне workspace) может лежать каталог-библиотека, подключаемая
+    // относительным путём #Использовать "<dir>". На вложенных уровнях flat-каталог
+    // по-прежнему считаем завершённой библиотекой и внутрь не спускаемся.
+    var flatModules = new LinkedHashSet<Path>();
+    flatModules.addAll(contents.osFiles());
+    flatModules.addAll(srcContents.osFiles());
+    var registeredFlat = !flatModules.isEmpty();
+    if (registeredFlat) {
+      sink.add(new ConventionalLibrary(normalized, List.of(), List.copyOf(flatModules)));
+      if (depth > 0) {
+        return;
+      }
     }
+
     if (depth >= MAX_DEPTH) {
       return;
     }
-    try (var stream = Files.list(dir)) {
-      stream
-        .filter(Files::isDirectory)
-        // Не заходим в oscript_modules уже обходимого каталога — транзитивные
-        // зависимости не должны переоткрываться convention-discovery'ем как
-        // отдельные библиотеки. Корневой workspace/oscript_modules/<lib>
-        // обрабатывается отдельно через addOscriptModulesChildren.
-        .filter(child -> !LibConfigDiscovery.OSCRIPT_MODULES_DIRNAME.equals(child.getFileName().toString()))
-        // Если каталог зарегистрирован как flat-библиотека, его подкаталог src
-        // уже включён в неё (listFlatOsFiles читает и <root>/src) — повторно как
-        // отдельную библиотеку не открываем.
-        .filter(child -> !(registeredFlat && SRC_PREFIX.equals(child.getFileName().toString())))
-        .forEach(child -> walk(child, skip, visited, sink, depth + 1));
-    } catch (IOException e) {
-      LOGGER.debug("Skipping unreadable directory while scanning conventional libraries: {}", dir, e);
-    }
-  }
 
-  /** Регистрация по convention-каталогам {@code Классы}/{@code Модули} (сильный сигнал). */
-  private static boolean tryRegisterConventional(Path libraryRoot, List<ConventionalLibrary> sink) {
-    var classFiles = listOsFiles(libraryRoot, CLASS_DIRS);
-    var moduleFiles = listOsFiles(libraryRoot, MODULE_DIRS);
-    if (!classFiles.isEmpty() || !moduleFiles.isEmpty()) {
-      sink.add(new ConventionalLibrary(libraryRoot, classFiles, moduleFiles));
-      return true;
+    for (var child : contents.subdirs().entrySet()) {
+      var name = child.getKey();
+      // Не заходим в oscript_modules уже обходимого каталога — транзитивные
+      // зависимости не должны переоткрываться convention-discovery'ем как
+      // отдельные библиотеки. Корневой workspace/oscript_modules/<lib>
+      // обрабатывается отдельно через addOscriptModulesChildren.
+      if (LibConfigDiscovery.OSCRIPT_MODULES_DIRNAME.equals(name)) {
+        continue;
+      }
+      // Если каталог зарегистрирован как flat-библиотека, его подкаталог src уже
+      // включён в неё (плоские .os из src) — повторно не открываем.
+      if (registeredFlat && SRC_PREFIX.equals(name)) {
+        continue;
+      }
+      walk(child.getValue(), skip, visited, sink, depth + 1);
     }
-    return false;
   }
 
   /**
-   * Третий способ подключения библиотеки: каталог без {@code lib.config} и без
-   * {@code Классы}/{@code Модули}, но содержащий {@code .os}-файлы — все они
-   * подключаются как модули.
+   * .os-файлы convention-каталогов {@code dirNames} (например,
+   * {@code Классы}/{@code Classes}) — как в самом каталоге библиотеки, так и под
+   * его {@code src}. Порядок и отсутствие дубликатов сохраняются
+   * ({@link LinkedHashSet}); каталог читается лишь если реально присутствует в
+   * заранее прочитанном листинге.
    */
-  private static boolean tryRegisterFlat(Path libraryRoot, List<ConventionalLibrary> sink) {
-    var flatModules = listFlatOsFiles(libraryRoot);
-    if (!flatModules.isEmpty()) {
-      sink.add(new ConventionalLibrary(libraryRoot, List.of(), flatModules));
-      return true;
-    }
-    return false;
-  }
-
-  private static List<Path> listFlatOsFiles(Path libraryRoot) {
-    var result = new LinkedHashSet<Path>();
-    addOsFilesFrom(libraryRoot, result);
-    addOsFilesFrom(libraryRoot.resolve(SRC_PREFIX), result);
-    return result.isEmpty() ? List.of() : List.copyOf(result);
-  }
-
-  private static List<Path> listOsFiles(Path libraryRoot, List<String> dirNames) {
+  private static List<Path> collectConventionalOsFiles(DirContents contents, DirContents srcContents,
+                                                       List<String> dirNames) {
     var result = new LinkedHashSet<Path>();
     for (var dirName : dirNames) {
-      addOsFilesFrom(libraryRoot.resolve(dirName), result);
-      addOsFilesFrom(libraryRoot.resolve(SRC_PREFIX).resolve(dirName), result);
+      var conventionDir = contents.subdirs().get(dirName);
+      if (conventionDir != null) {
+        result.addAll(readDir(conventionDir).osFiles());
+      }
+      var srcConventionDir = srcContents.subdirs().get(dirName);
+      if (srcConventionDir != null) {
+        result.addAll(readDir(srcConventionDir).osFiles());
+      }
     }
     return result.isEmpty() ? List.of() : List.copyOf(result);
-  }
-
-  private static void addOsFilesFrom(Path dir, Set<Path> sink) {
-    if (!Files.isDirectory(dir)) {
-      return;
-    }
-    try (Stream<Path> stream = Files.list(dir)) {
-      stream
-        .filter(Files::isRegularFile)
-        .filter(p -> p.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(OS_SUFFIX))
-        .forEach(sink::add);
-    } catch (IOException e) {
-      LOGGER.debug("Skipping unreadable conventional library directory: {}", dir, e);
-    }
   }
 
   /**
