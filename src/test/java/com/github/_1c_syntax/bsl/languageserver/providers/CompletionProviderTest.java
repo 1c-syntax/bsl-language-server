@@ -87,8 +87,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void resetEventHandlerResolver() {
-    when(eventHandlerResolver.lookupContract(any(), anyString()))
-      .thenReturn(Optional.empty());
+    when(eventHandlerResolver.lookupContract(any(), anyString())).thenReturn(Optional.empty());
   }
 
   private void enableSnippetSupport(boolean enabled) {
@@ -2671,5 +2670,190 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .isNotNull();
     assertThat(add.getDocumentation().getRight().getValue()).contains("Добавляет значение");
     assertThat(add.getData()).isNull();
+  }
+
+  @Test
+  void noDotCompletionRanksEventHandlerMethodBelowRegularLocalMethod() {
+    // given: локальный метод, у которого есть контракт платформенного события,
+    // ранжируется как self-член: он редко вызывается вручную и не должен
+    // теснить обычные локальные процедуры/функции документа.
+    // Имена подобраны намеренно "в лоб алфавиту" (А — первая буква, Я —
+    // последняя): если бы обработчик события ошибочно получил ту же корзину
+    // (BUCKET_LOCAL), что и обычный метод, чисто алфавитное сравнение sortText
+    // дало бы "АСобытие" < "ЯвнаяПроцедура" — и assertion ниже упал бы, поймав
+    // регресс. С прежними именами ("ПередЗаписью"/"ОбычнаяПроцедура") тест
+    // проходил бы даже при таком регрессе — по случайному совпадению
+    // алфавитного порядка (П > О и без разницы корзин).
+    // Стабится именно isEventHandler, а не lookupContract: MethodSymbolComputer классифицирует
+    // метод обработчиком СРАЗУ при построении дерева символов через этот вызов классификатора
+    // (eventHandlerResolver — мок, а не spy, поэтому стаб lookupContract не заставит
+    // невыстабленный isEventHandler отработать "по-настоящему").
+    when(eventHandlerResolver.isEventHandler(any(), eq("АСобытие")))
+      .thenReturn(true);
+
+    var src = """
+      Процедура АСобытие(Отказ)
+      КонецПроцедуры
+
+      Процедура ЯвнаяПроцедура()
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var eventHandlerItem = items.stream()
+      .filter(it -> "АСобытие".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("АСобытие должен попасть в completion"));
+    var regularMethodItem = items.stream()
+      .filter(it -> "ЯвнаяПроцедура".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("ЯвнаяПроцедура должна попасть в completion"));
+
+    assertThat(eventHandlerItem.getSortText())
+      .as("обработчик платформенного события должен ранжироваться ниже обычного локального метода")
+      .isGreaterThan(regularMethodItem.getSortText());
+  }
+
+  @Test
+  void declaredEventHandlerMethodGetsEventCompletionKind() {
+    // given — стабится isEventHandler, а не lookupContract: см. комментарий в
+    // noDotCompletionRanksEventHandlerMethodBelowRegularLocalMethod.
+    when(eventHandlerResolver.isEventHandler(any(), eq("ПриЗаписи")))
+      .thenReturn(true);
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      """);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .filteredOn(item -> "ПриЗаписи".equals(item.getLabel()))
+      .hasSize(1)
+      .allMatch(item -> item.getKind() == CompletionItemKind.Event);
+  }
+
+  @Test
+  void undeclaredEventHandlerOffersStubCompletionAtModuleLevel() {
+    // given — ПриЗаписи ещё не объявлен в документе, но входит в события owner-типа модуля;
+    // без snippetSupport клиента (по умолчанию в этом классе) заглушка — голый текст без $-меток
+    var contract = MemberDescriptor.event("ПриЗаписи", "",
+      List.of(new SignatureDescriptor(
+        List.of(
+          new ParameterDescriptor("Отказ", TypeSet.EMPTY, false, "", ""),
+          new ParameterDescriptor("ПараметрЗаписи", TypeSet.EMPTY, false, "", "")),
+        TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    var documentContext = TestUtils.getDocumentContext("");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var stub = items.stream()
+      .filter(item -> "ПриЗаписи".equals(item.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Заглушка ПриЗаписи должна попасть в completion"));
+    assertThat(stub.getKind()).isEqualTo(CompletionItemKind.Event);
+    assertThat(stub.getInsertText())
+      .isEqualTo("Процедура ПриЗаписи(Отказ, ПараметрЗаписи)\n\t\nКонецПроцедуры");
+  }
+
+  @Test
+  void undeclaredEventHandlerStubSnippetPlacesCursorInBodyFirst() {
+    // given — с snippetSupport курсор сразу после вставки должен оказаться В ТЕЛЕ (первый
+    // посещаемый tab-stop — $1), а не на первом параметре: параметры остаются доступны для
+    // переименования по Tab, но ПОСЛЕ тела ($2, $3, ...), а не раньше него; $0 — точка выхода
+    // из сниппета сразу после КонецПроцедуры.
+    enableSnippetSupport(true);
+    var contract = MemberDescriptor.event("ПриЗаписи", "",
+      List.of(new SignatureDescriptor(
+        List.of(
+          new ParameterDescriptor("Отказ", TypeSet.EMPTY, false, "", ""),
+          new ParameterDescriptor("ПараметрЗаписи", TypeSet.EMPTY, false, "", "")),
+        TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    var documentContext = TestUtils.getDocumentContext("");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    var stub = items.stream()
+      .filter(item -> "ПриЗаписи".equals(item.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Заглушка ПриЗаписи должна попасть в completion"));
+    assertThat(stub.getInsertTextFormat()).isEqualTo(InsertTextFormat.Snippet);
+    assertThat(stub.getInsertText())
+      .isEqualTo("Процедура ПриЗаписи(${2:Отказ}, ${3:ПараметрЗаписи})\n\t$1\nКонецПроцедуры$0");
+  }
+
+  @Test
+  void declaredEventHandlerIsNotDuplicatedAsStub() {
+    // given — ПриЗаписи уже объявлен: заглушка не должна предлагаться повторно
+    var contract = MemberDescriptor.event("ПриЗаписи", "", List.of());
+    when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    when(eventHandlerResolver.lookupContract(any(), eq("ПриЗаписи"))).thenReturn(Optional.of(contract));
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      """);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then — единственный пункт (уже объявленный обработчик), не два (объявленный + заглушка)
+    assertThat(items)
+      .filteredOn(item -> "ПриЗаписи".equals(item.getLabel()))
+      .hasSize(1);
+  }
+
+  @Test
+  void eventHandlerStubNotOfferedInsideAnotherMethodBody() {
+    // given — курсор внутри тела ДругаяПроцедура: вставка нового объявления процедуры была бы
+    // синтаксически некорректной, заглушка не должна предлагаться
+    var contract = MemberDescriptor.event("ПриЗаписи", "", List.of());
+    when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ДругаяПроцедура()
+
+      КонецПроцедуры
+      """);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items).noneMatch(item -> "ПриЗаписи".equals(item.getLabel()));
   }
 }

@@ -153,6 +153,31 @@ class EventHandlerResolverTest {
   }
 
   @Test
+  void globalEventsRebuiltAfterHbkBecomesAvailable() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
+
+    // 1) Провайдер (HBK/bsl-context) ещё не готов — событий нет.
+    when(bslContextHolder.get()).thenReturn(Optional.empty());
+    assertThat(resolver.allEvents(doc)).isEmpty();
+
+    // 2) HBK подгрузился — пустой результат не должен был закэшироваться: те же вызовы
+    // теперь находят событие (регресс на инвалидацию кэша globalEvents).
+    var event = stubEvent("ПередНачаломРаботыСистемы", "BeforeStart");
+    var globalContext = mock(PlatformGlobalContext.class);
+    when(globalContext.applicationEvents()).thenReturn(List.of(event));
+    when(globalContext.ordinaryApplicationEvents()).thenReturn(List.of());
+    when(globalContext.sessionModuleEvents()).thenReturn(List.of());
+    when(globalContext.externalConnectionModuleEvents()).thenReturn(List.of());
+    var provider = mock(ContextProvider.class);
+    when(provider.getGlobalContext()).thenReturn(globalContext);
+    when(bslContextHolder.get()).thenReturn(Optional.of(provider));
+
+    assertThat(resolver.lookupContract(doc, "ПередНачаломРаботыСистемы")).isPresent();
+    assertThat(resolver.allEvents(doc)).isNotEmpty();
+  }
+
+  @Test
   void globalModuleEmptyEventListReturnsEmpty() {
     var globalContext = mock(PlatformGlobalContext.class);
     when(globalContext.applicationEvents()).thenReturn(List.of());
@@ -248,6 +273,93 @@ class EventHandlerResolverTest {
     when(doc.getModuleType()).thenReturn(ModuleType.CommonModule);
 
     assertThat(resolver.lookupContract(doc, "ПриЗаписи")).isEmpty();
+  }
+
+  /**
+   * Осознанное ограничение (не баг): обработчики форм не резолвятся. Форма — единственный
+   * {@link ModuleType}, у которого события декларируются не по имени, а в {@code Form.xml}
+   * (блок {@code <Events>}), это отдельная, не начатая задача (см. javadoc класса). Явный тест
+   * фиксирует контракт, чтобы отсутствие резолва для форм не осталось молчаливым и не
+   * воспринималось как забытый кейс при последующих правках.
+   */
+  @Test
+  void formModuleIsNotResolvedByDesign() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    assertThat(resolver.lookupContract(doc, "ПриОткрытии")).isEmpty();
+    assertThat(resolver.allEvents(doc)).isEmpty();
+    verifyNoInteractions(typeRegistry);
+  }
+
+  @Test
+  void allEventsForOScriptClassReturnsBuiltinEvents() {
+    var doc = oscriptClassDoc();
+
+    var events = resolver.allEvents(doc);
+
+    assertThat(events)
+      .extracting(MemberDescriptor::name)
+      .containsExactlyInAnyOrder("ПриСозданииОбъекта", "ОбработкаПолученияПредставления");
+  }
+
+  @Test
+  void allEventsForGlobalModuleDedupsRuEnAliases() {
+    var event = stubEvent("ПередНачаломРаботыСистемы", "BeforeStart");
+    var globalContext = mock(PlatformGlobalContext.class);
+    when(globalContext.applicationEvents()).thenReturn(List.of(event));
+    when(globalContext.ordinaryApplicationEvents()).thenReturn(List.of());
+    when(globalContext.sessionModuleEvents()).thenReturn(List.of());
+    when(globalContext.externalConnectionModuleEvents()).thenReturn(List.of());
+    var provider = mock(ContextProvider.class);
+    when(provider.getGlobalContext()).thenReturn(globalContext);
+    when(bslContextHolder.get()).thenReturn(Optional.of(provider));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
+
+    // Событие лежит в карте под ru- и en-ключом на один и тот же объект — в allEvents() должно
+    // остаться единственное вхождение, а не два дубля.
+    assertThat(resolver.allEvents(doc))
+      .hasSize(1)
+      .extracting(MemberDescriptor::name)
+      .containsExactly("ПередНачаломРаботыСистемы");
+  }
+
+  @Test
+  void allEventsForGlobalModuleWithoutHbkReturnsEmpty() {
+    when(bslContextHolder.get()).thenReturn(Optional.empty());
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    assertThat(resolver.allEvents(doc)).isEmpty();
+  }
+
+  @Test
+  void allEventsForMdoSpecificOwnerFiltersByEventKind() {
+    var eventDescriptor = MemberDescriptor.event(
+      "ПриЗаписи", "", List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    var methodDescriptor = MemberDescriptor.method("Записать");
+    var commandRef = new TypeRef(TypeKind.PLATFORM, "Модуль команды");
+    when(typeRegistry.resolve("Модуль команды")).thenReturn(Optional.of(commandRef));
+    when(typeRegistry.getMembers(eq(commandRef), any()))
+      .thenReturn(List.of(eventDescriptor, methodDescriptor));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommandModule);
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.allEvents(doc))
+      .extracting(MemberDescriptor::name)
+      .containsExactly("ПриЗаписи");
+  }
+
+  @Test
+  void allEventsForUnsupportedModuleTypeReturnsEmpty() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommonModule);
+
+    assertThat(resolver.allEvents(doc)).isEmpty();
   }
 
   private static ContextEvent stubEvent(String ru, String en) {

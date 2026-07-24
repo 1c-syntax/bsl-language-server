@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -696,7 +697,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if (!isSupported(symbol) || symbol.getName().isEmpty()) {
         continue;
       }
-      collected.add(toEntry(uri, symbol, scriptVariant));
+      collected.add(toEntry(documentContext, symbol, scriptVariant));
     }
 
     var snapshot = List.copyOf(collected);
@@ -783,11 +784,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  private static Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
+  private static Entry toEntry(DocumentContext documentContext, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
     var name = symbol.getName();
     var containerName = getContainerName(symbol, scriptVariant).orElse("");
     return new Entry(
-      uri,
+      documentContext.getUri(),
       name,
       name.toLowerCase(Locale.ENGLISH),
       symbol.getSymbolKind(),
@@ -797,12 +798,20 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     );
   }
 
+  /**
+   * Поддерживается ли символ в {@code workspace/symbol}: любой {@link MethodSymbol}
+   * (обычный метод, конструктор OneScript-класса, обработчик платформенного события {@link
+   * com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol} — и в будущем любой
+   * новый подтип) и переменные модульного/глобального уровня.
+   */
   private static boolean isSupported(Symbol symbol) {
-    return switch (symbol.getSymbolKind()) {
-      case Method, Constructor -> true;
-      case Variable -> SUPPORTED_VARIABLE_KINDS.contains(((VariableSymbol) symbol).getKind());
-      default -> false;
-    };
+    if (symbol instanceof MethodSymbol) {
+      return true;
+    }
+    if (symbol instanceof VariableSymbol variableSymbol) {
+      return SUPPORTED_VARIABLE_KINDS.contains(variableSymbol.getKind());
+    }
+    return false;
   }
 
   private static Optional<String> getContainerName(SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {

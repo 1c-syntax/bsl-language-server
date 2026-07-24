@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticCompu
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -122,6 +123,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private SelfMemberClassifier selfMemberClassifier;
+
+  @SuppressWarnings("NullAway.Init")
+  @Setter(onMethod_ = {@Autowired})
+  private EventHandlerClassifier eventHandlerClassifier;
 
   @Nullable
   private BSLTokenizer tokenizer;
@@ -439,7 +444,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   private SymbolTree computeSymbolTree() {
-    return new SymbolTreeComputer(this, selfMemberClassifier).compute();
+    return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).compute();
   }
 
 

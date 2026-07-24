@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
@@ -46,17 +47,20 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private final DocumentContext documentContext;
   private final SelfMemberClassifier selfMemberClassifier;
+  private final EventHandlerClassifier eventHandlerClassifier;
 
-  public SymbolTreeComputer(DocumentContext documentContext, SelfMemberClassifier selfMemberClassifier) {
+  public SymbolTreeComputer(DocumentContext documentContext, SelfMemberClassifier selfMemberClassifier,
+                            EventHandlerClassifier eventHandlerClassifier) {
     this.documentContext = documentContext;
     this.selfMemberClassifier = selfMemberClassifier;
+    this.eventHandlerClassifier = eventHandlerClassifier;
   }
 
   @Override
   public SymbolTree compute() {
 
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
-    List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
+    List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
     // Переменные и регионы — за один общий обход дерева (оба обходят его вглубь).
     var regionVariableComputer =
       new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods, selfMemberClassifier);

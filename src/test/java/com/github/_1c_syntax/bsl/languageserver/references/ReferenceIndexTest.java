@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -51,6 +52,9 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private SymbolOccurrenceRepository symbolOccurrenceRepository;
+
+  @Autowired
+  private OScriptLibraryIndex oScriptLibraryIndex;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndex.bsl";
 

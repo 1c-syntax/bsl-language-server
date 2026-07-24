@@ -26,9 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
@@ -45,9 +47,11 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -66,6 +70,7 @@ import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
@@ -119,6 +124,10 @@ public final class CompletionProvider {
   private static final String BUCKET_GLOBAL = "2";
   private static final String BUCKET_TYPE = "3";
   private static final String BUCKET_KEYWORD = "4";
+  // Заглушки обработчиков платформенных событий: после локальных имён, до глобальных.
+  private static final String BUCKET_EVENT_STUB = "15";
+  // Сниппет-табстопы обработчика: $1 — тело, параметры — с ${2:...} (см. formatEventHandlerSnippet).
+  private static final int SNIPPET_PARAM_TABSTOP_OFFSET = 2;
   // Корзина членов типа в dot-completion: пользовательские/декларированные поля
   // приоритетнее дефолтных членов того же типа.
   private static final String BUCKET_MEMBER_FIELD = "1";
@@ -132,6 +141,7 @@ public final class CompletionProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final JsonMapper jsonMapper;
   private final FuzzyMatcher fuzzyMatcher;
+  private final EventContractsIndex eventContractsIndex;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
   // прикрепления `editor.action.triggerParameterHints` к completion item.
@@ -760,20 +770,17 @@ public final class CompletionProvider {
     for (var method : documentContext.getSymbolTree().getMethods()) {
       if (matches(method.getName(), prefix)) {
         var item = new CompletionItem(method.getName());
-        item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
+        var isEventHandler = method.getSymbolKind() == SymbolKind.Event;
+        item.setKind(methodCompletionKind(method, isEventHandler));
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
         applySourceMethodDetail(item, method);
         applySourceMethodDocumentation(item, method);
         if (method.isDeprecated()) {
           markDeprecatedItem(item);
         }
-        // Обработчик платформенного события ранжируется как self-член: его
-        // редко вызывают вручную, он не должен теснить обычные локальные
-        // процедуры/функции документа.
-        var bucket = eventContractsIndex.getContract(documentContext, method.getName()).isPresent()
-          ? BUCKET_SELF
-          : BUCKET_LOCAL;
-        applySortText(item, bucket, method.isDeprecated());
+        // Обработчик платформенного события ранжируется ниже обычных локальных методов:
+        // его редко вызывают вручную, он не должен теснить процедуры/функции документа.
+        applySortText(item, isEventHandler ? BUCKET_EVENT_STUB : BUCKET_LOCAL, method.isDeprecated());
         applyCommitCharacters(item);
         items.add(item);
       }
@@ -819,6 +826,13 @@ public final class CompletionProvider {
     }
 
     selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items));
+    // Заглушки ещё не объявленных обработчиков платформенных событий owner-типа модуля —
+    // только на уровне модуля (курсор вне тела метода): внутри чужого метода вставка нового
+    // объявления процедуры/функции была бы синтаксически некорректной (аналог «override method»
+    // в других IDE, но для обработчиков платформенных событий 1С).
+    if (enclosingMethod(documentContext, position).isEmpty()) {
+      collectEventHandlerStubs(documentContext, prefix, target, items);
+    }
 
     // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
     // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
@@ -832,6 +846,92 @@ public final class CompletionProvider {
     }
 
     return items;
+  }
+
+  private static CompletionItemKind methodCompletionKind(MethodSymbol method, boolean isEventHandler) {
+    if (isEventHandler) {
+      return CompletionItemKind.Event;
+    }
+    return method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method;
+  }
+
+  private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
+    var symbol = documentContext.getSymbolTree().getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+  }
+
+  /**
+   * Заглушки ещё не объявленных обработчиков платформенных событий owner-типа модуля:
+   * контракты берём из {@link EventContractsIndex}, отсеиваем уже объявленные в модуле
+   * методы и недоступные по target-совместимости. Ранжируются в {@link #BUCKET_EVENT_STUB}.
+   */
+  private void collectEventHandlerStubs(DocumentContext documentContext, String prefix,
+                                        CompatibilityMode target, List<CompletionItem> items) {
+    var contracts = eventContractsIndex.getAllContracts(documentContext);
+    if (contracts.isEmpty()) {
+      return;
+    }
+    var declaredMethods = documentContext.getSymbolTree().getMethods();
+    var scriptVariant = documentContext.getScriptVariantLanguage();
+    var bslVariant = scriptVariant == Language.EN ? ScriptVariant.ENGLISH : ScriptVariant.RUSSIAN;
+    for (var contract : contracts) {
+      var displayName = contract.displayName(scriptVariant);
+      if (PlatformMemberVersions.firesUnavailable(contract.metadata().sinceVersion(), target)
+        || !matches(displayName, prefix)
+        || declaredMethods.stream().anyMatch(m -> contract.matches(m.getName()))) {
+        continue;
+      }
+      items.add(buildEventHandlerStubItem(contract, displayName, scriptVariant, bslVariant, target));
+    }
+  }
+
+  private CompletionItem buildEventHandlerStubItem(MemberDescriptor contract, String displayName,
+                                                   Language scriptVariant, ScriptVariant bslVariant,
+                                                   CompatibilityMode target) {
+    var item = new CompletionItem(displayName);
+    item.setKind(CompletionItemKind.Event);
+    var signature = contract.signatures().isEmpty() ? SignatureDescriptor.EMPTY : contract.signatures().get(0);
+    applyDetail(item, formatParameterList(signature, scriptVariant), "");
+    applyDocumentation(item, contract, scriptVariant);
+    if (isMemberDeprecated(contract, target)) {
+      markDeprecatedItem(item);
+    }
+    item.setInsertText(formatEventHandlerSnippet(signature, displayName, scriptVariant, bslVariant, snippetSupport));
+    if (snippetSupport) {
+      item.setInsertTextFormat(InsertTextFormat.Snippet);
+    }
+    applySortText(item, BUCKET_EVENT_STUB, isMemberDeprecated(contract, target));
+    return item;
+  }
+
+  private static String formatEventHandlerSnippet(SignatureDescriptor signature, String displayName,
+                                                  Language scriptVariant, ScriptVariant bslVariant,
+                                                  boolean asSnippet) {
+    var sb = new StringBuilder();
+    sb.append(Keywords.PROCEDURE.get(bslVariant)).append(' ').append(displayName).append('(');
+    var params = signature.parameters();
+    for (var i = 0; i < params.size(); i++) {
+      if (i > 0) {
+        sb.append(", ");
+      }
+      var paramName = params.get(i).displayName(scriptVariant);
+      if (asSnippet) {
+        sb.append("${").append(i + SNIPPET_PARAM_TABSTOP_OFFSET).append(':').append(paramName).append('}');
+      } else {
+        sb.append(paramName);
+      }
+    }
+    sb.append(")\n\t")
+      .append(asSnippet ? "$1" : "")
+      .append('\n')
+      .append(Keywords.END_PROCEDURE.get(bslVariant));
+    if (asSnippet) {
+      sb.append("$0");
+    }
+    return sb.toString();
   }
 
   /**

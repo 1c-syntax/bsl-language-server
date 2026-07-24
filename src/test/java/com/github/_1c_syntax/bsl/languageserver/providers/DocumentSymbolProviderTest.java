@@ -21,18 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -40,6 +45,9 @@ class DocumentSymbolProviderTest {
 
   @Autowired
   private DocumentSymbolProvider documentSymbolProvider;
+
+  @MockitoBean
+  private EventHandlerResolver eventHandlerResolver;
 
   /**
    * Регрессионный тест: незавершённое объявление переменной ({@code Перем} без имени)
@@ -132,6 +140,42 @@ class DocumentSymbolProviderTest {
       }
     });
     return result;
+  }
+
+  /**
+   * Метод-обработчик платформенного события регистрируется в дереве символов как
+   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol}, и outline
+   * отдаёт для него {@link SymbolKind#Event} вместо {@link SymbolKind#Method}.
+   */
+  @Test
+  void testEventHandlerMethodMarkedAsEventKind() {
+    // given — резолвер стабится ДО создания документа: MethodSymbolComputer опрашивает
+    // классификатор синхронно при обходе AST, то есть уже во время TestUtils.getDocumentContext(...).
+    // Стабится именно isEventHandler, а не lookupContract: eventHandlerResolver — мок, а не spy,
+    // поэтому стаб lookupContract не заставит невыстабленный isEventHandler отработать "по-настоящему".
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ОбычнаяПроцедура")))
+      .thenReturn(false);
+
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      Процедура ОбычнаяПроцедура()
+      КонецПроцедуры""");
+
+    // when
+    var documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then
+    assertThat(documentSymbols)
+      .filteredOn(symbol -> symbol.getName().equals("ПриЗаписи"))
+      .hasSize(1)
+      .allMatch(symbol -> symbol.getKind() == SymbolKind.Event);
+    assertThat(documentSymbols)
+      .filteredOn(symbol -> symbol.getName().equals("ОбычнаяПроцедура"))
+      .hasSize(1)
+      .allMatch(symbol -> symbol.getKind() == SymbolKind.Method);
   }
 
   @Test

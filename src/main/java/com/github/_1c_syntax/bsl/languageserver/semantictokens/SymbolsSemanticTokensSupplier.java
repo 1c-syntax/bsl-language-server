@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -83,7 +84,7 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     // Add method symbols (functions and procedures)
     var isStatic = Modules.isStaticModule(documentContext);
     for (var method : symbolTree.getMethods()) {
-      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
+      var semanticTokenType = methodTokenType(method);
       var modifiers = methodModifiers(isStatic, method.isAsync());
       helper.addRange(entries, method.getSubNameRange(), semanticTokenType, modifiers);
       for (ParameterDefinition parameter : method.getParameters()) {
@@ -142,6 +143,19 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
         var descriptor = ((PlatformMemberSymbol) reference.symbol()).getDescriptor();
         helper.addRange(entries, reference.selectionRange(), tokenType, selfMemberModifiers(descriptor, isStatic));
       });
+  }
+
+  /**
+   * Тип семантического токена имени метода: {@link SemanticTokenTypes#Event} для
+   * обработчика платформенного события ({@link SymbolKind#Event}, см. {@code
+   * context.symbol.EventMethodSymbol}) — осознанно ценой различения функция/процедура для таких
+   * методов, иначе как обычно {@link SemanticTokenTypes#Function}/{@link SemanticTokenTypes#Method}.
+   */
+  private static String methodTokenType(MethodSymbol method) {
+    if (method.getSymbolKind() == SymbolKind.Event) {
+      return SemanticTokenTypes.Event;
+    }
+    return method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
   }
 
   private static String[] methodModifiers(boolean isStatic, boolean isAsync) {

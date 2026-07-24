@@ -45,6 +45,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -63,8 +64,12 @@ class VariableSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerC
 
   @BeforeEach
   void resetResolver() {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
+    // Классификация метода в EventMethodSymbol идёт через isEventHandler; у мок-бина делегируем
+    // в lookupContract (как в реальном бине), чтобы тесты продолжали задавать только lookupContract.
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenAnswer(inv -> eventHandlerResolver.lookupContract(inv.getArgument(0), inv.getArgument(1)).isPresent());
   }
 
   @Test
@@ -75,7 +80,7 @@ class VariableSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerC
           TypeSet.EMPTY, false,
           BilingualString.of("Признак отказа от записи.", ""), "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -107,7 +112,7 @@ class VariableSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerC
     // секция не добавляется, hover собирает базовое наполнение.
     var contract = MemberDescriptor.event("ПриЗаписи", "",
       List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -124,7 +129,7 @@ class VariableSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerC
   void parameterHoverEmptyContractSignaturesGivesNoDescription() {
     // Contract с пустым signatures (parameterAt L318) — описание не добавляется.
     var contract = MemberDescriptor.event("ПриЗаписи", "", List.of());
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -147,7 +152,7 @@ class VariableSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerC
           TypeSet.EMPTY, false,
           BilingualString.of("Признак отказа.", ""), "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """

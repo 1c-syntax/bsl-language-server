@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,10 +31,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class EventContractsIndexTest extends AbstractServerContextAwareTest {
@@ -40,13 +47,18 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
   @Autowired
   private EventContractsIndex eventContractsIndex;
 
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
+
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
   @BeforeEach
   void resetResolver() {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
+    when(eventHandlerResolver.allEvents(ArgumentMatchers.any()))
+      .thenReturn(List.of());
   }
 
   @Test
@@ -58,5 +70,35 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
     var contract = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
 
     assertThat(contract).isEmpty();
+  }
+
+  @Test
+  void getAllContractsDelegatesToResolverAndCachesPerUri() {
+    var documentContext = TestUtils.getDocumentContext("");
+    var contracts = List.of(MemberDescriptor.event("ПриЗаписи", "", List.of()));
+    when(eventHandlerResolver.allEvents(documentContext)).thenReturn(contracts);
+
+    var first = eventContractsIndex.getAllContracts(documentContext);
+    var second = eventContractsIndex.getAllContracts(documentContext);
+
+    assertThat(first).isEqualTo(contracts);
+    // Второй вызов должен обслуживаться из кэша, а не резолвером повторно.
+    verify(eventHandlerResolver, times(1)).allEvents(documentContext);
+    assertThat(second).isSameAs(first);
+  }
+
+  @Test
+  void configurationTypesRegisteredEventClearsAllContractsCache() {
+    var documentContext = TestUtils.getDocumentContext("");
+    when(eventHandlerResolver.allEvents(documentContext))
+      .thenReturn(List.of(MemberDescriptor.event("Первое", "", List.of())))
+      .thenReturn(List.of(MemberDescriptor.event("Второе", "", List.of())));
+
+    var beforeReload = eventContractsIndex.getAllContracts(documentContext);
+    eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(documentContext.getServerContext()));
+    var afterReload = eventContractsIndex.getAllContracts(documentContext);
+
+    assertThat(beforeReload).extracting(MemberDescriptor::name).containsExactly("Первое");
+    assertThat(afterReload).extracting(MemberDescriptor::name).containsExactly("Второе");
   }
 }

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,12 +32,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class SymbolTreeComputerTest {
 
+  @Autowired
+  private com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier eventHandlerClassifier;
+
   @Test
   void testModule() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/SymbolTreeComputer.bsl");
 
-    var symbolTreeComputer = new SymbolTreeComputer(documentContext, (doc, name) -> false);
+    var symbolTreeComputer = new SymbolTreeComputer(documentContext, (doc, name) -> false, eventHandlerClassifier);
 
     // when
     var symbolTree = symbolTreeComputer.compute();

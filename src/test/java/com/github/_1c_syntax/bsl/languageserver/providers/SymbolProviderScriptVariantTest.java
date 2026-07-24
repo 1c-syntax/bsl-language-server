@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
@@ -79,7 +80,7 @@ class SymbolProviderScriptVariantTest {
     when(documentContext.getScriptVariantLanguage()).thenReturn(scriptVariantLanguage);
     when(documentContext.getMdObject()).thenReturn(Optional.of(mdObject));
 
-    var symbol = mock(SourceDefinedSymbol.class);
+    var symbol = mock(MethodSymbol.class);
     when(symbol.getName()).thenReturn("НеУстаревшаяПроцедура");
     when(symbol.getSymbolKind()).thenReturn(SymbolKind.Method);
     when(symbol.getRange()).thenReturn(Ranges.create(0, 0, 0, 0));
@@ -87,7 +88,7 @@ class SymbolProviderScriptVariantTest {
     when(symbol.getOwner()).thenReturn(documentContext);
 
     var symbolTree = mock(SymbolTree.class);
-    when(symbolTree.getChildrenFlat()).thenReturn(List.of(symbol));
+    when(symbolTree.getChildrenFlat()).thenReturn(List.<SourceDefinedSymbol>of(symbol));
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
 
     // имя контейнера вычисляется индексом на момент индексации в варианте языка проекта

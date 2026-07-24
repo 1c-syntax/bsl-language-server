@@ -41,6 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.Mockito.when;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class EventHandlerInvalidSignatureDiagnosticTest
@@ -55,8 +56,13 @@ class EventHandlerInvalidSignatureDiagnosticTest
 
   @BeforeEach
   void resetResolver() {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
+    // Классификация метода в EventMethodSymbol идёт через isEventHandler; в реальном бине это
+    // lookupContract(...).isPresent(), поэтому у мок-бина делегируем так же — тесты продолжают
+    // задавать только lookupContract.
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenAnswer(inv -> eventHandlerResolver.lookupContract(inv.getArgument(0), inv.getArgument(1)).isPresent());
   }
 
   @Test
@@ -107,7 +113,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
   }
 
   private void stubAsHandler(String methodName, MemberDescriptor contract) {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq(methodName)))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq(methodName)))
       .thenReturn(Optional.of(contract));
   }
 
@@ -127,7 +133,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
         new ParameterDescriptor(BilingualString.of("ПараметрыЗаписи", "WriteParameters"),
           TypeSet.EMPTY, false, BilingualString.EMPTY, "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -155,7 +161,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
         new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
           TypeSet.EMPTY, false, BilingualString.EMPTY, "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПередЗаписью")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПередЗаписью")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -175,7 +181,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
   @Test
   void quickFixSilentWhenContractEmpty() {
     // Контракт без сигнатур — getQuickFixes должен вернуть пустой список.
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(MemberDescriptor.event("ПриЗаписи", "", List.of())));
 
     var src = "Процедура ПриЗаписи()\nКонецПроцедуры\n";
@@ -191,7 +197,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
         new ParameterDescriptor(BilingualString.of("", "Cancel"),
           TypeSet.EMPTY, false, BilingualString.EMPTY, "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
       .thenReturn(Optional.of(contract));
 
     var src = "Процедура Handler()\nКонецПроцедуры\n";
@@ -211,7 +217,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
       List.of(new SignatureDescriptor(List.of(
         new ParameterDescriptor(BilingualString.EMPTY, TypeSet.EMPTY, false, BilingualString.EMPTY, "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
       .thenReturn(Optional.of(contract));
 
     var src = "Процедура Handler()\nКонецПроцедуры\n";
@@ -232,7 +238,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
         new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
           TypeSet.EMPTY, false, BilingualString.EMPTY, "")
       ), TypeSet.EMPTY, "")));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -255,7 +261,7 @@ class EventHandlerInvalidSignatureDiagnosticTest
     // Диагностика с произвольным range вне метода — quickfix не должен ничего
     // создавать. Используем существующую диагностику и подменяем range.
     var contract = contractWithCancel(true);
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
     var src = "Процедура ПриЗаписи()\nКонецПроцедуры\n";
     var documentContext = TestUtils.getDocumentContext(src);
