@@ -167,17 +167,18 @@ public class AnalyzeCommand implements Callable<Integer> {
     // Update global configuration
     globalConfiguration.update(configurationFile);
 
+    // -c влияет и на глобальную, и на per-workspace конфигурацию (в analyze всегда ровно один
+    // workspace). Обновляем workspace-scoped конфигурацию ДО addWorkspace, чтобы тот сам
+    // подхватил из неё configurationRoot (см. ServerContextProvider#addWorkspace) и типы
+    // конфигурации зарегистрировались уже на WorkspaceAddedEvent — без отдельного события.
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri(), srcDir.toString())) {
+      configuration.update(configurationFile);
+    }
+
     // Create workspace for srcDir (factory will create per-workspace configuration)
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
-      // In analyze mode, -c affects both global and per-workspace settings
-      // since there is always exactly one workspace
-      configuration.update(configurationFile);
-
-      var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-      serverContext.setConfigurationRoot(configurationPath);
-
       var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
 
       serverContext.populateContext(files);

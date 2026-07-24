@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatingEvent;
 import com.github._1c_syntax.bsl.languageserver.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
@@ -140,11 +139,6 @@ public class EventPublisherAspect {
   @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildCall()")
   public void documentContextRebuild(JoinPoint joinPoint) {
     publishEvent(new DocumentContextContentChangedEvent((DocumentContext) joinPoint.getThis()));
-  }
-
-  @Before("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
-  public void serverContextPopulating(JoinPoint joinPoint, Collection<File> files) {
-    publishEvent(new ServerContextPopulatingEvent((ServerContext) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")

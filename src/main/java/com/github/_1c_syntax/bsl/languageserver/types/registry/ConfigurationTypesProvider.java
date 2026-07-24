@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatingEvent;
 import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -61,11 +60,9 @@ import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -76,7 +73,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -98,16 +94,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * поэтому запоздавшая регистрация результат уже не исправит — он останется неверным до
  * следующей перестройки документа.
  * <p>
- * Регистрация идемпотентна и подписана на два события, потому что момент готовности
- * конфигурации у разных «голов» разный:
- * <ul>
- *   <li>{@link WorkspaceAddedEvent} — путь LSP: {@code configurationRoot} (= URI workspace)
- *       известен уже здесь, то есть до того, как клиент пришлёт {@code didOpen};</li>
- *   <li>{@link ServerContextPopulatingEvent} — путь CLI/MCP: там {@code configurationRoot}
- *       задаётся уже после добавления workspace'а, поэтому на первом событии конфигурация
- *       ещё пуста. Событие публикуется перед наполнением контекста, когда рут уже задан,
- *       а деревья ещё не строились.</li>
- * </ul>
+ * Регистрация идемпотентна и подписана на {@link WorkspaceAddedEvent}: к этому моменту
+ * {@code configurationRoot} у контекста уже установлен — {@code addWorkspace} подхватывает его
+ * из workspace-scoped конфигурации (см. {@code ServerContextProvider#addWorkspace}), поэтому
+ * вызывающему достаточно обновить конфигурацию до {@code addWorkspace}. Деревья символов на
+ * этот момент ещё не строились: в LSP публикация {@code .bsl}-файлов идёт только после
+ * клиентского {@code initialized}, в CLI/MCP наполнение контекста ({@code populateContext})
+ * выполняется уже после {@code addWorkspace}.
+ * <p>
  * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно
  * ({@link Ordered#HIGHEST_PRECEDENCE}): Spring вызывает их последовательно на одном потоке,
  * а {@code OScriptLibraryIndex} делает полный обход дерева workspace'а (на больших проектах
@@ -180,8 +174,6 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
-  @Qualifier("workspaceServiceExecutor")
-  private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
@@ -197,30 +189,16 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
-   *
-   * @param event событие начала наполнения контекста сервера.
-   */
-  @EventListener
-  public void handleEvent(ServerContextPopulatingEvent event) {
-    tryRegister();
-  }
-
-  /**
    * Регистрирует конфигурационные типы workspace'а, взятого из
    * {@link WorkspaceContextHolder}, и события его служебных модулей.
    * <p>
    * Идемпотентно: фактическая регистрация выполняется не более одного раза на экземпляр,
-   * повторные вызовы — no-op. No-op также, если workspace не определён, неизвестен
-   * провайдеру контекстов или его конфигурация пуста.
+   * повторные вызовы — no-op. No-op также, если конфигурация workspace'а ещё пуста
+   * (у голого «безворкспейсного» контекста {@code configurationRoot == null}).
    * <p>
    * Побочный эффект помимо регистрации: форсирует инициализацию платформенных generic-типов
    * ({@code TypeRegistry.bootstrap()}). Она нужна {@code registerFamilySpecializations},
-   * который ищет generic'и по familyCore и без них молча пропускает специализации, и
-   * выполняется на {@link #platformTypesWarmupExecutor} параллельно обходу детей конфигурации.
-   * Собственный executor обязателен: воркеры {@code ForkJoinPool.commonPool()} в исполняемом
-   * fat-jar получают чужой {@code contextClassLoader}, из-за чего загрузка встроенных
-   * JSON-описаний падает с {@code FileNotFoundException}.
+   * который ищет generic'и по familyCore и без них молча пропускает специализации.
    *
    * @return контекст сервера, если регистрация действительно выполнена; иначе {@code null}.
    */
@@ -228,33 +206,22 @@ public class ConfigurationTypesProvider {
     if (registered.get()) {
       return null;
     }
+    // workspaceUri установлен всегда: tryRegister зовётся только из обработчика
+    // WorkspaceAddedEvent, а событие публикуется под workspace-контекстом.
     var workspaceUri = WorkspaceContextHolder.get();
-    var serverContext = workspaceUri == null
-      ? null
-      : serverContextProvider.getAllContexts().get(workspaceUri);
+    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext == null) {
       return null;
     }
     if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
-
-    // Прогрев платформенных generic-типов запускаем только после выигранного CAS: он нужен
-    // register()/registerFamilySpecializations и выполняется на выделенном executor'е
-    // (корректный contextClassLoader в fat-jar) параллельно обходу детей конфигурации.
-    var platformTypesWarmup = CompletableFuture.runAsync(() -> {
-      try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-        typeRegistry.ensureInitialized();
-      }
-    }, platformTypesWarmupExecutor).exceptionally((Throwable e) -> {
-      LOGGER.warn("Failed to warm up platform types for workspace {}", workspaceUri, e);
-      return null;
-    });
-
+    // Платформенные generic-типы нужны register()/registerFamilySpecializations — форсируем
+    // их инициализацию до регистрации (текущий поток несёт корректный contextClassLoader).
+    typeRegistry.ensureInitialized();
     var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
-    platformTypesWarmup.join();
     register(children);
     serviceModuleEventRegistrar.register(children);
     return serverContext;

@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestComponent;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -44,8 +44,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * и т.п.), считается один раз и кэшируется в дереве, поэтому запоздавшая регистрация уже
  * не исправила бы результат — он оставался бы неверным до первой правки файла. Раньше типы
  * регистрировались по завершении {@code populateContext}, то есть заведомо позже всех
- * деревьев; теперь — на {@code ServerContextPopulatingEvent} (и раньше, на
- * {@code WorkspaceAddedEvent}, когда конфигурация уже доступна).
+ * деревьев; теперь — на {@code WorkspaceAddedEvent}, к моменту которого {@code addWorkspace}
+ * уже выставил {@code configurationRoot} из workspace-конфигурации.
  */
 @CleanupContextBeforeClassAndAfterClass
 @Import(ConfigurationTypesRegisteredBeforeSymbolTreesTest.FirstSymbolTreeProbe.class)
@@ -73,7 +73,7 @@ class ConfigurationTypesRegisteredBeforeSymbolTreesTest extends AbstractServerCo
    * САМОГО ПЕРВОГО дерева символов: {@code DocumentContextContentChangedEvent} публикуется
    * по завершении {@code DocumentContext.rebuild()}, внутри которого дерево и считается.
    */
-  @Component
+  @TestComponent
   static class FirstSymbolTreeProbe {
 
     private final TypeRegistry typeRegistry;
