@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Locale;
+import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,10 +66,13 @@ class RegisterRecordStandardAttributesHbkTest extends AbstractServerContextAware
     var lowerNames = members.stream().map(m -> m.name().toLowerCase(Locale.ROOT)).toList();
 
     assertThat(lowerNames)
-      .as("Активность/Период/Регистратор/НомерСтроки должны прийти РОВНО по одному разу, "
-        + "как единственный bilingual-член (из bsl-context), а не второй раз под "
-        + "английским написанием (материализованным по ошибке из getAttributes())")
-      .doesNotContain("active", "period", "linenumber", "recorder")
-      .contains("активность", "период", "регистратор", "номерстроки");
+      .as("стандартные реквизиты не должны материализоваться второй раз под английским "
+        + "написанием (из getAttributes())")
+      .doesNotContain("active", "period", "linenumber", "recorder");
+    assertThat(lowerNames)
+      .as("Активность/Период/Регистратор/НомерСтроки должны прийти РОВНО по одному разу — "
+        + "единственным bilingual-членом из bsl-context")
+      .filteredOn(Set.of("активность", "период", "регистратор", "номерстроки")::contains)
+      .containsExactlyInAnyOrder("активность", "период", "регистратор", "номерстроки");
   }
 }
