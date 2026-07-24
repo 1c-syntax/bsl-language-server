@@ -559,8 +559,16 @@ public class TypeRegistry {
     return List.copyOf(byNameAndKind.values());
   }
 
-  /** Ключ дедупликации членов в {@link #computeMembers}: вид члена + имя без учёта регистра. */
-  private record MemberKey(MemberKind kind, String lowercaseName) {
+  /**
+   * Ключ дедупликации членов в {@link #computeMembers}: вид члена + имя без учёта регистра.
+   * Package-private (а не private) ради прямого юнит-теста {@code compareTo}.
+   */
+  record MemberKey(MemberKind kind, String lowercaseName) implements Comparable<MemberKey> {
+    @Override
+    public int compareTo(MemberKey other) {
+      var byKind = kind.compareTo(other.kind);
+      return byKind != 0 ? byKind : lowercaseName.compareTo(other.lowercaseName);
+    }
   }
 
   /**

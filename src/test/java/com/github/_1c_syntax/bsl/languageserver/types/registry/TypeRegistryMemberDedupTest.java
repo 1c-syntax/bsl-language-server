@@ -80,4 +80,18 @@ class TypeRegistryMemberDedupTest {
       .hasSize(1);
     assertThat(matching.getFirst().description()).isEqualTo("первый источник");
   }
+
+  @Test
+  void memberKeyOrdersByKindThenName() {
+    var propertyA = new TypeRegistry.MemberKey(MemberKind.PROPERTY, "а");
+    var propertyB = new TypeRegistry.MemberKey(MemberKind.PROPERTY, "б");
+    var methodA = new TypeRegistry.MemberKey(MemberKind.METHOD, "а");
+
+    // Одинаковый вид — сравнение по имени.
+    assertThat(propertyA).isLessThan(propertyB);
+    // Разный вид — сравнение по виду члена (имя одинаковое).
+    assertThat(propertyA.compareTo(methodA)).isNotZero();
+    // Рефлексивность.
+    assertThat(propertyA.compareTo(propertyA)).isZero();
+  }
 }
