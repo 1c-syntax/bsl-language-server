@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformType;
@@ -373,8 +374,11 @@ public class TypeRegistry {
 
   /**
    * Получить полный набор членов типа в разрезе языка — union по всем
-   * зарегистрированным {@link MemberSource}'ам этого языка. Дубли по имени
-   * отбрасываются (побеждает первый зарегистрированный источник).
+   * зарегистрированным {@link MemberSource}'ам этого языка. Дубли по паре
+   * (вид члена {@link MemberKind}, имя без учёта регистра) отбрасываются
+   * (побеждает первый источник в порядке резолва, а не обязательно первый
+   * зарегистрированный — см. {@link #registerMemberOverride}) — член одного
+   * вида не вытесняет одноимённый член другого вида.
    * <p>
    * Fallback по имени: TypeRef в LS — это пара {@code (kind, qualifiedName)}, и
    * один и тот же тип может предъявляться с разными kind'ами в зависимости от
@@ -540,15 +544,23 @@ public class TypeRegistry {
     // registerMemberSource/registerMemberOverride (Phase B/C MetadataCollectionSpecializer
     // и др. workspace-scoped провайдеры). Список — CopyOnWriteArrayList,
     // снимок через List.copyOf дёшев и стабилен на время итерации.
-    var byName = new LinkedHashMap<String, MemberDescriptor>();
+    // Ключ дедупликации — (kind, имя): метод и свойство с одинаковым именем —
+    // разные члены (например, self-completion может видеть self-метод и
+    // одноимённую self-переменную типа), один не должен вытеснять другой.
+    var byNameAndKind = new LinkedHashMap<MemberKey, MemberDescriptor>();
     for (var source : List.copyOf(resolveMemberSources(ref, fileType))) {
       for (var member : source.getMembers()) {
-        byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
+        byNameAndKind.putIfAbsent(
+          new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT)), member);
       }
     }
     // Неизменяемый список: память шарится между вызовами, случайная мутация
     // упадёт сразу (все потребители только итерируют).
-    return List.copyOf(byName.values());
+    return List.copyOf(byNameAndKind.values());
+  }
+
+  /** Ключ дедупликации членов в {@link #computeMembers}: вид члена + имя без учёта регистра. */
+  private record MemberKey(MemberKind kind, String lowercaseName) {
   }
 
   /**
@@ -599,7 +611,7 @@ public class TypeRegistry {
   /**
    * Аналог {@link #registerMemberSource}, но вставляет источник в НАЧАЛО списка,
    * чтобы при сборе членов через {@link #getMembers(TypeRef, FileType)} он выигрывал
-   * dedup ({@code putIfAbsent} по имени). Используется для override returnType
+   * dedup ({@code putIfAbsent} по паре (вид члена, имя)). Используется для override returnType
    * у конкретного member'а уже зарегистрированного типа (например, подмена
    * {@code ОбъектМетаданныхКонфигурация.Документы} с общего
    * {@code КоллекцияОбъектовМетаданных} на специализированный
