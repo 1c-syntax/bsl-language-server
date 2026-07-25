@@ -37,7 +37,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -48,6 +47,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -166,7 +166,8 @@ public class EventHandlerResolver implements EventHandlerClassifier {
    * только при доступном провайдере (см. {@link #globalEvents()}): до загрузки HBK карта пуста и
    * НЕ кэшируется, чтобы пересобраться при запоздалой подгрузке bsl-context.
    */
-  private volatile @Nullable Map<ModuleType, Map<String, MemberDescriptor>> globalEventsCache;
+  private final AtomicReference<Map<ModuleType, Map<String, MemberDescriptor>>> globalEventsCache =
+    new AtomicReference<>();
 
   public EventHandlerResolver(TypeRegistry typeRegistry, BslContextHolder bslContextHolder) {
     this.typeRegistry = typeRegistry;
@@ -257,7 +258,7 @@ public class EventHandlerResolver implements EventHandlerClassifier {
   }
 
   private Map<ModuleType, Map<String, MemberDescriptor>> globalEvents() {
-    var cached = globalEventsCache;
+    var cached = globalEventsCache.get();
     if (cached != null) {
       return cached;
     }
@@ -267,7 +268,7 @@ public class EventHandlerResolver implements EventHandlerClassifier {
       return Map.of();
     }
     var built = buildGlobalEvents();
-    globalEventsCache = built;
+    globalEventsCache.set(built);
     return built;
   }
 
