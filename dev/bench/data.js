@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784932886360,
+  "lastUpdate": 1784958750783,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40765,6 +40765,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.3587021424917705",
             "extra": "mean: 92.61039503415425 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0cbb857561003283d073b0c627e2660906e727b4",
+          "message": "Merge pull request #4302 from 1c-syntax/perf/oscript-conventional-single-listing\n\nperf(oscript): ускорить discovery OneScript-библиотек на больших конфигурациях",
+          "timestamp": "2026-07-25T07:30:35+02:00",
+          "tree_id": "270677a90eb0dcbb91bcadee9661188e72abaf6d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0cbb857561003283d073b0c627e2660906e727b4"
+        },
+        "date": 1784958738585,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.37776406606038,
+            "unit": "sec",
+            "range": "stddev: 1.784289589663572",
+            "extra": "mean: 91.37776406606038 sec\nrounds: 3"
           }
         ]
       }
