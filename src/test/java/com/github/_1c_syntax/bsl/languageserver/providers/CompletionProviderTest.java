@@ -2778,6 +2778,51 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void eventHandlerStubArrivesWithoutDocumentationButWithDataWhenResolveSupported() {
+    // given — клиент умеет лениво разрешать documentation
+    enableDocumentationResolveSupport(true);
+    var contract = MemberDescriptor.event("ПриЗаписи", "Возникает при записи объекта.",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    var documentContext = TestUtils.getDocumentContext("");
+
+    // when
+    var stub = noDotCompletionItem(documentContext, new Position(0, 0), "ПриЗаписи");
+
+    // then — documentation отложена, но data-ключ приложен для resolve
+    assertThat(stub.getDocumentation())
+      .as("при resolveSupport documentation заглушки события отдаётся лениво")
+      .isNull();
+    assertThat(stub.getData())
+      .as("для отложенного resolve в заглушку события кладётся data-ключ")
+      .isNotNull();
+  }
+
+  @Test
+  void resolveCompletionItemRestoresSameEventHandlerDocumentationAsEager() {
+    // given — ленивая заглушка события
+    enableDocumentationResolveSupport(true);
+    var contract = MemberDescriptor.event("ПриЗаписи", "Возникает при записи объекта.",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    var documentContext = TestUtils.getDocumentContext("");
+    var lazy = noDotCompletionItem(documentContext, new Position(0, 0), "ПриЗаписи");
+
+    // when — клиент запрашивает resolve
+    var resolved = resolve(lazy);
+
+    // then — documentation восстановлена по контракту события, data очищена
+    assertThat(resolved.getDocumentation())
+      .as("resolve восстанавливает documentation заглушки события")
+      .isNotNull();
+    assertThat(resolved.getDocumentation().getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(resolved.getDocumentation().getRight().getValue()).contains("Возникает при записи объекта.");
+    assertThat(resolved.getData())
+      .as("после resolve data очищается")
+      .isNull();
+  }
+
+  @Test
   void undeclaredEventHandlerStubSnippetPlacesCursorInBodyFirst() {
     // given — с snippetSupport курсор сразу после вставки должен оказаться В ТЕЛЕ (первый
     // посещаемый tab-stop — $1), а не на первом параметре: параметры остаются доступны для

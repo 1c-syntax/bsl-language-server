@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -142,6 +143,7 @@ public final class CompletionProvider {
   private final JsonMapper jsonMapper;
   private final FuzzyMatcher fuzzyMatcher;
   private final EventContractsIndex eventContractsIndex;
+  private final ServerContextProvider serverContextProvider;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
   // прикрепления `editor.action.triggerParameterHints` к completion item.
@@ -393,11 +395,35 @@ public final class CompletionProvider {
     if (functionName != null) {
       globalScopeProvider.globalFunction(functionName, data.getFileType())
         .ifPresent(function -> applyDocumentation(unresolved, function, data.getScriptVariant()));
+    } else if (data.getEventContractName() != null) {
+      resolveEventContractDocumentation(unresolved, data);
     } else {
       resolveMemberDocumentation(unresolved, data);
     }
     unresolved.setData(null);
     return unresolved;
+  }
+
+  /**
+   * Восстанавливает {@code documentation} контракта платформенного события по ключу
+   * {@link CompletionData} event-варианта: по {@code uri} восстанавливается документ, среди
+   * событий owner-типа его модуля контракт ищется по каноническому имени. Если ключ неполон
+   * или документ/контракт не найдены — ничего не делает.
+   *
+   * @param unresolved completion item, которому проставляется документация.
+   * @param data       ключ восстановления контракта события.
+   */
+  private void resolveEventContractDocumentation(CompletionItem unresolved, CompletionData data) {
+    var eventContractName = data.getEventContractName();
+    if (eventContractName == null) {
+      return;
+    }
+    serverContextProvider.getDocument(data.getUri())
+      .stream()
+      .flatMap(documentContext -> eventContractsIndex.getAllContracts(documentContext).stream())
+      .filter(contract -> contract.name().equals(eventContractName))
+      .findFirst()
+      .ifPresent(contract -> applyDocumentation(unresolved, contract, data.getScriptVariant()));
   }
 
   /**
@@ -884,26 +910,34 @@ public final class CompletionProvider {
         || declaredMethods.stream().anyMatch(m -> contract.matches(m.getName()))) {
         continue;
       }
-      items.add(buildEventHandlerStubItem(contract, displayName, scriptVariant, bslVariant, target));
+      items.add(buildEventHandlerStubItem(contract, displayName, scriptVariant, bslVariant, target,
+        documentContext.getUri(), documentContext.getFileType()));
     }
   }
 
   private CompletionItem buildEventHandlerStubItem(MemberDescriptor contract, String displayName,
                                                    Language scriptVariant, ScriptVariant bslVariant,
-                                                   CompatibilityMode target) {
+                                                   CompatibilityMode target, URI uri, FileType fileType) {
     var item = new CompletionItem(displayName);
     item.setKind(CompletionItemKind.Event);
     var signature = contract.signatures().isEmpty() ? SignatureDescriptor.EMPTY : contract.signatures().get(0);
     applyDetail(item, formatParameterList(signature, scriptVariant), "");
-    applyDocumentation(item, contract, scriptVariant);
-    if (isMemberDeprecated(contract, target)) {
+    // Документацию (описание события + параметры) откладываем в completionItem/resolve, если
+    // клиент это поддерживает, — как остальные пути completion в этом файле.
+    if (documentationResolveSupport) {
+      item.setData(CompletionData.forEventContract(uri, contract.name(), fileType, scriptVariant));
+    } else {
+      applyDocumentation(item, contract, scriptVariant);
+    }
+    var deprecated = isMemberDeprecated(contract, target);
+    if (deprecated) {
       markDeprecatedItem(item);
     }
     item.setInsertText(formatEventHandlerSnippet(signature, displayName, scriptVariant, bslVariant, snippetSupport));
     if (snippetSupport) {
       item.setInsertTextFormat(InsertTextFormat.Snippet);
     }
-    applySortText(item, BUCKET_EVENT_STUB, isMemberDeprecated(contract, target));
+    applySortText(item, BUCKET_EVENT_STUB, deprecated);
     return item;
   }
 

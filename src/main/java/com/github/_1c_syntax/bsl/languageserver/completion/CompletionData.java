@@ -45,13 +45,16 @@ import java.net.URI;
  * Сериализуется клиентом в JSON и приходит обратно как {@code JsonObject}/Map —
  * поля сделаны bean-style (Lombok {@code @Data}) для round-trip через Jackson.
  * <p>
- * Поддерживаются два вида ключа восстановления:
+ * Поддерживаются три вида ключа восстановления:
  * <ul>
  *   <li>член типа (dot-completion): заполнены {@code typeKind}/{@code typeQualifiedName}
  *       и {@code memberName}, по ним восстанавливается член типа-владельца;</li>
  *   <li>глобальная функция (no-dot completion): заполнено {@code functionName},
  *       по нему функция ищется в глобальной области видимости. Поля типа-владельца
- *       при этом не используются.</li>
+ *       при этом не используются;</li>
+ *   <li>контракт события (no-dot completion, заглушка обработчика): заполнено
+ *       {@code eventContractName}, по нему контракт ищется среди событий owner-типа
+ *       документа.</li>
  * </ul>
  */
 @Data
@@ -109,6 +112,14 @@ public class CompletionData {
   private String functionName;
 
   /**
+   * Каноническое имя контракта платформенного события, для которого нужно восстановить
+   * документацию (no-dot completion, заглушка ещё не объявленного обработчика). Заполнено
+   * только для варианта event-контракта; для члена типа и глобальной функции — {@code null}.
+   */
+  @Nullable
+  private String eventContractName;
+
+  /**
    * Создаёт ключ восстановления документации члена типа (dot-completion).
    *
    * @param uri               URI документа, в контексте которого построен item.
@@ -121,7 +132,7 @@ public class CompletionData {
    */
   public static CompletionData forMember(URI uri, TypeKind typeKind, String typeQualifiedName, String memberName,
                                          FileType fileType, Language scriptVariant) {
-    return new CompletionData(uri, typeKind, typeQualifiedName, memberName, fileType, scriptVariant, null);
+    return new CompletionData(uri, typeKind, typeQualifiedName, memberName, fileType, scriptVariant, null, null);
   }
 
   /**
@@ -134,6 +145,21 @@ public class CompletionData {
    * @return ключ восстановления глобальной функции.
    */
   public static CompletionData forFunction(URI uri, String functionName, FileType fileType, Language scriptVariant) {
-    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName);
+    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName, null);
+  }
+
+  /**
+   * Создаёт ключ восстановления документации контракта платформенного события
+   * (no-dot completion, заглушка ещё не объявленного обработчика).
+   *
+   * @param uri               URI документа, в контексте которого построен item.
+   * @param eventContractName каноническое имя контракта события.
+   * @param fileType          тип файла-потребителя (BSL/OS).
+   * @param scriptVariant     локаль скрипта (ru/en).
+   * @return ключ восстановления контракта события.
+   */
+  public static CompletionData forEventContract(URI uri, String eventContractName,
+                                                FileType fileType, Language scriptVariant) {
+    return new CompletionData(uri, null, null, null, fileType, scriptVariant, null, eventContractName);
   }
 }
