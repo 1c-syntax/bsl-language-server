@@ -35,7 +35,6 @@ import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;

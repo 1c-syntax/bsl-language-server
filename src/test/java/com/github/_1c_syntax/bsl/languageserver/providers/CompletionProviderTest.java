@@ -2749,8 +2749,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void undeclaredEventHandlerOffersStubCompletionAtModuleLevel() {
-    // given — ПриЗаписи ещё не объявлен в документе, но входит в события owner-типа модуля;
-    // без snippetSupport клиента (по умолчанию в этом классе) заглушка — голый текст без $-меток
+    // given: ПриЗаписи ещё не объявлен в документе, но входит в события owner-типа модуля.
+    // Без snippetSupport клиента (по умолчанию в этом классе) заглушка — голый текст без меток
     var contract = MemberDescriptor.event("ПриЗаписи", "",
       List.of(new SignatureDescriptor(
         List.of(
