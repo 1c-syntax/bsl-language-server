@@ -105,11 +105,11 @@ public class ReferenceIndexFiller {
    */
   private final Map<URI, Long> filledContentFingerprints = new ConcurrentHashMap<>();
 
-  // @Order(200): ПОСЛЕ ConfigurationModuleMembersProvider/OScriptModuleMembersProvider
-  // (@Order 100), которые наполняют moduleTypeByUri — от него зависит self-member проход
-  // (SelfMemberReferenceIndexFinder). Синхронная ранняя регистрация конфигурации (до
-  // прихода клиентского didOpen) гарантирует, что к моменту fill self-тип уже в кэше;
-  // явный порядок закрепляет это в рамках одного события.
+  // Порядок 200 — ПОСЛЕ ConfigurationModuleMembersProvider и OScriptModuleMembersProvider
+  // с порядком 100: они наполняют moduleTypeByUri, от которого зависит self-member проход
+  // SelfMemberReferenceIndexFinder. Синхронная ранняя регистрация конфигурации до клиентского
+  // didOpen гарантирует, что к моменту fill self-тип уже в кэше, а явный порядок закрепляет
+  // это в рамках одного события.
   @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {

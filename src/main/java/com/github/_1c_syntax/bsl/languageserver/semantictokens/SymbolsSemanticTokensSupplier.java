@@ -125,8 +125,8 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
   private void addSelfMemberTokens(List<SemanticTokenEntry> entries, URI uri,
                                    SymbolKind symbolKind, String tokenType) {
     referenceIndex.getReferencesFrom(uri, symbolKind).stream()
-      .filter(reference -> reference.symbol() instanceof PlatformMemberSymbol)
-      .forEach(reference -> {
+      .filter((Reference reference) -> reference.symbol() instanceof PlatformMemberSymbol)
+      .forEach((Reference reference) -> {
         var descriptor = ((PlatformMemberSymbol) reference.symbol()).getDescriptor();
         helper.addRange(entries, reference.selectionRange(), tokenType, selfMemberModifiers(descriptor));
       });

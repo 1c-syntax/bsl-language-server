@@ -131,7 +131,7 @@ public class ConfigurationModuleMembersProvider {
   public static Optional<String> selfTypeQualifiedName(ModuleType moduleType, MD mdObject) {
     if (moduleType == ModuleType.CommonModule) {
       var name = mdObject.getName();
-      return name == null || name.isBlank() ? Optional.empty() : Optional.of(name);
+      return name.isBlank() ? Optional.empty() : Optional.of(name);
     }
     var wrapperSuffix = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
     if (wrapperSuffix == null) {
@@ -139,7 +139,7 @@ public class ConfigurationModuleMembersProvider {
     }
     var groupNameRu = mdObject.getMdoType().fullName().getRu();
     var name = mdObject.getName();
-    if (groupNameRu == null || groupNameRu.isBlank() || name == null || name.isBlank()) {
+    if (groupNameRu.isBlank() || name.isBlank()) {
       return Optional.empty();
     }
     return Optional.of(groupNameRu + wrapperSuffix + "." + name);

@@ -628,7 +628,7 @@ public final class CompletionProvider {
    * (её отсекает {@code SelfMemberClassifier} при построении дерева), поэтому
    * такой self-член добавит {@link #collectSelfMembers}, а не эта ветка.
    */
-  private boolean isVariableHiddenFromNoDotCompletion(VariableSymbol variable,
+  private static boolean isVariableHiddenFromNoDotCompletion(VariableSymbol variable,
                                                       SourceDefinedSymbol moduleSymbol,
                                                       @Nullable MethodSymbol enclosingMethod) {
     var scope = variable.getScope();
