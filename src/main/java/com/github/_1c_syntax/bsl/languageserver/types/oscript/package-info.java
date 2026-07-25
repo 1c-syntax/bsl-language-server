@@ -8,9 +8,12 @@
  */
 
 /**
- * Источники типов OneScript: обнаружение библиотек
- * ({@link com.github._1c_syntax.bsl.languageserver.types.oscript.ConventionalLibraryDiscovery},
- * {@link com.github._1c_syntax.bsl.languageserver.types.oscript.LibConfigDiscovery}),
+ * Источники типов OneScript: обход дерева workspace
+ * ({@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryScanner}
+ * поверх корней из
+ * {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryRootResolver}),
+ * распознавание библиотек по соглашению
+ * ({@link com.github._1c_syntax.bsl.languageserver.types.oscript.ConventionalLibraryDiscovery}),
  * разбор {@code lib.config}
  * ({@link com.github._1c_syntax.bsl.languageserver.types.oscript.LibConfigParser}),
  * индекс

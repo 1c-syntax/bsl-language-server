@@ -30,23 +30,21 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 /**
- * Поиск манифестов {@code lib.config} OneScript-библиотек.
+ * Корни для поиска OneScript-библиотек и общие для подсистемы константы.
  * <p>
- * Источники:
+ * Сам обход дерева выполняет {@link OScriptLibraryScanner} за один проход; этот
+ * компонент лишь вычисляет набор корней, от которых обход стартует:
  * <ol>
- *   <li>Корень workspace (рекурсивно, глубина ≤ {@value #MAX_DEPTH}).</li>
+ *   <li>Корень workspace, а также каждый непосредственный подкаталог
+ *       {@code oscript_modules} (как отдельный корень локальной зависимости).</li>
  *   <li>Каталоги из {@code oscript.libRoots} (относительные пути — от корня
  *       workspace, абсолютные — как есть).</li>
  *   <li>Если включено {@code oscript.useEnvLibLocation} — пути из переменной
@@ -57,10 +55,7 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LibConfigDiscovery {
-
-  /** Имя файла-манифеста. */
-  public static final String LIB_CONFIG_FILENAME = "lib.config";
+public class OScriptLibraryRootResolver {
 
   /** Имя стандартного каталога локальных OneScript-зависимостей. */
   public static final String OSCRIPT_MODULES_DIRNAME = "oscript_modules";
@@ -68,33 +63,7 @@ public class LibConfigDiscovery {
   /** Имя переменной окружения с дополнительными корнями. */
   public static final String ENV_LIB_LOCATION = "OSCRIPT_LIB_LOCATION";
 
-  /** Максимальная глубина обхода в поисках {@code lib.config}. */
-  static final int MAX_DEPTH = 6;
-
   private final LanguageServerConfiguration configuration;
-
-  /**
-   * Найти все {@code lib.config} для указанного workspace-контекста.
-   *
-   * @param serverContext workspace-контекст; если у него нет корня,
-   *                      используются только глобальные источники
-   * @return список абсолютных нормализованных путей, без дубликатов
-   */
-  public List<Path> discover(ServerContext serverContext) {
-    var workspaceRoot = serverContext.getConfigurationRoot();
-    return discover(workspaceRoot);
-  }
-
-  /**
-   * Найти все {@code lib.config} для указанного корня workspace.
-   */
-  public List<Path> discover(Path workspaceRoot) {
-    var result = new LinkedHashSet<Path>();
-    for (var root : getRoots(workspaceRoot)) {
-      scan(root, result);
-    }
-    return new ArrayList<>(result);
-  }
 
   /**
    * Корни для поиска OneScript-библиотек (workspace + {@code libRoots} +
@@ -151,50 +120,6 @@ public class LibConfigDiscovery {
         .forEach(sink::add);
     } catch (IOException e) {
       LOGGER.debug("Skipping unreadable oscript_modules directory: {}", modulesDir, e);
-    }
-  }
-
-  private static void scan(Path root, Set<Path> sink) {
-    if (!Files.isDirectory(root)) {
-      return;
-    }
-    var rootAbs = root.toAbsolutePath().normalize();
-    try {
-      Files.walkFileTree(rootAbs, Set.of(), MAX_DEPTH, new SimpleFileVisitor<>() {
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-          // Сам root всегда обходим, иначе обнаружение библиотеки из корневого
-          // workspace/oscript_modules/<lib> сразу бы остановилось.
-          if (dir.equals(rootAbs)) {
-            return FileVisitResult.CONTINUE;
-          }
-          // Не заходим в oscript_modules уже обнаруженной библиотеки — её
-          // транзитивные зависимости не должны попадать в индекс верхнего
-          // workspace. Корневой workspace/oscript_modules обрабатывается
-          // отдельно через addOscriptModulesChildren().
-          if (OSCRIPT_MODULES_DIRNAME.equals(dir.getFileName().toString())) {
-            return FileVisitResult.SKIP_SUBTREE;
-          }
-          return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-          var name = file.getFileName().toString().toLowerCase(Locale.ROOT);
-          if (LIB_CONFIG_FILENAME.equals(name)) {
-            sink.add(file.toAbsolutePath().normalize());
-          }
-          return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) {
-          LOGGER.debug("Skipping unreadable path while scanning lib.config: {}", file, exc);
-          return FileVisitResult.CONTINUE;
-        }
-      });
-    } catch (IOException e) {
-      LOGGER.warn("Failed to scan oscript library root: {}", root, e);
     }
   }
 }
