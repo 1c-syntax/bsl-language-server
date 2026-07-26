@@ -36,6 +36,7 @@ import org.springframework.context.annotation.Import;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,6 +88,35 @@ class SelfMemberIndexColoringTest extends AbstractServerContextAwareTest {
         // и на записи, и на чтении.
         new ExpectedToken(2, 2, 9, SemanticTokenTypes.Property, "Реквизит1"),
         new ExpectedToken(3, 6, 9, SemanticTokenTypes.Property, "Реквизит1")
+      ));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void bareSelfMethodInManagerModuleIsColoredStatic() {
+    // Модуль менеджера — static-модуль: вызов платформенного self-метода менеджера
+    // (СоздатьЭлемент) размечается Method + DefaultLibrary + Static, как и объявленные
+    // методы такого модуля — в отличие от объектного модуля выше, где self-метод без Static.
+    // Тип менеджера с этим методом берётся из JSON-fallback (СправочникМенеджер.<Имя>),
+    // так что HBK не нужен.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        СоздатьЭлемент();
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
+
+      helper.assertContainsTokens(decoded, List.of(
+        new ExpectedToken(1, 2, 14, SemanticTokenTypes.Method,
+          Set.of(SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Static), "СоздатьЭлемент")
       ));
     } finally {
       context.removeDocument(documentContext.getUri());
