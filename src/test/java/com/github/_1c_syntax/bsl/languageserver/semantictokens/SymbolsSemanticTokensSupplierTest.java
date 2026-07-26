@@ -94,7 +94,7 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
     // then - function name should be highlighted as Function
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(0, 8, 10, SemanticTokenTypes.Function, "МояФункция")
+      new ExpectedToken(0, 8, 10, SemanticTokenTypes.Method, "МояФункция")
     ));
   }
 
@@ -188,7 +188,7 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
     // then
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(0, 14, 20, SemanticTokenTypes.Function,
+      new ExpectedToken(0, 14, 20, SemanticTokenTypes.Method,
         Set.of(SemanticTokenModifiers.Async), "ОбработатьАсинхронно")
     ));
   }

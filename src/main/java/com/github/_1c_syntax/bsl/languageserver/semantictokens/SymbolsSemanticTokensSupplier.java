@@ -146,16 +146,16 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Тип семантического токена имени метода: {@link SemanticTokenTypes#Event} для
-   * обработчика платформенного события ({@link SymbolKind#Event}, см. {@code
-   * context.symbol.EventMethodSymbol}) — осознанно ценой различения функция/процедура для таких
-   * методов, иначе как обычно {@link SemanticTokenTypes#Function}/{@link SemanticTokenTypes#Method}.
+   * Тип семантического токена имени метода: {@link SemanticTokenTypes#Event} для обработчика
+   * платформенного события ({@link SymbolKind#Event}), иначе {@link SemanticTokenTypes#Method}.
+   * Объявленные в коде методы — и процедуры, и функции — семантически методы; {@link
+   * SemanticTokenTypes#Function} зарезервирован за платформенными глобальными функциями (их
+   * размечает отдельный supplier).
    */
   private static String methodTokenType(MethodSymbol method) {
-    if (method.getSymbolKind() == SymbolKind.Event) {
-      return SemanticTokenTypes.Event;
-    }
-    return method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
+    return method.getSymbolKind() == SymbolKind.Event
+      ? SemanticTokenTypes.Event
+      : SemanticTokenTypes.Method;
   }
 
   private static String[] methodModifiers(boolean isStatic, boolean isAsync) {
