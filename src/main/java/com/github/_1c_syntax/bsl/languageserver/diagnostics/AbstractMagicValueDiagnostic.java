@@ -719,11 +719,8 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
   ) {
     return Optional.ofNullable(expression)
       .map(ParserRuleContext::getParent) // callParam
-      .filter(BSLParser.CallParamContext.class::isInstance)
       .map(ParserRuleContext::getParent) // callParamList
-      .filter(BSLParser.CallParamListContext.class::isInstance)
       .map(ParserRuleContext::getParent) // doCall
-      .filter(BSLParser.DoCallContext.class::isInstance)
       .map(ParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
       .filter(BSLParser.GlobalMethodCallContext.class::isInstance)
       .map(BSLParser.GlobalMethodCallContext.class::cast)
