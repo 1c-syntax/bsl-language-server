@@ -169,8 +169,21 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
   }
 
   private static boolean insideAssignmentWithDateMethodForSimpleDate(BSLParser.@Nullable ExpressionContext expression) {
-    return getSingleArgDateMethodExpression(expression)
-      .map(dateMethodExpression -> dateMethodExpression.getParent() instanceof BSLParser.AssignmentContext)
-      .orElse(false);
+    if (expression == null) {
+      return false;
+    }
+    var dateCallOpt = getEnclosingDateMethodCall(expression);
+    if (dateCallOpt.isEmpty()) {
+      return false;
+    }
+    // getEnclosingDateMethodCall гарантировал цепочку expression -> callParam -> callParamList
+    var callParamList = expression.getParent().getParent();
+    if (callParamList.getChildCount() != 1) {
+      return false;
+    }
+    // globalCall -> complexId -> member -> expression
+    var dateCallExpression = dateCallOpt.get().getParent().getParent().getParent();
+    return dateCallExpression.getChildCount() == 1
+      && dateCallExpression.getParent() instanceof BSLParser.AssignmentContext;
   }
 }

@@ -87,7 +87,7 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
    * замечанием в любом контексте. Расчёты и сложные выражения внутри Дата(...) остаются замечанием.
    */
   private static boolean isDateComponentArgument(BSLParser.ExpressionContext expression) {
-    return isNumericExpression(expression) && isArgumentOfDateMethod(expression);
+    return isNumericExpression(expression) && getEnclosingDateMethodCall(expression).isPresent();
   }
 
   @Override
@@ -127,20 +127,25 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     }
 
     var expression = getExpression(numericContextParent);
-    if (expression.isPresent()) {
-      var context = expression.get();
-      if (insideStructureOrCorrespondence(context)) {
-        return false;
-      }
-      if (isNumericExpression(context) && insideReturnStatement(context)) {
-        return false;
-      }
-      if (isDateComponentArgument(context)) {
-        return false;
-      }
-      return !isNumericExpression(context) || insideCallParam(context);
+    if (expression.isEmpty()) {
+      return false;
     }
-    return false;
+    var context = expression.get();
+    if (isAllowedNumericContext(context)) {
+      return false;
+    }
+    return !isNumericExpression(context) || insideCallParam(context);
+  }
+
+  /**
+   * Контексты, в которых числовой литерал допустим и не считается магическим: внутри
+   * структуры/соответствия, возвращаемое напрямую число ({@code Возврат 55}) и числовая
+   * компонента дата-литерала {@code Дата(...)}.
+   */
+  private boolean isAllowedNumericContext(BSLParser.ExpressionContext context) {
+    return insideStructureOrCorrespondence(context)
+      || (isNumericExpression(context) && insideReturnStatement(context))
+      || isDateComponentArgument(context);
   }
 
   private boolean mayBeNumberAccess(BSLParser.NumericContext ctx) {
