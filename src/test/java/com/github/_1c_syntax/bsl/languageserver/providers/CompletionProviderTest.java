@@ -715,7 +715,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .findFirst()
       .orElseThrow(() -> new AssertionError("локальная функция должна попасть в no-dot completion"));
 
-    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Function);
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Method);
     assertThat(item.getDetail())
       .as("сигнатура и тип возврата локального метода — как у платформенного")
       .isEqualTo("(Имя, Приветствие?): Строка");
@@ -2805,6 +2805,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var contract = MemberDescriptor.event("ПриЗаписи", "Возникает при записи объекта.",
       List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
     when(eventHandlerResolver.allEvents(any())).thenReturn(List.of(contract));
+    // resolve восстанавливает контракт по ключу (moduleType, ownerTypeRef) через eventsFor
+    when(eventHandlerResolver.eventsFor(any(), any(), any())).thenReturn(List.of(contract));
     var documentContext = TestUtils.getDocumentContext("");
     var lazy = noDotCompletionItem(documentContext, new Position(0, 0), "ПриЗаписи");
 

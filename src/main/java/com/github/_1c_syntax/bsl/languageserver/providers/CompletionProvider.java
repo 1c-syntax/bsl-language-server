@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -45,6 +44,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
@@ -52,6 +52,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -143,7 +144,7 @@ public final class CompletionProvider {
   private final JsonMapper jsonMapper;
   private final FuzzyMatcher fuzzyMatcher;
   private final EventContractsIndex eventContractsIndex;
-  private final ServerContextProvider serverContextProvider;
+  private final EventHandlerResolver eventHandlerResolver;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
   // прикрепления `editor.action.triggerParameterHints` к completion item.
@@ -406,21 +407,23 @@ public final class CompletionProvider {
 
   /**
    * Восстанавливает {@code documentation} контракта платформенного события по ключу
-   * {@link CompletionData} event-варианта: по {@code uri} восстанавливается документ, среди
-   * событий owner-типа его модуля контракт ищется по каноническому имени. Если ключ неполон
-   * или документ/контракт не найдены — ничего не делает.
+   * {@link CompletionData} event-варианта: набор событий берётся по паре
+   * {@code (moduleType, ownerTypeRef)} из ключа — без обращения к документу, — а контракт ищется
+   * по каноническому имени. Если ключ неполон или контракт не найден — ничего не делает.
    *
    * @param unresolved completion item, которому проставляется документация.
    * @param data       ключ восстановления контракта события.
    */
   private void resolveEventContractDocumentation(CompletionItem unresolved, CompletionData data) {
     var eventContractName = data.getEventContractName();
-    if (eventContractName == null) {
+    var moduleType = data.getModuleType();
+    if (eventContractName == null || moduleType == null) {
       return;
     }
-    serverContextProvider.getDocument(data.getUri())
-      .stream()
-      .flatMap(documentContext -> eventContractsIndex.getAllContracts(documentContext).stream())
+    var ownerTypeRef = data.getTypeKind() == null || data.getTypeQualifiedName() == null
+      ? null
+      : new TypeRef(data.getTypeKind(), data.getTypeQualifiedName());
+    eventHandlerResolver.eventsFor(moduleType, ownerTypeRef, data.getFileType()).stream()
       .filter(contract -> contract.name().equals(eventContractName))
       .findFirst()
       .ifPresent(contract -> applyDocumentation(unresolved, contract, data.getScriptVariant()));
@@ -797,7 +800,7 @@ public final class CompletionProvider {
       if (matches(method.getName(), prefix)) {
         var item = new CompletionItem(method.getName());
         var isEventHandler = method.getSymbolKind() == SymbolKind.Event;
-        item.setKind(methodCompletionKind(method, isEventHandler));
+        item.setKind(methodCompletionKind(isEventHandler));
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
         applySourceMethodDetail(item, method);
         applySourceMethodDocumentation(item, method);
@@ -874,11 +877,10 @@ public final class CompletionProvider {
     return items;
   }
 
-  private static CompletionItemKind methodCompletionKind(MethodSymbol method, boolean isEventHandler) {
-    if (isEventHandler) {
-      return CompletionItemKind.Event;
-    }
-    return method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method;
+  private static CompletionItemKind methodCompletionKind(boolean isEventHandler) {
+    // Объявленные методы (процедуры и функции) — Method; Function только у платформенных
+    // глобальных функций. Обработчик события — Event.
+    return isEventHandler ? CompletionItemKind.Event : CompletionItemKind.Method;
   }
 
   private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
@@ -903,6 +905,9 @@ public final class CompletionProvider {
     var declaredMethods = documentContext.getSymbolTree().getMethods();
     var scriptVariant = documentContext.getScriptVariantLanguage();
     var bslVariant = scriptVariant == Language.EN ? ScriptVariant.ENGLISH : ScriptVariant.RUSSIAN;
+    // Owner-тип событий — один на модуль; считаем один раз и кладём в data-ключ каждой заглушки,
+    // чтобы completionItem/resolve восстановил контракт без обращения к документу.
+    var ownerTypeRef = eventHandlerResolver.eventOwnerTypeRef(documentContext).orElse(null);
     for (var contract : contracts) {
       var displayName = contract.displayName(scriptVariant);
       if (PlatformMemberVersions.firesUnavailable(contract.metadata().sinceVersion(), target)
@@ -911,13 +916,14 @@ public final class CompletionProvider {
         continue;
       }
       items.add(buildEventHandlerStubItem(contract, displayName, scriptVariant, bslVariant, target,
-        documentContext.getUri(), documentContext.getFileType()));
+        documentContext, ownerTypeRef));
     }
   }
 
   private CompletionItem buildEventHandlerStubItem(MemberDescriptor contract, String displayName,
                                                    Language scriptVariant, ScriptVariant bslVariant,
-                                                   CompatibilityMode target, URI uri, FileType fileType) {
+                                                   CompatibilityMode target, DocumentContext documentContext,
+                                                   @Nullable TypeRef ownerTypeRef) {
     var item = new CompletionItem(displayName);
     item.setKind(CompletionItemKind.Event);
     var signature = contract.signatures().isEmpty() ? SignatureDescriptor.EMPTY : contract.signatures().get(0);
@@ -925,7 +931,8 @@ public final class CompletionProvider {
     // Документацию (описание события + параметры) откладываем в completionItem/resolve, если
     // клиент это поддерживает, — как остальные пути completion в этом файле.
     if (documentationResolveSupport) {
-      item.setData(CompletionData.forEventContract(uri, contract.name(), fileType, scriptVariant));
+      item.setData(CompletionData.forEventContract(documentContext.getUri(), documentContext.getModuleType(),
+        ownerTypeRef, contract.name(), documentContext.getFileType(), scriptVariant));
     } else {
       applyDocumentation(item, contract, scriptVariant);
     }

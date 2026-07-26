@@ -72,7 +72,7 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void getAllContractsDelegatesToResolverAndCachesPerUri() {
+  void getAllContractsDelegatesToResolver() {
     var documentContext = TestUtils.getDocumentContext("");
     var contracts = List.of(MemberDescriptor.event("ПриЗаписи", "", List.of()));
     when(eventHandlerResolver.allEvents(documentContext)).thenReturn(contracts);
@@ -81,13 +81,14 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
     var second = eventContractsIndex.getAllContracts(documentContext);
 
     assertThat(first).isEqualTo(contracts);
-    // Второй вызов должен обслуживаться из кэша, а не резолвером повторно.
-    verify(eventHandlerResolver, times(1)).allEvents(documentContext);
-    assertThat(second).isSameAs(first);
+    assertThat(second).isEqualTo(contracts);
+    // Отдельного кэша нет: события зависят от типа и уже мемоизированы источником
+    // (getMembers/globalEvents), поэтому каждый вызов делегирует в резолвер.
+    verify(eventHandlerResolver, times(2)).allEvents(documentContext);
   }
 
   @Test
-  void configurationTypesRegisteredEventClearsAllContractsCache() {
+  void getAllContractsReflectsReRegisteredTypes() {
     var documentContext = TestUtils.getDocumentContext("");
     when(eventHandlerResolver.allEvents(documentContext))
       .thenReturn(List.of(MemberDescriptor.event("Первое", "", List.of())))

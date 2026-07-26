@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextEvent;
 import com.github._1c_syntax.bsl.context.platform.EnAttachments;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -37,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -222,7 +224,32 @@ public class EventHandlerResolver implements EventHandlerClassifier {
    * Безопасно вызывать когда конфигурационные типы ещё не зарегистрированы — вернёт пустой список.
    */
   public List<MemberDescriptor> allEvents(DocumentContext documentContext) {
+    return eventsFor(documentContext.getModuleType(),
+      eventOwnerTypeRef(documentContext).orElse(null),
+      documentContext.getFileType());
+  }
+
+  /**
+   * Owner-тип, чьи события предлагаются в модуле документа: платформенный тип объекта/менеджера
+   * (например, {@code СправочникОбъект.<Имя>}). Пусто для модулей-глобальных-хостов и .os-классов —
+   * их события не зависят от конфигурационного типа. Служит стабильным ключом восстановления
+   * событий в {@code completionItem/resolve} (см. {@link #eventsFor}).
+   */
+  public Optional<TypeRef> eventOwnerTypeRef(DocumentContext documentContext) {
     var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass || GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return Optional.empty();
+    }
+    return resolveOwnerType(documentContext, moduleType);
+  }
+
+  /**
+   * Все события источника, заданного парой {@code (moduleType, ownerTypeRef)} — без привязки к
+   * конкретному документу, чтобы набор можно было восстановить по ключу из
+   * {@code completionItem/resolve}. Для .os-класса и модулей-глобальных-хостов события фиксированы
+   * (owner-тип не нужен), для объектных/менеджерских модулей берутся с {@code ownerTypeRef}.
+   */
+  public List<MemberDescriptor> eventsFor(ModuleType moduleType, @Nullable TypeRef ownerTypeRef, FileType fileType) {
     if (moduleType == ModuleType.OScriptClass) {
       return OSCRIPT_CLASS_EVENTS;
     }
@@ -234,11 +261,10 @@ public class EventHandlerResolver implements EventHandlerClassifier {
       // Одно событие лежит в карте под ru- и en-ключом на один и тот же объект — дедуп по identity/equals.
       return byName.values().stream().distinct().toList();
     }
-    var ownerTypeRef = resolveOwnerType(documentContext, moduleType);
-    if (ownerTypeRef.isEmpty()) {
+    if (ownerTypeRef == null) {
       return List.of();
     }
-    return typeRegistry.getMembers(ownerTypeRef.get(), documentContext.getFileType()).stream()
+    return typeRegistry.getMembers(ownerTypeRef, fileType).stream()
       .filter(m -> m.kind() == MemberKind.EVENT)
       .toList();
   }

@@ -61,13 +61,6 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
     = new ConcurrentHashMap<>();
 
   /**
-   * Кэш «все события owner-типа документа» (не привязанные к конкретному объявленному методу),
-   * для автодополнения заглушки ещё не объявленного обработчика. Инвалидируется теми же
-   * событиями, что и {@link #contractsByUri}.
-   */
-  private final Map<URI, List<MemberDescriptor>> allContractsByUri = new ConcurrentHashMap<>();
-
-  /**
    * Возвращает контракт платформенного события для метода с указанным именем
    * либо {@link Optional#empty()}, если метод не является обработчиком.
    */
@@ -81,26 +74,22 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
 
   /**
    * Возвращает все события owner-типа модуля документа — независимо от того, объявлен ли в
-   * документе метод-обработчик для каждого из них. См.
-   * {@link EventHandlerResolver#allEvents(DocumentContext)}.
+   * документе метод-обработчик для каждого из них. Отдельно не кэшируется: делегирует в
+   * {@link EventHandlerResolver#allEvents(DocumentContext)}, чей источник уже мемоизирован, а
+   * события зависят от типа, не от содержимого документа.
    */
   public List<MemberDescriptor> getAllContracts(DocumentContext documentContext) {
-    return allContractsByUri.computeIfAbsent(
-      documentContext.getUri(),
-      uri -> eventHandlerResolver.allEvents(documentContext)
-    );
+    return eventHandlerResolver.allEvents(documentContext);
   }
 
   @Override
   public void clear(URI uri) {
     contractsByUri.remove(uri);
-    allContractsByUri.remove(uri);
   }
 
   @EventListener
   public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
     contractsByUri.clear();
-    allContractsByUri.clear();
   }
 
   private Map<String, Optional<MemberDescriptor>> buildFor(DocumentContext documentContext) {
