@@ -254,32 +254,36 @@ public class ExpressionTypeInferencer {
     if (!(ast instanceof TerminalNode terminal)) {
       return TypeSet.EMPTY;
     }
-    // Терминал идентификатора уже под рукой — резолвим по нему, без спуска по AST
-    // от корня к позиции в reference-finder'ах. resolveReference возвращает
-    // Optional.empty(), когда ссылка нашлась, но указывает на вид символа, тип
-    // которого этот метод не берётся выводить (например, ModuleSymbol
-    // модуля-аксессора общего модуля — его типизирует globalProperty ниже) —
-    // тогда падаем на self-свойство/глобал, как и при отсутствии ссылки вовсе.
-    // А вот когда ссылка указывает на переменную/метод/self-член, но её тип
-    // честно не выводится (например, локальная переменная без единого
-    // присваивания) — resolveReference возвращает Optional.of(EMPTY), и ЭТОТ
-    // результат подменять self-свойством того же имени нельзя.
-    var viaReference = referenceResolver.findReference(ctx.documentContext.getUri(), terminal)
-      .flatMap(ref -> resolveReference(ref, ctx));
-    if (viaReference.isPresent()) {
-      return viaReference.get();
+    return identifierType(terminal, ctx);
+  }
+
+  /**
+   * Тип голого идентификатора под терминалом — с фоллбэком внутри, а не у вызывающего.
+   * <p>
+   * Сначала — по ссылке проекта (терминал уже под рукой, резолвим по нему без спуска
+   * по AST от корня в reference-finder'ах). Если ссылка резолвится в переменную/метод/
+   * self-член, {@link #referencedSymbolType} отдаёт её тип целиком — даже честно пустой
+   * (локальная переменная без единого присваивания): подменять его self-свойством того
+   * же имени нельзя, иначе вернётся self-member-затенение.
+   * <p>
+   * Если же ссылки нет ИЛИ она указывает на не-типизируемый здесь вид символа (например,
+   * {@code ModuleSymbol} модуля-аксессора общего модуля — {@code referencedSymbolType}
+   * отдаёт {@code null}), тип выводит фоллбэк: неявное поле extends-родителя →
+   * self-свойство self-типа модуля → глобальное свойство. Только {@code PROPERTY}: голый
+   * идентификатор без вызова не может ссылаться на метод (вызов резолвится в inferCall).
+   */
+  private TypeSet identifierType(TerminalNode terminal, InferenceContext ctx) {
+    var maybeRef = referenceResolver.findReference(ctx.documentContext.getUri(), terminal);
+    if (maybeRef.isPresent()) {
+      var referenced = referencedSymbolType(maybeRef.get(), ctx);
+      if (referenced != null) {
+        return referenced;
+      }
     }
     var text = terminal.getText();
     if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
-    // Неквалифицированное обращение к свойству self-типа текущего модуля:
-    // внутри модуля объекта/менеджера/набора записей/общего модуля к своим
-    // реквизитам обращаются без явного получателя. Self-тип — тот же, что
-    // регистрирует GlobalScopeProvider.indexModuleType для dot-completion, так
-    // что набор доступных свойств для каждого типа модуля не нужно перечислять
-    // отдельно. Только {@code PROPERTY}: голый идентификатор без вызова не
-    // может ссылаться на метод (вызов метода резолвится в inferCall/inferMethodCall).
     return inferImplicitExtendsParentField(text, ctx)
       .or(() -> selfMemberReturnTypes(ctx, text, MemberKind.PROPERTY))
       .orElseGet(() -> globalPropertyReturnTypes(text, ctx));
@@ -531,8 +535,8 @@ public class ExpressionTypeInferencer {
     //    именно в него, доверяем результату целиком — даже честно пустому
     //    (процедура или функция без объявленного типа возврата) — и НЕ падаем
     //    дальше на глобальную функцию/self-член с тем же именем: совпадение
-    //    имени не делает их одним и тем же символом (см. resolveReference в
-    //    inferIdentifier — тот же принцип для голых идентификаторов).
+    //    имени не делает их одним и тем же символом (см. referencedSymbolType в
+    //    identifierType — тот же принцип для голых идентификаторов).
     var localMethod = reference
       .flatMap(Reference::getSourceDefinedSymbol)
       .filter(MethodSymbol.class::isInstance)
@@ -806,34 +810,36 @@ public class ExpressionTypeInferencer {
   // ---------------------------------------------------------------------------
 
   /**
-   * @return {@code Optional.empty()}, если ссылка указывает на вид символа,
-   *     тип которого этот метод не берётся выводить (например,
-   *     {@code ModuleSymbol} модуля-аксессора общего модуля) — вызывающий
-   *     тогда сам решает, на что упасть дальше. Для переменной/метода/
-   *     self-члена результат всегда присутствует, даже если сам тип — пустой
-   *     {@link TypeSet#EMPTY} (честно невыведенный тип — не «символ не тот»).
+   * Тип символа-цели ссылки, если этот метод берётся его выводить (переменная/метод/
+   * self-член). {@code null} — вид символа здесь не типизируем (например,
+   * {@code ModuleSymbol} модуля-аксессора общего модуля): вызывающий
+   * ({@link #identifierType}) тогда переходит к фоллбэку. Для переменной/метода/
+   * self-члена результат непустой, даже если сам тип — пустой {@link TypeSet#EMPTY}:
+   * честно невыведенный тип — не «символ не тот», и подменять его self-свойством того
+   * же имени нельзя.
    */
-  private Optional<TypeSet> resolveReference(Reference reference, InferenceContext ctx) {
+  @Nullable
+  private TypeSet referencedSymbolType(Reference reference, InferenceContext ctx) {
     var target = reference.symbol();
     if (target instanceof PlatformMemberSymbol platformMember) {
       // Синтетический символ (self-свойство/метод, глобал) — не SourceDefinedSymbol,
       // тип берём напрямую из его MemberDescriptor.
-      return Optional.of(platformMember.getDescriptor().returnTypes());
+      return platformMember.getDescriptor().returnTypes();
     }
     if (!(target instanceof MethodSymbol) && !(target instanceof VariableSymbol)) {
-      return Optional.empty();
+      return null;
     }
     var symbol = (SourceDefinedSymbol) target;
     if (!ctx.visited.add(symbol)) {
       // Цикл: для переменной-аккумулятора возвращаем накопленный к этому моменту
       // тип (см. inProgress), для прочих символов — пусто, как и раньше.
-      return Optional.of(ctx.inProgress.getOrDefault(symbol, TypeSet.EMPTY));
+      return ctx.inProgress.getOrDefault(symbol, TypeSet.EMPTY);
     }
     try {
       if (symbol instanceof MethodSymbol method) {
-        return Optional.of(symbolTypeIndex.getDeclaredReturnTypes(method));
+        return symbolTypeIndex.getDeclaredReturnTypes(method);
       }
-      return Optional.of(inferVariable((VariableSymbol) symbol, ctx));
+      return inferVariable((VariableSymbol) symbol, ctx);
     } finally {
       ctx.visited.remove(symbol);
     }
