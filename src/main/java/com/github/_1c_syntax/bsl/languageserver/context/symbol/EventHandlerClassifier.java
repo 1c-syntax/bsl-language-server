@@ -25,17 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 /**
  * Классифицирует объявленный в коде метод как обработчик платформенного события.
- * <p>
- * Интерфейс — контракт {@code context.computer.MethodSymbolComputer}, реальная реализация живёт
- * в {@code types.registry} ({@code EventHandlerResolver}) и внедряется через Spring: та же
- * инверсия зависимости, что и у {@code context.computer.DiagnosticComputer} (реализация —
- * {@code diagnostics.DefaultDiagnosticComputer}) — так {@code context} не зависит от {@code types}
- * напрямую (см. {@code ArchitectureTest.layer_dependencies_are_respected}), хотя классификация по
- * существу требует доступа к реестру типов платформы/конфигурации.
- * <p>
- * Безопасно вызывать в любой момент жизни воркспейса: типы платформы/конфигурации регистрируются
- * ({@code types.registry.ConfigurationTypesProvider}) сразу по добавлению workspace'а — раньше,
- * чем {@code ServerContext.populateContext()} успевает построить хоть одно дерево символов.
+ * Реализация ({@code types.registry.EventHandlerResolver}) внедряется через Spring, чтобы
+ * {@code context} не зависел от {@code types} напрямую.
  */
 public interface EventHandlerClassifier {
 

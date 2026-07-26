@@ -697,7 +697,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if (!isSupported(symbol) || symbol.getName().isEmpty()) {
         continue;
       }
-      collected.add(toEntry(documentContext, symbol, scriptVariant));
+      collected.add(toEntry(uri, symbol, scriptVariant));
     }
 
     var snapshot = List.copyOf(collected);
@@ -784,11 +784,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  private static Entry toEntry(DocumentContext documentContext, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
+  private static Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
     var name = symbol.getName();
     var containerName = getContainerName(symbol, scriptVariant).orElse("");
     return new Entry(
-      documentContext.getUri(),
+      uri,
       name,
       name.toLowerCase(Locale.ENGLISH),
       symbol.getSymbolKind(),
