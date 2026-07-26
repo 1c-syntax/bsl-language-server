@@ -61,6 +61,15 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     SemanticTokenModifiers.DefaultLibrary,
     SemanticTokenModifiers.Async
   };
+  private static final String[] DEFAULT_LIBRARY_STATIC_MODIFIERS = {
+    SemanticTokenModifiers.DefaultLibrary,
+    SemanticTokenModifiers.Static
+  };
+  private static final String[] DEFAULT_LIBRARY_STATIC_ASYNC_MODIFIERS = {
+    SemanticTokenModifiers.DefaultLibrary,
+    SemanticTokenModifiers.Static,
+    SemanticTokenModifiers.Async
+  };
 
   private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
@@ -116,19 +125,22 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     // проиндексированные ReferenceIndexFiller как обращения к PlatformMemberSymbol — красим
     // здесь по индексу, тем же путём, что и обычные символы (отдельный сапплаер не нужен).
     // Точечные члены (получатель.член) ведут PlatformMember*SemanticTokensSupplier'ы.
-    addSelfMemberTokens(entries, uri, SymbolKind.Property, SemanticTokenTypes.Property);
-    addSelfMemberTokens(entries, uri, SymbolKind.Method, SemanticTokenTypes.Method);
+    // Self-методы static-модуля (общий модуль/менеджер/.os-модуль) вызываются статически —
+    // тот же Static-модификатор, что и у объявленных методов такого модуля. Self-свойства
+    // Static не получают (как и объявленные переменные).
+    addSelfMemberTokens(entries, uri, SymbolKind.Property, SemanticTokenTypes.Property, false);
+    addSelfMemberTokens(entries, uri, SymbolKind.Method, SemanticTokenTypes.Method, isStatic);
 
     return entries;
   }
 
   private void addSelfMemberTokens(List<SemanticTokenEntry> entries, URI uri,
-                                   SymbolKind symbolKind, String tokenType) {
+                                   SymbolKind symbolKind, String tokenType, boolean isStatic) {
     referenceIndex.getReferencesFrom(uri, symbolKind).stream()
       .filter((Reference reference) -> reference.symbol() instanceof PlatformMemberSymbol)
       .forEach((Reference reference) -> {
         var descriptor = ((PlatformMemberSymbol) reference.symbol()).getDescriptor();
-        helper.addRange(entries, reference.selectionRange(), tokenType, selfMemberModifiers(descriptor));
+        helper.addRange(entries, reference.selectionRange(), tokenType, selfMemberModifiers(descriptor, isStatic));
       });
   }
 
@@ -139,9 +151,15 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     return isAsync ? ASYNC_MODIFIERS : NO_MODIFIERS;
   }
 
-  private static String[] selfMemberModifiers(MemberDescriptor descriptor) {
+  private static String[] selfMemberModifiers(MemberDescriptor descriptor, boolean isStatic) {
     if (descriptor.standardLibrary()) {
+      if (isStatic) {
+        return descriptor.async() ? DEFAULT_LIBRARY_STATIC_ASYNC_MODIFIERS : DEFAULT_LIBRARY_STATIC_MODIFIERS;
+      }
       return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
+    }
+    if (isStatic) {
+      return descriptor.async() ? STATIC_ASYNC_MODIFIERS : STATIC_MODIFIERS;
     }
     return descriptor.async() ? ASYNC_MODIFIERS : NO_MODIFIERS;
   }

@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Path;
@@ -72,6 +74,34 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     // then — пересечений быть не должно.
     assertThat(overlaps)
       .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+      .isEmpty();
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @ValueSource(strings = {
+    "/Catalogs/Справочник1/Ext/ObjectModule.bsl",
+    "/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl",
+    "/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl",
+    "/InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl",
+    "/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+  })
+  void suppliersDoNotProduceOverlappingTokensAcrossModuleTypes(String relativeModulePath) {
+    // given — конфигурация с инференсом типов; проверяем модули РАЗНЫХ типов
+    // (объектный / менеджера / набора записей), где активны разные сапплаеры и
+    // по-разному ведут себя self-члены (в т.ч. Static-модификатор у методов static-модуля).
+    initServerContext(PATH_TO_METADATA);
+    var documentContext =
+      TestUtils.getDocumentContextFromFile(PATH_TO_METADATA + relativeModulePath, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — пересечений быть не должно ни в одном типе модуля.
+    assertThat(overlaps)
+      .as("Конфликты подсветки в %s: %s", relativeModulePath, describe(overlaps, documentContext))
       .isEmpty();
   }
 
