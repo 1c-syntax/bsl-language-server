@@ -153,16 +153,11 @@ class EventHandlerResolverTest {
   }
 
   @Test
-  void globalEventsRebuiltAfterHbkBecomesAvailable() {
+  void globalEventsCachedAfterFirstBuild() {
     var doc = mock(DocumentContext.class);
     when(doc.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
 
-    // 1) Провайдер (HBK/bsl-context) ещё не готов — событий нет.
-    when(bslContextHolder.get()).thenReturn(Optional.empty());
-    assertThat(resolver.allEvents(doc)).isEmpty();
-
-    // 2) HBK подгрузился — пустой результат не должен был закэшироваться: те же вызовы
-    // теперь находят событие (регресс на инвалидацию кэша globalEvents).
+    // 1) Провайдер доступен — карта глобальных событий собирается и кэшируется при первом обращении.
     var event = stubEvent("ПередНачаломРаботыСистемы", "BeforeStart");
     var globalContext = mock(PlatformGlobalContext.class);
     when(globalContext.applicationEvents()).thenReturn(List.of(event));
@@ -173,6 +168,12 @@ class EventHandlerResolverTest {
     when(provider.getGlobalContext()).thenReturn(globalContext);
     when(bslContextHolder.get()).thenReturn(Optional.of(provider));
 
+    assertThat(resolver.allEvents(doc)).isNotEmpty();
+
+    // 2) Результат закэширован: даже если провайдер потом «пропадёт», ранее собранная карта
+    // остаётся (BslContextHolder в проде синхронно-мемоизирован и не меняется, поэтому кэшировать
+    // безусловно, включая пустоту, безопасно — см. EventHandlerResolver#globalEvents).
+    when(bslContextHolder.get()).thenReturn(Optional.empty());
     assertThat(resolver.lookupContract(doc, "ПередНачаломРаботыСистемы")).isPresent();
     assertThat(resolver.allEvents(doc)).isNotEmpty();
   }

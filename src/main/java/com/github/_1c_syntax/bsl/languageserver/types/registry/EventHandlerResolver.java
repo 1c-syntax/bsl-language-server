@@ -164,9 +164,10 @@ public class EventHandlerResolver implements EventHandlerClassifier {
 
   /**
    * Карта глобальных событий: {@link ModuleType} → {@code lc(имя события)} → контракт. Источник —
-   * {@code ContextProvider.getGlobalContext()} (managed/ordinary/session/external). Кэшируется
-   * только при доступном провайдере (см. {@link #globalEvents()}): до загрузки HBK карта пуста и
-   * НЕ кэшируется, чтобы пересобраться при запоздалой подгрузке bsl-context.
+   * {@code ContextProvider.getGlobalContext()} (managed/ordinary/session/external). Собирается и
+   * кэшируется однократно при первом обращении (см. {@link #globalEvents()}); {@link BslContextHolder}
+   * синхронно-мемоизирован и позже не догружается, поэтому пустой результат (HBK недоступен)
+   * кэшируется наравне с полным.
    */
   private final AtomicReference<Map<ModuleType, Map<String, MemberDescriptor>>> globalEventsCache =
     new AtomicReference<>();
@@ -288,11 +289,12 @@ public class EventHandlerResolver implements EventHandlerClassifier {
     if (cached != null) {
       return cached;
     }
-    // Провайдер ещё не готов (HBK/bsl-context не загружен) — возвращаем пустоту БЕЗ кэширования:
-    // следующий вызов после подгрузки контекста соберёт и закэширует полную карту.
-    if (bslContextHolder.get().isEmpty()) {
-      return Map.of();
-    }
+    // Собираем и кэшируем однократно, включая пустой результат. BslContextHolder — синхронный
+    // мемоизированный Lazy без повторных попыток (см. его javadoc): если HBK/bsl-context недоступен,
+    // get() остаётся пустым навсегда, поэтому «поздней подгрузки», ради которой стоило бы не
+    // кэшировать пустоту и пересобирать, не бывает. При пустом провайдере buildGlobalEvents() отдаёт
+    // Map.of(). Гонки нет: worst-case — идемпотентный двойной build с одинаковым содержимым,
+    // AtomicReference даёт безопасную публикацию.
     var built = buildGlobalEvents();
     globalEventsCache.set(built);
     return built;
