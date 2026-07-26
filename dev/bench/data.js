@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784958750783,
+  "lastUpdate": 1785091298319,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40796,6 +40796,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.784289589663572",
             "extra": "mean: 91.37776406606038 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d8856bcfb156ff559317f0f0a656c40930259d52",
+          "message": "Merge pull request #4291 from 1c-syntax/fix/magicNumber\n\nfix #4290 MagicNumber from function",
+          "timestamp": "2026-07-26T19:54:24+02:00",
+          "tree_id": "5aaa96606189e6767366bd54f42f093ea6d8c6f1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d8856bcfb156ff559317f0f0a656c40930259d52"
+        },
+        "date": 1785091288869,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.45128909746806,
+            "unit": "sec",
+            "range": "stddev: 2.8599372824130653",
+            "extra": "mean: 93.45128909746806 sec\nrounds: 3"
           }
         ]
       }
