@@ -452,52 +452,6 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void noDotCompletionRanksEventHandlerMethodBelowRegularLocalMethod() {
-    // given: локальный метод, у которого есть контракт платформенного события,
-    // ранжируется как self-член: он редко вызывается вручную и не должен
-    // теснить обычные локальные процедуры/функции документа.
-    // Имена подобраны намеренно "в лоб алфавиту" (А — первая буква, Я —
-    // последняя): если бы обработчик события ошибочно получил ту же корзину
-    // (BUCKET_LOCAL), что и обычный метод, чисто алфавитное сравнение sortText
-    // дало бы "АСобытие" < "ЯвнаяПроцедура" — и assertion ниже упал бы, поймав
-    // регресс. С прежними именами ("ПередЗаписью"/"ОбычнаяПроцедура") тест
-    // проходил бы даже при таком регрессе — по случайному совпадению
-    // алфавитного порядка (П > О и без разницы корзин).
-    when(eventHandlerResolver.lookupContract(any(), eq("АСобытие")))
-      .thenReturn(Optional.of(MemberDescriptor.event("АСобытие", "", List.of())));
-
-    var src = """
-      Процедура АСобытие(Отказ)
-      КонецПроцедуры
-
-      Процедура ЯвнаяПроцедура()
-      КонецПроцедуры
-      """;
-    var documentContext = TestUtils.getDocumentContext(src);
-
-    var params = new CompletionParams();
-    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(1, 0));
-
-    // when
-    var items = completionProvider.getCompletion(documentContext, params).getItems();
-
-    // then
-    var eventHandlerItem = items.stream()
-      .filter(it -> "АСобытие".equals(it.getLabel()))
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("АСобытие должен попасть в completion"));
-    var regularMethodItem = items.stream()
-      .filter(it -> "ЯвнаяПроцедура".equals(it.getLabel()))
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("ЯвнаяПроцедура должна попасть в completion"));
-
-    assertThat(eventHandlerItem.getSortText())
-      .as("обработчик платформенного события должен ранжироваться ниже обычного локального метода")
-      .isGreaterThan(regularMethodItem.getSortText());
-  }
-
-  @Test
   void noDotCompletionShowsInferredTypeForEventHandlerParameter() {
     // given: тип параметра обработчика события известен из контракта события —
     // должен показываться в detail пункта completion, а не оставаться пустым

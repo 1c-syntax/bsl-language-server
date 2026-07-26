@@ -143,7 +143,6 @@ public final class CompletionProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final JsonMapper jsonMapper;
   private final FuzzyMatcher fuzzyMatcher;
-  private final EventContractsIndex eventContractsIndex;
   private final EventHandlerResolver eventHandlerResolver;
 
   // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
@@ -883,14 +882,6 @@ public final class CompletionProvider {
     // Объявленные методы (процедуры и функции) — Method; Function только у платформенных
     // глобальных функций. Обработчик события — Event.
     return isEventHandler ? CompletionItemKind.Event : CompletionItemKind.Method;
-  }
-
-  private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
-    var symbol = documentContext.getSymbolTree().getSymbolAtPosition(position);
-    if (symbol instanceof MethodSymbol method) {
-      return Optional.of(method);
-    }
-    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
   }
 
   /**
