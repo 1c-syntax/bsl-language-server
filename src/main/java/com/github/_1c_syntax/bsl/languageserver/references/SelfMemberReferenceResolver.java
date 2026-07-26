@@ -32,16 +32,7 @@ import java.util.Optional;
  * метода self-типа модуля) по его имени и виду — для реконструкции {@code Reference}
  * из проиндексированного вхождения ({@code ReferenceIndex.buildReference}).
  * <p>
- * Интерфейс — контракт слоя {@code references}; реализация живёт в {@code types}
- * (нужен доступ к реестру типов) и внедряется через Spring: та же инверсия
- * зависимости, что и у {@code context.symbol.SelfMemberClassifier}/
- * {@code EventHandlerClassifier}. Иначе прямой вызов системы типов из {@code
- * ReferenceIndex} затянул бы цикл {@code references↔types} в самый core индекса.
- * <p>
- * Self-члены индексируются как обращения к {@code PlatformMemberSymbol} (см.
- * {@code ReferenceIndexFiller}), поэтому их подсветку ведёт общий
- * {@code SymbolsSemanticTokensSupplier} по индексу, а не отдельный сапплаер, а
- * резолв/definition/hover идут единым путём через {@code ReferenceIndex}.
+ * Реализация живёт в слое {@code types} и внедряется через Spring.
  */
 public interface SelfMemberReferenceResolver {
 
