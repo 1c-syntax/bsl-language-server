@@ -106,7 +106,7 @@ public class ReferenceIndexFiller {
   private final Map<URI, Long> filledContentFingerprints = new ConcurrentHashMap<>();
 
   // Порядок 200 — ПОСЛЕ ConfigurationModuleMembersProvider и OScriptModuleMembersProvider
-  // с порядком 100: они наполняют moduleTypeByUri, от которого зависит self-member проход
+  // с порядком 100: они наполняют moduleTypeRefByUri, от которого зависит self-member проход
   // SelfMemberReferenceIndexFinder. Синхронная ранняя регистрация конфигурации до клиентского
   // didOpen гарантирует, что к моменту fill self-тип уже в кэше, а явный порядок закрепляет
   // это в рамках одного события.
@@ -153,7 +153,7 @@ public class ReferenceIndexFiller {
   public void handleEvent(ConfigurationTypesRegisteredEvent event) {
     for (var documentContext : event.getSource().getDocuments().values()) {
       if (filledContentFingerprints.containsKey(documentContext.getUri())
-        && globalScopeProvider.moduleTypeByUri(documentContext.getUri()).isPresent()) {
+        && globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
         fill(documentContext);
       }
     }
@@ -180,7 +180,7 @@ public class ReferenceIndexFiller {
     new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
     // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
-    if (globalScopeProvider.moduleTypeByUri(documentContext.getUri()).isPresent()) {
+    if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
       new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     }
     index.replaceReferences(documentContext.getUri(), batch);

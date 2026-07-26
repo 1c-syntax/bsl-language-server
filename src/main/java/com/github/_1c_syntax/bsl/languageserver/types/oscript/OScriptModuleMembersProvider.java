@@ -101,7 +101,7 @@ public class OScriptModuleMembersProvider {
    *  (один .os может одновременно быть и модулем, и классом). */
   private final Map<URI, Set<String>> registeredByUri = new ConcurrentHashMap<>();
 
-  // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeByUri
+  // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeRefByUri
   // OScript-типов, от которого зависит self-member проход индексатора.
   @Order(100)
   @EventListener
@@ -264,7 +264,7 @@ public class OScriptModuleMembersProvider {
    * ролью модуля URI уже занят, и его self-тип не должен смениться на класс.
    */
   private void registerSelfTypeUnlessModuleRoleClaimedIt(URI uri, TypeRef classRef) {
-    if (globalScopeProvider.moduleTypeByUri(uri).isEmpty()) {
+    if (globalScopeProvider.moduleTypeRefByUri(uri).isEmpty()) {
       globalScopeProvider.indexModuleType(uri, classRef);
     }
   }

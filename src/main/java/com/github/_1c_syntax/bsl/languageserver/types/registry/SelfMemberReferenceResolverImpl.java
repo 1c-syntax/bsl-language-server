@@ -36,14 +36,14 @@ import java.util.Optional;
 
 /**
  * Реализация {@link SelfMemberReferenceResolver} для слоя {@code references}: по
- * self-типу модуля документа ({@link GlobalScopeProvider#moduleTypeByUri}) и имени
+ * self-типу модуля документа ({@link GlobalScopeProvider#moduleTypeRefByUri}) и имени
  * собирает {@link PlatformMemberSymbol}.
  * <p>
  * Вынесена в отдельный бин на {@code GlobalScopeProvider}+{@code TypeRegistry} (без
  * {@code TypeService}), чтобы {@code ReferenceIndex} не образовал цикл
  * {@code ReferenceIndex→TypeService→ReferenceResolver→…→ReferenceIndex}.
  * <p>
- * Self-тип берётся ТОЛЬКО из кэша {@code moduleTypeByUri} — в отличие от
+ * Self-тип берётся ТОЛЬКО из кэша {@code moduleTypeRefByUri} — в отличие от
  * {@code TypeService.findSelfMember}, у которого при промахе кэша есть fallback на
  * метаданные. Здесь fallback не нужен: резолвер зовётся лишь на реконструкции ссылки
  * ({@code ReferenceIndex.buildReference}) — уже после наполнения кэша. Если self-типа
@@ -61,7 +61,7 @@ public class SelfMemberReferenceResolverImpl implements SelfMemberReferenceResol
   @Override
   public Optional<Symbol> resolveSelfMember(DocumentContext documentContext, SymbolKind symbolKind, String name) {
     var kind = symbolKind == SymbolKind.Method ? MemberKind.METHOD : MemberKind.PROPERTY;
-    return globalScopeProvider.moduleTypeByUri(documentContext.getUri())
+    return globalScopeProvider.moduleTypeRefByUri(documentContext.getUri())
       .flatMap(ref -> typeRegistry.findMember(ref, kind, name, documentContext.getFileType())
         .map(descriptor -> new PlatformMemberSymbol(descriptor.name(), ref, descriptor, -1, List.of())));
   }

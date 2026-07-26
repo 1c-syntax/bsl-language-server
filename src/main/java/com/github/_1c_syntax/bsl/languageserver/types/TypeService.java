@@ -134,7 +134,7 @@ public class TypeService implements SelfMemberClassifier {
    * Член self-типа текущего модуля (реквизит/платформенный метод объекта,
    * набора записей, менеджера, общего модуля, встроенный член OScript-класса),
    * доступный внутри модуля без квалификации. Self-тип — тот же, что и у
-   * dot-completion ({@link GlobalScopeProvider#moduleTypeByUri(java.net.URI)});
+   * dot-completion ({@link GlobalScopeProvider#moduleTypeRefByUri(java.net.URI)});
    * если он для документа не зарегистрирован — всегда empty.
    *
    * @param documentContext документ, из которого происходит обращение.
@@ -150,7 +150,7 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
-   * Self-тип модуля документа. Быстрый путь — кэш {@code moduleTypeByUri}; если он ещё
+   * Self-тип модуля документа. Быстрый путь — кэш {@code moduleTypeRefByUri}; если он ещё
    * пуст (его наполняет {@code ConfigurationModuleMembersProvider.register} на
    * {@code DocumentContextContentChangedEvent} — уже ПОСЛЕ построения дерева, оно
    * строится внутри {@code DocumentContext.rebuild}, а событие AOP публикует после
@@ -162,7 +162,7 @@ public class TypeService implements SelfMemberClassifier {
    * Тот же приём, что у {@code EventHandlerResolver.resolveOwnerType}.
    */
   private Optional<TypeRef> selfTypeRef(DocumentContext documentContext) {
-    var cached = globalScopeProvider.moduleTypeByUri(documentContext.getUri());
+    var cached = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
     if (cached.isPresent()) {
       return cached;
     }
@@ -335,7 +335,7 @@ public class TypeService implements SelfMemberClassifier {
    *       ({@code ПриСозданииОбъекта}) — см. ниже;</li>
    *   <li>{@link TypeKind#CONFIGURATION} — общие модули и модули менеджеров объектов
    *       конфигурации: документ-модуль находится обратным индексом
-   *       {@link GlobalScopeProvider#moduleUriByType(TypeRef)}, а его символ —
+   *       {@link GlobalScopeProvider#uriByModuleTypeRef(TypeRef)}, а его символ —
    *       {@code getSymbolTree().getModule()}.</li>
    * </ul>
    * Для платформенных/примитивных типов ({@link TypeKind#PLATFORM},
@@ -443,7 +443,7 @@ public class TypeService implements SelfMemberClassifier {
     TypeRef typeRef,
     DocumentContext requestingContext
   ) {
-    return globalScopeProvider.moduleUriByType(typeRef)
+    return globalScopeProvider.uriByModuleTypeRef(typeRef)
       .map(uri -> requestingContext.getServerContext().getDocument(uri))
       .<SourceDefinedSymbol>map(documentContext -> documentContext.getSymbolTree().getModule());
   }
@@ -459,7 +459,7 @@ public class TypeService implements SelfMemberClassifier {
   public Optional<URI> definingUri(TypeRef typeRef) {
     return switch (typeRef.kind()) {
       case USER -> userTypeDeclaration(typeRef).map(symbol -> symbol.getOwner().getUri());
-      case CONFIGURATION -> globalScopeProvider.moduleUriByType(typeRef);
+      case CONFIGURATION -> globalScopeProvider.uriByModuleTypeRef(typeRef);
       default -> Optional.empty();
     };
   }
@@ -687,7 +687,7 @@ public class TypeService implements SelfMemberClassifier {
    * Неквалифицированное обращение к члену self-типа текущего модуля (реквизит/
    * платформенный метод объекта/менеджера/набора записей/общего модуля,
    * встроенный член OScript-класса) — тот же self-тип, что и у dot-completion
-   * ({@link GlobalScopeProvider#moduleTypeByUri(java.net.URI)}). Вид члена определяется
+   * ({@link GlobalScopeProvider#moduleTypeRefByUri(java.net.URI)}). Вид члена определяется
    * контекстом обращения: вызов ({@code Имя(...)}) — {@link MemberKind#METHOD},
    * иначе — {@link MemberKind#PROPERTY} (голый идентификатор без вызова не
    * может ссылаться на метод).

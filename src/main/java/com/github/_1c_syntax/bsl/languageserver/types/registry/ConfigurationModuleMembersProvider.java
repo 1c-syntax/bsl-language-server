@@ -99,7 +99,7 @@ public class ConfigurationModuleMembersProvider {
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
 
-  // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeByUri,
+  // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeRefByUri,
   // от которого зависит self-member проход индексатора. Без явного порядка filler мог
   // отработать раньше и пропустить self-члены (см. ReferenceIndexFiller).
   @Order(100)
@@ -113,11 +113,11 @@ public class ConfigurationModuleMembersProvider {
    * RU-qualifiedName self-типа модуля по его метаданным — та же специализация, что
    * регистрирует {@link #register} ({@code СправочникОбъект.Контрагенты},
    * {@code ДокументНаборЗаписей.…}; для общего модуля — имя модуля). Чистая функция
-   * без побочных эффектов и без опоры на {@code moduleTypeByUri}.
+   * без побочных эффектов и без опоры на {@code moduleTypeRefByUri}.
    * <p>
    * Нужна, чтобы резолвить self-тип <b>из метаданных напрямую</b> на первой сборке
    * дерева символов — до того как {@link #register} (слушатель
-   * {@code DocumentContextContentChangedEvent}) наполнит {@code moduleTypeByUri}:
+   * {@code DocumentContextContentChangedEvent}) наполнит {@code moduleTypeRefByUri}:
    * дерево строится внутри {@code DocumentContext.rebuild}, а событие публикуется
    * AOP уже после возврата из него, поэтому кэш на момент классификации self-членов
    * ещё пуст (см. {@code TypeService#findSelfMember}, аналогично

@@ -155,12 +155,12 @@ public class ExpressionTypeInferencer {
    * Имя модуля в выражении ссылается на тип-namespace с экспортами как членами
    * (общий модуль {@code ОбщегоНазначения}, модуль менеджера/объекта, библиотечный
    * OneScript-модуль). Тип берётся из единого обратного индекса URI→тип в
-   * {@link GlobalScopeProvider#moduleTypeByUri(java.net.URI)}, который наполняют
+   * {@link GlobalScopeProvider#moduleTypeRefByUri(java.net.URI)}, который наполняют
    * провайдеры регистрации модулей. Инференсер больше не обращается к
    * подсистемным индексам (oscript/configuration) напрямую.
    */
   private TypeSet inferModuleAsType(ModuleSymbol module) {
-    return globalScopeProvider.moduleTypeByUri(module.getOwner().getUri())
+    return globalScopeProvider.moduleTypeRefByUri(module.getOwner().getUri())
       .map(TypeSet::of)
       .orElse(TypeSet.EMPTY);
   }
@@ -558,14 +558,14 @@ public class ExpressionTypeInferencer {
    * Продублирован через реестр напрямую, потому что инференсер не может зависеть от
    * фасада {@code TypeService} (тот сам делегирует инференсеру). В отличие от
    * {@code TypeService#findSelfMember} берёт self-тип только из кэша
-   * {@code moduleTypeByUri}, без fallback на метаданные: инференс идёт уже после
+   * {@code moduleTypeRefByUri}, без fallback на метаданные: инференс идёт уже после
    * наполнения кэша и при построении дерева символов не вызывается.
    *
    * @return типы значения self-члена; empty, если self-типа у документа нет
    *     или член с таким видом/именем не найден.
    */
   private Optional<TypeSet> selfMemberReturnTypes(InferenceContext ctx, String name, MemberKind kind) {
-    return globalScopeProvider.moduleTypeByUri(ctx.documentContext.getUri())
+    return globalScopeProvider.moduleTypeRefByUri(ctx.documentContext.getUri())
       .flatMap(ref -> typeRegistry.findMember(ref, kind, name, ctx.documentContext.getFileType()))
       .map(MemberDescriptor::returnTypes);
   }

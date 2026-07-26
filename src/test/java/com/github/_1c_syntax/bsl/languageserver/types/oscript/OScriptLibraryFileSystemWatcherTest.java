@@ -90,7 +90,7 @@ class OScriptLibraryFileSystemWatcherTest {
   }
 
   @Test
-  void moduleTypeByUriIndexedOnRegisterAndClearedOnUnregister() throws IOException {
+  void moduleTypeRefByUriIndexedOnRegisterAndClearedOnUnregister() throws IOException {
     // given — workspace c lib.config, объявляющим module ModOne
     Files.writeString(workspaceDir.resolve("ModOne.os"), """
       Процедура Привет() Экспорт
@@ -108,7 +108,7 @@ class OScriptLibraryFileSystemWatcherTest {
 
     // then — обратный индекс URI→тип заполнен
     WorkspaceContextHolder.run(workspaceUri, () ->
-      assertThat(globalScopeProvider.moduleTypeByUri(modUri))
+      assertThat(globalScopeProvider.moduleTypeRefByUri(modUri))
         .as("после регистрации тип модуля по URI должен быть в индексе")
         .isPresent());
 
@@ -117,7 +117,7 @@ class OScriptLibraryFileSystemWatcherTest {
 
     // then — обратный индекс по URI очищен, без протечки
     WorkspaceContextHolder.run(workspaceUri, () ->
-      assertThat(globalScopeProvider.moduleTypeByUri(modUri))
+      assertThat(globalScopeProvider.moduleTypeRefByUri(modUri))
         .as("после unregister URI→тип должен исчезнуть")
         .isEmpty());
   }

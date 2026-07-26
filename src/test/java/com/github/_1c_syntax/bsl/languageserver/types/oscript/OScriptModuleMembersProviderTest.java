@@ -112,7 +112,7 @@ class OScriptModuleMembersProviderTest {
     // Мок self-типа хранит состояние как реальный GlobalScopeProvider (Map<URI, TypeRef>):
     // регистрация класса читает то, что перед этим записала регистрация модуля того же URI.
     var selfTypeByUri = new HashMap<URI, TypeRef>();
-    when(globalScopeProvider.moduleTypeByUri(any()))
+    when(globalScopeProvider.moduleTypeRefByUri(any()))
       .thenAnswer(invocation -> Optional.ofNullable(selfTypeByUri.get(invocation.getArgument(0))));
     doAnswer(invocation -> selfTypeByUri.put(invocation.getArgument(0), invocation.getArgument(1)))
       .when(globalScopeProvider).indexModuleType(any(), any());

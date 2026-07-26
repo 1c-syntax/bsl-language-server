@@ -96,7 +96,7 @@ class SelfMemberIndexColoringTest extends AbstractServerContextAwareTest {
   /**
    * Регресс на гонку «документ открыт на старте»: дерево символов строится внутри
    * {@code DocumentContext.rebuild} ДО того, как {@code register} наполнит
-   * {@code moduleTypeByUri} (он бежит на событии, публикуемом уже после сборки).
+   * {@code moduleTypeRefByUri} (он бежит на событии, публикуемом уже после сборки).
    * Значит на первой сборке кэша self-типа ещё нет — и присваиваемый реквизит
    * ({@code Реквизит1 = …}) обязан распознаваться как self-член напрямую из
    * метаданных, иначе {@code VariableSymbolComputer} заведёт на него фантомную
@@ -112,7 +112,7 @@ class SelfMemberIndexColoringTest extends AbstractServerContextAwareTest {
     try {
       // Симулируем момент первой сборки дерева: кэш ещё не наполнен register()'ом.
       globalScopeProvider.removeModuleType(uri);
-      assertThat(globalScopeProvider.moduleTypeByUri(uri)).isEmpty();
+      assertThat(globalScopeProvider.moduleTypeRefByUri(uri)).isEmpty();
 
       // Реквизит конфигурации распознаётся как self-член из метаданных, а не как
       // самостоятельная переменная — фантом не заводится.

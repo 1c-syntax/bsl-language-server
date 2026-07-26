@@ -698,7 +698,7 @@ public final class CompletionProvider {
     // квалификации) — иначе пуст, и collectSelfMembers ниже ничего не
     // добавляет. Какие модули его получают, определяет регистрация в
     // GlobalScopeProvider, а не перечисление здесь.
-    var selfRef = globalScopeProvider.moduleTypeByUri(documentContext.getUri());
+    var selfRef = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
@@ -904,7 +904,7 @@ public final class CompletionProvider {
     if (typeService.isEnumType(valueType, fileType)) {
       return CompletionItemKind.Enum;
     }
-    if (fileType == FileType.OS && globalScopeProvider.moduleUriByType(valueType).isPresent()) {
+    if (fileType == FileType.OS && globalScopeProvider.uriByModuleTypeRef(valueType).isPresent()) {
       return CompletionItemKind.Module;
     }
     return CompletionItemKind.Variable;
