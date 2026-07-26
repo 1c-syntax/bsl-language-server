@@ -81,6 +81,15 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     return expression.getParent() instanceof BSLParser.CallParamContext;
   }
 
+  /**
+   * Плоское число — аргумент вызова Дата(...)/Date(...) — это компонента даты
+   * (год, месяц, день, час, минута, секунда), а не магическое число, поэтому не считается
+   * замечанием в любом контексте. Расчёты и сложные выражения внутри Дата(...) остаются замечанием.
+   */
+  private static boolean isDateComponentArgument(BSLParser.ExpressionContext expression) {
+    return isNumericExpression(expression) && isArgumentOfDateMethod(expression);
+  }
+
   @Override
   public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
     var checked = ctx.getText();
@@ -123,7 +132,10 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
       if (insideStructureOrCorrespondence(context)) {
         return false;
       }
-      if (insideReturnStatement(context) && isNumericExpression(context)) {
+      if (isNumericExpression(context) && insideReturnStatement(context)) {
+        return false;
+      }
+      if (isDateComponentArgument(context)) {
         return false;
       }
       return !isNumericExpression(context) || insideCallParam(context);

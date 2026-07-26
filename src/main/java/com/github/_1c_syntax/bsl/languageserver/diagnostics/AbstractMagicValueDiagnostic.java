@@ -41,6 +41,10 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
     "вставить|insert"
   );
 
+  private static final Pattern DATE_METHOD_PATTERN = CaseInsensitivePattern.compile(
+    "Дата|Date"
+  );
+
   private static final int MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_STATEMENT = 10;
   private static final int MAX_PARENT_TRAVERSAL_DEPTH_FOR_VARIABLE_ASSIGNMENT = 50;
   private static final int MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_PARAM = 5;
@@ -700,6 +704,82 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    */
   protected static boolean insideReturnStatement(BSLParser.@Nullable ExpressionContext expression) {
     return insideContext(expression, BSLParser.ReturnStatementContext.class);
+  }
+
+  /**
+   * Возвращает вызов метода Дата(...)/Date(...), непосредственным аргументом которого
+   * является переданное выражение. Число аргументов не ограничивается: у Дата(...) их
+   * может быть от одного (строка-дата) до шести (год, месяц, день, час, минута, секунда).
+   *
+   * @param expression выражение-аргумент для проверки
+   * @return Optional с контекстом вызова Дата(...), если выражение — его аргумент, иначе empty
+   */
+  private static Optional<BSLParser.GlobalMethodCallContext> getEnclosingDateMethodCall(
+    BSLParser.@Nullable ExpressionContext expression
+  ) {
+    if (expression == null) {
+      return Optional.empty();
+    }
+    var callParam = expression.getParent(); // callParam
+    if (!(callParam instanceof BSLParser.CallParamContext)) {
+      return Optional.empty();
+    }
+    var callParamList = callParam.getParent(); // callParamList
+    if (!(callParamList instanceof BSLParser.CallParamListContext)) {
+      return Optional.empty();
+    }
+    var doCall = callParamList.getParent(); // doCall
+    if (!(doCall instanceof BSLParser.DoCallContext)) {
+      return Optional.empty();
+    }
+    var globalCall = doCall.getParent(); // globalCall - метод Дата(ХХХ)
+    if (globalCall instanceof BSLParser.GlobalMethodCallContext globalMethodCall
+      && DATE_METHOD_PATTERN.matcher(globalMethodCall.methodName().getText()).matches()) {
+      return Optional.of(globalMethodCall);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Проверяет, является ли выражение непосредственным аргументом вызова метода Дата(...)/Date(...)
+   * (с любым числом аргументов).
+   *
+   * @param expression выражение-аргумент для проверки
+   * @return true, если выражение — аргумент вызова Дата(...)
+   */
+  protected static boolean isArgumentOfDateMethod(BSLParser.@Nullable ExpressionContext expression) {
+    return getEnclosingDateMethodCall(expression).isPresent();
+  }
+
+  /**
+   * Проверяет, является ли выражение единственным аргументом вызова метода Дата(...)/Date(...),
+   * и возвращает выражение самого вызова. Используется для формы даты одной строкой
+   * ({@code Дата("20200101")}).
+   *
+   * @param expression выражение-аргумент для проверки
+   * @return Optional с выражением вызова Дата(...), если аргумент единственный, иначе empty
+   */
+  protected static Optional<BSLParser.ExpressionContext> getSingleArgDateMethodExpression(
+    BSLParser.@Nullable ExpressionContext expression
+  ) {
+    var dateCallOpt = getEnclosingDateMethodCall(expression);
+    if (dateCallOpt.isEmpty() || expression == null) {
+      return Optional.empty();
+    }
+    // getEnclosingDateMethodCall гарантировал цепочку expression -> callParam -> callParamList
+    var callParamList = expression.getParent().getParent();
+    if (callParamList.getChildCount() != 1) {
+      return Optional.empty();
+    }
+    var complexId = dateCallOpt.get().getParent(); // complexId
+    if (complexId == null || complexId.getParent() == null) {
+      return Optional.empty();
+    }
+    var expr = complexId.getParent().getParent(); // member -> expression
+    if (expr instanceof BSLParser.ExpressionContext callExpression && callExpression.getChildCount() == 1) {
+      return Optional.of(callExpression);
+    }
+    return Optional.empty();
   }
 
   /**

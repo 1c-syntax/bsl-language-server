@@ -35,7 +35,7 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
   void runTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
       .hasRange(3, 18, 20)
       .hasRange(3, 23, 25)
@@ -46,7 +46,9 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(27, 34, 35)
       .hasRange(33, 37, 38)
       .hasRange(34, 37, 38)
-      .hasRange(55, 16, 18);
+      .hasRange(55, 16, 18)
+      .hasRange(59, 17, 19)
+      .hasRange(68, 27, 32);
   }
 
   @Test
@@ -57,7 +59,7 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
       .hasRange(7, 31, 33)
       .hasRange(11, 20, 21)
@@ -65,7 +67,9 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(23, 24, 26)
       .hasRange(33, 37, 38)
       .hasRange(34, 37, 38)
-      .hasRange(55, 16, 18);
+      .hasRange(55, 16, 18)
+      .hasRange(59, 17, 19)
+      .hasRange(68, 27, 32);
   }
 
   @Test
@@ -76,7 +80,7 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
       .hasRange(3, 18, 20)
       .hasRange(3, 23, 25)
@@ -89,7 +93,9 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(34, 37, 38)
       .hasRange(49, 32, 34)
       .hasRange(50, 18, 20)
-      .hasRange(55, 16, 18);
+      .hasRange(55, 16, 18)
+      .hasRange(59, 17, 19)
+      .hasRange(68, 27, 32);
   }
 
 }
