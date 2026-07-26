@@ -420,9 +420,11 @@ public final class CompletionProvider {
     if (eventContractName == null || moduleType == null) {
       return;
     }
-    var ownerTypeRef = data.getTypeKind() == null || data.getTypeQualifiedName() == null
+    var typeKind = data.getTypeKind();
+    var typeQualifiedName = data.getTypeQualifiedName();
+    var ownerTypeRef = typeKind == null || typeQualifiedName == null
       ? null
-      : new TypeRef(data.getTypeKind(), data.getTypeQualifiedName());
+      : new TypeRef(typeKind, typeQualifiedName);
     eventHandlerResolver.eventsFor(moduleType, ownerTypeRef, data.getFileType()).stream()
       .filter(contract -> contract.name().equals(eventContractName))
       .findFirst()
@@ -1500,15 +1502,31 @@ public final class CompletionProvider {
         sb.append(", ");
       }
       var p = params.get(i);
-      var paramName = p.displayName(scriptVariant);
-      sb.append(paramName);
+      sb.append(p.displayName(scriptVariant));
       if (p.optional()) {
         // Необязательный параметр помечаем «?» после имени: ИмяПараметра?.
         sb.append('?');
       }
+      var typeLabel = formatParamTypeName(p.types(), scriptVariant);
+      if (!typeLabel.isEmpty()) {
+        sb.append(": ").append(typeLabel);
+      }
     }
     sb.append(')');
     return sb.toString();
+  }
+
+  /**
+   * Читаемое имя типа параметра для {@link #formatParameterList}: имена всех типов набора через
+   * «{@code  | }», пустая строка — если тип неизвестен (у нетипизированных параметров, например
+   * локальных методов). Использует тот же {@link #formatTypeName}, что и тип возврата.
+   */
+  private String formatParamTypeName(TypeSet types, Language scriptVariant) {
+    return types.refs().stream()
+      .map(ref -> formatTypeName(ref, scriptVariant))
+      .filter(name -> !name.isEmpty())
+      .distinct()
+      .collect(Collectors.joining(" | "));
   }
 
   /**

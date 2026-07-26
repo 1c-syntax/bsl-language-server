@@ -1627,7 +1627,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .contains("Добавляет значение");
       assertThat(add.getDetail())
         .as("имя параметра в сигнатуре — на русском; необязательный → со знаком «?»")
-        .isEqualTo("(Значение?)");
+        .isEqualTo("(Значение?: Произвольный)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -1646,7 +1646,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .doesNotContain("Добавляет");
       assertThat(add.getDetail())
         .as("имя параметра в сигнатуре — на английском; необязательный → со знаком «?»")
-        .isEqualTo("(Value?)");
+        .isEqualTo("(Value?: Arbitrary)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -2447,7 +2447,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .as("для отложенного resolve в item кладётся data-ключ члена")
       .isNotNull();
     // detail остаётся жадным (фильтрация/вставка не требуют resolve)
-    assertThat(add.getDetail()).isEqualTo("(Значение?)");
+    assertThat(add.getDetail()).isEqualTo("(Значение?: Произвольный)");
   }
 
   @Test
