@@ -52,10 +52,6 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_DATES = "00010101,00010101000000,000101010000";
 
-  private static final Pattern METHOD_PATTERN = CaseInsensitivePattern.compile(
-    "Дата|Date"
-  );
-
   private static final Pattern PARAM_PATTERN = CaseInsensitivePattern.compile(
     "\"[0123]{1}\\d{7}\"|\"[0123]{1}\\d{13}\""
   );
@@ -176,24 +172,18 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
     if (expression == null) {
       return false;
     }
-    var callParam = expression.getParent(); // callParam
-    var callParamList = callParam.getParent(); // callParamList
+    var dateCallOpt = getEnclosingDateMethodCall(expression);
+    if (dateCallOpt.isEmpty()) {
+      return false;
+    }
+    // getEnclosingDateMethodCall гарантировал цепочку expression -> callParam -> callParamList
+    var callParamList = expression.getParent().getParent();
     if (callParamList.getChildCount() != 1) {
       return false;
     }
-    var doCall = callParamList.getParent(); // doCall
-    var globalCall = doCall.getParent(); // globalCall - метод Дата(ХХХ)
-    if (!(globalCall instanceof BSLParser.GlobalMethodCallContext globalMethodCall)
-      || (!METHOD_PATTERN.matcher(globalMethodCall.methodName().getText()).matches())) {
-      return false;
-    }
-    var complexId = globalCall.getParent(); // complexId
-    var member = complexId.getParent(); // member
-    var expr = member.getParent(); // expression
-    if (expr.getChildCount() != 1) {
-      return false;
-    }
-    var assignment = expr.getParent();
-    return assignment instanceof BSLParser.AssignmentContext;
+    // globalCall -> complexId -> member -> expression
+    var dateCallExpression = dateCallOpt.get().getParent().getParent().getParent();
+    return dateCallExpression.getChildCount() == 1
+      && dateCallExpression.getParent() instanceof BSLParser.AssignmentContext;
   }
 }
