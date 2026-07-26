@@ -92,7 +92,7 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - function name should be highlighted as Function
+    // then - function name should be highlighted as Method (declared functions are methods)
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(0, 8, 10, SemanticTokenTypes.Method, "МояФункция")
     ));

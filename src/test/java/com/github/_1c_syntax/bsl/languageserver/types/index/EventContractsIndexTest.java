@@ -88,17 +88,25 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void getAllContractsReflectsReRegisteredTypes() {
-    var documentContext = TestUtils.getDocumentContext("");
-    when(eventHandlerResolver.allEvents(documentContext))
-      .thenReturn(List.of(MemberDescriptor.event("Первое", "", List.of())))
-      .thenReturn(List.of(MemberDescriptor.event("Второе", "", List.of())));
+  void configurationTypesRegisteredEventInvalidatesContractCache() {
+    // getContract кэширует контракты по URI (contractsByUri); сброс — только по событию.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПриЗаписи()
+      КонецПроцедуры
+      """);
+    when(eventHandlerResolver.lookupContract(documentContext, "ПриЗаписи"))
+      .thenReturn(Optional.of(MemberDescriptor.event("Первое", "", List.of())))
+      .thenReturn(Optional.of(MemberDescriptor.event("Второе", "", List.of())));
 
-    var beforeReload = eventContractsIndex.getAllContracts(documentContext);
+    var before = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
+    // Без события повторный запрос обслуживается из кэша — значение то же (резолвер не опрашивается).
+    var cached = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
     eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(documentContext.getServerContext()));
-    var afterReload = eventContractsIndex.getAllContracts(documentContext);
+    // После события кэш сброшен — контракт перечитывается резолвером.
+    var afterReload = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
 
-    assertThat(beforeReload).extracting(MemberDescriptor::name).containsExactly("Первое");
-    assertThat(afterReload).extracting(MemberDescriptor::name).containsExactly("Второе");
+    assertThat(before.map(MemberDescriptor::name)).contains("Первое");
+    assertThat(cached.map(MemberDescriptor::name)).contains("Первое");
+    assertThat(afterReload.map(MemberDescriptor::name)).contains("Второе");
   }
 }
