@@ -61,11 +61,17 @@ public class ReferencesProvider {
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
     var position = params.getPosition();
 
-    var maybeSymbol = referenceResolver.findReference(documentContext.getUri(), position)
-      .flatMap(Reference::getSourceDefinedSymbol);
+    var maybeReference = referenceResolver.findReference(documentContext.getUri(), position);
+    if (maybeReference.isEmpty()) {
+      // Под курсором нет ссылки — искать нечего; без повторного прохода по индексу.
+      return new ArrayList<>();
+    }
 
-    // Символ без source-defined представления (напр. неквалифицированный self-член):
-    // объявления в исходниках у него нет, ссылки ищем по ключу вхождения под курсором.
+    var maybeSymbol = maybeReference.get().getSourceDefinedSymbol();
+
+    // Ссылка есть, но её цель — символ без source-defined представления (напр.
+    // неквалифицированный self-член): объявления в исходниках нет, все ссылки берём
+    // по ключу вхождения под курсором.
     if (maybeSymbol.isEmpty()) {
       return referenceIndex.getReferencesTo(documentContext.getUri(), position).stream()
         .map(Reference::toLocation)
