@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
+import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -96,6 +98,25 @@ class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<Assi
       .as("без MD-контекста типы локальной переменной не резолвятся, "
         + "false positives недопустимы")
       .isEmpty();
+  }
+
+  /**
+   * Ссылка у <b>объекта</b> справочника тоже read-only, и метка должна доходить до
+   * специализации {@code СправочникОбъект.<Имя>}, а не только до generic'а: диагностика
+   * решает по {@code accessMode} резолвленного члена конкретного типа-владельца.
+   */
+  @Test
+  void catalogObjectReferenceAttributeIsReadOnlyOnSpecialization() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    var objectType = typeRegistry.resolve("СправочникОбъект.Справочник1").orElseThrow();
+
+    assertThat(typeRegistry.getMembers(objectType, FileType.BSL))
+      .filteredOn(member -> member.matches("Ссылка"))
+      .as("read-only-метка должна наследоваться специализацией объектного типа")
+      .isNotEmpty()
+      .allMatch(member -> member.metadata().accessMode() == AccessMode.READ);
   }
 
   @Test

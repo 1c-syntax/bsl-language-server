@@ -130,7 +130,10 @@ public class ConfigurationModuleMembersProvider {
     var prev = registeredByUri.put(documentContext.getUri(), ref);
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
-      // тот же URI/тип — источник уже зарегистрирован, AST подхватится автоматически
+      // источник уже зарегистрирован, но содержимое изменилось (rebuild) — его member-source
+      // лениво читает символьное дерево, поэтому точечно сбрасываем memo членов только этого
+      // типа; кэши прочих типов остаются валидными (без сдвига глобальной эпохи).
+      typeRegistry.invalidateMembers(ref);
       return;
     }
 
@@ -160,6 +163,12 @@ public class ConfigurationModuleMembersProvider {
       documentContext.getSymbolTree().getModule());
 
     if (prev != null && prev.equals(ref)) {
+      // содержимое изменилось (rebuild): точечно пересобрать memo членов самого модуля
+      // и члена GLOBAL_CONTEXT (в него вошёл обновлённый symbol-источник модуля) — без
+      // сдвига глобальной эпохи членов. Name-индекс глобальной области отдельно сбрасывать
+      // не нужно: он кэширован по набору-источнику и пересоберётся сам, увидев новый набор.
+      typeRegistry.invalidateMembers(ref);
+      typeRegistry.invalidateMembers(TypeRegistry.GLOBAL_CONTEXT);
       return;
     }
 

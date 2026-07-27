@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -43,6 +46,9 @@ class OScriptInheritanceMembersTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private OScriptLibraryIndex index;
+
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
 
   @Test
   void childClassInheritsExportedMembersTransitively() {
@@ -96,6 +102,36 @@ class OScriptInheritanceMembersTest extends AbstractServerContextAwareTest {
     assertThat(baseMethod).hasSize(1);
     // ...и это собственное переопределение потомка, а не унаследованная версия.
     assertThat(baseMethod.get(0).description()).contains("Переопределение");
+  }
+
+  @Test
+  void editingBaseClassRebuildsMembersOfGrandchildTransitively() {
+    // given — иерархия База ← Промежуточный ← Дочерний прогрета. Источник унаследованных
+    // членов копирует к себе результат getMembers родителя, поэтому memo потомка держит
+    // снимок членов базы через два уровня.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/extends-lib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    var childRef = typeRegistry.resolve("ДочернийКласс", FileType.OS).orElseThrow();
+    var childMembersBefore = typeRegistry.getMembers(childRef, FileType.OS);
+    assertThat(childMembersBefore).extracting(MemberDescriptor::name).contains("БазовоеСвойство");
+
+    var baseUri = Absolute.uri(fixtureRoot.resolve("src/БазовыйКласс.os").toFile());
+    var baseDocument = context.getDocument(baseUri);
+    assertThat(baseDocument).isNotNull();
+    // содержимое документа должно быть загружено: в реальном потоке событие изменения
+    // летит уже после перестроения, и подписчики (тот же ReferenceIndexFiller) читают текст
+    context.rebuildDocument(baseDocument);
+
+    // when — правится БАЗОВЫЙ класс, то есть предок через два уровня
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(baseDocument));
+
+    // then — memo потомка пересобрано: инвалидация дошла транзитивно вниз по иерархии,
+    // а не остановилась на самом правленом типе и его прямых наследниках
+    var childMembersAfter = typeRegistry.getMembers(childRef, FileType.OS);
+    assertThat(childMembersAfter).isNotSameAs(childMembersBefore);
+    assertThat(childMembersAfter).extracting(MemberDescriptor::name).contains("БазовоеСвойство");
   }
 
   private Collection<MemberDescriptor> membersOf(String className) {

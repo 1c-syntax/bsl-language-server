@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -32,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformType;
@@ -49,10 +49,10 @@ import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -114,8 +114,17 @@ public class TypeRegistry {
   /**
    * Источники членов типов в разрезе языка (один тип может расширяться многими
    * источниками; порядок значим — {@link #registerMemberOverride} вставляет в начало).
+   * <p>
+   * Значение хранится компактно: для типа с единственным источником (доминирующий
+   * случай — на реальной конфигурации из ~671k типов ~561k имеют ровно один источник)
+   * — сам {@link MemberSource} без обёртки-списка; для типа с несколькими источниками
+   * — неизменяемый {@code MemberSource[]}. Массив/одиночка вместо
+   * {@code CopyOnWriteArrayList} на каждый тип убирает три служебных объекта на запись
+   * (список, его lock и backing-массив). Обновления атомарны по ключу через
+   * {@link ConcurrentHashMap#merge}; опубликованное значение неизменяемо, поэтому
+   * читатели ({@link #resolveMemberSources}) видят согласованный снимок без блокировки.
    */
-  private final Map<FileType, Map<TypeRef, List<MemberSource>>> memberSources = perFileType();
+  private final Map<FileType, Map<TypeRef, Object>> memberSources = perFileType();
 
   /**
    * Мемоизация {@link #getMembers(TypeRef, FileType)}. Сборка членов
@@ -128,6 +137,15 @@ public class TypeRegistry {
    */
   private final AtomicLong membersEpoch = new AtomicLong();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
+  /**
+   * Пер-типовые поколения memo членов: точечная инвалидация ({@link #invalidateMembers})
+   * инкрементирует поколение ключа, а {@link #getMembers} штампует им запись кэша и
+   * отвергает публикацию из устаревшего поколения. Защищает от гонки, когда параллельный
+   * незавершённый {@code computeMembers} публикует устаревший результат уже ПОСЛЕ
+   * инвалидации (эпоха при точечной инвалидации не двигается). Ключи заводятся только для
+   * реально инвалидированных типов — для нетронутых поколение по умолчанию {@code 0}.
+   */
+  private final Map<MembersKey, Long> membersGeneration = new ConcurrentHashMap<>();
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
@@ -141,13 +159,9 @@ public class TypeRegistry {
     }
   }
 
-  private record CachedMembers(long epoch, List<MemberDescriptor> members) {
+  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
   }
 
-  /** Пустой контейнер с разрезами по всем языкам. */
-  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
-    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
-  }
   /**
    * Типы, видимые в файлах каждого языка. Тип, не зарегистрированный ни в одном
    * разрезе, считается видимым везде (отсутствие знания — не повод фильтровать).
@@ -158,6 +172,12 @@ public class TypeRegistry {
   );
   /** Описания типов в разрезе языка (первая регистрация выигрывает). */
   private final Map<FileType, Map<TypeRef, String>> descriptions = perFileType();
+  /**
+   * «Страничные» метаданные типов в разрезе языка: доступность, версии
+   * появления/устаревания, «Замечание», «Пример», «См. также». Заполняются из
+   * {@link TypePackProvider.TypeDecl#metadata()}, первая регистрация выигрывает.
+   */
+  private final Map<FileType, Map<TypeRef, PlatformMetadata>> typeMetadata = perFileType();
   /** Конструкторы типов в разрезе языка (повторные регистрации конкатенируются). */
   private final Map<FileType, Map<TypeRef, List<SignatureDescriptor>>> constructors = perFileType();
   /** Динамические источники конструкторов в разрезе языка (например, OScript-класс из SymbolTree). */
@@ -202,6 +222,11 @@ public class TypeRegistry {
    * первая регистрация выигрывает.
    */
   private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
+
+  /** Пустой контейнер с разрезами по всем языкам. */
+  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
+    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
+  }
 
   /**
    * Явная точка материализации workspace-scoped реестра. Тело пустое: значим
@@ -373,8 +398,11 @@ public class TypeRegistry {
 
   /**
    * Получить полный набор членов типа в разрезе языка — union по всем
-   * зарегистрированным {@link MemberSource}'ам этого языка. Дубли по имени
-   * отбрасываются (побеждает первый зарегистрированный источник).
+   * зарегистрированным {@link MemberSource}'ам этого языка. Дубли по паре
+   * (вид члена {@link MemberKind}, имя без учёта регистра) отбрасываются
+   * (побеждает первый источник в порядке резолва, а не обязательно первый
+   * зарегистрированный — см. {@link #registerMemberOverride}) — член одного
+   * вида не вытесняет одноимённый член другого вида.
    * <p>
    * Fallback по имени: TypeRef в LS — это пара {@code (kind, qualifiedName)}, и
    * один и тот же тип может предъявляться с разными kind'ами в зависимости от
@@ -389,12 +417,16 @@ public class TypeRegistry {
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
     var epoch = membersEpoch.get();
     var key = new MembersKey(ref, fileType);
+    var generation = membersGeneration.getOrDefault(key, 0L);
     var cached = membersCache.get(key);
-    if (cached != null && cached.epoch() == epoch) {
+    if (cached != null && cached.epoch() == epoch && cached.generation() == generation) {
       return cached.members();
     }
     var members = computeMembers(ref, fileType);
-    membersCache.put(key, new CachedMembers(epoch, members));
+    // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
+    // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
+    // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
+    membersCache.put(key, new CachedMembers(epoch, generation, members));
     return members;
   }
 
@@ -443,8 +475,9 @@ public class TypeRegistry {
    * @param fileType язык, в котором он виден без префикса.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
-    globalPropertyTypes.get(fileType).add(ref);
-    membersEpoch.incrementAndGet();
+    if (globalPropertyTypes.get(fileType).add(ref)) {
+      membersEpoch.incrementAndGet();
+    }
   }
 
   /**
@@ -456,9 +489,13 @@ public class TypeRegistry {
    * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    globalPropertyTypes.get(fileType).add(ref);
     globalPropertySymbols.put(ref, new WeakReference<>(declaration));
-    membersEpoch.incrementAndGet();
+    if (globalPropertyTypes.get(fileType).add(ref)) {
+      membersEpoch.incrementAndGet();
+    }
+    // Повторная пометка (правка уже зарегистрированного модуля) обновляет только
+    // symbol-источник; инвалидацию memo GLOBAL_CONTEXT-члена и name-индекса, куда
+    // символ уже вошёл, выполняет вызывающий провайдер точечно.
   }
 
   /**
@@ -508,20 +545,6 @@ public class TypeRegistry {
   }
 
   /**
-   * Версия данных о членах типов: монотонный счётчик, инкрементируемый при любой
-   * мутации member-источников/оверрайдов и при изменении документов. Потребители
-   * (например, {@link GlobalScopeProvider} для name-индекса глобальной области)
-   * используют его как ключ инвалидации своих кэшей. Резолв глобальной области сам
-   * по себе — не дело {@code TypeRegistry} (хранилища типов); это абстракция
-   * {@code GlobalScopeProvider}.
-   *
-   * @return текущая эпоха членов.
-   */
-  public long membersEpoch() {
-    return membersEpoch.get();
-  }
-
-  /**
    * Имя резолвится в платформенный/конфигурационный тип с конструктором —
    * т.е. это имя типа для {@code Новый}/типовой позиции ({@code Структура},
    * {@code ТаблицаЗначений}), а не глобальное значение. Ось type-name отдельно
@@ -540,15 +563,31 @@ public class TypeRegistry {
     // registerMemberSource/registerMemberOverride (Phase B/C MetadataCollectionSpecializer
     // и др. workspace-scoped провайдеры). Список — CopyOnWriteArrayList,
     // снимок через List.copyOf дёшев и стабилен на время итерации.
-    var byName = new LinkedHashMap<String, MemberDescriptor>();
+    // Ключ дедупликации — (kind, имя): метод и свойство с одинаковым именем —
+    // разные члены (например, self-completion может видеть self-метод и
+    // одноимённую self-переменную типа), один не должен вытеснять другой.
+    var byNameAndKind = new LinkedHashMap<MemberKey, MemberDescriptor>();
     for (var source : List.copyOf(resolveMemberSources(ref, fileType))) {
       for (var member : source.getMembers()) {
-        byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
+        byNameAndKind.putIfAbsent(
+          new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT)), member);
       }
     }
     // Неизменяемый список: память шарится между вызовами, случайная мутация
     // упадёт сразу (все потребители только итерируют).
-    return List.copyOf(byName.values());
+    return List.copyOf(byNameAndKind.values());
+  }
+
+  /**
+   * Ключ дедупликации членов в {@link #computeMembers}: вид члена + имя без учёта регистра.
+   * Package-private (а не private) ради прямого юнит-теста {@code compareTo}.
+   */
+  record MemberKey(MemberKind kind, String lowercaseName) implements Comparable<MemberKey> {
+    @Override
+    public int compareTo(MemberKey other) {
+      var byKind = kind.compareTo(other.kind);
+      return byKind != 0 ? byKind : lowercaseName.compareTo(other.lowercaseName);
+    }
   }
 
   /**
@@ -561,24 +600,74 @@ public class TypeRegistry {
   private List<MemberSource> resolveMemberSources(TypeRef ref, FileType fileType) {
     var byRef = memberSources.get(fileType);
     var sources = byRef.get(ref);
-    if (sources == null || sources.isEmpty()) {
+    if (sources == null) {
       var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
       if (canonical != null && !canonical.equals(ref)) {
         sources = byRef.get(canonical);
       }
     }
-    return sources == null ? List.of() : sources;
+    return asSourceList(sources);
   }
 
   /**
-   * Сбросить memo {@link #getMembers}. Member-source'ы конфигурационных модулей и
-   * OScript-библиотек лениво читают символьное дерево документа и меняют вывод при
-   * правке без ре-регистрации источника — поэтому при любом изменении содержимого
-   * документа memo надо инвалидировать.
+   * Разложить компактное значение {@link #memberSources} в список источников:
+   * {@code null} → пусто, одиночный {@link MemberSource} → список из одного,
+   * {@code MemberSource[]} → неизменяемый список-обёртка. Пустого значения не бывает —
+   * {@link #appendSource}/{@link #prependSource} всегда дают ≥1 элемент, а единственное
+   * удаление ({@code memberSources...remove(ref)}) снимает ключ целиком.
    */
-  @EventListener
-  public void invalidateMembersCache(DocumentContextContentChangedEvent event) {
-    membersEpoch.incrementAndGet();
+  private static List<MemberSource> asSourceList(@Nullable Object value) {
+    if (value == null) {
+      return List.of();
+    }
+    if (value instanceof MemberSource single) {
+      return List.of(single);
+    }
+    return List.of((MemberSource[]) value);
+  }
+
+  /** Дописать источник в конец компактного значения (одиночка → массив). */
+  private static Object appendSource(Object current, Object added) {
+    var add = (MemberSource) added;
+    if (current instanceof MemberSource single) {
+      return new MemberSource[]{single, add};
+    }
+    var array = (MemberSource[]) current;
+    var updated = Arrays.copyOf(array, array.length + 1);
+    updated[array.length] = add;
+    return updated;
+  }
+
+  /** Вставить источник в начало компактного значения (override выигрывает dedup по имени). */
+  private static Object prependSource(Object current, Object added) {
+    var add = (MemberSource) added;
+    if (current instanceof MemberSource single) {
+      return new MemberSource[]{add, single};
+    }
+    var array = (MemberSource[]) current;
+    var updated = new MemberSource[array.length + 1];
+    updated[0] = add;
+    System.arraycopy(array, 0, updated, 1, array.length);
+    return updated;
+  }
+
+  /**
+   * Точечно сбросить memo {@link #getMembers} для одного типа во всех языках —
+   * без сдвига глобальной эпохи (кэши прочих типов остаются валидными).
+   * Применяется при правке содержимого документа, чьи member-source'ы читают
+   * только этот тип (BSL-модуль как источник членов своего типа-обёртки).
+   * <p>
+   * Инвалидация — через инкремент пер-типового поколения ({@link #membersGeneration}),
+   * а не удаление записи: это отвергает и уже закэшированный результат, и устаревший
+   * результат параллельного незавершённого {@code computeMembers}, который допишется
+   * в кэш уже после инвалидации. Запись выселяется перезаписью при следующем чтении.
+   *
+   * @param ref тип, memo членов которого нужно пересобрать.
+   */
+  public void invalidateMembers(TypeRef ref) {
+    for (var fileType : FileType.values()) {
+      membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
+    }
   }
 
   /**
@@ -591,15 +680,14 @@ public class TypeRegistry {
    * @param fileType язык файла, в котором члены источника видимы.
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
-    memberSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
-      .add(source);
+    memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
     membersEpoch.incrementAndGet();
   }
 
   /**
    * Аналог {@link #registerMemberSource}, но вставляет источник в НАЧАЛО списка,
    * чтобы при сборе членов через {@link #getMembers(TypeRef, FileType)} он выигрывал
-   * dedup ({@code putIfAbsent} по имени). Используется для override returnType
+   * dedup ({@code putIfAbsent} по паре (вид члена, имя)). Используется для override returnType
    * у конкретного member'а уже зарегистрированного типа (например, подмена
    * {@code ОбъектМетаданныхКонфигурация.Документы} с общего
    * {@code КоллекцияОбъектовМетаданных} на специализированный
@@ -607,8 +695,7 @@ public class TypeRegistry {
    * в реестре — другие members (Справочники, Перечисления, …) приходят оттуда.
    */
   public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
-    memberSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
-      .addFirst(source);
+    memberSources.get(fileType).merge(ref, source, TypeRegistry::prependSource);
     membersEpoch.incrementAndGet();
   }
 
@@ -927,8 +1014,30 @@ public class TypeRegistry {
   /**
    * Зарегистрировать конфигурационный тип (Справочники.X, Документы.X и т.д.).
    * Конфигурационные типы всегда BSL-only.
+   * <p>
+   * Инвариант «одно qualifiedName ↔ один {@link TypeRef}»: если имя уже
+   * зарезолвлено в канонический тип (например, платформенную специализацию
+   * {@code ОтчётОбъект.<Имя>}, которую завёл {@link #registerSpecialization}
+   * с kind'ом generic'а = {@link TypeKind#PLATFORM}), — <b>переиспользуем</b> его,
+   * а не плодим отдельный {@link TypeKind#CONFIGURATION}-ref с тем же именем.
+   * Иначе второй ref перекрыл бы первый в {@code aliasIndex}, а member-source'ы
+   * разбрелись бы по двум разным ref'ам: {@link #getMembers} собирает источники
+   * строго по своему ref (см. {@code resolveMemberSources}) и не досбирает чужие,
+   * из-за чего, например, события и встроенные реквизиты платформенного типа стали
+   * бы недостижимы после того, как модуль объекта до-регистрировал свои члены. Тот
+   * же resolve-or-intern уже делает {@link #registerSpecialization(String, TypeRef,
+   * Map, FileType)} — так обе стороны сходятся на один ref независимо от порядка
+   * регистрации.
    */
   public TypeRef registerConfigurationType(String qualifiedName) {
+    var existing = resolve(qualifiedName).orElse(null);
+    if (existing != null) {
+      // Имя уже занято каноническим типом — садимся на него, лишь дорегистрируя
+      // BSL-видимость (конфигурационные члены всегда BSL). Не перетираем types-запись
+      // существующего типа: его kind/описание/конструкторы остаются как есть.
+      registerFileType(existing, FileType.BSL);
+      return existing;
+    }
     var ref = intern(TypeKind.CONFIGURATION, qualifiedName);
     types.put(ref, new ConfigurationType(ref));
     addAlias(qualifiedName, ref);
@@ -967,6 +1076,35 @@ public class TypeRegistry {
    */
   public String getDescription(TypeRef ref, FileType fileType) {
     return descriptions.get(fileType).getOrDefault(ref, "");
+  }
+
+  /**
+   * «Страничные» метаданные типа из синтакс-помощника в разрезе указанного
+   * языка: доступность по видам клиента, версии появления/устаревания с
+   * рекомендуемыми заменами, «Замечание», «Пример», «См. также».
+   *
+   * @param ref      ссылка на тип.
+   * @param fileType язык файла-потребителя.
+   * @return метаданные либо {@link PlatformMetadata#EMPTY}, если источник их не дал.
+   */
+  public PlatformMetadata getTypeMetadata(TypeRef ref, FileType fileType) {
+    return typeMetadata.get(fileType).getOrDefault(ref, PlatformMetadata.EMPTY);
+  }
+
+  /**
+   * Зарегистрировать «страничные» метаданные типа в разрезе языка. Повторная
+   * регистрация того же языка игнорируется (первая выигрывает), пустые
+   * метаданные не сохраняются.
+   *
+   * @param ref      ссылка на тип.
+   * @param metadata метаданные типа.
+   * @param fileType язык файла, в котором метаданные видимы.
+   */
+  public void registerTypeMetadata(TypeRef ref, PlatformMetadata metadata, FileType fileType) {
+    if (metadata.isEmpty()) {
+      return;
+    }
+    typeMetadata.get(fileType).putIfAbsent(ref, metadata);
   }
 
   /**
@@ -1070,6 +1208,7 @@ public class TypeRegistry {
     }
     registerPackAliases(decl, ref);
     registerPackDescriptions(decl, ref, fileType);
+    registerPackMetadata(decl, ref, fileType);
     registerPackCallables(decl, ref, fileType);
     registerPackCollectionTraits(decl, ref, fileType);
     if (!decl.name().isEmpty()) {
@@ -1110,6 +1249,11 @@ public class TypeRegistry {
     }
     registerDescription(ref, decl.description().primary(), fileType);
     typeDescriptionsBilingual.get(fileType).putIfAbsent(ref, decl.description());
+  }
+
+  /** Страничные метаданные пака: доступность, версии, замечание, примеры, «См. также». */
+  private void registerPackMetadata(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
+    registerTypeMetadata(ref, decl.metadata(), fileType);
   }
 
   /** Вызываемое пака: конструкторы, члены, exposedAsGlobal-публикация. */

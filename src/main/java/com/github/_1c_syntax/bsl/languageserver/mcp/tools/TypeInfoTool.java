@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.ApiMetadataDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeSignatureDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -41,6 +42,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
@@ -72,6 +74,9 @@ public class TypeInfoTool {
    * @param constructors Сигнатуры конструкторов ({@code Новый ...}); пустой список, если конструкторов нет.
    * @param definedAt URI исходного файла-объявления (для конфигурационных и пользовательских типов);
    *   {@code null} для платформенных/примитивных типов.
+   * @param metadata Метаинформация самого типа (доступность по видам клиента,
+   *   версии появления/устаревания, «Замечание», примеры, «См. также»); {@code null},
+   *   если метаинформация отсутствует.
    */
   public record Result(
     String name,
@@ -81,7 +86,8 @@ public class TypeInfoTool {
     List<TypeMemberDto> methods,
     List<TypeMemberDto> events,
     List<TypeSignatureDto> constructors,
-    @Nullable String definedAt
+    @Nullable String definedAt,
+    @Nullable ApiMetadataDto metadata
   ) {
   }
 
@@ -89,7 +95,8 @@ public class TypeInfoTool {
     name = "type_info",
     description = "Look up a 1C/BSL type by name (e.g. `Массив`/`Array`) and return its properties, "
       + "methods, events and constructors with signatures, parameters, return types and platform "
-      + "metadata (since/deprecated versions, execution contexts, examples, see-also).",
+      + "metadata of both the type itself and its members (since/deprecated versions, execution "
+      + "contexts, notes, examples, see-also).",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
     // (here — nullable description/defaultValue). Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false,
@@ -126,6 +133,10 @@ public class TypeInfoTool {
 
       var description = typeService.getDescription(typeRef, effectiveLanguage, fileType);
       var definedAt = typeService.definingUri(typeRef).map(URI::toString).orElse(null);
+      var metadata = Optional.of(typeService.getTypeMetadata(typeRef, fileType))
+        .map(typeMetadata -> ApiMetadataDto.from(typeMetadata, effectiveLanguage))
+        .filter(dto -> !dto.isEmpty())
+        .orElse(null);
       return new Result(
         typeRef.qualifiedName(),
         typeRef.kind().name(),
@@ -134,7 +145,8 @@ public class TypeInfoTool {
         methods,
         events,
         constructors,
-        definedAt
+        definedAt,
+        metadata
       );
     }
   }

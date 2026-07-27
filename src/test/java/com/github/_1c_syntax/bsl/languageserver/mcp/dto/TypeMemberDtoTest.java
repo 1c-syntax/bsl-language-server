@@ -180,4 +180,37 @@ class TypeMemberDtoTest {
 
     assertThat(dto.description()).isNull();
   }
+
+  @Test
+  void signatureMetadataIsExposedWhenNotEmpty() {
+    // У конструкторов платформенных типов метаданные живут на самой сигнатуре.
+    var metadata = new PlatformMetadata(
+      "8.3.10",
+      "",
+      List.of(),
+      Set.of(),
+      null,
+      BilingualString.EMPTY,
+      BilingualString.EMPTY,
+      List.of(BilingualString.of("Массив = Новый Массив();")),
+      List.of()
+    );
+    var signature = new SignatureDescriptor(List.of(), TypeSet.EMPTY, BilingualString.EMPTY, metadata);
+
+    var dto = TypeSignatureDto.from(signature, Language.RU);
+
+    assertThat(dto.metadata()).isNotNull();
+    assertThat(dto.metadata().sinceVersion()).isEqualTo("8.3.10");
+    assertThat(dto.metadata().examples()).containsExactly("Массив = Новый Массив();");
+  }
+
+  @Test
+  void signatureWithoutMetadataExposesNull() {
+    var signature = new SignatureDescriptor(List.of(), TypeSet.EMPTY, "описание");
+
+    var dto = TypeSignatureDto.from(signature, Language.RU);
+
+    assertThat(dto.metadata()).isNull();
+    assertThat(dto.description()).isEqualTo("описание");
+  }
 }

@@ -50,6 +50,7 @@ public class ConstructorHoverBuilder {
   private final CollectionHoverHints collectionHoverHints;
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
+  private final PlatformMetadataRenderer metadataRenderer;
 
   private String tr(String key) {
     return resources.getResourceString(getClass(), key);
@@ -105,6 +106,13 @@ public class ConstructorHoverBuilder {
         sb.append('\n');
       }
     }
+    // Метаданные конструктора (его собственная страница СП: версии, примеры,
+    // «См. также») и следом — метаданные самого типа (доступность по видам
+    // клиента, версии, «Замечание» с главной страницы типа).
+    if (chosen != null) {
+      metadataRenderer.append(sb, chosen.metadata());
+    }
+    metadataRenderer.append(sb, typeService.getTypeMetadata(ref, fileType));
     collectionHoverHints.append(sb, ref, fileType);
     if (disclaim) {
       sb.append("\n\n_").append(tr("noMatchingConstructor")).append('_');

@@ -162,7 +162,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return new TypeDecl(kind, name, members,
       description, constructors,
       defaultElementTypes, supportsForEach, supportsIndexAccess,
-      forEachDescription, indexAccessDescription, typeParameters, isEnum);
+      forEachDescription, indexAccessDescription, typeParameters, isEnum,
+      metadataOf(context, en));
   }
 
   /**
@@ -187,11 +188,36 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return List.copyOf(refs);
   }
 
+  /**
+   * Описание типа с главной страницы синтакс-помощника. Объявлено на самом
+   * {@link Context}, поэтому доступно и типам, и коллекциям, и системным
+   * перечислениям.
+   */
   private static String descriptionOf(Context context) {
-    if (context instanceof ContextType type) {
-      return type.description();
-    }
-    return "";
+    return context.description();
+  }
+
+  /**
+   * «Страничные» метаданные самого типа (не члена): доступность по видам
+   * клиента, версии появления/устаревания с рекомендуемыми заменами,
+   * «Замечание», «Пример», «См. также». En-сторона приходит из
+   * bilingual-merger'а тем же {@link EnAttachments}, что и описание типа.
+   * <p>
+   * {@code accessMode} и {@code returnValueDescription} для типа не имеют
+   * смысла — это свойства члена.
+   */
+  private static PlatformMetadata metadataOf(Context context, EnAttachments en) {
+    return new PlatformMetadata(
+      context.sinceVersion(),
+      context.deprecatedSinceVersion(),
+      context.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(context.availabilities()),
+      null,
+      BilingualString.EMPTY,
+      BilingualString.of(safe(context.notes()), safe(en.notes())),
+      zipBilingual(context.examples(), en.examples()),
+      zipBilingual(context.seeAlso(), en.seeAlso())
+    );
   }
 
   /**
@@ -218,7 +244,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       var ctorDescBilingual = BilingualString.of(
         safe(ctor.description()), safe(enLookup.apply(ctor).description()));
       result.add(new SignatureDescriptor(
-        parameters, TypeSet.of(classRef), ctorDescBilingual));
+        parameters, TypeSet.of(classRef), ctorDescBilingual, metadataOf(ctor, enLookup)));
     }
     return List.copyOf(result);
   }
@@ -287,7 +313,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     } else {
       descriptor = MemberDescriptor.property(name, returnTypes, property.description());
     }
-    return descriptor.withMetadata(metadataOf(property))
+    return descriptor.withMetadata(metadataOf(property, enLookup))
       .withBilingualName(bilingualName(property.name()))
       .withBilingualDescription(BilingualString.of(
         safe(property.description()), safe(enLookup.apply(property).description())))
@@ -349,7 +375,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       signatures,
       null,
       event.isGeneric(),
-      metadataOf(event),
+      metadataOf(event, enLookup),
       false
     ).withStandardLibrary(true);
   }
@@ -415,36 +441,65 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   /**
-   * Извлекает платформенные метаданные из {@link ContextEvent}.
+   * Извлекает платформенные метаданные из {@link ContextConstructor} с учётом
+   * en-аттачментов. Возвращаемое значение конструктора — сам тип, отдельного
+   * описания у него нет, поэтому {@code returnValueDescription} пуст;
+   * блока «Замечание:» у конструкторов в синтакс-помощнике тоже нет.
    */
-  private static PlatformMetadata metadataOf(ContextEvent event) {
+  private static PlatformMetadata metadataOf(ContextConstructor constructor,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(constructor);
+    return new PlatformMetadata(
+      constructor.sinceVersion(),
+      constructor.deprecatedSinceVersion(),
+      constructor.recommendedReplacements(),
+      Set.of(),
+      null,
+      BilingualString.EMPTY,
+      BilingualString.EMPTY,
+      zipBilingual(constructor.examples(), en.examples()),
+      zipBilingual(constructor.seeAlso(), en.seeAlso())
+    );
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextEvent} с учётом
+   * en-аттачментов. Возвращаемого значения у события нет (handler-контракт),
+   * поэтому {@code returnValueDescription} пуст.
+   */
+  private static PlatformMetadata metadataOf(ContextEvent event,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(event);
     return new PlatformMetadata(
       event.sinceVersion(),
       event.deprecatedSinceVersion(),
       event.recommendedReplacements(),
       BslContextEnumMapping.mapAvailabilities(event.availabilities()),
       null,
-      "",
-      "",
-      List.of(),
-      List.of()
+      BilingualString.EMPTY,
+      BilingualString.of(safe(event.notes()), safe(en.notes())),
+      zipBilingual(event.examples(), en.examples()),
+      zipBilingual(event.seeAlso(), en.seeAlso())
     );
   }
 
   /**
-   * Извлекает платформенные метаданные из {@link ContextProperty}.
+   * Извлекает платформенные метаданные из {@link ContextProperty} с учётом
+   * en-аттачментов. Блок «Пример:» у свойств редок, но встречается.
    */
-  private static PlatformMetadata metadataOf(ContextProperty property) {
+  private static PlatformMetadata metadataOf(ContextProperty property,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(property);
     return new PlatformMetadata(
       property.sinceVersion(),
       property.deprecatedSinceVersion(),
       property.recommendedReplacements(),
       BslContextEnumMapping.mapAvailabilities(property.availabilities()),
       BslContextEnumMapping.mapAccessMode(property.accessMode()),
-      "",
-      "",
-      List.of(),
-      List.of()
+      BilingualString.EMPTY,
+      BilingualString.of(safe(property.notes()), safe(en.notes())),
+      zipBilingual(property.examples(), en.examples()),
+      zipBilingual(property.seeAlso(), en.seeAlso())
     );
   }
 

@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -51,10 +50,6 @@ import java.util.regex.Pattern;
   }
 )
 public class UnusedLocalMethodDiagnostic extends AbstractDiagnostic {
-
-  private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
-    "(ПриСозданииОбъекта|OnObjectCreate)"
-  );
 
   /**
    * Префиксы подключаемых методов
@@ -135,7 +130,6 @@ public class UnusedLocalMethodDiagnostic extends AbstractDiagnostic {
       .filter(method -> !method.isExport())
       .filter(method -> !isOverride(method))
       .filter(method -> !isAttachable(method))
-      .filter(method -> !isHandler(method))
       // Платформенный обработчик события (резолвится EventHandlerResolver'ом
       // по имени метода в object/manager/recordset/global/OScript-модулях).
       // Он вызывается платформой по триггеру события, в теле модуля никаких
@@ -147,10 +141,6 @@ public class UnusedLocalMethodDiagnostic extends AbstractDiagnostic {
 
   private boolean isAttachable(MethodSymbol methodSymbol) {
     return attachableMethodPrefixes.matcher(methodSymbol.getName()).matches();
-  }
-
-  private static boolean isHandler(MethodSymbol methodSymbol) {
-    return HANDLER_PATTERN.matcher(methodSymbol.getName()).matches();
   }
 
   private static boolean isOverride(MethodSymbol method) {

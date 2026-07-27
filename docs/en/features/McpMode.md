@@ -65,7 +65,7 @@ Source directories are provided by the client through MCP roots — just like an
 | `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
 | `hover` | Hover info for a symbol (signature, type, documentation) |
 | `definition` | Go to the symbol declaration |
-| `type_info` | Properties and methods of a type looked up by name (e.g. `Массив`/`Array`) |
+| `type_info` | Properties, methods, events and constructors of a type looked up by name (e.g. `Массив`/`Array`), with platform metadata of both the type itself and its members (since/deprecated versions, execution contexts, notes, examples, see-also) |
 | `global_member_info` | A global member looked up by name (e.g. `Сообщить`/`Message`) — function, property or system enum with signatures and metadata |
 | `global_member_search` | Search global context members — functions (`СтартовыйСценарий`/`StartupScript`), properties (`Метаданные`/`Metadata`) and system enums; fuzzy matching and relevance ranking like autocomplete, grouped by category, can be narrowed by categories |
 | `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |

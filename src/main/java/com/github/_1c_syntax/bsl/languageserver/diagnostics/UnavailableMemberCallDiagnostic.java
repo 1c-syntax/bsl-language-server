@@ -28,23 +28,28 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls.ConstructedType;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 
 import java.util.HashSet;
+import java.util.List;
 
 /**
- * Подсвечивает вызов метода или обращение к свойству платформенного типа,
- * недоступного в целевой версии платформы: член появился в версии новее, чем
- * режим совместимости проекта ({@code target < sinceVersion}).
+ * Подсвечивает вызов метода, обращение к свойству платформенного типа или
+ * конструирование самого типа, недоступных в целевой версии платформы: член
+ * (или тип) появился в версии новее, чем режим совместимости проекта
+ * ({@code target < sinceVersion}).
  * <p>
  * Источник версий — синтакс-помощник установленной платформы 1С (через
- * {@code bsl-context}) или встроенный справочник. Срабатывает, если хотя бы
- * один из возможных типов-владельцев ресивера делает член недоступным. Если
- * режим совместимости проекта не задан, считается «самая свежая платформа» —
- * тогда проверка не срабатывает.
+ * {@code bsl-context}) или встроенный справочник. Для членов срабатывает, если
+ * хотя бы один из возможных типов-владельцев ресивера делает член недоступным.
+ * Если режим совместимости проекта не задан, считается «самая свежая
+ * платформа» — тогда проверка не срабатывает.
  *
  * @see PlatformMemberCalls
  */
@@ -66,16 +71,39 @@ public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
+    // Оба вида мест — за один обход AST.
+    var callSites = PlatformMemberCalls.collect(documentContext, typeService);
+    checkMembers(callSites.members(), target);
+    checkConstructedTypes(callSites.constructedTypes(), target);
+  }
+
+  private void checkMembers(List<TypedMember> members, CompatibilityMode target) {
     var reported = new HashSet<Range>();
-    for (var member : PlatformMemberCalls.collect(documentContext, typeService)) {
+    for (var member : members) {
       var metadata = member.descriptor().metadata();
-      if (!PlatformMemberVersions.firesUnavailable(metadata.sinceVersion(), target)) {
+      if (!PlatformMemberVersions.isUnavailable(metadata, target)) {
         continue;
       }
       if (reported.add(member.range())) {
         diagnosticStorage.addDiagnostic(member.range(),
           info.getMessage(member.descriptor().name(), metadata.sinceVersion()));
       }
+    }
+  }
+
+  /**
+   * Конструирование типа, которого нет в целевой версии платформы
+   * ({@code Новый ЧтениеJSON()} при режиме совместимости ниже 8.3.6). Версия
+   * появления берётся с главной страницы типа в синтакс-помощнике.
+   */
+  private void checkConstructedTypes(List<ConstructedType> constructedTypes, CompatibilityMode target) {
+    for (var constructed : constructedTypes) {
+      if (!PlatformMemberVersions.isUnavailable(constructed.metadata(), target)) {
+        continue;
+      }
+      diagnosticStorage.addDiagnostic(constructed.node(),
+        info.getResourceString("typeMessage", constructed.typeName(),
+          constructed.metadata().sinceVersion()));
     }
   }
 }

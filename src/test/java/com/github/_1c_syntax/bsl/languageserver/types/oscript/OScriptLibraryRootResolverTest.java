@@ -35,14 +35,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @CleanupContextBeforeClassAndAfterClass
-class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
+class OScriptLibraryRootResolverTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private LibConfigDiscovery discovery;
+  private OScriptLibraryRootResolver discovery;
 
   @Autowired
   private LanguageServerConfiguration configuration;
@@ -51,34 +49,6 @@ class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
   void resetOscriptOptions() {
     configuration.getOscriptOptions().getLibRoots().clear();
     configuration.getOscriptOptions().setUseEnvLibLocation(false);
-  }
-
-  @Test
-  void discoversLibConfigInsideWorkspace(@TempDir Path workspace) throws IOException {
-    var libDir = workspace.resolve("oscript-libs/mylib");
-    Files.createDirectories(libDir);
-    var libConfig = libDir.resolve("lib.config");
-    Files.writeString(libConfig, "<package-def/>");
-
-    var nested = workspace.resolve("a/b/c/d/deeplib");
-    Files.createDirectories(nested);
-    Files.writeString(nested.resolve("lib.config"), "<package-def/>");
-
-    var result = discovery.discover(workspace);
-
-    assertThat(result).contains(libConfig.toAbsolutePath().normalize());
-    assertThat(result).contains(nested.resolve("lib.config").toAbsolutePath().normalize());
-  }
-
-  @Test
-  void deduplicatesPaths(@TempDir Path workspace) throws IOException {
-    var libDir = workspace.resolve("lib");
-    Files.createDirectories(libDir);
-    Files.writeString(libDir.resolve("lib.config"), "<package-def/>");
-
-    var result = discovery.discover(workspace);
-
-    assertThat(result).hasSize(1);
   }
 
   @Test
@@ -93,20 +63,6 @@ class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
       workspace.toAbsolutePath().normalize(),
       workspace.resolve("oscript_modules/fs").toAbsolutePath().normalize()
     );
-  }
-
-  @Test
-  void discoverFromServerContextDelegatesToConfigurationRoot(@TempDir Path workspace) throws IOException {
-    // given
-    Files.writeString(workspace.resolve("lib.config"), "<package-def/>");
-    var context = mock(ServerContext.class);
-    when(context.getConfigurationRoot()).thenReturn(workspace);
-
-    // when
-    var result = discovery.discover(context);
-
-    // then
-    assertThat(result).contains(workspace.resolve("lib.config").toAbsolutePath().normalize());
   }
 
   @Test
@@ -164,17 +120,5 @@ class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
 
     // then — только сам workspace
     assertThat(roots).containsExactly(workspace.toAbsolutePath().normalize());
-  }
-
-  @Test
-  void discoverSkipsMissingWorkspace(@TempDir Path parent) {
-    // given
-    var missing = parent.resolve("not-exist");
-
-    // when
-    var result = discovery.discover(missing);
-
-    // then — scan() == no-op для не-каталога; libRoots пуст → пустой результат
-    assertThat(result).isEmpty();
   }
 }

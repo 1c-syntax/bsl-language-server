@@ -25,6 +25,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,8 +38,14 @@ import org.springframework.stereotype.Component;
  * с тем контекстом, которому принадлежит бин (строгий контракт Spring). Бин регистрирует свой контекст
  * в аспекте. При уничтожении контекста {@link PreDestroy} гарантированно отменяет регистрацию,
  * не затрагивая остальные живые контексты.
+ * <p>
+ * Вся полезная работа бина — побочный эффект в {@link #setApplicationContext}, и его никто не инжектит.
+ * Поэтому при глобальной ленивой инициализации ({@code spring.main.lazy-initialization=true}) он бы не
+ * создавался и регистрация не выполнялась. {@link Lazy @Lazy(false)} гарантирует создание бина на старте
+ * контекста.
  */
 @Component
+@Lazy(false)
 @RequiredArgsConstructor
 public class EventPublisherAspectRegistration implements ApplicationContextAware {
 

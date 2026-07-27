@@ -26,6 +26,12 @@ hover, completion, signature help и ряд диагностик. См. корн
   `localFields`); **`MemberDescriptor`** (метод/свойство: двуязычные имя/описание, сигнатуры,
   возвращаемые типы, метаданные), `SignatureDescriptor`/`ParameterDescriptor`, `BilingualString`,
   `MemberKind`, `MemberSource`, `AccessMode`.
+  **`PlatformMetadata`** — «страничные» метаданные синтакс-помощника (доступность, версии
+  появления/устаревания с заменами, «Возвращаемое значение», «Замечание», «Пример», «См. также»).
+  Носят её три уровня: член (`MemberDescriptor.metadata`), сигнатура-конструктор
+  (`SignatureDescriptor.metadata`) и сам тип (`TypeDecl.metadata` → `TypeRegistry.getTypeMetadata`
+  → `TypeService.getTypeMetadata`). Потребители — hover (`PlatformMetadataRenderer`), completion
+  (пометка устаревшего), диагностики `DeprecatedMethodCall`/`UnavailableMemberCall`, MCP `type_info`.
 - **`registry/`** — источники и резолюция типов. **`TypeRegistry`** (workspace-scoped) —
   интернирование `TypeRef`, индекс алиасов, **мультиисточниковое** расширение членов
   (`FileType → TypeRef → List<MemberSource>`), мемоизация `getMembers()` с epoch-инвалидацией,
@@ -50,8 +56,10 @@ hover, completion, signature help и ряд диагностик. См. корн
 - **`symbol/`** — обёртки несорсовых сущностей: **`PlatformMemberSymbol`** (член платформенного/
   конфигурационного типа или глобал, несёт `MemberDescriptor`), **`ConstructorCallSymbol`**.
 - **`oscript/`** — источники типов OneScript: `OScriptLibraryIndex`, `OScriptModuleMembersProvider`
-  (регистрирует USER-типы и члены .os), обнаружение библиотек (`ConventionalLibraryDiscovery`,
-  `LibConfigDiscovery`, `LibConfigParser`); подпакеты `extends_/` (наследование классов:
+  (регистрирует USER-типы и члены .os), обнаружение библиотек за один обход дерева
+  (`OScriptLibraryScanner` поверх корней из `OScriptLibraryRootResolver`; `DirContents` —
+  примитив чтения каталога; `ConventionalLibraryDiscovery` — распознавание по соглашению;
+  `LibConfigParser` — разбор `lib.config`); подпакеты `extends_/` (наследование классов:
   `OScriptExtends`, `TypeRelationIndex`), `annotations/`, `autumn/` (DI-фреймворк Autumn).
 - **`util/`** — `SignatureSelection` (выбор перегрузки по числу/типам аргументов).
 

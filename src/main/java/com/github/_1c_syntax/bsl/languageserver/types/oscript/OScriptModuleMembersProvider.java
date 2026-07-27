@@ -45,8 +45,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,6 +99,41 @@ public class OScriptModuleMembersProvider {
       return;
     }
     register(documentContext);
+    invalidateMembersOfDocumentAndSubtypes(documentContext);
+  }
+
+  /**
+   * Точечно сбросить memo членов правленого документа и всех его наследников.
+   * <p>
+   * Member-source типа лениво читает символьное дерево своего документа, поэтому правка
+   * требует пересборки его членов. Наследники задеты транзитивно: источник унаследованных
+   * членов ({@code TypeRelations.inheritedMembers}) копирует к себе результат
+   * {@code getMembers} родителя, так что в memo наследника лежит снимок членов родителя —
+   * сброса одного лишь родителя недостаточно, снимок «протухает» на всю глубину иерархии.
+   * <p>
+   * Обход идёт по прямым наследникам ({@code &Расширяет}); интерфейсы ({@code &Реализует})
+   * членов не приносят, поэтому реализаторов обходить не нужно. Повторные посещения
+   * отсекаются по URI — это же защищает от циклов в объявлениях наследования.
+   *
+   * @param documentContext правленый {@code .os}-документ.
+   */
+  private void invalidateMembersOfDocumentAndSubtypes(DocumentContext documentContext) {
+    var visited = new HashSet<URI>();
+    var queue = new ArrayDeque<DocumentContext>();
+    queue.add(documentContext);
+    while (!queue.isEmpty()) {
+      var current = queue.poll();
+      if (!visited.add(current.getUri())) {
+        continue;
+      }
+      var names = registeredByUri.get(current.getUri());
+      if (names != null) {
+        for (var name : names) {
+          typeRegistry.resolve(name, FileType.OS).ifPresent(typeRegistry::invalidateMembers);
+        }
+      }
+      queue.addAll(typeRelations.subtypes(current));
+    }
   }
 
   /**

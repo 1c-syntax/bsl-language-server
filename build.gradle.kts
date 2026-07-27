@@ -19,7 +19,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.54.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.15.0"
+    id("io.sentry.jvm.gradle") version "6.16.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.25.0"
@@ -42,21 +42,21 @@ gitVersioning.apply {
     refs {
         describeTagFirstParent = false
         tag("v(?<tagVersion>[0-9].*)") {
-            version = $$"${ref.tagVersion}${dirty}"
+            version = "\${ref.tagVersion}\${dirty}"
         }
 
         branch("develop") {
-            version = $$"${describe.tag.version}." +
-                    $$"${describe.distance}-SNAPSHOT${dirty}"
+            version = "\${describe.tag.version}." +
+                    "\${describe.distance}-SNAPSHOT\${dirty}"
         }
 
         branch(".+") {
-            version = $$"${ref}-${commit.short}${dirty}"
+            version = "\${ref}-\${commit.short}\${dirty}"
         }
     }
 
     rev {
-        version = $$"${commit.short}${dirty}"
+        version = "\${commit.short}\${dirty}"
     }
 }
 
@@ -97,11 +97,11 @@ dependencies {
 
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.37.2")
-    api("io.github.1c-syntax:utils:0.9.0")
+    api("io.github.1c-syntax:utils:0.10.1")
     api("io.github.1c-syntax:mdclasses:0.20.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.1")
     api("io.github.1c-syntax:supportconf:0.17.1")
-    api("io.github.1c-syntax:bsl-context:0.7.0")
+    api("io.github.1c-syntax:bsl-context:0.9.2")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.0")
@@ -137,7 +137,7 @@ dependencies {
     implementation("org.apache.commons:commons-exec:1.6.0")
 
     // JGit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.7.0.202606012155-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.7.1.202607240634-r")
 
     // progress bar
     implementation("me.tongfei:progressbar:0.10.2")
@@ -172,7 +172,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // test utils
-    testImplementation("com.github.hazendaz.jmockit:jmockit:2.2.0")
+    testImplementation("com.github.hazendaz.jmockit:jmockit:2.3.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
@@ -313,6 +313,11 @@ tasks.jacocoTestReport {
 
 jmh {
     jmhVersion = "1.37"
+}
+
+// Дерево зависимостей проекта даёт в jmh-архиве больше 65535 записей — нужен zip64.
+tasks.named<Jar>("jmhJar") {
+    isZip64 = true
 }
 
 sentry {

@@ -34,7 +34,8 @@ folders; при `--mcp` оба источника (LSP folders + MCP roots) пи
 ## Инструменты (`@McpTool`)
 
 `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
-члены, конструкторы) · `TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
+члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
+`TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
 `FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`
 (нечёткий поиск по глобальному контексту). DTO — в `mcp/dto/`.
 

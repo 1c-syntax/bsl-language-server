@@ -63,6 +63,32 @@ class DeprecatedMethodCallPlatformPropertyTest
   }
 
   @Test
+  void deprecatedTypeConstruction() {
+    // Тип ЗащищенноеСоединениеNSS устарел с 8.3.8 в пользу
+    // ЗащищенноеСоединениеOpenSSL — версия и замена приходят с главной
+    // страницы типа в СП.
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.10");
+    try {
+      List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallPlatformType");
+      assertThat(diagnostics).hasSize(1);
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  @Test
+  void deprecatedTypeNotReportedForTargetBelowThreshold() {
+    // Негативная граница: целевая платформа ниже версии устаревания типа.
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.4");
+    try {
+      List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallPlatformType");
+      assertThat(diagnostics).isEmpty();
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  @Test
   void deprecatedPropertyNotReportedForTargetBelowThreshold() {
     // Негативная граница: для target ниже семейства устаревания (8.2.x)
     // диагностика молчит. 8.1.99 — последний патч 8.1, гарантированно ниже

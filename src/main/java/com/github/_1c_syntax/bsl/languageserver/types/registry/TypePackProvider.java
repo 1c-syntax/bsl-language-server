@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -79,6 +80,14 @@ public interface TypePackProvider {
    *                            в JSON-паке). Помечает тип как перечисление
    *                            ({@code TypeRegistry.isEnumType}) — для классификации
    *                            property-vs-enum у потребителей.
+   * @param metadata           «страничные» метаданные типа с главной страницы
+   *                            синтакс-помощника: доступность по видам клиента,
+   *                            версии появления/устаревания с рекомендуемыми
+   *                            заменами, «Замечание», «Пример», «См. также».
+   *                            Источник — {@code Context} bsl-context. Для типов
+   *                            без такой информации (конфигурационные,
+   *                            пользовательские, JSON-паки) —
+   *                            {@link PlatformMetadata#EMPTY}.
    */
   record TypeDecl(
     TypeKind kind,
@@ -92,7 +101,8 @@ public interface TypePackProvider {
     BilingualString forEachDescription,
     BilingualString indexAccessDescription,
     List<String> typeParameters,
-    boolean isEnum
+    boolean isEnum,
+    PlatformMetadata metadata
   ) {
 
     public TypeDecl {
@@ -103,6 +113,21 @@ public interface TypePackProvider {
       if (name == null) {
         name = BilingualString.EMPTY;
       }
+      if (metadata == null) {
+        metadata = PlatformMetadata.EMPTY;
+      }
+    }
+
+    /** Compat-конструктор без {@code metadata} ({@link PlatformMetadata#EMPTY}). */
+    public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
+                    BilingualString description,
+                    List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
+                    boolean supportsForEach, boolean supportsIndexAccess,
+                    BilingualString forEachDescription, BilingualString indexAccessDescription,
+                    List<String> typeParameters, boolean isEnum) {
+      this(kind, name, members, description, constructors, defaultElementTypes,
+        supportsForEach, supportsIndexAccess, forEachDescription, indexAccessDescription,
+        typeParameters, isEnum, PlatformMetadata.EMPTY);
     }
 
     /**

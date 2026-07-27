@@ -821,7 +821,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       }
     }
 
-    serverContext.closeDocument(documentContext);
+    // didClose приходит с потока диспетчеризации LSP4J, на котором workspace-контекст
+    // не установлен, — выставляем его явно (как в didOpen), чтобы workspace-scoped
+    // @EventListener-подписчики ServerContextDocumentClosedEvent корректно резолвились.
+    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(),
+      () -> serverContext.closeDocument(documentContext));
 
     if (!clientSupportsPullDiagnostics) {
       diagnosticProvider.publishEmptyDiagnosticList(documentContext);

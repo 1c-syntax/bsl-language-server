@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * транзитивные зависимости внутри {@code <lib>/oscript_modules/<lib2>} не
  * должны попадать в индекс верхнего workspace: только сам workspace и
  * библиотеки в его собственном {@code oscript_modules/} являются корнями
- * для {@link LibConfigDiscovery}.
+ * для {@link OScriptLibraryRootResolver}.
  */
 @CleanupContextBeforeClassAndAfterClass
 class NestedOscriptModulesSkipTest extends AbstractServerContextAwareTest {
