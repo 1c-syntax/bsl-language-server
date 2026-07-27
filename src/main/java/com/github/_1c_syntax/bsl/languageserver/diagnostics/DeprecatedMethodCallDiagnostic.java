@@ -67,7 +67,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     checkUserDefinedMethods();
 
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
-    // Сбор сайтов обращения к платформенному API — один раз на модуль; все три
+    // Сбор мест обращения к платформенному API — один раз на модуль; все три
     // проверки ниже работают по одному и тому же результату (раньше каждая
     // независимо пересобирала его, удваивая обход AST и резолв членов).
     var callSites = PlatformMemberCalls.collect(documentContext, typeService);

@@ -71,7 +71,7 @@ public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
-    // Оба вида сайтов — за один обход AST.
+    // Оба вида мест — за один обход AST.
     var callSites = PlatformMemberCalls.collect(documentContext, typeService);
     checkMembers(callSites.members(), target);
     checkConstructedTypes(callSites.constructedTypes(), target);

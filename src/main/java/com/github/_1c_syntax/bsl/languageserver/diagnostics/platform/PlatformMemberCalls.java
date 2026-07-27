@@ -38,10 +38,10 @@ import java.util.List;
 /**
  * Резолв обращений к платформенному API в модуле — общая база для диагностик
  * устаревания ({@code DeprecatedMethodCall}) и недоступности-по-версии
- * ({@code UnavailableMemberCall}). Собирает два вида сайтов: члены (вызов
- * метода, обращение к свойству, вызов глобальной функции) и конструируемые
- * типы ({@code Новый Тип(…)}). Версионная применимость (устаревание/
- * недоступность) вынесена в
+ * ({@code UnavailableMemberCall}). Собирает два вида мест в коде: обращения к
+ * членам (вызов метода, обращение к свойству, вызов глобальной функции) и
+ * конструирование типов ({@code Новый Тип(…)}). Версионная применимость
+ * (устаревание/недоступность) вынесена в
  * {@link com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions}.
  * <p>
  * Глобальные функции резолвятся напрямую (без инференса), поэтому собираются
@@ -68,7 +68,7 @@ public final class PlatformMemberCalls {
   }
 
   /**
-   * Сайты обращения к платформенному API одного модуля.
+   * Места обращения к платформенному API в одном модуле.
    *
    * @param members          резолвленные члены (метод, свойство, глобальная функция).
    *                         Для union-типа ресивера возвращаются все кандидаты-владельцы
@@ -79,7 +79,7 @@ public final class PlatformMemberCalls {
   }
 
   /**
-   * Конструируемый тип одного сайта {@code Новый Тип(…)}.
+   * Конструируемый тип в одном выражении {@code Новый Тип(…)}.
    *
    * @param typeRef  резолвленный тип.
    * @param typeName имя типа, как написано в коде (для сообщения диагностики).
@@ -96,8 +96,8 @@ public final class PlatformMemberCalls {
   }
 
   /**
-   * Собирает все сайты обращения к платформенному API модуля за один обход AST
-   * (раньше на каждый вид сайта был свой {@code findAllRuleNodes} — то есть
+   * Собирает все места обращения к платформенному API модуля за один обход AST
+   * (раньше на каждый вид обращения был свой {@code findAllRuleNodes} — то есть
    * отдельный полный обход дерева). Нерезолвленные имена пропускаются.
    */
   public static CallSites collect(DocumentContext documentContext, TypeService typeService) {
@@ -112,7 +112,7 @@ public final class PlatformMemberCalls {
     return new CallSites(members, constructedTypes);
   }
 
-  /** Резолв одного сайта вызова/обращения в зависимости от вида продукции. */
+  /** Резолв одного места вызова/обращения в зависимости от вида продукции. */
   private static void collectSite(ParserRuleContext node, DocumentContext documentContext,
                                   TypeService typeService, List<TypedMember> memberSink,
                                   List<ConstructedType> constructedSink) {
