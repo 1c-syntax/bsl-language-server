@@ -28,6 +28,19 @@ Fix it by raising the target platform version to a supported one, or by using a 
 Ответ = Вопрос("Продолжить?", РежимДиалогаВопрос.ДаНет);
 ```
 
+Construction of a type missing from the target version. The `JSONReader` type is available only since `8.3.6`, while the target platform version is `8.3.5`:
+
+```bsl
+// Triggers: the type is available only since version 8.3.6
+Reader = New JSONReader();
+```
+
+Fix it by raising the target platform version to `8.3.6` or higher, or by solving the task with types available in the target version (there is no built-in JSON type before `8.3.6`, so such data is read as text):
+
+```bsl
+Reader = New TextReader(FileName);
+```
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 

@@ -28,6 +28,19 @@ EndProcedure
 DeprecatedProcedure(); // Triggering diagnostics
 ```
 
+Construction of a deprecated type. The `NSSSecureConnection` type is marked deprecated since `8.3.8` in the syntax assistant, with `OpenSSLSecureConnection` as the recommended replacement:
+
+```bsl
+// Triggers: the type is deprecated since 8.3.8
+Connection = New NSSSecureConnection(ClientCertificate, CertificationAuthorityCertificates);
+```
+
+Fix it by switching to the recommended replacement:
+
+```bsl
+Connection = New OpenSSLSecureConnection(ClientCertificate, CertificationAuthorityCertificates);
+```
+
 ## Sources
 
 * Standart: [Procedures and functions description (RU)](https://its.1c.ru/db/v8std#content:453:hdoc)
