@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785091298319,
+  "lastUpdate": 1785136868315,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40827,6 +40827,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.8599372824130653",
             "extra": "mean: 93.45128909746806 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "066acc7e6191584732d34e9c4287057f401ccf91",
+          "message": "Merge pull request #4280 from 1c-syntax/perf/type-members-per-document-invalidation\n\nperf(types): точечная инвалидация memo членов вместо глобальной эпохи",
+          "timestamp": "2026-07-27T09:07:26+02:00",
+          "tree_id": "80137ba331c27c069cf79608e360039ba9955bbe",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/066acc7e6191584732d34e9c4287057f401ccf91"
+        },
+        "date": 1785136854847,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.05055673917134,
+            "unit": "sec",
+            "range": "stddev: 2.0197000269693324",
+            "extra": "mean: 93.05055673917134 sec\nrounds: 3"
           }
         ]
       }
