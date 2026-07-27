@@ -66,7 +66,7 @@ public class PlatformMetadataRenderer {
    * не пишет.
    */
   public void append(StringBuilder sb, PlatformMetadata md) {
-    if (md == null || md.isEmpty()) {
+    if (md.isEmpty()) {
       return;
     }
     if (!md.deprecatedSinceVersion().isBlank()) {

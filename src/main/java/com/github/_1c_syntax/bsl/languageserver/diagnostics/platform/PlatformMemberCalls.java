@@ -117,19 +117,10 @@ public final class PlatformMemberCalls {
                                   TypeService typeService, List<TypedMember> memberSink,
                                   List<ConstructedType> constructedSink) {
     switch (node) {
-      // Глобальные вызовы — резолв дёшев (без инференса), без pre-filter'а по имени.
-      case BSLParser.GlobalMethodCallContext globalCall -> {
-        var methodName = globalCall.methodName();
-        if (methodName != null) {
-          resolveInto(memberSink, documentContext, typeService, methodName.IDENTIFIER());
-        }
-      }
-      case BSLParser.MethodCallContext methodCall -> {
-        var methodName = methodCall.methodName();
-        if (methodName != null) {
-          resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, memberSink);
-        }
-      }
+      case BSLParser.GlobalMethodCallContext globalCall ->
+        resolveGlobalCall(globalCall, documentContext, typeService, memberSink);
+      case BSLParser.MethodCallContext methodCall ->
+        resolveMethodCall(methodCall, documentContext, typeService, memberSink);
       case BSLParser.AccessPropertyContext accessProperty ->
         resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, memberSink);
       case BSLParser.NewExpressionContext newExpression ->
@@ -137,6 +128,26 @@ public final class PlatformMemberCalls {
       default -> {
         // другие продукции в обход не запрашивались
       }
+    }
+  }
+
+  /** Глобальный вызов: резолв дёшев (без инференса), поэтому без pre-filter'а по имени. */
+  private static void resolveGlobalCall(BSLParser.GlobalMethodCallContext globalCall,
+                                        DocumentContext documentContext, TypeService typeService,
+                                        List<TypedMember> sink) {
+    var methodName = globalCall.methodName();
+    if (methodName != null) {
+      resolveInto(sink, documentContext, typeService, methodName.IDENTIFIER());
+    }
+  }
+
+  /** Вызов метода на ресивере: имя проходит pre-filter, затем точный резолв на типе-владельце. */
+  private static void resolveMethodCall(BSLParser.MethodCallContext methodCall,
+                                        DocumentContext documentContext, TypeService typeService,
+                                        List<TypedMember> sink) {
+    var methodName = methodCall.methodName();
+    if (methodName != null) {
+      resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink);
     }
   }
 
