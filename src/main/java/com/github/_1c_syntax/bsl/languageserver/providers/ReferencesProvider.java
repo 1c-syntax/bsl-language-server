@@ -64,13 +64,6 @@ public class ReferencesProvider {
     var maybeSymbol = referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol);
 
-    // Клиенту возвращаем ссылки только для source-defined символов. У несорсовых целей
-    // (неквалифицированный self-член, точечный платформенный член, ключевое слово,
-    // аннотация) source-объявления нет — ссылки на них не отдаём.
-    if (maybeSymbol.isEmpty()) {
-      return new ArrayList<>();
-    }
-
     List<Location> locations = maybeSymbol.stream()
       .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
