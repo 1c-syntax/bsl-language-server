@@ -42,6 +42,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
@@ -132,8 +133,10 @@ public class TypeInfoTool {
 
       var description = typeService.getDescription(typeRef, effectiveLanguage, fileType);
       var definedAt = typeService.definingUri(typeRef).map(URI::toString).orElse(null);
-      var metadata = ApiMetadataDto.from(
-        typeService.getTypeMetadata(typeRef, fileType), effectiveLanguage);
+      var metadata = Optional.of(typeService.getTypeMetadata(typeRef, fileType))
+        .map(typeMetadata -> ApiMetadataDto.from(typeMetadata, effectiveLanguage))
+        .filter(dto -> !dto.isEmpty())
+        .orElse(null);
       return new Result(
         typeRef.qualifiedName(),
         typeRef.kind().name(),
@@ -143,7 +146,7 @@ public class TypeInfoTool {
         events,
         constructors,
         definedAt,
-        metadata.isEmpty() ? null : metadata
+        metadata
       );
     }
   }
