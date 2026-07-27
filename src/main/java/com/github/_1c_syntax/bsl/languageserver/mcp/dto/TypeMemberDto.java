@@ -48,7 +48,7 @@ public record TypeMemberDto(
   @Nullable String description,
   List<TypeSignatureDto> signatures,
   boolean async,
-  @Nullable TypeMemberMetadataDto metadata
+  @Nullable PlatformMetadataDto metadata
 ) {
 
   public static TypeMemberDto from(MemberDescriptor member, Language language) {
@@ -56,7 +56,7 @@ public record TypeMemberDto(
       ? List.<TypeSignatureDto>of()
       : member.signatures().stream().map(signature -> TypeSignatureDto.from(signature, language)).toList();
     var description = member.displayDescription(language);
-    var metadata = TypeMemberMetadataDto.from(member.metadata(), language);
+    var metadata = PlatformMetadataDto.from(member.metadata(), language);
     return new TypeMemberDto(
       member.displayName(language),
       member.kind().name(),

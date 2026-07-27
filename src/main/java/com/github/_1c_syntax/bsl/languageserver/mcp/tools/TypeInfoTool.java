@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.PlatformMetadataDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeSignatureDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -72,6 +73,9 @@ public class TypeInfoTool {
    * @param constructors Сигнатуры конструкторов ({@code Новый ...}); пустой список, если конструкторов нет.
    * @param definedAt URI исходного файла-объявления (для конфигурационных и пользовательских типов);
    *   {@code null} для платформенных/примитивных типов.
+   * @param metadata Платформенная метаинформация самого типа (доступность по видам клиента,
+   *   версии появления/устаревания, «Замечание», примеры, «См. также»); {@code null},
+   *   если метаинформация отсутствует.
    */
   public record Result(
     String name,
@@ -81,7 +85,8 @@ public class TypeInfoTool {
     List<TypeMemberDto> methods,
     List<TypeMemberDto> events,
     List<TypeSignatureDto> constructors,
-    @Nullable String definedAt
+    @Nullable String definedAt,
+    @Nullable PlatformMetadataDto metadata
   ) {
   }
 
@@ -89,7 +94,8 @@ public class TypeInfoTool {
     name = "type_info",
     description = "Look up a 1C/BSL type by name (e.g. `Массив`/`Array`) and return its properties, "
       + "methods, events and constructors with signatures, parameters, return types and platform "
-      + "metadata (since/deprecated versions, execution contexts, examples, see-also).",
+      + "metadata of both the type itself and its members (since/deprecated versions, execution "
+      + "contexts, notes, examples, see-also).",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
     // (here — nullable description/defaultValue). Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false,
@@ -126,6 +132,8 @@ public class TypeInfoTool {
 
       var description = typeService.getDescription(typeRef, effectiveLanguage, fileType);
       var definedAt = typeService.definingUri(typeRef).map(URI::toString).orElse(null);
+      var metadata = PlatformMetadataDto.from(
+        typeService.getTypeMetadata(typeRef, fileType), effectiveLanguage);
       return new Result(
         typeRef.qualifiedName(),
         typeRef.kind().name(),
@@ -134,7 +142,8 @@ public class TypeInfoTool {
         methods,
         events,
         constructors,
-        definedAt
+        definedAt,
+        metadata.isEmpty() ? null : metadata
       );
     }
   }

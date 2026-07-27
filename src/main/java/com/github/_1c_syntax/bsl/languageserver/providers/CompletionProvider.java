@@ -539,6 +539,18 @@ public final class CompletionProvider {
       || member.getSymbolDescription().isDeprecated();
   }
 
+  /**
+   * Сам тип устарел для целевого режима совместимости — по «страничным»
+   * метаданным типа из синтакс-помощника ({@code Устарело с …}). Тем же
+   * правилом {@code target >= deprecatedSinceVersion}, что и для членов.
+   */
+  private boolean isPlatformClassDeprecated(String className, FileType fileType, CompatibilityMode target) {
+    return typeService.resolve(className, fileType)
+      .map(ref -> typeService.getTypeMetadata(ref, fileType))
+      .map(metadata -> PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target))
+      .orElse(false);
+  }
+
   @Nullable
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
     try {
@@ -593,13 +605,15 @@ public final class CompletionProvider {
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
+      var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
       for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(fileType), scriptVariant, fileType)) {
         if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
           continue;
         }
         if (matches(className, prefix)) {
-          var item = buildPlatformClassCompletionItem(className, fileType, scriptVariant);
-          applySortText(item, BUCKET_TYPE, false);
+          var deprecated = isPlatformClassDeprecated(className, fileType, target);
+          var item = buildPlatformClassCompletionItem(className, fileType, scriptVariant, deprecated);
+          applySortText(item, BUCKET_TYPE, deprecated);
           items.add(item);
         }
       }
@@ -990,11 +1004,18 @@ public final class CompletionProvider {
    * Курсор оставляем между скобок, если у конструктора есть параметры либо
    * перегрузок несколько; для единственного беспараметрового конструктора —
    * после закрытой скобки {@code ()}.
+   *
+   * @param deprecated устарел ли сам тип для целевого режима совместимости
+   *                   (см. {@link #isPlatformClassDeprecated}) — такой пункт
+   *                   помечается зачёркнутым.
    */
   private CompletionItem buildPlatformClassCompletionItem(String className, FileType fileType,
-                                                          Language scriptVariant) {
+                                                          Language scriptVariant, boolean deprecated) {
     var item = new CompletionItem(className);
     item.setKind(CompletionItemKind.Class);
+    if (deprecated) {
+      markDeprecatedItem(item);
+    }
     // Без данных о конструкторе сохраняем поведение с курсором между скобок.
     var ctorHasParameters = true;
     var refOpt = typeService.resolve(className, fileType);

@@ -23,13 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
-import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -41,9 +37,7 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +55,7 @@ public class PlatformMemberHoverBuilder {
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
   private final TypeRegistry typeRegistry;
+  private final PlatformMetadataRenderer metadataRenderer;
 
   private String tr(String key) {
     return resources.getResourceString(getClass(), key);
@@ -197,7 +192,7 @@ public class PlatformMemberHoverBuilder {
         sb.append('\n');
       }
     }
-    appendMetadata(sb, descriptor.metadata());
+    metadataRenderer.append(sb, descriptor.metadata());
     if (chosen != null && !chosen.description().isBlank()) {
       // returnValueDescription уже зашит в общий description выше
     }
@@ -231,94 +226,6 @@ public class PlatformMemberHoverBuilder {
       }
     }
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
-  }
-
-  /**
-   * Отрисовывает блок платформенных метаданных: «доступно с …», «устарело с …»,
-   * рекомендуемые замены, режим доступа, контексты исполнения, описание
-   * возвращаемого значения, «Замечание», примеры, «См. также».
-   * Если метаданные пусты — ничего не пишет.
-   */
-  private void appendMetadata(StringBuilder sb, PlatformMetadata md) {
-    if (md == null || md.isEmpty()) {
-      return;
-    }
-    if (!md.deprecatedSinceVersion().isBlank()) {
-      sb.append("\n\n**").append(tr("deprecatedSince")).append("** ").append(md.deprecatedSinceVersion());
-    }
-    if (!md.sinceVersion().isBlank()) {
-      sb.append("\n\n**").append(tr("sinceVersion")).append("** ").append(md.sinceVersion());
-    }
-    if (!md.recommendedReplacements().isEmpty()) {
-      sb.append("\n\n**").append(tr("recommendedReplacements")).append("** ")
-        .append(md.recommendedReplacements().stream()
-          .map(r -> "`" + r + "`")
-          .collect(Collectors.joining(", ")));
-    }
-    if (md.accessMode() == AccessMode.READ) {
-      sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadOnly"));
-    } else if (md.accessMode() == AccessMode.READ_WRITE) {
-      sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadWrite"));
-    }
-    appendAvailabilities(sb, md.availabilities());
-    var lang = configuration.getLanguage();
-    var rv = md.returnValueDescription().forLanguage(lang);
-    if (!rv.isBlank()) {
-      sb.append("\n\n**").append(tr("returnValueDescription")).append("** ").append(rv);
-    }
-    var nt = md.notes().forLanguage(lang);
-    if (!nt.isBlank()) {
-      sb.append("\n\n**").append(tr("notes")).append("** ").append(nt);
-    }
-    appendBilingualList(sb, tr("example"), md.examples(), true, lang);
-    appendBilingualList(sb, tr("seeAlso"), md.seeAlso(), false, lang);
-  }
-
-  private static void appendBilingualList(StringBuilder sb, String title,
-                                          List<BilingualString> items, boolean asCodeBlock,
-                                          Language lang) {
-    if (items == null || items.isEmpty()) {
-      return;
-    }
-    var resolved = new ArrayList<String>(items.size());
-    for (var bi : items) {
-      var s = bi.forLanguage(lang);
-      if (s != null && !s.isBlank()) {
-        resolved.add(s);
-      }
-    }
-    appendList(sb, title, resolved, asCodeBlock);
-  }
-
-  private void appendAvailabilities(StringBuilder sb, Set<Availability> availabilities) {
-    if (availabilities == null || availabilities.isEmpty()) {
-      return;
-    }
-    sb.append("\n\n**").append(tr("availabilities")).append("** ");
-    sb.append(availabilities.stream()
-      .map(this::displayName)
-      .collect(Collectors.joining(", ")));
-  }
-
-  private String displayName(Availability availability) {
-    return tr("availability." + availability.name());
-  }
-
-  private static void appendList(StringBuilder sb, String title, List<String> items, boolean asCodeBlock) {
-    if (items == null || items.isEmpty()) {
-      return;
-    }
-    sb.append("\n\n**").append(title).append(":**");
-    for (var item : items) {
-      if (item == null || item.isBlank()) {
-        continue;
-      }
-      if (asCodeBlock) {
-        sb.append("\n\n```bsl\n").append(item).append("\n```");
-      } else {
-        sb.append("\n- ").append(item);
-      }
-    }
   }
 
   /**

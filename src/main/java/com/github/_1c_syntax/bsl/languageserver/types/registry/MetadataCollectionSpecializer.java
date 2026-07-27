@@ -750,7 +750,7 @@ public class MetadataCollectionSpecializer {
       var newSignatures = new ArrayList<SignatureDescriptor>(rebuiltSignatures.size());
       for (var sig : rebuiltSignatures) {
         newSignatures.add(new SignatureDescriptor(sig.parameters(), elementTypeSet,
-          sig.bilingualDescription()));
+          sig.bilingualDescription(), sig.metadata()));
       }
       rebuiltSignatures = newSignatures;
     }

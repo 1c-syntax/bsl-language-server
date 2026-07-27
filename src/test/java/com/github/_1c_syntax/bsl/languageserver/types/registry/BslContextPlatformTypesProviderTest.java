@@ -47,6 +47,7 @@ import com.github._1c_syntax.bsl.context.platform.internal.PlatformContextStorag
 import com.github._1c_syntax.bsl.context.platform.primitive.PrimitivePlaceholderType;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import org.junit.jupiter.api.Test;
@@ -748,5 +749,170 @@ class BslContextPlatformTypesProviderTest {
     assertThat(decl.supportsIndexAccess()).isTrue();
     assertThat(decl.forEachDescription().ru()).isEqualTo("Обход выбирает строки таблицы.");
     assertThat(decl.indexAccessDescription().ru()).isEqualTo("Индексатор — индекс строки с 0.");
+  }
+
+  // --- страничные метаданные типа, свойства, события и конструктора ---
+
+  @Test
+  void propertyNotesAndSeeAlsoPropagated() {
+    var stringType = primitive("Строка", "String");
+    var property = PlatformContextProperty.builder()
+      .name(new ContextName("Заголовок", "Title"))
+      .rawTypes(List.of("Строка"))
+      .description("Заголовок окна.")
+      .availabilities(List.of())
+      .notes("Не действует в мобильном клиенте.")
+      .seeAlso(List.of("ФормаКлиентскогоПриложения.Заголовок"))
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(new ArrayList<>(List.of(property)))
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(type, stringType)))
+      .getTypes().stream()
+      .filter(t -> "Объект".equals(t.qualifiedName()))
+      .findFirst().orElseThrow();
+
+    var metadata = decl.members().iterator().next().metadata();
+    assertThat(metadata.notes().ru()).isEqualTo("Не действует в мобильном клиенте.");
+    assertThat(metadata.seeAlso()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("ФормаКлиентскогоПриложения.Заголовок");
+  }
+
+  @Test
+  void eventNotesExamplesAndSeeAlsoPropagated() {
+    var event = PlatformContextEvent.builder()
+      .name(new ContextName("ПриОткрытии", "OnOpen"))
+      .signatures(Collections.emptyList())
+      .description("Возникает при открытии формы.")
+      .availabilities(List.of(com.github._1c_syntax.bsl.context.api.Availability.THIN_CLIENT))
+      .notes("Не вызывается при повторном открытии.")
+      .examples(List.of("Процедура ПриОткрытии(Отказ)"))
+      .seeAlso(List.of("ФормаКлиентскогоПриложения.ПередЗакрытием"))
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("ФормаКлиентскогоПриложения", "ClientApplicationForm"))
+      .properties(Collections.emptyList())
+      .methods(Collections.emptyList())
+      .events(new ArrayList<>(List.of(event)))
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(type)))
+      .getTypes().iterator().next();
+
+    var member = decl.members().iterator().next();
+    assertThat(member.kind()).isEqualTo(MemberKind.EVENT);
+    var metadata = member.metadata();
+    assertThat(metadata.notes().ru()).isEqualTo("Не вызывается при повторном открытии.");
+    assertThat(metadata.examples()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("Процедура ПриОткрытии(Отказ)");
+    assertThat(metadata.seeAlso()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("ФормаКлиентскогоПриложения.ПередЗакрытием");
+    assertThat(metadata.availabilities()).containsExactly(Availability.THIN_CLIENT);
+  }
+
+  @Test
+  void constructorMetadataPropagated() {
+    var ctor = PlatformContextConstructor.builder()
+      .name(new ContextName("По умолчанию", "Default"))
+      .description("Создаёт объект.")
+      .parameters(Collections.emptyList())
+      .sinceVersion("8.3.10")
+      .deprecatedSinceVersion("8.3.27")
+      .recommendedReplacements(List.of("НовыйОбъект"))
+      .examples(List.of("Объект = Новый Объект();"))
+      .seeAlso(List.of("Объект.Метод"))
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(Collections.emptyList())
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(new ArrayList<>(List.of((ContextConstructor) ctor)))
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(type)))
+      .getTypes().iterator().next();
+
+    var metadata = decl.constructors().get(0).metadata();
+    assertThat(metadata.sinceVersion()).isEqualTo("8.3.10");
+    assertThat(metadata.deprecatedSinceVersion()).isEqualTo("8.3.27");
+    assertThat(metadata.recommendedReplacements()).containsExactly("НовыйОбъект");
+    assertThat(metadata.examples()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("Объект = Новый Объект();");
+    assertThat(metadata.seeAlso()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("Объект.Метод");
+  }
+
+  @Test
+  void typePageMetadataPropagated() {
+    var type = PlatformContextType.builder()
+      .name(new ContextName("ТабличноеПоле", "TableBox"))
+      .properties(Collections.emptyList())
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("Элемент обычной формы.")
+      .notes("Недоступен в управляемых формах.")
+      .availabilities(List.of(com.github._1c_syntax.bsl.context.api.Availability.THICK_CLIENT))
+      .sinceVersion("8.0")
+      .deprecatedSinceVersion("8.2")
+      .recommendedReplacements(List.of("ТаблицаФормы"))
+      .examples(List.of("Поле = Элементы.Таблица;"))
+      .seeAlso(List.of("ТаблицаФормы"))
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(type)))
+      .getTypes().iterator().next();
+
+    var metadata = decl.metadata();
+    assertThat(metadata.sinceVersion()).isEqualTo("8.0");
+    assertThat(metadata.deprecatedSinceVersion()).isEqualTo("8.2");
+    assertThat(metadata.recommendedReplacements()).containsExactly("ТаблицаФормы");
+    assertThat(metadata.availabilities()).containsExactly(Availability.THICK_CLIENT);
+    assertThat(metadata.notes().ru()).isEqualTo("Недоступен в управляемых формах.");
+    assertThat(metadata.examples()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("Поле = Элементы.Таблица;");
+    assertThat(metadata.seeAlso()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("ТаблицаФормы");
+    // accessMode и returnValueDescription для типа не имеют смысла.
+    assertThat(metadata.accessMode()).isNull();
+    assertThat(metadata.returnValueDescription().isEmpty()).isTrue();
+  }
+
+  @Test
+  void enumDescriptionAndMetadataPropagated() {
+    var enumeration = PlatformContextEnum.builder()
+      .name(new ContextName("ВидГраницы", "BorderType"))
+      .values(Collections.emptyList())
+      .description("Описывает виды границ ячейки.")
+      .notes("Используется в табличном документе.")
+      .sinceVersion("8.1")
+      .availabilities(List.of(com.github._1c_syntax.bsl.context.api.Availability.SERVER))
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(enumeration)))
+      .getTypes().iterator().next();
+
+    assertThat(decl.isEnum()).isTrue();
+    assertThat(decl.description().ru()).isEqualTo("Описывает виды границ ячейки.");
+    assertThat(decl.metadata().notes().ru()).isEqualTo("Используется в табличном документе.");
+    assertThat(decl.metadata().sinceVersion()).isEqualTo("8.1");
+    assertThat(decl.metadata().availabilities()).containsExactly(Availability.SERVER);
   }
 }

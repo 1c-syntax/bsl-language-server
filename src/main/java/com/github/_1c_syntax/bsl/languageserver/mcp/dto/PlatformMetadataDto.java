@@ -31,9 +31,11 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Платформенная метаинформация члена типа: контексты исполнения, версионная
- * совместимость, тексты разделов «Возвращаемое значение», «Замечание», «Примеры»,
- * «См. также» из HBK.
+ * Платформенная метаинформация из синтакс-помощника: контексты исполнения,
+ * версионная совместимость, тексты разделов «Возвращаемое значение»,
+ * «Замечание», «Примеры», «См. также» из HBK. Описывает как член типа, так и
+ * сам тип или его конструктор — набор заполненных полей зависит от источника
+ * (у типа нет режима доступа, у конструктора — описания возвращаемого значения).
  *
  * @param sinceVersion Версия платформы, начиная с которой член доступен; {@code null}, если не задано.
  * @param deprecatedSinceVersion Версия, начиная с которой устарел; {@code null}, если не задано.
@@ -45,7 +47,7 @@ import java.util.List;
  * @param examples Примеры использования.
  * @param seeAlso «См. также» — связанные сущности.
  */
-public record TypeMemberMetadataDto(
+public record PlatformMetadataDto(
   @Nullable String sinceVersion,
   @Nullable String deprecatedSinceVersion,
   List<String> recommendedReplacements,
@@ -58,12 +60,12 @@ public record TypeMemberMetadataDto(
 ) {
 
   /** Пустая метаинформация — все поля {@code null} или пустые списки. */
-  public static final TypeMemberMetadataDto EMPTY = new TypeMemberMetadataDto(
+  public static final PlatformMetadataDto EMPTY = new PlatformMetadataDto(
     null, null, List.of(), List.of(), null, null, null, List.of(), List.of()
   );
 
-  public static TypeMemberMetadataDto from(PlatformMetadata metadata, Language language) {
-    return new TypeMemberMetadataDto(
+  public static PlatformMetadataDto from(PlatformMetadata metadata, Language language) {
+    return new PlatformMetadataDto(
       nullIfBlank(metadata.sinceVersion()),
       nullIfBlank(metadata.deprecatedSinceVersion()),
       List.copyOf(metadata.recommendedReplacements()),

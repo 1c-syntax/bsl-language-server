@@ -31,11 +31,18 @@ import java.util.List;
  * @param parameters           упорядоченный список параметров
  * @param returnTypes          union возвращаемых типов
  * @param bilingualDescription краткое описание варианта (ru + en)
+ * @param metadata             платформенные метаданные варианта. Заполнены у
+ *                             конструкторов платформенных типов (у них своя
+ *                             страница в синтакс-помощнике с версиями,
+ *                             примерами и «См. также»); у сигнатур методов —
+ *                             {@link PlatformMetadata#EMPTY}, их метаданные
+ *                             живут на самом {@link MemberDescriptor}
  */
 public record SignatureDescriptor(
   List<ParameterDescriptor> parameters,
   TypeSet returnTypes,
-  BilingualString bilingualDescription
+  BilingualString bilingualDescription,
+  PlatformMetadata metadata
 ) {
 
   public static final SignatureDescriptor EMPTY = new SignatureDescriptor(
@@ -49,6 +56,15 @@ public record SignatureDescriptor(
     if (bilingualDescription == null) {
       bilingualDescription = BilingualString.EMPTY;
     }
+    if (metadata == null) {
+      metadata = PlatformMetadata.EMPTY;
+    }
+  }
+
+  /** Compat-конструктор без {@code metadata} ({@link PlatformMetadata#EMPTY}). */
+  public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet returnTypes,
+                             BilingualString bilingualDescription) {
+    this(parameters, returnTypes, bilingualDescription, PlatformMetadata.EMPTY);
   }
 
   /** Compat-конструктор: одноязычное {@code description} строкой. */
@@ -83,6 +99,14 @@ public record SignatureDescriptor(
 
   public static SignatureDescriptor of(List<ParameterDescriptor> parameters) {
     return new SignatureDescriptor(parameters, TypeSet.EMPTY, BilingualString.EMPTY);
+  }
+
+  /** Копия сигнатуры с заменёнными платформенными метаданными. */
+  public SignatureDescriptor withMetadata(PlatformMetadata newMetadata) {
+    if (metadata.equals(newMetadata)) {
+      return this;
+    }
+    return new SignatureDescriptor(parameters, returnTypes, bilingualDescription, newMetadata);
   }
 
   private static TypeSet wrapSingle(TypeRef ref) {

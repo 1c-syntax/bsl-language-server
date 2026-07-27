@@ -25,8 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -42,6 +44,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -70,12 +73,16 @@ class ConstructorHoverBuilderTest {
   @BeforeEach
   void setUp() {
     builder = new ConstructorHoverBuilder(
-      typeService, collectionHoverHints, resources, configuration);
+      typeService, collectionHoverHints, resources, configuration,
+      new PlatformMetadataRenderer(resources, configuration));
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
     when(typeService.getDescription(any(TypeRef.class), any(Language.class), any(FileType.class))).thenReturn("");
-    when(resources.getResourceString(eq(ConstructorHoverBuilder.class), any(String.class)))
+    when(typeService.getTypeMetadata(any(TypeRef.class), any(FileType.class)))
+      .thenReturn(PlatformMetadata.EMPTY);
+    // Стаб покрывает и сам билдер, и вынесенный PlatformMetadataRenderer.
+    when(resources.getResourceString(any(Class.class), any(String.class)))
       .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
   }
 
@@ -203,5 +210,51 @@ class ConstructorHoverBuilderTest {
 
     // then
     assertThat(content.getValue()).contains("CustomName");
+  }
+
+  @Test
+  void buildRendersTypePageMetadata() {
+    // given — «страничные» метаданные самого типа из синтакс-помощника.
+    when(typeService.getTypeMetadata(eq(STRUCTURE), any(FileType.class))).thenReturn(
+      new PlatformMetadata(
+        "8.0", "8.2", List.of("ТаблицаФормы"),
+        Set.of(Availability.THICK_CLIENT), null,
+        BilingualString.EMPTY, BilingualString.of("замечание типа"),
+        List.of(BilingualString.of("Пример типа")),
+        List.of(BilingualString.of("См.ТаблицаФормы"))));
+
+    // when
+    var content = builder.build("Структура", STRUCTURE, null, List.of(), false, "", FileType.BSL);
+
+    // then
+    var value = content.getValue();
+    assertThat(value)
+      .contains("[sinceVersion]").contains("8.0")
+      .contains("[deprecatedSince]").contains("8.2")
+      .contains("[recommendedReplacements]").contains("`ТаблицаФормы`")
+      .contains("[availabilities]").contains("[availability.THICK_CLIENT]")
+      .contains("[notes]").contains("замечание типа")
+      .contains("Пример типа")
+      .contains("См.ТаблицаФормы");
+  }
+
+  @Test
+  void buildRendersConstructorMetadata() {
+    // given — у самого конструктора своя страница СП: версии, примеры, «См. также».
+    var ctorMetadata = new PlatformMetadata(
+      "8.3.10", "", List.of(),
+      Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY,
+      List.of(BilingualString.of("Стр = Новый Структура();")),
+      List.of());
+    var sig = new SignatureDescriptor(List.of(), TypeSet.EMPTY, BilingualString.EMPTY, ctorMetadata);
+
+    // when
+    var content = builder.build("Структура", STRUCTURE, sig, List.of(sig), false, "", FileType.BSL);
+
+    // then
+    assertThat(content.getValue())
+      .contains("[sinceVersion]").contains("8.3.10")
+      .contains("Стр = Новый Структура();");
   }
 }

@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,6 +76,39 @@ class TypeDeclTest {
     assertThat(decl.forEachDescription()).isSameAs(BilingualString.EMPTY);
     assertThat(decl.indexAccessDescription()).isSameAs(BilingualString.EMPTY);
     assertThat(decl.typeParameters()).isEmpty();
+    assertThat(decl.metadata()).isSameAs(PlatformMetadata.EMPTY);
+  }
+
+  @Test
+  void compatCtorWithoutMetadataFallsBackToEmpty() {
+    // given / when — компат-конструктор без metadata (JSON-паки, конфигурационные типы).
+    var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM,
+      BilingualString.of("T"), List.of(),
+      BilingualString.of("описание"), List.of(), List.of(), false, false,
+      BilingualString.EMPTY, BilingualString.EMPTY, List.of(), false);
+
+    // then
+    assertThat(decl.metadata()).isSameAs(PlatformMetadata.EMPTY);
+  }
+
+  @Test
+  void canonicalCtorKeepsPageMetadata() {
+    // given
+    var metadata = new PlatformMetadata(
+      "8.3.10", "8.3.27", List.of("ЗаменаX"),
+      Set.of(Availability.SERVER), null,
+      BilingualString.EMPTY, BilingualString.of("замечание"),
+      List.of(BilingualString.of("пример")), List.of(BilingualString.of("см.")));
+
+    // when
+    var decl = new TypePackProvider.TypeDecl(TypeKind.PLATFORM,
+      BilingualString.of("ТабличноеПоле"), List.of(),
+      BilingualString.EMPTY, List.of(), List.of(), false, false,
+      BilingualString.EMPTY, BilingualString.EMPTY, List.of(), false, metadata);
+
+    // then
+    assertThat(decl.metadata()).isEqualTo(metadata);
+    assertThat(decl.metadata().deprecatedSinceVersion()).isEqualTo("8.3.27");
   }
 
   @Test
