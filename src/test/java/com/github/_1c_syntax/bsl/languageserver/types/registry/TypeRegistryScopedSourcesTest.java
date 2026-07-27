@@ -118,6 +118,25 @@ class TypeRegistryScopedSourcesTest {
   }
 
   @Test
+  void compactStorageKeepsSourceOrderAcrossAppendAndPrepend() {
+    // given — тип проходит все переходы компактного хранения: одиночка → массив (append)
+    // → массив с вставкой в начало (prepend). Каждый источник даёт свой член,
+    // порядок обхода источников должен сохраниться.
+    var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйКомпактныйПорядок");
+    typeRegistry.registerMemberSource(ref,
+      () -> List.of(MemberDescriptor.property("первый", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(ref,
+      () -> List.of(MemberDescriptor.property("второй", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberOverride(ref,
+      () -> List.of(MemberDescriptor.property("вставленный", TypeRef.UNKNOWN, "")), FileType.BSL);
+
+    // then — override встал в начало, исходные источники сохранили относительный порядок
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL))
+      .extracting(MemberDescriptor::name)
+      .containsExactly("вставленный", "первый", "второй");
+  }
+
+  @Test
   void invalidateMembersEvictsOnlyGivenType() {
     // given — два типа с изменяемыми источниками членов, оба прочитаны и мемоизированы
     var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйТочечныйA");

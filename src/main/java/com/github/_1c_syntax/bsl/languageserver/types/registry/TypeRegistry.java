@@ -52,6 +52,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -113,8 +114,17 @@ public class TypeRegistry {
   /**
    * Источники членов типов в разрезе языка (один тип может расширяться многими
    * источниками; порядок значим — {@link #registerMemberOverride} вставляет в начало).
+   * <p>
+   * Значение хранится компактно: для типа с единственным источником (доминирующий
+   * случай — на реальной конфигурации из ~671k типов ~561k имеют ровно один источник)
+   * — сам {@link MemberSource} без обёртки-списка; для типа с несколькими источниками
+   * — неизменяемый {@code MemberSource[]}. Массив/одиночка вместо
+   * {@code CopyOnWriteArrayList} на каждый тип убирает три служебных объекта на запись
+   * (список, его lock и backing-массив). Обновления атомарны по ключу через
+   * {@link ConcurrentHashMap#merge}; опубликованное значение неизменяемо, поэтому
+   * читатели ({@link #resolveMemberSources}) видят согласованный снимок без блокировки.
    */
-  private final Map<FileType, Map<TypeRef, List<MemberSource>>> memberSources = perFileType();
+  private final Map<FileType, Map<TypeRef, Object>> memberSources = perFileType();
 
   /**
    * Мемоизация {@link #getMembers(TypeRef, FileType)}. Сборка членов
@@ -583,13 +593,55 @@ public class TypeRegistry {
   private List<MemberSource> resolveMemberSources(TypeRef ref, FileType fileType) {
     var byRef = memberSources.get(fileType);
     var sources = byRef.get(ref);
-    if (sources == null || sources.isEmpty()) {
+    if (sources == null) {
       var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
       if (canonical != null && !canonical.equals(ref)) {
         sources = byRef.get(canonical);
       }
     }
-    return sources == null ? List.of() : sources;
+    return asSourceList(sources);
+  }
+
+  /**
+   * Разложить компактное значение {@link #memberSources} в список источников:
+   * {@code null} → пусто, одиночный {@link MemberSource} → список из одного,
+   * {@code MemberSource[]} → неизменяемый список-обёртка. Пустого значения не бывает —
+   * {@link #appendSource}/{@link #prependSource} всегда дают ≥1 элемент, а единственное
+   * удаление ({@code memberSources...remove(ref)}) снимает ключ целиком.
+   */
+  private static List<MemberSource> asSourceList(@Nullable Object value) {
+    if (value == null) {
+      return List.of();
+    }
+    if (value instanceof MemberSource single) {
+      return List.of(single);
+    }
+    return List.of((MemberSource[]) value);
+  }
+
+  /** Дописать источник в конец компактного значения (одиночка → массив). */
+  private static Object appendSource(Object current, Object added) {
+    var add = (MemberSource) added;
+    if (current instanceof MemberSource single) {
+      return new MemberSource[]{single, add};
+    }
+    var array = (MemberSource[]) current;
+    var updated = Arrays.copyOf(array, array.length + 1);
+    updated[array.length] = add;
+    return updated;
+  }
+
+  /** Вставить источник в начало компактного значения (override выигрывает dedup по имени). */
+  private static Object prependSource(Object current, Object added) {
+    var add = (MemberSource) added;
+    if (current instanceof MemberSource single) {
+      return new MemberSource[]{add, single};
+    }
+    var array = (MemberSource[]) current;
+    var updated = new MemberSource[array.length + 1];
+    updated[0] = add;
+    System.arraycopy(array, 0, updated, 1, array.length);
+    return updated;
   }
 
   /**
@@ -621,8 +673,7 @@ public class TypeRegistry {
    * @param fileType язык файла, в котором члены источника видимы.
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
-    memberSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
-      .add(source);
+    memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
     membersEpoch.incrementAndGet();
   }
 
@@ -637,8 +688,7 @@ public class TypeRegistry {
    * в реестре — другие members (Справочники, Перечисления, …) приходят оттуда.
    */
   public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
-    memberSources.get(fileType).computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
-      .addFirst(source);
+    memberSources.get(fileType).merge(ref, source, TypeRegistry::prependSource);
     membersEpoch.incrementAndGet();
   }
 
