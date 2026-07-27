@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785136868315,
+  "lastUpdate": 1785148351182,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40858,6 +40858,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.0197000269693324",
             "extra": "mean: 93.05055673917134 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c3252918774f2d63a953fbd7e2808d1fa24c8fac",
+          "message": "Merge pull request #4304 from 1c-syntax/feat/bsl-context-0.9.0\n\nfeat(types): метаданные синтакс-помощника из bsl-context 0.9.2 — типы, конструкторы, свойства, события",
+          "timestamp": "2026-07-27T11:49:55+02:00",
+          "tree_id": "76f3022782612fa3cf12b2c965272f877d8efd22",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c3252918774f2d63a953fbd7e2808d1fa24c8fac"
+        },
+        "date": 1785148341519,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.89254728953044,
+            "unit": "sec",
+            "range": "stddev: 2.146313217641647",
+            "extra": "mean: 92.89254728953044 sec\nrounds: 3"
           }
         ]
       }
