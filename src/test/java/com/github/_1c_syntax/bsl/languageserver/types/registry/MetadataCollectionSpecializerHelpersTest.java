@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.context.api.ContextName;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -548,6 +549,27 @@ class MetadataCollectionSpecializerHelpersTest {
     assertThat(result.signatures()).hasSize(1);
     assertThat(result.signatures().get(0).returnType().qualifiedName())
       .isEqualTo("ОбъектМетаданных: Документ");
+  }
+
+  @Test
+  void withElementReturnType_keepsSignatureMetadata() {
+    // Специализация подменяет только тип возврата: платформенные метаданные
+    // сигнатуры (версии, примеры, «См. также») должны пережить пересборку.
+    var metadata = new PlatformMetadata(
+      "8.3.10", "", java.util.List.of(), java.util.Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY,
+      java.util.List.of(BilingualString.of("Пример")), java.util.List.of());
+    var signature = new SignatureDescriptor(
+      java.util.List.of(),
+      TypeSet.of(new TypeRef(TypeKind.PLATFORM, "Произвольный")),
+      BilingualString.EMPTY,
+      metadata);
+    var template = MemberDescriptor.method("Получить", java.util.List.of(signature));
+
+    var result = MetadataCollectionSpecializer.withElementReturnType(template,
+      TypeSet.of(new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Документ")));
+
+    assertThat(result.signatures().get(0).metadata()).isEqualTo(metadata);
   }
 
   // === isElementReturningMethod ===
