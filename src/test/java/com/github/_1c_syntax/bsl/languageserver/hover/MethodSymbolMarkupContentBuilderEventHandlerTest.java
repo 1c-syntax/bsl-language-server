@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -45,6 +46,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,6 +101,39 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
       .contains("Обработчик события платформы")
       .contains("ПриЗаписи")
       .contains("Возникает при записи объекта.");
+  }
+
+  @Test
+  void hoverIncludesEventPlatformMetadata() {
+    // given — контракт события с непустыми метаданными синтакс-помощника (замечание + пример),
+    // как их приносит bsl-context после #4304
+    var metadata = new PlatformMetadata(
+      "", "", List.of(), Set.of(), null,
+      "", "Срабатывает перед сохранением объекта в информационную базу.",
+      List.of("Отказ = Истина;"), List.of()
+    );
+    var contract = MemberDescriptor.event(
+      "ПриЗаписи",
+      "Возникает при записи объекта.",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, ""))
+    ).withMetadata(metadata);
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписи").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    // then — блок метаданных события (замечание/пример) виден в hover обработчика
+    assertThat(content)
+      .contains("Срабатывает перед сохранением объекта в информационную базу.")
+      .contains("Отказ = Истина;");
   }
 
   @Test

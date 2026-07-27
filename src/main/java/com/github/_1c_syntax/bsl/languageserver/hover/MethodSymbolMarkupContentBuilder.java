@@ -42,6 +42,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final DescriptionFormatter descriptionFormatter;
   private final EventContractsIndex eventContractsIndex;
+  private final PlatformMetadataRenderer metadataRenderer;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -104,6 +105,15 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // варианты вызова
     var callOptionsSection = descriptionFormatter.getCallOptionsSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
+
+    // метаданные платформенного события (замечание, пример, «см. также», доступность/версии)
+    // из дескриптора контракта — так же, как их рисуют PlatformMemberHoverBuilder и
+    // ConstructorHoverBuilder для платформенных членов и конструкторов. Только у обработчика.
+    if (isEventHandler) {
+      var eventMetadata = new StringBuilder();
+      metadataRenderer.append(eventMetadata, eventContract.get().metadata());
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventMetadata.toString().strip());
+    }
 
     var content = markupBuilder.toString();
 
