@@ -485,8 +485,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   /**
    * Извлекает платформенные метаданные из {@link ContextProperty} с учётом
-   * en-аттачментов. Блока «Пример:» у свойств в синтакс-помощнике нет —
-   * {@code examples} всегда пуст.
+   * en-аттачментов. Блок «Пример:» у свойств редок, но встречается.
    */
   private static PlatformMetadata metadataOf(ContextProperty property,
                                              Function<Object, EnAttachments> enLookup) {
@@ -499,7 +498,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       BslContextEnumMapping.mapAccessMode(property.accessMode()),
       BilingualString.EMPTY,
       BilingualString.of(safe(property.notes()), safe(en.notes())),
-      List.of(),
+      zipBilingual(property.examples(), en.examples()),
       zipBilingual(property.seeAlso(), en.seeAlso())
     );
   }

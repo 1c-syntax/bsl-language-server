@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypePackProvider.TypeDecl;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -104,6 +105,32 @@ class PlatformTypeMetadataHbkTest {
     assertThat(members)
       .filteredOn(member -> !member.metadata().notes().isEmpty())
       .as("«Замечание:» у свойств и методов")
+      .isNotEmpty();
+    // Блок кода на странице события/свойства оформлен таблицей без маркера
+    // «Пример:» — до bsl-context 0.9.2 он терялся.
+    assertThat(members)
+      .filteredOn(member -> member.kind() == MemberKind.EVENT && !member.metadata().examples().isEmpty())
+      .as("«Пример:» у событий")
+      .isNotEmpty();
+    assertThat(members)
+      .filteredOn(member -> member.kind() == MemberKind.PROPERTY && !member.metadata().examples().isEmpty())
+      .as("«Пример:» у свойств")
+      .isNotEmpty();
+  }
+
+  @Test
+  void enumValueDescriptionsAreBilingual() {
+    // Значения системных перечислений — не члены ContextType, поэтому их
+    // en-описания мержатся отдельной веткой bilingual-merger'а.
+    var enumValues = provider.getTypes().stream()
+      .filter(TypeDecl::isEnum)
+      .flatMap(type -> type.members().stream())
+      .toList();
+
+    assertThat(enumValues).isNotEmpty();
+    assertThat(enumValues)
+      .filteredOn(value -> !value.displayDescription(Language.EN).isBlank())
+      .as("описания значений перечислений в en-локали")
       .isNotEmpty();
   }
 

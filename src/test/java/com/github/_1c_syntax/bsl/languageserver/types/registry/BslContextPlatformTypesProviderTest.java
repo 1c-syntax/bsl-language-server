@@ -754,7 +754,7 @@ class BslContextPlatformTypesProviderTest {
   // --- страничные метаданные типа, свойства, события и конструктора ---
 
   @Test
-  void propertyNotesAndSeeAlsoPropagated() {
+  void propertyNotesExamplesAndSeeAlsoPropagated() {
     var stringType = primitive("Строка", "String");
     var property = PlatformContextProperty.builder()
       .name(new ContextName("Заголовок", "Title"))
@@ -762,6 +762,7 @@ class BslContextPlatformTypesProviderTest {
       .description("Заголовок окна.")
       .availabilities(List.of())
       .notes("Не действует в мобильном клиенте.")
+      .examples(List.of("ЭтаФорма.Заголовок = \"Отчёт\";"))
       .seeAlso(List.of("ФормаКлиентскогоПриложения.Заголовок"))
       .build();
     var type = PlatformContextType.builder()
@@ -780,6 +781,9 @@ class BslContextPlatformTypesProviderTest {
 
     var metadata = decl.members().iterator().next().metadata();
     assertThat(metadata.notes().ru()).isEqualTo("Не действует в мобильном клиенте.");
+    assertThat(metadata.examples()).singleElement()
+      .extracting(BilingualString::ru)
+      .isEqualTo("ЭтаФорма.Заголовок = \"Отчёт\";");
     assertThat(metadata.seeAlso()).singleElement()
       .extracting(BilingualString::ru)
       .isEqualTo("ФормаКлиентскогоПриложения.Заголовок");
