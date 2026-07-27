@@ -116,21 +116,27 @@ public final class PlatformMemberCalls {
   private static void collectSite(ParserRuleContext node, DocumentContext documentContext,
                                   TypeService typeService, List<TypedMember> memberSink,
                                   List<ConstructedType> constructedSink) {
-    if (node instanceof BSLParser.GlobalMethodCallContext globalCall) {
+    switch (node) {
       // Глобальные вызовы — резолв дёшев (без инференса), без pre-filter'а по имени.
-      var methodName = globalCall.methodName();
-      if (methodName != null) {
-        resolveInto(memberSink, documentContext, typeService, methodName.IDENTIFIER());
+      case BSLParser.GlobalMethodCallContext globalCall -> {
+        var methodName = globalCall.methodName();
+        if (methodName != null) {
+          resolveInto(memberSink, documentContext, typeService, methodName.IDENTIFIER());
+        }
       }
-    } else if (node instanceof BSLParser.MethodCallContext methodCall) {
-      var methodName = methodCall.methodName();
-      if (methodName != null) {
-        resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, memberSink);
+      case BSLParser.MethodCallContext methodCall -> {
+        var methodName = methodCall.methodName();
+        if (methodName != null) {
+          resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, memberSink);
+        }
       }
-    } else if (node instanceof BSLParser.AccessPropertyContext accessProperty) {
-      resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, memberSink);
-    } else if (node instanceof BSLParser.NewExpressionContext newExpression) {
-      resolveConstructedType(newExpression, documentContext, typeService, constructedSink);
+      case BSLParser.AccessPropertyContext accessProperty ->
+        resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, memberSink);
+      case BSLParser.NewExpressionContext newExpression ->
+        resolveConstructedType(newExpression, documentContext, typeService, constructedSink);
+      default -> {
+        // другие продукции в обход не запрашивались
+      }
     }
   }
 

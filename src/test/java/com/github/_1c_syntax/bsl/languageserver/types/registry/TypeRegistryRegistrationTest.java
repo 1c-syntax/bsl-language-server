@@ -249,13 +249,11 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
-  void registerTypeMetadataIgnoresBlankInput() {
+  void registerTypeMetadataIgnoresEmptyMetadata() {
     // given
     var ref = typeRegistry.registerUserType("ТМета2", declaration, FileType.BSL);
 
-    // when
-    typeRegistry.registerTypeMetadata(null, PlatformMetadata.EMPTY, FileType.BSL);
-    typeRegistry.registerTypeMetadata(ref, null, FileType.BSL);
+    // when — пустые метаданные не занимают место в индексе
     typeRegistry.registerTypeMetadata(ref, PlatformMetadata.EMPTY, FileType.BSL);
 
     // then

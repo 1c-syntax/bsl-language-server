@@ -50,7 +50,7 @@ public record TypeSignatureDto(
     return new TypeSignatureDto(
       signature.parameters().stream().map(parameter -> TypeParameterDto.from(parameter, language)).toList(),
       signature.returnTypes().refs().stream().map(TypeRef::qualifiedName).sorted().toList(),
-      description == null || description.isBlank() ? null : description,
+      description.isBlank() ? null : description,
       metadata.isEmpty() ? null : metadata
     );
   }

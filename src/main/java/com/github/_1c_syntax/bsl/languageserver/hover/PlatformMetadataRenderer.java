@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -50,6 +51,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PlatformMetadataRenderer {
 
+  /** Начало markdown-секции блока: пустая строка + жирный заголовок. */
+  private static final String SECTION_PREFIX = "\n\n**";
+
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
 
@@ -66,46 +70,52 @@ public class PlatformMetadataRenderer {
       return;
     }
     if (!md.deprecatedSinceVersion().isBlank()) {
-      sb.append("\n\n**").append(tr("deprecatedSince")).append("** ").append(md.deprecatedSinceVersion());
+      sb.append(SECTION_PREFIX).append(tr("deprecatedSince")).append("** ")
+        .append(md.deprecatedSinceVersion());
     }
     if (!md.sinceVersion().isBlank()) {
-      sb.append("\n\n**").append(tr("sinceVersion")).append("** ").append(md.sinceVersion());
+      sb.append(SECTION_PREFIX).append(tr("sinceVersion")).append("** ").append(md.sinceVersion());
     }
     if (!md.recommendedReplacements().isEmpty()) {
-      sb.append("\n\n**").append(tr("recommendedReplacements")).append("** ")
+      sb.append(SECTION_PREFIX).append(tr("recommendedReplacements")).append("** ")
         .append(md.recommendedReplacements().stream()
           .map(r -> "`" + r + "`")
           .collect(Collectors.joining(", ")));
     }
-    if (md.accessMode() == AccessMode.READ) {
-      sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadOnly"));
-    } else if (md.accessMode() == AccessMode.READ_WRITE) {
-      sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadWrite"));
-    }
+    appendAccessMode(sb, md.accessMode());
     appendAvailabilities(sb, md.availabilities());
     var lang = configuration.getLanguage();
     var rv = md.returnValueDescription().forLanguage(lang);
     if (!rv.isBlank()) {
-      sb.append("\n\n**").append(tr("returnValueDescription")).append("** ").append(rv);
+      sb.append(SECTION_PREFIX).append(tr("returnValueDescription")).append("** ").append(rv);
     }
     var nt = md.notes().forLanguage(lang);
     if (!nt.isBlank()) {
-      sb.append("\n\n**").append(tr("notes")).append("** ").append(nt);
+      sb.append(SECTION_PREFIX).append(tr("notes")).append("** ").append(nt);
     }
     appendBilingualList(sb, tr("example"), md.examples(), true, lang);
     appendBilingualList(sb, tr("seeAlso"), md.seeAlso(), false, lang);
   }
 
+  /** Режим доступа есть только у свойств; у методов, типов и конструкторов он {@code null}. */
+  private void appendAccessMode(StringBuilder sb, @Nullable AccessMode accessMode) {
+    if (accessMode == null) {
+      return;
+    }
+    var mode = accessMode == AccessMode.READ ? tr("accessReadOnly") : tr("accessReadWrite");
+    sb.append(SECTION_PREFIX).append(tr("accessMode")).append("** ").append(mode);
+  }
+
   private static void appendBilingualList(StringBuilder sb, String title,
                                           List<BilingualString> items, boolean asCodeBlock,
                                           Language lang) {
-    if (items == null || items.isEmpty()) {
+    if (items.isEmpty()) {
       return;
     }
     var resolved = new ArrayList<String>(items.size());
     for (var bi : items) {
       var s = bi.forLanguage(lang);
-      if (s != null && !s.isBlank()) {
+      if (!s.isBlank()) {
         resolved.add(s);
       }
     }
@@ -113,10 +123,10 @@ public class PlatformMetadataRenderer {
   }
 
   private void appendAvailabilities(StringBuilder sb, Set<Availability> availabilities) {
-    if (availabilities == null || availabilities.isEmpty()) {
+    if (availabilities.isEmpty()) {
       return;
     }
-    sb.append("\n\n**").append(tr("availabilities")).append("** ");
+    sb.append(SECTION_PREFIX).append(tr("availabilities")).append("** ");
     sb.append(availabilities.stream()
       .map(this::displayName)
       .collect(Collectors.joining(", ")));
@@ -127,12 +137,12 @@ public class PlatformMetadataRenderer {
   }
 
   private static void appendList(StringBuilder sb, String title, List<String> items, boolean asCodeBlock) {
-    if (items == null || items.isEmpty()) {
+    if (items.isEmpty()) {
       return;
     }
-    sb.append("\n\n**").append(title).append(":**");
+    sb.append(SECTION_PREFIX).append(title).append(":**");
     for (var item : items) {
-      if (item == null || item.isBlank()) {
+      if (item.isBlank()) {
         continue;
       }
       if (asCodeBlock) {

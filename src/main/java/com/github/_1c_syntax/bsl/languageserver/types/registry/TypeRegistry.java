@@ -145,10 +145,6 @@ public class TypeRegistry {
   private record CachedMembers(long epoch, List<MemberDescriptor> members) {
   }
 
-  /** Пустой контейнер с разрезами по всем языкам. */
-  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
-    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
-  }
   /**
    * Типы, видимые в файлах каждого языка. Тип, не зарегистрированный ни в одном
    * разрезе, считается видимым везде (отсутствие знания — не повод фильтровать).
@@ -209,6 +205,11 @@ public class TypeRegistry {
    * первая регистрация выигрывает.
    */
   private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
+
+  /** Пустой контейнер с разрезами по всем языкам. */
+  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
+    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
+  }
 
   /**
    * Явная точка материализации workspace-scoped реестра. Тело пустое: значим
@@ -1040,7 +1041,7 @@ public class TypeRegistry {
    * @param fileType язык файла, в котором метаданные видимы.
    */
   public void registerTypeMetadata(TypeRef ref, PlatformMetadata metadata, FileType fileType) {
-    if (ref == null || metadata == null || metadata.isEmpty()) {
+    if (metadata.isEmpty()) {
       return;
     }
     typeMetadata.get(fileType).putIfAbsent(ref, metadata);

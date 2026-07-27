@@ -192,10 +192,9 @@ public class PlatformMemberHoverBuilder {
         sb.append('\n');
       }
     }
+    // Описание возвращаемого значения отдельно не печатается: оно уже входит
+    // в блок метаданных выше (PlatformMetadata.returnValueDescription).
     metadataRenderer.append(sb, descriptor.metadata());
-    if (chosen != null && !chosen.description().isBlank()) {
-      // returnValueDescription уже зашит в общий description выше
-    }
     if (disclaim) {
       sb.append("\n\n_").append(tr("noMatchingSignature")).append('_');
     }
