@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.ReferenceContext;
@@ -67,12 +68,18 @@ public class ReferencesProvider {
       return new ArrayList<>();
     }
 
-    var maybeSymbol = maybeReference.get().getSourceDefinedSymbol();
+    var reference = maybeReference.get();
+    var maybeSymbol = reference.getSourceDefinedSymbol();
 
-    // Ссылка есть, но её цель — символ без source-defined представления (напр.
-    // неквалифицированный self-член): объявления в исходниках нет, все ссылки берём
-    // по ключу вхождения под курсором.
     if (maybeSymbol.isEmpty()) {
+      // Цель ссылки — несорсовый символ. Ссылки чейзим только у неквалифицированного
+      // self-члена: он приходит как PlatformMemberSymbol и индексируется ReferenceIndexFiller
+      // под маркером $self, но source-объявления не имеет — поэтому все его вхождения берём по
+      // occurrence-ключу под курсором. Прочие синтетические цели (точечный платформенный член
+      // получатель.член, ключевое слово, аннотация) в индекс вхождений не попадают — ссылок нет.
+      if (!(reference.symbol() instanceof PlatformMemberSymbol)) {
+        return new ArrayList<>();
+      }
       return referenceIndex.getReferencesTo(documentContext.getUri(), position).stream()
         .map(Reference::toLocation)
         .collect(Collectors.toCollection(ArrayList::new));
