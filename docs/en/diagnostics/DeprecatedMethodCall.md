@@ -13,6 +13,8 @@ Besides user-defined methods, the diagnostic also triggers on calls to platform 
 
 In addition, accesses to configuration properties prefixed with `Удалить`/`Delete` are highlighted — the standard 1C convention for marking deprecated attributes, enumeration values and configuration objects.
 
+Besides members, the diagnostic checks construction of a deprecated type — `New TypeName(...)`. The deprecation version and the recommended replacements come from the type's main page in the syntax assistant, so this check works only with an installed 1C platform. The `New("TypeName")` form is not checked: the type name there is computed at runtime.
+
 For OneScript the diagnostic also highlights accesses to members flagged as deprecated in the bundled type reference (the 1C platform versioning model does not apply to OneScript, so deprecation there is treated as "always deprecated").
 
 ## Examples
@@ -24,6 +26,19 @@ Procedure DeprecatedProcedure()
 EndProcedure
 
 DeprecatedProcedure(); // Triggering diagnostics
+```
+
+Construction of a deprecated type. The `NSSSecureConnection` type is marked deprecated since `8.3.8` in the syntax assistant, with `OpenSSLSecureConnection` as the recommended replacement:
+
+```bsl
+// Triggers: the type is deprecated since 8.3.8
+Connection = New NSSSecureConnection(ClientCertificate, CertificationAuthorityCertificates);
+```
+
+Fix it by switching to the recommended replacement:
+
+```bsl
+Connection = New OpenSSLSecureConnection(ClientCertificate, CertificationAuthorityCertificates);
 ```
 
 ## Sources

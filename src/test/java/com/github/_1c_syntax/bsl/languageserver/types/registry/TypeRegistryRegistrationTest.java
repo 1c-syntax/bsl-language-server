@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
@@ -34,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -222,6 +226,44 @@ class TypeRegistryRegistrationTest {
 
     // then
     assertThat(typeRegistry.getDescription(ref, FileType.BSL)).isEqualTo("ru-описание");
+  }
+
+  @Test
+  void registerTypeMetadataStoresAndExposesByScope() {
+    // given
+    var ref = typeRegistry.registerUserType("ТМета", declaration, FileType.BSL);
+    var metadata = new PlatformMetadata(
+      "8.3.10", "8.3.27", List.of("Замена"),
+      Set.of(Availability.SERVER), null,
+      BilingualString.EMPTY, BilingualString.of("замечание"),
+      List.of(), List.of());
+
+    // when
+    typeRegistry.registerTypeMetadata(ref, metadata, FileType.BSL);
+
+    // then
+    assertThat(typeRegistry.getTypeMetadata(ref, FileType.BSL)).isEqualTo(metadata);
+    assertThat(typeRegistry.getTypeMetadata(ref, FileType.OS))
+      .as("метаданные видимы только в своём разрезе языка")
+      .isSameAs(PlatformMetadata.EMPTY);
+  }
+
+  @Test
+  void registerTypeMetadataIgnoresEmptyMetadata() {
+    // given
+    var ref = typeRegistry.registerUserType("ТМета2", declaration, FileType.BSL);
+    var metadata = new PlatformMetadata(
+      "8.3.10", "", List.of(), Set.of(), null,
+      BilingualString.EMPTY, BilingualString.of("замечание"),
+      List.of(), List.of());
+
+    // when — пустые метаданные не занимают место в индексе, поэтому следующая
+    // регистрация не упирается в «первая выигрывает»
+    typeRegistry.registerTypeMetadata(ref, PlatformMetadata.EMPTY, FileType.BSL);
+    typeRegistry.registerTypeMetadata(ref, metadata, FileType.BSL);
+
+    // then
+    assertThat(typeRegistry.getTypeMetadata(ref, FileType.BSL)).isEqualTo(metadata);
   }
 
   @Test

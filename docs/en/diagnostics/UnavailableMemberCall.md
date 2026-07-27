@@ -9,6 +9,8 @@ The version a member becomes available in is taken from the syntax assistant of 
 
 When the object type may be inferred as one of several types (for example, a variable assigned values of different types in different code branches), the diagnostic triggers if the member is unavailable for at least one of the possible types.
 
+Besides members, the diagnostic checks construction of the type itself - `New TypeName(...)`. The version a type was introduced in comes from its main page in the syntax assistant, so this check works only with an installed 1C platform. The `New("TypeName")` form is not checked: the type name there is computed at runtime.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -24,6 +26,19 @@ Fix it by raising the target platform version to a supported one, or by using a 
 
 ```bsl
 Ответ = Вопрос("Продолжить?", РежимДиалогаВопрос.ДаНет);
+```
+
+Construction of a type missing from the target version. The `JSONReader` type is available only since `8.3.6`, while the target platform version is `8.3.5`:
+
+```bsl
+// Triggers: the type is available only since version 8.3.6
+Reader = New JSONReader();
+```
+
+Fix it by raising the target platform version to `8.3.6` or higher, or by solving the task with types available in the target version (there is no built-in JSON type before `8.3.6`, so such data is read as text):
+
+```bsl
+Reader = New TextReader(FileName);
 ```
 
 ## Sources

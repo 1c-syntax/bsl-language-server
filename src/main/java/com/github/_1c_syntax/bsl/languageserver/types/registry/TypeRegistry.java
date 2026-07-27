@@ -152,10 +152,6 @@ public class TypeRegistry {
   private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
   }
 
-  /** Пустой контейнер с разрезами по всем языкам. */
-  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
-    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
-  }
   /**
    * Типы, видимые в файлах каждого языка. Тип, не зарегистрированный ни в одном
    * разрезе, считается видимым везде (отсутствие знания — не повод фильтровать).
@@ -166,6 +162,12 @@ public class TypeRegistry {
   );
   /** Описания типов в разрезе языка (первая регистрация выигрывает). */
   private final Map<FileType, Map<TypeRef, String>> descriptions = perFileType();
+  /**
+   * «Страничные» метаданные типов в разрезе языка: доступность, версии
+   * появления/устаревания, «Замечание», «Пример», «См. также». Заполняются из
+   * {@link TypePackProvider.TypeDecl#metadata()}, первая регистрация выигрывает.
+   */
+  private final Map<FileType, Map<TypeRef, PlatformMetadata>> typeMetadata = perFileType();
   /** Конструкторы типов в разрезе языка (повторные регистрации конкатенируются). */
   private final Map<FileType, Map<TypeRef, List<SignatureDescriptor>>> constructors = perFileType();
   /** Динамические источники конструкторов в разрезе языка (например, OScript-класс из SymbolTree). */
@@ -210,6 +212,11 @@ public class TypeRegistry {
    * первая регистрация выигрывает.
    */
   private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
+
+  /** Пустой контейнер с разрезами по всем языкам. */
+  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
+    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
+  }
 
   /**
    * Явная точка материализации workspace-scoped реестра. Тело пустое: значим
@@ -1022,6 +1029,35 @@ public class TypeRegistry {
   }
 
   /**
+   * «Страничные» метаданные типа из синтакс-помощника в разрезе указанного
+   * языка: доступность по видам клиента, версии появления/устаревания с
+   * рекомендуемыми заменами, «Замечание», «Пример», «См. также».
+   *
+   * @param ref      ссылка на тип.
+   * @param fileType язык файла-потребителя.
+   * @return метаданные либо {@link PlatformMetadata#EMPTY}, если источник их не дал.
+   */
+  public PlatformMetadata getTypeMetadata(TypeRef ref, FileType fileType) {
+    return typeMetadata.get(fileType).getOrDefault(ref, PlatformMetadata.EMPTY);
+  }
+
+  /**
+   * Зарегистрировать «страничные» метаданные типа в разрезе языка. Повторная
+   * регистрация того же языка игнорируется (первая выигрывает), пустые
+   * метаданные не сохраняются.
+   *
+   * @param ref      ссылка на тип.
+   * @param metadata метаданные типа.
+   * @param fileType язык файла, в котором метаданные видимы.
+   */
+  public void registerTypeMetadata(TypeRef ref, PlatformMetadata metadata, FileType fileType) {
+    if (metadata.isEmpty()) {
+      return;
+    }
+    typeMetadata.get(fileType).putIfAbsent(ref, metadata);
+  }
+
+  /**
    * Зарегистрировать описание типа в разрезе языка. Повторная регистрация
    * того же языка игнорируется (первая выигрывает).
    *
@@ -1122,6 +1158,7 @@ public class TypeRegistry {
     }
     registerPackAliases(decl, ref);
     registerPackDescriptions(decl, ref, fileType);
+    registerPackMetadata(decl, ref, fileType);
     registerPackCallables(decl, ref, fileType);
     registerPackCollectionTraits(decl, ref, fileType);
     if (!decl.name().isEmpty()) {
@@ -1162,6 +1199,11 @@ public class TypeRegistry {
     }
     registerDescription(ref, decl.description().primary(), fileType);
     typeDescriptionsBilingual.get(fileType).putIfAbsent(ref, decl.description());
+  }
+
+  /** Страничные метаданные пака: доступность, версии, замечание, примеры, «См. также». */
+  private void registerPackMetadata(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
+    registerTypeMetadata(ref, decl.metadata(), fileType);
   }
 
   /** Вызываемое пака: конструкторы, члены, exposedAsGlobal-публикация. */

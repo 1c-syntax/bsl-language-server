@@ -270,7 +270,7 @@ public record MemberDescriptor(
         var parametersChanged = !specializedParameters.equals(sig.parameters());
         if (returnChanged || parametersChanged) {
           rebuilt.add(new SignatureDescriptor(specializedParameters, specializedReturn,
-            sig.bilingualDescription()));
+            sig.bilingualDescription(), sig.metadata()));
           signaturesChanged = true;
         } else {
           rebuilt.add(sig);

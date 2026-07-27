@@ -21,16 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 @CleanupContextBeforeClassAndAfterClass
 class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<UnavailableMemberCallDiagnostic> {
+
+  @Autowired
+  private TypeRegistry typeRegistry;
+
   UnavailableMemberCallDiagnosticTest() {
     super(UnavailableMemberCallDiagnostic.class);
   }
@@ -75,5 +86,48 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
     } finally {
       configuration.getV8PlatformOptions().setTargetVersion(null);
     }
+  }
+
+  @Test
+  void constructedTypeUnavailableForOlderTarget() {
+
+    // given — «страничные» метаданные типа приходят из HBK, в JSON-fallback'е
+    // их нет, поэтому версию появления типа регистрируем вручную.
+    registerTypeSinceVersion();
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.10");
+    try {
+      // when
+      List<Diagnostic> diagnostics = getDiagnostics("UnavailableMemberCallType");
+
+      // then — подсвечено имя типа в «Новый Массив()».
+      assertThat(diagnostics).hasSize(1);
+      assertThat(DiagnosticMessage.getStringValue(diagnostics.get(0).getMessage()))
+        .contains("Массив")
+        .contains("8.3.20");
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  @Test
+  void constructedTypeAvailableForNewerTarget() {
+
+    // given
+    registerTypeSinceVersion();
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.22");
+    try {
+      // when / then — целевая версия выше версии появления типа.
+      assertThat(getDiagnostics("UnavailableMemberCallType")).isEmpty();
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  /** Версия появления типа {@code Массив} — 8.3.20 (синтетическая, для теста). */
+  private void registerTypeSinceVersion() {
+    var ref = typeRegistry.resolve("Массив").orElseThrow();
+    typeRegistry.registerTypeMetadata(ref, new PlatformMetadata(
+      "8.3.20", "", List.of(), Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()), FileType.BSL);
   }
 }

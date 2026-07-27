@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -223,6 +224,20 @@ public class TypeService {
    */
   public String getDescription(TypeRef typeRef, Language language, FileType fileType) {
     return typeRegistry.getDescription(typeRef, language, fileType);
+  }
+
+  /**
+   * «Страничные» метаданные самого типа из синтакс-помощника: доступность по
+   * видам клиента, версии появления/устаревания с рекомендуемыми заменами,
+   * «Замечание», «Пример», «См. также». Метаданные членов типа живут на
+   * {@link MemberDescriptor#metadata()}.
+   *
+   * @param typeRef  тип.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @return метаданные; {@link PlatformMetadata#EMPTY}, если источник их не дал.
+   */
+  public PlatformMetadata getTypeMetadata(TypeRef typeRef, FileType fileType) {
+    return typeRegistry.getTypeMetadata(typeRef, fileType);
   }
 
   /**

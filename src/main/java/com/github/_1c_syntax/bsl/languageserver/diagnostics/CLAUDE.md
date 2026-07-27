@@ -74,7 +74,11 @@ LSP-severity и LSP-теги); зависит от `configuration`. `DiagnosticP
 - **`QuickFixProvider`** — диагностика опционально реализует
   `getQuickFixes(List<Diagnostic>, CodeActionParams, DocumentContext)`.
 - `typo/` — инфраструктура проверки орфографии (JLanguageTool: `JLanguageToolPool`,
-  `CheckedWordsHolder`). `platform/` — интроспекция вызовов платформенного API (`PlatformMemberCalls`).
+  `CheckedWordsHolder`). `platform/` — интроспекция обращений к платформенному API:
+  `PlatformMemberCalls.collect()` за один обход AST собирает и члены (метод, свойство,
+  глобальная функция), и конструируемые типы (`Новый Тип(…)`). На нём стоят
+  `DeprecatedMethodCall` и `UnavailableMemberCall`; версионную применимость считает
+  `types/PlatformMemberVersions` по `PlatformMetadata` члена либо самого типа.
 
 ## Прогон одной диагностики при разработке
 
