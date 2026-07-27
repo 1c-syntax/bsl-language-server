@@ -118,15 +118,15 @@ public class GlobalScopeProvider {
    * (у которого на руках URI, а не имя). Единая точка вместо обращения инференсера к
    * двум URI-ключевым индексам подсистем.
    */
-  private final Map<URI, TypeRef> moduleTypeByUri = new ConcurrentHashMap<>();
+  private final Map<URI, TypeRef> moduleTypeRefByUri = new ConcurrentHashMap<>();
   /**
-   * Обратный индекс к {@link #moduleTypeByUri}: тип-значение модуля → URI документа,
-   * объявившего этот тип. Заполняется синхронно вместе с {@link #moduleTypeByUri}
+   * Обратный индекс к {@link #moduleTypeRefByUri}: тип-значение модуля → URI документа,
+   * объявившего этот тип. Заполняется синхронно вместе с {@link #moduleTypeRefByUri}
    * (см. {@link #indexModuleType}/{@link #removeModuleType}). Используется навигацией
    * по типу к объявившему модулю (общий модуль, модуль менеджера объекта,
    * library-модуль OneScript) — у потребителя на руках {@link TypeRef}, а не URI.
    */
-  private final Map<TypeRef, URI> uriByModuleType = new ConcurrentHashMap<>();
+  private final Map<TypeRef, URI> uriByModuleTypeRef = new ConcurrentHashMap<>();
   /**
    * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
    * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
@@ -414,22 +414,22 @@ public class GlobalScopeProvider {
    * же URI перезаписывает тип (корректно отражает переименование модуля).
    */
   public void indexModuleType(URI uri, TypeRef ref) {
-    var previous = moduleTypeByUri.put(uri, ref);
+    var previous = moduleTypeRefByUri.put(uri, ref);
     if (previous != null && !previous.equals(ref)) {
       // Тип модуля сменился (переименование): чистим устаревшую обратную запись,
       // только если она всё ещё указывает на этот же URI.
-      uriByModuleType.remove(previous, uri);
+      uriByModuleTypeRef.remove(previous, uri);
     }
-    uriByModuleType.put(ref, uri);
+    uriByModuleTypeRef.put(ref, uri);
   }
 
   /**
    * Снять связь URI→тип (при удалении документа/дерегистрации library-модуля).
    */
   public void removeModuleType(URI uri) {
-    var ref = moduleTypeByUri.remove(uri);
+    var ref = moduleTypeRefByUri.remove(uri);
     if (ref != null) {
-      uriByModuleType.remove(ref, uri);
+      uriByModuleTypeRef.remove(ref, uri);
     }
   }
 
@@ -437,13 +437,13 @@ public class GlobalScopeProvider {
    * Тип-значение модуля по URI документа. Используется выводом типа ресивера-модуля
    * ({@code ModuleSymbol}), у которого есть URI, но нет имени для name-keyed lookup'а.
    */
-  public Optional<TypeRef> moduleTypeByUri(URI uri) {
-    return Optional.ofNullable(moduleTypeByUri.get(uri));
+  public Optional<TypeRef> moduleTypeRefByUri(URI uri) {
+    return Optional.ofNullable(moduleTypeRefByUri.get(uri));
   }
 
   /**
    * URI документа-модуля, объявившего тип, по самому типу — обратная операция к
-   * {@link #moduleTypeByUri(URI)}. Используется навигацией по выведенному типу к
+   * {@link #moduleTypeRefByUri(URI)}. Используется навигацией по выведенному типу к
    * объявившему его модулю (общий модуль, модуль менеджера объекта конфигурации,
    * library-модуль OneScript).
    *
@@ -451,8 +451,8 @@ public class GlobalScopeProvider {
    * @return URI документа, объявившего тип, либо {@code empty}, если тип не модульный
    *   (не зарегистрирован через {@link #indexModuleType}).
    */
-  public Optional<URI> moduleUriByType(TypeRef ref) {
-    return Optional.ofNullable(uriByModuleType.get(ref));
+  public Optional<URI> uriByModuleTypeRef(TypeRef ref) {
+    return Optional.ofNullable(uriByModuleTypeRef.get(ref));
   }
 
 

@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
@@ -38,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
@@ -89,7 +92,10 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>dot-completion: после точки выводится union членов всех типов выражения слева;</li>
  *   <li>no-dot completion: глобальные функции, классы (в позиции после {@code Новый}),
- *       ключевые слова + локальные методы документа, отфильтрованные по префиксу.</li>
+ *       ключевые слова + локальные методы документа, отфильтрованные по префиксу;
+ *       внутри модуля объекта/набора записей/менеджера/менеджера значения
+ *       дополнительно предлагаются неявные self-члены самого модуля — реквизиты,
+ *       табличные части и платформенные методы (см. {@link #collectSelfMembers}).</li>
  * </ul>
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_completion">Completion Request specification</a>
@@ -103,9 +109,13 @@ public final class CompletionProvider {
   // sortText-«корзины» для no-dot completion. Клиент сортирует пункты по sortText
   // лексикографически, поэтому меньший префикс = выше в списке. Без sortText всё
   // сортируется по label, и локальные имена документа тонут среди сотен глобальных.
-  // Порядок: локальные имена документа → глобальные функции/контексты → классы и
-  // MD-имена → ключевые слова. Внутри корзины — стабильно по label.
+  // Порядок: локальные имена документа → self-члены модуля (неявный ЭтотОбъект/
+  // ЭтаФорма) → глобальные функции/контексты → классы и MD-имена → ключевые
+  // слова. Внутри корзины — стабильно по label. BUCKET_SELF лексикографически
+  // между "1" и "2" (двухсимвольная корзина всегда идёт после односимвольной с
+  // тем же первым знаком: "10_..." < "150_..." < "20_...").
   private static final String BUCKET_LOCAL = "1";
+  private static final String BUCKET_SELF = "15";
   private static final String BUCKET_GLOBAL = "2";
   private static final String BUCKET_TYPE = "3";
   private static final String BUCKET_KEYWORD = "4";
@@ -116,6 +126,7 @@ public final class CompletionProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
+  private final EventContractsIndex eventContractsIndex;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -469,10 +480,24 @@ public final class CompletionProvider {
     var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
     for (int i = 0; i < filtered.size(); i++) {
       var member = filtered.get(i);
-      var bucket = localFieldNames.contains(member.name()) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
+      var bucket = localFieldNames.contains(memberKey(member)) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
       applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
     }
     return items;
+  }
+
+  /**
+   * Ключ дедупликации члена в аккумуляторах dot/self-completion: вид члена +
+   * имя без учёта регистра. Метод и свойство с одинаковым именем — разные
+   * члены (например, self-метод и одноимённая self-переменная/self-поле),
+   * один не должен вытеснять другой.
+   */
+  private static String memberKey(MemberKind kind, String name) {
+    return kind + ":" + name.toLowerCase(Locale.ROOT);
+  }
+
+  private static String memberKey(MemberDescriptor member) {
+    return memberKey(member.kind(), member.name());
   }
 
   /**
@@ -485,8 +510,9 @@ public final class CompletionProvider {
    * в подсказке (#4206).
    *
    * @param typeSet         тип(ы) ресивера слева от точки.
-   * @param members         аккумулятор членов по имени (заполняется через {@code putIfAbsent}).
-   * @param localFieldNames имена добавленных полей — для приоритетной корзины sortText.
+   * @param members         аккумулятор членов по {@link #memberKey(MemberDescriptor)}
+   *                        (заполняется через {@code putIfAbsent}).
+   * @param localFieldNames ключи добавленных полей — для приоритетной корзины sortText.
    */
   private static void collectDeclaredFields(TypeSet typeSet, Map<String, MemberDescriptor> members,
                                             Set<String> localFieldNames) {
@@ -497,9 +523,10 @@ public final class CompletionProvider {
         // Полный TypeSet поля (с union/вложенными полями), как в
         // DereferenceMemberMatcher, а не только головной ref.
         var fieldTypes = field.types().isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : field.types();
-        if (members.putIfAbsent(fieldName,
+        var key = memberKey(MemberKind.PROPERTY, fieldName);
+        if (members.putIfAbsent(key,
           MemberDescriptor.property(fieldName, fieldTypes, field.description())) == null) {
-          localFieldNames.add(fieldName);
+          localFieldNames.add(key);
         }
       }
     }
@@ -512,8 +539,10 @@ public final class CompletionProvider {
    * члену запоминается тип-владелец для отложенного восстановления документации.
    *
    * @param typeSet       тип(ы) ресивера слева от точки.
-   * @param members       аккумулятор членов по имени (заполняется через {@code putIfAbsent}).
-   * @param owners        тип-владелец каждого члена — для {@code completionItem/resolve}.
+   * @param members       аккумулятор членов по {@link #memberKey(MemberDescriptor)}
+   *                      (заполняется через {@code putIfAbsent}).
+   * @param owners        тип-владелец каждого члена, по тому же ключу — для
+   *                      {@code completionItem/resolve}.
    * @param fileType      тип файла-потребителя (BSL/OS).
    * @param scriptVariant локаль скрипта для отбора написаний членов.
    */
@@ -521,8 +550,9 @@ public final class CompletionProvider {
                                   Map<String, TypeRef> owners, FileType fileType, Language scriptVariant) {
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
-        if (members.putIfAbsent(member.name(), member) == null) {
-          owners.put(member.name(), ref);
+        var key = memberKey(member);
+        if (members.putIfAbsent(key, member) == null) {
+          owners.put(key, ref);
         }
       }
     }
@@ -574,6 +604,35 @@ public final class CompletionProvider {
   }
 
   private record DotCompletionInfo(String prefix) {
+  }
+
+  /**
+   * Метод, в области видимости которого находится {@code position}.
+   *
+   * @return метод, содержащий позицию; {@code empty}, если позиция вне
+   *         какого-либо метода (уровень модуля).
+   */
+  private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
+    var symbol = documentContext.getSymbolTree().getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+  }
+
+  /**
+   * Переменная не должна попадать в no-dot completion, если она вне текущей
+   * видимости (не уровня модуля и не объявлена/не параметр охватывающего
+   * метода — см. {@link VariableSymbol#getScope()}). Голое присваивание
+   * одноимённому self-реквизиту без {@code Перем} переменной уже не порождает
+   * (её отсекает {@code SelfMemberClassifier} при построении дерева), поэтому
+   * такой self-член добавит {@link #collectSelfMembers}, а не эта ветка.
+   */
+  private static boolean isVariableHiddenFromNoDotCompletion(VariableSymbol variable,
+                                                      SourceDefinedSymbol moduleSymbol,
+                                                      @Nullable MethodSymbol enclosingMethod) {
+    var scope = variable.getScope();
+    return !scope.equals(moduleSymbol) && !scope.equals(enclosingMethod);
   }
 
   private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {
@@ -634,6 +693,13 @@ public final class CompletionProvider {
       return items;
     }
 
+    // Self-тип текущего модуля, если платформа моделирует для него экземпляр
+    // (реквизиты и платформенные методы вызываются внутри модуля без
+    // квалификации) — иначе пуст, и collectSelfMembers ниже ничего не
+    // добавляет. Какие модули его получают, определяет регистрация в
+    // GlobalScopeProvider, а не перечисление здесь.
+    var selfRef = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
+
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
       for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), scriptVariant, fileType)) {
@@ -674,8 +740,8 @@ public final class CompletionProvider {
     }
 
     // Global functions. Один и тот же двуязычный дескриптор зарегистрирован
-    // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
-    // primary-имени через seenFn.
+    // под ru- и en-ключом, поэтому в values() встречается дважды — дедупликация
+    // по primary-имени через seenFn.
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new HashSet<String>();
     for (var fn : globalScopeProvider.globalFunctions(fileType)) {
@@ -701,22 +767,58 @@ public final class CompletionProvider {
         if (method.isDeprecated()) {
           markDeprecatedItem(item);
         }
-        applySortText(item, BUCKET_LOCAL, method.isDeprecated());
+        // Обработчик платформенного события ранжируется как self-член: его
+        // редко вызывают вручную, он не должен теснить обычные локальные
+        // процедуры/функции документа.
+        var bucket = eventContractsIndex.getContract(documentContext, method.getName()).isPresent()
+          ? BUCKET_SELF
+          : BUCKET_LOCAL;
+        applySortText(item, bucket, method.isDeprecated());
         applyCommitCharacters(item);
         items.add(item);
       }
     }
 
-    // Local variables of current document
+    // Local variables of current document — только модульного уровня и текущей
+    // области видимости (параметры/локальные переменные метода, в котором стоит
+    // курсор); переменные и параметры ДРУГИХ методов документа не видны здесь и
+    // не должны предлагаться (см. VariableSymbol.getScope()).
+    var moduleSymbol = documentContext.getSymbolTree().getModule();
+    var enclosingMethod = enclosingMethod(documentContext, position);
+    // Имена локальных объявлений, видимых в текущей области, — приоритетнее
+    // одноимённого self-члена (см. collectSelfMembers), но только внутри
+    // СВОЕГО вида: локальный метод перекрывает self-метод того же имени
+    // (вызов "Имя(...)" — процедуры/функции), локальная переменная —
+    // self-свойство (голая ссылка на имя — переменные); они живут в разных
+    // пространствах имён BSL, поэтому ключ дедупликации несёт вид члена (см.
+    // memberKey). Методы документа видны из любой его точки, поэтому
+    // в дедупликацию идут все целиком; переменные — только модульного уровня
+    // и текущей области (та же видимость, что и в цикле ниже).
+    var declaredLocalNames = new HashSet<String>();
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      declaredLocalNames.add(memberKey(MemberKind.METHOD, method.getName()));
+    }
     for (var variable : documentContext.getSymbolTree().getVariables()) {
+      if (isVariableHiddenFromNoDotCompletion(variable, moduleSymbol, enclosingMethod.orElse(null))) {
+        continue;
+      }
+      declaredLocalNames.add(memberKey(MemberKind.PROPERTY, variable.getName()));
       if (matches(variable.getName(), prefix)) {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
+        // Тип переменной в detail. Инференс идёт только по видимым (модульным + текущего
+        // метода) совпавшим с префиксом переменным и кэшируется по символу
+        // (InferredVariableTypeIndex), так что стоимость — единицы вызовов однократно
+        // до прогрева кэша; полезность подсказки её перевешивает.
+        var varType = typeService.typesOfSymbol(variable).refs().stream().findFirst().orElse(null);
+        applyDetail(item, "", formatTypeName(varType, scriptVariant));
         applySortText(item, BUCKET_LOCAL, false);
         applyCommitCharacters(item);
         items.add(item);
       }
     }
+
+    selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items));
 
     // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
     // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
@@ -733,6 +835,65 @@ public final class CompletionProvider {
   }
 
   /**
+   * Собрать неявные self-члены типа {@code selfRef} (реквизиты, табличные
+   * части, платформенные методы объекта) и добавить их в {@code items}.
+   * Фильтры те же, что и в {@link #dotCompletion} (недоступные по
+   * target-совместимости, {@code EVENT}). Локальное объявление из
+   * {@code declaredLocalNames} приоритетнее одноимённого self-члена ТОГО ЖЕ
+   * вида (см. {@link #memberKey}) — такой член пропускается, а не
+   * дублируется.
+   */
+  private void collectSelfMembers(TypeRef selfRef,
+                                  DocumentContext documentContext,
+                                  Set<String> declaredLocalNames,
+                                  CompatibilityMode target,
+                                  String prefix,
+                                  List<CompletionItem> items) {
+    var fileType = documentContext.getFileType();
+    var scriptVariant = documentContext.getScriptVariantLanguage();
+    var typeSet = TypeSet.of(selfRef);
+    var members = new LinkedHashMap<String, MemberDescriptor>();
+    var owners = new LinkedHashMap<String, TypeRef>();
+    var localFieldNames = new HashSet<String>();
+    collectDeclaredFields(typeSet, members, localFieldNames);
+    collectTypeMembers(typeSet, members, owners, fileType, scriptVariant);
+
+    var filtered = members.values().stream()
+      .filter(m -> !declaredLocalNames.contains(memberKey(m)))
+      // Глобальная функция/свойство того же имени перекрывает self-член (тот же порядок
+      // резолва, что у ReferenceIndexFiller/TypeService): голое имя резолвится в глобал,
+      // поэтому как self-completion его не предлагаем — иначе тот же пункт появился бы
+      // дважды (BUCKET_GLOBAL, добавленный выше, и BUCKET_SELF).
+      .filter(m -> !isShadowedByGlobal(m, fileType, scriptVariant))
+      .filter(m -> matches(m.displayName(scriptVariant), prefix))
+      // События платформы — обработчики; их не вызывают неквалифицированно
+      // (перекрываются объявлением процедуры), в completion не нужны.
+      .filter(m -> m.kind() != MemberKind.EVENT)
+      .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
+      .toList();
+
+    var selfItems = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
+    for (var i = 0; i < filtered.size(); i++) {
+      applySortText(selfItems.get(i), BUCKET_SELF, isMemberDeprecated(filtered.get(i), target));
+    }
+    items.addAll(selfItems);
+  }
+
+  /**
+   * Self-член {@code member} перекрыт глобальной функцией (для {@link MemberKind#METHOD})
+   * или глобальным свойством (для {@link MemberKind#PROPERTY}) того же имени. Тот же
+   * порядок резолва имени, что у {@code ReferenceIndexFiller}/{@code TypeService}:
+   * голое имя резолвится в глобал, поэтому предлагать член как self-completion нельзя.
+   */
+  private boolean isShadowedByGlobal(MemberDescriptor member, FileType fileType, Language scriptVariant) {
+    var name = member.displayName(scriptVariant);
+    if (member.kind() == MemberKind.METHOD) {
+      return globalScopeProvider.globalFunction(name, fileType).isPresent();
+    }
+    return globalScopeProvider.globalProperty(name, fileType).isPresent();
+  }
+
+  /**
    * Иконка completion для глобального свойства, выведенная из типа-значения:
    * перечисление → {@code Enum}; library-модуль
    * OneScript (модульный тип в OS-файле) → {@code Module}; иначе (платформенное
@@ -743,7 +904,7 @@ public final class CompletionProvider {
     if (typeService.isEnumType(valueType, fileType)) {
       return CompletionItemKind.Enum;
     }
-    if (fileType == FileType.OS && globalScopeProvider.moduleUriByType(valueType).isPresent()) {
+    if (fileType == FileType.OS && globalScopeProvider.uriByModuleTypeRef(valueType).isPresent()) {
       return CompletionItemKind.Module;
     }
     return CompletionItemKind.Variable;
@@ -842,7 +1003,7 @@ public final class CompletionProvider {
                                                  URI uri) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
-      var owner = owners.get(member.name());
+      var owner = owners.get(memberKey(member));
       // documentation откладывается в resolve только когда член резолвим обратно по
       // owner-типу. Локальные поля (owner == null) резолвить нечем — documentation строится сразу.
       var deferDocumentation = documentationResolveSupport && owner != null;

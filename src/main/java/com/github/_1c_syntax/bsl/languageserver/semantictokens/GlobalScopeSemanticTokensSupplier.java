@@ -134,7 +134,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     if (typeRegistry.isEnumType(valueType, fileType)) {
       helper.addRange(entries, Ranges.create(identifier),
         SemanticTokenTypes.Enum, SemanticTokenModifiers.DefaultLibrary);
-    } else if (globalScopeProvider.moduleUriByType(valueType).isPresent()) {
+    } else if (globalScopeProvider.uriByModuleTypeRef(valueType).isPresent()) {
       helper.addRange(entries, Ranges.create(identifier), SemanticTokenTypes.Namespace);
     } else {
       helper.addRange(entries, Ranges.create(identifier),

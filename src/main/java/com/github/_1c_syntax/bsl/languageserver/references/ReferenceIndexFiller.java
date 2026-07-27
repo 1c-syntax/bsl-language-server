@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
@@ -33,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
@@ -54,6 +56,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -90,6 +93,8 @@ public class ReferenceIndexFiller {
   private final ReferenceIndex index;
   private final LanguageServerConfiguration configuration;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final GlobalScopeProvider globalScopeProvider;
+  private final SelfMemberResolver selfMemberResolver;
 
   /**
    * Отпечаток содержимого, для которого документ был проиндексирован в последний раз.
@@ -100,6 +105,12 @@ public class ReferenceIndexFiller {
    */
   private final Map<URI, Long> filledContentFingerprints = new ConcurrentHashMap<>();
 
+  // Порядок 200 — ПОСЛЕ ConfigurationModuleMembersProvider и OScriptModuleMembersProvider
+  // с порядком 100: они наполняют moduleTypeRefByUri, от которого зависит self-member проход
+  // SelfMemberReferenceIndexFinder. Синхронная ранняя регистрация конфигурации до клиентского
+  // didOpen гарантирует, что к моменту fill self-тип уже в кэше, а явный порядок закрепляет
+  // это в рамках одного события.
+  @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
@@ -126,6 +137,29 @@ public class ReferenceIndexFiller {
   }
 
   /**
+   * Переиндексирует self-члены документов после (пере)регистрации конфигурационных типов.
+   * <p>
+   * Проход self-членов в {@link #fill} резолвит их через {@code TypeRegistry}: документ,
+   * наполненный ДО регистрации типов (либо до их перерегистрации при будущем reload
+   * конфигурации), самих self-членов ещё не проиндексировал — здесь их подхватываем, чем
+   * и обеспечивается обещанное {@code SelfMemberResolverImpl}/{@code ReferenceIndex}
+   * восстановление подсветки/резолва. Перебираем только уже наполненные документы с
+   * self-типом; при обычном порядке (типы регистрируются раньше {@code didOpen}) наполненных
+   * документов на этот момент ещё нет — обработчик вхолостую.
+   *
+   * @param event событие успешной регистрации конфигурационных типов.
+   */
+  @EventListener
+  public void handleEvent(ConfigurationTypesRegisteredEvent event) {
+    for (var documentContext : event.getSource().getDocuments().values()) {
+      if (filledContentFingerprints.containsKey(documentContext.getUri())
+        && globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
+        fill(documentContext);
+      }
+    }
+  }
+
+  /**
    * Переиндексировать обращения к символам, расположенные в документе.
    * <p>
    * Новый набор вхождений собирается в буфер и применяется атомарной заменой
@@ -144,6 +178,11 @@ public class ReferenceIndexFiller {
     var documentContextAst = documentContext.getAst();
     new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
+    // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
+    if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
+      new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    }
     index.replaceReferences(documentContext.getUri(), batch);
     filledContentFingerprints.put(documentContext.getUri(), contentFingerprint(content));
   }
@@ -172,6 +211,12 @@ public class ReferenceIndexFiller {
     void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
                           String variableName, Range range, OccurrenceType occurrenceType) {
       batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+    }
+
+    void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
+                            String name, Range range) {
+      batch.add(index.selfMemberOccurrence(
+        uri, mdoRef, moduleType, symbolKind, name, range, OccurrenceType.REFERENCE));
     }
   }
 
@@ -887,6 +932,85 @@ public class ReferenceIndexFiller {
             Ranges.create(methodNameToken)
           );
         }
+      }
+    }
+  }
+
+  /**
+   * Индексирует неквалифицированные (без явного получателя) обращения к self-члену
+   * текущего модуля — реквизиту/платформенному методу self-типа — как ссылки на
+   * {@code PlatformMemberSymbol} (см. {@link ReferenceIndex#selfMemberOccurrence}).
+   * Благодаря этому их подсветку ведёт общий {@code SymbolsSemanticTokensSupplier} по
+   * индексу (а не отдельный сапплаер), а резолв/definition/hover — единым путём через
+   * {@link ReferenceIndex}. Затенение — как у резолва имени в BSL: локальный метод/
+   * переменная и глобальная функция/свойство перекрывают self-член.
+   */
+  private class SelfMemberReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
+
+    private final DocumentContext documentContext;
+    private final BatchingSink sink;
+    private final SymbolTree symbolTree;
+    private final URI uri;
+    private final String mdoRef;
+    private final ModuleType moduleType;
+
+    SelfMemberReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
+      this.documentContext = documentContext;
+      this.sink = sink;
+      this.symbolTree = documentContext.getSymbolTree();
+      this.uri = documentContext.getUri();
+      this.mdoRef = documentContext.getMdoRef();
+      this.moduleType = documentContext.getModuleType();
+    }
+
+    @Override
+    public ParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+      var methodNameCtx = ctx.methodName();
+      if (methodNameCtx != null) {
+        var name = methodNameCtx.getStart().getText();
+        // Локальный метод и глобальная функция перекрывают self-метод — их ведут
+        // MethodSymbolReferenceIndexFinder / PlatformGlobalMethodSemanticTokensSupplier.
+        if (!name.isBlank()
+          && symbolTree.getMethodSymbol(name).isEmpty()
+          && globalScopeProvider.globalFunction(name, documentContext.getFileType()).isEmpty()
+          && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Method, name).isPresent()) {
+          sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Method, name, Ranges.create(methodNameCtx));
+        }
+      }
+      return super.visitGlobalMethodCall(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+      processBareIdentifier(ctx.IDENTIFIER(), ctx);
+      return super.visitComplexIdentifier(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+      processBareIdentifier(ctx.IDENTIFIER(), ctx);
+      return super.visitCallStatement(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+      processBareIdentifier(ctx.IDENTIFIER(), ctx);
+      return super.visitLValue(ctx);
+    }
+
+    private void processBareIdentifier(@Nullable TerminalNode identifier, ParserRuleContext scopeNode) {
+      if (identifier == null) {
+        return;
+      }
+      var name = identifier.getText();
+      // Локальная переменная в области видимости и глобальное свойство перекрывают
+      // self-реквизит. Голое присваивание одноимённому реквизиту без Перем переменной
+      // не создаёт (SelfMemberClassifier), поэтому getVariableSymbolInScope для реквизита пуст.
+      if (!name.isBlank()
+        && symbolTree.getVariableSymbolInScope(scopeNode, name).isEmpty()
+        && globalScopeProvider.globalProperty(name, documentContext.getFileType()).isEmpty()
+        && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Property, name).isPresent()) {
+        sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Property, name, Ranges.create(identifier));
       }
     }
   }

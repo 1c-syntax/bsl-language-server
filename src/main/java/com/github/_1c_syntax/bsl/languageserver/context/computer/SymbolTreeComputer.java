@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -44,9 +45,11 @@ import java.util.Optional;
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private final DocumentContext documentContext;
+  private final SelfMemberClassifier selfMemberClassifier;
 
-  public SymbolTreeComputer(DocumentContext documentContext) {
+  public SymbolTreeComputer(DocumentContext documentContext, SelfMemberClassifier selfMemberClassifier) {
     this.documentContext = documentContext;
+    this.selfMemberClassifier = selfMemberClassifier;
   }
 
   @Override
@@ -55,7 +58,8 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
     // Переменные и регионы — за один общий обход дерева (оба обходят его вглубь).
-    var regionVariableComputer = new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods);
+    var regionVariableComputer =
+      new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods, selfMemberClassifier);
     List<VariableSymbol> variables = regionVariableComputer.compute();
     List<RegionSymbol> regions = regionVariableComputer.getRegions();
 

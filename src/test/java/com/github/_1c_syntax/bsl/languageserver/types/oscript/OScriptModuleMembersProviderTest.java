@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
@@ -32,19 +33,26 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.MemberTypeFromCommentResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -101,11 +109,19 @@ class OScriptModuleMembersProviderTest {
     when(typeRegistry.registerUserType(eq("dual.Модуль"), any(), eq(FileType.OS))).thenReturn(moduleRef);
     when(typeRegistry.registerUserType(eq("dual.Класс"), any(), eq(FileType.OS))).thenReturn(classRef);
 
+    // Мок self-типа хранит состояние как реальный GlobalScopeProvider (Map<URI, TypeRef>):
+    // регистрация класса читает то, что перед этим записала регистрация модуля того же URI.
+    var selfTypeByUri = new HashMap<URI, TypeRef>();
+    when(globalScopeProvider.moduleTypeRefByUri(any()))
+      .thenAnswer(invocation -> Optional.ofNullable(selfTypeByUri.get(invocation.getArgument(0))));
+    doAnswer(invocation -> selfTypeByUri.put(invocation.getArgument(0), invocation.getArgument(1)))
+      .when(globalScopeProvider).indexModuleType(any(), any());
+
     // when
     provider.register(documentContext);
 
     // then — обратный индекс URI→тип хранит тип модуля, а не класса.
-    verify(globalScopeProvider).indexModuleType(uri, moduleRef);
+    assertThat(selfTypeByUri).containsEntry(uri, moduleRef);
     verify(globalScopeProvider, never()).indexModuleType(uri, classRef);
   }
 
@@ -155,5 +171,68 @@ class OScriptModuleMembersProviderTest {
 
     // then — признак коллекции снимается (false), а не остаётся от прежнего состояния.
     verify(typeRegistry).setUserTypeIterable(ref, false, FileType.OS);
+  }
+
+  @Test
+  void oscriptClassGetsBuiltinRaiseEventMember() {
+    // given — небиблиотечный .os-класс.
+    var uri = URI.create("file:///КлассССобытием.os");
+    when(oScriptLibraryIndex.findEntriesByUri(uri)).thenReturn(List.of());
+
+    var documentContext = mock(DocumentContext.class);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    when(documentContext.getUri()).thenReturn(uri);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.OScriptClass);
+    var symbolTree = mock(SymbolTree.class);
+    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
+
+    var ref = new TypeRef(TypeKind.USER, "КлассССобытием");
+    when(typeRegistry.registerUserType(eq("КлассССобытием"), any(), eq(FileType.OS))).thenReturn(ref);
+
+    var sourceCaptor = ArgumentCaptor.forClass(MemberSource.class);
+
+    // when
+    provider.register(documentContext);
+
+    // then — среди зарегистрированных источников членов есть встроенный ВызватьСобытие/RaiseEvent,
+    // доступный у ЛЮБОГО OScript-класса вне зависимости от объявленных им самим членов.
+    verify(typeRegistry, atLeastOnce()).registerMemberSource(eq(ref), sourceCaptor.capture(), eq(FileType.OS));
+    var allMembers = sourceCaptor.getAllValues().stream()
+      .flatMap(source -> source.getMembers().stream())
+      .toList();
+    var raiseEvent = allMembers.stream()
+      .filter(m -> "ВызватьСобытие".equals(m.name()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("ВызватьСобытие должен быть встроенным членом OScript-класса"));
+
+    assertThat(raiseEvent.bilingualName().en()).isEqualTo("RaiseEvent");
+    assertThat(raiseEvent.signatures()).hasSize(1);
+    assertThat(raiseEvent.signatures().getFirst().parameters()).hasSize(2);
+  }
+
+  @Test
+  void oscriptClassSelfTypeIsIndexedForUnqualifiedAccessInsideItsOwnBody() {
+    // given — небиблиотечный .os-класс (не объявлен ни в каком lib.config).
+    var uri = URI.create("file:///КлассБезБиблиотеки.os");
+    when(oScriptLibraryIndex.findEntriesByUri(uri)).thenReturn(List.of());
+
+    var documentContext = mock(DocumentContext.class);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    when(documentContext.getUri()).thenReturn(uri);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.OScriptClass);
+    var symbolTree = mock(SymbolTree.class);
+    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
+
+    var ref = new TypeRef(TypeKind.USER, "КлассБезБиблиотеки");
+    when(typeRegistry.registerUserType(eq("КлассБезБиблиотеки"), any(), eq(FileType.OS))).thenReturn(ref);
+
+    // when
+    provider.register(documentContext);
+
+    // then — URI класса связан с его же типом: комплишен/инференсер внутри тела
+    // класса могут найти его члены (включая встроенные) как self-члены.
+    verify(globalScopeProvider).indexModuleType(uri, ref);
   }
 }

@@ -94,4 +94,26 @@ class TypeRegistryMemberDedupTest {
     // Рефлексивность.
     assertThat(propertyA.compareTo(propertyA)).isZero();
   }
+
+  @Test
+  void findMemberResolvesByKindAndName() {
+    // Единая точка резолва «член по (тип, вид, имя)», которой пользуются self-member
+    // потребители (резолвер ссылок, TypeService, инференсер): при одноимённых
+    // property и method возвращает член именно запрошенного вида.
+    var ref = typeRegistry.registerConfigurationType("ТестовыйТипFindMember");
+    typeRegistry.registerMemberSource(ref,
+      () -> List.of(MemberDescriptor.property("Значение", TypeRef.UNKNOWN)), FileType.BSL);
+    typeRegistry.registerMemberSource(ref,
+      () -> List.of(MemberDescriptor.method("Значение")), FileType.BSL);
+
+    assertThat(typeRegistry.findMember(ref, MemberKind.PROPERTY, "Значение", FileType.BSL))
+      .as("findMember с PROPERTY возвращает одноимённое свойство, а не метод")
+      .hasValueSatisfying(member -> assertThat(member.kind()).isEqualTo(MemberKind.PROPERTY));
+    assertThat(typeRegistry.findMember(ref, MemberKind.METHOD, "Значение", FileType.BSL))
+      .as("findMember с METHOD возвращает одноимённый метод, а не свойство")
+      .hasValueSatisfying(member -> assertThat(member.kind()).isEqualTo(MemberKind.METHOD));
+    assertThat(typeRegistry.findMember(ref, MemberKind.PROPERTY, "НетТакогоЧлена", FileType.BSL))
+      .as("несуществующий член — empty")
+      .isEmpty();
+  }
 }

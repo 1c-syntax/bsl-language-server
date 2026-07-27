@@ -430,6 +430,25 @@ public class TypeRegistry {
     return members;
   }
 
+  /**
+   * Первый член типа {@code ref} заданного вида {@code kind} с именем {@code name}
+   * (ru/en-написание, без учёта регистра). Единая точка резолва «член по (тип, вид,
+   * имя)» для self-member-потребителей ({@code SelfMemberResolverImpl},
+   * {@code TypeService#findSelfMember}, {@code ExpressionTypeInferencer}), чтобы
+   * семантика сопоставления не расходилась по копиям.
+   *
+   * @param ref      тип-владелец.
+   * @param kind     требуемый вид члена.
+   * @param name     имя члена (ru/en, без учёта регистра).
+   * @param fileType язык файла-потребителя.
+   * @return найденный член; empty, если такого нет.
+   */
+  public Optional<MemberDescriptor> findMember(TypeRef ref, MemberKind kind, String name, FileType fileType) {
+    return getMembers(ref, fileType).stream()
+      .filter(member -> member.kind() == kind && member.matches(name))
+      .findFirst();
+  }
+
   /** Типы-перечисления (источник пометил {@code isEnum}), в разрезе языка. */
   private final Map<FileType, Set<TypeRef>> enumTypes = Map.of(
     FileType.BSL, ConcurrentHashMap.newKeySet(),

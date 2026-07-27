@@ -27,8 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -72,6 +75,73 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     assertThat(overlaps)
       .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
       .isEmpty();
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @ValueSource(strings = {
+    "/Catalogs/Справочник1/Ext/ObjectModule.bsl",
+    "/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl",
+    "/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl",
+    "/InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl",
+    "/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+  })
+  void suppliersDoNotProduceOverlappingTokensAcrossModuleTypes(String relativeModulePath) {
+    // given — конфигурация с инференсом типов; проверяем модули РАЗНЫХ типов
+    // (объектный / менеджера / набора записей), где активны разные сапплаеры и
+    // по-разному ведут себя self-члены (в т.ч. Static-модификатор у методов static-модуля).
+    initServerContext(PATH_TO_METADATA);
+    var documentContext =
+      TestUtils.getDocumentContextFromFile(PATH_TO_METADATA + relativeModulePath, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — пересечений быть не должно ни в одном типе модуля.
+    assertThat(overlaps)
+      .as("Конфликты подсветки в %s: %s", relativeModulePath, describe(overlaps, documentContext))
+      .isEmpty();
+  }
+
+  @Test
+  void bareAssignmentToSelfAttributeDoesNotOverlapWithVariableToken() {
+    // Регрессия: бесскобочное обращение к одноимённому реквизиту без Перем.
+    // Раньше присваивание заводило фантомную DYNAMIC VariableSymbol (см.
+    // VariableSymbolComputer#visitLValue), которую SymbolsSemanticTokensSupplier красил
+    // как переменную, а тот же диапазон отдельный сапплаер красил как self-свойство —
+    // два токена на одном участке ломали дельта-кодированный поток (порча съезжала на
+    // все последующие токены файла). Теперь фантом не создаётся (SelfMemberClassifier),
+    // self-члены индексируются (ReferenceIndexFiller) и красятся единственный раз
+    // SymbolsSemanticTokensSupplier — пересечений быть не должно. Чтения ДО присваивания
+    // в сценарии — намеренно: именно такой порядок провоцировал артефакт.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура ПриЗаписи(Отказ)
+        А = ВерсияДанных;
+        Б = Реквизит1;
+
+        ВерсияДанных = "1";
+        Реквизит1 = ТекущаяДатаСеанса();
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var allTokens = provider.collectTokens(documentContext);
+      var lines = documentContext.getContentList();
+      var overlaps = TokenOverlaps.findOverlaps(allTokens,
+        line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+      assertThat(overlaps)
+        .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+        .isEmpty();
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
   }
 
   private String describe(List<TokenOverlaps.TokenOverlap> overlaps, DocumentContext documentContext) {

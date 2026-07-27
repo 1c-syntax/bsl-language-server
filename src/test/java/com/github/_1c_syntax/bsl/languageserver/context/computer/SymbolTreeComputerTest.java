@@ -36,7 +36,7 @@ class SymbolTreeComputerTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/SymbolTreeComputer.bsl");
 
-    var symbolTreeComputer = new SymbolTreeComputer(documentContext);
+    var symbolTreeComputer = new SymbolTreeComputer(documentContext, (doc, name) -> false);
 
     // when
     var symbolTree = symbolTreeComputer.compute();

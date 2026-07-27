@@ -241,6 +241,28 @@ public class SymbolTree {
   }
 
   /**
+   * Переменная с именем {@code variableName}, видимая в точке узла {@code node}:
+   * сперва — в охватывающем методе (по {@code RULE_sub}), иначе — на уровне модуля.
+   * Единый резолв видимости переменной для потребителей, которым нужно отличить
+   * объявленную переменную от одноимённого self-члена (система типов, индексатор
+   * ссылок).
+   *
+   * @param node         узел, в точке которого проверяется видимость.
+   * @param variableName имя переменной (без учёта регистра — как хранит дерево).
+   * @return видимая переменная; empty, если такой в области видимости нет.
+   */
+  public Optional<VariableSymbol> getVariableSymbolInScope(ParserRuleContext node, String variableName) {
+    var sub = Trees.getRootParent(node, BSLParser.RULE_sub);
+    if (sub instanceof BSLParser.SubContext subContext) {
+      var inMethod = getMethodSymbol(subContext).flatMap(method -> getVariableSymbol(variableName, method));
+      if (inMethod.isPresent()) {
+        return inMethod;
+      }
+    }
+    return getVariableSymbol(variableName, module);
+  }
+
+  /**
    * Поиск самого вложенного символа, содержащего указанную позицию.
    * <p>
    * Использует иерархический спуск по дереву символов вместо линейного поиска.

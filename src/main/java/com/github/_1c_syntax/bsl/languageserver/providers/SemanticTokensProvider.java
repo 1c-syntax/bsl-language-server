@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -289,6 +290,25 @@ public class SemanticTokensProvider {
    */
   @EventListener
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    refreshSemanticTokens();
+  }
+
+  /**
+   * Обрабатывает событие регистрации конфигурационных типов.
+   * <p>
+   * Self-члены модуля (реквизиты/платформенные методы объекта и т.п., которые
+   * {@code ReferenceIndexFiller} индексирует, а {@code SymbolsSemanticTokensSupplier}
+   * красит) резолвятся через self-тип из
+   * реестра типов, который конфигурационные провайдеры заполняют уже ПОСЛЕ
+   * {@link ServerContextPopulatedEvent}. Если клиент запросил токены до этой
+   * регистрации, подсветка остаётся устаревшей до следующей правки файла —
+   * поэтому по завершении регистрации типов тоже запрашивается
+   * {@code workspace/semanticTokens/refresh}.
+   *
+   * @param event Событие регистрации конфигурационных типов.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
     refreshSemanticTokens();
   }
 
