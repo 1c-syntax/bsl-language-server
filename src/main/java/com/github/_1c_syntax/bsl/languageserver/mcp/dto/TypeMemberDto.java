@@ -38,7 +38,7 @@ import java.util.List;
  * @param description Описание; {@code null}, если отсутствует.
  * @param signatures Сигнатуры (для метода/события); для свойства — пустой список.
  * @param async Признак асинхронного метода ({@code Асинх}/{@code Async}); для свойств всегда {@code false}.
- * @param metadata Платформенная метаинформация (версии, контексты, примеры и т.п.);
+ * @param metadata Метаинформация справочника (версии, контексты, примеры и т.п.);
  *   {@code null}, если метаинформация отсутствует.
  */
 public record TypeMemberDto(
@@ -48,7 +48,7 @@ public record TypeMemberDto(
   @Nullable String description,
   List<TypeSignatureDto> signatures,
   boolean async,
-  @Nullable PlatformMetadataDto metadata
+  @Nullable ApiMetadataDto metadata
 ) {
 
   public static TypeMemberDto from(MemberDescriptor member, Language language) {
@@ -56,7 +56,7 @@ public record TypeMemberDto(
       ? List.<TypeSignatureDto>of()
       : member.signatures().stream().map(signature -> TypeSignatureDto.from(signature, language)).toList();
     var description = member.displayDescription(language);
-    var metadata = PlatformMetadataDto.from(member.metadata(), language);
+    var metadata = ApiMetadataDto.from(member.metadata(), language);
     return new TypeMemberDto(
       member.displayName(language),
       member.kind().name(),

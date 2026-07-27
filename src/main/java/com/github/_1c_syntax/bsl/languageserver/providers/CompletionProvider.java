@@ -464,7 +464,7 @@ public final class CompletionProvider {
       // в автодополнении предлагать не нужно — его вызов помечает
       // UnavailableMemberCall. Устаревшие при этом остаются (показываются
       // зачёркнутыми).
-      .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
+      .filter(m -> !PlatformMemberVersions.isUnavailable(m.metadata(), target))
       .toList();
     var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
     for (int i = 0; i < filtered.size(); i++) {
@@ -535,7 +535,7 @@ public final class CompletionProvider {
    * oscript ({@code "*"}) срабатывает всегда.
    */
   private static boolean isMemberDeprecated(MemberDescriptor member, CompatibilityMode target) {
-    return PlatformMemberVersions.firesDeprecated(member.metadata().deprecatedSinceVersion(), target)
+    return PlatformMemberVersions.isDeprecated(member.metadata(), target)
       || member.getSymbolDescription().isDeprecated();
   }
 
@@ -547,7 +547,7 @@ public final class CompletionProvider {
   private boolean isPlatformClassDeprecated(String className, FileType fileType, CompatibilityMode target) {
     return typeService.resolve(className, fileType)
       .map(ref -> typeService.getTypeMetadata(ref, fileType))
-      .map(metadata -> PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target))
+      .map(metadata -> PlatformMemberVersions.isDeprecated(metadata, target))
       .orElse(false);
   }
 

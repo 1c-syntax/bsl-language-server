@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
@@ -102,6 +103,21 @@ public class PlatformMemberVersions {
   public static boolean firesUnavailable(String sinceVersion, CompatibilityMode target) {
     var version = parseSinceVersion(sinceVersion);
     return version != null && CompatibilityMode.compareTo(version, target) < 0;
+  }
+
+  /**
+   * Сущность (член, тип, конструктор) устарела для целевой платформы. Знание
+   * «какое поле метаданных отвечает за устаревание» живёт здесь, а не
+   * размазано по вызывающим — их четыре: обе диагностики, автодополнение
+   * членов и автодополнение классов после {@code Новый}.
+   */
+  public static boolean isDeprecated(PlatformMetadata metadata, CompatibilityMode target) {
+    return firesDeprecated(metadata.deprecatedSinceVersion(), target);
+  }
+
+  /** Сущность (член, тип) недоступна в целевой платформе. Парная к {@link #isDeprecated}. */
+  public static boolean isUnavailable(PlatformMetadata metadata, CompatibilityMode target) {
+    return firesUnavailable(metadata.sinceVersion(), target);
   }
 
   /**

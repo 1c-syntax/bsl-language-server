@@ -34,19 +34,19 @@ import java.util.List;
  * @param parameters Параметры (в порядке объявления).
  * @param returnTypes Типы возвращаемого значения (полные имена); пусто для процедур.
  * @param description Описание сигнатуры; {@code null}, если отсутствует.
- * @param metadata Платформенная метаинформация варианта (заполнена у конструкторов:
+ * @param metadata Метаинформация варианта (заполнена у конструкторов:
  *   версии, примеры, «См. также»); {@code null}, если метаинформация отсутствует.
  */
 public record TypeSignatureDto(
   List<TypeParameterDto> parameters,
   List<String> returnTypes,
   @Nullable String description,
-  @Nullable PlatformMetadataDto metadata
+  @Nullable ApiMetadataDto metadata
 ) {
 
   public static TypeSignatureDto from(SignatureDescriptor signature, Language language) {
     var description = signature.displayDescription(language);
-    var metadata = PlatformMetadataDto.from(signature.metadata(), language);
+    var metadata = ApiMetadataDto.from(signature.metadata(), language);
     return new TypeSignatureDto(
       signature.parameters().stream().map(parameter -> TypeParameterDto.from(parameter, language)).toList(),
       signature.returnTypes().refs().stream().map(TypeRef::qualifiedName).sorted().toList(),

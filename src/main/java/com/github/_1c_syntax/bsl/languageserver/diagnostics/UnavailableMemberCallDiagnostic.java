@@ -81,7 +81,7 @@ public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
     var reported = new HashSet<Range>();
     for (var member : members) {
       var metadata = member.descriptor().metadata();
-      if (!PlatformMemberVersions.firesUnavailable(metadata.sinceVersion(), target)) {
+      if (!PlatformMemberVersions.isUnavailable(metadata, target)) {
         continue;
       }
       if (reported.add(member.range())) {
@@ -98,12 +98,12 @@ public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
    */
   private void checkConstructedTypes(List<ConstructedType> constructedTypes, CompatibilityMode target) {
     for (var constructed : constructedTypes) {
-      var sinceVersion = constructed.metadata().sinceVersion();
-      if (!PlatformMemberVersions.firesUnavailable(sinceVersion, target)) {
+      if (!PlatformMemberVersions.isUnavailable(constructed.metadata(), target)) {
         continue;
       }
       diagnosticStorage.addDiagnostic(constructed.node(),
-        info.getResourceString("typeMessage", constructed.typeName(), sinceVersion));
+        info.getResourceString("typeMessage", constructed.typeName(),
+          constructed.metadata().sinceVersion()));
     }
   }
 }

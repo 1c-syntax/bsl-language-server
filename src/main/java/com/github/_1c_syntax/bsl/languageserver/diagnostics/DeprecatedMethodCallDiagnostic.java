@@ -102,7 +102,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     var reported = new HashSet<Range>();
     for (var member : platformMemberCalls) {
       var metadata = member.descriptor().metadata();
-      if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)
+      if (PlatformMemberVersions.isDeprecated(metadata, target)
         && reported.add(member.range())) {
         diagnosticStorage.addDiagnostic(member.range(),
           info.getMessage(member.descriptor().name(), replacementsHint(metadata)));
@@ -119,7 +119,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   private void checkConstructedTypes(List<ConstructedType> constructedTypes, CompatibilityMode target) {
     for (var constructed : constructedTypes) {
       var metadata = constructed.metadata();
-      if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)) {
+      if (PlatformMemberVersions.isDeprecated(metadata, target)) {
         diagnosticStorage.addDiagnostic(constructed.node(),
           info.getMessage(constructed.typeName(), replacementsHint(metadata)));
       }

@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
-import com.github._1c_syntax.bsl.languageserver.mcp.dto.PlatformMetadataDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.ApiMetadataDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeSignatureDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -73,7 +73,7 @@ public class TypeInfoTool {
    * @param constructors Сигнатуры конструкторов ({@code Новый ...}); пустой список, если конструкторов нет.
    * @param definedAt URI исходного файла-объявления (для конфигурационных и пользовательских типов);
    *   {@code null} для платформенных/примитивных типов.
-   * @param metadata Платформенная метаинформация самого типа (доступность по видам клиента,
+   * @param metadata Метаинформация самого типа (доступность по видам клиента,
    *   версии появления/устаревания, «Замечание», примеры, «См. также»); {@code null},
    *   если метаинформация отсутствует.
    */
@@ -86,7 +86,7 @@ public class TypeInfoTool {
     List<TypeMemberDto> events,
     List<TypeSignatureDto> constructors,
     @Nullable String definedAt,
-    @Nullable PlatformMetadataDto metadata
+    @Nullable ApiMetadataDto metadata
   ) {
   }
 
@@ -132,7 +132,7 @@ public class TypeInfoTool {
 
       var description = typeService.getDescription(typeRef, effectiveLanguage, fileType);
       var definedAt = typeService.definingUri(typeRef).map(URI::toString).orElse(null);
-      var metadata = PlatformMetadataDto.from(
+      var metadata = ApiMetadataDto.from(
         typeService.getTypeMetadata(typeRef, fileType), effectiveLanguage);
       return new Result(
         typeRef.qualifiedName(),

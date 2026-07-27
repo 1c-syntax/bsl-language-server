@@ -33,12 +33,12 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PlatformMetadataDtoTest {
+class ApiMetadataDtoTest {
 
   @Test
   void emptyMetadataIsEmpty() {
-    assertThat(PlatformMetadataDto.EMPTY.isEmpty()).isTrue();
-    assertThat(PlatformMetadataDto.from(PlatformMetadata.EMPTY, Language.RU).isEmpty()).isTrue();
+    assertThat(ApiMetadataDto.EMPTY.isEmpty()).isTrue();
+    assertThat(ApiMetadataDto.from(PlatformMetadata.EMPTY, Language.RU).isEmpty()).isTrue();
   }
 
   @Test
@@ -55,7 +55,7 @@ class PlatformMetadataDtoTest {
       List.of(BilingualString.of("См. Сообщить", "See Message"))
     );
 
-    var dto = PlatformMetadataDto.from(metadata, Language.RU);
+    var dto = ApiMetadataDto.from(metadata, Language.RU);
 
     assertThat(dto.sinceVersion()).isEqualTo("8.3.20");
     assertThat(dto.deprecatedSinceVersion()).isEqualTo("8.3.27");
@@ -83,7 +83,7 @@ class PlatformMetadataDtoTest {
       List.of(BilingualString.of("См. Сообщить", "See Message"))
     );
 
-    var dto = PlatformMetadataDto.from(metadata, Language.EN);
+    var dto = ApiMetadataDto.from(metadata, Language.EN);
 
     assertThat(dto.returnValueDescription()).isEqualTo("Returns a number");
     assertThat(dto.notes()).isEqualTo("Note");
@@ -105,7 +105,7 @@ class PlatformMetadataDtoTest {
       List.of()
     );
 
-    var dto = PlatformMetadataDto.from(metadata, Language.RU);
+    var dto = ApiMetadataDto.from(metadata, Language.RU);
 
     assertThat(dto.sinceVersion()).isNull();
     assertThat(dto.deprecatedSinceVersion()).isNull();
@@ -125,7 +125,7 @@ class PlatformMetadataDtoTest {
       List.of(), List.of()
     );
 
-    var dto = PlatformMetadataDto.from(metadata, Language.RU);
+    var dto = ApiMetadataDto.from(metadata, Language.RU);
 
     assertThat(dto.availabilities()).containsExactly("SERVER", "THIN_CLIENT", "WEB_CLIENT");
   }
@@ -144,7 +144,7 @@ class PlatformMetadataDtoTest {
       List.of()
     );
 
-    var dto = PlatformMetadataDto.from(metadata, Language.RU);
+    var dto = ApiMetadataDto.from(metadata, Language.RU);
 
     assertThat(dto.examples()).containsExactly("Пример1");
   }

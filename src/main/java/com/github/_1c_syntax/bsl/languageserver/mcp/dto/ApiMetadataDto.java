@@ -31,11 +31,14 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Платформенная метаинформация из синтакс-помощника: контексты исполнения,
- * версионная совместимость, тексты разделов «Возвращаемое значение»,
- * «Замечание», «Примеры», «См. также» из HBK. Описывает как член типа, так и
- * сам тип или его конструктор — набор заполненных полей зависит от источника
- * (у типа нет режима доступа, у конструктора — описания возвращаемого значения).
+ * Метаинформация элемента API из справочника: контексты исполнения, версионная
+ * совместимость, тексты разделов «Возвращаемое значение», «Замечание»,
+ * «Примеры», «См. также». Для 1С источник — синтакс-помощник платформы, для
+ * OneScript — встроенный справочник типов.
+ * <p>
+ * Описывает как член типа, так и сам тип или его конструктор — набор
+ * заполненных полей зависит от источника (у типа нет режима доступа,
+ * у конструктора — описания возвращаемого значения).
  *
  * @param sinceVersion Версия платформы, начиная с которой член доступен; {@code null}, если не задано.
  * @param deprecatedSinceVersion Версия, начиная с которой устарел; {@code null}, если не задано.
@@ -47,7 +50,7 @@ import java.util.List;
  * @param examples Примеры использования.
  * @param seeAlso «См. также» — связанные сущности.
  */
-public record PlatformMetadataDto(
+public record ApiMetadataDto(
   @Nullable String sinceVersion,
   @Nullable String deprecatedSinceVersion,
   List<String> recommendedReplacements,
@@ -60,12 +63,12 @@ public record PlatformMetadataDto(
 ) {
 
   /** Пустая метаинформация — все поля {@code null} или пустые списки. */
-  public static final PlatformMetadataDto EMPTY = new PlatformMetadataDto(
+  public static final ApiMetadataDto EMPTY = new ApiMetadataDto(
     null, null, List.of(), List.of(), null, null, null, List.of(), List.of()
   );
 
-  public static PlatformMetadataDto from(PlatformMetadata metadata, Language language) {
-    return new PlatformMetadataDto(
+  public static ApiMetadataDto from(PlatformMetadata metadata, Language language) {
+    return new ApiMetadataDto(
       nullIfBlank(metadata.sinceVersion()),
       nullIfBlank(metadata.deprecatedSinceVersion()),
       List.copyOf(metadata.recommendedReplacements()),
