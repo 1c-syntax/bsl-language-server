@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.platform;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -34,10 +36,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Резолв платформенных членов в сайтах вызовов модуля — общая база для
- * диагностик устаревания ({@code DeprecatedMethodCall}) и
- * недоступности-по-версии ({@code UnavailableMemberCall}). Версионная
- * применимость члена (устаревание/недоступность) вынесена в
+ * Резолв обращений к платформенному API в модуле — общая база для диагностик
+ * устаревания ({@code DeprecatedMethodCall}) и недоступности-по-версии
+ * ({@code UnavailableMemberCall}). Собирает два вида сайтов: члены (вызов
+ * метода, обращение к свойству, вызов глобальной функции) и конструируемые
+ * типы ({@code Новый Тип(…)}). Версионная применимость (устаревание/
+ * недоступность) вынесена в
  * {@link com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions}.
  * <p>
  * Глобальные функции резолвятся напрямую (без инференса), поэтому собираются
@@ -46,6 +50,10 @@ import java.util.List;
  * дешёвый фильтр, после которого {@link TypeService#membersAt} выполняет
  * точный резолв члена на конкретном типе-владельце (иначе сработал бы
  * однофамилец с другого типа).
+ * <p>
+ * Форма {@code Новый("ИмяТипа", …)} не разбирается: имя типа там — значение
+ * выражения, вычисляемое в рантайме. Это совпадает с областью резолва
+ * {@code NewExpressionReferenceFinder}, на котором стоят hover и signature help.
  */
 public final class PlatformMemberCalls {
 
@@ -60,40 +68,89 @@ public final class PlatformMemberCalls {
   }
 
   /**
-   * Собирает резолвленные платформенные члены во всех сайтах вызовов/обращений
-   * модуля. Для union-типа ресивера возвращаются все кандидаты-владельцы (по
-   * одному {@link TypedMember} на тип) с одинаковым диапазоном.
+   * Сайты обращения к платформенному API одного модуля.
+   *
+   * @param members          резолвленные члены (метод, свойство, глобальная функция).
+   *                         Для union-типа ресивера возвращаются все кандидаты-владельцы
+   *                         (по одному {@link TypedMember} на тип) с одинаковым диапазоном.
+   * @param constructedTypes типы, конструируемые через {@code Новый Тип(…)}.
    */
-  public static List<TypedMember> collect(DocumentContext documentContext,
-                                          TypeService typeService) {
+  public record CallSites(List<TypedMember> members, List<ConstructedType> constructedTypes) {
+  }
+
+  /**
+   * Конструируемый тип одного сайта {@code Новый Тип(…)}.
+   *
+   * @param typeRef  резолвленный тип.
+   * @param typeName имя типа, как написано в коде (для сообщения диагностики).
+   * @param metadata «страничные» метаданные типа: версии появления/устаревания,
+   *                 рекомендуемые замены и т.д.
+   * @param node     узел имени типа — диапазон подсветки.
+   */
+  public record ConstructedType(
+    TypeRef typeRef,
+    String typeName,
+    PlatformMetadata metadata,
+    ParserRuleContext node
+  ) {
+  }
+
+  /**
+   * Собирает все сайты обращения к платформенному API модуля за один обход AST
+   * (раньше на каждый вид сайта был свой {@code findAllRuleNodes} — то есть
+   * отдельный полный обход дерева). Нерезолвленные имена пропускаются.
+   */
+  public static CallSites collect(DocumentContext documentContext, TypeService typeService) {
     var ast = documentContext.getAst();
-    var result = new ArrayList<TypedMember>();
-    // Один обход AST на все три вида сайтов (раньше — три отдельных
-    // findAllRuleNodes, каждый — полный обход дерева).
+    var members = new ArrayList<TypedMember>();
+    var constructedTypes = new ArrayList<ConstructedType>();
     for (var node : Trees.findAllRuleNodes(ast,
-      BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall, BSLParser.RULE_accessProperty)) {
-      collectSite(node, documentContext, typeService, result);
+      BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall, BSLParser.RULE_accessProperty,
+      BSLParser.RULE_newExpression)) {
+      collectSite(node, documentContext, typeService, members, constructedTypes);
     }
-    return result;
+    return new CallSites(members, constructedTypes);
   }
 
   /** Резолв одного сайта вызова/обращения в зависимости от вида продукции. */
   private static void collectSite(ParserRuleContext node, DocumentContext documentContext,
-                                  TypeService typeService, List<TypedMember> sink) {
+                                  TypeService typeService, List<TypedMember> memberSink,
+                                  List<ConstructedType> constructedSink) {
     if (node instanceof BSLParser.GlobalMethodCallContext globalCall) {
       // Глобальные вызовы — резолв дёшев (без инференса), без pre-filter'а по имени.
       var methodName = globalCall.methodName();
       if (methodName != null) {
-        resolveInto(sink, documentContext, typeService, methodName.IDENTIFIER());
+        resolveInto(memberSink, documentContext, typeService, methodName.IDENTIFIER());
       }
     } else if (node instanceof BSLParser.MethodCallContext methodCall) {
       var methodName = methodCall.methodName();
       if (methodName != null) {
-        resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink);
+        resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, memberSink);
       }
     } else if (node instanceof BSLParser.AccessPropertyContext accessProperty) {
-      resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, sink);
+      resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, memberSink);
+    } else if (node instanceof BSLParser.NewExpressionContext newExpression) {
+      resolveConstructedType(newExpression, documentContext, typeService, constructedSink);
     }
+  }
+
+  /**
+   * Резолв конструируемого типа: имя типа из {@code Новый Тип(…)} + его
+   * «страничные» метаданные. Форма {@code Новый(«ИмяТипа»)} и неизвестные
+   * реестру имена пропускаются.
+   */
+  private static void resolveConstructedType(BSLParser.NewExpressionContext newExpression,
+                                             DocumentContext documentContext,
+                                             TypeService typeService,
+                                             List<ConstructedType> sink) {
+    var typeNameContext = newExpression.typeName();
+    if (typeNameContext == null) {
+      return;
+    }
+    var fileType = documentContext.getFileType();
+    var typeName = typeNameContext.getText();
+    typeService.resolve(typeName, fileType).ifPresent(typeRef -> sink.add(new ConstructedType(
+      typeRef, typeName, typeService.getTypeMetadata(typeRef, fileType), typeNameContext)));
   }
 
   /**

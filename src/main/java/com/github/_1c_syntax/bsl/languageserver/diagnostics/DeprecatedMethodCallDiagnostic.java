@@ -29,13 +29,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls.ConstructedType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
@@ -63,12 +66,14 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   public void check() {
     checkUserDefinedMethods();
 
-    // Сбор платформенных членов по всем сайтам вызовов — один раз на модуль;
-    // обе проверки ниже работают по одному и тому же списку (раньше каждая
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
+    // Сбор сайтов обращения к платформенному API — один раз на модуль; все три
+    // проверки ниже работают по одному и тому же результату (раньше каждая
     // независимо пересобирала его, удваивая обход AST и резолв членов).
-    var platformMemberCalls = PlatformMemberCalls.collect(documentContext, typeService);
-    checkPlatformMembers(platformMemberCalls);
-    checkDeletedPrefixMembers(platformMemberCalls);
+    var callSites = PlatformMemberCalls.collect(documentContext, typeService);
+    checkPlatformMembers(callSites.members(), target);
+    checkDeletedPrefixMembers(callSites.members());
+    checkConstructedTypes(callSites.constructedTypes(), target);
   }
 
   /**
@@ -93,21 +98,40 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
    * ({@code target >= deprecatedSinceVersion}). Срабатывает, если хотя бы один
    * из возможных типов-владельцев ресивера делает член устаревшим.
    */
-  private void checkPlatformMembers(List<TypedMember> platformMemberCalls) {
-    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
+  private void checkPlatformMembers(List<TypedMember> platformMemberCalls, CompatibilityMode target) {
     var reported = new HashSet<Range>();
     for (var member : platformMemberCalls) {
       var metadata = member.descriptor().metadata();
       if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)
         && reported.add(member.range())) {
-        var replacements = metadata.recommendedReplacements();
-        var hint = replacements.isEmpty()
-          ? ""
-          : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
         diagnosticStorage.addDiagnostic(member.range(),
-          info.getMessage(member.descriptor().name(), hint));
+          info.getMessage(member.descriptor().name(), replacementsHint(metadata)));
       }
     }
+  }
+
+  /**
+   * Конструирование типа, устаревшего для целевой версии платформы
+   * ({@code Новый ЗащищенноеСоединениеNSS()} при {@code target >= 8.3.8}).
+   * Версия устаревания и рекомендуемые замены берутся с главной страницы типа
+   * в синтакс-помощнике.
+   */
+  private void checkConstructedTypes(List<ConstructedType> constructedTypes, CompatibilityMode target) {
+    for (var constructed : constructedTypes) {
+      var metadata = constructed.metadata();
+      if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)) {
+        diagnosticStorage.addDiagnostic(constructed.node(),
+          info.getMessage(constructed.typeName(), replacementsHint(metadata)));
+      }
+    }
+  }
+
+  /** Хвост сообщения «Следует использовать: …» либо пустая строка, если замены не указаны. */
+  private String replacementsHint(PlatformMetadata metadata) {
+    var replacements = metadata.recommendedReplacements();
+    return replacements.isEmpty()
+      ? ""
+      : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
   }
 
   /**

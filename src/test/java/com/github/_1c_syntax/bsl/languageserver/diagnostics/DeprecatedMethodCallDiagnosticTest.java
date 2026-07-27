@@ -21,17 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 @CleanupContextBeforeClassAndAfterClass
 class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<DeprecatedMethodCallDiagnostic> {
+
+  @Autowired
+  private TypeRegistry typeRegistry;
+
   DeprecatedMethodCallDiagnosticTest() {
     super(DeprecatedMethodCallDiagnostic.class);
   }
@@ -102,5 +113,48 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
 
     // then — оба обращения к УдалитьЛегаси (присваивание и чтение) подсвечены.
     assertThat(diagnostics).hasSize(2);
+  }
+
+  @Test
+  void deprecatedConstructedType() {
+
+    // given — «страничные» метаданные типа приходят из HBK, в JSON-fallback'е
+    // их нет, поэтому версию устаревания типа регистрируем вручную.
+    registerDeprecatedType();
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.10");
+    try {
+      // when
+      List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallType");
+
+      // then — подсвечено имя типа в «Новый Массив()», в сообщении есть замена.
+      assertThat(diagnostics).hasSize(1);
+      assertThat(DiagnosticMessage.getStringValue(diagnostics.get(0).getMessage()))
+        .contains("Массив")
+        .contains("ФиксированныйМассив");
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  @Test
+  void deprecatedConstructedTypeNotReportedForOlderTarget() {
+
+    // given
+    registerDeprecatedType();
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.4");
+    try {
+      // when / then — целевая версия ниже версии устаревания типа.
+      assertThat(getDiagnostics("DeprecatedMethodCallType")).isEmpty();
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  /** Тип {@code Массив} устарел с 8.3.5 в пользу {@code ФиксированныйМассив} (синтетика для теста). */
+  private void registerDeprecatedType() {
+    var ref = typeRegistry.resolve("Массив").orElseThrow();
+    typeRegistry.registerTypeMetadata(ref, new PlatformMetadata(
+      "", "8.3.5", List.of("ФиксированныйМассив"), Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()), FileType.BSL);
   }
 }
