@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785148351182,
+  "lastUpdate": 1785150908633,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40889,6 +40889,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.146313217641647",
             "extra": "mean: 92.89254728953044 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f47395b94d4c6bdd444c810d4b9823f0b75f32a3",
+          "message": "Merge pull request #4306 from 1c-syntax/perf/member-sources-compact-storage\n\nperf(types): компактное хранение источников членов вместо списка на тип",
+          "timestamp": "2026-07-27T12:42:02+02:00",
+          "tree_id": "3e9dea55cfc43d14088fd941137d06120ee275df",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f47395b94d4c6bdd444c810d4b9823f0b75f32a3"
+        },
+        "date": 1785150896102,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.22354706128438,
+            "unit": "sec",
+            "range": "stddev: 2.453474504002002",
+            "extra": "mean: 93.22354706128438 sec\nrounds: 3"
           }
         ]
       }
