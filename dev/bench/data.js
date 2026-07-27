@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785167574280,
+  "lastUpdate": 1785170307870,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40951,6 +40951,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.447990436201025",
             "extra": "mean: 93.78909913698833 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aec31a91070ba71d33a6e1600d887bb7d99645b8",
+          "message": "Merge pull request #4289 from 1c-syntax/feat/self-member-lsp-support\n\nfeat(types): self-члены модуля в completion, hover, references, signature help, semantic tokens и инференсе типов",
+          "timestamp": "2026-07-27T16:57:12+02:00",
+          "tree_id": "de30f7f188c42dec2ed064df60ea01e6d0c0a826",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/aec31a91070ba71d33a6e1600d887bb7d99645b8"
+        },
+        "date": 1785170296583,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.93841791152954,
+            "unit": "sec",
+            "range": "stddev: 3.12355578731045",
+            "extra": "mean: 93.93841791152954 sec\nrounds: 3"
           }
         ]
       }
