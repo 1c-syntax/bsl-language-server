@@ -252,12 +252,18 @@ class TypeRegistryRegistrationTest {
   void registerTypeMetadataIgnoresEmptyMetadata() {
     // given
     var ref = typeRegistry.registerUserType("ТМета2", declaration, FileType.BSL);
+    var metadata = new PlatformMetadata(
+      "8.3.10", "", List.of(), Set.of(), null,
+      BilingualString.EMPTY, BilingualString.of("замечание"),
+      List.of(), List.of());
 
-    // when — пустые метаданные не занимают место в индексе
+    // when — пустые метаданные не занимают место в индексе, поэтому следующая
+    // регистрация не упирается в «первая выигрывает»
     typeRegistry.registerTypeMetadata(ref, PlatformMetadata.EMPTY, FileType.BSL);
+    typeRegistry.registerTypeMetadata(ref, metadata, FileType.BSL);
 
     // then
-    assertThat(typeRegistry.getTypeMetadata(ref, FileType.BSL)).isSameAs(PlatformMetadata.EMPTY);
+    assertThat(typeRegistry.getTypeMetadata(ref, FileType.BSL)).isEqualTo(metadata);
   }
 
   @Test

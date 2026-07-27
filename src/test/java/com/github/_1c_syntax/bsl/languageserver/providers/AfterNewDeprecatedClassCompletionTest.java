@@ -85,6 +85,23 @@ class AfterNewDeprecatedClassCompletionTest extends AbstractServerContextAwareTe
   }
 
   @Test
+  void classIsMarkedWhenTargetEqualsDeprecationVersion() {
+    // given — граница правила «target >= deprecatedSinceVersion»
+    var configuration = deprecateArraySince("8.3.5");
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.5");
+    try {
+      // when
+      var item = itemFor("Массив");
+
+      // then — на самой версии устаревания класс уже помечается
+      assertThat(isMarkedDeprecated(item)).isTrue();
+      assertThat(item.getSortText()).isEqualTo("31_Массив");
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  @Test
   void classIsNotMarkedWhenTargetBelowDeprecationVersion() {
     // given — целевая версия ниже версии устаревания типа
     var configuration = deprecateArraySince("8.3.5");
