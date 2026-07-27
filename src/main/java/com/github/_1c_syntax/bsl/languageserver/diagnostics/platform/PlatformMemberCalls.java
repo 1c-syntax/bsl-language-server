@@ -52,8 +52,7 @@ import java.util.List;
  * однофамилец с другого типа).
  * <p>
  * Форма {@code Новый("ИмяТипа", …)} не разбирается: имя типа там — значение
- * выражения, вычисляемое в рантайме. Это совпадает с областью резолва
- * {@code NewExpressionReferenceFinder}, на котором стоят hover и signature help.
+ * выражения, вычисляемое в рантайме.
  */
 public final class PlatformMemberCalls {
 
