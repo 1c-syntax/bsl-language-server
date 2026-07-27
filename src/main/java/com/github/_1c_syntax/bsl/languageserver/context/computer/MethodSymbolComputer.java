@@ -298,7 +298,7 @@ public final class MethodSymbolComputer
       return Optional.empty();
     }
 
-    return Optional.of(MethodDescription.create(comments));
+    return Optional.of(documentContext.getSymbolDescriptionIndex().methodDescription(documentContext, comments));
   }
 
   private static List<ParameterDefinition> createParameters(

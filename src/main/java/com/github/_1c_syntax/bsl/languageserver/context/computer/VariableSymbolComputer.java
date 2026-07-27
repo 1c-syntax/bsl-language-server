@@ -282,7 +282,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      VariableDescription.create(Collections.emptyList(), trailingComments)
+      documentContext.getSymbolDescriptionIndex()
+        .variableDescription(documentContext, Collections.emptyList(), trailingComments)
     );
   }
 
@@ -294,7 +295,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      VariableDescription.create(Collections.emptyList(), trailingComments)
+      documentContext.getSymbolDescriptionIndex()
+        .variableDescription(documentContext, Collections.emptyList(), trailingComments)
     );
   }
 
@@ -306,7 +308,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      VariableDescription.create(Collections.emptyList(), trailingComments)
+      documentContext.getSymbolDescriptionIndex()
+        .variableDescription(documentContext, Collections.emptyList(), trailingComments)
     );
   }
 
@@ -326,7 +329,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return Optional.empty();
     }
 
-    return Optional.of(VariableDescription.create(comments, trailingComments));
+    return Optional.of(documentContext.getSymbolDescriptionIndex()
+      .variableDescription(documentContext, comments, trailingComments));
 
   }
 
