@@ -113,30 +113,6 @@ public class ReferenceIndex {
   }
 
   /**
-   * Все вхождения того же символа, что и вхождение под курсором {@code position}.
-   * <p>
-   * В отличие от {@link #getReferencesTo(SourceDefinedSymbol)}, работает по ключу самого
-   * вхождения, поэтому находит ссылки и на символы без source-defined представления —
-   * например, на неквалифицированные self-члены (их вхождения помечены
-   * {@link #SELF_MEMBER_SCOPE}). Если под курсором вхождения нет — пусто.
-   *
-   * @param uri      URI документа.
-   * @param position позиция курсора на одном из вхождений символа.
-   * @return все вхождения символа под курсором.
-   */
-  public List<Reference> getReferencesTo(URI uri, Position position) {
-    var occurrence = locationRepository.findByPosition(uri, position).orElse(null);
-    if (occurrence == null) {
-      return List.of();
-    }
-    return symbolOccurrenceRepository.getAllBySymbol(occurrence.symbol())
-      .stream()
-      .map(this::buildReference)
-      .flatMap(Optional::stream)
-      .collect(Collectors.toList());
-  }
-
-  /**
    * Поиск символа по позиции курсора.
    *
    * @param uri      URI документа, в котором необходимо осуществить поиск.

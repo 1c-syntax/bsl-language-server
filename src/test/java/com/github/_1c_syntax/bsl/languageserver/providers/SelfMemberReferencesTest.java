@@ -37,10 +37,10 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Find-references на неквалифицированном self-члене (реквизите self-типа модуля):
- * все его голые вхождения индексируются как обращения к одному
- * {@code PlatformMemberSymbol} под общим ключом, поэтому запрос ссылок из любого
- * вхождения находит их все.
+ * Find-references на неквалифицированном self-члене (реквизите self-типа модуля) ссылок
+ * НЕ отдаёт: клиенту возвращаются location только по source-defined символам, а у self-члена
+ * (синтетический {@code PlatformMemberSymbol}) source-объявления нет. Guard от повторного
+ * добавления occurrence-поиска в {@code ReferencesProvider}.
  */
 class SelfMemberReferencesTest extends AbstractServerContextAwareTest {
 
@@ -51,7 +51,7 @@ class SelfMemberReferencesTest extends AbstractServerContextAwareTest {
   private ReferencesProvider referencesProvider;
 
   @Test
-  void referencesOfBareSelfAttributeFindAllItsUsages() {
+  void bareSelfAttributeReturnsNoReferences() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
     var content = """
@@ -71,8 +71,9 @@ class SelfMemberReferencesTest extends AbstractServerContextAwareTest {
       var references = referencesProvider.getReferences(documentContext, params);
 
       assertThat(references)
-        .as("оба голых обращения к self-реквизиту Реквизит1 должны находиться как ссылки")
-        .hasSize(2);
+        .as("find-references отдаёт location только по source-defined символам; "
+          + "у self-члена source-объявления нет — ссылок не возвращаем")
+        .isEmpty();
     } finally {
       context.removeDocument(documentContext.getUri());
     }

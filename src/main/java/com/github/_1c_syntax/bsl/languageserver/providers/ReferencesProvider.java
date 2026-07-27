@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.ReferenceContext;
@@ -62,27 +61,14 @@ public class ReferencesProvider {
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
     var position = params.getPosition();
 
-    var maybeReference = referenceResolver.findReference(documentContext.getUri(), position);
-    if (maybeReference.isEmpty()) {
-      // Под курсором нет ссылки — искать нечего; без повторного прохода по индексу.
-      return new ArrayList<>();
-    }
+    var maybeSymbol = referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol);
 
-    var reference = maybeReference.get();
-    var maybeSymbol = reference.getSourceDefinedSymbol();
-
+    // Клиенту возвращаем ссылки только для source-defined символов. У несорсовых целей
+    // (неквалифицированный self-член, точечный платформенный член, ключевое слово,
+    // аннотация) source-объявления нет — ссылки на них не отдаём.
     if (maybeSymbol.isEmpty()) {
-      // Цель ссылки — несорсовый символ. Ссылки чейзим только у неквалифицированного
-      // self-члена: он приходит как PlatformMemberSymbol и индексируется ReferenceIndexFiller
-      // под маркером $self, но source-объявления не имеет — поэтому все его вхождения берём по
-      // occurrence-ключу под курсором. Прочие синтетические цели (точечный платформенный член
-      // получатель.член, ключевое слово, аннотация) в индекс вхождений не попадают — ссылок нет.
-      if (!(reference.symbol() instanceof PlatformMemberSymbol)) {
-        return new ArrayList<>();
-      }
-      return referenceIndex.getReferencesTo(documentContext.getUri(), position).stream()
-        .map(Reference::toLocation)
-        .collect(Collectors.toCollection(ArrayList::new));
+      return new ArrayList<>();
     }
 
     List<Location> locations = maybeSymbol.stream()
