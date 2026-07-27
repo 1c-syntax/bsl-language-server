@@ -32,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -113,6 +115,61 @@ class TypeRegistryScopedSourcesTest {
     assertThat(typeRegistry.getDescription(ref, FileType.OS)).isEqualTo("общее описание");
     assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).hasSize(1);
     assertThat(typeRegistry.getConstructors(ref, FileType.OS)).hasSize(1);
+  }
+
+  @Test
+  void invalidateMembersEvictsOnlyGivenType() {
+    // given — два типа с изменяемыми источниками членов, оба прочитаны и мемоизированы
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйТочечныйA");
+    var refB = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйТочечныйB");
+    var nameA = new AtomicReference<>("A1");
+    var nameB = new AtomicReference<>("B1");
+    typeRegistry.registerMemberSource(refA,
+      () -> List.of(MemberDescriptor.property(nameA.get(), TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refB,
+      () -> List.of(MemberDescriptor.property(nameB.get(), TypeRef.UNKNOWN, "")), FileType.BSL);
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1");
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("B1");
+
+    // when — оба источника поменяли вывод, но инвалидируем ТОЛЬКО тип A
+    nameA.set("A2");
+    nameB.set("B2");
+    typeRegistry.invalidateMembers(refA);
+
+    // then — A пересобран (виден новый член), B остался из кэша: инвалидация точечная,
+    // без сдвига глобальной эпохи (иначе B тоже пересобрался бы в "B2")
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A2");
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("B1");
+  }
+
+  @Test
+  void staleInFlightComputeIsRejectedAfterInvalidation() {
+    // given — источник, который ВО ВРЕМЯ первого вычисления сам инициирует инвалидацию
+    // (имитация параллельной правки, прошедшей после снятия поколения, но до записи в кэш)
+    var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйГонкаПоколения");
+    var value = new AtomicReference<>("stale");
+    var invalidateWhileComputing = new AtomicBoolean(false);
+    typeRegistry.registerMemberSource(ref, () -> {
+      if (invalidateWhileComputing.getAndSet(false)) {
+        typeRegistry.invalidateMembers(ref);
+      }
+      return List.of(MemberDescriptor.property(value.get(), TypeRef.UNKNOWN, ""));
+    }, FileType.BSL);
+
+    // when — вычисление снимает поколение G, внутри него проходит инвалидация (G→G+1),
+    // устаревший результат дописывается в кэш под поколением G
+    invalidateWhileComputing.set(true);
+    typeRegistry.getMembers(ref, FileType.BSL);
+    value.set("fresh");
+
+    // then — следующее чтение видит рассинхрон поколения и пересобирает свежий результат,
+    // а не отдаёт устаревшую запись
+    assertThat(typeRegistry.getMembers(ref, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("fresh");
   }
 
   @Test

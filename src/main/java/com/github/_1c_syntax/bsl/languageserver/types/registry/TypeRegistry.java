@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -50,7 +49,6 @@ import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -129,6 +127,15 @@ public class TypeRegistry {
    */
   private final AtomicLong membersEpoch = new AtomicLong();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
+  /**
+   * Пер-типовые поколения memo членов: точечная инвалидация ({@link #invalidateMembers})
+   * инкрементирует поколение ключа, а {@link #getMembers} штампует им запись кэша и
+   * отвергает публикацию из устаревшего поколения. Защищает от гонки, когда параллельный
+   * незавершённый {@code computeMembers} публикует устаревший результат уже ПОСЛЕ
+   * инвалидации (эпоха при точечной инвалидации не двигается). Ключи заводятся только для
+   * реально инвалидированных типов — для нетронутых поколение по умолчанию {@code 0}.
+   */
+  private final Map<MembersKey, Long> membersGeneration = new ConcurrentHashMap<>();
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
@@ -142,7 +149,7 @@ public class TypeRegistry {
     }
   }
 
-  private record CachedMembers(long epoch, List<MemberDescriptor> members) {
+  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
   }
 
   /** Пустой контейнер с разрезами по всем языкам. */
@@ -393,12 +400,16 @@ public class TypeRegistry {
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
     var epoch = membersEpoch.get();
     var key = new MembersKey(ref, fileType);
+    var generation = membersGeneration.getOrDefault(key, 0L);
     var cached = membersCache.get(key);
-    if (cached != null && cached.epoch() == epoch) {
+    if (cached != null && cached.epoch() == epoch && cached.generation() == generation) {
       return cached.members();
     }
     var members = computeMembers(ref, fileType);
-    membersCache.put(key, new CachedMembers(epoch, members));
+    // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
+    // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
+    // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
+    membersCache.put(key, new CachedMembers(epoch, generation, members));
     return members;
   }
 
@@ -447,8 +458,9 @@ public class TypeRegistry {
    * @param fileType язык, в котором он виден без префикса.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
-    globalPropertyTypes.get(fileType).add(ref);
-    membersEpoch.incrementAndGet();
+    if (globalPropertyTypes.get(fileType).add(ref)) {
+      membersEpoch.incrementAndGet();
+    }
   }
 
   /**
@@ -460,9 +472,13 @@ public class TypeRegistry {
    * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    globalPropertyTypes.get(fileType).add(ref);
     globalPropertySymbols.put(ref, new WeakReference<>(declaration));
-    membersEpoch.incrementAndGet();
+    if (globalPropertyTypes.get(fileType).add(ref)) {
+      membersEpoch.incrementAndGet();
+    }
+    // Повторная пометка (правка уже зарегистрированного модуля) обновляет только
+    // symbol-источник; инвалидацию memo GLOBAL_CONTEXT-члена и name-индекса, куда
+    // символ уже вошёл, выполняет вызывающий провайдер точечно.
   }
 
   /**
@@ -509,20 +525,6 @@ public class TypeRegistry {
     }
     var weak = globalPropertySymbols.get(ref);
     return weak == null ? null : weak.get();
-  }
-
-  /**
-   * Версия данных о членах типов: монотонный счётчик, инкрементируемый при любой
-   * мутации member-источников/оверрайдов и при изменении документов. Потребители
-   * (например, {@link GlobalScopeProvider} для name-индекса глобальной области)
-   * используют его как ключ инвалидации своих кэшей. Резолв глобальной области сам
-   * по себе — не дело {@code TypeRegistry} (хранилища типов); это абстракция
-   * {@code GlobalScopeProvider}.
-   *
-   * @return текущая эпоха членов.
-   */
-  public long membersEpoch() {
-    return membersEpoch.get();
   }
 
   /**
@@ -591,14 +593,22 @@ public class TypeRegistry {
   }
 
   /**
-   * Сбросить memo {@link #getMembers}. Member-source'ы конфигурационных модулей и
-   * OScript-библиотек лениво читают символьное дерево документа и меняют вывод при
-   * правке без ре-регистрации источника — поэтому при любом изменении содержимого
-   * документа memo надо инвалидировать.
+   * Точечно сбросить memo {@link #getMembers} для одного типа во всех языках —
+   * без сдвига глобальной эпохи (кэши прочих типов остаются валидными).
+   * Применяется при правке содержимого документа, чьи member-source'ы читают
+   * только этот тип (BSL-модуль как источник членов своего типа-обёртки).
+   * <p>
+   * Инвалидация — через инкремент пер-типового поколения ({@link #membersGeneration}),
+   * а не удаление записи: это отвергает и уже закэшированный результат, и устаревший
+   * результат параллельного незавершённого {@code computeMembers}, который допишется
+   * в кэш уже после инвалидации. Запись выселяется перезаписью при следующем чтении.
+   *
+   * @param ref тип, memo членов которого нужно пересобрать.
    */
-  @EventListener
-  public void invalidateMembersCache(DocumentContextContentChangedEvent event) {
-    membersEpoch.incrementAndGet();
+  public void invalidateMembers(TypeRef ref) {
+    for (var fileType : FileType.values()) {
+      membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
+    }
   }
 
   /**

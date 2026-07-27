@@ -315,6 +315,11 @@ jmh {
     jmhVersion = "1.37"
 }
 
+// Дерево зависимостей проекта даёт в jmh-архиве больше 65535 записей — нужен zip64.
+tasks.named<Jar>("jmhJar") {
+    isZip64 = true
+}
+
 sentry {
     org.set("1c-syntax")
     projectName.set("bsl-language-server")
