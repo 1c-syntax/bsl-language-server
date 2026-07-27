@@ -34,7 +34,7 @@ import java.util.Optional;
  * <p>
  * Реализация живёт в слое {@code types} и внедряется через Spring.
  */
-public interface SelfMemberReferenceResolver {
+public interface SelfMemberResolver {
 
   /**
    * Символ self-члена {@code name} вида {@code symbolKind}

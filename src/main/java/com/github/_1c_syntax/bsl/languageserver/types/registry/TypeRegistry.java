@@ -423,7 +423,7 @@ public class TypeRegistry {
   /**
    * Первый член типа {@code ref} заданного вида {@code kind} с именем {@code name}
    * (ru/en-написание, без учёта регистра). Единая точка резолва «член по (тип, вид,
-   * имя)» для self-member-потребителей ({@code SelfMemberReferenceResolverImpl},
+   * имя)» для self-member-потребителей ({@code SelfMemberResolverImpl},
    * {@code TypeService#findSelfMember}, {@code ExpressionTypeInferencer}), чтобы
    * семантика сопоставления не расходилась по копиям.
    *

@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.references.SelfMemberReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.references.SelfMemberResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Реализация {@link SelfMemberReferenceResolver} для слоя {@code references}: по
+ * Реализация {@link SelfMemberResolver} для слоя {@code references}: по
  * self-типу модуля документа ({@link GlobalScopeProvider#moduleTypeRefByUri}) и имени
  * собирает {@link PlatformMemberSymbol}.
  * <p>
@@ -53,7 +53,7 @@ import java.util.Optional;
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
-public class SelfMemberReferenceResolverImpl implements SelfMemberReferenceResolver {
+public class SelfMemberResolverImpl implements SelfMemberResolver {
 
   private final GlobalScopeProvider globalScopeProvider;
   private final TypeRegistry typeRegistry;

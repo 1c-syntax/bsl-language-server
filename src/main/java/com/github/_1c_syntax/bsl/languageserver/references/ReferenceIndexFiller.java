@@ -94,7 +94,7 @@ public class ReferenceIndexFiller {
   private final LanguageServerConfiguration configuration;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final SelfMemberReferenceResolver selfMemberReferenceResolver;
+  private final SelfMemberResolver selfMemberResolver;
 
   /**
    * Отпечаток содержимого, для которого документ был проиндексирован в последний раз.
@@ -142,7 +142,7 @@ public class ReferenceIndexFiller {
    * Проход self-членов в {@link #fill} резолвит их через {@code TypeRegistry}: документ,
    * наполненный ДО регистрации типов (либо до их перерегистрации при будущем reload
    * конфигурации), самих self-членов ещё не проиндексировал — здесь их подхватываем, чем
-   * и обеспечивается обещанное {@code SelfMemberReferenceResolverImpl}/{@code ReferenceIndex}
+   * и обеспечивается обещанное {@code SelfMemberResolverImpl}/{@code ReferenceIndex}
    * восстановление подсветки/резолва. Перебираем только уже наполненные документы с
    * self-типом; при обычном порядке (типы регистрируются раньше {@code didOpen}) наполненных
    * документов на этот момент ещё нет — обработчик вхолостую.
@@ -973,7 +973,7 @@ public class ReferenceIndexFiller {
         if (!name.isBlank()
           && symbolTree.getMethodSymbol(name).isEmpty()
           && globalScopeProvider.globalFunction(name, documentContext.getFileType()).isEmpty()
-          && selfMemberReferenceResolver.resolveSelfMember(documentContext, SymbolKind.Method, name).isPresent()) {
+          && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Method, name).isPresent()) {
           sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Method, name, Ranges.create(methodNameCtx));
         }
       }
@@ -1009,7 +1009,7 @@ public class ReferenceIndexFiller {
       if (!name.isBlank()
         && symbolTree.getVariableSymbolInScope(scopeNode, name).isEmpty()
         && globalScopeProvider.globalProperty(name, documentContext.getFileType()).isEmpty()
-        && selfMemberReferenceResolver.resolveSelfMember(documentContext, SymbolKind.Property, name).isPresent()) {
+        && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Property, name).isPresent()) {
         sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Property, name, Ranges.create(identifier));
       }
     }

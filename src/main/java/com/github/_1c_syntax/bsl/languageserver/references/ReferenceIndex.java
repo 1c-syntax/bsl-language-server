@@ -66,7 +66,7 @@ public class ReferenceIndex {
    * Маркер {@code scopeName} для вхождений неквалифицированных self-членов
    * (реквизитов/платформенных методов self-типа модуля). По нему
    * {@link #buildReference} реконструирует {@code PlatformMemberSymbol} через
-   * {@link SelfMemberReferenceResolver}, а не ищет source-defined символ в дереве.
+   * {@link SelfMemberResolver}, а не ищет source-defined символ в дереве.
    * Не пересекается с реальными именами методов (у source-символов scopeName — имя
    * охватывающего метода либо пусто).
    */
@@ -76,7 +76,7 @@ public class ReferenceIndex {
   private final StringInterner stringInterner;
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
-  private final SelfMemberReferenceResolver selfMemberReferenceResolver;
+  private final SelfMemberResolver selfMemberResolver;
 
   /**
    * Получить ссылки на символ.
@@ -310,7 +310,7 @@ public class ReferenceIndex {
    * Построить вхождение «обращение к неквалифицированному self-члену» (реквизиту/
    * платформенному методу self-типа модуля) без записи в индекс. Ключ помечается
    * {@link #SELF_MEMBER_SCOPE}, по которому {@link #buildReference} реконструирует
-   * {@code PlatformMemberSymbol} через {@link SelfMemberReferenceResolver}.
+   * {@code PlatformMemberSymbol} через {@link SelfMemberResolver}.
    *
    * @param uri            URI документа, где встречен self-член.
    * @param mdoRef         mdoRef документа (self-тип — это его собственный тип модуля).
@@ -366,7 +366,7 @@ public class ReferenceIndex {
 
   /**
    * Реконструировать {@code Reference} для вхождения self-члена: цель — синтетический
-   * {@code PlatformMemberSymbol}, собранный {@link SelfMemberReferenceResolver} по
+   * {@code PlatformMemberSymbol}, собранный {@link SelfMemberResolver} по
    * self-типу документа и имени/виду члена. Если self-типа нет или член не найден
    * (конфигурационные типы ещё не зарегистрированы) — empty; корректная подсветка/
    * резолв восстановятся при переиндексации на {@code ConfigurationTypesRegisteredEvent}.
@@ -376,7 +376,7 @@ public class ReferenceIndex {
     if (document == null) {
       return Optional.empty();
     }
-    return selfMemberReferenceResolver
+    return selfMemberResolver
       .resolveSelfMember(document, occurrence.symbol().symbolKind(), occurrence.symbol().symbolName())
       .map(memberSymbol -> new Reference(
         getFromSymbol(serverContext, occurrence),
