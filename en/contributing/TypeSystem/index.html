@@ -2270,7 +2270,7 @@ file) are exposed the same way, but tagged as <code>LIBRARY_MODULE</code>.</p>
 <tr>
 <td>OneScript libs</td>
 <td><code>types.oscript.*</code></td>
-<td><code>LibConfigDiscovery</code> / <code>ConventionalLibraryDiscovery</code> find roots under <code>oscript_modules/</code>; <code>LibConfigParser</code> / <code>OScriptLibraryFileParser</code> build the index; <code>OScriptLibraryIndex</code> registers types via <code>TypeRegistry</code> and <code>GlobalScopeProvider</code>; <code>OScriptModuleTypeResolver</code> fixes <code>ModuleType.OScriptClass / OScriptModule</code>.</td>
+<td><code>OScriptLibraryScanner</code> walks the workspace once (roots from <code>OScriptLibraryRootResolver</code>, per-directory reads via <code>DirContents</code>) finding <code>lib.config</code> manifests and, via <code>ConventionalLibraryDiscovery</code>, convention/flat libraries; <code>LibConfigParser</code> parses manifests; <code>OScriptLibraryIndex</code> registers types via <code>TypeRegistry</code> and <code>GlobalScopeProvider</code>; <code>OScriptModuleTypeResolver</code> fixes <code>ModuleType.OScriptClass / OScriptModule</code>.</td>
 </tr>
 <tr>
 <td>Symbol typing</td>
