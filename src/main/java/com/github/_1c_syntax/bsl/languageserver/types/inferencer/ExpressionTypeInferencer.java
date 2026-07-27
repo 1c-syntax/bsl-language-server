@@ -258,27 +258,32 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Тип голого идентификатора под терминалом — с фоллбэком внутри, а не у вызывающего.
+   * Тип голого идентификатора под терминалом — резолв и фоллбэк целиком внутри; вызывающий
+   * ({@link #inferIdentifier}) про фоллбэки не знает.
    * <p>
-   * Сначала — по ссылке проекта (терминал уже под рукой, резолвим по нему без спуска
-   * по AST от корня в reference-finder'ах). Если ссылка резолвится в переменную/метод/
-   * self-член, {@link #referencedSymbolType} отдаёт её тип целиком — даже честно пустой
-   * (локальная переменная без единого присваивания): подменять его self-свойством того
+   * Если ссылка резолвится в переменную/метод/self-член — берём её тип целиком, даже честно
+   * пустой (локальная переменная без единого присваивания): подменять его self-свойством того
    * же имени нельзя, иначе вернётся self-member-затенение.
    * <p>
    * Если же ссылки нет ИЛИ она указывает на не-типизируемый здесь вид символа (например,
-   * {@code ModuleSymbol} модуля-аксессора общего модуля — {@code referencedSymbolType}
-   * отдаёт {@code null}), тип выводит фоллбэк: неявное поле extends-родителя →
-   * self-свойство self-типа модуля → глобальное свойство. Только {@code PROPERTY}: голый
-   * идентификатор без вызова не может ссылаться на метод (вызов резолвится в inferCall).
+   * {@code ModuleSymbol} модуля-аксессора общего модуля) — тип выводит фоллбэк: неявное поле
+   * extends-родителя → self-свойство self-типа модуля → глобальное свойство. Только
+   * {@code PROPERTY}: голый идентификатор без вызова не может ссылаться на метод (вызов
+   * резолвится в inferCall).
    */
   private TypeSet identifierType(TerminalNode terminal, InferenceContext ctx) {
     var maybeRef = referenceResolver.findReference(ctx.documentContext.getUri(), terminal);
     if (maybeRef.isPresent()) {
-      var referenced = referencedSymbolType(maybeRef.get(), ctx);
-      if (referenced != null) {
-        return referenced;
+      var target = maybeRef.get().symbol();
+      // Синтетический self-свойство/метод/глобал — тип напрямую из MemberDescriptor.
+      if (target instanceof PlatformMemberSymbol platformMember) {
+        return platformMember.getDescriptor().returnTypes();
       }
+      // Source-defined переменная/метод — их тип (даже честно пустой), с защитой от цикла.
+      if (target instanceof MethodSymbol || target instanceof VariableSymbol) {
+        return sourceSymbolType((SourceDefinedSymbol) target, ctx);
+      }
+      // Иначе вид символа здесь не типизируем — падаем на фоллбэк ниже.
     }
     var text = terminal.getText();
     if (text.isBlank()) {
@@ -535,8 +540,8 @@ public class ExpressionTypeInferencer {
     //    именно в него, доверяем результату целиком — даже честно пустому
     //    (процедура или функция без объявленного типа возврата) — и НЕ падаем
     //    дальше на глобальную функцию/self-член с тем же именем: совпадение
-    //    имени не делает их одним и тем же символом (см. referencedSymbolType в
-    //    identifierType — тот же принцип для голых идентификаторов).
+    //    имени не делает их одним и тем же символом (см. identifierType — тот же
+    //    принцип для голых идентификаторов).
     var localMethod = reference
       .flatMap(Reference::getSourceDefinedSymbol)
       .filter(MethodSymbol.class::isInstance)
@@ -810,26 +815,11 @@ public class ExpressionTypeInferencer {
   // ---------------------------------------------------------------------------
 
   /**
-   * Тип символа-цели ссылки, если этот метод берётся его выводить (переменная/метод/
-   * self-член). {@code null} — вид символа здесь не типизируем (например,
-   * {@code ModuleSymbol} модуля-аксессора общего модуля): вызывающий
-   * ({@link #identifierType}) тогда переходит к фоллбэку. Для переменной/метода/
-   * self-члена результат непустой, даже если сам тип — пустой {@link TypeSet#EMPTY}:
-   * честно невыведенный тип — не «символ не тот», и подменять его self-свойством того
-   * же имени нельзя.
+   * Тип source-defined символа-цели ссылки (переменной/метода) с защитой от цикла инференса.
+   * Результат всегда присутствует, даже если сам тип — пустой {@link TypeSet#EMPTY}: честно
+   * невыведенный тип нельзя подменять self-свойством того же имени.
    */
-  @Nullable
-  private TypeSet referencedSymbolType(Reference reference, InferenceContext ctx) {
-    var target = reference.symbol();
-    if (target instanceof PlatformMemberSymbol platformMember) {
-      // Синтетический символ (self-свойство/метод, глобал) — не SourceDefinedSymbol,
-      // тип берём напрямую из его MemberDescriptor.
-      return platformMember.getDescriptor().returnTypes();
-    }
-    if (!(target instanceof MethodSymbol) && !(target instanceof VariableSymbol)) {
-      return null;
-    }
-    var symbol = (SourceDefinedSymbol) target;
+  private TypeSet sourceSymbolType(SourceDefinedSymbol symbol, InferenceContext ctx) {
     if (!ctx.visited.add(symbol)) {
       // Цикл: для переменной-аккумулятора возвращаем накопленный к этому моменту
       // тип (см. inProgress), для прочих символов — пусто, как и раньше.
