@@ -97,6 +97,21 @@ final class CollectionTraitsIndex {
   }
 
   /**
+   * Задать типы элементов коллекции явно — для типов, у которых нет описания от
+   * платформенного провайдера. Первая регистрация выигрывает, как и при
+   * наследовании ({@link #inherit}), поэтому вызывать надо до него.
+   *
+   * @param ref          ссылка на тип-коллекцию.
+   * @param elementTypes типы элементов; пустой список ничего не меняет.
+   */
+  void registerDefaultElementTypes(TypeRef ref, List<TypeRef> elementTypes) {
+    if (elementTypes.isEmpty()) {
+      return;
+    }
+    defaultElementTypes.putIfAbsent(ref, List.copyOf(elementTypes));
+  }
+
+  /**
    * Скопировать коллекционные свойства типа-источника на другой тип: типы
    * элементов, признаки {@code Для Каждого} и индексатора вместе с описаниями.
    * <p>

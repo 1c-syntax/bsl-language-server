@@ -882,10 +882,34 @@ public class TypeService implements SelfMemberClassifier {
     var fromIndex = referenceResolver.findReference(documentContext.getUri(), receiverEnd)
       .map(this::typesAt)
       .orElse(TypeSet.EMPTY);
-    if (!fromIndex.isEmpty()) {
-      return fromIndex;
+    var fromExpression = expressionTypesAt(documentContext, receiverEnd);
+    if (fromIndex.isEmpty()) {
+      return fromExpression;
     }
-    return expressionTypesAt(documentContext, receiverEnd);
+    // Индекс ссылок отдаёт ОБЪЯВЛЕННЫЙ тип члена, без уточнений, добытых на месте:
+    // у `ТЗ.Колонки` это просто коллекция колонок, без самих колонок, а у
+    // `ТЧ.ВыгрузитьКолонку("Цена")` — нетипизированный массив. Если инференс дал те
+    // же типы, но с уточнениями, берём его: он строго информативнее.
+    return refinesSameTypes(fromExpression, fromIndex) ? fromExpression : fromIndex;
+  }
+
+  /**
+   * Уточняет ли {@code candidate} тот же набор типов, что и {@code base}: типы те же,
+   * но у кандидата есть типы элементов или поля «открытого» объекта, которых нет у базы.
+   */
+  private static boolean refinesSameTypes(TypeSet candidate, TypeSet base) {
+    if (!candidate.refs().equals(base.refs())) {
+      return false;
+    }
+    for (var ref : candidate.refs()) {
+      var richerElements = !candidate.getElementTypes(ref).isEmpty()
+        && base.getElementTypes(ref).isEmpty();
+      var richerFields = candidate.getLocalFields(ref).size() > base.getLocalFields(ref).size();
+      if (richerElements || richerFields) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
