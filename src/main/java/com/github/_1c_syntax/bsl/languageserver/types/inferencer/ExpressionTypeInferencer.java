@@ -115,6 +115,7 @@ public class ExpressionTypeInferencer {
   private final InferredVariableTypeIndex inferredVariableTypeIndex;
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final CallStatementByReceiverIndex callStatementByReceiverIndex;
+  private final TableCollectionInference tableCollectionInference;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -400,11 +401,10 @@ public class ExpressionTypeInferencer {
    * {@code Для Каждого X Из Коллекция Цикл} увидеть тип X (например,
    * {@code КлючИЗначение} для {@code Соответствие}) без явных JsDoc-аннотаций.
    * <p>
-   * Если у ссылки уже есть объявленный тип элемента, а дефолт — это лишь
-   * универсальный {@code Произвольный} (вершина решётки), он не уточняет
-   * известный тип и не подмешивается ({@code Массив из Число} иначе превращался
-   * бы в {@code Массив из Число, Произвольный}, #4179). Осмысленные дефолты
-   * обёрток ({@code ЭлементСпискаЗначений}, {@code КлючИЗначение}) сохраняются.
+   * Уточнение, добытое на месте, не перетирается: оно точнее реестрового умолчания.
+   * Так {@code Массив из Число} не превращается в {@code Массив из Число, Произвольный}
+   * (#4179), а {@code ТаблицаЗначений}, выгруженная из табличной части, сохраняет
+   * строку с её колонками вместо обобщённой {@code СтрокаТаблицыЗначений}.
    */
   private TypeSet attachDefaultElementTypes(TypeSet base) {
     if (base.isEmpty()) {
@@ -412,14 +412,13 @@ public class ExpressionTypeInferencer {
     }
     var result = base;
     for (var ref : base.refs()) {
+      if (!base.getElementTypes(ref).isEmpty()) {
+        continue;
+      }
       var defaults = typeRegistry.getDefaultElementTypes(ref);
-      if (defaults.isEmpty()) {
-        continue;
+      if (!defaults.isEmpty()) {
+        result = result.withElement(ref, defaults);
       }
-      if (!base.getElementTypes(ref).isEmpty() && isOnlyAny(defaults)) {
-        continue;
-      }
-      result = result.withElement(ref, defaults);
     }
     return result;
   }
@@ -470,7 +469,7 @@ public class ExpressionTypeInferencer {
   }
 
   @Nullable
-  private static String extractStringLiteral(BslExpression node) {
+  static String extractStringLiteral(BslExpression node) {
     var ast = node.getRepresentingAst();
     if (ast == null) {
       return null;
@@ -488,6 +487,33 @@ public class ExpressionTypeInferencer {
     var lower = typeName.toLowerCase(Locale.ROOT);
     return lower.equals("структура") || lower.equals("structure")
       || lower.equals("фиксированнаяструктура") || lower.equals("fixedstructure");
+  }
+
+  /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
+  private static final String ELEMENT_GETTER = "Получить";
+
+  /**
+   * Тип элемента для {@code Получить(Индекс)}. Платформа объявляет возврат как
+   * {@code Произвольный}, хотя это ровно то же, что даёт индексатор, — поэтому
+   * цепочка {@code …ВыгрузитьКолонку("КТУ").Получить(0)} без уточнения обрывалась.
+   * <p>
+   * KV-коллекции исключены: у {@code Соответствие.Получить(Ключ)} результат — значение,
+   * а элемент коллекции — {@code КлючИЗначение}, и подстановка элемента там была бы ошибкой.
+   *
+   * @param leftTypes типы получателя.
+   * @return типы элемента; {@link TypeSet#EMPTY}, если правило неприменимо.
+   */
+  private TypeSet elementGetterTypes(TypeSet leftTypes) {
+    for (var ref : leftTypes.refs()) {
+      if (isStructureOrMapLike(ref.qualifiedName())) {
+        return TypeSet.EMPTY;
+      }
+    }
+    var result = TypeSet.EMPTY;
+    for (var ref : leftTypes.refs()) {
+      result = result.union(leftTypes.getElementTypes(ref));
+    }
+    return result;
   }
 
   /**
@@ -698,9 +724,10 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     var right = node.getRight();
+    var methodCall = right instanceof MethodCallNode call ? call : null;
     String memberName;
     MemberKind expectedKind;
-    if (right instanceof MethodCallNode methodCall) {
+    if (methodCall != null) {
       var nameNode = methodCall.getName();
       memberName = nameNode == null ? null : nameNode.getText();
       expectedKind = MemberKind.METHOD;
@@ -711,6 +738,19 @@ public class ExpressionTypeInferencer {
     }
     if (memberName == null || memberName.isBlank()) {
       return TypeSet.EMPTY;
+    }
+    // Члены табличных коллекций, состав результата у которых определяется колонками
+    // получателя и аргументами вызова, а не объявленным типом.
+    var tableTypes = tableCollectionInference.infer(
+      leftTypes, memberName, methodCall, ctx.documentContext.getFileType());
+    if (tableTypes != null) {
+      return tableTypes;
+    }
+    if (methodCall != null && ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
+      var element = elementGetterTypes(leftTypes);
+      if (!element.isEmpty()) {
+        return element;
+      }
     }
     // Сначала смотрим декларированные поля «открытого» объекта данных
     // (Структура / ТаблицаЗначений с описанными ключами).
@@ -760,7 +800,8 @@ public class ExpressionTypeInferencer {
         // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
         for (var ref : member.returnTypes().refs()) {
           if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-            result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
+            var returned = enrichReturnRefWithElementFields(ref, elementSet);
+            result = result.union(carryDeclaredDecorations(member.returnTypes(), ref, returned));
           }
         }
       }
@@ -785,6 +826,31 @@ public class ExpressionTypeInferencer {
       enriched = enriched.withField(ret, entry.getKey(), field.types(), field.description());
     }
     return enriched;
+  }
+
+  /**
+   * Переносит на выведенный тип уточнения, объявленные в самом
+   * {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor}:
+   * тип элемента коллекции и поля «открытого» объекта. Голого набора ref'ов мало —
+   * возврат вида «{@code Массив} строк вот этой табличной части» весь смысл держит
+   * именно в уточнении, и без переноса оно терялось бы.
+   *
+   * @param declared объявленные типы возврата члена.
+   * @param ref      ref, для которого собирается результат.
+   * @param target   уже собранный результат по этому ref'у.
+   * @return результат с перенесёнными уточнениями.
+   */
+  private static TypeSet carryDeclaredDecorations(TypeSet declared, TypeRef ref, TypeSet target) {
+    var result = target;
+    var elements = declared.getElementTypes(ref);
+    if (!elements.isEmpty()) {
+      result = result.withElement(ref, elements);
+    }
+    for (var entry : declared.getLocalFields(ref).entrySet()) {
+      var field = entry.getValue();
+      result = result.withField(ref, entry.getKey(), field.types(), field.description());
+    }
+    return result;
   }
 
   @Nullable

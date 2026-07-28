@@ -1448,6 +1448,153 @@
   },
   {
     "kind": "TYPE",
+    "name": "Строка табличной части",
+    "nameRu": "Строка табличной части",
+    "nameEn": "Line of a tabular section",
+    "description": "Строка табличной части объекта.",
+    "members": [
+      {
+        "name": "НомерСтроки",
+        "nameRu": "НомерСтроки",
+        "nameEn": "LineNumber",
+        "kind": "PROPERTY",
+        "returnType": "Число",
+        "description": "Номер строки в табличной части."
+      }
+    ]
+  },
+  {
+    "kind": "COLLECTION",
+    "name": "Табличная часть",
+    "nameRu": "Табличная часть",
+    "nameEn": "Tabular section",
+    "description": "Табличная часть объекта.",
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
+    "elementTypes": [
+      "Строка табличной части"
+    ],
+    "members": [
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "returnType": "Строка табличной части",
+        "description": "Добавляет строку в конец табличной части."
+      },
+      {
+        "name": "Вставить",
+        "nameRu": "Вставить",
+        "nameEn": "Insert",
+        "kind": "METHOD",
+        "returnType": "Строка табличной части",
+        "description": "Вставляет строку в указанную позицию."
+      },
+      {
+        "name": "Получить",
+        "nameRu": "Получить",
+        "nameEn": "Get",
+        "kind": "METHOD",
+        "returnType": "Строка табличной части",
+        "description": "Возвращает строку по индексу."
+      },
+      {
+        "name": "Найти",
+        "nameRu": "Найти",
+        "nameEn": "Find",
+        "kind": "METHOD",
+        "returnType": "Строка табличной части",
+        "description": "Ищет значение в указанных колонках."
+      },
+      {
+        "name": "НайтиСтроки",
+        "nameRu": "НайтиСтроки",
+        "nameEn": "FindRows",
+        "kind": "METHOD",
+        "returnType": "Массив",
+        "description": "Возвращает массив строк, отвечающих условию отбора."
+      },
+      {
+        "name": "Выгрузить",
+        "nameRu": "Выгрузить",
+        "nameEn": "Unload",
+        "kind": "METHOD",
+        "returnType": "ТаблицаЗначений",
+        "description": "Выгружает табличную часть в таблицу значений."
+      },
+      {
+        "name": "ВыгрузитьКолонки",
+        "nameRu": "ВыгрузитьКолонки",
+        "nameEn": "UnloadColumns",
+        "kind": "METHOD",
+        "returnType": "ТаблицаЗначений",
+        "description": "Выгружает указанные колонки в таблицу значений."
+      },
+      {
+        "name": "ВыгрузитьКолонку",
+        "nameRu": "ВыгрузитьКолонку",
+        "nameEn": "UnloadColumn",
+        "kind": "METHOD",
+        "returnType": "Массив",
+        "description": "Выгружает значения одной колонки в массив."
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает количество строк."
+      },
+      {
+        "name": "Очистить",
+        "nameRu": "Очистить",
+        "nameEn": "Clear",
+        "kind": "METHOD",
+        "description": "Удаляет все строки табличной части."
+      },
+      {
+        "name": "Удалить",
+        "nameRu": "Удалить",
+        "nameEn": "Delete",
+        "kind": "METHOD",
+        "description": "Удаляет строку табличной части."
+      },
+      {
+        "name": "Индекс",
+        "nameRu": "Индекс",
+        "nameEn": "IndexOf",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает индекс строки."
+      },
+      {
+        "name": "Итог",
+        "nameRu": "Итог",
+        "nameEn": "Total",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает сумму значений колонки."
+      },
+      {
+        "name": "Сортировать",
+        "nameRu": "Сортировать",
+        "nameEn": "Sort",
+        "kind": "METHOD",
+        "description": "Сортирует табличную часть по колонкам."
+      },
+      {
+        "name": "Загрузить",
+        "nameRu": "Загрузить",
+        "nameEn": "Load",
+        "kind": "METHOD",
+        "description": "Загружает данные из таблицы значений."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
     "name": "СтрокаТаблицыЗначений",
     "aliases": [
       "ValueTableRow"

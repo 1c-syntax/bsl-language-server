@@ -597,16 +597,16 @@ public class ConfigurationTypesProvider {
       var collRef = registerWithAlias(collRu, collEn);
 
       var tsAttributes = ts.getAttributes();
+      // Аналогично основным реквизитам: лямбда вызывает buildAttributeMembers
+      // на каждый getMembers, поэтому язык читается per-call и подхватывает
+      // workspace/didChangeConfiguration.
+      MemberSource columnSource = () -> buildAttributeMembers(tsAttributes);
       if (!tsAttributes.isEmpty()) {
-        // Аналогично основным реквизитам: лямбда вызывает buildAttributeMembers
-        // на каждый getMembers, поэтому язык читается per-call и подхватывает
-        // workspace/didChangeConfiguration.
-        MemberSource columnSource = () -> buildAttributeMembers(tsAttributes);
+        // Колонки — только у строки: у самой табличной части их нет, обращение
+        // `ТЧ.Цена` в 1С не работает.
         typeRegistry.registerMemberSource(rowRef, columnSource, FileType.BSL);
-        // Для удобства dot-completion'а ТЧ-коллекция тоже показывает колонки —
-        // обращение `ТЧ.Колонка` к коллекции встречается в коде (через индекс/первую строку).
-        typeRegistry.registerMemberSource(collRef, columnSource, FileType.BSL);
       }
+      registerTabularSectionPlatformMembers(rowRef, collRef, columnSource);
 
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
@@ -614,6 +614,44 @@ public class ConfigurationTypesProvider {
       var immutableTs = List.copyOf(tsMembers);
       typeRegistry.registerMemberSource(objectRef, () -> immutableTs, FileType.BSL);
     }
+  }
+
+  /** Платформенный тип значения табличной части (в синтакс-помощнике имя с пробелом). */
+  private static final String TABULAR_SECTION_TYPE = "Табличная часть";
+
+  /** Платформенный тип строки табличной части. */
+  private static final String TABULAR_SECTION_ROW_TYPE = "Строка табличной части";
+
+  /**
+   * Подмешивает табличной части и её строке платформенную часть: методы коллекции
+   * ({@code Добавить}, {@code НайтиСтроки}, {@code Выгрузить} …), обход
+   * {@code Для Каждого}, индексатор и {@code НомерСтроки} у строки.
+   * <p>
+   * Типы возврата при этом уточняются под строку <b>этой</b> табличной части: у
+   * платформенного описания они обобщённые, и без уточнения цепочка обрывалась бы на
+   * первом же вызове (см. {@link CollectionReturnsSpecializer}). Тип элемента коллекции
+   * задаётся до наследования коллекционных свойств — иначе выиграла бы унаследованная
+   * обобщённая строка и {@code Для Каждого} потерял бы колонки.
+   *
+   * @param rowRef  тип строки этой табличной части.
+   * @param collRef тип этой табличной части.
+   * @param columns источник её колонок.
+   */
+  private void registerTabularSectionPlatformMembers(TypeRef rowRef, TypeRef collRef, MemberSource columns) {
+    var genericColl = typeRegistry.resolve(TABULAR_SECTION_TYPE).orElse(null);
+    var genericRow = typeRegistry.resolve(TABULAR_SECTION_ROW_TYPE).orElse(null);
+    if (genericColl == null || genericRow == null) {
+      return;
+    }
+    typeRegistry.registerSpecialization(rowRef, genericRow, Map.of(), FileType.BSL);
+    typeRegistry.registerSpecialization(collRef, genericColl, Map.of(), FileType.BSL);
+    typeRegistry.registerDefaultElementTypes(collRef, List.of(rowRef));
+    typeRegistry.inheritCollectionTraits(collRef, genericColl, FileType.BSL);
+
+    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
+    typeRegistry.registerMemberOverride(collRef, () -> CollectionReturnsSpecializer.specialize(
+      typeRegistry.getMembers(genericColl, FileType.BSL), genericRow, rowRef,
+      CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
   }
 
   /**

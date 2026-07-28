@@ -1368,6 +1368,21 @@ public class TypeRegistry {
     collectionTraits.inherit(target, source, fileType);
   }
 
+  /**
+   * Задать типы элементов коллекции явно. Нужно там, где элемент известен точнее,
+   * чем у обобщённого типа: у специализации коллекции ({@code ДокументТабличнаяЧасть.X.Y})
+   * элемент — своя строка с колонками, а не обобщённая {@code Строка табличной части}.
+   * <p>
+   * Первая регистрация выигрывает, как и при наследовании
+   * ({@link #inheritCollectionTraits}), поэтому вызывать надо до него.
+   *
+   * @param ref          ссылка на тип-коллекцию.
+   * @param elementTypes типы элементов; пустой список ничего не меняет.
+   */
+  public void registerDefaultElementTypes(TypeRef ref, List<TypeRef> elementTypes) {
+    collectionTraits.registerDefaultElementTypes(ref, elementTypes);
+  }
+
   /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
   public boolean supportsForEach(TypeRef ref, FileType fileType) {
     return collectionTraits.supportsForEach(ref, fileType);
