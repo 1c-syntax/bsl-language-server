@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.completion;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,13 +47,16 @@ import java.net.URI;
  * Сериализуется клиентом в JSON и приходит обратно как {@code JsonObject}/Map —
  * поля сделаны bean-style (Lombok {@code @Data}) для round-trip через Jackson.
  * <p>
- * Поддерживаются два вида ключа восстановления:
+ * Поддерживаются три вида ключа восстановления:
  * <ul>
  *   <li>член типа (dot-completion): заполнены {@code typeKind}/{@code typeQualifiedName}
  *       и {@code memberName}, по ним восстанавливается член типа-владельца;</li>
  *   <li>глобальная функция (no-dot completion): заполнено {@code functionName},
  *       по нему функция ищется в глобальной области видимости. Поля типа-владельца
- *       при этом не используются.</li>
+ *       при этом не используются;</li>
+ *   <li>контракт события (no-dot completion, заглушка обработчика): заполнено
+ *       {@code eventContractName}, по нему контракт ищется среди событий owner-типа
+ *       документа.</li>
  * </ul>
  */
 @Data
@@ -109,6 +114,22 @@ public class CompletionData {
   private String functionName;
 
   /**
+   * Каноническое имя контракта платформенного события, для которого нужно восстановить
+   * документацию (no-dot completion, заглушка ещё не объявленного обработчика). Заполнено
+   * только для варианта event-контракта; для члена типа и глобальной функции — {@code null}.
+   */
+  @Nullable
+  private String eventContractName;
+
+  /**
+   * Вид модуля документа (вариант event-контракта): по нему и owner-типу
+   * ({@link #typeKind}/{@link #typeQualifiedName}) в resolve восстанавливается набор событий
+   * без обращения к документу. Заполнено только для варианта event-контракта.
+   */
+  @Nullable
+  private ModuleType moduleType;
+
+  /**
    * Создаёт ключ восстановления документации члена типа (dot-completion).
    *
    * @param uri               URI документа, в контексте которого построен item.
@@ -121,7 +142,8 @@ public class CompletionData {
    */
   public static CompletionData forMember(URI uri, TypeKind typeKind, String typeQualifiedName, String memberName,
                                          FileType fileType, Language scriptVariant) {
-    return new CompletionData(uri, typeKind, typeQualifiedName, memberName, fileType, scriptVariant, null);
+    return new CompletionData(uri, typeKind, typeQualifiedName, memberName, fileType, scriptVariant,
+      null, null, null);
   }
 
   /**
@@ -134,6 +156,27 @@ public class CompletionData {
    * @return ключ восстановления глобальной функции.
    */
   public static CompletionData forFunction(URI uri, String functionName, FileType fileType, Language scriptVariant) {
-    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName);
+    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName, null, null);
+  }
+
+  /**
+   * Создаёт ключ восстановления документации контракта платформенного события
+   * (no-dot completion, заглушка ещё не объявленного обработчика). Набор событий восстанавливается
+   * по паре {@code (moduleType, ownerTypeRef)} без обращения к документу.
+   *
+   * @param uri               URI документа, в контексте которого построен item.
+   * @param moduleType        вид модуля документа.
+   * @param ownerTypeRef      owner-тип событий ({@code null} для .os-класса и глобальных модулей).
+   * @param eventContractName каноническое имя контракта события.
+   * @param fileType          тип файла-потребителя (BSL/OS).
+   * @param scriptVariant     локаль скрипта (ru/en).
+   * @return ключ восстановления контракта события.
+   */
+  public static CompletionData forEventContract(URI uri, ModuleType moduleType, @Nullable TypeRef ownerTypeRef,
+                                                String eventContractName, FileType fileType, Language scriptVariant) {
+    var ownerKind = ownerTypeRef == null ? null : ownerTypeRef.kind();
+    var ownerName = ownerTypeRef == null ? null : ownerTypeRef.qualifiedName();
+    return new CompletionData(uri, ownerKind, ownerName, null, fileType, scriptVariant, null,
+      eventContractName, moduleType);
   }
 }

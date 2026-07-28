@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
@@ -78,6 +79,11 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
   @Override
   public void visitConstructor(ConstructorSymbol constructor) {
     visitMethod(constructor);
+  }
+
+  @Override
+  public void visitEventMethod(EventMethodSymbol event) {
+    visitMethod(event);
   }
 
   @Override

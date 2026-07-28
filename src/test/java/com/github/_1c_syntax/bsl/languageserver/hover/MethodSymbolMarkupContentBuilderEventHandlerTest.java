@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -40,13 +41,14 @@ import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -65,8 +67,12 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
 
   @BeforeEach
   void resetResolver() {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
+    // Классификация метода в EventMethodSymbol идёт через isEventHandler; у мок-бина делегируем
+    // в lookupContract (как в реальном бине), чтобы тесты продолжали задавать только lookupContract.
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenAnswer(inv -> eventHandlerResolver.lookupContract(inv.getArgument(0), inv.getArgument(1)).isPresent());
   }
 
   @Test
@@ -77,7 +83,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
       "Возникает при записи объекта.",
       List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, ""))
     );
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -98,6 +104,39 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   }
 
   @Test
+  void hoverIncludesEventPlatformMetadata() {
+    // given — контракт события с непустыми метаданными синтакс-помощника (замечание + пример),
+    // как их приносит bsl-context после #4304
+    var metadata = new PlatformMetadata(
+      "", "", List.of(), Set.of(), null,
+      "", "Срабатывает перед сохранением объекта в информационную базу.",
+      List.of("Отказ = Истина;"), List.of()
+    );
+    var contract = MemberDescriptor.event(
+      "ПриЗаписи",
+      "Возникает при записи объекта.",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, ""))
+    ).withMetadata(metadata);
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписи").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    // then — блок метаданных события (замечание/пример) виден в hover обработчика
+    assertThat(content)
+      .contains("Срабатывает перед сохранением объекта в информационную базу.")
+      .contains("Отказ = Истина;");
+  }
+
+  @Test
   void hoverWithContractRendersParameterTypesFromContract() {
     // given — контракт с типизированным параметром Отказ:Булево
     var cancelParam = new ParameterDescriptor(
@@ -111,7 +150,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
       "Возникает при записи объекта.",
       List.of(new SignatureDescriptor(List.of(cancelParam), TypeSet.EMPTY, ""))
     );
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -157,7 +196,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
       "Возникает при записи.",
       List.of()
     );
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(Optional.of(contract));
 
     var src = """
@@ -189,7 +228,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
       "",
       List.of(new SignatureDescriptor(List.of(anonymous), TypeSet.EMPTY, ""))
     );
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("Handler")))
       .thenReturn(Optional.of(contract));
 
     var src = """

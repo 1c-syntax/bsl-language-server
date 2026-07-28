@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -69,10 +71,12 @@ public final class MethodSymbolComputer
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
   private final DocumentContext documentContext;
+  private final EventHandlerClassifier eventHandlerClassifier;
   private final Set<MethodSymbol> methods = new HashSet<>();
 
-  public MethodSymbolComputer(DocumentContext documentContext) {
+  public MethodSymbolComputer(DocumentContext documentContext, EventHandlerClassifier eventHandlerClassifier) {
     this.documentContext = documentContext;
+    this.eventHandlerClassifier = eventHandlerClassifier;
   }
 
   @Override
@@ -245,6 +249,29 @@ public final class MethodSymbolComputer
 
     if (isOscriptClassConstructor(name, function)) {
       return ConstructorSymbol.builder()
+        .name(name)
+        .owner(documentContext)
+        .range(range)
+        .subNameRange(subNameRange)
+        .function(function)
+        .export(export)
+        .async(async)
+        .description(description)
+        .deprecated(deprecated)
+        .parameters(parameters)
+        .compilerDirectiveKind(compilerDirective)
+        .annotations(annotations)
+        .build();
+    }
+
+    // Конструктор проверяется ДО события: "ПриСозданииОбъекта" у OScript-класса совпадает
+    // и с контрактом события (см. EventHandlerResolver.OSCRIPT_CLASS_EVENTS), но остаётся
+    // ConstructorSymbol — отдельный, уже устоявшийся вид символа со своей семантикой в дереве
+    // символов, hover'е и ReferenceIndex, реклассификации не подлежит. Классификация по имени
+    // не смотрит на function/procedure (как и lookupContract) — платформа вызывает обработчик
+    // по имени независимо от того, что метод по ошибке объявлен функцией.
+    if (eventHandlerClassifier.isEventHandler(documentContext, name)) {
+      return EventMethodSymbol.builder()
         .name(name)
         .owner(documentContext)
         .range(range)

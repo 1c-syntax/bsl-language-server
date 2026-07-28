@@ -101,7 +101,7 @@ public class ReferenceIndex {
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(scopeName)
-      .symbolKind(symbol.getSymbolKind())
+      .symbolKind(indexedKindOf(symbol.getSymbolKind()))
       .symbolName(symbolName)
       .build();
 
@@ -216,7 +216,44 @@ public class ReferenceIndex {
   }
 
   /**
+   * Канонический вид callable-символа для построения/поиска ключа индекса вхождений
+   * ({@code Symbol.symbolKind}), в отличие от display-{@link SymbolKind}, возвращаемого
+   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol#getSymbolKind()}.
+   * <p>
+   * На месте вызова (например, {@code Новый ИмяКласса(...)}) неизвестно без резолва
+   * документа-получателя, является ли цель обычным методом или конструктором OneScript-класса
+   * ({@link com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol}) —
+   * поэтому все callable-вхождения индексируются {@link #methodCallOccurrence} под единым
+   * {@link SymbolKind#Method} независимо от истинного вида цели (см. и
+   * {@code ReferenceIndexFiller#tryRegisterLibraryClassReference}, который знает, что вызывает
+   * именно конструктор, но всё равно идёт тем же общим путём индексации). Читающая сторона
+   * ({@link #getReferencesTo}) обязана канонизировать так же — иначе ключ, построенный по
+   * настоящему {@code getSymbolKind()} символа-цели ({@code Constructor}), никогда не совпадёт с
+   * реально сохранённым ({@code Method}), и Find References/Rename/Call Hierarchy incoming
+   * молча не находят ни одной ссылки на конструктор.
+   * <p>
+   * Так же канонизируется {@link SymbolKind#Event}: объявленные обработчики платформенных
+   * событий попадают в дерево символов как {@code EventMethodSymbol} (display-вид {@code Event}),
+   * но их прямые вызовы индексируются {@link #methodCallOccurrence} под {@code Method} — без
+   * канонизации Find References/Call Hierarchy не нашли бы ни одного прямого вызова обработчика.
+   * Точка расширения при появлении новых callable-{@link SymbolKind} — сюда достаточно добавить
+   * очередной случай.
+   *
+   * @param symbolKind реальный (display) вид искомого/индексируемого символа.
+   * @return канонический вид для ключа индекса.
+   */
+  private static SymbolKind indexedKindOf(SymbolKind symbolKind) {
+    if (symbolKind == SymbolKind.Constructor || symbolKind == SymbolKind.Event) {
+      return SymbolKind.Method;
+    }
+    return symbolKind;
+  }
+
+  /**
    * Построить вхождение «вызов метода» без записи в индекс.
+   * <p>
+   * Кладётся под каноническим {@link SymbolKind#Method} независимо от истинного вида цели
+   * (обычный метод или конструктор OneScript-класса) — см. {@link #indexedKindOf}.
    *
    * @param uri        URI документа, откуда произошел вызов.
    * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).

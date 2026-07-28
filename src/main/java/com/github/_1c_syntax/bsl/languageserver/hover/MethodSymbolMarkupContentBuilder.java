@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -41,6 +42,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final DescriptionFormatter descriptionFormatter;
   private final EventContractsIndex eventContractsIndex;
+  private final PlatformMetadataRenderer metadataRenderer;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -57,6 +59,10 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // варианты вызова
 
     var eventContract = eventContractsIndex.getContract(symbol.getOwner(), symbol.getName());
+    // Обработчик события определяем по классифицированному виду символа (EventMethodSymbol),
+    // а не только по наличию контракта: конструктор OScript-класса (ПриСозданииОбъекта) может
+    // совпасть с событием, но остаётся конструктором и в hover'е показывается как обычный метод.
+    var isEventHandler = symbol instanceof EventMethodSymbol && eventContract.isPresent();
 
     // сигнатура
     var signature = descriptionFormatter.getSignature(symbol);
@@ -72,7 +78,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
     // признак "обработчик события платформы" + платформенное описание события +
     // пользовательское purpose из шапки метода (если метод — обработчик)
-    if (eventContract.isPresent()) {
+    if (isEventHandler) {
       descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
         descriptionFormatter.getEventHandlerSection(symbol, eventContract.get()));
     } else {
@@ -83,7 +89,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
     // параметры: для обработчика — контракт события (имена/типы), иначе —
     // шапка-комментарий пользователя
-    var parametersSection = eventContract.isPresent()
+    var parametersSection = isEventHandler
       ? descriptionFormatter.getParametersSection(symbol, eventContract.get())
       : descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
@@ -99,6 +105,15 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // варианты вызова
     var callOptionsSection = descriptionFormatter.getCallOptionsSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
+
+    // метаданные платформенного события (замечание, пример, «см. также», доступность/версии)
+    // из дескриптора контракта — так же, как их рисуют PlatformMemberHoverBuilder и
+    // ConstructorHoverBuilder для платформенных членов и конструкторов. Только у обработчика.
+    if (isEventHandler) {
+      var eventMetadata = new StringBuilder();
+      metadataRenderer.append(eventMetadata, eventContract.get().metadata());
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventMetadata.toString().strip());
+    }
 
     var content = markupBuilder.toString();
 

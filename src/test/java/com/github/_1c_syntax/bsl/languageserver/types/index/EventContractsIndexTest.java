@@ -22,17 +22,23 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class EventContractsIndexTest extends AbstractServerContextAwareTest {
@@ -40,13 +46,18 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
   @Autowired
   private EventContractsIndex eventContractsIndex;
 
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
+
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
   @BeforeEach
   void resetResolver() {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
+    when(eventHandlerResolver.allEvents(ArgumentMatchers.any()))
+      .thenReturn(List.of());
   }
 
   @Test
@@ -58,5 +69,44 @@ class EventContractsIndexTest extends AbstractServerContextAwareTest {
     var contract = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
 
     assertThat(contract).isEmpty();
+  }
+
+  @Test
+  void getAllContractsDelegatesToResolver() {
+    var documentContext = TestUtils.getDocumentContext("");
+    var contracts = List.of(MemberDescriptor.event("ПриЗаписи", "", List.of()));
+    when(eventHandlerResolver.allEvents(documentContext)).thenReturn(contracts);
+
+    var first = eventContractsIndex.getAllContracts(documentContext);
+    var second = eventContractsIndex.getAllContracts(documentContext);
+
+    assertThat(first).isEqualTo(contracts);
+    assertThat(second).isEqualTo(contracts);
+    // Отдельного кэша нет: события зависят от типа и уже мемоизированы источником
+    // (getMembers/globalEvents), поэтому каждый вызов делегирует в резолвер.
+    verify(eventHandlerResolver, times(2)).allEvents(documentContext);
+  }
+
+  @Test
+  void configurationTypesRegisteredEventInvalidatesContractCache() {
+    // getContract кэширует контракты по URI (contractsByUri); сброс — только по событию.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПриЗаписи()
+      КонецПроцедуры
+      """);
+    when(eventHandlerResolver.lookupContract(documentContext, "ПриЗаписи"))
+      .thenReturn(Optional.of(MemberDescriptor.event("Первое", "", List.of())))
+      .thenReturn(Optional.of(MemberDescriptor.event("Второе", "", List.of())));
+
+    var before = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
+    // Без события повторный запрос обслуживается из кэша — значение то же (резолвер не опрашивается).
+    var cached = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
+    eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(documentContext.getServerContext()));
+    // После события кэш сброшен — контракт перечитывается резолвером.
+    var afterReload = eventContractsIndex.getContract(documentContext, "ПриЗаписи");
+
+    assertThat(before.map(MemberDescriptor::name)).contains("Первое");
+    assertThat(cached.map(MemberDescriptor::name)).contains("Первое");
+    assertThat(afterReload.map(MemberDescriptor::name)).contains("Второе");
   }
 }

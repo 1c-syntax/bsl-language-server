@@ -182,6 +182,9 @@ public class BuiltinTypesJsonLoader {
         // чтобы тип возврата сохранялся и у методов без описанных параметров.
         descriptor = new MemberDescriptor(name, MemberKind.METHOD, description, returnTypes,
           signatures, null, false, PlatformMetadata.EMPTY);
+      } else if (kind == MemberKind.EVENT) {
+        // У события есть сигнатура-контракт обработчика, но нет возвращаемого значения.
+        descriptor = MemberDescriptor.event(name, description, signatures);
       } else if (generic) {
         descriptor = MemberDescriptor.genericProperty(name, returnType, description);
       } else {

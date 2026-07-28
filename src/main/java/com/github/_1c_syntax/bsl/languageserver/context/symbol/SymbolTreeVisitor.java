@@ -63,4 +63,11 @@ public interface SymbolTreeVisitor {
    * @param variable Символ переменной
    */
   void visitVariable(VariableSymbol variable);
+
+  /**
+   * Посетить символ метода-обработчика платформенного события.
+   *
+   * @param event Символ обработчика события
+   */
+  void visitEventMethod(EventMethodSymbol event);
 }

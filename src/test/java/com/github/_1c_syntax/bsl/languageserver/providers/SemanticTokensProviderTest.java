@@ -568,7 +568,7 @@ class SemanticTokensProviderTest {
       // Line 9: Функция keyword
       new ExpectedToken(9, 0, 7, SemanticTokenTypes.Keyword, "Функция"),
       // Line 9: ПроверитьДанные function name
-      new ExpectedToken(9, 8, 15, SemanticTokenTypes.Function, "ПроверитьДанные"),
+      new ExpectedToken(9, 8, 15, SemanticTokenTypes.Method, "ПроверитьДанные"),
       // Line 9: ( operator
       new ExpectedToken(9, 23, 1, SemanticTokenTypes.Operator, "("),
       // Line 9: Имя parameter definition

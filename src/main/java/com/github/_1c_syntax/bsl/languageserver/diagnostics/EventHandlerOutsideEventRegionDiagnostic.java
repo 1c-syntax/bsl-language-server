@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -29,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -86,24 +86,14 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getEn()
   );
 
-  private final EventContractsIndex eventContractsIndex;
-
-  public EventHandlerOutsideEventRegionDiagnostic(EventContractsIndex eventContractsIndex) {
-    this.eventContractsIndex = eventContractsIndex;
-  }
-
   @Override
   public void check() {
     var isFormModule = documentContext.getModuleType() == ModuleType.FormModule;
     documentContext.getSymbolTree().getMethods().stream()
-      .filter(this::isEventHandler)
+      .filter(EventMethodSymbol.class::isInstance)
       .filter(method -> !isInEventRegion(method, isFormModule))
       .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(),
         info.getMessage(method.getName())));
-  }
-
-  private boolean isEventHandler(MethodSymbol method) {
-    return eventContractsIndex.getContract(documentContext, method.getName()).isPresent();
   }
 
   private static boolean isInEventRegion(MethodSymbol method, boolean isFormModule) {

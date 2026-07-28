@@ -24,19 +24,26 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -51,6 +58,15 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ApplicationEventPublisher eventPublisher;
+
+  @MockitoBean
+  private EventHandlerResolver eventHandlerResolver;
+
+  @BeforeEach
+  void resetEventHandlerResolver() {
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
+  }
 
   @Test
   void indexesSupportedSymbolsOnContentChangedEvent() {
@@ -72,6 +88,29 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     var variables = index.search("МодульнаяПеременная", NO_CANCEL);
     assertThat(variables)
       .anyMatch(entry -> entry.name().equals("МодульнаяПеременная"));
+  }
+
+  @Test
+  void indexedEntryHasEventKindForEventHandlerMethod() {
+    // given — резолвер стабится ДО создания документа: MethodSymbolComputer опрашивает
+    // классификатор синхронно при обходе AST, то есть уже во время TestUtils.getDocumentContext(...).
+    // Стабится именно isEventHandler, а не lookupContract — см. аналогичный комментарий в
+    // MethodSymbolComputerEventClassificationTest.
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("уникальноесобытие123")))
+      .thenReturn(true);
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура уникальноесобытие123(Отказ)
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // then
+    assertThat(index.search("уникальноесобытие123", NO_CANCEL))
+      .filteredOn(entry -> entry.name().equals("уникальноесобытие123"))
+      .hasSize(1)
+      .allMatch(entry -> entry.kind() == SymbolKind.Event);
   }
 
   @Test

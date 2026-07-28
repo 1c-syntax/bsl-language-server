@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextEvent;
 import com.github._1c_syntax.bsl.context.platform.EnAttachments;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
@@ -35,8 +37,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.Lazy;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -47,6 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -66,7 +69,7 @@ import java.util.stream.Collectors;
 @Component
 @WorkspaceScope
 @Slf4j
-public class EventHandlerResolver {
+public class EventHandlerResolver implements EventHandlerClassifier {
 
   /**
    * Модули, чей owner-тип — специализация по имени MDO:
@@ -160,13 +163,14 @@ public class EventHandlerResolver {
   private final BslContextHolder bslContextHolder;
 
   /**
-   * Лениво построенная карта глобальных событий: {@link ModuleType} →
-   * {@code lc(имя события)} → контракт. Источник —
-   * {@code ContextProvider.getGlobalContext()} с четырьмя списками
-   * (managed/ordinary/session/external). Если HBK недоступен — карта пуста.
+   * Карта глобальных событий: {@link ModuleType} → {@code lc(имя события)} → контракт. Источник —
+   * {@code ContextProvider.getGlobalContext()} (managed/ordinary/session/external). Собирается и
+   * кэшируется однократно при первом обращении (см. {@link #globalEvents()}); {@link BslContextHolder}
+   * синхронно-мемоизирован и позже не догружается, поэтому пустой результат (HBK недоступен)
+   * кэшируется наравне с полным.
    */
-  private final Lazy<Map<ModuleType, Map<String, MemberDescriptor>>> globalEvents
-    = new Lazy<>(this::buildGlobalEvents);
+  private final AtomicReference<Map<ModuleType, Map<String, MemberDescriptor>>> globalEventsCache =
+    new AtomicReference<>();
 
   public EventHandlerResolver(TypeRegistry typeRegistry, BslContextHolder bslContextHolder) {
     this.typeRegistry = typeRegistry;
@@ -202,6 +206,70 @@ public class EventHandlerResolver {
       .findFirst();
   }
 
+  /**
+   * Реализация {@link EventHandlerClassifier} для {@code
+   * context.computer.MethodSymbolComputer}: тонкая обёртка над {@link #lookupContract} —
+   * при обходе AST полный {@link MemberDescriptor} не нужен, важен только сам факт классификации.
+   */
+  @Override
+  public boolean isEventHandler(DocumentContext documentContext, String methodName) {
+    return lookupContract(documentContext, methodName).isPresent();
+  }
+
+  /**
+   * Возвращает все события платформенного owner-типа модуля документа — независимо от того,
+   * объявлен ли в документе метод-обработчик для каждого из них.
+   * <p>
+   * Используется для автодополнения заглушки ещё не объявленного обработчика (см.
+   * {@link com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex#getAllContracts}).
+   * Безопасно вызывать когда конфигурационные типы ещё не зарегистрированы — вернёт пустой список.
+   */
+  public List<MemberDescriptor> allEvents(DocumentContext documentContext) {
+    return eventsFor(documentContext.getModuleType(),
+      eventOwnerTypeRef(documentContext).orElse(null),
+      documentContext.getFileType());
+  }
+
+  /**
+   * Owner-тип, чьи события предлагаются в модуле документа: платформенный тип объекта/менеджера
+   * (например, {@code СправочникОбъект.<Имя>}). Пусто для модулей-глобальных-хостов и .os-классов —
+   * их события не зависят от конфигурационного типа. Служит стабильным ключом восстановления
+   * событий в {@code completionItem/resolve} (см. {@link #eventsFor}).
+   */
+  public Optional<TypeRef> eventOwnerTypeRef(DocumentContext documentContext) {
+    var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass || GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return Optional.empty();
+    }
+    return resolveOwnerType(documentContext, moduleType);
+  }
+
+  /**
+   * Все события источника, заданного парой {@code (moduleType, ownerTypeRef)} — без привязки к
+   * конкретному документу, чтобы набор можно было восстановить по ключу из
+   * {@code completionItem/resolve}. Для .os-класса и модулей-глобальных-хостов события фиксированы
+   * (owner-тип не нужен), для объектных/менеджерских модулей берутся с {@code ownerTypeRef}.
+   */
+  public List<MemberDescriptor> eventsFor(ModuleType moduleType, @Nullable TypeRef ownerTypeRef, FileType fileType) {
+    if (moduleType == ModuleType.OScriptClass) {
+      return OSCRIPT_CLASS_EVENTS;
+    }
+    if (GLOBAL_HOST_MODULES.contains(moduleType)) {
+      var byName = globalEvents().get(moduleType);
+      if (byName == null) {
+        return List.of();
+      }
+      // Одно событие лежит в карте под ru- и en-ключом на один и тот же объект — дедуп по identity/equals.
+      return byName.values().stream().distinct().toList();
+    }
+    if (ownerTypeRef == null) {
+      return List.of();
+    }
+    return typeRegistry.getMembers(ownerTypeRef, fileType).stream()
+      .filter(m -> m.kind() == MemberKind.EVENT)
+      .toList();
+  }
+
   private static Optional<MemberDescriptor> lookupOScriptClassEvent(String methodName) {
     var key = methodName.toLowerCase(Locale.ROOT);
     var ruKey = OSCRIPT_CLASS_EVENT_ALIASES_EN_TO_RU.getOrDefault(key, key);
@@ -209,11 +277,27 @@ public class EventHandlerResolver {
   }
 
   private Optional<MemberDescriptor> lookupGlobalEvent(ModuleType moduleType, String methodName) {
-    var byName = globalEvents.getOrCompute().get(moduleType);
+    var byName = globalEvents().get(moduleType);
     if (byName == null) {
       return Optional.empty();
     }
     return Optional.ofNullable(byName.get(methodName.toLowerCase(Locale.ROOT)));
+  }
+
+  private Map<ModuleType, Map<String, MemberDescriptor>> globalEvents() {
+    var cached = globalEventsCache.get();
+    if (cached != null) {
+      return cached;
+    }
+    // Собираем и кэшируем однократно, включая пустой результат. BslContextHolder — синхронный
+    // мемоизированный Lazy без повторных попыток (см. его javadoc): если HBK/bsl-context недоступен,
+    // get() остаётся пустым навсегда, поэтому «поздней подгрузки», ради которой стоило бы не
+    // кэшировать пустоту и пересобирать, не бывает. При пустом провайдере buildGlobalEvents() отдаёт
+    // Map.of(). Гонки нет: worst-case — идемпотентный двойной build с одинаковым содержимым,
+    // AtomicReference даёт безопасную публикацию.
+    var built = buildGlobalEvents();
+    globalEventsCache.set(built);
+    return built;
   }
 
   private Map<ModuleType, Map<String, MemberDescriptor>> buildGlobalEvents() {

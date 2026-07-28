@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -69,6 +70,14 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
       uri -> buildFor(documentContext)
     );
     return contracts.getOrDefault(methodName.toLowerCase(Locale.ROOT), Optional.empty());
+  }
+
+  /**
+   * Возвращает все события owner-типа модуля документа — независимо от того, объявлен ли в
+   * документе метод-обработчик для каждого из них.
+   */
+  public List<MemberDescriptor> getAllContracts(DocumentContext documentContext) {
+    return eventHandlerResolver.allEvents(documentContext);
   }
 
   @Override

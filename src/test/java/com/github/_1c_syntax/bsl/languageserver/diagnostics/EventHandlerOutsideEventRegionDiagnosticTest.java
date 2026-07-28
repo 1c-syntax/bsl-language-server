@@ -22,9 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -42,9 +39,9 @@ import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
+import static org.mockito.Mockito.when;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 /**
@@ -56,12 +53,6 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 class EventHandlerOutsideEventRegionDiagnosticTest
   extends AbstractDiagnosticTest<EventHandlerOutsideEventRegionDiagnostic> {
 
-  private static final MemberDescriptor STUB_CONTRACT = MemberDescriptor.event(
-    "<event>",
-    "",
-    List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, ""))
-  );
-
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
@@ -71,8 +62,8 @@ class EventHandlerOutsideEventRegionDiagnosticTest
 
   @BeforeEach
   void resetResolver() {
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
-      .thenReturn(Optional.empty());
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(false);
   }
 
   @Test
@@ -98,9 +89,9 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   }
 
   private void stubAsEventHandlers(Set<String> methodNames) {
-    methodNames.forEach(name -> Mockito.when(
-        eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq(name)))
-      .thenReturn(Optional.of(STUB_CONTRACT)));
+    methodNames.forEach(name -> when(
+        eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq(name)))
+      .thenReturn(true));
   }
 
   @Test
@@ -130,8 +121,8 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриЗаписи(Отказ) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
     var documentContext = TestUtils.getDocumentContext(src);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     Assertions.assertThat(diagnostics).hasSize(1);
@@ -160,10 +151,10 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриУдалении(Отказ) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриУдалении")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриУдалении")))
+      .thenReturn(true);
     var documentContext = TestUtils.getDocumentContext(src);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     Assertions.assertThat(diagnostics).hasSize(2);
@@ -201,8 +192,8 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриЗаписи() Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
     var documentContext = TestUtils.getDocumentContext(src);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     var diagnostic = diagnostics.get(0);
@@ -223,8 +214,8 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриЗаписи(Отказ) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
     var documentContext = TestUtils.getDocumentContext(src);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     Assertions.assertThat(diagnostics).hasSize(1);
@@ -251,8 +242,8 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриЗаписи(Отказ) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
     var documentContext = TestUtils.getDocumentContext(src);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     var fixes = getQuickFixes(diagnostics.get(0), documentContext);
@@ -275,8 +266,8 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриЗаписи(Отказ) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
     var documentContext = TestUtils.getDocumentContext(src);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
@@ -310,12 +301,12 @@ class EventHandlerOutsideEventRegionDiagnosticTest
 
       #КонецОбласти
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ТоварыПриИзменении")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ТоварыПриИзменении")))
+      .thenReturn(true);
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
     var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
-    Mockito.when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     // ТоварыПриИзменении в правильной области-префиксе → не срабатывает.
@@ -333,10 +324,10 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриЗаписи(Отказ) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
     var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
-    Mockito.when(documentContext.getContentList()).thenReturn(new String[0]);
+    when(documentContext.getContentList()).thenReturn(new String[0]);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     Assertions.assertThat(diagnostics).isNotEmpty();
@@ -354,10 +345,10 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
       КонецПроцедуры
       """;
-    Mockito.when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
-      .thenReturn(Optional.of(STUB_CONTRACT));
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
     var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
-    Mockito.when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     Assertions.assertThat(diagnostics).hasSize(1);

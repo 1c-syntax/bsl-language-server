@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -75,12 +76,13 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
 
   @Override
   public void check() {
-    documentContext.getSymbolTree().getMethods().forEach(method ->
-      eventContractsIndex.getContract(documentContext, method.getName())
-        .map(MemberDescriptor::signatures)
-        .filter(signatures -> !signatures.isEmpty())
-        .ifPresent(signatures -> checkSignature(method, signatures))
-    );
+    documentContext.getSymbolTree().getMethods().stream()
+      .filter(EventMethodSymbol.class::isInstance)
+      .forEach(method ->
+        eventContractsIndex.getContract(documentContext, method.getName())
+          .map(MemberDescriptor::signatures)
+          .filter(signatures -> !signatures.isEmpty())
+          .ifPresent(signatures -> checkSignature(method, signatures)));
   }
 
   /**

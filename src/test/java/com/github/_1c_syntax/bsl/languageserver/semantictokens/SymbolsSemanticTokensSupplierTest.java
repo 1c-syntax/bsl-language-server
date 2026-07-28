@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
@@ -31,8 +32,11 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -51,6 +55,31 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
   @Autowired
   private OScriptLibraryIndex oScriptLibraryIndex;
 
+  @MockitoBean
+  private EventHandlerResolver eventHandlerResolver;
+
+  @Test
+  void testEventHandlerMethodGetsEventTokenType() {
+    // given — резолвер стабится ДО создания документа: подробности см. в аналогичном тесте
+    // DocumentSymbolProviderTest.testEventHandlerMethodMarkedAsEventKind. Стабится isEventHandler,
+    // а не lookupContract — именно её опрашивает MethodSymbolComputer при построении дерева символов.
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
+
+    String bsl = """
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — имя обработчика красится как Event, а не Method
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 10, 9, SemanticTokenTypes.Event, "ПриЗаписи")
+    ));
+  }
+
   @Test
   void testMethodDeclaration() {
     // given
@@ -63,9 +92,9 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - function name should be highlighted as Function
+    // then - function name should be highlighted as Method (declared functions are methods)
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(0, 8, 10, SemanticTokenTypes.Function, "МояФункция")
+      new ExpectedToken(0, 8, 10, SemanticTokenTypes.Method, "МояФункция")
     ));
   }
 
@@ -159,7 +188,7 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
     // then
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(0, 14, 20, SemanticTokenTypes.Function,
+      new ExpectedToken(0, 14, 20, SemanticTokenTypes.Method,
         Set.of(SemanticTokenModifiers.Async), "ОбработатьАсинхронно")
     ));
   }

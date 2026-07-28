@@ -53,6 +53,7 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Comment,
       SemanticTokenTypes.Function,
       SemanticTokenTypes.Method,
+      SemanticTokenTypes.Event,  // Added for platform event handler methods
       SemanticTokenTypes.Variable,
       SemanticTokenTypes.Parameter,
       SemanticTokenTypes.Macro,
