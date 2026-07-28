@@ -103,6 +103,9 @@ public class ExpressionTypeInferencer {
 
   private static final int MAX_DEPTH = 32;
 
+  /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
+  private static final String ELEMENT_GETTER = "Получить";
+
   private static final TypeRef NUMBER = new TypeRef(TypeKind.PRIMITIVE, "Число");
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
   private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
@@ -423,11 +426,6 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
-  /** Набор состоит из единственного универсального типа ({@link TypeRef#ANY}). */
-  private static boolean isOnlyAny(TypeSet types) {
-    return types.refs().size() == 1 && types.refs().iterator().next().equals(TypeRef.ANY);
-  }
-
   /**
    * Для записи {@code Новый Структура("К1, К2", v1, v2)}: распарсить первый
    * строковый аргумент в имена ключей и подвесить к каждому ключу TypeSet
@@ -489,8 +487,31 @@ public class ExpressionTypeInferencer {
       || lower.equals("фиксированнаяструктура") || lower.equals("fixedstructure");
   }
 
-  /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
-  private static final String ELEMENT_GETTER = "Получить";
+  /**
+   * Уточнение типа члена, которое из объявления не выводится: члены табличных
+   * коллекций (зависят от колонок получателя и аргументов вызова) и
+   * {@code Получить(Индекс)} как методная форма индексатора.
+   *
+   * @param leftTypes  типы получателя.
+   * @param memberName имя члена.
+   * @param call       узел вызова, если член — метод; {@code null} для свойства.
+   * @param ctx        контекст инференса.
+   * @return уточнённый тип; {@code null}, если уточнять нечем и нужен общий путь.
+   */
+  @Nullable
+  private TypeSet refinedMemberTypes(TypeSet leftTypes, String memberName,
+                                     @Nullable MethodCallNode call, InferenceContext ctx) {
+    var tableTypes = tableCollectionInference.infer(
+      leftTypes, memberName, call, ctx.documentContext.getFileType());
+    if (tableTypes != null) {
+      return tableTypes;
+    }
+    if (call == null || !ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
+      return null;
+    }
+    var element = elementGetterTypes(leftTypes);
+    return element.isEmpty() ? null : element;
+  }
 
   /**
    * Тип элемента для {@code Получить(Индекс)}. Платформа объявляет возврат как
@@ -503,7 +524,7 @@ public class ExpressionTypeInferencer {
    * @param leftTypes типы получателя.
    * @return типы элемента; {@link TypeSet#EMPTY}, если правило неприменимо.
    */
-  private TypeSet elementGetterTypes(TypeSet leftTypes) {
+  private static TypeSet elementGetterTypes(TypeSet leftTypes) {
     for (var ref : leftTypes.refs()) {
       if (isStructureOrMapLike(ref.qualifiedName())) {
         return TypeSet.EMPTY;
@@ -739,18 +760,9 @@ public class ExpressionTypeInferencer {
     if (memberName == null || memberName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    // Члены табличных коллекций, состав результата у которых определяется колонками
-    // получателя и аргументами вызова, а не объявленным типом.
-    var tableTypes = tableCollectionInference.infer(
-      leftTypes, memberName, methodCall, ctx.documentContext.getFileType());
-    if (tableTypes != null) {
-      return tableTypes;
-    }
-    if (methodCall != null && ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
-      var element = elementGetterTypes(leftTypes);
-      if (!element.isEmpty()) {
-        return element;
-      }
+    var refined = refinedMemberTypes(leftTypes, memberName, methodCall, ctx);
+    if (refined != null) {
+      return refined;
     }
     // Сначала смотрим декларированные поля «открытого» объекта данных
     // (Структура / ТаблицаЗначений с описанными ключами).
@@ -1149,8 +1161,8 @@ public class ExpressionTypeInferencer {
     var scopeRange = scope == null ? null : scope.getRange();
     var variableName = variable.getName();
 
-    var rowRef = typeRegistry.resolve("СтрокаТаблицыЗначений", owner.getFileType())
-      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, "СтрокаТаблицыЗначений"));
+    var rowRef = typeRegistry.resolve(TableCollectionInference.VALUE_TABLE_ROW, owner.getFileType())
+      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, TableCollectionInference.VALUE_TABLE_ROW));
     TypeSet rowSet = TypeSet.of(rowRef);
     boolean hasColumns = false;
 

@@ -953,6 +953,8 @@
       },
       {
         "name": "Колонки",
+        "nameRu": "Колонки",
+        "nameEn": "Columns",
         "kind": "PROPERTY",
         "returnType": "КоллекцияКолонокТаблицыЗначений"
       },

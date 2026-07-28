@@ -93,6 +93,9 @@ final class CollectionReturnsSpecializer {
         specialized.add(member.withReturnTypes(withElements(member.returnTypes(), TypeSet.of(row))));
       } else if (member.matches(UNLOAD_METHOD) && !unloadedRow.isEmpty()) {
         specialized.add(member.withReturnTypes(withElements(member.returnTypes(), unloadedRow)));
+      } else {
+        // Остальные члены обобщённого типа наследуются как есть — уточнять в них нечего.
+        continue;
       }
     }
     return List.copyOf(specialized);

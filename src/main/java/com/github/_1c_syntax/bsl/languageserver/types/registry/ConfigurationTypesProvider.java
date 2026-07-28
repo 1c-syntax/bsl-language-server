@@ -114,6 +114,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class ConfigurationTypesProvider {
 
+  /** Платформенный тип значения табличной части (в синтакс-помощнике имя с пробелом). */
+  private static final String TABULAR_SECTION_TYPE = "Табличная часть";
+
+  /** Платформенный тип строки табличной части. */
+  private static final String TABULAR_SECTION_ROW_TYPE = "Строка табличной части";
+
   /** MDOType'ы, для которых имеет смысл регистрировать менеджер-тип. */
   private static final Set<MDOType> MANAGER_TYPES = Set.of(
     MDOType.CATALOG,
@@ -615,12 +621,6 @@ public class ConfigurationTypesProvider {
       typeRegistry.registerMemberSource(objectRef, () -> immutableTs, FileType.BSL);
     }
   }
-
-  /** Платформенный тип значения табличной части (в синтакс-помощнике имя с пробелом). */
-  private static final String TABULAR_SECTION_TYPE = "Табличная часть";
-
-  /** Платформенный тип строки табличной части. */
-  private static final String TABULAR_SECTION_ROW_TYPE = "Строка табличной части";
 
   /**
    * Подмешивает табличной части и её строке платформенную часть: методы коллекции

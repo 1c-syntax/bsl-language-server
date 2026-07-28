@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -66,7 +67,8 @@ class TableCollectionInference {
   private static final String COLUMNS = "Колонки";
 
   private static final String VALUE_TABLE = "ТаблицаЗначений";
-  private static final String VALUE_TABLE_ROW = "СтрокаТаблицыЗначений";
+  /** Строка таблицы значений — общая для всего пакета: её же резолвит {@link ExpressionTypeInferencer}. */
+  static final String VALUE_TABLE_ROW = "СтрокаТаблицыЗначений";
   private static final String COLUMNS_COLLECTION = "КоллекцияКолонокТаблицыЗначений";
   private static final String COLUMN = "КолонкаТаблицыЗначений";
   private static final String ARRAY = "Массив";
@@ -93,40 +95,48 @@ class TableCollectionInference {
       return null;
     }
     var kind = call == null ? MemberKind.PROPERTY : MemberKind.METHOD;
-    if (!hasMember(receiver, memberName, kind, fileType)) {
-      // Уточняем только реально существующие члены: иначе выдумали бы тип
-      // несуществующему вызову и спрятали бы ошибку в коде.
+    // Уточняем только реально существующие члены: иначе выдумали бы тип
+    // несуществующему вызову и спрятали бы ошибку в коде.
+    var member = resolveMember(receiver, memberName, kind, fileType);
+    if (member == null) {
       return null;
     }
-    var columns = columnsOf(receiver, fileType);
-    if (columns.isEmpty()) {
-      return null;
-    }
+    // Дальше сверяемся с найденным дескриптором, а не с написанием в коде:
+    // `matches` знает оба языка, поэтому `Unload` получает то же уточнение, что
+    // и `Выгрузить`. Колонки считаются только под сработавшее правило.
     if (call == null) {
-      return COLUMNS.equalsIgnoreCase(memberName) ? columnsCollection(columns) : null;
+      return member.matches(COLUMNS) ? columnsCollection(columnsOf(receiver, fileType)) : null;
     }
-    if (UNLOAD_COLUMN.equalsIgnoreCase(memberName)) {
-      return unloadColumn(columns, call);
+    if (member.matches(UNLOAD_COLUMN)) {
+      return unloadColumn(columnsOf(receiver, fileType), call);
     }
-    if (UNLOAD.equalsIgnoreCase(memberName)) {
-      return unloaded(selected(columns, call, UNLOAD_COLUMNS_ARG));
+    if (member.matches(UNLOAD)) {
+      return unloaded(selected(columnsOf(receiver, fileType), call, UNLOAD_COLUMNS_ARG));
     }
-    if (UNLOAD_COLUMNS.equalsIgnoreCase(memberName)) {
-      return unloaded(selected(columns, call, FIRST_ARG));
+    if (member.matches(UNLOAD_COLUMNS)) {
+      return unloaded(selected(columnsOf(receiver, fileType), call, FIRST_ARG));
     }
     return null;
   }
 
-  /** Объявлен ли у получателя такой член — чтобы не уточнять несуществующий вызов. */
-  private boolean hasMember(TypeSet receiver, String memberName, MemberKind kind, FileType fileType) {
+  /**
+   * Член получателя с таким именем и видом. Ищется один раз: он же отвечает на вопрос
+   * «существует ли член» и он же служит для выбора правила — по дескриптору, а не по
+   * написанию, чтобы русское и английское имя вели себя одинаково.
+   *
+   * @return дескриптор; {@code null}, если такого члена у получателя нет.
+   */
+  @Nullable
+  private MemberDescriptor resolveMember(TypeSet receiver, String memberName, MemberKind kind,
+                                         FileType fileType) {
     for (var ref : receiver.refs()) {
       for (var member : typeRegistry.getMembers(ref, fileType)) {
         if (member.kind() == kind && member.matches(memberName)) {
-          return true;
+          return member;
         }
       }
     }
-    return false;
+    return null;
   }
 
   /**
@@ -139,16 +149,22 @@ class TableCollectionInference {
     for (var ref : receiver.refs()) {
       var elements = receiver.getElementTypes(ref);
       for (var elementRef : elements.refs()) {
-        elements.getLocalFields(elementRef)
-          .forEach((name, field) -> columns.merge(name, field.types(), TypeSet::union));
-        for (var member : typeRegistry.getMembers(elementRef, fileType)) {
-          if (member.kind() == MemberKind.PROPERTY && !member.generic()) {
-            columns.merge(member.name(), member.returnTypes(), TypeSet::union);
-          }
-        }
+        collectColumnsOfRow(elements, elementRef, fileType, columns);
       }
     }
     return columns;
+  }
+
+  /** Колонки одной строки: сначала уточнения с места, затем свойства её типа. */
+  private void collectColumnsOfRow(TypeSet elements, TypeRef elementRef, FileType fileType,
+                                   Map<String, TypeSet> columns) {
+    elements.getLocalFields(elementRef)
+      .forEach((name, field) -> columns.merge(name, field.types(), TypeSet::union));
+    for (var member : typeRegistry.getMembers(elementRef, fileType)) {
+      if (member.kind() == MemberKind.PROPERTY && !member.generic()) {
+        columns.merge(member.name(), member.returnTypes(), TypeSet::union);
+      }
+    }
   }
 
   /**
@@ -191,7 +207,7 @@ class TableCollectionInference {
   private TypeSet unloaded(Map<String, TypeSet> columns) {
     var tableRef = resolve(VALUE_TABLE);
     var rowRef = resolve(VALUE_TABLE_ROW);
-    if (tableRef == null || rowRef == null) {
+    if (columns.isEmpty() || tableRef == null || rowRef == null) {
       return null;
     }
     var row = TypeSet.of(rowRef);
@@ -226,7 +242,7 @@ class TableCollectionInference {
   private TypeSet columnsCollection(Map<String, TypeSet> columns) {
     var collectionRef = resolve(COLUMNS_COLLECTION);
     var columnRef = resolve(COLUMN);
-    if (collectionRef == null || columnRef == null) {
+    if (columns.isEmpty() || collectionRef == null || columnRef == null) {
       return null;
     }
     var columnType = TypeSet.of(columnRef);

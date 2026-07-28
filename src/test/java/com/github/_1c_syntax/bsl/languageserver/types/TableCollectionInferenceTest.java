@@ -180,6 +180,28 @@ class TableCollectionInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void englishMemberNamesAreRefinedToo() {
+    var documentContext = moduleWith("""
+      Процедура Тест() Экспорт
+        Документ = Документы.Документ1.СоздатьДокумент();
+        Часть = Документ.ТабличнаяЧасть1.UnloadColumns("Реквизит1");
+        Значения = Документ.ТабличнаяЧасть1.UnloadColumn("Реквизит1");
+        Колонки = Документ.ТабличнаяЧасть1.Unload().Columns;
+      КонецПроцедуры
+      """);
+
+    assertThat(columnsOf(documentContext, "Часть"))
+      .as("правило выбирается по дескриптору, поэтому английское написание работает так же")
+      .containsExactly("Реквизит1");
+    assertThat(typesOf(documentContext, "Значения").getElementTypes().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly(rowColumnType(documentContext));
+    var columns = typesOf(documentContext, "Колонки");
+    assertThat(columns.getLocalFields(columns.refs().iterator().next()))
+      .containsKeys("Реквизит1", "Реквизит2");
+  }
+
+  @Test
   void namesFromVariableLeaveTypeGeneric() {
     var documentContext = moduleWith("""
       Процедура Тест() Экспорт
