@@ -1378,6 +1378,45 @@ public class TypeRegistry {
     }
   }
 
+  /**
+   * Скопировать коллекционные свойства типа-источника на его специализацию:
+   * типы элементов, признаки {@code Для Каждого} и индексатора вместе с их
+   * текстовыми описаниями.
+   * <p>
+   * {@link #registerSpecialization(TypeRef, TypeRef, Map, FileType)} переносит только
+   * members — коллекционные свойства приходят из {@link TypePackProvider.TypeDecl} и
+   * специализации не достаются. Без явного копирования специализация коллекции
+   * (например, {@code ВсеЭлементыФормы.<форма>}) переставала бы обходиться
+   * {@code Для Каждого} и индексироваться.
+   * <p>
+   * Уже заданные у {@code target} свойства не перетираются: собственная регистрация
+   * специализации приоритетнее унаследованной.
+   *
+   * @param target   специализированный тип-получатель.
+   * @param source   тип-источник (обычно generic, от которого сделана специализация).
+   * @param fileType языковой скоуп.
+   */
+  public void inheritCollectionTraits(TypeRef target, TypeRef source, FileType fileType) {
+    if (target.equals(source)) {
+      return;
+    }
+    var elements = defaultElementTypes.get(source);
+    if (elements != null && !elements.isEmpty()) {
+      defaultElementTypes.putIfAbsent(target, elements);
+    }
+    copyTrait(supportsForEach.get(fileType), target, source);
+    copyTrait(supportsIndexAccess.get(fileType), target, source);
+    copyTrait(forEachDescriptions.get(fileType), target, source);
+    copyTrait(indexAccessDescriptions.get(fileType), target, source);
+  }
+
+  private static <V> void copyTrait(Map<TypeRef, V> trait, TypeRef target, TypeRef source) {
+    var value = trait.get(source);
+    if (value != null) {
+      trait.putIfAbsent(target, value);
+    }
+  }
+
   /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
   public boolean supportsForEach(TypeRef ref, FileType fileType) {
     return Boolean.TRUE.equals(supportsForEach.get(fileType).get(ref));
