@@ -184,22 +184,11 @@ public class TypeRegistry {
   private final Map<FileType, Map<TypeRef, List<Supplier<List<SignatureDescriptor>>>>> constructorSources = perFileType();
 
   /**
-   * Тип ↔ типы элементов «по умолчанию» для коллекции. Заполняется из
-   * {@link TypePackProvider.TypeDecl#defaultElementTypes()} при регистрации.
-   * Источник истины — bsl-context ({@code ContextCollection.collectionElementTypes()})
-   * или builtin JSON. Используется инференсером для прокидывания element-типа
-   * на TypeSet, чтобы {@code Для Каждого X Из Коллекция} давал X нужного типа
-   * без аннотаций пользователя.
+   * Коллекционные свойства типов: типы элементов, признаки {@code Для Каждого}
+   * и индексатора с описаниями. Вынесены в отдельный индекс — реестр только
+   * делегирует к нему и канонизирует типы элементов через {@link #resolve(String)}.
    */
-  private final Map<TypeRef, List<TypeRef>> defaultElementTypes = new ConcurrentHashMap<>();
-  /** Тип ↔ {@code supportsForEach} в разрезе языка ({@code true} — обход {@code Для Каждого} разрешён). */
-  private final Map<FileType, Map<TypeRef, Boolean>> supportsForEach = perFileType();
-  /** Тип ↔ {@code supportsIndexAccess} в разрезе языка ({@code true} — индексатор {@code [...]} разрешён). */
-  private final Map<FileType, Map<TypeRef, Boolean>> supportsIndexAccess = perFileType();
-  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника, в разрезе языка. */
-  private final Map<FileType, Map<TypeRef, BilingualString>> forEachDescriptions = perFileType();
-  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника, в разрезе языка. */
-  private final Map<FileType, Map<TypeRef, BilingualString>> indexAccessDescriptions = perFileType();
+  private final CollectionTraitsIndex collectionTraits = new CollectionTraitsIndex();
   /**
    * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
    * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.
@@ -778,6 +767,13 @@ public class TypeRegistry {
    * зависеть от порядка инициализации платформенных провайдеров.
    * Также индексируются read-only и версионные members специализированного типа
    * (см. {@link #indexMemberMetadata}).
+   * <p>
+   * Переносятся <b>только members</b>. Коллекционные свойства (типы элементов,
+   * {@code Для Каждого}, индексатор) сознательно не копируются: метод используется и
+   * как «подмешать в тип members другого типа», когда у одного target'а несколько
+   * источников, и там «источник — коллекция» не значит «target — коллекция». Если
+   * специализация должна остаться коллекцией, позовите
+   * {@link #inheritCollectionTraits(TypeRef, TypeRef, FileType)} явно.
    *
    * @param specializedRef  целевой TypeRef, который должен «наследовать»
    *                        members generic-типа
@@ -1215,8 +1211,7 @@ public class TypeRegistry {
     membersEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
-    supportsForEach.values().forEach(byRef -> byRef.remove(ref));
-    defaultElementTypes.remove(ref);
+    collectionTraits.remove(ref);
   }
 
   private void registerPack(TypePackProvider.TypeDecl decl, FileType fileType) {
@@ -1229,7 +1224,8 @@ public class TypeRegistry {
     registerPackDescriptions(decl, ref, fileType);
     registerPackMetadata(decl, ref, fileType);
     registerPackCallables(decl, ref, fileType);
-    registerPackCollectionTraits(decl, ref, fileType);
+    collectionTraits.registerPack(decl, ref, fileType);
+    registerPackTypeParameters(decl, ref);
     if (!decl.name().isEmpty()) {
       displayNames.putIfAbsent(ref, decl.name());
     }
@@ -1286,23 +1282,8 @@ public class TypeRegistry {
     }
   }
 
-  /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */
-  private void registerPackCollectionTraits(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
-    if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
-      defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
-    }
-    if (decl.supportsForEach()) {
-      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
-    }
-    if (decl.supportsIndexAccess()) {
-      supportsIndexAccess.get(fileType).put(ref, Boolean.TRUE);
-    }
-    if (!decl.forEachDescription().isEmpty()) {
-      forEachDescriptions.get(fileType).put(ref, decl.forEachDescription());
-    }
-    if (!decl.indexAccessDescription().isEmpty()) {
-      indexAccessDescriptions.get(fileType).put(ref, decl.indexAccessDescription());
-    }
+  /** Generic-параметры пака: имена плейсхолдеров в qualifiedName типа. */
+  private void registerPackTypeParameters(TypePackProvider.TypeDecl decl, TypeRef ref) {
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
     }
@@ -1337,22 +1318,13 @@ public class TypeRegistry {
    * используются как ключи в индексах членов).
    */
   public TypeSet getDefaultElementTypes(TypeRef ref) {
-    var raw = defaultElementTypes.get(ref);
-    if (raw == null || raw.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var canonical = new ArrayList<TypeRef>(raw.size());
-    for (var element : raw) {
-      var resolved = resolve(element.qualifiedName()).orElse(element);
-      canonical.add(resolved);
-    }
-    return TypeSet.of(canonical);
+    return collectionTraits.defaultElementTypes(ref, element -> resolve(element.qualifiedName()).orElse(element));
   }
 
   /**
    * Пометить пользовательский тип (OneScript-класс) как коллекцию, обходимую
    * через {@code Для Каждого} — или снять признак. Это императивный аналог
-   * {@link #registerPackCollectionTraits} для USER-типов, у которых нет
+   * регистрации пака для USER-типов, у которых нет
    * {@link TypePackProvider.TypeDecl}: источник истины — аннотация
    * {@code &Обходимое} на {@code ПриСозданииОбъекта} (см.
    * {@code OScriptIterable#isIterable}).
@@ -1371,21 +1343,39 @@ public class TypeRegistry {
    * @param fileType языковой скоуп, в котором действует признак.
    */
   public void setUserTypeIterable(TypeRef ref, boolean iterable, FileType fileType) {
-    if (iterable) {
-      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
-    } else {
-      supportsForEach.get(fileType).remove(ref);
-    }
+    collectionTraits.setIterable(ref, iterable, fileType);
+  }
+
+  /**
+   * Скопировать коллекционные свойства типа-источника на его специализацию:
+   * типы элементов, признаки {@code Для Каждого} и индексатора вместе с их
+   * текстовыми описаниями.
+   * <p>
+   * {@link #registerSpecialization(TypeRef, TypeRef, Map, FileType)} переносит только
+   * members — коллекционные свойства приходят из {@link TypePackProvider.TypeDecl} и
+   * специализации не достаются. Без явного копирования специализация коллекции
+   * (например, {@code ВсеЭлементыФормы.<форма>}) переставала бы обходиться
+   * {@code Для Каждого} и индексироваться.
+   * <p>
+   * Уже заданные у {@code target} свойства не перетираются: собственная регистрация
+   * специализации приоритетнее унаследованной.
+   *
+   * @param target   специализированный тип-получатель.
+   * @param source   тип-источник (обычно generic, от которого сделана специализация).
+   * @param fileType языковой скоуп.
+   */
+  public void inheritCollectionTraits(TypeRef target, TypeRef source, FileType fileType) {
+    collectionTraits.inherit(target, source, fileType);
   }
 
   /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
   public boolean supportsForEach(TypeRef ref, FileType fileType) {
-    return Boolean.TRUE.equals(supportsForEach.get(fileType).get(ref));
+    return collectionTraits.supportsForEach(ref, fileType);
   }
 
   /** {@code true}, если у типа разрешён индексатор {@code [...]} в данном языке файла. */
   public boolean supportsIndexAccess(TypeRef ref, FileType fileType) {
-    return Boolean.TRUE.equals(supportsIndexAccess.get(fileType).get(ref));
+    return collectionTraits.supportsIndexAccess(ref, fileType);
   }
 
   /**
@@ -1399,7 +1389,7 @@ public class TypeRegistry {
 
   /** Описание обхода в указанной локали (с fallback на другую) в данном языке файла. */
   public String getForEachDescription(TypeRef ref, FileType fileType, Language language) {
-    return forEachDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+    return collectionTraits.forEachDescription(ref, fileType, language);
   }
 
   /**
@@ -1413,7 +1403,7 @@ public class TypeRegistry {
 
   /** Описание индексатора в указанной локали в данном языке файла. */
   public String getIndexAccessDescription(TypeRef ref, FileType fileType, Language language) {
-    return indexAccessDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+    return collectionTraits.indexAccessDescription(ref, fileType, language);
   }
 
   /**
