@@ -64,6 +64,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperat
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
+import com.github._1c_syntax.utils.Lazy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -78,6 +79,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1043,13 +1045,9 @@ public class ExpressionTypeInferencer {
     if (!(terminal.getParent() instanceof ParserRuleContext use)) {
       return null;
     }
-    var definitions = definitionPositions(variable);
-    if (definitions.isEmpty()) {
-      return null;
-    }
     ctx.flowInProgress.add(variable);
     try {
-      return variableFlowAnalyzer.typeAt(owner, use, flowInputs(variable, definitions, ctx));
+      return variableFlowAnalyzer.typeAt(owner, use, flowInputs(variable, ctx));
     } catch (RuntimeException e) {
       // Расчёт по потоку — уточнение, а не единственный источник типа. Если он сорвался
       // (например, граф не построился на неожиданной форме кода), тип должен дать прежний
@@ -1082,10 +1080,6 @@ public class ExpressionTypeInferencer {
     if (variable.getKind() == VariableKind.MODULE || !owner.getUri().equals(reference.uri())) {
       return null;
     }
-    var definitions = definitionPositions(variable);
-    if (definitions.isEmpty()) {
-      return null;
-    }
     var ctx = new InferenceContext(owner);
     ctx.flowInProgress.add(variable);
     try {
@@ -1093,7 +1087,7 @@ public class ExpressionTypeInferencer {
         owner,
         reference.selectionRange().getStart(),
         reference.occurrenceType() == OccurrenceType.DEFINITION,
-        flowInputs(variable, definitions, ctx)
+        flowInputs(variable, ctx)
       );
     } catch (StackOverflowError | RuntimeException e) {
       return null;
@@ -1106,27 +1100,43 @@ public class ExpressionTypeInferencer {
    * Исходные данные расчёта по потоку для переменной: что известно на входе в тело,
    * где она меняется и как считать вклад каждого изменения.
    *
-   * @param variable    переменная.
-   * @param definitions позиции присваиваний переменной.
-   * @param ctx         контекст текущего инференса.
+   * @param variable переменная.
+   * @param ctx      контекст текущего инференса.
    * @return данные для {@link VariableFlowAnalyzer}.
    */
-  private VariableFlowAnalyzer.FlowInputs flowInputs(
-    VariableSymbol variable,
-    List<Position> definitions,
-    InferenceContext ctx
-  ) {
+  private VariableFlowAnalyzer.FlowInputs flowInputs(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
-    var mutationCalls = mutationCalls(variable);
+    // Оба набора считаются лениво: за местами присваиваний стоит обход индекса ссылок с
+    // поиском символа по позиции на каждое обращение к переменной, и это самая дорогая
+    // часть подготовки. При готовом ответе в кэше она не нужна вовсе.
+    var mutationCalls = new Lazy<>(() -> mutationCalls(variable));
     return new VariableFlowAnalyzer.FlowInputs(
-      flowEntryFact(variable),
-      definitions,
-      mutationCalls.keySet(),
+      variable,
+      // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
+      // (внутри инференса другой переменной) мог быть усечён защитой от циклов,
+      // и переиспользовать такой результат как самостоятельный нельзя.
+      ctx.visited.size() <= 1,
+      () -> flowEntryFact(variable),
+      () -> definitionPositions(variable),
+      () -> mutationCalls.getOrCompute().keySet(),
       position -> attachDefaultElementTypes(inferFromDefinitionPosition(owner, position, ctx)),
-      (position, incoming) -> applyMutation(variable, mutationCalls.get(position), incoming, ctx),
-      (condition, whenTrue, incoming) ->
-        guardConditionNarrowing.narrow(condition, whenTrue, incoming, variable, owner)
+      (position, incoming) -> applyMutation(variable, mutationCalls.getOrCompute().get(position), incoming, ctx),
+      narrowingCallback(variable, owner)
     );
+  }
+
+  /**
+   * Колбэк сужения по охраняющим условиям с запоминанием разбора: расчёт идёт проходами и
+   * спрашивает одни и те же условия многократно, а разбор тянет резолв переменной через
+   * индекс — самую дорогую часть шага.
+   *
+   * @param variable переменная, тип которой сужается.
+   * @param owner    документ с условиями.
+   * @return колбэк для {@link VariableFlowAnalyzer}.
+   */
+  private VariableFlowAnalyzer.GuardNarrowing narrowingCallback(VariableSymbol variable, DocumentContext owner) {
+    return (condition, whenTrue, incoming) ->
+      guardConditionNarrowing.compile(condition, owner).apply(variable, whenTrue, incoming);
   }
 
   /**

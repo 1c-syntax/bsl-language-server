@@ -70,12 +70,18 @@ public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableInd
     BSLParser.CodeBlockContext codeBlock,
     CfgBuildOptions options
   ) {
-    return graphsByUri
-      .computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
-      .computeIfAbsent(
-        new GraphKey(codeBlock, options),
-        key -> key.options().buildGraph(key.codeBlock())
-      );
+    var byKey = graphsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>());
+    var key = new GraphKey(codeBlock, options);
+    var cached = byKey.get(key);
+    if (cached != null) {
+      return cached;
+    }
+    // Построение идёт ВНЕ computeIfAbsent: обход поддерева операторов не мгновенный, а под
+    // замком корзины на нём выстраивались бы все потоки пакетного анализа. Двойная работа
+    // при гонке безвредна — граф зависит только от блока кода и настроек.
+    var graph = options.buildGraph(codeBlock);
+    var previous = byKey.putIfAbsent(key, graph);
+    return previous == null ? graph : previous;
   }
 
   /**

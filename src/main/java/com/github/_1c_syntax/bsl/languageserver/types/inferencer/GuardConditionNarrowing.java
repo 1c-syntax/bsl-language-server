@@ -22,8 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -40,9 +44,12 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Сужение типа переменной охраняющим условием.
@@ -64,8 +71,9 @@ import java.util.Locale;
  * это дизъюнкция, и какая именно часть оказалась ложной, неизвестно.
  */
 @Component
+@WorkspaceScope
 @RequiredArgsConstructor
-public class GuardConditionNarrowing {
+public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableIndex {
 
   private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
 
@@ -74,42 +82,127 @@ public class GuardConditionNarrowing {
   private static final String TYPE_RU = "ТИП";
   private static final String TYPE_EN = "TYPE";
 
+  private final Map<URI, Map<BSLParser.ExpressionContext, CompiledGuard>> compiledByUri = new ConcurrentHashMap<>();
+
   private final TypeRegistry typeRegistry;
   private final ReferenceResolver referenceResolver;
 
   /**
-   * Сузить тип переменной по охраняющему условию.
+   * Утверждение о типе переменной, снятое с одной проверки в условии.
+   *
+   * @param type     проверяемый тип; {@code null} — проверка на {@code Неопределено}.
+   * @param equality было ли сравнение на равенство: {@code <>} переворачивает смысл.
+   */
+  private record Assertion(SourceDefinedSymbol variable, @Nullable TypeRef type, boolean equality) {
+
+    /** Применить утверждение к типу на указанной ветке. */
+    private TypeSet apply(boolean whenTrue, TypeSet incoming) {
+      var ref = type == null ? UNDEFINED : type;
+      // «Утверждается ли равенство на этой ветке»: `<>` переворачивает смысл, ложная ветка — ещё раз.
+      if (equality != whenTrue) {
+        return incoming.without(ref);
+      }
+      if (type == null) {
+        return TypeSet.of(UNDEFINED);
+      }
+      // Набор заменяется целиком: проверка типа в коде утверждает про переменную больше,
+      // чем известно из присваиваний. Если тип уже был в наборе, он остаётся со своими уточнениями.
+      var retained = incoming.retaining(ref);
+      return retained.isEmpty() ? TypeSet.of(ref) : retained;
+    }
+  }
+
+  /**
+   * Разобранное охраняющее условие: сколько в нём проверок и что из них следует про
+   * анализируемую переменную.
+   * <p>
+   * Разбор и резолв переменной делаются один раз, а применение к типу — сколько угодно:
+   * расчёт по потоку идёт проходами и спрашивает одно и то же условие многократно.
+   *
+   * @param conjunctCount общее число проверок в конъюнкции, включая не относящиеся к переменной.
+   * @param assertions    утверждения, снятые с проверок про эту переменную.
+   */
+  public record CompiledGuard(int conjunctCount, List<Assertion> assertions) {
+
+    /** Условие, из которого про переменную ничего не следует. */
+    public static final CompiledGuard NONE = new CompiledGuard(0, List.of());
+
+    /**
+     * Сузить тип переменной на ветке условия.
+     *
+     * @param variable переменная, тип которой сужается: условие может утверждать что-то
+     *                 про несколько переменных, берутся только её проверки.
+     * @param whenTrue ветка: {@code true} — истинная, {@code false} — ложная.
+     * @param incoming тип переменной перед условием.
+     * @return суженный тип; исходный, если сужать нечем.
+     */
+    public TypeSet apply(SourceDefinedSymbol variable, boolean whenTrue, TypeSet incoming) {
+      // На ложной ветке отрицание конъюнкции даёт дизъюнкцию: какая часть оказалась
+      // ложной, неизвестно, поэтому сужает только условие из одной проверки.
+      if (assertions.isEmpty() || !whenTrue && conjunctCount > 1) {
+        return incoming;
+      }
+      var narrowed = incoming;
+      for (var assertion : assertions) {
+        if (assertion.variable().equals(variable)) {
+          narrowed = assertion.apply(whenTrue, narrowed);
+        }
+      }
+      return narrowed;
+    }
+  }
+
+  /**
+   * Разобрать охраняющее условие в утверждения о переменных — из кэша либо на месте.
+   * <p>
+   * Разбор не зависит от того, чей тип сужают: условие может утверждать что-то про
+   * несколько переменных сразу, и каждая проверка несёт свою. Поэтому разбирается оно
+   * один раз на документ, а не заново на каждую переменную — резолв переменной через
+   * индекс символов дорогой, а условий в методе столько же, сколько и переменных.
    *
    * @param condition       выражение условия.
-   * @param whenTrue        ветка условия: {@code true} — истинная, {@code false} — ложная.
-   * @param incoming        тип переменной перед условием.
-   * @param variable        переменная, тип которой сужается.
    * @param documentContext контекст документа с условием.
-   * @return суженный тип; исходный, если условие ничего про эту переменную не утверждает.
+   * @return разобранное условие; {@link CompiledGuard#NONE}, если сужать по нему нечего.
    */
-  public TypeSet narrow(
-    BSLParser.ExpressionContext condition,
-    boolean whenTrue,
-    TypeSet incoming,
-    VariableSymbol variable,
-    DocumentContext documentContext
-  ) {
+  public CompiledGuard compile(BSLParser.ExpressionContext condition, DocumentContext documentContext) {
+    var byCondition = compiledByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>());
+    var cached = byCondition.get(condition);
+    if (cached != null) {
+      return cached;
+    }
+    var compiled = compileCondition(condition, documentContext);
+    var previous = byCondition.putIfAbsent(condition, compiled);
+    return previous == null ? compiled : previous;
+  }
+
+  /**
+   * Удалить кэш по URI документа.
+   *
+   * @param uri URI документа.
+   */
+  @Override
+  public void clear(URI uri) {
+    compiledByUri.remove(uri);
+  }
+
+  /** Разбор условия без кэш-обвязки. */
+  private CompiledGuard compileCondition(BSLParser.ExpressionContext condition, DocumentContext documentContext) {
     var tree = ExpressionTreeBuildingVisitor.buildExpressionTree(condition);
     if (tree == null) {
-      return incoming;
+      return CompiledGuard.NONE;
     }
     var checks = new ArrayList<BslExpression>();
     if (!collectConjuncts(tree, checks)) {
-      return incoming;
+      return CompiledGuard.NONE;
     }
-    if (!whenTrue && checks.size() > 1) {
-      return incoming;
-    }
-    var narrowed = incoming;
+    var assertions = new ArrayList<Assertion>();
     for (var check : checks) {
-      narrowed = applyCheck(check, whenTrue, narrowed, variable, documentContext);
+      var assertion = assertionOf(check, documentContext);
+      if (assertion != null) {
+        assertions.add(assertion);
+      }
     }
-    return narrowed;
+    return assertions.isEmpty() ? CompiledGuard.NONE : new CompiledGuard(checks.size(), List.copyOf(assertions));
   }
 
   /**
@@ -133,93 +226,73 @@ public class GuardConditionNarrowing {
     return true;
   }
 
-  /** Применить одну проверку к типу. */
-  private TypeSet applyCheck(
-    BslExpression check,
-    boolean whenTrue,
-    TypeSet incoming,
-    VariableSymbol variable,
-    DocumentContext documentContext
-  ) {
+  /** Утверждение, снятое с одной проверки; {@code null}, если проверка ни о чём не говорит. */
+  @Nullable
+  private Assertion assertionOf(BslExpression check, DocumentContext documentContext) {
     if (!(check instanceof BinaryOperationNode binary)) {
-      return incoming;
+      return null;
     }
     var operator = binary.getOperator();
     if (operator != BslOperator.EQUAL && operator != BslOperator.NOT_EQUAL) {
-      return incoming;
+      return null;
     }
-    // «Утверждается ли равенство на этой ветке»: `<>` переворачивает смысл, ложная ветка — ещё раз.
-    var asserted = (operator == BslOperator.EQUAL) == whenTrue;
+    var equality = operator == BslOperator.EQUAL;
 
-    var typeName = checkedTypeName(binary, variable, documentContext);
-    if (typeName != null) {
-      return narrowToType(incoming, typeName, asserted, documentContext);
+    var typeCheck = typeCheckOf(binary, documentContext);
+    if (typeCheck != null) {
+      var resolved = typeRegistry.resolve(typeCheck.typeName(), documentContext.getFileType()).orElse(null);
+      return resolved == null ? null : new Assertion(typeCheck.variable(), resolved, equality);
     }
-    if (isUndefinedCheck(binary, variable, documentContext)) {
-      return asserted ? TypeSet.of(UNDEFINED) : incoming.without(UNDEFINED);
-    }
-    return incoming;
+    var undefinedCheck = undefinedCheckOf(binary, documentContext);
+    return undefinedCheck == null ? null : new Assertion(undefinedCheck, null, equality);
   }
 
   /**
-   * Имя типа из проверки {@code ТипЗнч(Х) = Тип("Имя")}, либо {@code null}, если это
-   * не она или проверяется другая переменная.
+   * Проверка вида {@code ТипЗнч(Х) = Тип("Имя")}: какая переменная проверяется и на какой тип.
+   *
+   * @param variable проверяемая переменная.
+   * @param typeName имя типа из строкового литерала.
    */
-  @Nullable
-  private String checkedTypeName(
-    BinaryOperationNode binary,
-    VariableSymbol variable,
-    DocumentContext documentContext
-  ) {
-    var name = typeNameFromPair(binary.getLeft(), binary.getRight(), variable, documentContext);
-    return name != null
-      ? name
-      : typeNameFromPair(binary.getRight(), binary.getLeft(), variable, documentContext);
+  private record TypeCheck(SourceDefinedSymbol variable, String typeName) {
   }
 
-  /** Имя типа, если слева — {@code ТипЗнч(Х)} нашей переменной, а справа — {@code Тип("Имя")}. */
+  /** Проверка типа в любом порядке операндов, либо {@code null}. */
   @Nullable
-  private String typeNameFromPair(
+  private TypeCheck typeCheckOf(BinaryOperationNode binary, DocumentContext documentContext) {
+    var direct = typeCheckOfPair(binary.getLeft(), binary.getRight(), documentContext);
+    return direct != null ? direct : typeCheckOfPair(binary.getRight(), binary.getLeft(), documentContext);
+  }
+
+  /** Проверка типа, если слева — {@code ТипЗнч(Х)}, а справа — {@code Тип("Имя")}. */
+  @Nullable
+  private TypeCheck typeCheckOfPair(
     BslExpression typeOfSide,
     BslExpression typeSide,
-    VariableSymbol variable,
     DocumentContext documentContext
   ) {
     var argument = callArgument(typeOfSide, TYPE_OF_RU, TYPE_OF_EN);
-    if (argument == null || !isVariable(argument, variable, documentContext)) {
+    if (argument == null) {
+      return null;
+    }
+    var variable = resolvedVariable(argument, documentContext);
+    if (variable == null) {
       return null;
     }
     var typeArgument = callArgument(typeSide, TYPE_RU, TYPE_EN);
-    return typeArgument == null ? null : stringLiteral(typeArgument);
+    if (typeArgument == null) {
+      return null;
+    }
+    var typeName = stringLiteral(typeArgument);
+    return typeName == null ? null : new TypeCheck(variable, typeName);
   }
 
-  /** Проверка {@code Х = Неопределено} нашей переменной в любом порядке операндов. */
-  private boolean isUndefinedCheck(
-    BinaryOperationNode binary,
-    VariableSymbol variable,
-    DocumentContext documentContext
-  ) {
-    return isVariable(binary.getLeft(), variable, documentContext) && isUndefined(binary.getRight())
-      || isVariable(binary.getRight(), variable, documentContext) && isUndefined(binary.getLeft());
-  }
-
-  /**
-   * Заменить набор проверенным типом либо убрать его из набора.
-   * <p>
-   * На истинной ветке набор заменяется целиком: проверка типа в коде утверждает про
-   * переменную больше, чем известно из присваиваний. Если тип уже был в наборе,
-   * он остаётся вместе со своими уточнениями.
-   */
-  private TypeSet narrowToType(TypeSet incoming, String typeName, boolean asserted, DocumentContext documentContext) {
-    var resolved = typeRegistry.resolve(typeName, documentContext.getFileType()).orElse(null);
-    if (resolved == null) {
-      return incoming;
+  /** Переменная из проверки {@code Х = Неопределено} в любом порядке операндов, либо {@code null}. */
+  @Nullable
+  private SourceDefinedSymbol undefinedCheckOf(BinaryOperationNode binary, DocumentContext documentContext) {
+    if (isUndefined(binary.getRight())) {
+      return resolvedVariable(binary.getLeft(), documentContext);
     }
-    if (!asserted) {
-      return incoming.without(resolved);
-    }
-    var retained = incoming.retaining(resolved);
-    return retained.isEmpty() ? TypeSet.of(resolved) : retained;
+    return isUndefined(binary.getLeft()) ? resolvedVariable(binary.getRight(), documentContext) : null;
   }
 
   /**
@@ -238,15 +311,17 @@ public class GuardConditionNarrowing {
     return call.arguments().get(0);
   }
 
-  /** Ссылается ли узел на нашу переменную — проверяется по индексу ссылок, не по имени. */
-  private boolean isVariable(BslExpression node, VariableSymbol variable, DocumentContext documentContext) {
+  /** Переменная, на которую ссылается узел-идентификатор; резолв по индексу, не по имени. */
+  private @Nullable SourceDefinedSymbol resolvedVariable(BslExpression node, DocumentContext documentContext) {
     if (node.getNodeType() != ExpressionNodeType.IDENTIFIER
       || !(node.getRepresentingAst() instanceof TerminalNode terminal)) {
-      return false;
+      return null;
     }
     return referenceResolver.findReference(documentContext.getUri(), terminal)
-      .map(reference -> variable.equals(reference.symbol()))
-      .orElse(false);
+      .map(Reference::symbol)
+      .filter(VariableSymbol.class::isInstance)
+      .map(SourceDefinedSymbol.class::cast)
+      .orElse(null);
   }
 
   /** Литерал {@code Неопределено}. */
