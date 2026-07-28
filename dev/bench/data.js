@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785170307870,
+  "lastUpdate": 1785220745527,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -40982,6 +40982,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.12355578731045",
             "extra": "mean: 93.93841791152954 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d9b33626236b0c136be4f546b90508c3bf0651e",
+          "message": "Merge pull request #4301 from 1c-syntax/feat/event-handler-symbolkind\n\nfeat(context): обработчики событий как отдельный вид символа — подсветка, completion, диагностики, hover",
+          "timestamp": "2026-07-28T08:16:24+02:00",
+          "tree_id": "058eb57a0f38f83e43217f4f236830b9fd8e7b29",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3d9b33626236b0c136be4f546b90508c3bf0651e"
+        },
+        "date": 1785220732745,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.55242856343587,
+            "unit": "sec",
+            "range": "stddev: 4.375537460698044",
+            "extra": "mean: 93.55242856343587 sec\nrounds: 3"
           }
         ]
       }
