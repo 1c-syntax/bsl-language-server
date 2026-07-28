@@ -799,8 +799,7 @@ public final class CompletionProvider {
     for (var method : documentContext.getSymbolTree().getMethods()) {
       if (matches(method.getName(), prefix)) {
         var item = new CompletionItem(method.getName());
-        var isEventHandler = method.getSymbolKind() == SymbolKind.Event;
-        item.setKind(methodCompletionKind(isEventHandler));
+        item.setKind(methodCompletionKind(method));
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
         applySourceMethodDetail(item, method);
         applySourceMethodDocumentation(item, method);
@@ -809,7 +808,8 @@ public final class CompletionProvider {
         }
         // Обработчик платформенного события ранжируется ниже обычных локальных методов:
         // его редко вызывают вручную, он не должен теснить процедуры/функции документа.
-        applySortText(item, isEventHandler ? BUCKET_EVENT_STUB : BUCKET_LOCAL, method.isDeprecated());
+        applySortText(item, method.getSymbolKind() == SymbolKind.Event ? BUCKET_EVENT_STUB : BUCKET_LOCAL,
+          method.isDeprecated());
         applyCommitCharacters(item);
         items.add(item);
       }
@@ -877,10 +877,10 @@ public final class CompletionProvider {
     return items;
   }
 
-  private static CompletionItemKind methodCompletionKind(boolean isEventHandler) {
+  private static CompletionItemKind methodCompletionKind(MethodSymbol method) {
     // Объявленные методы (процедуры и функции) — Method; Function только у платформенных
     // глобальных функций. Обработчик события — Event.
-    return isEventHandler ? CompletionItemKind.Event : CompletionItemKind.Method;
+    return method.getSymbolKind() == SymbolKind.Event ? CompletionItemKind.Event : CompletionItemKind.Method;
   }
 
   /**
