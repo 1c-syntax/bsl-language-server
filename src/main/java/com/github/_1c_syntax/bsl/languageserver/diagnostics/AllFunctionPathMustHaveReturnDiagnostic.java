@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildingParseTreeVisitor;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
@@ -34,11 +34,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.index.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -58,7 +60,14 @@ import java.util.stream.Collectors;
     DiagnosticTag.SUSPICIOUS
   }
 )
+@RequiredArgsConstructor
 public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
+
+  /** Настройки построения графа: анализ путей смотрит и повторные итерации циклов. */
+  private static final CfgBuildOptions CFG_OPTIONS = CfgBuildOptions.defaults()
+    .withPreprocessorConditions(true);
+
+  private final ControlFlowGraphIndex controlFlowGraphIndex;
 
   private static final boolean LOOPS_EXECUTED_ONCE_DEFAULT = true;
   private static final boolean IGNORE_ELSELESS_SWITCHES = false;
@@ -96,9 +105,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private void checkAllPathsHaveReturns(BSLParser.FunctionContext ctx) {
-    var builder = new CfgBuildingParseTreeVisitor();
-    builder.producePreprocessorConditions(true);
-    var graph = builder.buildGraph(ctx.subCodeBlock().codeBlock());
+    var graph = controlFlowGraphIndex.graphOf(documentContext, ctx.subCodeBlock().codeBlock(), CFG_OPTIONS);
 
     var exitNode = graph.getExitPoint();
 

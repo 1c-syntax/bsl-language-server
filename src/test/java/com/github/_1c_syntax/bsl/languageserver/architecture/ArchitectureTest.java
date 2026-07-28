@@ -255,6 +255,7 @@ class ArchitectureTest {
     .layer("Types").definedBy(ROOT_PACKAGE + ".types..")
     .layer("Configuration").definedBy(ROOT_PACKAGE + ".configuration..")
     .layer("Cfg").definedBy(ROOT_PACKAGE + ".cfg..")
+    .layer("Index").definedBy(ROOT_PACKAGE + ".index..")
     .layer("Formatting").definedBy(ROOT_PACKAGE + ".formatting..")
     // Листовые foundation-пакеты
     .layer("Infrastructure").definedBy(ROOT_PACKAGE + ".infrastructure..")
@@ -316,7 +317,7 @@ class ArchitectureTest {
 
     // Движок диагностик
     .whereLayer("Diagnostics").mayOnlyAccessLayers(
-      "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
+      "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Index", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
     // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
@@ -327,8 +328,11 @@ class ArchitectureTest {
     .whereLayer("References").mayOnlyAccessLayers(
       "Configuration", "Context", "Infrastructure", "Types", "Utils")
     .whereLayer("Types").mayOnlyAccessLayers(
-      "Configuration", "Context", "Events", "Infrastructure", "References", "Utils")
+      "Configuration", "Context", "Events", "Index", "Infrastructure", "References", "Utils")
     .whereLayer("Cfg").mayOnlyAccessLayers("Utils")
+    // Индексы знают о документе, чей разбор кэшируют, и о графе потока управления,
+    // который для него строят, — но ни один домен от них не зависит в обратную сторону.
+    .whereLayer("Index").mayOnlyAccessLayers("Cfg", "Context", "Infrastructure")
     .whereLayer("Formatting").mayOnlyAccessLayers("Configuration", "Utils")
 
     // Листья: ни от чего внутри проекта не зависят
@@ -352,7 +356,7 @@ class ArchitectureTest {
   // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
 
   static final Set<String> ACYCLIC_DOMAINS = Set.of(
-    "cfg", "cli", "client", "codelenses", "commands", "databind", "events", "infrastructure",
+    "cfg", "cli", "client", "codelenses", "commands", "databind", "events", "index", "infrastructure",
     "jsonrpc", "mcp", "recognizer", "reporters", "utils", "websocket"
   );
 

@@ -59,6 +59,9 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 - **Диагностики** (`diagnostics/`) — правила анализа (наследники `AbstractDiagnostic`, аннотация `@DiagnosticMetadata`).
 - **Индекс ссылок** (`references/`) · **символы** (`context/symbol/`) · **CFG** (`cfg/`) ·
   **конфигурация** (`configuration/`) · **отчёты** (`reporters/`).
+- **`index/`** — общая основа индексов-кэшей, разрезанных по документам: сброс записей по
+  событиям жизненного цикла документа (`AbstractDocumentLifecycleClearableIndex`) и кэш
+  графов потока управления (`ControlFlowGraphIndex`).
 
 Точки входа подкоманд — в `cli/` (каждый класс реализует picocli-`Callable<Integer>` с аннотацией
 `@Command` и именуется с суффиксом `Command`: `LanguageServerStartCommand`, `AnalyzeCommand`,

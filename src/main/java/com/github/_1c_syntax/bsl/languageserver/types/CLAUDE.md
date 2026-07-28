@@ -46,7 +46,8 @@ hover, completion, signature help и ряд диагностик. См. корн
   цепочки, менеджеры конфигурации, общие модули), `CallStatementByReceiverIndex`,
   `EventContractsIndex`, `WorkspaceSymbolIndex`. Оба `Inferred*`-индекса наполняет
   `ExpressionTypeInferencer` лениво; инвалидация — per-URI по жизненному циклу документа
-  (`AbstractDocumentLifecycleClearableIndex`) + полный сброс на регистрацию конфигурационных типов.
+  (общая база `index/AbstractDocumentLifecycleClearableIndex` в корне `languageserver`)
+  + полный сброс на регистрацию конфигурационных типов.
 - **`inferencer/`** — вывод типов. **`ExpressionTypeInferencer`** (workspace-scoped) — `infer()`
   по дереву `BslExpression` (а не сырому ANTLR); диспетчеризация по узлу (LITERAL/IDENTIFIER/CALL/
   BINARY_OP/…), защита от циклов, устойчив к битым выражениям (→ `UNKNOWN`/`TypeSet.EMPTY`).
