@@ -739,6 +739,27 @@ public class ExpressionTypeInferencer {
     return merged;
   }
 
+  /**
+   * Типы поля «открытого» объекта данных (Структура, ТаблицаЗначений с описанными
+   * ключами), объявленного на самом наборе типов. Смотрится раньше членов типа:
+   * задокументированное поле точнее одноимённого дефолтного члена платформы.
+   *
+   * @param leftTypes  типы получателя.
+   * @param memberName имя поля.
+   * @return типы поля; {@link TypeSet#EMPTY}, если такого поля не объявлено.
+   */
+  private static TypeSet declaredFieldTypes(TypeSet leftTypes, String memberName) {
+    var result = TypeSet.EMPTY;
+    for (var leftType : leftTypes.refs()) {
+      for (var entry : leftTypes.getLocalFields(leftType).entrySet()) {
+        if (entry.getKey().equalsIgnoreCase(memberName)) {
+          result = result.union(entry.getValue().types());
+        }
+      }
+    }
+    return result;
+  }
+
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {
     var leftTypes = inferInternal(node.getLeft(), ctx);
     if (leftTypes.isEmpty()) {
@@ -764,18 +785,8 @@ public class ExpressionTypeInferencer {
     if (refined != null) {
       return refined;
     }
-    // Сначала смотрим декларированные поля «открытого» объекта данных
-    // (Структура / ТаблицаЗначений с описанными ключами).
-    TypeSet fromLocalFields = TypeSet.EMPTY;
     if (expectedKind == MemberKind.PROPERTY) {
-      for (var leftType : leftTypes.refs()) {
-        var fields = leftTypes.getLocalFields(leftType);
-        for (var entry : fields.entrySet()) {
-          if (entry.getKey().equalsIgnoreCase(memberName)) {
-            fromLocalFields = fromLocalFields.union(entry.getValue().types());
-          }
-        }
-      }
+      var fromLocalFields = declaredFieldTypes(leftTypes, memberName);
       if (!fromLocalFields.isEmpty()) {
         return fromLocalFields;
       }

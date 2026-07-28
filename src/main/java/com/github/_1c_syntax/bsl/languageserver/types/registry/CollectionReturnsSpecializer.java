@@ -82,23 +82,38 @@ final class CollectionReturnsSpecializer {
                                            TypeRef genericRow, TypeRef row, TypeSet unloadedRow) {
     var specialized = new ArrayList<MemberDescriptor>();
     for (var member : genericMembers) {
-      var refs = member.returnTypes().refs();
-      if (refs.contains(genericRow)) {
-        var converted = new ArrayList<TypeRef>(refs.size());
-        for (var ref : refs) {
-          converted.add(ref.equals(genericRow) ? row : ref);
-        }
-        specialized.add(member.withReturnTypes(TypeSet.of(converted)));
-      } else if (member.matches(ROWS_SEARCH_METHOD)) {
-        specialized.add(member.withReturnTypes(withElements(member.returnTypes(), TypeSet.of(row))));
-      } else if (member.matches(UNLOAD_METHOD) && !unloadedRow.isEmpty()) {
-        specialized.add(member.withReturnTypes(withElements(member.returnTypes(), unloadedRow)));
-      } else {
-        // Остальные члены обобщённого типа наследуются как есть — уточнять в них нечего.
-        continue;
+      var refined = refine(member, genericRow, row, unloadedRow);
+      if (refined != null) {
+        specialized.add(refined);
       }
     }
     return List.copyOf(specialized);
+  }
+
+  /**
+   * Уточнённая копия одного члена.
+   *
+   * @return копия с уточнённым типом возврата; {@code null}, если уточнять в члене нечего
+   *   и он наследуется от обобщённого типа как есть.
+   */
+  @Nullable
+  private static MemberDescriptor refine(MemberDescriptor member, TypeRef genericRow, TypeRef row,
+                                         TypeSet unloadedRow) {
+    var refs = member.returnTypes().refs();
+    if (refs.contains(genericRow)) {
+      var converted = new ArrayList<TypeRef>(refs.size());
+      for (var ref : refs) {
+        converted.add(ref.equals(genericRow) ? row : ref);
+      }
+      return member.withReturnTypes(TypeSet.of(converted));
+    }
+    if (member.matches(ROWS_SEARCH_METHOD)) {
+      return member.withReturnTypes(withElements(member.returnTypes(), TypeSet.of(row)));
+    }
+    if (member.matches(UNLOAD_METHOD) && !unloadedRow.isEmpty()) {
+      return member.withReturnTypes(withElements(member.returnTypes(), unloadedRow));
+    }
+    return null;
   }
 
   /** Тот же набор типов, но с проставленным типом элемента у каждой ссылки. */

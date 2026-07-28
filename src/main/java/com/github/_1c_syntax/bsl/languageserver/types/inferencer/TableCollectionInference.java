@@ -107,6 +107,13 @@ class TableCollectionInference {
     if (call == null) {
       return member.matches(COLUMNS) ? columnsCollection(columnsOf(receiver, fileType)) : null;
     }
+    return inferMethod(receiver, member, call, fileType);
+  }
+
+  /** Уточнение для метода: колонки считаются только под сработавшее правило. */
+  @Nullable
+  private TypeSet inferMethod(TypeSet receiver, MemberDescriptor member, MethodCallNode call,
+                              FileType fileType) {
     if (member.matches(UNLOAD_COLUMN)) {
       return unloadColumn(columnsOf(receiver, fileType), call);
     }
