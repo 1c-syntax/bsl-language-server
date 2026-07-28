@@ -879,12 +879,13 @@ public final class CompletionProvider {
 
   /**
    * Вид иконки объявленного метода по его {@link SymbolKind}: обработчик события — Event;
-   * метод модуля без состояния (общий модуль BSL, модуль OneScript) — самостоятельная функция
-   * (Function); прочие процедуры и функции — Method.
+   * конструктор OneScript-класса — Constructor; метод модуля без состояния (общий модуль BSL,
+   * модуль OneScript) — самостоятельная функция (Function); прочие процедуры и функции — Method.
    */
   private static CompletionItemKind methodCompletionKind(SymbolKind symbolKind) {
     return switch (symbolKind) {
       case Event -> CompletionItemKind.Event;
+      case Constructor -> CompletionItemKind.Constructor;
       case Function -> CompletionItemKind.Function;
       default -> CompletionItemKind.Method;
     };

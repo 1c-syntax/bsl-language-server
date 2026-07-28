@@ -488,6 +488,34 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionOScriptClassConstructorHasConstructorKind() {
+    // given — OneScript-класс: конструктор ПриСозданииОбъекта в структуре документа имеет
+    // SymbolKind.Constructor, поэтому и в автодополнении иконка должна быть Constructor,
+    // а не Method (вид берётся из символа через methodCompletionKind).
+    initServerContext(
+      Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath(), true);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/oscript-libraries/internal-classes-test"
+        + "/oscript_modules/internal-classes-lib/src/Классы/PublicEntity.os",
+      context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // пустая строка между методами (line 3, 0-based) — контекст модуля без префикса
+    params.setPosition(new Position(3, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.OScriptClass);
+    assertThat(items)
+      .filteredOn(it -> "ПриСозданииОбъекта".equals(it.getLabel()))
+      .isNotEmpty()
+      .allMatch(it -> it.getKind() == CompletionItemKind.Constructor);
+  }
+
+  @Test
   void noDotCompletionShowsInferredTypeForEventHandlerParameter() {
     // given: тип параметра обработчика события известен из контракта события —
     // должен показываться в detail пункта completion, а не оставаться пустым
