@@ -317,7 +317,7 @@ class ArchitectureTest {
 
     // Движок диагностик
     .whereLayer("Diagnostics").mayOnlyAccessLayers(
-      "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Index", "Infrastructure",
+      "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
     // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
@@ -329,10 +329,11 @@ class ArchitectureTest {
       "Configuration", "Context", "Infrastructure", "Types", "Utils")
     .whereLayer("Types").mayOnlyAccessLayers(
       "Configuration", "Context", "Events", "Index", "Infrastructure", "References", "Utils")
-    .whereLayer("Cfg").mayOnlyAccessLayers("Utils")
-    // Индексы знают о документе, чей разбор кэшируют, и о графе потока управления,
-    // который для него строят, — но ни один домен от них не зависит в обратную сторону.
-    .whereLayer("Index").mayOnlyAccessLayers("Cfg", "Context", "Infrastructure")
+    // Кэш графов знает о документе, чей разбор кэширует, и о базе индексов — она задаёт
+    // сброс по жизненному циклу документа.
+    .whereLayer("Cfg").mayOnlyAccessLayers("Context", "Index", "Infrastructure", "Utils")
+    // База индексов: знает только про события жизненного цикла документа.
+    .whereLayer("Index").mayOnlyAccessLayers("Context")
     .whereLayer("Formatting").mayOnlyAccessLayers("Configuration", "Utils")
 
     // Листья: ни от чего внутри проекта не зависят

@@ -88,12 +88,13 @@ public record CfgBuildOptions(
   }
 
   /**
-   * Построить граф потока управления блока кода с этими настройками.
+   * Построить граф потока управления блока кода с этими настройками. Потребители
+   * берут граф через {@link ControlFlowGraphIndex}, поэтому метод не публичный.
    *
    * @param codeBlock блок кода: тело метода или код модуля.
    * @return построенный граф.
    */
-  public ControlFlowGraph buildGraph(BSLParser.CodeBlockContext codeBlock) {
+  ControlFlowGraph buildGraph(BSLParser.CodeBlockContext codeBlock) {
     var builder = new CfgBuildingParseTreeVisitor();
     builder.produceLoopIterations(loopIterations);
     builder.producePreprocessorConditions(preprocessorConditions);
