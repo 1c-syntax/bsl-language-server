@@ -74,9 +74,7 @@ public class EventContractsIndex extends AbstractDocumentLifecycleClearableIndex
 
   /**
    * Возвращает все события owner-типа модуля документа — независимо от того, объявлен ли в
-   * документе метод-обработчик для каждого из них. Отдельно не кэшируется: делегирует в
-   * {@link EventHandlerResolver#allEvents(DocumentContext)}, чей источник уже мемоизирован, а
-   * события зависят от типа, не от содержимого документа.
+   * документе метод-обработчик для каждого из них.
    */
   public List<MemberDescriptor> getAllContracts(DocumentContext documentContext) {
     return eventHandlerResolver.allEvents(documentContext);

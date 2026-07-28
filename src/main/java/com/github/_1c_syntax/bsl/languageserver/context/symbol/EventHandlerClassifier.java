@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 /**
  * Классифицирует объявленный в коде метод как обработчик платформенного события.
- * Реализация ({@code types.registry.EventHandlerResolver}) внедряется через Spring, чтобы
- * {@code context} не зависел от {@code types} напрямую.
  */
 public interface EventHandlerClassifier {
 

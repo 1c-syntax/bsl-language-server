@@ -29,17 +29,6 @@ import org.eclipse.lsp4j.SymbolKind;
 /**
  * Символ метода-обработчика платформенного события ({@code ПриЗаписи}, {@code ПередУдалением}
  * и т.п.).
- * <p>
- * Такой же полноценный {@link AbstractMethodSymbol}, как {@link RegularMethodSymbol} и {@link
- * ConstructorSymbol} — строится {@link com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer}
- * ПРИ ОБХОДЕ AST, а не пересобирается впоследствии: метод, чьё имя совпадает с контрактом события
- * owner-типа модуля, сразу регистрируется в дереве символов как {@code EventMethodSymbol}, никогда
- * не проходя через промежуточное состояние {@link RegularMethodSymbol}.
- * <p>
- * Классификацию (нужен доступ к {@code types.registry.EventHandlerResolver}/{@code TypeRegistry},
- * которых {@code context} видеть не вправе — см. {@code ArchitectureTest.layer_dependencies_are_respected})
- * выполняет {@link EventHandlerClassifier}, внедряемый в {@code MethodSymbolComputer} через
- * инверсию зависимости (тот же приём, что и у {@code context.computer.DiagnosticComputer}).
  */
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
