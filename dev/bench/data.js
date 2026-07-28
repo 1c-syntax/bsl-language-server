@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785231826809,
+  "lastUpdate": 1785233190744,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41075,6 +41075,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6805128396333465",
             "extra": "mean: 91.98553403218587 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f09044516caf192dd74067f7eac89aa1be6c9114",
+          "message": "Merge pull request #4310 from 1c-syntax/feat/inherit-collection-traits\n\nfeat(types): Наследование коллекционных свойств специализацией типа",
+          "timestamp": "2026-07-28T10:42:10+02:00",
+          "tree_id": "9b8e938cdfc80358ad02f40bc09f3bede2d38a63",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f09044516caf192dd74067f7eac89aa1be6c9114"
+        },
+        "date": 1785233178746,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.61349471410115,
+            "unit": "sec",
+            "range": "stddev: 2.5662536621105416",
+            "extra": "mean: 93.61349471410115 sec\nrounds: 3"
           }
         ]
       }
