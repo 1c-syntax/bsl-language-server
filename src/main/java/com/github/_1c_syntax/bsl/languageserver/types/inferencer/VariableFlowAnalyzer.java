@@ -23,7 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -95,6 +97,23 @@ public class VariableFlowAnalyzer {
   }
 
   /**
+   * Сужение типа охраняющим условием на ветке.
+   */
+  @FunctionalInterface
+  public interface GuardNarrowing {
+
+    /**
+     * Как условие сужает тип переменной на своей ветке.
+     *
+     * @param condition выражение условия.
+     * @param whenTrue  ветка: {@code true} — истинная, {@code false} — ложная.
+     * @param incoming  тип переменной перед условием.
+     * @return суженный тип; исходный, если условие про эту переменную ничего не утверждает.
+     */
+    TypeSet narrow(BSLParser.ExpressionContext condition, boolean whenTrue, TypeSet incoming);
+  }
+
+  /**
    * Тип переменной в точке использования.
    *
    * @param documentContext     контекст документа с использованием.
@@ -105,6 +124,7 @@ public class VariableFlowAnalyzer {
    * @param definitionPositions позиции всех присваиваний переменной в документе;
    *                            учитываются только попавшие в анализируемое тело.
    * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
+   * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
    * @return тип переменной в этой точке; {@code null}, если расчёт неприменим —
    *     тело не найдено или использование не удалось разместить в графе.
    */
@@ -114,7 +134,8 @@ public class VariableFlowAnalyzer {
     ParserRuleContext use,
     TypeSet entryFact,
     Collection<Position> definitionPositions,
-    AssignedTypes assigned
+    AssignedTypes assigned,
+    GuardNarrowing narrowing
   ) {
     var body = enclosingBody(use);
     if (body == null) {
@@ -136,7 +157,7 @@ public class VariableFlowAnalyzer {
     // Использование в левой части присваивания — это само присваивание: спрашивают тип,
     // который переменная получает здесь, а не тот, что был до неё.
     var atDefinition = coversAnyDefinition(use, definitionPositions);
-    return new Pass(graph, entryFact, definitionPositions, assigned)
+    return new Pass(graph, entryFact, definitionPositions, assigned, narrowing)
       .typeAtStatement(useVertex, useStatement, atDefinition);
   }
 
@@ -151,6 +172,7 @@ public class VariableFlowAnalyzer {
     private final TypeSet entryFact;
     private final Collection<Position> definitionPositions;
     private final AssignedTypes assigned;
+    private final GuardNarrowing narrowing;
 
     /**
      * Присваиваемые типы, уже посчитанные в этом расчёте. Каждый проход до неподвижной
@@ -199,17 +221,35 @@ public class VariableFlowAnalyzer {
       return facts;
     }
 
-    /** Объединение типов на выходе всех предшественников вершины. */
+    /**
+     * Объединение типов на выходе всех предшественников вершины. По рёбрам веток
+     * условия тип проходит суженным: на истинной ветке верно само условие, на ложной —
+     * его отрицание. Этим же получается сужение охранным предложением
+     * ({@code Если Х = Неопределено Тогда Возврат; КонецЕсли;}) — до кода за условием
+     * доходит только ложная ветка.
+     */
     private TypeSet joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, TypeSet> facts) {
       var joined = TypeSet.EMPTY;
       for (var edge : graph.incomingEdgesOf(vertex)) {
         var predecessor = graph.getEdgeSource(edge);
         var atPredecessor = facts.get(predecessor);
         if (atPredecessor != null) {
-          joined = joined.union(applyAssignments(predecessor, atPredecessor, null, false));
+          var outgoing = applyAssignments(predecessor, atPredecessor, null, false);
+          joined = joined.union(narrowedByEdge(predecessor, edge.getType(), outgoing));
         }
       }
       return joined;
+    }
+
+    /** Тип, прошедший по ребру ветки условия. */
+    private TypeSet narrowedByEdge(CfgVertex predecessor, CfgEdgeType edgeType, TypeSet outgoing) {
+      if (!(predecessor instanceof ConditionalVertex conditional)) {
+        return outgoing;
+      }
+      if (edgeType != CfgEdgeType.TRUE_BRANCH && edgeType != CfgEdgeType.FALSE_BRANCH) {
+        return outgoing;
+      }
+      return narrowing.narrow(conditional.getExpression(), edgeType == CfgEdgeType.TRUE_BRANCH, outgoing);
     }
 
     /**

@@ -121,6 +121,7 @@ public class ExpressionTypeInferencer {
   private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final TableCollectionInference tableCollectionInference;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
+  private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -1051,7 +1052,9 @@ public class ExpressionTypeInferencer {
         use,
         flowEntryFact(variable),
         definitions,
-        position -> inferFromDefinitionPosition(owner, position, ctx)
+        position -> inferFromDefinitionPosition(owner, position, ctx),
+        (condition, whenTrue, incoming) ->
+          guardConditionNarrowing.narrow(condition, whenTrue, incoming, variable, owner)
       );
       return byFlow == null ? null : withAccumulatedFields(variable, byFlow, ctx);
     } finally {
