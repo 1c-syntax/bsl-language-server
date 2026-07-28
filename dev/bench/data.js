@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785229107119,
+  "lastUpdate": 1785231826809,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41044,6 +41044,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.248994894235261",
             "extra": "mean: 92.85662547747295 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8a07211fe8db51fbb884a2dd11eac6b22aa0aac0",
+          "message": "Merge pull request #4311 from 1c-syntax/refactor/value-types-resolver\n\nОбщий резолв ValueTypeDescription в ValueTypes",
+          "timestamp": "2026-07-28T10:37:36+02:00",
+          "tree_id": "15dc6d09b85f1ea4fc906deaf7d95c7fc16ff0ef",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8a07211fe8db51fbb884a2dd11eac6b22aa0aac0"
+        },
+        "date": 1785231815135,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.98553403218587,
+            "unit": "sec",
+            "range": "stddev: 0.6805128396333465",
+            "extra": "mean: 91.98553403218587 sec\nrounds: 3"
           }
         ]
       }
