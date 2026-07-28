@@ -264,7 +264,14 @@ public class VariableFlowAnalyzer {
       }
     }
     var fileCodeBlock = ast.fileCodeBlock();
-    return fileCodeBlock == null ? null : fileCodeBlock.codeBlock();
+    if (fileCodeBlock == null) {
+      return null;
+    }
+    // Тело модуля в дереве может быть не одно (код до и после объявлений методов), и
+    // добраться отсюда можно не до всякого. Отдаём блок, только если он правда накрывает
+    // позицию: иначе расчёт пошёл бы по чужому телу.
+    var codeBlock = fileCodeBlock.codeBlock();
+    return codeBlock != null && Ranges.containsPosition(Ranges.create(codeBlock), position) ? codeBlock : null;
   }
 
   /** Оператор графа, накрывающий позицию. */

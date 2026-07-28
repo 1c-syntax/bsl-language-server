@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -885,6 +886,11 @@ public class TypeService implements SelfMemberClassifier {
   private TypeSet receiverSegmentTypes(DocumentContext documentContext, Position receiverEnd) {
     var reference = referenceResolver.findReference(documentContext.getUri(), receiverEnd).orElse(null);
     var fromIndex = reference == null ? TypeSet.EMPTY : typesAt(reference);
+    // Ссылка на переменную уже дала позиционный ответ — сравнивать не с чем, а расчёт
+    // выражения в той же точке был бы вторым таким же проходом по методу.
+    if (!fromIndex.isEmpty() && isVariableReference(reference)) {
+      return fromIndex;
+    }
     var fromExpression = expressionTypesAt(documentContext, receiverEnd);
     if (fromIndex.isEmpty()) {
       return fromExpression;
@@ -899,6 +905,17 @@ public class TypeService implements SelfMemberClassifier {
     // `ТЧ.ВыгрузитьКолонку("Цена")` — нетипизированный массив. Если инференс дал те
     // же типы, но с уточнениями, берём его: он строго информативнее.
     return refinesSameTypes(fromExpression, fromIndex) ? fromExpression : fromIndex;
+  }
+
+  /**
+   * Ведёт ли ссылка на переменную или параметр.
+   *
+   * @param reference ссылка; {@code null} — ссылки нет.
+   * @return {@code true}, если ссылка указывает на переменную.
+   */
+  private static boolean isVariableReference(@Nullable Reference reference) {
+    return reference != null
+      && reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol;
   }
 
   /**

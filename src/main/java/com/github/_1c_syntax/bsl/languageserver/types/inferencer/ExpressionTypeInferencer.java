@@ -65,6 +65,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -100,6 +101,7 @@ import java.util.function.Predicate;
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
+@Slf4j
 public class ExpressionTypeInferencer {
 
   private static final int MAX_DEPTH = 32;
@@ -1048,6 +1050,12 @@ public class ExpressionTypeInferencer {
     ctx.flowInProgress.add(variable);
     try {
       return variableFlowAnalyzer.typeAt(owner, use, flowInputs(variable, definitions, ctx));
+    } catch (RuntimeException e) {
+      // Расчёт по потоку — уточнение, а не единственный источник типа. Если он сорвался
+      // (например, граф не построился на неожиданной форме кода), тип должен дать прежний
+      // путь, а не общий перехват в infer(), который обнулил бы всё выражение целиком.
+      LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
+      return null;
     } finally {
       ctx.flowInProgress.remove(variable);
     }
