@@ -92,7 +92,11 @@ public class TypeService implements SelfMemberClassifier {
   public TypeSet typesAt(Reference reference) {
     var sourceDefined = reference.getSourceDefinedSymbol();
     if (sourceDefined.isPresent()) {
-      return typesOfSymbol(sourceDefined.get());
+      // Ссылка позиционна, поэтому и ответ позиционный: тип переменной берётся в точке
+      // ссылки — с учётом присваиваний и вставок, случившихся на путях к ней. Прежний
+      // ответ «про переменную в целом» остаётся у typesOfSymbol.
+      var atUse = inferencer.inferVariableAt(reference);
+      return atUse != null ? atUse : typesOfSymbol(sourceDefined.get());
     }
     if (reference.symbol() instanceof PlatformMemberSymbol platformMember) {
       var returnTypes = platformMember.getDescriptor().returnTypes();
@@ -879,9 +883,8 @@ public class TypeService implements SelfMemberClassifier {
    * здесь нельзя: он накрыл бы незавершённое {@code Ресивер.Член} и не разрешил член.
    */
   private TypeSet receiverSegmentTypes(DocumentContext documentContext, Position receiverEnd) {
-    var fromIndex = referenceResolver.findReference(documentContext.getUri(), receiverEnd)
-      .map(this::typesAt)
-      .orElse(TypeSet.EMPTY);
+    var reference = referenceResolver.findReference(documentContext.getUri(), receiverEnd).orElse(null);
+    var fromIndex = reference == null ? TypeSet.EMPTY : typesAt(reference);
     var fromExpression = expressionTypesAt(documentContext, receiverEnd);
     if (fromIndex.isEmpty()) {
       return fromExpression;

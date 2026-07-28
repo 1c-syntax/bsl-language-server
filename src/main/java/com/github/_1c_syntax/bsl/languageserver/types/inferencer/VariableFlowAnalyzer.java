@@ -131,13 +131,10 @@ public class VariableFlowAnalyzer {
   }
 
   /**
-   * Тип переменной в точке использования.
+   * Исходные данные расчёта по одной переменной.
    *
-   * @param documentContext     контекст документа с использованием.
-   * @param use                 узел использования переменной.
-   * @param entryFact           тип переменной на входе в тело: объявленные типы
-   *                            параметра, типы из аннотаций и прочее, что известно
-   *                            до первого присваивания.
+   * @param entryFact           тип переменной на входе в тело: объявленные типы параметра,
+   *                            типы из аннотаций и прочее, что известно до первого присваивания.
    * @param definitionPositions позиции всех присваиваний переменной в документе;
    *                            учитываются только попавшие в анализируемое тело.
    * @param mutationPositions   позиции операторов, меняющих тип переменной на месте
@@ -145,13 +142,8 @@ public class VariableFlowAnalyzer {
    * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
    * @param mutations           колбэк, применяющий изменение оператора-мутатора.
    * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
-   * @return тип переменной в этой точке; {@code null}, если расчёт неприменим —
-   *     тело не найдено или использование не удалось разместить в графе.
    */
-  @Nullable
-  public TypeSet typeAt(
-    DocumentContext documentContext,
-    ParserRuleContext use,
+  public record FlowInputs(
     TypeSet entryFact,
     Collection<Position> definitionPositions,
     Collection<Position> mutationPositions,
@@ -159,6 +151,21 @@ public class VariableFlowAnalyzer {
     Mutations mutations,
     GuardNarrowing narrowing
   ) {
+  }
+
+  /**
+   * Тип переменной в точке использования, когда узел использования уже под рукой —
+   * например в разборе выражения. Тело и оператор находятся подъёмом по дереву от узла,
+   * без поиска по диапазонам.
+   *
+   * @param documentContext контекст документа с использованием.
+   * @param use             узел использования переменной.
+   * @param inputs          исходные данные расчёта.
+   * @return тип переменной в этой точке; {@code null}, если расчёт неприменим —
+   *     тело не найдено или использование не удалось разместить в графе.
+   */
+  @Nullable
+  public TypeSet typeAt(DocumentContext documentContext, ParserRuleContext use, FlowInputs inputs) {
     var body = enclosingBody(use);
     if (body == null) {
       return null;
@@ -166,24 +173,109 @@ public class VariableFlowAnalyzer {
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
     var vertexByStatement = vertexByStatement(graph);
     var useStatement = enclosingStatement(use, vertexByStatement.keySet());
+    // Использование в левой части присваивания — это само присваивание: спрашивают тип,
+    // который переменная получает здесь, а не тот, что был до неё.
+    var atDefinition = coversAnyDefinition(use, inputs.definitionPositions());
+    return typeAtStatement(graph, body, vertexByStatement, useStatement, atDefinition, inputs);
+  }
+
+  /**
+   * Тип переменной в позиции документа — для вызывающих, у которых узла нет, а есть
+   * только позиция (ссылка из индекса). Тело метода ищется перебором объявлений верхнего
+   * уровня по диапазонам, оператор — перебором операторов графа: спуска по дереву разбора
+   * тут нет, поэтому вызов по стоимости сопоставим с узловым.
+   *
+   * @param documentContext контекст документа с использованием.
+   * @param position        позиция использования.
+   * @param atDefinition    стоит ли позиция на присваивании переменной: тогда тип берётся
+   *                        после этого присваивания, а не до него.
+   * @param inputs          исходные данные расчёта.
+   * @return тип переменной в этой точке; {@code null}, если расчёт неприменим.
+   */
+  @Nullable
+  public TypeSet typeAt(
+    DocumentContext documentContext,
+    Position position,
+    boolean atDefinition,
+    FlowInputs inputs
+  ) {
+    var body = bodyAt(documentContext, position);
+    if (body == null) {
+      return null;
+    }
+    var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
+    var vertexByStatement = vertexByStatement(graph);
+    var useStatement = statementAt(vertexByStatement.keySet(), position);
+    return typeAtStatement(graph, body, vertexByStatement, useStatement, atDefinition, inputs);
+  }
+
+  /** Общая часть обоих входов: проверки применимости и сам расчёт. */
+  @Nullable
+  private static TypeSet typeAtStatement(
+    ControlFlowGraph graph,
+    BSLParser.CodeBlockContext body,
+    Map<ParserRuleContext, CfgVertex> vertexByStatement,
+    @Nullable ParserRuleContext useStatement,
+    boolean atDefinition,
+    FlowInputs inputs
+  ) {
     if (useStatement == null) {
       return null;
     }
     // Если хоть один меняющий тип оператор не лёг в граф, расчёт по потоку потерял бы его
     // вклад — тогда точнее прежний путь с обходом всей области видимости.
-    if (!allPlaced(vertexByStatement.keySet(), body, definitionPositions)
-      || !allPlaced(vertexByStatement.keySet(), body, mutationPositions)) {
+    if (!allPlaced(vertexByStatement.keySet(), body, inputs.definitionPositions())
+      || !allPlaced(vertexByStatement.keySet(), body, inputs.mutationPositions())) {
       return null;
     }
     var useVertex = vertexByStatement.get(useStatement);
     if (useVertex == null) {
       return null;
     }
-    // Использование в левой части присваивания — это само присваивание: спрашивают тип,
-    // который переменная получает здесь, а не тот, что был до неё.
-    var atDefinition = coversAnyDefinition(use, definitionPositions);
-    var pass = new Pass(graph, entryFact, definitionPositions, mutationPositions, assigned, mutations, narrowing);
-    return pass.typeAtStatement(useVertex, useStatement, atDefinition);
+    return new Pass(
+      graph,
+      inputs.entryFact(),
+      inputs.definitionPositions(),
+      inputs.mutationPositions(),
+      inputs.assigned(),
+      inputs.mutations(),
+      inputs.narrowing()
+    ).typeAtStatement(useVertex, useStatement, atDefinition);
+  }
+
+  /**
+   * Тело метода или код модуля, накрывающие позицию. Перебираются только объявления
+   * верхнего уровня — в операторы разбор не спускается.
+   */
+  private static BSLParser.@Nullable CodeBlockContext bodyAt(DocumentContext documentContext, Position position) {
+    var ast = documentContext.getAst();
+    var subs = ast.subs();
+    if (subs != null) {
+      for (var sub : subs.sub()) {
+        if (!Ranges.containsPosition(Ranges.create(sub), position)) {
+          continue;
+        }
+        var procedure = sub.procedure();
+        if (procedure != null) {
+          return procedure.subCodeBlock().codeBlock();
+        }
+        var function = sub.function();
+        return function == null ? null : function.subCodeBlock().codeBlock();
+      }
+    }
+    var fileCodeBlock = ast.fileCodeBlock();
+    return fileCodeBlock == null ? null : fileCodeBlock.codeBlock();
+  }
+
+  /** Оператор графа, накрывающий позицию. */
+  @Nullable
+  private static ParserRuleContext statementAt(Collection<ParserRuleContext> statements, Position position) {
+    for (var statement : statements) {
+      if (Ranges.containsPosition(Ranges.create(statement), position)) {
+        return statement;
+      }
+    }
+    return null;
   }
 
   /**

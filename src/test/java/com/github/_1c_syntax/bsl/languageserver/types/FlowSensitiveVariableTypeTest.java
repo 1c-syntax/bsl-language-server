@@ -23,6 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -133,6 +136,42 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(fieldNames(types)).containsExactly("ИзВетки");
+  }
+
+  @Test
+  void danglingDotDoesNotOfferFieldsInsertedBelow() {
+    // given: автодополнение на `ЧтоТо.` выше по коду, чем вставки полей.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/FlowAccumulationDanglingDot.bsl");
+    var content = documentContext.getContent();
+    var markerStart = content.indexOf("ЧтоТо.\n");
+    assertThat(markerStart).as("висячая точка найдена в фикстуре").isNotNegative();
+    var line = content.substring(0, markerStart).split("\n").length - 1;
+    var lineStart = content.lastIndexOf('\n', markerStart - 1) + 1;
+    var position = new Position(line, markerStart - lineStart + "ЧтоТо.".length());
+
+    // when
+    var types = typeService.receiverTypesAt(documentContext, position);
+
+    // then: вставки ниже по коду здесь ещё не случились.
+    assertThat(fieldNames(types)).isEmpty();
+  }
+
+  @Test
+  void typeAtReferenceIsTakenAtThatOccurrence() {
+    // given: тем же путём тип берёт hover — через ссылку, без узла дерева разбора.
+    var documentContext = doc();
+    var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("ПоляСтруктурыНакапливаютсяПоПорядку").orElseThrow();
+    var variable = symbolTree.getVariableSymbol("Данные", method).orElseThrow();
+    var declaration = new Reference(
+      variable, variable, documentContext.getUri(), variable.getSelectionRange(), OccurrenceType.DEFINITION);
+
+    // when
+    var types = typeService.typesAt(declaration);
+
+    // then: в точке объявления вставок ещё не было.
+    assertThat(fieldNames(types)).isEmpty();
   }
 
   @Test

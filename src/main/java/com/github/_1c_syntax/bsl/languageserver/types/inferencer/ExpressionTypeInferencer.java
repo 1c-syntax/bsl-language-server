@@ -1045,23 +1045,80 @@ public class ExpressionTypeInferencer {
     if (definitions.isEmpty()) {
       return null;
     }
-    var mutationCalls = mutationCalls(variable);
+    ctx.flowInProgress.add(variable);
+    try {
+      return variableFlowAnalyzer.typeAt(owner, use, flowInputs(variable, definitions, ctx));
+    } finally {
+      ctx.flowInProgress.remove(variable);
+    }
+  }
+
+  /**
+   * Тип переменной в точке, на которую указывает ссылка, — с учётом того, какие
+   * присваивания и изменения на месте уже случились на путях к ней.
+   * <p>
+   * Отличается от {@link #inferSymbol(SourceDefinedSymbol)}, который отвечает про
+   * переменную в целом, объединяя всё по её области видимости. Узел дерева разбора
+   * не нужен: расчёт находит тело и оператор по позиции.
+   *
+   * @param reference ссылка на переменную — несёт и документ, и позицию.
+   * @return тип в этой точке; {@code null}, если ссылка не на переменную текущего
+   *     документа либо расчёт по потоку неприменим.
+   */
+  @Nullable
+  public TypeSet inferVariableAt(Reference reference) {
+    if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)) {
+      return null;
+    }
+    var owner = variable.getOwner();
+    if (variable.getKind() == VariableKind.MODULE || !owner.getUri().equals(reference.uri())) {
+      return null;
+    }
+    var definitions = definitionPositions(variable);
+    if (definitions.isEmpty()) {
+      return null;
+    }
+    var ctx = new InferenceContext(owner);
     ctx.flowInProgress.add(variable);
     try {
       return variableFlowAnalyzer.typeAt(
         owner,
-        use,
-        flowEntryFact(variable),
-        definitions,
-        mutationCalls.keySet(),
-        position -> attachDefaultElementTypes(inferFromDefinitionPosition(owner, position, ctx)),
-        (position, incoming) -> applyMutation(variable, mutationCalls.get(position), incoming, ctx),
-        (condition, whenTrue, incoming) ->
-          guardConditionNarrowing.narrow(condition, whenTrue, incoming, variable, owner)
+        reference.selectionRange().getStart(),
+        reference.occurrenceType() == OccurrenceType.DEFINITION,
+        flowInputs(variable, definitions, ctx)
       );
+    } catch (StackOverflowError | RuntimeException e) {
+      return null;
     } finally {
       ctx.flowInProgress.remove(variable);
     }
+  }
+
+  /**
+   * Исходные данные расчёта по потоку для переменной: что известно на входе в тело,
+   * где она меняется и как считать вклад каждого изменения.
+   *
+   * @param variable    переменная.
+   * @param definitions позиции присваиваний переменной.
+   * @param ctx         контекст текущего инференса.
+   * @return данные для {@link VariableFlowAnalyzer}.
+   */
+  private VariableFlowAnalyzer.FlowInputs flowInputs(
+    VariableSymbol variable,
+    List<Position> definitions,
+    InferenceContext ctx
+  ) {
+    var owner = variable.getOwner();
+    var mutationCalls = mutationCalls(variable);
+    return new VariableFlowAnalyzer.FlowInputs(
+      flowEntryFact(variable),
+      definitions,
+      mutationCalls.keySet(),
+      position -> attachDefaultElementTypes(inferFromDefinitionPosition(owner, position, ctx)),
+      (position, incoming) -> applyMutation(variable, mutationCalls.get(position), incoming, ctx),
+      (condition, whenTrue, incoming) ->
+        guardConditionNarrowing.narrow(condition, whenTrue, incoming, variable, owner)
+    );
   }
 
   /**
