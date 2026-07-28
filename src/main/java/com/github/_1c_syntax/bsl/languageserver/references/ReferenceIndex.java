@@ -236,6 +236,9 @@ public class ReferenceIndex {
    * событий попадают в дерево символов как {@code EventMethodSymbol} (display-вид {@code Event}),
    * но их прямые вызовы индексируются {@link #methodCallOccurrence} под {@code Method} — без
    * канонизации Find References/Call Hierarchy не нашли бы ни одного прямого вызова обработчика.
+   * И так же — {@link SymbolKind#Function}: методы модулей без состояния (общих модулей BSL и
+   * модулей OneScript) отдаются в дереве символов как {@code Function}
+   * (см. {@code RegularMethodSymbol#getSymbolKind()}), но их вызовы индексируются под {@code Method}.
    * Точка расширения при появлении новых callable-{@link SymbolKind} — сюда достаточно добавить
    * очередной случай.
    *
@@ -243,7 +246,9 @@ public class ReferenceIndex {
    * @return канонический вид для ключа индекса.
    */
   private static SymbolKind indexedKindOf(SymbolKind symbolKind) {
-    if (symbolKind == SymbolKind.Constructor || symbolKind == SymbolKind.Event) {
+    if (symbolKind == SymbolKind.Constructor
+      || symbolKind == SymbolKind.Event
+      || symbolKind == SymbolKind.Function) {
       return SymbolKind.Method;
     }
     return symbolKind;

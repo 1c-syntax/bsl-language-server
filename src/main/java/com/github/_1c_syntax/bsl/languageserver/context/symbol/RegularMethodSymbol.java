@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
@@ -31,15 +32,34 @@ import org.eclipse.lsp4j.SymbolKind;
  * модуле BSL. Конструкторы OneScript-классов представлены отдельным
  * {@link ConstructorSymbol}, чтобы их можно было различать в symbol tree,
  * hover'е и go-to-definition. Общая структура полей — в {@link AbstractMethodSymbol}.
+ * <p>
+ * В LSP нет отдельного {@link SymbolKind} для процедуры, поэтому и процедуры, и
+ * функции BSL по умолчанию представлены как {@link SymbolKind#Method}. Но методы
+ * модулей без состояния — общих модулей BSL и модулей OneScript — это
+ * самостоятельные функции, а не члены объекта со состоянием, поэтому для них
+ * корректнее {@link SymbolKind#Function}. Признак задаётся флагом
+ * {@link #standaloneFunction}: он влияет только на {@link #getSymbolKind()} (вид
+ * символа в outline и результатах поиска по рабочей области); во всех прочих
+ * отношениях такой символ остаётся обычным {@link RegularMethodSymbol} и
+ * обрабатывается общим путём (hover, автодополнение, семантические токены).
  */
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public final class RegularMethodSymbol extends AbstractMethodSymbol {
 
+  /**
+   * {@code true}, если метод принадлежит модулю без состояния (общий модуль BSL
+   * либо модуль OneScript) и потому является самостоятельной функцией —
+   * {@link SymbolKind#Function}. Иначе метод представлен как
+   * {@link SymbolKind#Method}. Значение по умолчанию — {@code false}.
+   */
+  @Builder.Default
+  private final boolean standaloneFunction = false;
+
   @Override
   public SymbolKind getSymbolKind() {
-    return SymbolKind.Method;
+    return standaloneFunction ? SymbolKind.Function : SymbolKind.Method;
   }
 
   @Override

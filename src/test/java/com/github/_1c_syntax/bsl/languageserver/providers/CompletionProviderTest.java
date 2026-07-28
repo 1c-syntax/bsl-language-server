@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
@@ -452,6 +453,69 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionCommonModuleLocalMethodHasFunctionKind() {
+    // given — документ является общим модулем (модуль без состояния): его собственные методы
+    // в автодополнении должны получать CompletionItemKind.Function, как и в структуре документа.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var commonModuleUri = Path.of(
+      "./src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl").toUri();
+    var content = """
+      Функция МояФункция() Экспорт
+      Возврат 1;
+      КонецФункции
+
+      Процедура Тест()
+      МояФун
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(commonModuleUri, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `МояФун` (line 5, 0-based), позиция сразу после префикса
+    params.setPosition(new Position(5, 6));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
+    assertThat(items)
+      .filteredOn(it -> "МояФункция".equals(it.getLabel()))
+      .hasSize(1)
+      .allMatch(it -> it.getKind() == CompletionItemKind.Function);
+  }
+
+  @Test
+  void noDotCompletionOScriptClassConstructorHasConstructorKind() {
+    // given — OneScript-класс: конструктор ПриСозданииОбъекта в структуре документа имеет
+    // SymbolKind.Constructor, поэтому и в автодополнении иконка должна быть Constructor,
+    // а не Method (вид берётся из символа через methodCompletionKind).
+    initServerContext(
+      Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath(), true);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/oscript-libraries/internal-classes-test"
+        + "/oscript_modules/internal-classes-lib/src/Классы/PublicEntity.os",
+      context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // пустая строка между методами (line 3, 0-based) — контекст модуля без префикса
+    params.setPosition(new Position(3, 0));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.OScriptClass);
+    assertThat(items)
+      .filteredOn(it -> "ПриСозданииОбъекта".equals(it.getLabel()))
+      .isNotEmpty()
+      .allMatch(it -> it.getKind() == CompletionItemKind.Constructor);
+  }
+
+  @Test
   void noDotCompletionShowsInferredTypeForEventHandlerParameter() {
     // given: тип параметра обработчика события известен из контракта события —
     // должен показываться в detail пункта completion, а не оставаться пустым
@@ -625,7 +689,9 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .findFirst()
       .orElseThrow(() -> new AssertionError("метод общего модуля должен попасть в dot-completion"));
 
-    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Method);
+    // метод общего модуля — модуль без состояния, поэтому иконка — Function (как и в структуре
+    // документа); вид берётся из символа-источника метода
+    assertThat(item.getKind()).isEqualTo(CompletionItemKind.Function);
     assertThat(item.getDetail())
       .as("сигнатура и тип возврата метода общего модуля — как у платформенного")
       .isEqualTo("(Значение): Массив");

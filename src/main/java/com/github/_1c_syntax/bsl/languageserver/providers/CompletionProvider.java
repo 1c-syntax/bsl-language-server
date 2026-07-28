@@ -799,7 +799,7 @@ public final class CompletionProvider {
     for (var method : documentContext.getSymbolTree().getMethods()) {
       if (matches(method.getName(), prefix)) {
         var item = new CompletionItem(method.getName());
-        item.setKind(methodCompletionKind(method));
+        item.setKind(methodCompletionKind(method.getSymbolKind()));
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
         applySourceMethodDetail(item, method);
         applySourceMethodDocumentation(item, method);
@@ -877,10 +877,18 @@ public final class CompletionProvider {
     return items;
   }
 
-  private static CompletionItemKind methodCompletionKind(MethodSymbol method) {
-    // Объявленные методы (процедуры и функции) — Method; Function только у платформенных
-    // глобальных функций. Обработчик события — Event.
-    return method.getSymbolKind() == SymbolKind.Event ? CompletionItemKind.Event : CompletionItemKind.Method;
+  /**
+   * Вид иконки объявленного метода по его {@link SymbolKind}: обработчик события — Event;
+   * конструктор OneScript-класса — Constructor; метод модуля без состояния (общий модуль BSL,
+   * модуль OneScript) — самостоятельная функция (Function); прочие процедуры и функции — Method.
+   */
+  private static CompletionItemKind methodCompletionKind(SymbolKind symbolKind) {
+    return switch (symbolKind) {
+      case Event -> CompletionItemKind.Event;
+      case Constructor -> CompletionItemKind.Constructor;
+      case Function -> CompletionItemKind.Function;
+      default -> CompletionItemKind.Method;
+    };
   }
 
   /**
@@ -1180,7 +1188,11 @@ public final class CompletionProvider {
     var displayName = member.displayName(scriptVariant);
     var item = new CompletionItem(displayName);
     if (member.kind() == MemberKind.METHOD) {
-      item.setKind(methodKind);
+      // Для source-defined членов (например, экспортных методов общего модуля) вид берётся
+      // прямо из символа-источника, чтобы иконка совпадала со структурой документа; для
+      // платформенных членов без символа — переданный methodKind.
+      var sourceSymbol = member.sourceSymbol();
+      item.setKind(sourceSymbol == null ? methodKind : methodCompletionKind(sourceSymbol.getSymbolKind()));
       applyCallableInsertText(item, displayName, memberHasParameters(member));
       applyMethodDetail(item, member, scriptVariant);
     } else {

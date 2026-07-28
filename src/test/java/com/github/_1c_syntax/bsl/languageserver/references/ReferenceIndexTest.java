@@ -145,6 +145,32 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void commonModuleMethodIsFunctionAndItsCallsAreFound() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var callerMethod = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
+
+    var commonModuleContext = context
+      .getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
+      .orElseThrow();
+    var calledMethod = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+
+    var location = new Location(documentContext.getUri().toString(), Ranges.create(2, 22, 41));
+
+    // when
+    var references = referenceIndex.getReferencesTo(calledMethod);
+
+    // then
+    // метод общего модуля BSL — самостоятельная функция (SymbolKind.Function); его вызовы
+    // индексируются под каноническим SymbolKind.Method (ReferenceIndex#indexedKindOf), поэтому
+    // Find References/Rename находят их без приведения вида на месте вызова
+    assertThat(calledMethod.getSymbolKind()).isEqualTo(SymbolKind.Function);
+    assertThat(references)
+      .isNotEmpty()
+      .contains(Reference.of(callerMethod, calledMethod, location));
+  }
+
+  @Test
   void testGetReferenceToCommonModuleMethod() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
