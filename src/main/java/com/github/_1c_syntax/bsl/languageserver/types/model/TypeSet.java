@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Неизменяемый, hash-stable union типов.
@@ -200,6 +201,73 @@ public record TypeSet(
     var merged = new LinkedHashSet<>(this.refs);
     merged.add(ref);
     return new TypeSet(merged, this.elementTypes, this.localFields, this.lazyElements, this.lazyFields);
+  }
+
+  /**
+   * Сузить набор до одного типа: остаётся только {@code ref} со своими декорациями,
+   * декорации остальных типов отбрасываются.
+   * <p>
+   * Операция над множеством, а не проверка утверждения о типе: если {@code ref} в
+   * наборе нет, результат пуст. Решение, что делать в этом случае — довериться
+   * проверке типа в коде и подставить её тип или оставить набор как есть, — принимает
+   * вызывающий.
+   *
+   * @param ref тип, до которого сужается набор.
+   * @return набор из одного типа; {@link #EMPTY}, если такого типа в наборе не было.
+   */
+  public TypeSet retaining(TypeRef ref) {
+    if (!refs.contains(ref)) {
+      return EMPTY;
+    }
+    return filtered(kept -> kept.equals(ref));
+  }
+
+  /**
+   * Убрать из набора один тип вместе с его декорациями.
+   *
+   * @param ref убираемый тип.
+   * @return набор без указанного типа; текущий набор, если его там не было;
+   *     {@link #EMPTY}, если он был единственным.
+   */
+  public TypeSet without(TypeRef ref) {
+    if (!refs.contains(ref)) {
+      return this;
+    }
+    if (refs.size() == 1) {
+      return EMPTY;
+    }
+    return filtered(kept -> !kept.equals(ref));
+  }
+
+  /** Набор из типов, прошедших отбор, вместе с их декорациями. */
+  private TypeSet filtered(Predicate<TypeRef> keep) {
+    var keptRefs = new LinkedHashSet<TypeRef>();
+    for (var ref : refs) {
+      if (keep.test(ref)) {
+        keptRefs.add(ref);
+      }
+    }
+    return new TypeSet(
+      keptRefs,
+      filterByKey(elementTypes, keep),
+      filterByKey(localFields, keep),
+      filterByKey(lazyElements, keep),
+      filterByKey(lazyFields, keep)
+    );
+  }
+
+  /** Декорационная мапа без записей по отсеянным типам. */
+  private static <V> Map<TypeRef, V> filterByKey(Map<TypeRef, V> source, Predicate<TypeRef> keep) {
+    if (source.isEmpty()) {
+      return source;
+    }
+    var copy = new LinkedHashMap<TypeRef, V>();
+    for (var entry : source.entrySet()) {
+      if (keep.test(entry.getKey())) {
+        copy.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return copy;
   }
 
   /**
