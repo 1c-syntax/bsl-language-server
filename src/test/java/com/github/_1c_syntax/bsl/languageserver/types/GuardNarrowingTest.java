@@ -63,6 +63,33 @@ class GuardNarrowingTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void receiverOfMemberAccessIsNarrowed() {
+    // given: тип ресивера нужен автодополнению и hover на `Значение.`
+    var documentContext = doc();
+    var position = positionOf(documentContext, "Значение.Длина()", "Значение.".length() + 1);
+
+    // when
+    var types = typeService.receiverTypesAt(documentContext, position);
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void receiverBeforeDanglingDotIsNarrowed() {
+    // given: автодополнение спрашивает тип ресивера сразу после точки, когда члена ещё нет.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/GuardNarrowingDanglingDot.bsl");
+    var position = positionOf(documentContext, "Значение.\n", "Значение.".length());
+
+    // when
+    var types = typeService.receiverTypesAt(documentContext, position);
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
   void conjunctionOfChecksNarrows() {
     // given / when
     var types = at("ВнутриКонъюнкции = Значение", "ВнутриКонъюнкции = ".length());
@@ -102,14 +129,18 @@ class GuardNarrowingTest extends AbstractServerContextAwareTest {
 
   private TypeSet at(String marker, int offsetInMarker) {
     var documentContext = doc();
+    return typeService.expressionTypesAt(documentContext, positionOf(documentContext, marker, offsetInMarker + 1));
+  }
+
+  private static Position positionOf(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);
     assertThat(markerStart).as("маркер '%s' найден в фикстуре", marker).isNotNegative();
     var targetOffset = markerStart + offsetInMarker;
-    var lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    var lineStart = content.lastIndexOf('\n', targetOffset - 1) + 1;
     var line = content.substring(0, targetOffset).split("\n").length - 1;
     var charInLine = targetOffset - lineStart;
-    return typeService.expressionTypesAt(documentContext, new Position(line, charInLine + 1));
+    return new Position(line, charInLine);
   }
 
   private static DocumentContext doc() {

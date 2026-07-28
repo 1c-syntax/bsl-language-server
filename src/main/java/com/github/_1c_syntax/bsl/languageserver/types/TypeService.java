@@ -886,11 +886,31 @@ public class TypeService implements SelfMemberClassifier {
     if (fromIndex.isEmpty()) {
       return fromExpression;
     }
+    // Индекс ссылок отдаёт тип символа целиком, а инференс считает его в этой точке кода:
+    // внутри ветки с проверкой типа набор сужен. Более узкий набор — точнее.
+    if (narrowsSameTypes(fromExpression, fromIndex)) {
+      return fromExpression;
+    }
     // Индекс ссылок отдаёт ОБЪЯВЛЕННЫЙ тип члена, без уточнений, добытых на месте:
     // у `ТЗ.Колонки` это просто коллекция колонок, без самих колонок, а у
     // `ТЧ.ВыгрузитьКолонку("Цена")` — нетипизированный массив. Если инференс дал те
     // же типы, но с уточнениями, берём его: он строго информативнее.
     return refinesSameTypes(fromExpression, fromIndex) ? fromExpression : fromIndex;
+  }
+
+  /**
+   * Сужает ли {@code candidate} набор {@code base}: непустое строгое подмножество его
+   * типов. Так выглядит результат проверки типа в коде — набор в этой точке уже, чем
+   * объявленный у символа.
+   *
+   * @param candidate проверяемый набор.
+   * @param base      набор, с которым сравнивается.
+   * @return {@code true}, если кандидат — непустое строгое подмножество базы.
+   */
+  private static boolean narrowsSameTypes(TypeSet candidate, TypeSet base) {
+    return !candidate.isEmpty()
+      && candidate.size() < base.size()
+      && base.refs().containsAll(candidate.refs());
   }
 
   /**
@@ -923,7 +943,7 @@ public class TypeService implements SelfMemberClassifier {
       return Optional.empty();
     }
     var line = lines[position.getLine()];
-    var col = Math.min(position.getCharacter(), line.length());
+    var col = Math.clamp(position.getCharacter(), 0, line.length());
     var i = col;
     while (i > 0 && isIdentChar(line.charAt(i - 1))) {
       i--;
