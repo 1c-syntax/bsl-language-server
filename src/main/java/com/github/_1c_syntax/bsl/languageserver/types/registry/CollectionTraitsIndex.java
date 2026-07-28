@@ -79,7 +79,7 @@ final class CollectionTraitsIndex {
    * @param fileType языковой скоуп, в котором действуют признаки.
    */
   void registerPack(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
-    if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
+    if (!decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
     }
     if (decl.supportsForEach()) {
