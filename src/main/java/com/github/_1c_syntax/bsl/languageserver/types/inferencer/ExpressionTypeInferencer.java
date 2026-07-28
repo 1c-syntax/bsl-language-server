@@ -65,6 +65,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -119,6 +120,7 @@ public class ExpressionTypeInferencer {
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final TableCollectionInference tableCollectionInference;
+  private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -284,8 +286,12 @@ public class ExpressionTypeInferencer {
         return platformMember.getDescriptor().returnTypes();
       }
       // Source-defined переменная/метод — их тип (даже честно пустой), с защитой от цикла.
-      if (target instanceof MethodSymbol || target instanceof VariableSymbol) {
-        return sourceSymbolType((SourceDefinedSymbol) target, ctx);
+      if (target instanceof VariableSymbol variable) {
+        var byFlow = flowTypeAt(variable, terminal, ctx);
+        return byFlow != null ? byFlow : sourceSymbolType(variable, ctx);
+      }
+      if (target instanceof MethodSymbol method) {
+        return sourceSymbolType(method, ctx);
       }
       // Иначе вид символа здесь не типизируем — падаем на фоллбэк ниже.
     }
@@ -1010,6 +1016,104 @@ public class ExpressionTypeInferencer {
   }
 
   /**
+   * Тип переменной в точке использования, рассчитанный по потоку управления тела:
+   * присваивание перекрывает прежний тип, в точках слияния путей типы объединяются.
+   * Точнее объединения по всем присваиваниям, которое даёт {@link #inferVariable}.
+   *
+   * @param variable переменная.
+   * @param terminal терминал использования.
+   * @param ctx      контекст текущего инференса.
+   * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим и нужен
+   *     общий путь: переменная модуля (её меняют из разных методов), использование в
+   *     другом документе, повторный вход по той же переменной, отсутствие присваиваний
+   *     либо неразмещаемое в графе присваивание.
+   */
+  @Nullable
+  private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
+    if (variable.getKind() == VariableKind.MODULE || ctx.flowInProgress.contains(variable)) {
+      return null;
+    }
+    var owner = variable.getOwner();
+    if (!owner.getUri().equals(ctx.documentContext.getUri())) {
+      return null;
+    }
+    if (!(terminal.getParent() instanceof ParserRuleContext use)) {
+      return null;
+    }
+    var definitions = definitionPositions(variable);
+    if (definitions.isEmpty()) {
+      return null;
+    }
+    ctx.flowInProgress.add(variable);
+    try {
+      var byFlow = variableFlowAnalyzer.typeAt(
+        owner,
+        use,
+        flowEntryFact(variable),
+        definitions,
+        position -> inferFromDefinitionPosition(owner, position, ctx)
+      );
+      return byFlow == null ? null : withAccumulatedFields(variable, byFlow, ctx);
+    } finally {
+      ctx.flowInProgress.remove(variable);
+    }
+  }
+
+  /**
+   * Дополнить тип переменной тем, что собирается по всей её области видимости
+   * независимо от порядка операторов: типы элементов по умолчанию, поля, добавленные
+   * через {@code Вставить}, и колонки таблицы значений.
+   *
+   * @param variable переменная.
+   * @param base     тип, рассчитанный по потоку.
+   * @param ctx      контекст текущего инференса.
+   * @return тип с накопленными декорациями.
+   */
+  private TypeSet withAccumulatedFields(VariableSymbol variable, TypeSet base, InferenceContext ctx) {
+    var result = attachDefaultElementTypes(base);
+    result = accumulateStructureInsertFields(variable, result, ctx);
+    return accumulateValueTableColumnFields(variable, result, ctx);
+  }
+
+  /**
+   * Тип переменной до первого присваивания: то, что известно из объявления, а не из кода.
+   *
+   * @param variable переменная.
+   * @return типы на входе в тело; пустой набор, если ничего не объявлено.
+   */
+  private TypeSet flowEntryFact(VariableSymbol variable) {
+    var entry = TypeSet.EMPTY;
+    if (variable.getKind() == VariableKind.PARAMETER) {
+      entry = entry.union(declaredParameterTypes(variable));
+    }
+    return entry
+      .union(typesFromVariableTrailingComment(variable))
+      .union(autumnInjectedType(variable))
+      .union(extendsParentFieldType(variable));
+  }
+
+  /**
+   * Позиции всех присваиваний переменной: объявление (первое присваивание содержится в
+   * самом символе) плюс {@code DEFINITION}-вхождения из индекса ссылок.
+   *
+   * @param variable переменная.
+   * @return позиции присваиваний без повторов.
+   */
+  private List<Position> definitionPositions(VariableSymbol variable) {
+    var positions = new ArrayList<Position>();
+    positions.add(variable.getSelectionRange().getStart());
+    for (var occurrence : referenceIndex.getReferencesTo(variable)) {
+      if (occurrence.occurrenceType() == OccurrenceType.DEFINITION) {
+        var start = occurrence.selectionRange().getStart();
+        if (!positions.contains(start)) {
+          positions.add(start);
+        }
+      }
+    }
+    return positions;
+  }
+
+  /**
    * Тип внедряемой через {@code &Пластилин} зависимости фреймворка «ОСень».
    * Аннотации несёт сам символ — и поле модуля, и параметр конструктора/завязи
    * (см. {@code VariableSymbolComputer}).
@@ -1641,6 +1745,13 @@ public class ExpressionTypeInferencer {
      * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
      */
     final Map<SourceDefinedSymbol, TypeSet> inProgress = new HashMap<>();
+    /**
+     * Переменные, для которых прямо сейчас идёт расчёт по потоку. Держится отдельно от
+     * {@link #inProgress}: тот отдаёт частичный тип символа, а здесь нужен именно отказ
+     * от повторного расчёта по потоку — вложенный запрос должен уйти на символьный путь
+     * с его собственной защитой от циклов.
+     */
+    final Set<SourceDefinedSymbol> flowInProgress = new HashSet<>();
     int depth;
 
     InferenceContext(DocumentContext documentContext) {

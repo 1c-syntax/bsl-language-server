@@ -328,7 +328,7 @@ class ArchitectureTest {
     .whereLayer("References").mayOnlyAccessLayers(
       "Configuration", "Context", "Infrastructure", "Types", "Utils")
     .whereLayer("Types").mayOnlyAccessLayers(
-      "Configuration", "Context", "Events", "Index", "Infrastructure", "References", "Utils")
+      "Cfg", "Configuration", "Context", "Events", "Index", "Infrastructure", "References", "Utils")
     // Кэш графов знает о документе, чей разбор кэширует, и о базе индексов — она задаёт
     // сброс по жизненному циклу документа.
     .whereLayer("Cfg").mayOnlyAccessLayers("Context", "Index", "Infrastructure", "Utils")
