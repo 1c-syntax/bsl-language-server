@@ -90,6 +90,52 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void structureFieldIsNotVisibleBeforeItsInsert() {
+    // given / when
+    var types = at("ПослеПервойВставки = Данные", "ПослеПервойВставки = ".length());
+
+    // then: вторая вставка идёт ниже по коду и здесь ещё не случилась.
+    assertThat(fieldNames(types)).containsExactly("Первое");
+  }
+
+  @Test
+  void structureFieldsAccumulateInStatementOrder() {
+    // given / when
+    var types = at("ПослеВторойВставки = Данные", "ПослеВторойВставки = ".length());
+
+    // then
+    assertThat(fieldNames(types)).containsExactlyInAnyOrder("Первое", "Второе");
+  }
+
+  @Test
+  void valueTableColumnIsNotVisibleBeforeItsAdd() {
+    // given / when
+    var types = at("ПослеПервойКолонки = Таблица", "ПослеПервойКолонки = ".length());
+
+    // then
+    assertThat(columnNames(types)).containsExactly("Номенклатура");
+  }
+
+  @Test
+  void valueTableColumnsAccumulateInStatementOrder() {
+    // given / when
+    var types = at("ПослеВторойКолонки = Таблица", "ПослеВторойКолонки = ".length());
+
+    // then
+    assertThat(columnNames(types)).containsExactlyInAnyOrder("Номенклатура", "Количество");
+  }
+
+  @Test
+  void fieldInsertedInBranchIsVisibleAfterJoin() {
+    // given: поле добавлено только в одной ветке — после слияния путей оно возможно.
+    // when
+    var types = at("ПослеВетвления = Набор", "ПослеВетвления = ".length());
+
+    // then
+    assertThat(fieldNames(types)).containsExactly("ИзВетки");
+  }
+
+  @Test
   void selfAssignmentReadsPreviousType() {
     // given / when
     var types = at("Накопитель = Накопитель + \"хвост\"", "Накопитель = ".length());
@@ -117,5 +163,20 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
 
   private static List<String> qnames(TypeSet types) {
     return types.refs().stream().map(ref -> ref.qualifiedName()).toList();
+  }
+
+  /** Имена полей «открытого» объекта данных — того единственного типа, что в наборе. */
+  private static List<String> fieldNames(TypeSet types) {
+    assertThat(types.refs()).hasSize(1);
+    return List.copyOf(types.getLocalFields(types.refs().iterator().next()).keySet());
+  }
+
+  /** Имена колонок таблицы значений — поля типа строки, привязанного элементом. */
+  private static List<String> columnNames(TypeSet types) {
+    assertThat(types.refs()).hasSize(1);
+    var tableRef = types.refs().iterator().next();
+    var rowTypes = types.getElementTypes(tableRef);
+    assertThat(rowTypes.refs()).hasSize(1);
+    return List.copyOf(rowTypes.getLocalFields(rowTypes.refs().iterator().next()).keySet());
   }
 }

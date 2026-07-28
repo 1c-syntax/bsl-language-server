@@ -97,6 +97,23 @@ public class VariableFlowAnalyzer {
   }
 
   /**
+   * Изменение типа оператором-мутатором: {@code Х.Вставить("Поле", …)},
+   * {@code Х.Колонки.Добавить("Имя", …)} и подобными.
+   */
+  @FunctionalInterface
+  public interface Mutations {
+
+    /**
+     * Как оператор в этой позиции меняет тип переменной.
+     *
+     * @param position позиция оператора-мутатора.
+     * @param incoming тип переменной перед ним.
+     * @return изменённый тип; исходный, если оператор ничего не добавляет.
+     */
+    TypeSet apply(Position position, TypeSet incoming);
+  }
+
+  /**
    * Сужение типа охраняющим условием на ветке.
    */
   @FunctionalInterface
@@ -123,7 +140,10 @@ public class VariableFlowAnalyzer {
    *                            до первого присваивания.
    * @param definitionPositions позиции всех присваиваний переменной в документе;
    *                            учитываются только попавшие в анализируемое тело.
+   * @param mutationPositions   позиции операторов, меняющих тип переменной на месте
+   *                            (добавление поля структуры, колонки таблицы значений).
    * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
+   * @param mutations           колбэк, применяющий изменение оператора-мутатора.
    * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
    * @return тип переменной в этой точке; {@code null}, если расчёт неприменим —
    *     тело не найдено или использование не удалось разместить в графе.
@@ -134,7 +154,9 @@ public class VariableFlowAnalyzer {
     ParserRuleContext use,
     TypeSet entryFact,
     Collection<Position> definitionPositions,
+    Collection<Position> mutationPositions,
     AssignedTypes assigned,
+    Mutations mutations,
     GuardNarrowing narrowing
   ) {
     var body = enclosingBody(use);
@@ -147,7 +169,10 @@ public class VariableFlowAnalyzer {
     if (useStatement == null) {
       return null;
     }
-    if (!allDefinitionsPlaced(vertexByStatement.keySet(), body, definitionPositions)) {
+    // Если хоть один меняющий тип оператор не лёг в граф, расчёт по потоку потерял бы его
+    // вклад — тогда точнее прежний путь с обходом всей области видимости.
+    if (!allPlaced(vertexByStatement.keySet(), body, definitionPositions)
+      || !allPlaced(vertexByStatement.keySet(), body, mutationPositions)) {
       return null;
     }
     var useVertex = vertexByStatement.get(useStatement);
@@ -157,8 +182,8 @@ public class VariableFlowAnalyzer {
     // Использование в левой части присваивания — это само присваивание: спрашивают тип,
     // который переменная получает здесь, а не тот, что был до неё.
     var atDefinition = coversAnyDefinition(use, definitionPositions);
-    return new Pass(graph, entryFact, definitionPositions, assigned, narrowing)
-      .typeAtStatement(useVertex, useStatement, atDefinition);
+    var pass = new Pass(graph, entryFact, definitionPositions, mutationPositions, assigned, mutations, narrowing);
+    return pass.typeAtStatement(useVertex, useStatement, atDefinition);
   }
 
   /**
@@ -171,7 +196,9 @@ public class VariableFlowAnalyzer {
     private final ControlFlowGraph graph;
     private final TypeSet entryFact;
     private final Collection<Position> definitionPositions;
+    private final Collection<Position> mutationPositions;
     private final AssignedTypes assigned;
+    private final Mutations mutations;
     private final GuardNarrowing narrowing;
 
     /**
@@ -189,7 +216,7 @@ public class VariableFlowAnalyzer {
     private TypeSet typeAtStatement(CfgVertex vertex, ParserRuleContext statement, boolean inclusive) {
       var facts = computeEntryFacts();
       var atVertex = facts.getOrDefault(vertex, TypeSet.EMPTY);
-      return applyAssignments(vertex, atVertex, statement, inclusive);
+      return applyStatements(vertex, atVertex, statement, inclusive);
     }
 
     /**
@@ -234,7 +261,7 @@ public class VariableFlowAnalyzer {
         var predecessor = graph.getEdgeSource(edge);
         var atPredecessor = facts.get(predecessor);
         if (atPredecessor != null) {
-          var outgoing = applyAssignments(predecessor, atPredecessor, null, false);
+          var outgoing = applyStatements(predecessor, atPredecessor, null, false);
           joined = joined.union(narrowedByEdge(predecessor, edge.getType(), outgoing));
         }
       }
@@ -253,13 +280,13 @@ public class VariableFlowAnalyzer {
     }
 
     /**
-     * Применить к типу присваивания, сделанные в вершине. Если задан {@code stopAt},
+     * Применить к типу операторы вершины по порядку. Если задан {@code stopAt},
      * обход останавливается на этом операторе: {@code X = F(X)} читает прежний тип,
-     * поэтому по умолчанию присваивание в самом операторе не применяется. Флаг
+     * поэтому по умолчанию оператор, на котором остановились, не применяется. Флаг
      * {@code inclusive} применяет и его — так отвечают на вопрос о типе в точке
      * самого присваивания.
      */
-    private TypeSet applyAssignments(
+    private TypeSet applyStatements(
       CfgVertex vertex,
       TypeSet incoming,
       @Nullable ParserRuleContext stopAt,
@@ -274,10 +301,7 @@ public class VariableFlowAnalyzer {
         if (isStop && !inclusive) {
           break;
         }
-        var definition = definitionIn(statement);
-        if (definition != null) {
-          current = assignedTypes.computeIfAbsent(definition, assigned::at);
-        }
+        current = applyStatement(statement, current);
         if (isStop) {
           break;
         }
@@ -285,11 +309,24 @@ public class VariableFlowAnalyzer {
       return current;
     }
 
-    /** Позиция присваивания переменной внутри оператора, либо {@code null}. */
+    /**
+     * Изменение типа одним оператором: присваивание задаёт тип заново, оператор-мутатор
+     * дополняет уже накопленный. Оператор может быть только чем-то одним из двух.
+     */
+    private TypeSet applyStatement(ParserRuleContext statement, TypeSet incoming) {
+      var definition = positionIn(statement, definitionPositions);
+      if (definition != null) {
+        return assignedTypes.computeIfAbsent(definition, assigned::at);
+      }
+      var mutation = positionIn(statement, mutationPositions);
+      return mutation == null ? incoming : mutations.apply(mutation, incoming);
+    }
+
+    /** Позиция из набора, попадающая внутрь оператора, либо {@code null}. */
     @Nullable
-    private Position definitionIn(ParserRuleContext statement) {
+    private static Position positionIn(ParserRuleContext statement, Collection<Position> positions) {
       var range = Ranges.create(statement);
-      for (var position : definitionPositions) {
+      for (var position : positions) {
         if (Ranges.containsPosition(range, position)) {
           return position;
         }
@@ -337,13 +374,13 @@ public class VariableFlowAnalyzer {
    * @param definitionPositions позиции присваиваний переменной в документе.
    * @return {@code true}, если каждое присваивание внутри тела нашлось в операторах графа.
    */
-  private static boolean allDefinitionsPlaced(
+  private static boolean allPlaced(
     Collection<ParserRuleContext> statements,
     BSLParser.CodeBlockContext body,
-    Collection<Position> definitionPositions
+    Collection<Position> positions
   ) {
     var bodyRange = Ranges.create(body);
-    for (var position : definitionPositions) {
+    for (var position : positions) {
       if (Ranges.containsPosition(bodyRange, position) && !isPlaced(statements, position)) {
         return false;
       }

@@ -1045,37 +1045,112 @@ public class ExpressionTypeInferencer {
     if (definitions.isEmpty()) {
       return null;
     }
+    var mutationCalls = mutationCalls(variable);
     ctx.flowInProgress.add(variable);
     try {
-      var byFlow = variableFlowAnalyzer.typeAt(
+      return variableFlowAnalyzer.typeAt(
         owner,
         use,
         flowEntryFact(variable),
         definitions,
-        position -> inferFromDefinitionPosition(owner, position, ctx),
+        mutationCalls.keySet(),
+        position -> attachDefaultElementTypes(inferFromDefinitionPosition(owner, position, ctx)),
+        (position, incoming) -> applyMutation(variable, mutationCalls.get(position), incoming, ctx),
         (condition, whenTrue, incoming) ->
           guardConditionNarrowing.narrow(condition, whenTrue, incoming, variable, owner)
       );
-      return byFlow == null ? null : withAccumulatedFields(variable, byFlow, ctx);
     } finally {
       ctx.flowInProgress.remove(variable);
     }
   }
 
   /**
-   * Дополнить тип переменной тем, что собирается по всей её области видимости
-   * независимо от порядка операторов: типы элементов по умолчанию, поля, добавленные
-   * через {@code Вставить}, и колонки таблицы значений.
+   * Операторы, меняющие тип переменной на месте, по позиции их начала: добавление поля
+   * структуры или соответствия и добавление колонки таблицы значений.
    *
    * @param variable переменная.
-   * @param base     тип, рассчитанный по потоку.
-   * @param ctx      контекст текущего инференса.
-   * @return тип с накопленными декорациями.
+   * @return операторы-мутаторы по позициям, в порядке следования в документе.
    */
-  private TypeSet withAccumulatedFields(VariableSymbol variable, TypeSet base, InferenceContext ctx) {
-    var result = attachDefaultElementTypes(base);
-    result = accumulateStructureInsertFields(variable, result, ctx);
-    return accumulateValueTableColumnFields(variable, result, ctx);
+  private Map<Position, BSLParser.CallStatementContext> mutationCalls(VariableSymbol variable) {
+    var owner = variable.getOwner();
+    var ast = safeGetOwnerAst(owner);
+    if (ast == null) {
+      return Map.of();
+    }
+    Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
+    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
+      calls.put(Ranges.create(call).getStart(), call);
+    }
+    return calls;
+  }
+
+  /**
+   * Применить к типу переменной одно изменение на месте: добавленное поле структуры
+   * либо добавленную колонку таблицы значений.
+   *
+   * @param variable переменная.
+   * @param call     оператор-мутатор; {@code null}, если по позиции ничего не нашлось.
+   * @param incoming тип переменной перед оператором.
+   * @param ctx      контекст текущего инференса.
+   * @return изменённый тип; исходный, если оператор к этому типу неприменим.
+   */
+  private TypeSet applyMutation(
+    VariableSymbol variable,
+    BSLParser.@Nullable CallStatementContext call,
+    TypeSet incoming,
+    InferenceContext ctx
+  ) {
+    if (call == null || incoming.isEmpty()) {
+      return incoming;
+    }
+    var scope = variable.getScope();
+    var scopeRange = scope == null ? null : scope.getRange();
+    var variableName = variable.getName();
+
+    var structureRef = headRefOf(incoming, ExpressionTypeInferencer::isStructureOrMapLike);
+    if (structureRef != null) {
+      var field = insertedStructureField(call, variableName, scopeRange, ctx);
+      if (field != null && !field.types().isEmpty()) {
+        return incoming.withField(structureRef, field.name(), field.types());
+      }
+    }
+    var tableRef = headRefOf(incoming, ExpressionTypeInferencer::isValueTableLike);
+    if (tableRef != null) {
+      var column = addedColumn(call, variableName, scopeRange, ctx);
+      if (column != null) {
+        var rowRef = valueTableRowRef(variable.getOwner());
+        return incoming.withElement(tableRef, TypeSet.of(rowRef).withField(rowRef, column.name(), column.types()));
+      }
+    }
+    return incoming;
+  }
+
+  /**
+   * Первый тип набора, подходящий под условие.
+   *
+   * @param types     набор типов.
+   * @param predicate условие отбора по полному имени типа.
+   * @return подходящий тип либо {@code null}.
+   */
+  @Nullable
+  private static TypeRef headRefOf(TypeSet types, Predicate<String> predicate) {
+    for (var ref : types.refs()) {
+      if (predicate.test(ref.qualifiedName())) {
+        return ref;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Тип строки таблицы значений — на нём моделируются колонки.
+   *
+   * @param owner документ, для языка которого резолвится тип.
+   * @return ссылка на тип строки таблицы значений.
+   */
+  private TypeRef valueTableRowRef(DocumentContext owner) {
+    return typeRegistry.resolve(TableCollectionInference.VALUE_TABLE_ROW, owner.getFileType())
+      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, TableCollectionInference.VALUE_TABLE_ROW));
   }
 
   /**
