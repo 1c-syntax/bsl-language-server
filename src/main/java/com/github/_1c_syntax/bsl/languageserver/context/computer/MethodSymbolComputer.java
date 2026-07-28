@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
@@ -290,6 +291,7 @@ public final class MethodSymbolComputer
     return RegularMethodSymbol.builder()
       .name(name)
       .owner(documentContext)
+      .standaloneFunction(isStatelessModule())
       .range(range)
       .subNameRange(subNameRange)
       .function(function)
@@ -301,6 +303,29 @@ public final class MethodSymbolComputer
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)
       .build();
+  }
+
+  /**
+   * Проверить, что модуль не хранит состояние: общий модуль BSL
+   * ({@link ModuleType#CommonModule}) либо модуль OneScript (любой {@code .os}-файл,
+   * не являющийся классом).
+   * <p>
+   * Методы таких модулей — самостоятельные функции, а не члены объекта со
+   * состоянием, поэтому для них корректнее {@link org.eclipse.lsp4j.SymbolKind#Function}.
+   * Класс OneScript ({@link ModuleType#OScriptClass}) — это инстанцируемый объект
+   * со своим состоянием, поэтому его методы остаются
+   * {@link org.eclipse.lsp4j.SymbolKind#Method}. Отдельный {@code .os}-файл вне
+   * библиотеки имеет {@link ModuleType#UNKNOWN}, но по семантике OneScript это
+   * скрипт-модуль, а не класс, поэтому он также считается модулем без состояния.
+   *
+   * @return {@code true}, если модуль не хранит состояние
+   */
+  private boolean isStatelessModule() {
+    if (documentContext.getModuleType() == ModuleType.CommonModule) {
+      return true;
+    }
+    return documentContext.getFileType() == FileType.OS
+      && documentContext.getModuleType() != ModuleType.OScriptClass;
   }
 
   /**

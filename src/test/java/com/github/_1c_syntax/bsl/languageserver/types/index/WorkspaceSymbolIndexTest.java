@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.junit.jupiter.api.BeforeEach;
@@ -556,6 +557,80 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
   private static Set<Entry> emptyExclude() {
     return Collections.newSetFromMap(new IdentityHashMap<>());
+  }
+
+  /**
+   * Методы общего модуля (BSL) — функции без состояния, поэтому в индексе рабочей
+   * области они получают вид {@link SymbolKind#Function}.
+   */
+  @Test
+  void indexesCommonModuleMethodsAsFunction() {
+    // given — общий модуль конфигурации (модуль без состояния)
+    initServerContext(TestUtils.PATH_TO_METADATA);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", context);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("НеУстаревшаяФункция", NO_CANCEL);
+
+    // then — запись метода общего модуля проиндексирована как Function
+    // (фильтр по контейнеру: метод с тем же именем есть и в stateful-модуле менеджера)
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
+    assertThat(result)
+      .filteredOn(entry -> entry.name().equals("НеУстаревшаяФункция")
+        && entry.containerName().contains("ПервыйОбщийМодуль"))
+      .isNotEmpty()
+      .allMatch(entry -> entry.kind() == SymbolKind.Function);
+  }
+
+  /**
+   * Методы модуля объекта (BSL) — члены объекта со состоянием, поэтому в индексе
+   * рабочей области они остаются {@link SymbolKind#Method}.
+   */
+  @Test
+  void indexesObjectModuleMethodsAsMethod() {
+    // given — модуль объекта справочника (модуль со состоянием)
+    initServerContext(TestUtils.PATH_TO_METADATA);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl", context);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Тест", NO_CANCEL);
+
+    // then — запись метода модуля объекта остаётся Method
+    // (фильтр по контейнеру: метод с тем же именем есть и в stateless-модулях)
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.ObjectModule);
+    assertThat(result)
+      .filteredOn(entry -> entry.name().equals("Тест")
+        && entry.containerName().contains("Справочник1"))
+      .isNotEmpty()
+      .allMatch(entry -> entry.kind() == SymbolKind.Method);
+  }
+
+  /**
+   * Методы модуля OneScript — функции без состояния, поэтому в индексе рабочей
+   * области они получают вид {@link SymbolKind#Function}.
+   */
+  @Test
+  void indexesOneScriptModuleMethodsAsFunction() {
+    // given — модуль OneScript (.os, модуль без состояния)
+    var documentContext = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      """
+        Процедура УникальныйМетодОС() Экспорт
+        КонецПроцедуры""");
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("УникальныйМетодОС", NO_CANCEL);
+
+    // then — запись метода модуля OneScript проиндексирована как Function
+    assertThat(result)
+      .filteredOn(entry -> entry.name().equals("УникальныйМетодОС"))
+      .isNotEmpty()
+      .allMatch(entry -> entry.kind() == SymbolKind.Function);
   }
 
   @Test
