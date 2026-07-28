@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785220745527,
+  "lastUpdate": 1785229107119,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41013,6 +41013,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.375537460698044",
             "extra": "mean: 93.55242856343587 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a3cd0858b8d86494e626ed6eb258f3be0d60821b",
+          "message": "Merge pull request #4312 from 1c-syntax/claude/bsl-language-server-4117-7ptjk2\n\nfeat(symbols): SymbolKind.Function для методов модулей без состояния",
+          "timestamp": "2026-07-28T09:31:19+02:00",
+          "tree_id": "660a76ed27c3b2e8948ab65f137b9a7620c4df60",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a3cd0858b8d86494e626ed6eb258f3be0d60821b"
+        },
+        "date": 1785229093722,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.85662547747295,
+            "unit": "sec",
+            "range": "stddev: 3.248994894235261",
+            "extra": "mean: 92.85662547747295 sec\nrounds: 3"
           }
         ]
       }
