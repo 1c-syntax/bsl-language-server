@@ -55,8 +55,6 @@ import com.github._1c_syntax.bsl.mdo.children.PredefinedValue;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MultiName;
-import com.github._1c_syntax.bsl.types.ValueType;
-import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -1053,18 +1051,7 @@ public class ConfigurationTypesProvider {
   }
 
   private TypeSet resolveCommonAttributeReturnTypes(CommonAttribute ca) {
-    var valueType = ca.getValueType();
-    if (valueType.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new java.util.LinkedHashSet<TypeRef>();
-    for (var vt : valueType.getTypes()) {
-      var resolved = resolveValueType(vt);
-      if (resolved != null) {
-        refs.add(resolved);
-      }
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    return ValueTypes.resolve(typeRegistry, ca.getValueType());
   }
 
   /**
@@ -1107,27 +1094,6 @@ public class ConfigurationTypesProvider {
    * composite-типа из нескольких {@code v8:Type}).
    */
   private TypeSet resolveAttributeReturnTypes(Attribute attribute) {
-    var valueType = attribute.getValueType();
-    if (valueType.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new java.util.LinkedHashSet<TypeRef>();
-    for (var vt : valueType.getTypes()) {
-      var resolved = resolveValueType(vt);
-      if (resolved != null) {
-        refs.add(resolved);
-      }
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
-  }
-
-  @Nullable
-  private TypeRef resolveValueType(ValueType vt) {
-    if (vt instanceof PrimitiveValueType primitive) {
-      return typeRegistry.resolve(primitive.fullName().getRu()).orElse(null);
-    }
-    // V8 / METADATA / UNKNOWN — пока не поддерживаем точно; resolve по имени даст
-    // частичное покрытие для V8-типов, имена которых совпадают с регистрационными.
-    return typeRegistry.resolve(vt.fullName().getRu()).orElse(null);
+    return ValueTypes.resolve(typeRegistry, attribute.getValueType());
   }
 }
