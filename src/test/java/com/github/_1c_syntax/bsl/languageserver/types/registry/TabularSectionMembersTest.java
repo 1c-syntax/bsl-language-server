@@ -97,12 +97,29 @@ class TabularSectionMembersTest extends AbstractServerContextAwareTest {
       assertThat(method.returnTypes().refs()).extracting(TypeRef::qualifiedName)
         .as("%s возвращает строку этой табличной части", methodName)
         .contains(ROW);
-      assertThat(method.signatures())
-        .as("%s: тип уточнён и в сигнатуре — её показывает подсказка автодополнения", methodName)
-        .allSatisfy(signature -> assertThat(signature.returnTypes().refs())
-          .extracting(TypeRef::qualifiedName)
-          .contains(ROW));
     }
+  }
+
+  @Test
+  void rowTypeIsRefinedInSignatureReturnAndParameters() {
+    // Подсказка автодополнения показывает тип из сигнатуры, а не из члена, поэтому
+    // уточнение обязано доехать и туда. Параметры — тот же случай: `Индекс(Строка)`
+    // принимает строку именно этой табличной части.
+    var insert = member(SECTION, "Вставить");
+    assertThat(insert.signatures()).isNotEmpty();
+    assertThat(insert.signatures().get(0).returnTypes().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly(ROW);
+
+    var indexOf = member(SECTION, "Индекс");
+    assertThat(indexOf.signatures()).isNotEmpty();
+    assertThat(indexOf.signatures().get(0).parameters().get(0).types().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly(ROW);
+    assertThat(indexOf.returnTypes().refs())
+      .as("тип возврата у метода свой — его подменять нечем")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Число");
   }
 
   @Test
