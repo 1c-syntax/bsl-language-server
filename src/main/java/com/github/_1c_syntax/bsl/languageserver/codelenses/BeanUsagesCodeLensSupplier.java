@@ -112,7 +112,8 @@ public class BeanUsagesCodeLensSupplier
 
     var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();
-    var command = navigationCommandBuilder.referencesCommand(title, uri, position, locations);
+    var tooltip = resources.getResourceString(getClass(), "tooltip");
+    var command = navigationCommandBuilder.referencesCommand(title, tooltip, uri, position, locations);
     unresolved.setCommand(command);
     return unresolved;
   }

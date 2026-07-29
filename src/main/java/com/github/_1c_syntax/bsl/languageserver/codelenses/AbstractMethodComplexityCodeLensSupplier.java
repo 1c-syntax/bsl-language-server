@@ -50,6 +50,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   implements CodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
+  private static final String TOOLTIP_KEY = "tooltip";
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
   /**
@@ -84,6 +85,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
       );
 
       var command = commandSupplier.createCommand(title, arguments);
+      command.setTooltip(Resources.getResourceString(configuration.getLanguage(), getClass(), TOOLTIP_KEY));
 
       unresolved.setCommand(command);
     });

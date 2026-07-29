@@ -100,9 +100,25 @@ public class NavigationCommandBuilder {
    * @return Команда с идентификатором, выбранным под клиента.
    */
   public Command gotoCommand(String title, URI uri, Position position, List<Location> targets) {
+    return gotoCommand(title, null, uri, position, targets);
+  }
+
+  /**
+   * Команда перехода к целям с подсказкой (tooltip), показываемой при наведении на линзу.
+   *
+   * @param title    Заголовок линзы.
+   * @param tooltip  Подсказка при наведении (может быть {@code null}).
+   * @param uri      URI документа, из которого выполняется переход.
+   * @param position Позиция курсора, от которой выполняется переход.
+   * @param targets  Цели перехода (объявления производителей).
+   * @return Команда с идентификатором, выбранным под клиента.
+   */
+  public Command gotoCommand(String title, String tooltip, URI uri, Position position, List<Location> targets) {
     var multiple = targets.size() == 1 ? MULTIPLE_GOTO : MULTIPLE_PEEK;
     var commandId = isVsCodeLike() ? VS_CODE_GOTO_COMMAND : BUILTIN_GOTO_COMMAND;
-    return new Command(title, commandId, List.of(uri.toString(), position, targets, multiple));
+    var command = new Command(title, commandId, List.of(uri.toString(), position, targets, multiple));
+    command.setTooltip(tooltip);
+    return command;
   }
 
   /**
@@ -116,8 +132,24 @@ public class NavigationCommandBuilder {
    * @return Команда с идентификатором, выбранным под клиента.
    */
   public Command referencesCommand(String title, URI uri, Position position, List<Location> locations) {
+    return referencesCommand(title, null, uri, position, locations);
+  }
+
+  /**
+   * Команда показа списка использований в поповере с подсказкой (tooltip) при наведении на линзу.
+   *
+   * @param title     Заголовок линзы.
+   * @param tooltip   Подсказка при наведении (может быть {@code null}).
+   * @param uri       URI документа, из которого выполняется показ.
+   * @param position  Позиция курсора, от которой выполняется показ.
+   * @param locations Местоположения использований.
+   * @return Команда с идентификатором, выбранным под клиента.
+   */
+  public Command referencesCommand(String title, String tooltip, URI uri, Position position, List<Location> locations) {
     var commandId = isVsCodeLike() ? VS_CODE_REFERENCES_COMMAND : BUILTIN_REFERENCES_COMMAND;
-    return new Command(title, commandId, List.of(uri.toString(), position, locations));
+    var command = new Command(title, commandId, List.of(uri.toString(), position, locations));
+    command.setTooltip(tooltip);
+    return command;
   }
 
   /**

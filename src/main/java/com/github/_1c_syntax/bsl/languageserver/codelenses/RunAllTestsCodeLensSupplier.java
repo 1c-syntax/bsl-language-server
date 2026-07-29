@@ -108,6 +108,7 @@ public class RunAllTestsCodeLensSupplier
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runAllTests"));
+    command.setTooltip(resources.getResourceString(getClass(), "tooltip"));
     command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 

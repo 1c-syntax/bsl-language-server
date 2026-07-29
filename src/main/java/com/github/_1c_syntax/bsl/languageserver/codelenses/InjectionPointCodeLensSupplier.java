@@ -109,7 +109,8 @@ public class InjectionPointCodeLensSupplier
 
     var title = title(data, locations.size());
     var position = unresolved.getRange().getStart();
-    var command = navigationCommandBuilder.gotoCommand(title, documentContext.getUri(), position, locations);
+    var tooltip = resources.getResourceString(getClass(), "tooltip");
+    var command = navigationCommandBuilder.gotoCommand(title, tooltip, documentContext.getUri(), position, locations);
     unresolved.setCommand(command);
     return unresolved;
   }
