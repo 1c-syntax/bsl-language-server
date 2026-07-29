@@ -69,6 +69,14 @@ public class RunTestCodeLensSupplier
   @SuppressWarnings("NullAway.Init")
   private RunTestCodeLensSupplier self;
 
+  /**
+   * Конструктор поставщика линз запуска теста.
+   *
+   * @param configuration           Конфигурация language server.
+   * @param clientCapabilitiesHolder Хранилище клиентских возможностей.
+   * @param testRunnerAdapter       Адаптер внешнего раннера тестов.
+   * @param resources               Локализованные ресурсы сервера.
+   */
   public RunTestCodeLensSupplier(
     LanguageServerConfiguration configuration,
     ClientCapabilitiesHolder clientCapabilitiesHolder,
@@ -133,6 +141,13 @@ public class RunTestCodeLensSupplier
     return unresolved;
   }
 
+  /**
+   * Построить неразрешённую линзу запуска теста по символу тестового метода.
+   *
+   * @param method          Символ тестового метода.
+   * @param documentContext Контекст документа.
+   * @return Неразрешённая линза с данными для последующего резолва.
+   */
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
     var testId = method.getName();
     var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testId);

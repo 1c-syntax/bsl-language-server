@@ -61,6 +61,14 @@ public class RunAllTestsCodeLensSupplier
   @Getter
   private RunAllTestsCodeLensSupplier self;
 
+  /**
+   * Конструктор поставщика линзы запуска всех тестов документа.
+   *
+   * @param configuration           Конфигурация language server.
+   * @param clientCapabilitiesHolder Хранилище клиентских возможностей.
+   * @param testRunnerAdapter       Адаптер внешнего раннера тестов.
+   * @param resources               Локализованные ресурсы сервера.
+   */
   public RunAllTestsCodeLensSupplier(
     LanguageServerConfiguration configuration,
     ClientCapabilitiesHolder clientCapabilitiesHolder,
@@ -125,6 +133,13 @@ public class RunAllTestsCodeLensSupplier
     return DefaultCodeLensData.class;
   }
 
+  /**
+   * Построить неразрешённую линзу запуска всех тестов на первом методе документа.
+   *
+   * @param method          Символ первого метода документа (место отрисовки линзы).
+   * @param documentContext Контекст документа.
+   * @return Неразрешённая линза с данными для последующего резолва.
+   */
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
 
     var codeLensData = new DefaultCodeLensData(documentContext.getUri(), getId());
