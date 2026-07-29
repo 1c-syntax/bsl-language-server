@@ -144,6 +144,47 @@ class NavigationCommandBuilderTest {
   }
 
   @Test
+  void gotoCommandSetsTooltipWhenProvided() {
+    // given
+    var builder = builderForVsCodeLikeClient();
+    var targets = List.of(new Location(URI_VALUE.toString(), new Range(POSITION, POSITION)));
+
+    // when
+    var command = builder.gotoCommand("title", "tooltip text", URI_VALUE, POSITION, targets);
+
+    // then
+    assertThat(command.getTooltip()).isEqualTo("tooltip text");
+  }
+
+  @Test
+  void referencesCommandSetsTooltipWhenProvided() {
+    // given
+    var builder = builderForVsCodeLikeClient();
+    var locations = List.of(new Location(URI_VALUE.toString(), new Range(POSITION, POSITION)));
+
+    // when
+    var command = builder.referencesCommand("title", "tooltip text", URI_VALUE, POSITION, locations);
+
+    // then
+    assertThat(command.getTooltip()).isEqualTo("tooltip text");
+  }
+
+  @Test
+  void commandsWithoutTooltipHaveNullTooltip() {
+    // given
+    var builder = builderForVsCodeLikeClient();
+    var targets = List.of(new Location(URI_VALUE.toString(), new Range(POSITION, POSITION)));
+
+    // when
+    var gotoCommand = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    var referencesCommand = builder.referencesCommand("title", URI_VALUE, POSITION, targets);
+
+    // then
+    assertThat(gotoCommand.getTooltip()).isNull();
+    assertThat(referencesCommand.getTooltip()).isNull();
+  }
+
+  @Test
   void clientTypeIsResolvedOnceOnInitializeEvent() {
     // given
     var builder = builderForVsCodeLikeClient();
