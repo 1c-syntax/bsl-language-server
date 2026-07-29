@@ -736,7 +736,7 @@ public class ExpressionTypeInferencer {
 
   /**
    * Собрать union localFields по всем ref'ам набора. Источник —
-   * {@link #accumulateStructureInsertFields} (Структура/Соответствие)
+   * {@link #applyMutation} (Структура/Соответствие)
    * и {@link #applyStructureConstructorKeys} (Структура с key-list-конструктором).
    */
   private static Map<String, TypeSet> collectKeyValueFields(TypeSet leftTypes) {
@@ -971,43 +971,35 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Тело инференса переменной без кэш-обвязки. По мере объединения присваиваний
-   * публикует растущий {@code acc} в {@link InferenceContext#inProgress}, чтобы
-   * self-reference (например, {@code Строка = Строка + "..."}) резолвился в уже
-   * известный тип из предыдущих присваиваний, а не в {@link TypeSet#EMPTY}.
+   * Тело инференса переменной без кэш-обвязки: известное на входе в тело, объединённое со
+   * всеми присваиваниями и всеми изменениями на месте.
+   * <p>
+   * Слагаемые те же, что у расчёта по потоку управления, и считаются теми же методами —
+   * {@link #flowEntryFact}, {@link #definitionPositions}, {@link #applyMutation}. Разница
+   * в том, что здесь они объединяются без учёта порядка и достижимости, а значит ответ
+   * один на всю область видимости. Это отступной путь для случаев, где расчёт по потоку
+   * неприменим (см. {@link #flowTypeAt}).
+   * <p>
+   * По мере объединения присваиваний растущий тип публикуется в
+   * {@link InferenceContext#inProgress}: так ссылка переменной на саму себя
+   * ({@code Строка = Строка + "…"}) резолвится в тип из предыдущих присваиваний,
+   * а не в {@link TypeSet#EMPTY}.
+   *
+   * @param variable переменная.
+   * @param ctx      контекст текущего инференса.
+   * @return тип переменной по всей области видимости.
    */
   private TypeSet inferVariableInternal(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
-    TypeSet acc = TypeSet.EMPTY;
-    Set<Position> visitedPositions = new HashSet<>();
-
-    if (variable.getKind() == VariableKind.PARAMETER) {
-      acc = acc.union(declaredParameterTypes(variable));
-    }
-
-    acc = acc.union(typesFromVariableTrailingComment(variable));
+    var acc = flowEntryFact(variable);
     ctx.inProgress.put(variable, acc);
 
-    var declarationStart = variable.getSelectionRange().getStart();
-    if (visitedPositions.add(declarationStart)) {
-      acc = acc.union(inferFromDefinitionPosition(owner, declarationStart, ctx));
+    for (var position : definitionPositions(variable)) {
+      acc = acc.union(inferFromDefinitionPosition(owner, position, ctx));
       ctx.inProgress.put(variable, acc);
     }
-    for (var occurrence : referenceIndex.getReferencesTo(variable)) {
-      if (occurrence.occurrenceType() != OccurrenceType.DEFINITION) {
-        continue;
-      }
-      var start = occurrence.selectionRange().getStart();
-      if (visitedPositions.add(start)) {
-        acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
-        ctx.inProgress.put(variable, acc);
-      }
-    }
-    acc = acc.union(autumnInjectedType(variable));
-    acc = acc.union(extendsParentFieldType(variable));
     acc = attachDefaultElementTypes(acc);
-    acc = accumulateStructureInsertFields(variable, acc, ctx);
-    acc = accumulateValueTableColumnFields(variable, acc, ctx);
+    acc = accumulateMutations(variable, acc, ctx);
     return acc;
   }
 
@@ -1154,6 +1146,16 @@ public class ExpressionTypeInferencer {
   /**
    * Применить к типу переменной одно изменение на месте: добавленное поле структуры
    * либо добавленную колонку таблицы значений.
+   * <p>
+   * Поля структуры и соответствия ({@code X.Вставить("Имя", Значение)}) кладутся прямо на
+   * тип-получатель: значение, присвоенное ключу, задаёт тип поля. Работает для Структуры,
+   * ФиксированнойСтруктуры, Соответствия и ФиксированногоСоответствия — у всех
+   * {@code .Вставить(…)} даёт пару «строковый ключ → значение».
+   * <p>
+   * Колонки таблицы значений ({@code X.Колонки.Добавить("Имя", Тип)}) кладутся не на саму
+   * таблицу, а на тип её строки ({@code СтрокаТаблицыЗначений}), привязанный к таблице
+   * через {@link TypeSet#withElement}. Поэтому после {@code Для Каждого Строка Из ТЗ}
+   * или {@code ТЗ[0]} обращение {@code Строка.Имя} видно как поле известного типа.
    *
    * @param variable переменная.
    * @param call     оператор-мутатор; {@code null}, если по позиции ничего не нашлось.
@@ -1303,46 +1305,25 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Накопить поля «открытой» структуры/соответствия по mutation-вызовам
-   * {@code X.Вставить("Имя", значение)} / {@code X.Insert(...)} в области видимости
-   * переменной. Соответствует EDT-стандарту code typification: значения,
-   * присваиваемые ключам, сужают тип объекта. Работает для Структуры,
-   * ФиксированнойСтруктуры, Соответствия и ФиксированногоСоответствия —
-   * у всех у них {@code .Вставить(...)} даёт строковый ключ → значение.
+   * Накопить изменения на месте по всей области видимости переменной: добавленные поля
+   * структуры или соответствия ({@code X.Вставить("Имя", Значение)}) и добавленные
+   * колонки таблицы значений ({@code X.Колонки.Добавить("Имя", Тип)}).
+   * <p>
+   * Вклад каждого оператора считает {@link #applyMutation} — тот же, что применяется при
+   * расчёте по потоку управления. Разница только в том, что здесь операторы применяются
+   * все подряд, без учёта места использования: поле видно по всей области видимости, а не
+   * с места своей вставки. Такой ответ нужен там, где расчёт по потоку неприменим —
+   * переменная модуля, обращение из другого документа, повторный вход по той же переменной.
+   *
+   * @param variable переменная.
+   * @param base     тип, накопленный по присваиваниям.
+   * @param ctx      контекст текущего инференса.
+   * @return тип с полями и колонками; исходный, если изменений на месте нет.
    */
-  private TypeSet accumulateStructureInsertFields(
-    VariableSymbol variable,
-    TypeSet base,
-    InferenceContext ctx
-  ) {
-    if (base.refs().isEmpty()) {
-      return base;
-    }
-    TypeRef headRef = null;
-    for (var ref : base.refs()) {
-      if (isStructureOrMapLike(ref.qualifiedName())) {
-        headRef = ref;
-        break;
-      }
-    }
-    if (headRef == null) {
-      return base;
-    }
-    var owner = variable.getOwner();
-    var ast = safeGetOwnerAst(owner);
-    if (ast == null) {
-      return base;
-    }
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
-    var variableName = variable.getName();
-
+  private TypeSet accumulateMutations(VariableSymbol variable, TypeSet base, InferenceContext ctx) {
     var result = base;
-    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variableName)) {
-      var field = insertedStructureField(call, variableName, scopeRange, ctx);
-      if (field != null && !field.types().isEmpty()) {
-        result = result.withField(headRef, field.name(), field.types());
-      }
+    for (var call : mutationCalls(variable).values()) {
+      result = applyMutation(variable, call, result, ctx);
     }
     return result;
   }
@@ -1383,60 +1364,6 @@ public class ExpressionTypeInferencer {
       valueTypes = TypeSet.of(UNDEFINED);
     }
     return new KeyedTypes(keyName.trim(), valueTypes);
-  }
-
-  /**
-   * Накопить «колонки» открытой {@code ТаблицаЗначений} по mutation-вызовам
-   * {@code X.Колонки.Добавить("Имя", Тип)} / {@code X.Columns.Add(...)}
-   * в области видимости переменной. Колонки моделируются как
-   * {@code localFields} на типе строки ({@code СтрокаТаблицыЗначений}),
-   * который привязывается к ТЗ через {@link TypeSet#withElement} — поэтому
-   * после {@code Для Каждого Строка Из ТЗ} или {@code ТЗ[0]} hover и
-   * автокомплит будут видеть {@code Строка.Имя} как поле известного типа.
-   */
-  private TypeSet accumulateValueTableColumnFields(
-    VariableSymbol variable,
-    TypeSet base,
-    InferenceContext ctx
-  ) {
-    if (base.refs().isEmpty()) {
-      return base;
-    }
-    TypeRef headRef = null;
-    for (var ref : base.refs()) {
-      if (isValueTableLike(ref.qualifiedName())) {
-        headRef = ref;
-        break;
-      }
-    }
-    if (headRef == null) {
-      return base;
-    }
-    var owner = variable.getOwner();
-    var ast = safeGetOwnerAst(owner);
-    if (ast == null) {
-      return base;
-    }
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
-    var variableName = variable.getName();
-
-    var rowRef = typeRegistry.resolve(TableCollectionInference.VALUE_TABLE_ROW, owner.getFileType())
-      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, TableCollectionInference.VALUE_TABLE_ROW));
-    TypeSet rowSet = TypeSet.of(rowRef);
-    boolean hasColumns = false;
-
-    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variableName)) {
-      var column = addedColumn(call, variableName, scopeRange, ctx);
-      if (column != null) {
-        rowSet = rowSet.withField(rowRef, column.name(), column.types());
-        hasColumns = true;
-      }
-    }
-    if (!hasColumns) {
-      return base;
-    }
-    return base.withElement(headRef, rowSet);
   }
 
   /**
@@ -1819,9 +1746,41 @@ public class ExpressionTypeInferencer {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
       return TypeSet.of(NUMBER);
     }
+    if (statement instanceof BSLParser.ForEachStatementContext forEach) {
+      // Связывание «Для Каждого Х Из Коллекция»: тип Х — тип элемента коллекции.
+      // Выражение коллекции лежит в самом заголовке, поэтому искать его по позиции
+      // спуском по дереву не нужно.
+      return elementTypesOfCollection(forEach.expression(), ctx);
+    }
     return inferFromDefinitionPosition(owner, position, ctx);
   }
 
+  /**
+   * Типы элементов коллекции, по которой идёт обход.
+   *
+   * @param collection выражение коллекции; {@code null}, если его в заголовке нет.
+   * @param ctx        контекст текущего инференса.
+   * @return типы элементов; пустой набор, если коллекция не выводится.
+   */
+  private TypeSet elementTypesOfCollection(BSLParser.@Nullable ExpressionContext collection, InferenceContext ctx) {
+    if (collection == null) {
+      return TypeSet.EMPTY;
+    }
+    var collectionExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(collection);
+    return collectionExpr == null ? TypeSet.EMPTY : inferInternal(collectionExpr, ctx).getElementTypes();
+  }
+
+  /**
+   * Тип, присваиваемый переменной в указанной позиции, когда оператор вызывающему неизвестен.
+   * <p>
+   * Оператор ищется спуском по дереву разбора от корня файла — этим путь и отличается от
+   * {@link #inferFromDefinition}, которому оператор известен заранее.
+   *
+   * @param owner    документ с присваиванием.
+   * @param position позиция присваивания либо связывания в цикле обхода.
+   * @param ctx      контекст текущего инференса.
+   * @return присваиваемые типы; пустой набор, если вывести их не удалось.
+   */
   private TypeSet inferFromDefinitionPosition(
     DocumentContext owner,
     Position position,
@@ -1840,12 +1799,8 @@ public class ExpressionTypeInferencer {
     // тип X — это объединение typeSets, объявленных как elementTypes
     // коллекции.
     var forEach = ExpressionAtPosition.findForEachBindingAt(owner, position);
-    if (forEach.isPresent() && forEach.get().expression() != null) {
-      var collectionExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(forEach.get().expression());
-      if (collectionExpr != null) {
-        var collectionTypes = inferInternal(collectionExpr, ctx);
-        result = result.union(collectionTypes.getElementTypes());
-      }
+    if (forEach.isPresent()) {
+      result = result.union(elementTypesOfCollection(forEach.get().expression(), ctx));
     }
     return result;
   }
