@@ -336,6 +336,33 @@ public record TypeSet(
   }
 
   /**
+   * Прикрепить к указанному {@code ref} сразу несколько полей «открытого» объекта данных.
+   * <p>
+   * Набор неизменяемый, поэтому каждое добавление копирует уже накопленные поля: набирать
+   * их по одному — квадратично по их числу. Там, где поля известны разом (колонки таблицы,
+   * ключи из doc-комментария), нужен этот метод, а не {@link #withField} в цикле.
+   *
+   * @param ref    тип-владелец полей (добавляется в набор, если отсутствует).
+   * @param fields добавляемые поля по именам; пустая карта ничего не меняет.
+   * @return новый {@link TypeSet} с дополненным {@code localFields[ref]}.
+   */
+  public TypeSet withFields(TypeRef ref, Map<String, LocalField> fields) {
+    if (fields.isEmpty()) {
+      return this;
+    }
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    // Чужие бакеты кладутся по ссылке: неизменяемую копию всего один раз сделает
+    // конструктор. Копируется только тот бакет, который меняем.
+    var merged = new LinkedHashMap<TypeRef, Map<String, LocalField>>(this.localFields);
+    var bucket = new LinkedHashMap<>(this.localFields.getOrDefault(ref, Map.of()));
+    for (var entry : fields.entrySet()) {
+      bucket.merge(entry.getKey(), entry.getValue(), LocalField::merge);
+    }
+    merged.put(ref, bucket);
+    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields);
+  }
+
+  /**
    * Прикрепить к {@code ref} <b>ленивое</b> поле «открытого» объекта — поле,
    * тип которого задан {@code см.}-ссылкой на локальную функцию
    * (см. {@link LazyTypeSet}), с текстовым описанием из doc-комментария.

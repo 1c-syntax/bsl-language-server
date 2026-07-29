@@ -854,12 +854,7 @@ public class ExpressionTypeInferencer {
     if (!elementSet.refs().contains(ret)) {
       return TypeSet.of(ret);
     }
-    var enriched = TypeSet.of(ret);
-    for (var entry : elementSet.getLocalFields(ret).entrySet()) {
-      var field = entry.getValue();
-      enriched = enriched.withField(ret, entry.getKey(), field.types(), field.description());
-    }
-    return enriched;
+    return TypeSet.of(ret).withFields(ret, elementSet.getLocalFields(ret));
   }
 
   /**
@@ -880,11 +875,7 @@ public class ExpressionTypeInferencer {
     if (!elements.isEmpty()) {
       result = result.withElement(ref, elements);
     }
-    for (var entry : declared.getLocalFields(ref).entrySet()) {
-      var field = entry.getValue();
-      result = result.withField(ref, entry.getKey(), field.types(), field.description());
-    }
-    return result;
+    return result.withFields(ref, declared.getLocalFields(ref));
   }
 
   @Nullable

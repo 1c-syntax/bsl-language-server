@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -217,10 +218,11 @@ class TableCollectionInference {
     if (columns.isEmpty() || tableRef == null || rowRef == null) {
       return null;
     }
-    var row = TypeSet.of(rowRef);
+    var fields = new LinkedHashMap<String, LocalField>();
     for (var column : columns.entrySet()) {
-      row = row.withField(rowRef, column.getKey(), column.getValue());
+      fields.put(column.getKey(), new LocalField(column.getValue(), ""));
     }
+    var row = TypeSet.of(rowRef).withFields(rowRef, fields);
     return TypeSet.of(tableRef).withElement(tableRef, row);
   }
 
