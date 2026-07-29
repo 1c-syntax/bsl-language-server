@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -47,7 +48,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class DeclaredParameterTypes {
+public class DeclaredParameterTypeResolver implements VariableTypeSource {
 
   private final SymbolTypeIndex symbolTypeIndex;
   private final EventContractsIndex eventContractsIndex;
@@ -58,8 +59,10 @@ public class DeclaredParameterTypes {
    * @param variable переменная.
    * @return объявленные типы; пустой набор, если переменная не параметр либо тип не объявлен.
    */
-  public TypeSet of(VariableSymbol variable) {
-    if (!(variable.getScope() instanceof MethodSymbol method)) {
+  @Override
+  public TypeSet typesOf(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.PARAMETER
+      || !(variable.getScope() instanceof MethodSymbol method)) {
       return TypeSet.EMPTY;
     }
     var name = variable.getName();

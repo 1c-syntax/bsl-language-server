@@ -51,11 +51,24 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class OScriptFrameworkTypes {
+public class OScriptFrameworkTypeResolver implements VariableTypeSource {
 
   private final TypeRegistry typeRegistry;
   private final AutumnComponentInferencer autumnComponentInferencer;
   private final OScriptExtends oScriptExtends;
+
+  /**
+   * Типы, которые переменной задают фреймворки: внедрение «ОСени» и держатель родителя
+   * библиотеки extends. Один и тот же символ обоими сразу быть не может, поэтому
+   * объединение здесь — просто «что сработало, то и вернули».
+   *
+   * @param variable переменная.
+   * @return типы от фреймворков; пустой набор, если ни один не сработал.
+   */
+  @Override
+  public TypeSet typesOf(VariableSymbol variable) {
+    return injectedType(variable).union(parentHolderType(variable));
+  }
 
   /**
    * Тип зависимости, внедряемой фреймворком «ОСень» по аннотации {@code &Пластилин}.

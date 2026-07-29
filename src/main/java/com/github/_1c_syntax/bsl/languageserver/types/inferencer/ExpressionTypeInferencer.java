@@ -109,14 +109,19 @@ public class ExpressionTypeInferencer {
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
-  private final DeclaredParameterTypes declaredParameterTypes;
-  private final CommentDeclaredTypes commentDeclaredTypes;
+  private final VariableCommentTypeResolver variableCommentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final OScriptFrameworkTypes oScriptFrameworkTypes;
+  private final OScriptFrameworkTypeResolver oScriptFrameworkTypeResolver;
+
+  /**
+   * Источники типа, объявленного о переменной помимо кода её тела. Внедряются списком:
+   * новый вид объявления — новый бин, а не правка этого класса.
+   */
+  private final List<VariableTypeSource> variableTypeSources;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -289,7 +294,7 @@ public class ExpressionTypeInferencer {
     if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
-    var implicitParent = oScriptFrameworkTypes.implicitParentFieldType(text, ctx.documentContext);
+    var implicitParent = oScriptFrameworkTypeResolver.implicitParentFieldType(text, ctx.documentContext);
     if (!implicitParent.isEmpty()) {
       return implicitParent;
     }
@@ -1084,13 +1089,10 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet flowEntryFact(VariableSymbol variable) {
     var entry = TypeSet.EMPTY;
-    if (variable.getKind() == VariableKind.PARAMETER) {
-      entry = entry.union(declaredParameterTypes(variable));
+    for (var source : variableTypeSources) {
+      entry = entry.union(source.typesOf(variable));
     }
-    return entry
-      .union(commentDeclaredTypes.ofDeclaration(variable))
-      .union(oScriptFrameworkTypes.injectedType(variable))
-      .union(oScriptFrameworkTypes.parentHolderType(variable));
+    return entry;
   }
 
   /**
@@ -1137,17 +1139,6 @@ public class ExpressionTypeInferencer {
 
 
   /**
-   * Тип переменной, объявленный вне тела метода, — если она параметр.
-   *
-   * @param variable переменная.
-   * @return объявленные типы; пустой набор, если переменная не параметр либо тип
-   *     не объявлен.
-   */
-  private TypeSet declaredParameterTypes(VariableSymbol variable) {
-    return declaredParameterTypes.of(variable);
-  }
-
-  /**
    * Тип, присваиваемый переменной, когда оператор присваивания уже известен вызывающему.
    * <p>
    * Поиск присваивания по позиции — рекурсивный спуск по дереву разбора от корня файла,
@@ -1170,7 +1161,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(commentDeclaredTypes.ofAssignment(owner, assignment));
+      return types.union(variableCommentTypeResolver.ofAssignment(owner, assignment));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1222,7 +1213,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(commentDeclaredTypes.ofAssignment(owner, assignment.get()));
+      result = result.union(variableCommentTypeResolver.ofAssignment(owner, assignment.get()));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:

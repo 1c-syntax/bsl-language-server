@@ -56,7 +56,7 @@ import java.util.Set;
  */
 @Component
 @RequiredArgsConstructor
-public class CommentDeclaredTypes {
+public class VariableCommentTypeResolver implements VariableTypeSource {
 
   private final TypeRegistry typeRegistry;
 
@@ -67,7 +67,8 @@ public class CommentDeclaredTypes {
    * @return объявленные типы; пустой набор, если комментария нет либо типы в нём
    *     не распознаны.
    */
-  public TypeSet ofDeclaration(VariableSymbol variable) {
+  @Override
+  public TypeSet typesOf(VariableSymbol variable) {
     var description = variable.getDescription().orElse(null);
     if (description == null) {
       return TypeSet.EMPTY;
