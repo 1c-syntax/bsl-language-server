@@ -67,11 +67,17 @@ public class BeanUsagesCodeLensSupplier
   private final AutumnNavigation autumnNavigation;
   private final NavigationCommandBuilder navigationCommandBuilder;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     return documentContext.getFileType() == FileType.OS;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
     var symbolTree = documentContext.getSymbolTree();
@@ -101,6 +107,9 @@ public class BeanUsagesCodeLensSupplier
     return codeLenses;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, BeanUsagesCodeLensData data) {
     var uri = documentContext.getUri();
@@ -118,6 +127,9 @@ public class BeanUsagesCodeLensSupplier
     return unresolved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<BeanUsagesCodeLensData> getCodeLensDataClass() {
     return BeanUsagesCodeLensData.class;

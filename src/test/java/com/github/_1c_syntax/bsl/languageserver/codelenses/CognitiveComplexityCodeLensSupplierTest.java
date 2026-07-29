@@ -86,6 +86,7 @@ class CognitiveComplexityCodeLensSupplierTest {
       .anySatisfy(codeLens -> {
         assertThat(codeLens.getRange()).isEqualTo(secondMethod.getSubNameRange());
         assertThat(codeLens.getCommand().getTitle()).contains(String.valueOf(complexitySecondMethod));
+        assertThat(codeLens.getCommand().getTooltip()).isNotBlank();
         assertThat(codeLens.getCommand().getCommand()).isEqualTo("toggleCognitiveComplexityInlayHints");
         assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().getFirst()).getMethodName()).isEqualTo(secondMethod.getName());
       });
