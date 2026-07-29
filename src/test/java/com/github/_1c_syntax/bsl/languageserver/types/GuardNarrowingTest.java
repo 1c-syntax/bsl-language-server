@@ -120,6 +120,26 @@ class GuardNarrowingTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void negatedUndefinedCheckNarrows() {
+    // given: «Не Х = Неопределено» — то же, что «Х <> Неопределено».
+    // when
+    var types = at("ВнутриОтрицания = Значение", "ВнутриОтрицания = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void negatedTypeCheckRemovesCheckedType() {
+    // given: «Не ТипЗнч(Х) = Тип("Строка")» — то же, что «ТипЗнч(Х) <> Тип("Строка")».
+    // when
+    var types = at("ВнутриОтрицанияТипа = Значение", "ВнутриОтрицанияТипа = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Число");
+  }
+
+  @Test
   void conjunctionOfChecksNarrows() {
     // given / when
     var types = at("ВнутриКонъюнкции = Значение", "ВнутриКонъюнкции = ".length());

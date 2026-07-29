@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -94,6 +95,11 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
    * @param equality было ли сравнение на равенство: {@code <>} переворачивает смысл.
    */
   private record Assertion(SourceDefinedSymbol variable, @Nullable TypeRef type, boolean equality) {
+
+    /** То же утверждение с обратным знаком — для проверки под отрицанием. */
+    private Assertion negated() {
+      return new Assertion(variable, type, !equality);
+    }
 
     /** Применить утверждение к типу на указанной ветке. */
     private TypeSet apply(boolean whenTrue, TypeSet incoming) {
@@ -191,39 +197,61 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
     if (tree == null) {
       return CompiledGuard.NONE;
     }
-    var checks = new ArrayList<BslExpression>();
-    if (!collectConjuncts(tree, checks)) {
+    var checks = new ArrayList<Conjunct>();
+    if (!collectConjuncts(tree, false, checks)) {
       return CompiledGuard.NONE;
     }
     var assertions = new ArrayList<Assertion>();
-    for (var check : checks) {
-      var assertion = assertionOf(check, documentContext);
+    for (var conjunct : checks) {
+      var assertion = assertionOf(conjunct.check(), documentContext);
       if (assertion != null) {
-        assertions.add(assertion);
+        assertions.add(conjunct.negated() ? assertion.negated() : assertion);
       }
     }
     return assertions.isEmpty() ? CompiledGuard.NONE : new CompiledGuard(checks.size(), List.copyOf(assertions));
   }
 
   /**
-   * Разложить условие на проверки, соединённые {@code И}.
+   * Разложить условие на проверки, соединённые {@code И}, с учётом отрицаний.
+   * <p>
+   * Отрицание не отбрасывается, а переворачивает смысл проверки: {@code Не Х = Неопределено}
+   * — то же, что {@code Х <> Неопределено}. По законам де Моргана отрицание над {@code ИЛИ}
+   * даёт конъюнкцию отрицаний, поэтому под {@code Не} разбирается уже дизъюнкция, а не
+   * конъюнкция; двойное отрицание возвращает исходный смысл.
    *
-   * @param node   узел условия.
-   * @param target список, куда складываются проверки.
+   * @param node     узел условия.
+   * @param negated  находится ли узел под нечётным числом отрицаний.
+   * @param target   список, куда складываются проверки вместе с их знаком.
    * @return {@code false}, если встретилась дизъюнкция — тогда сужать нельзя.
    */
-  private static boolean collectConjuncts(BslExpression node, List<BslExpression> target) {
+  private static boolean collectConjuncts(BslExpression node, boolean negated, List<Conjunct> target) {
+    if (node instanceof UnaryOperationNode unary && unary.getOperator() == BslOperator.NOT) {
+      return collectConjuncts(unary.getOperand(), !negated, target);
+    }
     if (node instanceof BinaryOperationNode binary) {
-      if (binary.getOperator() == BslOperator.OR) {
+      var operator = binary.getOperator();
+      // Под отрицанием конъюнкция и дизъюнкция меняются местами.
+      var conjunction = negated ? BslOperator.OR : BslOperator.AND;
+      var disjunction = negated ? BslOperator.AND : BslOperator.OR;
+      if (operator == disjunction) {
         return false;
       }
-      if (binary.getOperator() == BslOperator.AND) {
-        return collectConjuncts(binary.getLeft(), target)
-          && collectConjuncts(binary.getRight(), target);
+      if (operator == conjunction) {
+        return collectConjuncts(binary.getLeft(), negated, target)
+          && collectConjuncts(binary.getRight(), negated, target);
       }
     }
-    target.add(node);
+    target.add(new Conjunct(node, negated));
     return true;
+  }
+
+  /**
+   * Одна проверка условия вместе со знаком, с которым она в него входит.
+   *
+   * @param check   узел проверки.
+   * @param negated стоит ли проверка под отрицанием.
+   */
+  private record Conjunct(BslExpression check, boolean negated) {
   }
 
   /** Утверждение, снятое с одной проверки; {@code null}, если проверка ни о чём не говорит. */
