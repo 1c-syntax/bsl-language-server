@@ -31,6 +31,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -70,6 +71,12 @@ final class FlowLayout {
         return false;
       }
       return line != endLine || position.getCharacter() <= endChar;
+    }
+
+    /** Начинается ли оператор не позже позиции. */
+    boolean startsNotAfter(Position position) {
+      return startLine < position.getLine()
+        || startLine == position.getLine() && startChar <= position.getCharacter();
     }
   }
 
@@ -122,6 +129,10 @@ final class FlowLayout {
         byStatement.put(statement, slot);
       }
     }
+    // Операторы графа занимают непересекающиеся участки текста (составные операторы в
+    // вершины не кладутся — только листовые), поэтому отсортированный список даёт
+    // двоичный поиск по позиции вместо перебора всего тела.
+    slots.sort(Comparator.comparingInt(Slot::startLine).thenComparingInt(Slot::startChar));
     var bodyStart = body.getStart();
     var bodyStop = body.getStop() == null ? bodyStart : body.getStop();
     return new FlowLayout(
@@ -183,15 +194,31 @@ final class FlowLayout {
     return byStatement.containsKey(statement);
   }
 
-  /** Оператор, накрывающий позицию; {@code null}, если такого нет. */
+  /**
+   * Оператор, накрывающий позицию; {@code null}, если такого нет.
+   * <p>
+   * Двоичный поиск по отсортированным операторам: запрос типа приходит на каждое
+   * обращение к члену, и перебор всего тела делал стоимость квадратичной по его длине.
+   */
   @Nullable
   ParserRuleContext statementAt(Position position) {
-    for (var slot : slots) {
-      if (slot.covers(position)) {
-        return slot.statement();
+    var low = 0;
+    var high = slots.size() - 1;
+    var candidate = -1;
+    while (low <= high) {
+      var middle = (low + high) >>> 1;
+      if (slots.get(middle).startsNotAfter(position)) {
+        candidate = middle;
+        low = middle + 1;
+      } else {
+        high = middle - 1;
       }
     }
-    return null;
+    if (candidate < 0) {
+      return null;
+    }
+    var slot = slots.get(candidate);
+    return slot.covers(position) ? slot.statement() : null;
   }
 
   /** Накрывает ли позицию хоть один оператор графа. */
