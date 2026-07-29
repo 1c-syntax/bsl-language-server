@@ -1126,6 +1126,7 @@ public class ExpressionTypeInferencer {
     Function<VariableSymbol, Map<Position, BSLParser.CallStatementContext>> callsOf = target ->
       callsByVariable.computeIfAbsent(target, key -> new Lazy<>(() -> mutationCalls(key))).getOrCompute();
     return new VariableFlowAnalyzer.FlowInputs(
+      ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
       // (внутри инференса другой переменной) мог быть усечён защитой от циклов,
       // и переиспользовать такой результат как самостоятельный нельзя.
@@ -1938,6 +1939,13 @@ public class ExpressionTypeInferencer {
      * с его собственной защитой от циклов.
      */
     final Set<SourceDefinedSymbol> flowInProgress = new HashSet<>();
+    /**
+     * Расчёты по потоку, идущие прямо сейчас в рамках этого вывода. Вывод типа
+     * присваивания просит типы переменных из правой части, и если они из того же тела,
+     * запрос приходит посреди его же расчёта — тогда он читает строящееся окружение,
+     * а не запускает расчёт тела заново.
+     */
+    final VariableFlowAnalyzer.FlowSession flowSession = new VariableFlowAnalyzer.FlowSession();
     int depth;
 
     InferenceContext(DocumentContext documentContext) {

@@ -195,6 +195,17 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void typeFlowsThroughAnotherVariable() {
+    // given: тип «Вторая» получается из «Первой», которую перед этим переприсвоили.
+    // Расчёт по потоку спрашивает тип «Первой» посреди расчёта того же тела.
+    // when
+    var types = at("ПослеЦепочки = Вторая", "ПослеЦепочки = ".length());
+
+    // then: не объединение по области видимости, где было бы ещё и Число.
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
   void selfAssignmentReadsPreviousType() {
     // given / when
     var types = at("Накопитель = Накопитель + \"хвост\"", "Накопитель = ".length());

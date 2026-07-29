@@ -100,6 +100,22 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private final Map<URI, Map<BSLParser.CodeBlockContext, Facts>> factsByUri = new ConcurrentHashMap<>();
 
   /**
+   * Расчёты по телам, идущие прямо сейчас в рамках одного вывода типов.
+   * <p>
+   * Вывод типа присваивания просит типы переменных из правой части, и если они из того же
+   * тела, запрос приходит посреди его же расчёта. Без этой памятки он не нашёл бы готового
+   * ответа в кэше и запустил бы расчёт тела заново — тем глубже, чем длиннее цепочка
+   * зависимостей между переменными. Вместо этого он читает строящееся окружение.
+   * <p>
+   * Заводится вызывающим на один вывод типов и передаётся в {@link FlowInputs}. Владелец
+   * явный, время жизни — вызов вывода; общего изменяемого состояния между потоками нет.
+   */
+  public static final class FlowSession {
+
+    private final Map<BSLParser.CodeBlockContext, Pass> active = new IdentityHashMap<>();
+  }
+
+  /**
    * Тип каждой переменной тела в одной его точке.
    * <p>
    * Неизменяемо, поэтому соседние точки, между которыми ничего не поменялось, ссылаются на
@@ -252,6 +268,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   /**
    * Исходные данные расчёта по телу.
    *
+   * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
    * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
    *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
    * @param variables           переменные тела, за типами которых следит расчёт.
@@ -269,6 +286,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    *     кэше ничего этого не нужно, а тип спрашивают на каждое обращение к переменной.
    */
   public record FlowInputs(
+    FlowSession session,
     boolean cacheable,
     Supplier<Collection<VariableSymbol>> variables,
     Function<VariableSymbol, TypeSet> entryFact,
@@ -388,6 +406,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (layout.vertexOf(useStatement) == null) {
       return null;
     }
+    // Запрос пришёл посреди расчёта этого же тела — из вывода типа чьего-то присваивания.
+    // Отвечаем тем, что насчитано к этому моменту: перезапуск расчёта дал бы тот же ответ,
+    // только пройдя тело ещё раз.
+    var active = inputs.session().active.get(body);
+    if (active != null) {
+      return active.estimateAt(useStatement, variable);
+    }
     var facts = factsOf(documentContext, body, layout, inputs);
     if (!facts.applicable().contains(variable)) {
       return null;
@@ -465,7 +490,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
     var pass = new Pass(graph, layout, inputs, applicable, changesByStatement);
-    return new Facts(applicable, pass.computeStatementFacts(), changesByStatement);
+    var active = inputs.session().active;
+    active.put(body, pass);
+    try {
+      return new Facts(applicable, pass.computeStatementFacts(), changesByStatement);
+    } finally {
+      active.remove(body);
+    }
   }
 
   /** Разложить позиции изменений по операторам, в которых они стоят. */
@@ -510,6 +541,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     private final Map<Position, TypeSet> assignedTypes = new HashMap<>();
 
+    /**
+     * Окружение перед каждым оператором. Заполняется по ходу расчёта, а не только в конце:
+     * пока идут проходы, отсюда отвечают вложенные запросы про переменные этого же тела.
+     */
+    private final Map<ParserRuleContext, Environment> beforeStatement = new IdentityHashMap<>();
+
     private Pass(
       ControlFlowGraph graph,
       FlowLayout layout,
@@ -532,15 +569,28 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     private Map<ParserRuleContext, Environment> computeStatementFacts() {
       var byVertex = computeEntryFacts();
-      Map<ParserRuleContext, Environment> beforeStatement = new IdentityHashMap<>();
       for (var vertex : layout.orderedVertices()) {
-        var current = byVertex.getOrDefault(vertex, Environment.EMPTY);
-        for (var statement : layout.statementsOf(vertex)) {
-          beforeStatement.put(statement, current);
-          current = applyStatement(statement, current);
-        }
+        applyStatements(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
       }
       return beforeStatement;
+    }
+
+    /**
+     * Тип переменной перед оператором по тому, что насчитано к этому моменту. Отвечает на
+     * вложенный запрос из вывода типа чьего-то присваивания в этом же теле.
+     *
+     * @param statement оператор, перед которым нужен тип.
+     * @param variable  переменная.
+     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл — тогда
+     *     вызывающему отвечает прежний путь с обходом всей области видимости.
+     */
+    @Nullable
+    private TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {
+      if (!applicable.contains(variable)) {
+        return null;
+      }
+      var environment = beforeStatement.get(statement);
+      return environment == null ? null : environment.get(variable);
     }
 
     /**
@@ -628,10 +678,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return vertex instanceof WhileLoopVertex loop ? loop.getExpression() : null;
     }
 
-    /** Применить к окружению все операторы вершины по порядку. */
+    /**
+     * Применить к окружению все операторы вершины по порядку, попутно запоминая окружение
+     * перед каждым из них: пока идут проходы, отсюда отвечают вложенные запросы.
+     */
     private Environment applyStatements(CfgVertex vertex, Environment incoming) {
       var current = incoming;
       for (var statement : layout.statementsOf(vertex)) {
+        beforeStatement.put(statement, current);
         current = applyStatement(statement, current);
       }
       return current;
