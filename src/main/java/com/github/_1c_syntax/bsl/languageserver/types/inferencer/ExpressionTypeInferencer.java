@@ -41,7 +41,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -67,7 +66,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -114,7 +112,7 @@ public class ExpressionTypeInferencer {
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
-  private final GlobalScopeProvider globalScopeProvider;
+  private final ScopeMemberTypeResolver scopeMemberTypeResolver;
   private final OScriptFrameworkTypeResolver oScriptFrameworkTypeResolver;
 
   /**
@@ -147,23 +145,9 @@ public class ExpressionTypeInferencer {
       return inferVariable(variable, ctx);
     }
     if (symbol instanceof ModuleSymbol module) {
-      return inferModuleAsType(module);
+      return scopeMemberTypeResolver.moduleType(module);
     }
     return TypeSet.EMPTY;
-  }
-
-  /**
-   * Имя модуля в выражении ссылается на тип-namespace с экспортами как членами
-   * (общий модуль {@code ОбщегоНазначения}, модуль менеджера/объекта, библиотечный
-   * OneScript-модуль). Тип берётся из единого обратного индекса URI→тип в
-   * {@link GlobalScopeProvider#moduleTypeRefByUri(java.net.URI)}, который наполняют
-   * провайдеры регистрации модулей. Инференсер больше не обращается к
-   * подсистемным индексам (oscript/configuration) напрямую.
-   */
-  private TypeSet inferModuleAsType(ModuleSymbol module) {
-    return globalScopeProvider.moduleTypeRefByUri(module.getOwner().getUri())
-      .map(TypeSet::of)
-      .orElse(TypeSet.EMPTY);
   }
 
   // ---------------------------------------------------------------------------
@@ -298,21 +282,8 @@ public class ExpressionTypeInferencer {
     if (!implicitParent.isEmpty()) {
       return implicitParent;
     }
-    return selfMemberReturnTypes(ctx, text, MemberKind.PROPERTY)
-      .orElseGet(() -> globalPropertyReturnTypes(text, ctx));
-  }
-
-  /**
-   * Глобальная область: платформенные глобалы, library-модули, common-модули —
-   * все приходят как глобальные свойства. Только {@code PROPERTY}: голое имя
-   * глобальной функции ({@code METHOD}) — не значение, а имена типов для
-   * {@code Новый} (Структура) вообще не члены контекста.
-   */
-  private TypeSet globalPropertyReturnTypes(String text, InferenceContext ctx) {
-    return globalScopeProvider.globalProperty(text, ctx.documentContext.getFileType())
-      .map(MemberDescriptor::returnTypes)
-      .filter(types -> types.refs().stream().anyMatch(ref -> !ref.equals(TypeRef.UNKNOWN)))
-      .orElse(TypeSet.EMPTY);
+    return scopeMemberTypeResolver.selfMemberType(ctx.documentContext, text, MemberKind.PROPERTY)
+      .orElseGet(() -> scopeMemberTypeResolver.globalPropertyType(ctx.documentContext, text));
   }
 
   // ---------------------------------------------------------------------------
@@ -473,46 +444,14 @@ public class ExpressionTypeInferencer {
     }
     // 2. Платформенная глобальная функция (СтрНайти и т.п.) — через
     //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
-    var globalReturn = globalFunctionReturnTypes(name.getText(), ctx);
+    var globalReturn = scopeMemberTypeResolver.globalFunctionType(ctx.documentContext, name.getText());
     if (!globalReturn.isEmpty()) {
       return globalReturn;
     }
     // 3. Неквалифицированный вызов платформенного метода self-типа модуля.
     //    Тот же self-тип, что и в inferIdentifier для свойств, здесь —
     //    MemberKind.METHOD.
-    return selfMemberReturnTypes(ctx, name.getText(), MemberKind.METHOD)
-      .orElse(TypeSet.EMPTY);
-  }
-
-  /**
-   * Возвращаемые типы self-члена текущего модуля с заданными видом и именем.
-   * Продублирован через реестр напрямую, потому что инференсер не может зависеть от
-   * фасада {@code TypeService} (тот сам делегирует инференсеру). В отличие от
-   * {@code TypeService#findSelfMember} берёт self-тип только из кэша
-   * {@code moduleTypeRefByUri}, без fallback на метаданные: инференс идёт уже после
-   * наполнения кэша и при построении дерева символов не вызывается.
-   *
-   * @return типы значения self-члена; empty, если self-типа у документа нет
-   *     или член с таким видом/именем не найден.
-   */
-  private Optional<TypeSet> selfMemberReturnTypes(InferenceContext ctx, String name, MemberKind kind) {
-    return globalScopeProvider.moduleTypeRefByUri(ctx.documentContext.getUri())
-      .flatMap(ref -> typeRegistry.findMember(ref, kind, name, ctx.documentContext.getFileType()))
-      .map(MemberDescriptor::returnTypes);
-  }
-
-  /**
-   * Резолв возвращаемых типов глобальной функции по имени. Используется как
-   * fallback, когда {@code ReferenceResolver} не дал ссылку или дал ссылку
-   * без типа.
-   */
-  private TypeSet globalFunctionReturnTypes(String methodName, InferenceContext ctx) {
-    if (methodName == null || methodName.isBlank()) {
-      return TypeSet.EMPTY;
-    }
-    return globalScopeProvider.globalFunction(methodName, ctx.documentContext.getFileType())
-      .map(MemberDescriptor::returnTypes)
-      .filter(types -> !types.isEmpty())
+    return scopeMemberTypeResolver.selfMemberType(ctx.documentContext, name.getText(), MemberKind.METHOD)
       .orElse(TypeSet.EMPTY);
   }
 
@@ -571,7 +510,7 @@ public class ExpressionTypeInferencer {
     if (leftTypes.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    var kvFields = collectKeyValueFields(leftTypes);
+    var kvFields = OpenDataObjectInference.fieldsOf(leftTypes);
     if (!kvFields.isEmpty()) {
       var keyName = OpenDataObjectInference.stringLiteralOf(node.getRight());
       if (keyName != null) {
@@ -594,43 +533,6 @@ public class ExpressionTypeInferencer {
     TypeSet result = TypeSet.EMPTY;
     for (var ref : leftTypes.refs()) {
       result = result.union(leftTypes.getElementTypes(ref));
-    }
-    return result;
-  }
-
-  /**
-   * Собрать union localFields по всем ref'ам набора. Источник —
-   * {@link #applyMutation} (Структура/Соответствие)
-   * и {@link OpenDataObjectInference} (поля из конструктора и операторов-мутаторов).
-   */
-  private static Map<String, TypeSet> collectKeyValueFields(TypeSet leftTypes) {
-    var merged = new LinkedHashMap<String, TypeSet>();
-    for (var ref : leftTypes.refs()) {
-      var fields = leftTypes.getLocalFields(ref);
-      for (var entry : fields.entrySet()) {
-        merged.merge(entry.getKey(), entry.getValue().types(), TypeSet::union);
-      }
-    }
-    return merged;
-  }
-
-  /**
-   * Типы поля «открытого» объекта данных (Структура, ТаблицаЗначений с описанными
-   * ключами), объявленного на самом наборе типов. Смотрится раньше членов типа:
-   * задокументированное поле точнее одноимённого дефолтного члена платформы.
-   *
-   * @param leftTypes  типы получателя.
-   * @param memberName имя поля.
-   * @return типы поля; {@link TypeSet#EMPTY}, если такого поля не объявлено.
-   */
-  private static TypeSet declaredFieldTypes(TypeSet leftTypes, String memberName) {
-    var result = TypeSet.EMPTY;
-    for (var leftType : leftTypes.refs()) {
-      for (var entry : leftTypes.getLocalFields(leftType).entrySet()) {
-        if (entry.getKey().equalsIgnoreCase(memberName)) {
-          result = result.union(entry.getValue().types());
-        }
-      }
     }
     return result;
   }
@@ -661,7 +563,7 @@ public class ExpressionTypeInferencer {
       return refined;
     }
     if (expectedKind == MemberKind.PROPERTY) {
-      var fromLocalFields = declaredFieldTypes(leftTypes, memberName);
+      var fromLocalFields = OpenDataObjectInference.fieldTypes(leftTypes, memberName);
       if (!fromLocalFields.isEmpty()) {
         return fromLocalFields;
       }
@@ -863,7 +765,7 @@ public class ExpressionTypeInferencer {
       ctx.inProgress.put(variable, acc);
     }
     acc = attachDefaultElementTypes(acc);
-    acc = accumulateMutations(variable, acc, ctx);
+    acc = openDataObjectInference.applyAll(variable, acc, node -> inferInternal(node, ctx));
     return acc;
   }
 
@@ -987,7 +889,9 @@ public class ExpressionTypeInferencer {
     // обход индекса вызовов, а при готовом окружении в кэше они не нужны вовсе.
     Map<VariableSymbol, Lazy<Map<Position, BSLParser.CallStatementContext>>> callsByVariable = new HashMap<>();
     Function<VariableSymbol, Map<Position, BSLParser.CallStatementContext>> callsOf = target ->
-      callsByVariable.computeIfAbsent(target, key -> new Lazy<>(() -> mutationCalls(key))).getOrCompute();
+      callsByVariable
+        .computeIfAbsent(target, key -> new Lazy<>(() -> openDataObjectInference.mutatorsOf(key)))
+        .getOrCompute();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
@@ -1000,7 +904,8 @@ public class ExpressionTypeInferencer {
       target -> callsOf.apply(target).keySet(),
       (target, statement, position) ->
         attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
-      (target, position, incoming) -> applyMutation(target, callsOf.apply(target).get(position), incoming, ctx),
+      (target, position, incoming) -> openDataObjectInference.apply(
+        target, callsOf.apply(target).get(position), incoming, node -> inferInternal(node, ctx)),
       narrowingCallback(owner)
     );
   }
@@ -1042,46 +947,6 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Операторы, меняющие тип переменной на месте, по позиции их начала: добавление поля
-   * структуры или соответствия и добавление колонки таблицы значений.
-   *
-   * @param variable переменная.
-   * @return операторы-мутаторы по позициям, в порядке следования в документе.
-   */
-  private Map<Position, BSLParser.CallStatementContext> mutationCalls(VariableSymbol variable) {
-    return openDataObjectInference.mutatorsOf(variable);
-  }
-
-  /**
-   * Применить к типу переменной одно изменение на месте: добавленное поле структуры
-   * либо добавленную колонку таблицы значений.
-   * <p>
-   * Поля структуры и соответствия ({@code X.Вставить("Имя", Значение)}) кладутся прямо на
-   * тип-получатель: значение, присвоенное ключу, задаёт тип поля. Работает для Структуры,
-   * ФиксированнойСтруктуры, Соответствия и ФиксированногоСоответствия — у всех
-   * {@code .Вставить(…)} даёт пару «строковый ключ → значение».
-   * <p>
-   * Колонки таблицы значений ({@code X.Колонки.Добавить("Имя", Тип)}) кладутся не на саму
-   * таблицу, а на тип её строки ({@code СтрокаТаблицыЗначений}), привязанный к таблице
-   * через {@link TypeSet#withElement}. Поэтому после {@code Для Каждого Строка Из ТЗ}
-   * или {@code ТЗ[0]} обращение {@code Строка.Имя} видно как поле известного типа.
-   *
-   * @param variable переменная.
-   * @param call     оператор-мутатор; {@code null}, если по позиции ничего не нашлось.
-   * @param incoming тип переменной перед оператором.
-   * @param ctx      контекст текущего инференса.
-   * @return изменённый тип; исходный, если оператор к этому типу неприменим.
-   */
-  private TypeSet applyMutation(
-    VariableSymbol variable,
-    BSLParser.@Nullable CallStatementContext call,
-    TypeSet incoming,
-    InferenceContext ctx
-  ) {
-    return openDataObjectInference.apply(variable, call, incoming, node -> inferInternal(node, ctx));
-  }
-
-  /**
    * Тип переменной до первого присваивания: то, что известно из объявления, а не из кода.
    *
    * @param variable переменная.
@@ -1114,27 +979,6 @@ public class ExpressionTypeInferencer {
       }
     }
     return positions;
-  }
-
-
-  /**
-   * Накопить изменения на месте по всей области видимости переменной: добавленные поля
-   * структуры или соответствия ({@code X.Вставить("Имя", Значение)}) и добавленные
-   * колонки таблицы значений ({@code X.Колонки.Добавить("Имя", Тип)}).
-   * <p>
-   * Вклад каждого оператора считает {@link #applyMutation} — тот же, что применяется при
-   * расчёте по потоку управления. Разница только в том, что здесь операторы применяются
-   * все подряд, без учёта места использования: поле видно по всей области видимости, а не
-   * с места своей вставки. Такой ответ нужен там, где расчёт по потоку неприменим —
-   * переменная модуля, обращение из другого документа, повторный вход по той же переменной.
-   *
-   * @param variable переменная.
-   * @param base     тип, накопленный по присваиваниям.
-   * @param ctx      контекст текущего инференса.
-   * @return тип с полями и колонками; исходный, если изменений на месте нет.
-   */
-  private TypeSet accumulateMutations(VariableSymbol variable, TypeSet base, InferenceContext ctx) {
-    return openDataObjectInference.applyAll(variable, base, node -> inferInternal(node, ctx));
   }
 
 

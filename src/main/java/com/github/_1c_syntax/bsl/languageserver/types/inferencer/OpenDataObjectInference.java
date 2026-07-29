@@ -329,6 +329,47 @@ public class OpenDataObjectInference {
     return result;
   }
 
+  /**
+   * Типы поля, записанного на наборе, — по имени.
+   * <p>
+   * Смотрится раньше членов самого типа: поле, объявленное автором в коде, точнее
+   * одноимённого члена платформы.
+   *
+   * @param types      набор типов получателя.
+   * @param fieldName  имя поля; регистр не важен.
+   * @return типы поля; пустой набор, если такого поля не записано.
+   */
+  public static TypeSet fieldTypes(TypeSet types, String fieldName) {
+    var result = TypeSet.EMPTY;
+    for (var ref : types.refs()) {
+      for (var field : types.getLocalFields(ref).entrySet()) {
+        if (field.getKey().equalsIgnoreCase(fieldName)) {
+          result = result.union(field.getValue().types());
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Все поля, записанные на наборе, — по всем его типам разом.
+   * <p>
+   * Нужно обращению по ключу ({@code Структура["Ключ"]}): по литеральному ключу берётся
+   * своё поле, по вычисляемому — объединение всех.
+   *
+   * @param types набор типов получателя.
+   * @return типы по именам полей; пустая карта, если полей не записано.
+   */
+  public static Map<String, TypeSet> fieldsOf(TypeSet types) {
+    var merged = new LinkedHashMap<String, TypeSet>();
+    for (var ref : types.refs()) {
+      for (var field : types.getLocalFields(ref).entrySet()) {
+        merged.merge(field.getKey(), field.getValue().types(), TypeSet::union);
+      }
+    }
+    return merged;
+  }
+
   /** Первый тип набора, подходящий под условие. */
   @Nullable
   private static TypeRef headRefOf(TypeSet types, Predicate<String> predicate) {
