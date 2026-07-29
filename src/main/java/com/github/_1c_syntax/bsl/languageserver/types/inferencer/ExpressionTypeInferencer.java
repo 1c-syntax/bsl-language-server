@@ -1119,7 +1119,8 @@ public class ExpressionTypeInferencer {
       () -> flowEntryFact(variable),
       () -> definitionPositions(variable),
       () -> mutationCalls.getOrCompute().keySet(),
-      position -> attachDefaultElementTypes(inferFromDefinitionPosition(owner, position, ctx)),
+      (statement, position) ->
+        attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
       (position, incoming) -> applyMutation(variable, mutationCalls.getOrCompute().get(position), incoming, ctx),
       narrowingCallback(variable, owner)
     );
@@ -1796,6 +1797,34 @@ public class ExpressionTypeInferencer {
       .filter(m -> m.getName().equalsIgnoreCase(methodName))
       .findFirst()
       .orElse(null);
+  }
+
+  /**
+   * Тип, присваиваемый переменной, когда оператор присваивания уже известен вызывающему.
+   * <p>
+   * Поиск присваивания по позиции — рекурсивный спуск по дереву разбора от корня файла,
+   * и на больших модулях он заметен в профиле. Расчёт по потоку знает оператор графа, в
+   * котором стоит присваивание, поэтому спуск ему не нужен.
+   *
+   * @param owner     документ с присваиванием.
+   * @param statement оператор графа, в котором стоит присваивание.
+   * @param position  позиция присваивания — на случай, если оператор не присваивание
+   *                  (тогда работает поиск по позиции, как раньше).
+   * @param ctx       контекст текущего инференса.
+   * @return присваиваемые типы; пустой набор, если вывести их не удалось.
+   */
+  private TypeSet inferFromDefinition(
+    DocumentContext owner,
+    ParserRuleContext statement,
+    Position position,
+    InferenceContext ctx
+  ) {
+    if (statement instanceof BSLParser.AssignmentContext assignment) {
+      var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
+      var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
+      return types.union(inlineCommentTypes(owner, assignment));
+    }
+    return inferFromDefinitionPosition(owner, position, ctx);
   }
 
   private TypeSet inferFromDefinitionPosition(

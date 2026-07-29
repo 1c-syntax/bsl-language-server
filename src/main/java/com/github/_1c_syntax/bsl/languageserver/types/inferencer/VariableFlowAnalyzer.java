@@ -95,13 +95,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * разложенные по операторам места изменений типа. Считается один раз, дальше запрос
    * лишь доигрывает операторы своего блока.
    *
-   * @param byVertex              тип переменной на входе в каждую вершину.
+   * @param beforeStatement       тип переменной перед каждым оператором. Хранится по
+   *                              операторам, а не по вершинам: иначе запрос доигрывал бы
+   *                              операторы блока от его начала до места использования, а
+   *                              это на каждое обращение к члену в длинном методе.
    * @param definitionByStatement присваивания по операторам, в которых они стоят.
    * @param mutationByStatement   операторы-мутаторы по операторам, в которых они стоят.
    */
   private record Facts(
     boolean applicable,
-    Map<CfgVertex, TypeSet> byVertex,
+    Map<ParserRuleContext, TypeSet> beforeStatement,
     Map<ParserRuleContext, Position> definitionByStatement,
     Map<ParserRuleContext, Position> mutationByStatement
   ) {
@@ -123,10 +126,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     /**
      * Типы, которые переменная получает в этом присваивании.
      *
-     * @param position позиция присваивания — начало имени переменной в левой части.
+     * @param statement оператор графа, в котором стоит присваивание. Передаётся, чтобы
+     *                  вызывающему не пришлось искать его спуском по дереву разбора:
+     *                  расчёт уже знает этот узел.
+     * @param position  позиция присваивания — начало имени переменной в левой части.
      * @return присваиваемые типы; пустой набор, если вывести их не удалось.
      */
-    TypeSet at(Position position);
+    TypeSet at(ParserRuleContext statement, Position position);
   }
 
   /**
@@ -290,26 +296,27 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     boolean atDefinition,
     FlowInputs inputs
   ) {
-    var useVertex = layout.vertexOf(useStatement);
-    if (useVertex == null) {
+    if (layout.vertexOf(useStatement) == null) {
       return null;
     }
     var facts = factsOf(documentContext, body, layout, inputs);
     if (!facts.applicable()) {
       return null;
     }
-    var pass = new Pass(
-      controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults()),
-      layout,
-      inputs,
-      facts.definitionByStatement(),
-      facts.mutationByStatement()
-    );
-    var atVertex = facts.byVertex().getOrDefault(useVertex, TypeSet.EMPTY);
+    var before = facts.beforeStatement().getOrDefault(useStatement, TypeSet.EMPTY);
     var inclusive = useNode == null
       ? atDefinition
       : coversDefinition(useNode, facts.definitionByStatement().get(useStatement));
-    return pass.applyStatements(useVertex, atVertex, useStatement, inclusive);
+    if (!inclusive) {
+      return before;
+    }
+    // Использование стоит на самом присваивании — нужен тип после него.
+    var definition = facts.definitionByStatement().get(useStatement);
+    if (definition != null) {
+      return inputs.assigned().at(useStatement, definition);
+    }
+    var mutation = facts.mutationByStatement().get(useStatement);
+    return mutation == null ? before : inputs.mutations().apply(mutation, before);
   }
 
   /**
@@ -348,7 +355,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       var mutationByStatement = layout.index(mutations);
       var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
       var pass = new Pass(graph, layout, inputs, definitionByStatement, mutationByStatement);
-      computed = new Facts(true, pass.computeEntryFacts(), definitionByStatement, mutationByStatement);
+      computed = new Facts(true, pass.computeStatementFacts(), definitionByStatement, mutationByStatement);
     }
     if (byVariable == null) {
       return computed;
@@ -398,6 +405,25 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       this.inputs = inputs;
       this.definitionByStatement = definitionByStatement;
       this.mutationByStatement = mutationByStatement;
+    }
+
+    /**
+     * Тип переменной перед каждым оператором тела. Считается один раз: сперва окружение
+     * по вершинам до неподвижной точки, затем один проход по операторам каждой вершины.
+     *
+     * @return тип перед каждым оператором графа.
+     */
+    private Map<ParserRuleContext, TypeSet> computeStatementFacts() {
+      var byVertex = computeEntryFacts();
+      Map<ParserRuleContext, TypeSet> beforeStatement = new IdentityHashMap<>();
+      for (var vertex : layout.orderedVertices()) {
+        var current = byVertex.getOrDefault(vertex, TypeSet.EMPTY);
+        for (var statement : layout.statementsOf(vertex)) {
+          beforeStatement.put(statement, current);
+          current = applyStatement(statement, current);
+        }
+      }
+      return beforeStatement;
     }
 
     /**
@@ -491,7 +517,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private TypeSet applyStatement(ParserRuleContext statement, TypeSet incoming) {
       var definition = definitionByStatement.get(statement);
       if (definition != null) {
-        return assignedTypes.computeIfAbsent(definition, inputs.assigned()::at);
+        return assignedTypes.computeIfAbsent(definition, position -> inputs.assigned().at(statement, position));
       }
       var mutation = mutationByStatement.get(statement);
       return mutation == null ? incoming : inputs.mutations().apply(mutation, incoming);
