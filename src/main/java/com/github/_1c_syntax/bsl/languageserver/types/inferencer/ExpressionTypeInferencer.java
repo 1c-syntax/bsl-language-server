@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -37,14 +36,11 @@ import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTy
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.ExtendsAnnotations;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -120,8 +116,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final AutumnComponentInferencer autumnComponentInferencer;
-  private final OScriptExtends oScriptExtends;
+  private final OScriptFrameworkTypes oScriptFrameworkTypes;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -294,27 +289,12 @@ public class ExpressionTypeInferencer {
     if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return inferImplicitExtendsParentField(text, ctx)
-      .or(() -> selfMemberReturnTypes(ctx, text, MemberKind.PROPERTY))
-      .orElseGet(() -> globalPropertyReturnTypes(text, ctx));
-  }
-
-  /**
-   * Неявное поле родителя библиотеки extends: фреймворк создаёт _ОбъектРодитель
-   * в собранном объекте, в исходниках наследника оно не объявлено — типизируем
-   * его родительским классом, чтобы _ОбъектРодитель.МетодБазы() резолвился.
-   *
-   * @return тип родителя; {@code Optional.empty()}, если имя — не это неявное
-   *     поле, файл не OScript-класс, либо тип родителя не выводится (тогда
-   *     резолв продолжается self-свойством/глобальным свойством).
-   */
-  private Optional<TypeSet> inferImplicitExtendsParentField(String text, InferenceContext ctx) {
-    if (!ExtendsAnnotations.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(text)
-      || ctx.documentContext.getFileType() != FileType.OS) {
-      return Optional.empty();
+    var implicitParent = oScriptFrameworkTypes.implicitParentFieldType(text, ctx.documentContext);
+    if (!implicitParent.isEmpty()) {
+      return implicitParent;
     }
-    var parent = parentClassType(ctx.documentContext);
-    return parent.isEmpty() ? Optional.empty() : Optional.of(parent);
+    return selfMemberReturnTypes(ctx, text, MemberKind.PROPERTY)
+      .orElseGet(() -> globalPropertyReturnTypes(text, ctx));
   }
 
   /**
@@ -1109,8 +1089,8 @@ public class ExpressionTypeInferencer {
     }
     return entry
       .union(commentDeclaredTypes.ofDeclaration(variable))
-      .union(autumnInjectedType(variable))
-      .union(extendsParentFieldType(variable));
+      .union(oScriptFrameworkTypes.injectedType(variable))
+      .union(oScriptFrameworkTypes.parentHolderType(variable));
   }
 
   /**
@@ -1134,49 +1114,6 @@ public class ExpressionTypeInferencer {
     return positions;
   }
 
-  /**
-   * Тип внедряемой через {@code &Пластилин} зависимости фреймворка «ОСень».
-   * Аннотации несёт сам символ — и поле модуля, и параметр конструктора/завязи
-   * (см. {@code VariableSymbolComputer}).
-   */
-  private TypeSet autumnInjectedType(VariableSymbol variable) {
-    var kind = variable.getKind();
-    if (kind != VariableKind.MODULE && kind != VariableKind.PARAMETER) {
-      return TypeSet.EMPTY;
-    }
-    return autumnComponentInferencer.inferInjectedType(
-      variable.getAnnotations(), variable.getName(), variable.getOwner().getFileType());
-  }
-
-  /**
-   * Тип поля-держателя родителя библиотеки {@code extends}: поле, помеченное
-   * {@code &Родитель} (явный держатель), либо неявное поле
-   * {@code _ОбъектРодитель}. Типом становится родительский класс, объявленный
-   * через {@code &Расширяет} (в т.ч. через мета-аннотации). Так
-   * {@code Родитель.МетодБазы()} даёт автодополнение/hover по членам родителя.
-   */
-  private TypeSet extendsParentFieldType(VariableSymbol variable) {
-    if (variable.getKind() != VariableKind.MODULE) {
-      return TypeSet.EMPTY;
-    }
-    var owner = variable.getOwner();
-    if (owner.getFileType() != FileType.OS || !oScriptExtends.isParentHolder(variable)) {
-      return TypeSet.EMPTY;
-    }
-    return parentClassType(owner);
-  }
-
-  /**
-   * Тип родительского класса {@code .os}-документа (через {@code &Расширяет} /
-   * мета-аннотации), либо {@link TypeSet#EMPTY}, если наследование не объявлено
-   * или родитель не разрешается в зарегистрированный тип.
-   */
-  private TypeSet parentClassType(DocumentContext documentContext) {
-    return oScriptExtends.parentClassName(documentContext)
-      .flatMap(name -> typeRegistry.resolve(name, FileType.OS))
-      .map(TypeSet::of)
-      .orElse(TypeSet.EMPTY);
-  }
 
   /**
    * Накопить изменения на месте по всей области видимости переменной: добавленные поля
