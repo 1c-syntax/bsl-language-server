@@ -1815,6 +1815,10 @@ public class ExpressionTypeInferencer {
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
       return types.union(inlineCommentTypes(owner, assignment));
     }
+    if (statement instanceof BSLParser.ForStatementContext) {
+      // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
+      return TypeSet.of(NUMBER);
+    }
     return inferFromDefinitionPosition(owner, position, ctx);
   }
 

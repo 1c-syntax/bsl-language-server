@@ -175,6 +175,26 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void loopBindingGivesElementType() {
+    // given: связывание в «Для Каждого» — присваивание, которого нет отдельным оператором.
+    // when
+    var types = at("ВнутриЦикла = Элемент", "ВнутриЦикла = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void labelMergesTypesFromAllJumps() {
+    // given: к метке ведут два пути — переход из ветки и обычное продолжение.
+    // when
+    var types = at("ПослеМетки = Значение", "ПослеМетки = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Число", "Строка");
+  }
+
+  @Test
   void selfAssignmentReadsPreviousType() {
     // given / when
     var types = at("Накопитель = Накопитель + \"хвост\"", "Накопитель = ".length());

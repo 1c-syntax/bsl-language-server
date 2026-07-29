@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
+import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -474,14 +475,27 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return joined;
     }
 
-    /** Тип, прошедший по ребру ветки условия. */
+    /**
+     * Тип, прошедший по ребру ветки условия. Условие цикла {@code Пока} сужает так же,
+     * как условие {@code Если}: на входе в тело оно верно, за циклом — ложно.
+     */
     private TypeSet narrowedByEdge(CfgVertex predecessor, CfgEdgeType edgeType, TypeSet outgoing) {
-      if (!(predecessor instanceof ConditionalVertex conditional)
-        || edgeType != CfgEdgeType.TRUE_BRANCH && edgeType != CfgEdgeType.FALSE_BRANCH) {
+      if (edgeType != CfgEdgeType.TRUE_BRANCH && edgeType != CfgEdgeType.FALSE_BRANCH) {
         return outgoing;
       }
-      return inputs.narrowing()
-        .narrow(conditional.getExpression(), edgeType == CfgEdgeType.TRUE_BRANCH, outgoing);
+      var condition = conditionOf(predecessor);
+      if (condition == null) {
+        return outgoing;
+      }
+      return inputs.narrowing().narrow(condition, edgeType == CfgEdgeType.TRUE_BRANCH, outgoing);
+    }
+
+    /** Условие вершины-ветвления; {@code null}, если вершина условия не несёт. */
+    private static BSLParser.@Nullable ExpressionContext conditionOf(CfgVertex vertex) {
+      if (vertex instanceof ConditionalVertex conditional) {
+        return conditional.getExpression();
+      }
+      return vertex instanceof WhileLoopVertex loop ? loop.getExpression() : null;
     }
 
     /**

@@ -24,8 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
+import com.github._1c_syntax.bsl.languageserver.cfg.ForLoopVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
@@ -111,22 +114,23 @@ final class FlowLayout {
     var slots = new ArrayList<Slot>();
     Map<ParserRuleContext, Slot> byStatement = new IdentityHashMap<>();
     for (var vertex : graph.vertexSet()) {
-      if (!(vertex instanceof BasicBlockVertex block)) {
-        continue;
-      }
-      for (var statement : block.statements()) {
-        var start = statement.getStart();
-        var stop = statement.getStop() == null ? start : statement.getStop();
-        var slot = new Slot(
-          statement,
-          start.getLine() - 1,
-          start.getCharPositionInLine(),
-          stop.getLine() - 1,
-          stop.getCharPositionInLine() + stop.getText().length(),
-          vertex
-        );
-        slots.add(slot);
-        byStatement.put(statement, slot);
+      if (vertex instanceof BasicBlockVertex block) {
+        for (var statement : block.statements()) {
+          addSlot(slots, byStatement, statement, statement.getStop(), vertex);
+        }
+      } else if (vertex instanceof ForeachLoopVertex loop) {
+        // Связывание «Для Каждого Х Из Коллекция» — тоже присваивание, но отдельным
+        // оператором в граф оно не попадает. Берём заголовок цикла, ограничивая его
+        // выражением коллекции: тело лежит дальше и должно остаться за отдельными
+        // операторами, иначе участки текста перестанут быть непересекающимися.
+        var header = loop.getLoopHeader();
+        addSlot(slots, byStatement, header, header.expression().getStop(), vertex);
+      } else if (vertex instanceof ForLoopVertex loop) {
+        // «Для Сч = 1 По Граница» — присваивание счётчика, тоже без отдельного оператора.
+        // Граница заголовка — выражение верхней границы, дальше начинается тело.
+        var header = loop.getLoopHeader();
+        var bounds = header.expression();
+        addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
       }
     }
     // Операторы графа занимают непересекающиеся участки текста (составные операторы в
@@ -142,6 +146,36 @@ final class FlowLayout {
       bodyStart.getLine() - 1,
       bodyStop.getLine() - 1
     );
+  }
+
+  /**
+   * Добавить оператор в раскладку.
+   *
+   * @param slots       накапливаемый список.
+   * @param byStatement карта «оператор → слот».
+   * @param statement   узел оператора.
+   * @param stopToken   последний токен, входящий в границы; {@code null} — начало оператора.
+   * @param vertex      вершина, которой принадлежит оператор.
+   */
+  private static void addSlot(
+    List<Slot> slots,
+    Map<ParserRuleContext, Slot> byStatement,
+    ParserRuleContext statement,
+    @Nullable Token stopToken,
+    CfgVertex vertex
+  ) {
+    var start = statement.getStart();
+    var stop = stopToken == null ? start : stopToken;
+    var slot = new Slot(
+      statement,
+      start.getLine() - 1,
+      start.getCharPositionInLine(),
+      stop.getLine() - 1,
+      stop.getCharPositionInLine() + stop.getText().length(),
+      vertex
+    );
+    slots.add(slot);
+    byStatement.put(statement, slot);
   }
 
   /**
@@ -177,9 +211,18 @@ final class FlowLayout {
     return orderedVertices;
   }
 
-  /** Операторы вершины по порядку следования в коде. */
+  /**
+   * Операторы вершины по порядку следования в коде. У вершины цикла обхода это заголовок
+   * со связыванием переменной: для расчёта он такое же присваивание, как остальные.
+   */
   List<ParserRuleContext> statementsOf(CfgVertex vertex) {
-    return vertex instanceof BasicBlockVertex block ? block.statements() : List.of();
+    if (vertex instanceof BasicBlockVertex block) {
+      return block.statements();
+    }
+    if (vertex instanceof ForeachLoopVertex loop) {
+      return List.of(loop.getLoopHeader());
+    }
+    return vertex instanceof ForLoopVertex loop ? List.of(loop.getLoopHeader()) : List.of();
   }
 
   /** Вершина, которой принадлежит оператор; {@code null}, если оператора в графе нет. */

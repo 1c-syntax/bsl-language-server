@@ -90,6 +90,36 @@ class GuardNarrowingTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void loopVariableIsNarrowedInsideCheck() {
+    // given: связывание в «Для Каждого» — присваивание, которого нет отдельным оператором.
+    // when
+    var types = at("ВнутриПроверкиВЦикле = Элемент", "ВнутриПроверкиВЦикле = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void whileConditionNarrowsInsideLoop() {
+    // given: условие цикла «Пока» верно на каждой итерации тела.
+    // when
+    var types = at("ВнутриПока = Значение", "ВнутриПока = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void forLoopCounterIsNumber() {
+    // given: счётчик «Для Сч = 1 По Граница» — присваивание без отдельного оператора.
+    // when
+    var types = at("ВнутриФор = Сч", "ВнутриФор = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Число");
+  }
+
+  @Test
   void conjunctionOfChecksNarrows() {
     // given / when
     var types = at("ВнутриКонъюнкции = Значение", "ВнутриКонъюнкции = ".length());
