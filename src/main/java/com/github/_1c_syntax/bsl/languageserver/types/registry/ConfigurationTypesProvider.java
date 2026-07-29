@@ -32,9 +32,11 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.AccountingRegister;
 import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
@@ -120,6 +122,14 @@ public class ConfigurationTypesProvider {
   /** Платформенный тип строки табличной части. */
   private static final String TABULAR_SECTION_ROW_TYPE = "Строка табличной части";
 
+  /**
+   * Ядра имён семейств регистров. Внутри семейства типы отличаются только суффиксом
+   * ({@code Запись}, {@code КлючЗаписи}, {@code НаборЗаписей} …), поэтому по этому списку
+   * опознаётся ссылка на чужое семейство (см. {@link #registerRegisterFamilyFixups}).
+   */
+  private static final Set<String> REGISTER_FAMILY_CORES = Set.of(
+    "РегистрСведений", "РегистрНакопления", "РегистрБухгалтерии", "РегистрРасчета");
+
   /** MDOType'ы, для которых имеет смысл регистрировать менеджер-тип. */
   private static final Set<MDOType> MANAGER_TYPES = Set.of(
     MDOType.CATALOG,
@@ -181,6 +191,7 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  private final RecorderIndex recorderIndex;
   @Qualifier("platformTypesWarmupExecutor")
   private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
@@ -254,6 +265,9 @@ public class ConfigurationTypesProvider {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
     var commonAttributes = collectCommonAttributes(children);
+    // «Регистр → его регистраторы» — только обходом документов: со стороны регистра
+    // этих данных в метаданных нет. Нужно до регистрации типов регистров.
+    recorderIndex.index(children);
     int count = 0;
     for (var md : children) {
       if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
@@ -352,6 +366,7 @@ public class ConfigurationTypesProvider {
     }
     var familyCore = fullName.getRu();
     registerFamilySpecializations(familyCore, name);
+    registerRegisterFamilyFixups(md, familyCore, name);
     registerDerivedSpecializations(md, name);
     if (md instanceof DocumentJournal journal) {
       registerDocumentJournalColumnMembers(journal, familyCore, name);
@@ -364,6 +379,7 @@ public class ConfigurationTypesProvider {
     }
     var registerChildren = registerChildrenOf(md);
     if (registerChildren != null) {
+      registerRecordSetCollectionMembers(familyCore, name);
       registerRegisterRecordExpansion(familyCore, name, registerChildren);
     }
   }
@@ -613,7 +629,6 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerMemberSource(rowRef, columnSource, FileType.BSL);
       }
       registerTabularSectionPlatformMembers(rowRef, collRef, columnSource);
-
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
     if (!tsMembers.isEmpty()) {
@@ -681,6 +696,137 @@ public class ConfigurationTypesProvider {
    * {@code СправочникСписок.<Имя>} и любые другие, которые HBK заведёт в
    * будущем.
    */
+  /**
+   * Достраивает типы членов регистра, которые специализация по имени регистра не
+   * покрывает. Оба случая видны по одному признаку — оставшемуся generic-плейсхолдеру:
+   * <ul>
+   *   <li>{@code Регистратор} объявлен как {@code ДокументСсылка.<Имя документа>}:
+   *       имя регистра к документу отношения не имеет, подставляются
+   *       документы-регистраторы (см. {@link RecorderIndex});</li>
+   *   <li>член ссылается на <b>чужое</b> семейство регистров: у
+   *       {@code РегистрБухгалтерииНаборЗаписей} метод {@code Вставить} объявлен
+   *       возвращающим {@code РегистрНакопленияЗапись.<Имя регистра накопления>}, хотя
+   *       соседние {@code Добавить} и {@code Получить} — {@code РегистрБухгалтерииЗапись}.
+   *       Это ошибка синтакс-помощника; семейство заменяется на своё.</li>
+   * </ul>
+   * Обе правки принимаются, только если получившийся тип есть в реестре.
+   */
+  // TODO mdclasses#670: так же типизировать Счет/СчетДт/СчетКт записи регистра
+  //  бухгалтерии (объявлены как ПланСчетовСсылка.<Имя плана счетов>) и ВидРасчета
+  //  записи регистра расчёта. План указан у регистра в метаданных (<ChartOfAccounts>,
+  //  <ChartOfCalculationTypes>), но mdclasses 0.20.0 его не разбирает. Как появится —
+  //  добавить имя плана вторым набором подстановки рядом с recorders: подходящий
+  //  выберется по тому же признаку «тип есть в реестре».
+  private void registerRegisterFamilyFixups(MD md, String familyCore, String mdName) {
+    if (!REGISTER_FAMILY_CORES.contains(familyCore)) {
+      return;
+    }
+    var recorders = recorderIndex.recordersOf(md.getMdoReference().getMdoRefRu());
+    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
+      var parameters = typeRegistry.getTypeParameters(generic);
+      if (parameters.size() != 1) {
+        continue;
+      }
+      var bindings = Map.of(parameters.get(0), mdName);
+      var specialized = typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName())
+        .orElse(null);
+      if (specialized == null || specialized.equals(generic)) {
+        continue;
+      }
+      typeRegistry.registerMemberOverride(specialized,
+        () -> fixedUpRegisterMembers(generic, familyCore, bindings, mdName, recorders), FileType.BSL);
+    }
+  }
+
+  /**
+   * Члены generic-типа, у которых после подстановки имени регистра остался плейсхолдер,
+   * — с достроенными типами. Остальные не отдаются вовсе: они приходят обычной
+   * специализацией, и дублировать их незачем.
+   * <p>
+   * Читаются у generic'а, а не у специализированного типа: источник регистрируется как
+   * раз на специализированный, и обращение к его же {@code getMembers} зациклилось бы.
+   */
+  private List<MemberDescriptor> fixedUpRegisterMembers(TypeRef generic, String familyCore,
+                                                        Map<String, String> bindings, String mdName,
+                                                        List<String> recorders) {
+    var result = new ArrayList<MemberDescriptor>();
+    for (var member : typeRegistry.getMembers(generic, FileType.BSL)) {
+      if (member.generic()) {
+        continue;
+      }
+      var specialized = member.specialize(bindings);
+      var fixed = ownFamilyMember(specialized, familyCore, mdName);
+      if (fixed == null) {
+        fixed = PlaceholderBinder.bind(typeRegistry, specialized, recorders);
+      }
+      if (fixed != null) {
+        result.add(fixed);
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  /**
+   * Заменяет в типах члена чужое семейство регистров на своё.
+   *
+   * @return член со своим типом; {@code null}, если подменять нечего.
+   */
+  private @Nullable MemberDescriptor ownFamilyMember(MemberDescriptor member, String familyCore,
+                                                     String mdName) {
+    var returnTypes = ownFamilyTypes(member.returnTypes(), familyCore, mdName);
+    if (returnTypes == null) {
+      return null;
+    }
+    var signatures = member.signatures().stream()
+      .map(signature -> ownFamilySignature(signature, familyCore, mdName))
+      .toList();
+    return member.withReturnTypes(returnTypes).withSignatures(signatures);
+  }
+
+  private SignatureDescriptor ownFamilySignature(SignatureDescriptor signature, String familyCore,
+                                                 String mdName) {
+    var returnTypes = ownFamilyTypes(signature.returnTypes(), familyCore, mdName);
+    if (returnTypes == null) {
+      return signature;
+    }
+    return new SignatureDescriptor(signature.parameters(), returnTypes,
+      signature.bilingualDescription(), signature.metadata());
+  }
+
+  /** @return набор с заменённым семейством; {@code null}, если ни один тип не поменялся. */
+  private @Nullable TypeSet ownFamilyTypes(TypeSet types, String familyCore, String mdName) {
+    var refs = new ArrayList<TypeRef>(types.refs().size());
+    var changed = false;
+    for (var ref : types.refs()) {
+      var own = ownFamilyRef(ref, familyCore, mdName);
+      changed |= !own.equals(ref);
+      refs.add(own);
+    }
+    return changed ? TypeSet.of(refs) : null;
+  }
+
+  private TypeRef ownFamilyRef(TypeRef ref, String familyCore, String mdName) {
+    var qualifiedName = ref.qualifiedName();
+    if (ref.placeholders().isEmpty() || qualifiedName.startsWith(familyCore)) {
+      return ref;
+    }
+    var dot = qualifiedName.indexOf('.');
+    if (dot < 0) {
+      return ref;
+    }
+    for (var foreignCore : REGISTER_FAMILY_CORES) {
+      if (!qualifiedName.startsWith(foreignCore)) {
+        continue;
+      }
+      var kindSuffix = qualifiedName.substring(foreignCore.length(), dot);
+      var own = typeRegistry.resolve(familyCore + kindSuffix + "." + mdName).orElse(null);
+      if (own != null) {
+        return own;
+      }
+    }
+    return ref;
+  }
+
   private void registerFamilySpecializations(String familyCore, String mdName) {
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
       var parameters = typeRegistry.getTypeParameters(generic);
@@ -826,6 +972,59 @@ public class ConfigurationTypesProvider {
    * @param regName    имя регистра в конфигурации
    * @param children   измерения/ресурсы/реквизиты регистра
    */
+  /**
+   * Делает набор записей регистра полноценной коллекцией своих записей: обход
+   * {@code Для Каждого} и индексатор дают запись <b>этого</b> регистра, а
+   * {@code Выгрузить()} — таблицу значений с его колонками.
+   * <p>
+   * Платформа описывает набор обобщённо: {@code Выгрузить()} объявлен возвращающим
+   * просто {@code ТаблицаЗначений}, хотя колонки у выгруженной таблицы те же, что у
+   * записи. Приём тот же, что у табличных частей (см.
+   * {@link #registerTabularSectionPlatformMembers}); колонками служат свойства записи —
+   * измерения, ресурсы, реквизиты и стандартные реквизиты вроде {@code Регистратор}.
+   *
+   * @param familyCore ru-часть имени семейства ({@code "РегистрНакопления"} и т.п.).
+   * @param regName    имя регистра в конфигурации.
+   */
+  private void registerRecordSetCollectionMembers(String familyCore, String regName) {
+    var genericSet = singleGenericOf(familyCore + "НаборЗаписей");
+    var genericRecord = singleGenericOf(familyCore + "Запись");
+    if (genericSet == null || genericRecord == null) {
+      return;
+    }
+    var setRef = specializedByName(genericSet, regName);
+    var recordRef = specializedByName(genericRecord, regName);
+    if (setRef == null || recordRef == null) {
+      return;
+    }
+    // Тип элемента — до наследования коллекционных свойств: иначе выиграла бы
+    // унаследованная обобщённая запись и обход потерял бы колонки.
+    typeRegistry.registerDefaultElementTypes(setRef, List.of(recordRef));
+    typeRegistry.inheritCollectionTraits(setRef, genericSet, FileType.BSL);
+
+    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
+    MemberSource columns = () -> typeRegistry.getMembers(recordRef, FileType.BSL).stream()
+      .filter(member -> member.kind() == MemberKind.PROPERTY && !member.generic())
+      .toList();
+    typeRegistry.registerMemberOverride(setRef, () -> CollectionReturnsSpecializer.specialize(
+      typeRegistry.getMembers(genericSet, FileType.BSL), genericRecord, recordRef,
+      CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
+  }
+
+  /** Единственный generic семейства с ровно одним параметром; {@code null} — такого нет. */
+  private @Nullable TypeRef singleGenericOf(String familyCore) {
+    return typeRegistry.findAllGenericsByFamilyCore(familyCore).stream()
+      .filter(generic -> typeRegistry.getTypeParameters(generic).size() == 1)
+      .findFirst()
+      .orElse(null);
+  }
+
+  /** Специализация generic'а по имени MD-объекта; {@code null} — не зарегистрирована. */
+  private @Nullable TypeRef specializedByName(TypeRef generic, String mdName) {
+    var bindings = Map.of(typeRegistry.getTypeParameters(generic).get(0), mdName);
+    return typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName()).orElse(null);
+  }
+
   private void registerRegisterRecordExpansion(String familyCore, String regName, RegisterChildren children) {
     var generic = typeRegistry.findAllGenericsByFamilyCore(familyCore + "Запись").stream()
       .findFirst()

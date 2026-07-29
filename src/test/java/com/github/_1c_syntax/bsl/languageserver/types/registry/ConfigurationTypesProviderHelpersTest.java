@@ -197,7 +197,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
@@ -238,7 +238,7 @@ class ConfigurationTypesProviderHelpersTest {
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-        new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
+        new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
 
@@ -279,7 +279,7 @@ class ConfigurationTypesProviderHelpersTest {
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
@@ -322,7 +322,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
 
       provider.tryRegister();
 
@@ -376,7 +376,7 @@ class ConfigurationTypesProviderHelpersTest {
       LanguageServerConfiguration.class);
     var mcs = mock(MetadataCollectionSpecializer.class);
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
+      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
   }
 
   // === memberPlaceholderName ===
@@ -914,7 +914,7 @@ class ConfigurationTypesProviderHelpersTest {
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
       var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new SimpleAsyncTaskExecutor());
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
       assertion.accept(registry, provider);
     } finally {
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
