@@ -97,6 +97,11 @@ class TabularSectionMembersTest extends AbstractServerContextAwareTest {
       assertThat(method.returnTypes().refs()).extracting(TypeRef::qualifiedName)
         .as("%s возвращает строку этой табличной части", methodName)
         .contains(ROW);
+      assertThat(method.signatures())
+        .as("%s: тип уточнён и в сигнатуре — её показывает подсказка автодополнения", methodName)
+        .allSatisfy(signature -> assertThat(signature.returnTypes().refs())
+          .extracting(TypeRef::qualifiedName)
+          .contains(ROW));
     }
   }
 
