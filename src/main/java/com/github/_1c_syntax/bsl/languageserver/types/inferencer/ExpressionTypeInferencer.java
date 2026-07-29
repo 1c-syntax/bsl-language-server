@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -34,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
@@ -121,13 +119,13 @@ public class ExpressionTypeInferencer {
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
+  private final DeclaredParameterTypes declaredParameterTypes;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final AutumnComponentInferencer autumnComponentInferencer;
-  private final EventContractsIndex eventContractsIndex;
   private final OScriptExtends oScriptExtends;
 
   /**
@@ -1224,124 +1222,14 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Найти {@link ParameterDefinition} в скоупе-методе по имени переменной и
-   * вернуть его декларированные типы из JsDoc. Если у параметра нет
-   * собственного описания, но у метода есть docblock-ссылка
-   * {@code // См. ДругойМетод} — типы наследуются от одноимённого
-   * параметра целевого метода (только в пределах того же модуля).
+   * Тип переменной, объявленный вне тела метода, — если она параметр.
+   *
+   * @param variable переменная.
+   * @return объявленные типы; пустой набор, если переменная не параметр либо тип
+   *     не объявлен.
    */
   private TypeSet declaredParameterTypes(VariableSymbol variable) {
-    var scope = variable.getScope();
-    if (!(scope instanceof MethodSymbol method)) {
-      return TypeSet.EMPTY;
-    }
-    var name = variable.getName();
-    var parameters = method.getParameters();
-    for (var i = 0; i < parameters.size(); i++) {
-      var parameter = parameters.get(i);
-      if (parameter.getName().equalsIgnoreCase(name)) {
-        return resolveParameterTypes(method, parameter, name, i);
-      }
-    }
-    return TypeSet.EMPTY;
-  }
-
-  /**
-   * Источники типа параметра в порядке убывания приоритета: doc-комментарий
-   * (включая {@code См.}-ссылки, в т.ч. вложенные в коллекции/структуры),
-   * контракт платформенного события (для обработчиков), наследование от
-   * родительского метода в иерархии.
-   */
-  private TypeSet resolveParameterTypes(MethodSymbol method, ParameterDefinition parameter,
-                                        String name, int paramIndex) {
-    // getDeclaredParameterTypes разворачивает и См.-ссылки в описании параметра
-    // (включая вложенные) — отдельный проход по hyperlink-ам больше не нужен.
-    var direct = symbolTypeIndex.getDeclaredParameterTypes(parameter, method.getOwner());
-    if (!direct.isEmpty()) {
-      return direct;
-    }
-    var fromContract = eventHandlerParameterTypes(method, paramIndex);
-    if (!fromContract.isEmpty()) {
-      return fromContract;
-    }
-    return inheritedParameterTypes(method, name);
-  }
-
-  /**
-   * Тип параметра обработчика платформенного события из контракта (bsl-context).
-   * Сопоставление строго <b>по позиции</b>: имена параметров обработчика задаёт
-   * пользователь — они не обязаны совпадать с именами в контракте. Если последний
-   * параметр контракта помечен {@code variadic}, все параметры метода с индексом
-   * за ним наследуют его тип (хвост переменной арности — например, конструктор
-   * OneScript-класса {@code ПриСозданииОбъекта(а, б, в, ...)}).
-   */
-  private TypeSet eventHandlerParameterTypes(MethodSymbol method, int paramIndex) {
-    var contractOpt = eventContractsIndex.getContract(method.getOwner(), method.getName());
-    if (contractOpt.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var signatures = contractOpt.get().signatures();
-    if (signatures.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var params = signatures.get(0).parameters();
-    if (params.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var idx = paramIndex < params.size() ? paramIndex : (params.size() - 1);
-    var param = params.get(idx);
-    if (paramIndex >= params.size() && !param.variadic()) {
-      return TypeSet.EMPTY;
-    }
-    return param.types();
-  }
-
-  /**
-   * Найти типы параметра {@code name} в методе-источнике, на который
-   * ссылается текущий метод через {@code // См. Метод} в docblock'е.
-   * Сейчас работает только для ссылок на методы в том же модуле.
-   */
-  private TypeSet inheritedParameterTypes(MethodSymbol method, String paramName) {
-    var description = method.getDescription().orElse(null);
-    if (description == null) {
-      return TypeSet.EMPTY;
-    }
-    var links = description.getLinks();
-    if (links == null || links.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var owner = method.getOwner();
-    for (var link : links) {
-      var target = findLocalMethod(owner, link.link());
-      if (target == null) {
-        continue;
-      }
-      for (var targetParam : target.getParameters()) {
-        if (targetParam.getName().equalsIgnoreCase(paramName)) {
-          var types = symbolTypeIndex.getDeclaredParameterTypes(targetParam, owner);
-          if (!types.isEmpty()) {
-            return types;
-          }
-        }
-      }
-    }
-    return TypeSet.EMPTY;
-  }
-
-  /**
-   * @return метод с именем {@code methodName} из текущего модуля,
-   *         либо {@code null} если такого метода нет (или ссылка
-   *         указывает на cross-module — пока не поддерживается).
-   */
-  @Nullable
-  private static MethodSymbol findLocalMethod(DocumentContext documentContext, String methodName) {
-    if (methodName == null || methodName.contains(".")) {
-      return null;
-    }
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(m -> m.getName().equalsIgnoreCase(methodName))
-      .findFirst()
-      .orElse(null);
+    return declaredParameterTypes.of(variable);
   }
 
   /**
