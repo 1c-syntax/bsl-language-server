@@ -1056,22 +1056,52 @@ public class ExpressionTypeInferencer {
    */
   @Nullable
   public TypeSet inferVariableAt(Reference reference) {
-    if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)) {
+    if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)
+      || !variable.getOwner().getUri().equals(reference.uri())) {
+      return null;
+    }
+    return inferVariableAt(
+      variable,
+      reference.selectionRange().getStart(),
+      // Ссылка на само присваивание спрашивает про тип до него, а не после.
+      reference.occurrenceType() == OccurrenceType.DEFINITION
+    );
+  }
+
+  /**
+   * Тип переменной в указанной точке документа, которому она принадлежит.
+   * <p>
+   * Точка не обязана быть обращением к переменной: расчёт отвечает на вопрос, что
+   * переменная содержит в этом месте кода. Так тип узнаёт автодополнение — там обращения
+   * ещё нет, пользователь только набирает имя.
+   *
+   * @param variable переменная.
+   * @param position точка в теле, для которой нужен тип.
+   * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим.
+   */
+  @Nullable
+  public TypeSet inferVariableAt(VariableSymbol variable, Position position) {
+    return inferVariableAt(variable, position, false);
+  }
+
+  /**
+   * Тип переменной в точке с уточнением, стоит ли точка на самом присваивании.
+   *
+   * @param variable     переменная.
+   * @param position     точка в теле, для которой нужен тип.
+   * @param atDefinition стоит ли точка на присваивании: тогда берётся тип до него.
+   * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим.
+   */
+  @Nullable
+  private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition) {
+    if (variable.getKind() == VariableKind.MODULE) {
       return null;
     }
     var owner = variable.getOwner();
-    if (variable.getKind() == VariableKind.MODULE || !owner.getUri().equals(reference.uri())) {
-      return null;
-    }
     var ctx = new InferenceContext(owner);
     ctx.flowInProgress.add(variable);
     try {
-      return variableFlowAnalyzer.typeAt(
-        owner,
-        reference.selectionRange().getStart(),
-        reference.occurrenceType() == OccurrenceType.DEFINITION,
-        flowInputs(variable, ctx)
-      );
+      return variableFlowAnalyzer.typeAt(owner, position, atDefinition, flowInputs(variable, ctx));
     } catch (StackOverflowError | RuntimeException e) {
       return null;
     } finally {

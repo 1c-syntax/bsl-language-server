@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -551,6 +552,89 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     assertThat(item.getDetail())
       .as("тип параметра обработчика события должен показываться в completion")
       .isEqualTo("Структура");
+  }
+
+  @Test
+  void variableDetailShowsTypeAtCursorNotUnionOverScope() {
+    // given: переменная меняет тип, курсор стоит между присваиваниями.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Проверка()
+      	Значение = 1;
+      	Сообщить(Зна);
+      	Значение = "строка";
+      КонецПроцедуры
+      """);
+
+    // when
+    var item = completionItem(documentContext, new Position(2, 13), "Значение");
+
+    // then: присваивание строки ниже по коду здесь ещё не случилось, поэтому в detail
+    // только число — а не оба типа, как было бы при ответе по всей области видимости.
+    assertThat(item.getDetail())
+      .as("в detail должен быть тип переменной в точке курсора")
+      .isEqualTo("Число");
+  }
+
+  @Test
+  void variableDetailShowsAllTypesAtMergePoint() {
+    // given: после слияния путей переменная держит оба типа сразу.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Проверка(Условие)
+      	Если Условие Тогда
+      		Значение = 1;
+      	Иначе
+      		Значение = "строка";
+      	КонецЕсли;
+      	Сообщить(Зна);
+      КонецПроцедуры
+      """);
+
+    // when
+    var item = completionItem(documentContext, new Position(6, 13), "Значение");
+
+    // then: показывать один тип из двух было бы неправдой. Порядок не проверяем — он идёт
+    // от обхода графа, а не от порядка веток в тексте.
+    assertThat(item.getDetail().split(", "))
+      .as("в detail должны быть все типы переменной в точке курсора")
+      .containsExactlyInAnyOrder("Число", "Строка");
+  }
+
+  @Test
+  void variableDetailFollowsReassignment() {
+    // given: тот же код, но курсор ниже второго присваивания.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Проверка()
+      	Значение = 1;
+      	Значение = "строка";
+      	Сообщить(Зна);
+      КонецПроцедуры
+      """);
+
+    // when
+    var item = completionItem(documentContext, new Position(3, 13), "Значение");
+
+    // then
+    assertThat(item.getDetail())
+      .as("после переприсваивания в detail должен быть новый тип")
+      .isEqualTo("Строка");
+  }
+
+  /**
+   * Элемент автодополнения с нужной меткой в указанной позиции документа.
+   *
+   * @param documentContext документ.
+   * @param position        позиция курсора.
+   * @param label           метка искомого элемента.
+   * @return найденный элемент.
+   */
+  private CompletionItem completionItem(DocumentContext documentContext, Position position, String label) {
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(position);
+    return completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> label.equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError(label + " должен попасть в completion"));
   }
 
   @Test

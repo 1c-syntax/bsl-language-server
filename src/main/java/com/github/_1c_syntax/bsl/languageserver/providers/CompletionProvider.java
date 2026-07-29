@@ -842,12 +842,13 @@ public final class CompletionProvider {
       if (matches(variable.getName(), prefix)) {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
-        // Тип переменной в detail. Инференс идёт только по видимым (модульным + текущего
-        // метода) совпавшим с префиксом переменным и кэшируется по символу
-        // (InferredVariableTypeIndex), так что стоимость — единицы вызовов однократно
-        // до прогрева кэша; полезность подсказки её перевешивает.
-        var varType = typeService.typesOfSymbol(variable).refs().stream().findFirst().orElse(null);
-        applyDetail(item, "", formatTypeName(varType, scriptVariant));
+        // Тип переменной в detail — в точке курсора: подсказка про то, что переменная
+        // содержит здесь, а не про всё, что она содержала когда-либо в своей области
+        // видимости. Инференс идёт только по видимым (модульным + текущего метода)
+        // совпавшим с префиксом переменным и кэшируется, так что стоимость — единицы
+        // вызовов однократно до прогрева кэша; полезность подсказки её перевешивает.
+        var varTypes = typeService.typesOfSymbolAt(variable, position);
+        applyDetail(item, "", formatTypeNames(varTypes, scriptVariant));
         applySortText(item, BUCKET_LOCAL, false);
         applyCommitCharacters(item);
         items.add(item);
@@ -1634,6 +1635,24 @@ public final class CompletionProvider {
     var displayName = typeService.displayName(ref, scriptVariant);
     var dot = displayName.lastIndexOf('.');
     return dot < 0 ? displayName : displayName.substring(dot + 1);
+  }
+
+  /**
+   * Короткие имена всех типов набора через запятую — так же, как их показывает hover.
+   * <p>
+   * Переменная может держать несколько типов сразу: в точке слияния путей после
+   * {@code Если … Иначе …} набор из двух типов — обычное дело, и показывать из него
+   * один было бы неправдой.
+   *
+   * @param types         набор типов.
+   * @param scriptVariant язык отображаемых имён.
+   * @return имена через запятую; пустая строка, если показывать нечего.
+   */
+  private String formatTypeNames(TypeSet types, Language scriptVariant) {
+    return types.refs().stream()
+      .map(ref -> formatTypeName(ref, scriptVariant))
+      .filter(name -> !name.isEmpty())
+      .collect(Collectors.joining(", "));
   }
 
   private static String formatSignaturesCount(int count, Language scriptVariant) {

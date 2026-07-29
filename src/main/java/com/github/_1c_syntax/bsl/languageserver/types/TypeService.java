@@ -123,6 +123,30 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
+   * Тип символа в указанной точке его документа — позиционный ответ там, где обращения к
+   * символу ещё нет и {@link Reference} не существует (автодополнение показывает тип
+   * переменной, чьё имя пользователь только набирает).
+   * <p>
+   * Для переменной это тип с учётом присваиваний и изменений на месте, случившихся на
+   * путях к точке. Для остальных символов позиция смысла не имеет, и ответ тот же, что
+   * у {@link #typesOfSymbol(SourceDefinedSymbol)}.
+   *
+   * @param symbol   символ, чей тип нужен.
+   * @param position точка в документе символа.
+   * @return набор типов в этой точке; если расчёт по потоку неприменим (переменная
+   *     модуля, точка вне тела), — ответ по всей области видимости.
+   */
+  public TypeSet typesOfSymbolAt(SourceDefinedSymbol symbol, Position position) {
+    if (symbol instanceof VariableSymbol variable) {
+      var atPoint = inferencer.inferVariableAt(variable, position);
+      if (atPoint != null) {
+        return atPoint;
+      }
+    }
+    return typesOfSymbol(symbol);
+  }
+
+  /**
    * {@inheritDoc}
    * <p>
    * Делегирует в {@link #findSelfMember} с {@link MemberKind#PROPERTY}: self-тип
