@@ -200,7 +200,7 @@ class TableCollectionInference {
     if (arguments.size() <= argIndex) {
       return List.of();
     }
-    var literal = ExpressionTypeInferencer.extractStringLiteral(arguments.get(argIndex));
+    var literal = OpenDataObjectInference.stringLiteralOf(arguments.get(argIndex));
     if (literal == null) {
       return List.of();
     }

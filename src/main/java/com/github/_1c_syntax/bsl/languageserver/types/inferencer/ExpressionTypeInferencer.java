@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
@@ -71,7 +70,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -83,12 +81,10 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Ленивый инференсер типов выражений.
@@ -123,8 +119,8 @@ public class ExpressionTypeInferencer {
   private final SymbolTypeIndex symbolTypeIndex;
   private final InferredVariableTypeIndex inferredVariableTypeIndex;
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
-  private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final TableCollectionInference tableCollectionInference;
+  private final OpenDataObjectInference openDataObjectInference;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
@@ -364,50 +360,14 @@ public class ExpressionTypeInferencer {
       .map(TypeSet::of)
       .orElseGet(() -> TypeSet.of(typeRegistry.intern(TypeKind.USER, typeName)));
     base = attachDefaultElementTypes(base);
-    if (isStructureLike(typeName)) {
-      base = applyStructureConstructorKeys(base, constructor, ctx);
+    if (OpenDataObjectInference.isStructureLike(typeName)) {
+      base = openDataObjectInference.applyConstructorKeys(base, constructor, node -> inferInternal(node, ctx));
     }
-    if (isTypeDescriptionType(typeName)) {
-      base = applyTypeDescriptionConstructorTypes(base, constructor, ctx);
+    if (OpenDataObjectInference.isTypeDescriptionType(typeName)) {
+      base = openDataObjectInference.applyTypeDescriptionTypes(
+        base, constructor, ctx.documentContext.getFileType());
     }
     return base;
-  }
-
-  /**
-   * Для записи {@code Новый ОписаниеТипов("Число[,Строка,...]")}: распарсить
-   * первый строковый аргумент в имена типов, зарезолвить через
-   * {@link TypeRegistry} и подвесить набор к {@link TypeRef} «ОписаниеТипов»
-   * через {@link TypeSet#withElement}. Это позволяет потребителям
-   * (например, {@link #accumulateValueTableColumnFields}) забрать «содержимое»
-   * описания типов прямо из TypeSet без повторного парсинга AST.
-   */
-  private TypeSet applyTypeDescriptionConstructorTypes(
-    TypeSet base,
-    ConstructorCallNode constructor,
-    InferenceContext ctx
-  ) {
-    var args = constructor.arguments();
-    if (args.isEmpty() || base.refs().isEmpty()) {
-      return base;
-    }
-    var literal = extractStringLiteral(args.get(0));
-    if (literal == null) {
-      return base;
-    }
-    var fileType = ctx.documentContext.getFileType();
-    var refs = new ArrayList<TypeRef>();
-    for (var raw : literal.split(",")) {
-      var name = raw.trim();
-      if (name.isEmpty()) {
-        continue;
-      }
-      typeRegistry.resolve(name, fileType).ifPresent(refs::add);
-    }
-    if (refs.isEmpty()) {
-      return base;
-    }
-    var headRef = base.refs().iterator().next();
-    return base.withElement(headRef, TypeSet.of(refs));
   }
 
   /**
@@ -436,67 +396,6 @@ public class ExpressionTypeInferencer {
       }
     }
     return result;
-  }
-
-  /**
-   * Для записи {@code Новый Структура("К1, К2", v1, v2)}: распарсить первый
-   * строковый аргумент в имена ключей и подвесить к каждому ключу TypeSet
-   * соответствующего value-аргумента через {@link TypeSet#withField(TypeRef, String, TypeSet)}.
-   */
-  private TypeSet applyStructureConstructorKeys(
-    TypeSet base,
-    ConstructorCallNode constructor,
-    InferenceContext ctx
-  ) {
-    var args = constructor.arguments();
-    if (args.isEmpty() || base.refs().isEmpty()) {
-      return base;
-    }
-    var keyLiteral = extractStringLiteral(args.get(0));
-    if (keyLiteral == null) {
-      return base;
-    }
-    var keys = keyLiteral.split(",");
-    var headRef = base.refs().iterator().next();
-    var result = base;
-    for (int i = 0; i < keys.length; i++) {
-      var keyName = keys[i].trim();
-      if (keyName.isEmpty()) {
-        continue;
-      }
-      int valueArgIndex = i + 1;
-      TypeSet valueTypes;
-      if (valueArgIndex < args.size()) {
-        valueTypes = inferInternal(args.get(valueArgIndex), ctx);
-      } else {
-        valueTypes = TypeSet.of(UNDEFINED);
-      }
-      if (!valueTypes.isEmpty()) {
-        result = result.withField(headRef, keyName, valueTypes);
-      }
-    }
-    return result;
-  }
-
-  @Nullable
-  static String extractStringLiteral(BslExpression node) {
-    var ast = node.getRepresentingAst();
-    if (ast == null) {
-      return null;
-    }
-    var trimmed = ast.getText().trim();
-    if (trimmed.length() >= 2
-      && (trimmed.charAt(0) == '"' || trimmed.charAt(0) == '\'')
-      && trimmed.charAt(0) == trimmed.charAt(trimmed.length() - 1)) {
-      return trimmed.substring(1, trimmed.length() - 1);
-    }
-    return null;
-  }
-
-  private static boolean isStructureLike(String typeName) {
-    var lower = typeName.toLowerCase(Locale.ROOT);
-    return lower.equals("структура") || lower.equals("structure")
-      || lower.equals("фиксированнаяструктура") || lower.equals("fixedstructure");
   }
 
   /**
@@ -538,7 +437,7 @@ public class ExpressionTypeInferencer {
    */
   private static TypeSet elementGetterTypes(TypeSet leftTypes) {
     for (var ref : leftTypes.refs()) {
-      if (isStructureOrMapLike(ref.qualifiedName())) {
+      if (OpenDataObjectInference.isStructureOrMapLike(ref.qualifiedName())) {
         return TypeSet.EMPTY;
       }
     }
@@ -547,20 +446,6 @@ public class ExpressionTypeInferencer {
       result = result.union(leftTypes.getElementTypes(ref));
     }
     return result;
-  }
-
-  /**
-   * Платформенные KV-коллекции, у которых {@code .Вставить("Имя", значение)} /
-   * {@code .Insert(...)} даёт строковый ключ → значение. Сюда же подмешивается
-   * {@link #isStructureLike} (Структура и ФиксированнаяСтруктура).
-   */
-  private static boolean isStructureOrMapLike(String typeName) {
-    if (isStructureLike(typeName)) {
-      return true;
-    }
-    var lower = typeName.toLowerCase(Locale.ROOT);
-    return lower.equals("соответствие") || lower.equals("map")
-      || lower.equals("фиксированноесоответствие") || lower.equals("fixedmap");
   }
 
   @Nullable
@@ -710,7 +595,7 @@ public class ExpressionTypeInferencer {
     }
     var kvFields = collectKeyValueFields(leftTypes);
     if (!kvFields.isEmpty()) {
-      var keyName = extractStringLiteral(node.getRight());
+      var keyName = OpenDataObjectInference.stringLiteralOf(node.getRight());
       if (keyName != null) {
         var trimmed = keyName.trim();
         TypeSet exact = TypeSet.EMPTY;
@@ -738,7 +623,7 @@ public class ExpressionTypeInferencer {
   /**
    * Собрать union localFields по всем ref'ам набора. Источник —
    * {@link #applyMutation} (Структура/Соответствие)
-   * и {@link #applyStructureConstructorKeys} (Структура с key-list-конструктором).
+   * и {@link OpenDataObjectInference} (поля из конструктора и операторов-мутаторов).
    */
   private static Map<String, TypeSet> collectKeyValueFields(TypeSet leftTypes) {
     var merged = new LinkedHashMap<String, TypeSet>();
@@ -1186,16 +1071,7 @@ public class ExpressionTypeInferencer {
    * @return операторы-мутаторы по позициям, в порядке следования в документе.
    */
   private Map<Position, BSLParser.CallStatementContext> mutationCalls(VariableSymbol variable) {
-    var owner = variable.getOwner();
-    var ast = safeGetOwnerAst(owner);
-    if (ast == null) {
-      return Map.of();
-    }
-    Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
-    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      calls.put(Ranges.create(call).getStart(), call);
-    }
-    return calls;
+    return openDataObjectInference.mutatorsOf(variable);
   }
 
   /**
@@ -1224,57 +1100,7 @@ public class ExpressionTypeInferencer {
     TypeSet incoming,
     InferenceContext ctx
   ) {
-    if (call == null || incoming.isEmpty()) {
-      return incoming;
-    }
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
-    var variableName = variable.getName();
-
-    var structureRef = headRefOf(incoming, ExpressionTypeInferencer::isStructureOrMapLike);
-    if (structureRef != null) {
-      var field = insertedStructureField(call, variableName, scopeRange, ctx);
-      if (field != null && !field.types().isEmpty()) {
-        return incoming.withField(structureRef, field.name(), field.types());
-      }
-    }
-    var tableRef = headRefOf(incoming, ExpressionTypeInferencer::isValueTableLike);
-    if (tableRef != null) {
-      var column = addedColumn(call, variableName, scopeRange, ctx);
-      if (column != null) {
-        var rowRef = valueTableRowRef(variable.getOwner());
-        return incoming.withElement(tableRef, TypeSet.of(rowRef).withField(rowRef, column.name(), column.types()));
-      }
-    }
-    return incoming;
-  }
-
-  /**
-   * Первый тип набора, подходящий под условие.
-   *
-   * @param types     набор типов.
-   * @param predicate условие отбора по полному имени типа.
-   * @return подходящий тип либо {@code null}.
-   */
-  @Nullable
-  private static TypeRef headRefOf(TypeSet types, Predicate<String> predicate) {
-    for (var ref : types.refs()) {
-      if (predicate.test(ref.qualifiedName())) {
-        return ref;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Тип строки таблицы значений — на нём моделируются колонки.
-   *
-   * @param owner документ, для языка которого резолвится тип.
-   * @return ссылка на тип строки таблицы значений.
-   */
-  private TypeRef valueTableRowRef(DocumentContext owner) {
-    return typeRegistry.resolve(TableCollectionInference.VALUE_TABLE_ROW, owner.getFileType())
-      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, TableCollectionInference.VALUE_TABLE_ROW));
+    return openDataObjectInference.apply(variable, call, incoming, node -> inferInternal(node, ctx));
   }
 
   /**
@@ -1376,261 +1202,7 @@ public class ExpressionTypeInferencer {
    * @return тип с полями и колонками; исходный, если изменений на месте нет.
    */
   private TypeSet accumulateMutations(VariableSymbol variable, TypeSet base, InferenceContext ctx) {
-    var result = base;
-    for (var call : mutationCalls(variable).values()) {
-      result = applyMutation(variable, call, result, ctx);
-    }
-    return result;
-  }
-
-  /**
-   * Поле структуры/соответствия, добавляемое вызовом {@code X.Вставить("Ключ", Значение)}
-   * для нужного ресивера в области видимости, либо {@code null}, если вызов не подходит.
-   *
-   * @param call         разбираемый callStatement.
-   * @param variableName имя переменной-ресивера.
-   * @param scopeRange   диапазон области видимости переменной (или {@code null}).
-   * @param ctx          контекст инференса для вывода типа значения.
-   * @return добавляемое поле (имя + типы значения) либо {@code null}.
-   */
-  @Nullable
-  private KeyedTypes insertedStructureField(
-    BSLParser.CallStatementContext call,
-    String variableName,
-    @Nullable Range scopeRange,
-    InferenceContext ctx
-  ) {
-    var params = mutationCallParams(
-      call, variableName, scopeRange, extractInsertReceiverName(call), ExpressionTypeInferencer::isInsertMethodName);
-    if (params == null) {
-      return null;
-    }
-    var keyName = Optional.ofNullable(params.get(0).expression())
-      .map(ExpressionTypeInferencer::extractStringLiteralText)
-      .orElse(null);
-    if (keyName == null || keyName.isBlank()) {
-      return null;
-    }
-    TypeSet valueTypes;
-    if (params.size() >= 2 && params.get(1).expression() != null) {
-      var valueExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(params.get(1).expression());
-      valueTypes = valueExpr == null ? TypeSet.EMPTY : inferInternal(valueExpr, ctx);
-    } else {
-      valueTypes = TypeSet.of(UNDEFINED);
-    }
-    return new KeyedTypes(keyName.trim(), valueTypes);
-  }
-
-  /**
-   * Колонка таблицы значений, добавляемая вызовом {@code X.Колонки.Добавить("Имя", Тип)}
-   * для нужного ресивера в области видимости, либо {@code null}, если вызов не подходит.
-   *
-   * @param call         разбираемый callStatement.
-   * @param variableName имя переменной-ресивера.
-   * @param scopeRange   диапазон области видимости переменной (или {@code null}).
-   * @param ctx          контекст инференса для вывода типов колонки.
-   * @return добавляемая колонка (имя + типы) либо {@code null}.
-   */
-  @Nullable
-  private KeyedTypes addedColumn(
-    BSLParser.CallStatementContext call,
-    String variableName,
-    @Nullable Range scopeRange,
-    InferenceContext ctx
-  ) {
-    var params = mutationCallParams(
-      call, variableName, scopeRange, extractColumnsAddReceiverName(call), ExpressionTypeInferencer::isAddMethodName);
-    if (params == null) {
-      return null;
-    }
-    var keyName = Optional.ofNullable(params.get(0).expression())
-      .map(ExpressionTypeInferencer::extractStringLiteralText)
-      .orElse(null);
-    if (keyName == null || keyName.isBlank()) {
-      return null;
-    }
-    // Второй аргумент по сигнатуре платформы — объект ОписаниеТипов. Выводим тип выражения
-    // через инференсер; если в нём есть ОписаниеТипов-ref, забираем его elementTypes
-    // (туда applyTypeDescriptionConstructorTypes складывает имена типов из первого аргумента
-    // конструктора). Любое другое выражение даст пустой набор — колонка останется Неопределено.
-    var valueExpr = params.size() >= 2 ? params.get(1).expression() : null;
-    var columnTypes = valueExpr == null ? TypeSet.EMPTY : extractColumnTypes(valueExpr, ctx);
-    return new KeyedTypes(keyName.trim(), columnTypes.isEmpty() ? TypeSet.of(UNDEFINED) : columnTypes);
-  }
-
-  /**
-   * Параметры mutation-вызова {@code X.Метод(...)}, если его базовый идентификатор совпадает
-   * с {@code receiverName}, вызов попадает в область видимости и его метод проходит предикат.
-   * Общий guard-префикс для {@link #insertedStructureField} и {@link #addedColumn}.
-   *
-   * @param call           разбираемый callStatement.
-   * @param receiverName   имя переменной-ресивера.
-   * @param scopeRange     диапазон области видимости (или {@code null} — без проверки).
-   * @param actualReceiver фактический базовый идентификатор вызова (или {@code null}).
-   * @param methodMatches  предикат на имя вызываемого метода.
-   * @return непустой список параметров вызова либо {@code null}, если вызов не подходит.
-   */
-  @Nullable
-  private static List<? extends BSLParser.CallParamContext> mutationCallParams(
-    BSLParser.CallStatementContext call,
-    String receiverName,
-    @Nullable Range scopeRange,
-    @Nullable String actualReceiver,
-    Predicate<BSLParser.MethodCallContext> methodMatches
-  ) {
-    if (actualReceiver == null || !actualReceiver.equalsIgnoreCase(receiverName)) {
-      return null;
-    }
-    if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
-      return null;
-    }
-    var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
-    if (methodCall == null || !methodMatches.test(methodCall)) {
-      return null;
-    }
-    var paramList = methodCall.doCall() == null ? null : methodCall.doCall().callParamList();
-    if (paramList == null) {
-      return null;
-    }
-    var params = paramList.callParam();
-    return params.isEmpty() ? null : params;
-  }
-
-  /**
-   * Имя и типы поля/колонки, накапливаемых из mutation-вызова.
-   *
-   * @param name  имя ключа/колонки.
-   * @param types типы значения/колонки.
-   */
-  private record KeyedTypes(String name, TypeSet types) {
-  }
-
-  private static boolean isValueTableLike(String typeName) {
-    var lower = typeName.toLowerCase(Locale.ROOT);
-    return lower.equals("таблицазначений") || lower.equals("valuetable");
-  }
-
-  /**
-   * Извлечь типы колонки из второго аргумента {@code Колонки.Добавить("X", typesArg, ...)}.
-   * <p>
-   * Подход: строим {@link BslExpression} из AST второго аргумента и просим
-   * инференсер вывести его тип. Если в результирующем {@link TypeSet} есть
-   * {@link TypeRef}, идентифицируемый как {@code ОписаниеТипов} — берём у него
-   * {@link TypeSet#getElementTypes(TypeRef) elementTypes}, куда
-   * {@link #applyTypeDescriptionConstructorTypes} складывает типы из конструктора
-   * {@code Новый ОписаниеТипов("Число,Строка")}.
-   * <p>
-   * Это даёт корректное поведение для всех альтернатив:
-   * <ul>
-   *   <li>{@code Новый ОписаниеТипов("Число")} → {@code Число};</li>
-   *   <li>{@code Тип("Число")} → инференсер вернёт {@code Тип} (не ОписаниеТипов) → пусто;</li>
-   *   <li>строковый литерал → инференсер вернёт {@code Строка} → пусто;</li>
-   *   <li>переменная с типом ОписаниеТипов без литерального конструктора —
-   *       inferred-ref совпадает, но elementTypes пуст → пусто.</li>
-   * </ul>
-   */
-  private TypeSet extractColumnTypes(BSLParser.ExpressionContext expr, InferenceContext ctx) {
-    var bslExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(expr);
-    if (bslExpr == null) {
-      return TypeSet.EMPTY;
-    }
-    var inferred = inferInternal(bslExpr, ctx);
-    for (var ref : inferred.refs()) {
-      if (isTypeDescriptionType(ref.qualifiedName())) {
-        var elementTypes = inferred.getElementTypes(ref);
-        if (!elementTypes.isEmpty()) {
-          return elementTypes;
-        }
-      }
-    }
-    return TypeSet.EMPTY;
-  }
-
-  private static boolean isTypeDescriptionType(String name) {
-    return "ОписаниеТипов".equalsIgnoreCase(name) || "TypeDescription".equalsIgnoreCase(name);
-  }
-
-  private static boolean isAddMethodName(BSLParser.MethodCallContext methodCall) {
-    var nameCtx = methodCall.methodName();
-    if (nameCtx == null) {
-      return false;
-    }
-    var text = nameCtx.getText();
-    return "Добавить".equalsIgnoreCase(text) || "Add".equalsIgnoreCase(text);
-  }
-
-  /**
-   * Для конструкции {@code X.Колонки.Добавить(...)}: вернуть {@code "X"},
-   * если у callStatement ровно один accessProperty-модификатор с именем
-   * {@code Колонки}/{@code Columns} и далее идёт accessCall.
-   */
-  @Nullable
-  private static String extractColumnsAddReceiverName(BSLParser.CallStatementContext ctx) {
-    var identifier = ctx.IDENTIFIER();
-    if (identifier == null) {
-      return null;
-    }
-    var modifiers = ctx.modifier();
-    if (modifiers.size() != 1) {
-      return null;
-    }
-    var prop = modifiers.get(0).accessProperty();
-    if (prop == null || prop.IDENTIFIER() == null) {
-      return null;
-    }
-    var propName = prop.IDENTIFIER().getText();
-    if (!"Колонки".equalsIgnoreCase(propName) && !"Columns".equalsIgnoreCase(propName)) {
-      return null;
-    }
-    if (ctx.accessCall() == null) {
-      return null;
-    }
-    return identifier.getText();
-  }
-
-  @Nullable
-  private static String extractInsertReceiverName(BSLParser.CallStatementContext ctx) {
-    var identifier = ctx.IDENTIFIER();
-    if (identifier == null) {
-      return null;
-    }
-    // X.Вставить(...) — ровно один accessCall-модификатор и никаких других access*.
-    if (!ctx.modifier().isEmpty()) {
-      return null;
-    }
-    if (ctx.accessCall() == null) {
-      return null;
-    }
-    return identifier.getText();
-  }
-
-  private static boolean isInsertMethodName(BSLParser.MethodCallContext methodCall) {
-    var nameCtx = methodCall.methodName();
-    if (nameCtx == null) {
-      return false;
-    }
-    var text = nameCtx.getText();
-    return "Вставить".equalsIgnoreCase(text) || "Insert".equalsIgnoreCase(text);
-  }
-
-  @Nullable
-  private static String extractStringLiteralText(BSLParser.ExpressionContext expr) {
-    var text = expr.getText();
-    if (text == null || text.length() < 2) {
-      return null;
-    }
-    if (text.charAt(0) != '"' || text.charAt(text.length() - 1) != '"') {
-      return null;
-    }
-    return text.substring(1, text.length() - 1);
-  }
-
-  private static BSLParser.@Nullable FileContext safeGetOwnerAst(DocumentContext owner) {
-    try {
-      return owner.getAst();
-    } catch (NullPointerException e) {
-      return null;
-    }
+    return openDataObjectInference.applyAll(variable, base, node -> inferInternal(node, ctx));
   }
 
   /**
