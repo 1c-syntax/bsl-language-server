@@ -87,6 +87,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -1030,7 +1031,7 @@ public class ExpressionTypeInferencer {
     }
     ctx.flowInProgress.add(variable);
     try {
-      return variableFlowAnalyzer.typeAt(owner, use, flowInputs(variable, ctx));
+      return variableFlowAnalyzer.typeAt(owner, use, variable, flowInputs(variable, ctx));
     } catch (RuntimeException e) {
       // Расчёт по потоку — уточнение, а не единственный источник типа. Если он сорвался
       // (например, граф не построился на неожиданной форме кода), тип должен дать прежний
@@ -1101,7 +1102,7 @@ public class ExpressionTypeInferencer {
     var ctx = new InferenceContext(owner);
     ctx.flowInProgress.add(variable);
     try {
-      return variableFlowAnalyzer.typeAt(owner, position, atDefinition, flowInputs(variable, ctx));
+      return variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, flowInputs(variable, ctx));
     } catch (StackOverflowError | RuntimeException e) {
       return null;
     } finally {
@@ -1119,24 +1120,47 @@ public class ExpressionTypeInferencer {
    */
   private VariableFlowAnalyzer.FlowInputs flowInputs(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
-    // Оба набора считаются лениво: за местами присваиваний стоит обход индекса ссылок с
-    // поиском символа по позиции на каждое обращение к переменной, и это самая дорогая
-    // часть подготовки. При готовом ответе в кэше она не нужна вовсе.
-    var mutationCalls = new Lazy<>(() -> mutationCalls(variable));
+    // Операторы-мутаторы разбираются лениво и по одному разу на переменную: за ними стоит
+    // обход индекса вызовов, а при готовом окружении в кэше они не нужны вовсе.
+    Map<VariableSymbol, Lazy<Map<Position, BSLParser.CallStatementContext>>> callsByVariable = new HashMap<>();
+    Function<VariableSymbol, Map<Position, BSLParser.CallStatementContext>> callsOf = target ->
+      callsByVariable.computeIfAbsent(target, key -> new Lazy<>(() -> mutationCalls(key))).getOrCompute();
     return new VariableFlowAnalyzer.FlowInputs(
-      variable,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
       // (внутри инференса другой переменной) мог быть усечён защитой от циклов,
       // и переиспользовать такой результат как самостоятельный нельзя.
       ctx.visited.size() <= 1,
-      () -> flowEntryFact(variable),
-      () -> definitionPositions(variable),
-      () -> mutationCalls.getOrCompute().keySet(),
-      (statement, position) ->
+      () -> variablesSharingBody(variable),
+      this::flowEntryFact,
+      this::definitionPositions,
+      target -> callsOf.apply(target).keySet(),
+      (target, statement, position) ->
         attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
-      (position, incoming) -> applyMutation(variable, mutationCalls.getOrCompute().get(position), incoming, ctx),
-      narrowingCallback(variable, owner)
+      (target, position, incoming) -> applyMutation(target, callsOf.apply(target).get(position), incoming, ctx),
+      narrowingCallback(owner)
     );
+  }
+
+  /**
+   * Переменные, живущие в том же теле, что и заданная: расчёт по потоку считает их все
+   * разом, одним поиском неподвижной точки.
+   * <p>
+   * Общее тело определяется общей областью видимости — методом либо телом модуля.
+   * Переменные модуля (объявленные {@code Перем}) в расчёт не идут: их меняют из разных
+   * методов, и одного тела для ответа про них мало.
+   *
+   * @param variable переменная, чьё тело интересует.
+   * @return переменные этого тела вместе с самой заданной.
+   */
+  private List<VariableSymbol> variablesSharingBody(VariableSymbol variable) {
+    var scope = variable.getScope();
+    var siblings = new ArrayList<VariableSymbol>();
+    for (var candidate : variable.getOwner().getSymbolTree().getVariables()) {
+      if (candidate.getScope() == scope && candidate.getKind() != VariableKind.MODULE) {
+        siblings.add(candidate);
+      }
+    }
+    return siblings.isEmpty() ? List.of(variable) : siblings;
   }
 
   /**
@@ -1148,8 +1172,8 @@ public class ExpressionTypeInferencer {
    * @param owner    документ с условиями.
    * @return колбэк для {@link VariableFlowAnalyzer}.
    */
-  private VariableFlowAnalyzer.GuardNarrowing narrowingCallback(VariableSymbol variable, DocumentContext owner) {
-    return (condition, whenTrue, incoming) ->
+  private VariableFlowAnalyzer.GuardNarrowing narrowingCallback(DocumentContext owner) {
+    return (variable, condition, whenTrue, incoming) ->
       guardConditionNarrowing.compile(condition, owner).apply(variable, whenTrue, incoming);
   }
 
