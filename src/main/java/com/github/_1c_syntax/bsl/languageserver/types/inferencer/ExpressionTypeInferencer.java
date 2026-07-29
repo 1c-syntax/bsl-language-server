@@ -48,8 +48,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptEx
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
@@ -59,8 +57,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallN
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.description.TypeDescription;
-import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,12 +68,10 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -120,6 +114,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final DeclaredParameterTypes declaredParameterTypes;
+  private final CommentDeclaredTypes commentDeclaredTypes;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
@@ -1113,7 +1108,7 @@ public class ExpressionTypeInferencer {
       entry = entry.union(declaredParameterTypes(variable));
     }
     return entry
-      .union(typesFromVariableTrailingComment(variable))
+      .union(commentDeclaredTypes.ofDeclaration(variable))
       .union(autumnInjectedType(variable))
       .union(extendsParentFieldType(variable));
   }
@@ -1203,23 +1198,6 @@ public class ExpressionTypeInferencer {
     return openDataObjectInference.applyAll(variable, base, node -> inferInternal(node, ctx));
   }
 
-  /**
-   * Извлечь типы из висячего комментария декларации переменной:
-   * {@code Перем X; // Тип -}. Источник — структурно разобранные парсером типы
-   * {@code VariableDescription.trailingDescription.getTypes()}, который парсер уже
-   * привязал к декларации.
-   */
-  private TypeSet typesFromVariableTrailingComment(VariableSymbol variable) {
-    var description = variable.getDescription().orElse(null);
-    if (description == null) {
-      return TypeSet.EMPTY;
-    }
-    var trailing = description.getTrailingDescription().orElse(null);
-    if (trailing == null) {
-      return TypeSet.EMPTY;
-    }
-    return resolveCommentTypes(trailing.getTypes(), variable.getOwner().getFileType());
-  }
 
   /**
    * Тип переменной, объявленный вне тела метода, — если она параметр.
@@ -1255,7 +1233,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(inlineCommentTypes(owner, assignment));
+      return types.union(commentDeclaredTypes.ofAssignment(owner, assignment));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1307,7 +1285,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(inlineCommentTypes(owner, assignment.get()));
+      result = result.union(commentDeclaredTypes.ofAssignment(owner, assignment.get()));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:
@@ -1320,49 +1298,6 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
-  /**
-   * Подхватить типы из висячего комментария в строке присваивания:
-   * {@code X = F(); // Тип -}. Соответствует «inline-typing локальной
-   * переменной» из стандарта 1С:EDT. Комментарий разбирается тем же парсером
-   * описаний, что и висячий комментарий декларации: из токена строится
-   * {@link VariableDescription}, а типы берутся структурно из её
-   * {@code trailingDescription.getTypes()}.
-   */
-  private TypeSet inlineCommentTypes(
-    DocumentContext owner,
-    BSLParser.AssignmentContext assignment
-  ) {
-    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
-    if (trailingComment.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var trailing = VariableDescription.create(Collections.emptyList(), trailingComment)
-      .getTrailingDescription()
-      .orElse(null);
-    if (trailing == null) {
-      return TypeSet.EMPTY;
-    }
-    return resolveCommentTypes(trailing.getTypes(), owner.getFileType());
-  }
-
-  /**
-   * Резолвит структурно разобранные парсером типы комментария в {@link TypeSet}
-   * по их {@link TypeDescription#name()}. Для коллекционной нотации
-   * {@code Массив из Число} парсер возвращает один тип-голову {@code Массив}.
-   */
-  private TypeSet resolveCommentTypes(List<TypeDescription> types, FileType fileType) {
-    if (types == null || types.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    Set<TypeRef> refs = new LinkedHashSet<>();
-    for (var td : types) {
-      var typeName = DescriptionTypes.resolveName(td);
-      if (!typeName.isBlank()) {
-        typeRegistry.resolve(typeName, fileType).ifPresent(refs::add);
-      }
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
-  }
 
   // ---------------------------------------------------------------------------
   // Helpers
