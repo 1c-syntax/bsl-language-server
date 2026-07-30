@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.commands.ToggleCyclomaticComplex
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -39,9 +40,10 @@ public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexi
 
   public CyclomaticComplexityCodeLensSupplier(
     LanguageServerConfiguration configuration,
-    ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier
+    ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier,
+    Resources resources
   ) {
-    super(configuration, commandSupplier);
+    super(configuration, commandSupplier, resources);
   }
 
   @Override

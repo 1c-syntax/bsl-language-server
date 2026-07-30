@@ -61,6 +61,11 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   /**
+   * Локализованные ресурсы сервера.
+   */
+  private final Resources resources;
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -83,7 +88,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
 
-      var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
+      var title = resources.getResourceString(getClass(), TITLE_KEY, complexity);
       var arguments = new ToggleComplexityInlayHintsCommandArguments(
         data.getUri(),
         commandSupplier.getId(),
@@ -91,7 +96,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
       );
 
       var command = commandSupplier.createCommand(title, arguments);
-      command.setTooltip(Resources.getResourceString(configuration.getLanguage(), getClass(), TOOLTIP_KEY));
+      command.setTooltip(resources.getResourceString(getClass(), TOOLTIP_KEY));
 
       unresolved.setCommand(command);
     });

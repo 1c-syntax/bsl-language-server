@@ -90,20 +90,6 @@ public class NavigationCommandBuilder {
   }
 
   /**
-   * Команда перехода к производителю(-ям): прыжок к единственной цели, поповер при нескольких.
-   * Подходит прямой линзе «точка внедрения → производитель».
-   *
-   * @param title    Заголовок линзы.
-   * @param uri      URI документа, из которого выполняется переход.
-   * @param position Позиция курсора, от которой выполняется переход.
-   * @param targets  Цели перехода (объявления производителей).
-   * @return Команда с идентификатором, выбранным под клиента.
-   */
-  public Command gotoCommand(String title, URI uri, Position position, List<Location> targets) {
-    return gotoCommand(title, null, uri, position, targets);
-  }
-
-  /**
    * Команда перехода к целям с подсказкой (tooltip), показываемой при наведении на линзу.
    *
    * @param title    Заголовок линзы.
@@ -119,20 +105,6 @@ public class NavigationCommandBuilder {
     var command = new Command(title, commandId, List.of(uri.toString(), position, targets, multiple));
     command.setTooltip(tooltip);
     return command;
-  }
-
-  /**
-   * Команда показа списка использований в поповере. Подходит обратной линзе
-   * «производитель → точки внедрения».
-   *
-   * @param title     Заголовок линзы.
-   * @param uri       URI документа, из которого выполняется показ.
-   * @param position  Позиция курсора, от которой выполняется показ.
-   * @param locations Местоположения использований.
-   * @return Команда с идентификатором, выбранным под клиента.
-   */
-  public Command referencesCommand(String title, URI uri, Position position, List<Location> locations) {
-    return referencesCommand(title, null, uri, position, locations);
   }
 
   /**
