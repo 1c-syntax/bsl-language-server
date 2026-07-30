@@ -37,8 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Тип переменной модуля в точке использования: её меняют из разных методов, поэтому
- * расчёт по потоку тела опирается на сводку по всему модулю и возвращается к ней там,
- * где управление могло уйти в другой метод.
+ * расчёт по потоку тела опирается на объединение по всей области видимости и возвращается
+ * к нему там, где управление могло уйти в другой метод.
  */
 @CleanupContextBeforeClassAndAfterClass
 class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
@@ -47,8 +47,8 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
   private TypeService typeService;
 
   @Test
-  void assignmentInBodyOverridesSummary() {
-    // given: `Кэш` присваивают в двух методах — сводка по модулю даёт оба типа.
+  void assignmentInBodyOverridesScopeUnion() {
+    // given: `Кэш` присваивают в двух методах — объединение по модулю даёт оба типа.
     // when
     var types = at("ПослеПрисваивания = Кэш", "ПослеПрисваивания = ".length());
 
@@ -57,7 +57,7 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void callResetsTypeToSummary() {
+  void callResetsTypeToScopeUnion() {
     // given: вызванный метод мог присвоить переменной что угодно.
     // when
     var types = at("ПослеВызова = Кэш", "ПослеВызова = ".length());
@@ -67,7 +67,7 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void useBeforeFirstAssignmentTakesSummary() {
+  void useBeforeFirstAssignmentTakesScopeUnion() {
     // given: до присваивания в этом теле переменная содержит то, что оставил другой метод.
     // when
     var types = at("ДоПрисваивания = Кэш", "ДоПрисваивания = ".length());
@@ -77,8 +77,8 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void mutatorFieldsSurviveThroughSummary() {
-    // given: поле, вставленное в структуру, видно и после возврата к сводке.
+  void mutatorFieldsSurviveThroughScopeUnion() {
+    // given: поле, вставленное в структуру, видно и после возврата к объединению.
     // when
     var types = at("ПослеВставки = Настройки", "ПослеВставки = ".length());
 
