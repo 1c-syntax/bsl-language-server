@@ -74,6 +74,8 @@ public class OpenDataObjectInference {
   private static final String ADD_EN = "Add";
   private static final String COLUMNS_RU = "Колонки";
   private static final String COLUMNS_EN = "Columns";
+  private static final String ADJUST_VALUE_RU = "ПривестиЗначение";
+  private static final String ADJUST_VALUE_EN = "AdjustValue";
 
   /** Тип ключа без значения: {@code Новый Структура("Ключ")} и {@code Вставить("Ключ")}. */
   private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
@@ -243,6 +245,37 @@ public class OpenDataObjectInference {
       return base;
     }
     return base.withElement(base.refs().iterator().next(), TypeSet.of(refs));
+  }
+
+  /**
+   * Типы значения, приведённого описанием типов: {@code ОписаниеЧисла.ПривестиЗначение(Х)}
+   * даёт значение ровно тех типов, что описаны.
+   * <p>
+   * Платформа объявляет возврат как {@code Произвольный}, потому что в общем случае состав
+   * описания неизвестен. Но если описание собрано литеральным конструктором, состав уже
+   * разобран и лежит в типах элементов — оттуда и берём. Так после
+   * {@code ТипЧисло = Новый ОписаниеТипов("Число")} обращение
+   * {@code ТипЧисло.ПривестиЗначение(Строка).Округлить(2)} видит число, а не «произвольный».
+   *
+   * @param receiver   типы получателя.
+   * @param memberName имя члена.
+   * @return типы приведённого значения; {@code null}, если правило неприменимо и нужен
+   *     общий путь.
+   */
+  @Nullable
+  public TypeSet adjustedValueTypes(TypeSet receiver, String memberName) {
+    if (!ADJUST_VALUE_RU.equalsIgnoreCase(memberName) && !ADJUST_VALUE_EN.equalsIgnoreCase(memberName)) {
+      return null;
+    }
+    for (var ref : receiver.refs()) {
+      if (isTypeDescriptionType(ref.qualifiedName())) {
+        var described = receiver.getElementTypes(ref);
+        if (!described.isEmpty()) {
+          return described;
+        }
+      }
+    }
+    return null;
   }
 
   /**

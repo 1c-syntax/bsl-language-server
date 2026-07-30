@@ -66,8 +66,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -369,6 +369,12 @@ public class ExpressionTypeInferencer {
       leftTypes, memberName, call, ctx.documentContext.getFileType());
     if (tableTypes != null) {
       return tableTypes;
+    }
+    if (call != null) {
+      var adjusted = openDataObjectInference.adjustedValueTypes(leftTypes, memberName);
+      if (adjusted != null) {
+        return adjusted;
+      }
     }
     if (call == null || !ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
       return null;
