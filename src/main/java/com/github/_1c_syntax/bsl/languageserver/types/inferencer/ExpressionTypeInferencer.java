@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.VariablesByScopeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -63,7 +64,9 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -108,6 +111,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final VariableCommentTypeResolver variableCommentTypeResolver;
+  private final VariablesByScopeIndex variablesByScope;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
@@ -922,14 +926,11 @@ public class ExpressionTypeInferencer {
    * @return переменные этого тела вместе с самой заданной.
    */
   private List<VariableSymbol> variablesSharingBody(VariableSymbol variable) {
-    var scope = variable.getScope();
-    var siblings = new ArrayList<VariableSymbol>();
-    for (var candidate : variable.getOwner().getSymbolTree().getVariables()) {
-      if (candidate.getScope() == scope && candidate.getKind() != VariableKind.MODULE) {
-        siblings.add(candidate);
-      }
-    }
-    return siblings.isEmpty() ? List.of(variable) : siblings;
+    // Раскладка по областям считается один раз на документ: иначе каждый расчёт тела
+    // перебирал бы переменные всего модуля, а тел в модуле столько же, сколько методов.
+    var byScope = variablesByScope.get(variable.getOwner());
+    var siblings = byScope.get(variable.getScope());
+    return siblings == null || siblings.isEmpty() ? List.of(variable) : siblings;
   }
 
   /**
@@ -967,15 +968,14 @@ public class ExpressionTypeInferencer {
    * @param variable переменная.
    * @return позиции присваиваний без повторов.
    */
-  private List<Position> definitionPositions(VariableSymbol variable) {
-    var positions = new ArrayList<Position>();
+  private Collection<Position> definitionPositions(VariableSymbol variable) {
+    // Множество, а не список с проверкой contains: у переменной в длинном методе
+    // присваиваний бывают десятки, и отсев повторов перебором давал квадрат.
+    Set<Position> positions = new LinkedHashSet<>();
     positions.add(variable.getSelectionRange().getStart());
     for (var occurrence : referenceIndex.getReferencesTo(variable)) {
       if (occurrence.occurrenceType() == OccurrenceType.DEFINITION) {
-        var start = occurrence.selectionRange().getStart();
-        if (!positions.contains(start)) {
-          positions.add(start);
-        }
+        positions.add(occurrence.selectionRange().getStart());
       }
     }
     return positions;

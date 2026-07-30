@@ -43,8 +43,8 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -124,22 +125,43 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    *
    * @param types типы переменных; переменных, о которых ничего не известно, в карте нет.
    */
-  private record Environment(Map<VariableSymbol, TypeSet> types) {
+  private record Environment(TypeSet[] types) {
 
-    private static final Environment EMPTY = new Environment(Map.of());
+    /**
+     * Пустое окружение нулевой длины — обращение к любой переменной даёт пустой набор.
+     * Годится как начальное значение для тела любого размера.
+     */
+    private static final Environment EMPTY = new Environment(new TypeSet[0]);
 
-    /** Тип переменной; пустой набор, если про неё здесь ничего не известно. */
-    TypeSet get(VariableSymbol variable) {
-      return types.getOrDefault(variable, TypeSet.EMPTY);
+    /**
+     * Окружение, в котором о переменных ничего не известно.
+     *
+     * @param size число переменных тела.
+     * @return окружение нужного размера.
+     */
+    static Environment blank(int size) {
+      var types = new TypeSet[size];
+      Arrays.fill(types, TypeSet.EMPTY);
+      return new Environment(types);
     }
 
-    /** Окружение с изменённым типом одной переменной. */
-    Environment with(VariableSymbol variable, TypeSet type) {
-      if (type.equals(get(variable))) {
+    /** Тип переменной по её номеру; пустой набор, если про неё здесь ничего не известно. */
+    TypeSet get(int index) {
+      return index < types.length ? types[index] : TypeSet.EMPTY;
+    }
+
+    /**
+     * Окружение с изменённым типом одной переменной.
+     * <p>
+     * Если тип не поменялся, возвращается это же окружение: так соседние точки, между
+     * которыми ничего не произошло, ссылаются на один объект.
+     */
+    Environment with(int index, TypeSet type, int size) {
+      if (type.equals(get(index))) {
         return this;
       }
-      var changed = new HashMap<>(types);
-      changed.put(variable, type);
+      var changed = resized(size);
+      changed[index] = type;
       return new Environment(changed);
     }
 
@@ -148,28 +170,63 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      * Так сходятся пути в точке слияния.
      */
     Environment union(Environment other) {
-      if (types.isEmpty()) {
+      if (types.length == 0) {
         return other;
       }
-      if (other.types.isEmpty()) {
+      if (other.types.length == 0) {
         return this;
       }
-      var merged = new HashMap<>(types);
-      other.types.forEach((variable, type) -> merged.merge(variable, type, TypeSet::union));
-      return new Environment(merged);
+      TypeSet[] merged = null;
+      for (var i = 0; i < types.length; i++) {
+        var united = types[i].union(other.types[i]);
+        if (merged == null && !united.equals(types[i])) {
+          merged = types.clone();
+        }
+        if (merged != null) {
+          merged[i] = united;
+        }
+      }
+      return merged == null ? this : new Environment(merged);
     }
 
     /**
      * Окружение, к каждой переменной которого применено преобразование, — так работает
-     * сужение по охраняющему условию на ребре ветки.
+     * сужение по охраняющему условию на ребре ветки. Если ни один тип не изменился,
+     * возвращается это же окружение: условие обычно говорит про одну переменную из многих.
      */
-    Environment map(Function<VariableSymbol, TypeSet> transform) {
-      if (types.isEmpty()) {
-        return this;
+    Environment map(IntFunction<TypeSet> transform) {
+      TypeSet[] mapped = null;
+      for (var i = 0; i < types.length; i++) {
+        var narrowed = transform.apply(i);
+        if (mapped == null && !narrowed.equals(types[i])) {
+          mapped = types.clone();
+        }
+        if (mapped != null) {
+          mapped[i] = narrowed;
+        }
       }
-      Map<VariableSymbol, TypeSet> mapped = new HashMap<>(types.size());
-      types.forEach((variable, type) -> mapped.put(variable, transform.apply(variable)));
-      return new Environment(mapped);
+      return mapped == null ? this : new Environment(mapped);
+    }
+
+    /** Копия массива нужной длины: пустое окружение растягивается до размера тела. */
+    private TypeSet[] resized(int size) {
+      if (types.length == size) {
+        return types.clone();
+      }
+      var grown = new TypeSet[size];
+      Arrays.fill(grown, TypeSet.EMPTY);
+      System.arraycopy(types, 0, grown, 0, types.length);
+      return grown;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return this == other || other instanceof Environment that && Arrays.equals(types, that.types);
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(types);
     }
   }
 
@@ -181,22 +238,29 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param definition {@code true} — присваивание (задаёт тип заново),
    *                   {@code false} — мутатор (дополняет накопленный).
    */
-  private record Change(VariableSymbol variable, Position position, boolean definition) {
+  private record Change(VariableSymbol variable, int index, Position position, boolean definition) {
   }
 
   /**
    * Рассчитанное по телу, что не зависит от точки запроса.
    *
-   * @param applicable        переменные, для которых расчёт по потоку применим; про
+   * @param indexes           номера переменных, для которых расчёт по потоку применим; про
    *                          остальные отвечает прежний путь с обходом области видимости.
+   *                          Номер — место переменной в окружении.
    * @param beforeStatement   окружение перед каждым оператором тела.
    * @param changesByStatement изменения типов по операторам, в которых они стоят.
    */
   private record Facts(
-    Set<VariableSymbol> applicable,
+    Map<VariableSymbol, Integer> indexes,
     Map<ParserRuleContext, Environment> beforeStatement,
     Map<ParserRuleContext, List<Change>> changesByStatement
   ) {
+
+    /** Номер переменной в окружении; {@code null}, если расчёт по потоку к ней неприменим. */
+    @Nullable
+    Integer indexOf(VariableSymbol variable) {
+      return indexes.get(variable);
+    }
 
     /** Изменение типа переменной в этом операторе; {@code null}, если его тут нет. */
     @Nullable
@@ -414,11 +478,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return active.estimateAt(useStatement, variable);
     }
     var facts = factsOf(documentContext, body, layout, inputs);
-    if (!facts.applicable().contains(variable)) {
+    var index = facts.indexOf(variable);
+    if (index == null) {
       return null;
     }
     var change = facts.changeOf(useStatement, variable);
-    var before = facts.beforeStatement().getOrDefault(useStatement, Environment.EMPTY).get(variable);
+    var before = facts.beforeStatement().getOrDefault(useStatement, Environment.EMPTY).get(index);
     var inclusive = useNode == null
       ? atDefinition
       : change != null && change.definition() && Ranges.containsPosition(Ranges.create(useNode), change.position());
@@ -470,7 +535,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     FlowLayout layout,
     FlowInputs inputs
   ) {
-    Set<VariableSymbol> applicable = Collections.newSetFromMap(new IdentityHashMap<>());
+    // Каждой переменной, попавшей в расчёт, достаётся номер — её место в окружении.
+    // Окружение хранится массивом по этим номерам, а не картой: копия массива на десяток
+    // элементов дешевле копирования и перехеширования карты, а копий тут много — на
+    // каждое изменение, слияние и сужение в каждом проходе.
+    Map<VariableSymbol, Integer> indexes = new IdentityHashMap<>();
+    var variables = new ArrayList<VariableSymbol>();
     Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
     for (var variable : inputs.variables().get()) {
       var definitions = inputs.definitionPositions().apply(variable);
@@ -481,19 +551,21 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       if (definitions.isEmpty() || !allPlaced(layout, definitions) || !allPlaced(layout, mutations)) {
         continue;
       }
-      applicable.add(variable);
-      collectChanges(layout, variable, definitions, true, changesByStatement);
-      collectChanges(layout, variable, mutations, false, changesByStatement);
+      var index = variables.size();
+      indexes.put(variable, index);
+      variables.add(variable);
+      collectChanges(layout, variable, index, definitions, true, changesByStatement);
+      collectChanges(layout, variable, index, mutations, false, changesByStatement);
     }
-    if (applicable.isEmpty()) {
-      return new Facts(applicable, Map.of(), Map.of());
+    if (variables.isEmpty()) {
+      return new Facts(Map.of(), Map.of(), Map.of());
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
-    var pass = new Pass(graph, layout, inputs, applicable, changesByStatement);
+    var pass = new Pass(graph, layout, inputs, variables, indexes, changesByStatement);
     var active = inputs.session().active;
     active.put(body, pass);
     try {
-      return new Facts(applicable, pass.computeStatementFacts(), changesByStatement);
+      return new Facts(indexes, pass.computeStatementFacts(), changesByStatement);
     } finally {
       active.remove(body);
     }
@@ -503,13 +575,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private static void collectChanges(
     FlowLayout layout,
     VariableSymbol variable,
+    int index,
     Collection<Position> positions,
     boolean definition,
     Map<ParserRuleContext, List<Change>> target
   ) {
     layout.index(positions).forEach((statement, position) ->
       target.computeIfAbsent(statement, key -> new ArrayList<>(1))
-        .add(new Change(variable, position, definition)));
+        .add(new Change(variable, index, position, definition)));
   }
 
   /** Все ли изменения типа легли в операторы графа. */
@@ -531,7 +604,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private final ControlFlowGraph graph;
     private final FlowLayout layout;
     private final FlowInputs inputs;
-    private final Set<VariableSymbol> applicable;
+    /** Переменные тела по их номерам в окружении. */
+    private final List<VariableSymbol> variables;
+    private final Map<VariableSymbol, Integer> indexes;
     private final Map<ParserRuleContext, List<Change>> changesByStatement;
 
     /**
@@ -547,17 +622,27 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     private final Map<ParserRuleContext, Environment> beforeStatement = new IdentityHashMap<>();
 
+    /** Окружение на входе в тело: считается по первому требованию и переиспользуется. */
+    @Nullable
+    private Environment entry;
+
+    /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
+    private final Map<CfgVertex, Environment> outgoing = new IdentityHashMap<>();
+    private final Map<CfgVertex, Environment> outgoingInput = new IdentityHashMap<>();
+
     private Pass(
       ControlFlowGraph graph,
       FlowLayout layout,
       FlowInputs inputs,
-      Set<VariableSymbol> applicable,
+      List<VariableSymbol> variables,
+      Map<VariableSymbol, Integer> indexes,
       Map<ParserRuleContext, List<Change>> changesByStatement
     ) {
       this.graph = graph;
       this.layout = layout;
       this.inputs = inputs;
-      this.applicable = applicable;
+      this.variables = variables;
+      this.indexes = indexes;
       this.changesByStatement = changesByStatement;
     }
 
@@ -586,11 +671,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     @Nullable
     private TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {
-      if (!applicable.contains(variable)) {
+      var index = indexes.get(variable);
+      if (index == null) {
         return null;
       }
       var environment = beforeStatement.get(statement);
-      return environment == null ? null : environment.get(variable);
+      return environment == null ? null : environment.get(index);
     }
 
     /**
@@ -621,16 +707,21 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return facts;
     }
 
-    /** Окружение на входе в тело: что известно о переменных до первого присваивания. */
+    /**
+     * Окружение на входе в тело: что известно о переменных до первого присваивания.
+     * Считается один раз — источники объявленного типа тянут разбор комментариев и
+     * аннотаций, а спрашивают их в каждом проходе.
+     */
     private Environment entryEnvironment() {
-      Map<VariableSymbol, TypeSet> entry = new HashMap<>();
-      for (var variable : applicable) {
-        var types = inputs.entryFact().apply(variable);
-        if (!types.isEmpty()) {
-          entry.put(variable, types);
+      if (entry == null) {
+        var types = Environment.blank(variables.size());
+        var current = types;
+        for (var i = 0; i < variables.size(); i++) {
+          current = current.with(i, inputs.entryFact().apply(variables.get(i)), variables.size());
         }
+        entry = current;
       }
-      return entry.isEmpty() ? Environment.EMPTY : new Environment(entry);
+      return entry;
     }
 
     /**
@@ -646,11 +737,34 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         var predecessor = graph.getEdgeSource(edge);
         var atPredecessor = facts.get(predecessor);
         if (atPredecessor != null) {
-          var outgoing = applyStatements(predecessor, atPredecessor);
+          var outgoing = outgoingOf(predecessor, atPredecessor);
           joined = joined.union(narrowedByEdge(predecessor, edge.getType(), outgoing));
         }
       }
       return joined;
+    }
+
+    /**
+     * Окружение на выходе вершины — то же, что на входе, но с применёнными операторами.
+     * <p>
+     * Считается один раз на каждое входное окружение, а не на каждое исходящее ребро.
+     * Иначе операторы вершины проигрывались бы заново для каждого её последователя, а
+     * вместе с ними — колбэки операторов-мутаторов, которые тянут разбор вызова и вывод
+     * типа значения. Сравнение входа идёт по ссылке: окружения неизменяемы, и при
+     * изменении на месте старого создаётся новое.
+     *
+     * @param vertex   вершина.
+     * @param incoming окружение на входе в неё.
+     * @return окружение на выходе.
+     */
+    private Environment outgoingOf(CfgVertex vertex, Environment incoming) {
+      if (outgoingInput.get(vertex) == incoming) {
+        return outgoing.get(vertex);
+      }
+      var result = applyStatements(vertex, incoming);
+      outgoingInput.put(vertex, incoming);
+      outgoing.put(vertex, result);
+      return result;
     }
 
     /**
@@ -666,8 +780,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         return outgoing;
       }
       var whenTrue = edgeType == CfgEdgeType.TRUE_BRANCH;
-      return outgoing.map(variable ->
-        inputs.narrowing().narrow(variable, condition, whenTrue, outgoing.get(variable)));
+      return outgoing.map(index ->
+        inputs.narrowing().narrow(variables.get(index), condition, whenTrue, outgoing.get(index)));
     }
 
     /** Условие вершины-ветвления; {@code null}, если вершина условия не несёт. */
@@ -707,8 +821,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         var updated = change.definition()
           ? assignedTypes.computeIfAbsent(
             change.position(), position -> inputs.assigned().at(variable, statement, position))
-          : inputs.mutations().apply(variable, change.position(), current.get(variable));
-        current = current.with(variable, updated);
+          : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
+        current = current.with(change.index(), updated, variables.size());
       }
       return current;
     }
