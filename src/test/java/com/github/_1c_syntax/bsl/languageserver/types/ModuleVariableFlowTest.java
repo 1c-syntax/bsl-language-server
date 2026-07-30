@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -108,6 +109,6 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
   }
 
   private static List<String> qnames(TypeSet types) {
-    return types.refs().stream().map(ref -> ref.qualifiedName()).toList();
+    return types.refs().stream().map(TypeRef::qualifiedName).toList();
   }
 }

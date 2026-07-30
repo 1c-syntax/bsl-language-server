@@ -942,17 +942,30 @@ public class ExpressionTypeInferencer {
       visible.addAll(inScope.values());
     }
     if (scope != module) {
-      // Переменные модуля видны из метода, а созданные присваиванием в теле модуля — нет.
-      var atModuleLevel = byScope.get(module);
-      if (atModuleLevel != null) {
-        for (var candidate : atModuleLevel.values()) {
-          if (candidate.getKind() == VariableKind.MODULE) {
-            visible.add(candidate);
-          }
-        }
-      }
+      addModuleVariables(byScope.get(module), visible);
     }
     return visible;
+  }
+
+  /**
+   * Добавить к набору переменные, объявленные {@code Перем} на уровне модуля: они видны из
+   * любого метода, а созданные присваиванием в теле модуля — нет.
+   *
+   * @param atModuleLevel переменные области видимости модуля; {@code null}, если их нет.
+   * @param target        набор, куда добавлять.
+   */
+  private static void addModuleVariables(
+    @Nullable Map<String, VariableSymbol> atModuleLevel,
+    List<VariableSymbol> target
+  ) {
+    if (atModuleLevel == null) {
+      return;
+    }
+    for (var candidate : atModuleLevel.values()) {
+      if (candidate.getKind() == VariableKind.MODULE) {
+        target.add(candidate);
+      }
+    }
   }
 
   /**

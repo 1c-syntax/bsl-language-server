@@ -299,12 +299,16 @@ final class FlowLayout {
   boolean hasCall(ParserRuleContext statement) {
     var known = callStatements;
     if (known == null) {
-      known = new HashSet<ParserRuleContext>();
+      var found = new HashSet<ParserRuleContext>();
       for (var slot : slots) {
         if (containsCall(slot)) {
-          known.add(slot.statement());
+          found.add(slot.statement());
         }
       }
+      // Публикуется неизменяемым: набор считается по первому требованию из любого потока,
+      // и делить между ними изменяемую коллекцию нельзя. Двойная работа при гонке
+      // безвредна — набор от расчёта не зависит.
+      known = Set.copyOf(found);
       callStatements = known;
     }
     return known.contains(statement);
