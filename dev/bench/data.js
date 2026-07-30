@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785416183878,
+  "lastUpdate": 1785419796515,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41199,6 +41199,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.3343048813986593",
             "extra": "mean: 93.8787751197815 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "af362caed37b2f3cf93aea654997b8b904d03a8b",
+          "message": "Merge pull request #4328 from 1c-syntax/feature/narrow-in-conjunction\n\nfeat(types): сужение типа внутри самого условия — конъюнкция и дизъюнкция",
+          "timestamp": "2026-07-30T15:19:16+02:00",
+          "tree_id": "c453eb5f6ddcd7e3083caed76a7f5339cae559cc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/af362caed37b2f3cf93aea654997b8b904d03a8b"
+        },
+        "date": 1785419785568,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.58666984240215,
+            "unit": "sec",
+            "range": "stddev: 1.834408335227989",
+            "extra": "mean: 91.58666984240215 sec\nrounds: 3"
           }
         ]
       }
