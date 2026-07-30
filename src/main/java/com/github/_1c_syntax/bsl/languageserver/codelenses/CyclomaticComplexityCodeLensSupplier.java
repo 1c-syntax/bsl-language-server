@@ -38,6 +38,13 @@ import java.util.Map;
 @Order(5)
 public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
+  /**
+   * Конструктор поставщика линз цикломатической сложности.
+   *
+   * @param configuration  Конфигурация language server.
+   * @param commandSupplier Поставщик команды переключения inlay-хинтов цикломатической сложности.
+   * @param resources      Локализованные ресурсы сервера.
+   */
   public CyclomaticComplexityCodeLensSupplier(
     LanguageServerConfiguration configuration,
     ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier,

@@ -38,6 +38,13 @@ import java.util.Map;
 @Order(4)
 public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
+  /**
+   * Конструктор поставщика линз когнитивной сложности.
+   *
+   * @param configuration  Конфигурация language server.
+   * @param commandSupplier Поставщик команды переключения inlay-хинтов когнитивной сложности.
+   * @param resources      Локализованные ресурсы сервера.
+   */
   public CognitiveComplexityCodeLensSupplier(
     LanguageServerConfiguration configuration,
     ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier,
