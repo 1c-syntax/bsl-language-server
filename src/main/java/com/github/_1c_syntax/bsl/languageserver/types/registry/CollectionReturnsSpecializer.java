@@ -132,8 +132,8 @@ final class CollectionReturnsSpecializer {
     var signaturesChanged = false;
     for (var signature : member.signatures()) {
       var replaced = replaceRow(signature, genericRow, row);
-      signaturesChanged |= replaced != signature;
-      signatures.add(replaced);
+      signaturesChanged |= replaced != null;
+      signatures.add(replaced == null ? signature : replaced);
     }
     if (returnTypes == null && !signaturesChanged) {
       return null;
@@ -142,6 +142,8 @@ final class CollectionReturnsSpecializer {
     return signaturesChanged ? result.withSignatures(signatures) : result;
   }
 
+  /** @return копия сигнатуры с конкретной строкой; {@code null}, если обобщённой строки в ней нет. */
+  @Nullable
   private static SignatureDescriptor replaceRow(SignatureDescriptor signature, TypeRef genericRow, TypeRef row) {
     var returnTypes = replaceRow(signature.returnTypes(), genericRow, row);
     var parameters = new ArrayList<ParameterDescriptor>(signature.parameters().size());
@@ -154,7 +156,7 @@ final class CollectionReturnsSpecializer {
         parameter.variadic()));
     }
     if (returnTypes == null && !parametersChanged) {
-      return signature;
+      return null;
     }
     return new SignatureDescriptor(parameters,
       returnTypes == null ? signature.returnTypes() : returnTypes,
