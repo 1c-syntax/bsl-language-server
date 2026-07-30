@@ -225,6 +225,18 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void selfAssignmentAfterTypeChangeReadsOnlyPreviousType() {
+    // given: правая часть читает ту же переменную, тип которой считается. Раньше такой
+    // повторный вход уходил на объединение по области видимости, и к строке примешивалось
+    // число от первого присваивания.
+    // when
+    var types = at("ПослеСамоприсваивания = Копилка", "ПослеСамоприсваивания = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
   void selfAssignmentReadsPreviousType() {
     // given / when
     var types = at("Накопитель = Накопитель + \"хвост\"", "Накопитель = ".length());

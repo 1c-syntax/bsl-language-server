@@ -787,12 +787,11 @@ public class ExpressionTypeInferencer {
    * @param ctx      контекст текущего инференса.
    * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим и нужен
    *     общий путь: переменная модуля (её меняют из разных методов), использование в
-   *     другом документе, повторный вход по той же переменной, отсутствие присваиваний
-   *     либо неразмещаемое в графе присваивание.
+   *     другом документе, отсутствие присваиваний либо неразмещаемое в графе присваивание.
    */
   @Nullable
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
-    if (variable.getKind() == VariableKind.MODULE || ctx.flowInProgress.contains(variable)) {
+    if (variable.getKind() == VariableKind.MODULE) {
       return null;
     }
     var owner = variable.getOwner();
@@ -802,7 +801,11 @@ public class ExpressionTypeInferencer {
     if (!(terminal.getParent() instanceof ParserRuleContext use)) {
       return null;
     }
-    ctx.flowInProgress.add(variable);
+    // Повторный вход по той же переменной здесь не отсекается: у `Х = Х + 1` правая часть
+    // спрашивает тип посреди расчёта того же тела, и ответ у расчёта есть — окружение перед
+    // текущим оператором. Отказ отдал бы объединение по всей области видимости, то есть
+    // примешал бы типы из присваиваний ниже по коду. Зацикливания не будет: строящееся
+    // окружение отвечает чтением из карты, не запуская расчёт заново.
     try {
       return variableFlowAnalyzer.typeAt(owner, use, variable, flowInputs(variable, ctx));
     } catch (StackOverflowError | RuntimeException e) {
@@ -812,8 +815,6 @@ public class ExpressionTypeInferencer {
       // обнулил бы всё выражение целиком.
       LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
       return null;
-    } finally {
-      ctx.flowInProgress.remove(variable);
     }
   }
 
@@ -873,13 +874,10 @@ public class ExpressionTypeInferencer {
     }
     var owner = variable.getOwner();
     var ctx = new InferenceContext(owner);
-    ctx.flowInProgress.add(variable);
     try {
       return variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, flowInputs(variable, ctx));
     } catch (StackOverflowError | RuntimeException e) {
       return null;
-    } finally {
-      ctx.flowInProgress.remove(variable);
     }
   }
 
@@ -1129,13 +1127,6 @@ public class ExpressionTypeInferencer {
      * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
      */
     final Map<SourceDefinedSymbol, TypeSet> inProgress = new HashMap<>();
-    /**
-     * Переменные, для которых прямо сейчас идёт расчёт по потоку. Держится отдельно от
-     * {@link #inProgress}: тот отдаёт частичный тип символа, а здесь нужен именно отказ
-     * от повторного расчёта по потоку — вложенный запрос должен уйти на символьный путь
-     * с его собственной защитой от циклов.
-     */
-    final Set<SourceDefinedSymbol> flowInProgress = new HashSet<>();
     /**
      * Расчёты по потоку, идущие прямо сейчас в рамках этого вывода. Вывод типа
      * присваивания просит типы переменных из правой части, и если они из того же тела,
