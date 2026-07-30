@@ -28,7 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -43,6 +45,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Разложенное по позициям тело метода: операторы графа с их границами и вершинами,
@@ -91,6 +94,9 @@ final class FlowLayout {
   private final List<CfgVertex> orderedVertices;
   private final int bodyStartLine;
   private final int bodyEndLine;
+
+  /** Операторы с вызовами: считаются по первому требованию, см. {@link #hasCall}. */
+  private final Lazy<Set<ParserRuleContext>> callStatements = new Lazy<>(this::findCallStatements);
 
   private FlowLayout(
     List<Slot> slots,
@@ -277,6 +283,51 @@ final class FlowLayout {
       return conditional.getExpression() == statement;
     }
     return vertex instanceof WhileLoopVertex loop && loop.getExpression() == statement;
+  }
+
+  /**
+   * Содержит ли оператор вызов метода — точку, в которой управление уходит из этого тела.
+   * <p>
+   * Нужно переменным, видимым другим телам модуля: вызванный метод мог присвоить им что
+   * угодно, поэтому после такого оператора их тип возвращается к объединению по области
+   * видимости.
+   * Считается по первому требованию и на всё тело сразу: переменных модуля в теле обычно
+   * нет вовсе, и обход дерева всех операторов тогда не нужен.
+   *
+   * @param statement оператор графа.
+   * @return {@code true}, если внутри оператора есть вызов метода.
+   */
+  boolean hasCall(ParserRuleContext statement) {
+    return callStatements.getOrCompute().contains(statement);
+  }
+
+  /** Найти операторы, внутри которых есть вызов. */
+  private Set<ParserRuleContext> findCallStatements() {
+    var found = new HashSet<ParserRuleContext>();
+    for (var slot : slots) {
+      if (containsCall(slot)) {
+        found.add(slot.statement());
+      }
+    }
+    return Set.copyOf(found);
+  }
+
+  /**
+   * Есть ли вызов внутри границ оператора. Границы проверяются отдельно от дерева: у
+   * заголовка цикла узел включает и тело, которое в оператор заголовка не входит.
+   *
+   * @param slot оператор с границами.
+   * @return {@code true}, если хотя бы один вызов начинается внутри границ.
+   */
+  private static boolean containsCall(Slot slot) {
+    var calls = Trees.findAllRuleNodes(slot.statement(), BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall);
+    for (var call : calls) {
+      var start = call.getStart();
+      if (slot.covers(new Position(start.getLine() - 1, start.getCharPositionInLine()))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
