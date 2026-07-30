@@ -49,6 +49,7 @@ com.github._1c_syntax.bsl.languageserver.events
 com.github._1c_syntax.bsl.languageserver.folding
 com.github._1c_syntax.bsl.languageserver.formatting
 com.github._1c_syntax.bsl.languageserver.hover
+com.github._1c_syntax.bsl.languageserver.index
 com.github._1c_syntax.bsl.languageserver.infrastructure
 com.github._1c_syntax.bsl.languageserver.inlayhints
 com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure
