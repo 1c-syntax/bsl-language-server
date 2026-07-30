@@ -943,8 +943,22 @@ public class ExpressionTypeInferencer {
    * @return колбэк для {@link VariableFlowAnalyzer}.
    */
   private VariableFlowAnalyzer.GuardNarrowing narrowingCallback(DocumentContext owner) {
-    return (variable, condition, whenTrue, incoming) ->
-      guardConditionNarrowing.compile(condition, owner).apply(variable, whenTrue, incoming);
+    return new VariableFlowAnalyzer.GuardNarrowing() {
+      @Override
+      public TypeSet narrow(
+        VariableSymbol variable,
+        BSLParser.ExpressionContext condition,
+        boolean whenTrue,
+        TypeSet incoming
+      ) {
+        return guardConditionNarrowing.compile(condition, owner).apply(variable, whenTrue, incoming);
+      }
+
+      @Override
+      public Set<? extends SourceDefinedSymbol> variablesOf(BSLParser.ExpressionContext condition) {
+        return guardConditionNarrowing.compile(condition, owner).variables();
+      }
+    };
   }
 
   /**

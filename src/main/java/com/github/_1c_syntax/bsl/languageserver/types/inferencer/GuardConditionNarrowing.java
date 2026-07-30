@@ -47,9 +47,12 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -127,11 +130,37 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
    *
    * @param conjunctCount общее число проверок в конъюнкции, включая не относящиеся к переменной.
    * @param assertions    утверждения, снятые с проверок про эту переменную.
+   * @param variables     переменные, о которых условие что-то утверждает. Считаются при
+   *                      разборе и хранятся готовыми: расчёт по потоку спрашивает их на
+   *                      каждом ребре ветки в каждом проходе, и собирать набор заново
+   *                      выходило дороже, чем сэкономленные вызовы сужения.
    */
-  public record CompiledGuard(int conjunctCount, List<Assertion> assertions) {
+  public record CompiledGuard(
+    int conjunctCount,
+    List<Assertion> assertions,
+    Set<SourceDefinedSymbol> variables
+  ) {
 
     /** Условие, из которого про переменную ничего не следует. */
-    public static final CompiledGuard NONE = new CompiledGuard(0, List.of());
+    public static final CompiledGuard NONE = new CompiledGuard(0, List.of(), Set.of());
+
+    /**
+     * Скомпилированное условие с посчитанным набором переменных.
+     *
+     * @param conjunctCount общее число проверок в конъюнкции.
+     * @param assertions    утверждения по проверкам.
+     * @return скомпилированное условие.
+     */
+    static CompiledGuard of(int conjunctCount, List<Assertion> assertions) {
+      if (assertions.isEmpty()) {
+        return NONE;
+      }
+      Set<SourceDefinedSymbol> mentioned = Collections.newSetFromMap(new IdentityHashMap<>());
+      for (var assertion : assertions) {
+        mentioned.add(assertion.variable());
+      }
+      return new CompiledGuard(conjunctCount, assertions, mentioned);
+    }
 
     /**
      * Сузить тип переменной на ветке условия.
@@ -208,7 +237,7 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
         assertions.add(conjunct.negated() ? assertion.negated() : assertion);
       }
     }
-    return assertions.isEmpty() ? CompiledGuard.NONE : new CompiledGuard(checks.size(), List.copyOf(assertions));
+    return CompiledGuard.of(checks.size(), List.copyOf(assertions));
   }
 
   /**

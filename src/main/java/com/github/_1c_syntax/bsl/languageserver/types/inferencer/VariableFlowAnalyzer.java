@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -314,7 +315,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   /**
    * Сужение типа охраняющим условием на ветке.
    */
-  @FunctionalInterface
   public interface GuardNarrowing {
 
     /**
@@ -327,6 +327,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      * @return суженный тип; исходный, если условие про эту переменную ничего не утверждает.
      */
     TypeSet narrow(VariableSymbol variable, BSLParser.ExpressionContext condition, boolean whenTrue, TypeSet incoming);
+
+    /**
+     * Переменные, о которых условие вообще что-то утверждает.
+     * <p>
+     * Без этого пришлось бы спрашивать сужение про каждую переменную тела: условие почти
+     * всегда говорит об одной, а рёбер ветвлений и проходов по графу много.
+     *
+     * @param condition выражение условия.
+     * @return переменные из условия; пусто, если условие ни о чём не говорит.
+     */
+    Set<? extends SourceDefinedSymbol> variablesOf(BSLParser.ExpressionContext condition);
   }
 
   /**
@@ -779,9 +790,26 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       if (condition == null) {
         return outgoing;
       }
+      // Сужаем только переменные, о которых условие правда что-то утверждает: перебор всех
+      // переменных тела давал бы вызов колбэка на каждую, а условие обычно про одну.
+      var mentioned = inputs.narrowing().variablesOf(condition);
+      if (mentioned.isEmpty()) {
+        return outgoing;
+      }
       var whenTrue = edgeType == CfgEdgeType.TRUE_BRANCH;
-      return outgoing.map(index ->
-        inputs.narrowing().narrow(variables.get(index), condition, whenTrue, outgoing.get(index)));
+      var narrowed = outgoing;
+      for (var symbol : mentioned) {
+        var index = indexes.get(symbol);
+        if (index == null) {
+          continue;
+        }
+        var variable = variables.get(index);
+        narrowed = narrowed.with(
+          index,
+          inputs.narrowing().narrow(variable, condition, whenTrue, narrowed.get(index)),
+          variables.size());
+      }
+      return narrowed;
     }
 
     /** Условие вершины-ветвления; {@code null}, если вершина условия не несёт. */
