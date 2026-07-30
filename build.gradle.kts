@@ -104,7 +104,7 @@ dependencies {
     api("io.github.1c-syntax:bsl-context:0.9.2")
 
     // nullability annotations
-    api("org.jspecify:jspecify:1.0.0")
+    api("org.jspecify:jspecify:1.0.1")
 
     // JLanguageTool
     implementation("org.languagetool:languagetool-core:$languageToolVersion") {
