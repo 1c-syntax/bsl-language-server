@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
-import com.github._1c_syntax.bsl.languageserver.types.index.VariablesByScopeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -111,7 +110,6 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final VariableCommentTypeResolver variableCommentTypeResolver;
-  private final VariablesByScopeIndex variablesByScope;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
@@ -932,11 +930,24 @@ public class ExpressionTypeInferencer {
    * @return переменные этого тела вместе с самой заданной.
    */
   private List<VariableSymbol> variablesSharingBody(VariableSymbol variable) {
-    // Раскладка по областям считается один раз на документ: иначе каждый расчёт тела
-    // перебирал бы переменные всего модуля, а тел в модуле столько же, сколько методов.
-    var byScope = variablesByScope.get(variable.getOwner());
-    var siblings = byScope.get(variable.getScope());
-    return siblings == null || siblings.isEmpty() ? List.of(variable) : siblings;
+    // Раскладку по областям видимости дерево символов уже держит готовой и ленивой —
+    // своего перебора всех переменных модуля на каждый расчёт тела не нужно.
+    var scope = variable.getScope();
+    if (scope == null) {
+      return List.of(variable);
+    }
+    var inScope = variable.getOwner().getSymbolTree().getVariablesByName().get(scope);
+    if (inScope == null || inScope.isEmpty()) {
+      return List.of(variable);
+    }
+    // Переменные модуля из расчёта исключены: их меняют из разных методов, одного тела мало.
+    var siblings = new ArrayList<VariableSymbol>(inScope.size());
+    for (var candidate : inScope.values()) {
+      if (candidate.getKind() != VariableKind.MODULE) {
+        siblings.add(candidate);
+      }
+    }
+    return siblings.isEmpty() ? List.of(variable) : siblings;
   }
 
   /**

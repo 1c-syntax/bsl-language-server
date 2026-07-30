@@ -229,6 +229,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     public int hashCode() {
       return Arrays.hashCode(types);
     }
+
+    /** По содержимому, а не по ссылке на массив: иначе в отладке смысла не видно. */
+    @Override
+    public String toString() {
+      return "Environment" + Arrays.toString(types);
+    }
   }
 
   /**

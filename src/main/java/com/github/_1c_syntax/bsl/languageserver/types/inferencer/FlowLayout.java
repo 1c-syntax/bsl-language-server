@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Разложенное по позициям тело метода: операторы графа с их границами и вершинами,
@@ -149,7 +150,8 @@ final class FlowLayout {
     // двоичный поиск по позиции вместо перебора всего тела.
     slots.sort(Comparator.comparingInt(Slot::startLine).thenComparingInt(Slot::startChar));
     var bodyStart = body.getStart();
-    var bodyStop = body.getStop() == null ? bodyStart : body.getStop();
+    // Последнего токена может не быть у недоразобранного блока — тогда границей служит первый.
+    var bodyStop = Objects.requireNonNullElse(body.getStop(), bodyStart);
     return new FlowLayout(
       List.copyOf(slots),
       byStatement,
@@ -176,7 +178,7 @@ final class FlowLayout {
     CfgVertex vertex
   ) {
     var start = statement.getStart();
-    var stop = stopToken == null ? start : stopToken;
+    var stop = Objects.requireNonNullElse(stopToken, start);
     var slot = new Slot(
       statement,
       start.getLine() - 1,

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -197,8 +198,10 @@ public class OpenDataObjectInference {
       return base;
     }
     var keys = keyLiteral.split(",");
-    var headRef = base.refs().iterator().next();
-    var result = base;
+    // Поля собираются и добавляются разом: набор типов неизменяем, и добавление по одному
+    // копировало бы накопленную карту полей на каждый ключ, а ключей в конструкторе бывает
+    // много.
+    Map<String, LocalField> fields = new LinkedHashMap<>();
     for (var i = 0; i < keys.length; i++) {
       var keyName = keys[i].trim();
       if (keyName.isEmpty()) {
@@ -209,10 +212,10 @@ public class OpenDataObjectInference {
         ? types.of(args.get(valueArgIndex))
         : UNDEFINED;
       if (!valueTypes.isEmpty()) {
-        result = result.withField(headRef, keyName, valueTypes);
+        fields.merge(keyName, LocalField.of(valueTypes), LocalField::merge);
       }
     }
-    return result;
+    return base.withFields(base.refs().iterator().next(), fields);
   }
 
   /**
