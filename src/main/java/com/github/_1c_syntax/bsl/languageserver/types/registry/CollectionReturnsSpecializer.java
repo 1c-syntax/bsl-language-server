@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.jspecify.annotations.Nullable;
@@ -99,13 +101,9 @@ final class CollectionReturnsSpecializer {
   @Nullable
   private static MemberDescriptor refine(MemberDescriptor member, TypeRef genericRow, TypeRef row,
                                          TypeSet unloadedRow) {
-    var refs = member.returnTypes().refs();
-    if (refs.contains(genericRow)) {
-      var converted = new ArrayList<TypeRef>(refs.size());
-      for (var ref : refs) {
-        converted.add(ref.equals(genericRow) ? row : ref);
-      }
-      return member.withReturnTypes(TypeSet.of(converted));
+    var withRow = replaceRow(member, genericRow, row);
+    if (withRow != null) {
+      return withRow;
     }
     if (member.matches(ROWS_SEARCH_METHOD)) {
       return member.withReturnTypes(withElements(member.returnTypes(), TypeSet.of(row)));
@@ -114,6 +112,69 @@ final class CollectionReturnsSpecializer {
       return member.withReturnTypes(withElements(member.returnTypes(), unloadedRow));
     }
     return null;
+  }
+
+  /**
+   * Заменяет обобщённую строку на конкретную <b>во всех позициях</b> члена: тип возврата,
+   * тип возврата сигнатуры и типы параметров ({@code Индекс(Строка)},
+   * {@code Сдвинуть(Строка, …)}).
+   * <p>
+   * Одного типа на уровне члена мало: подсказка автодополнения показывает тип из
+   * сигнатуры ({@code CompletionProvider.applyMethodDetail}), и без этой замены у
+   * {@code Добавить()} там оставалось обобщённое объявление.
+   *
+   * @return копия члена с конкретной строкой; {@code null}, если обобщённой строки в нём нет.
+   */
+  @Nullable
+  private static MemberDescriptor replaceRow(MemberDescriptor member, TypeRef genericRow, TypeRef row) {
+    var returnTypes = replaceRow(member.returnTypes(), genericRow, row);
+    var signatures = new ArrayList<SignatureDescriptor>(member.signatures().size());
+    var signaturesChanged = false;
+    for (var signature : member.signatures()) {
+      var replaced = replaceRow(signature, genericRow, row);
+      signaturesChanged |= replaced != null;
+      signatures.add(replaced == null ? signature : replaced);
+    }
+    if (returnTypes == null && !signaturesChanged) {
+      return null;
+    }
+    var result = returnTypes == null ? member : member.withReturnTypes(returnTypes);
+    return signaturesChanged ? result.withSignatures(signatures) : result;
+  }
+
+  /** @return копия сигнатуры с конкретной строкой; {@code null}, если обобщённой строки в ней нет. */
+  @Nullable
+  private static SignatureDescriptor replaceRow(SignatureDescriptor signature, TypeRef genericRow, TypeRef row) {
+    var returnTypes = replaceRow(signature.returnTypes(), genericRow, row);
+    var parameters = new ArrayList<ParameterDescriptor>(signature.parameters().size());
+    var parametersChanged = false;
+    for (var parameter : signature.parameters()) {
+      var replaced = replaceRow(parameter.types(), genericRow, row);
+      parametersChanged |= replaced != null;
+      parameters.add(replaced == null ? parameter : new ParameterDescriptor(parameter.bilingualName(),
+        replaced, parameter.optional(), parameter.bilingualDescription(), parameter.defaultValue(),
+        parameter.variadic()));
+    }
+    if (returnTypes == null && !parametersChanged) {
+      return null;
+    }
+    return new SignatureDescriptor(parameters,
+      returnTypes == null ? signature.returnTypes() : returnTypes,
+      signature.bilingualDescription(), signature.metadata());
+  }
+
+  /** @return набор с заменённой строкой; {@code null}, если обобщённой строки в нём нет. */
+  @Nullable
+  private static TypeSet replaceRow(TypeSet types, TypeRef genericRow, TypeRef row) {
+    var refs = types.refs();
+    if (!refs.contains(genericRow)) {
+      return null;
+    }
+    var converted = new ArrayList<TypeRef>(refs.size());
+    for (var ref : refs) {
+      converted.add(ref.equals(genericRow) ? row : ref);
+    }
+    return TypeSet.of(converted);
   }
 
   /** Тот же набор типов, но с проставленным типом элемента у каждой ссылки. */

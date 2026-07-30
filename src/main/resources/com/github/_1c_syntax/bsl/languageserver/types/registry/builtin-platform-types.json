@@ -1491,7 +1491,22 @@
         "nameEn": "Insert",
         "kind": "METHOD",
         "returnType": "Строка табличной части",
-        "description": "Вставляет строку в указанную позицию."
+        "description": "Вставляет строку в указанную позицию.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Индекс",
+                "nameRu": "Индекс",
+                "nameEn": "Index",
+                "types": [
+                  "Число"
+                ],
+                "description": "Позиция, на которую вставляется строка."
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "Получить",
@@ -1572,7 +1587,22 @@
         "nameEn": "IndexOf",
         "kind": "METHOD",
         "returnType": "Число",
-        "description": "Возвращает индекс строки."
+        "description": "Возвращает индекс строки.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Строка",
+                "nameRu": "Строка",
+                "nameEn": "Row",
+                "types": [
+                  "Строка табличной части"
+                ],
+                "description": "Строка, индекс которой нужно получить."
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "Итог",

@@ -101,6 +101,28 @@ class TabularSectionMembersTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void rowTypeIsRefinedInSignatureReturnAndParameters() {
+    // Подсказка автодополнения показывает тип из сигнатуры, а не из члена, поэтому
+    // уточнение обязано доехать и туда. Параметры — тот же случай: `Индекс(Строка)`
+    // принимает строку именно этой табличной части.
+    var insert = member(SECTION, "Вставить");
+    assertThat(insert.signatures()).isNotEmpty();
+    assertThat(insert.signatures().get(0).returnTypes().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly(ROW);
+
+    var indexOf = member(SECTION, "Индекс");
+    assertThat(indexOf.signatures()).isNotEmpty();
+    assertThat(indexOf.signatures().get(0).parameters().get(0).types().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly(ROW);
+    assertThat(indexOf.returnTypes().refs())
+      .as("тип возврата у метода свой — его подменять нечем")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Число");
+  }
+
+  @Test
   void findRowsReturnsArrayOfOwnRows() {
     var findRows = member(SECTION, "НайтиСтроки");
 
