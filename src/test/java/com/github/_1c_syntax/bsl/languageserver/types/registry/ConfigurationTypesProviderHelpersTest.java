@@ -65,7 +65,6 @@ import com.github._1c_syntax.bsl.mdo.children.WebServiceOperationParameter;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
