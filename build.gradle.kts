@@ -16,7 +16,7 @@ plugins {
     id("io.freefair.javadoc-utf-8") version "9.5.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
     id("io.freefair.maven-central.validate-poms") version "9.5.0"
-    id("com.github.ben-manes.versions") version "0.56.0"
+    id("com.github.ben-manes.versions") version "0.57.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "6.16.0"
@@ -99,12 +99,12 @@ dependencies {
     api("io.github.1c-syntax:bsl-parser:0.37.2")
     api("io.github.1c-syntax:utils:0.10.1")
     api("io.github.1c-syntax:mdclasses:0.20.0")
-    api("io.github.1c-syntax:bsl-common-library:0.12.2")
+    api("io.github.1c-syntax:bsl-common-library:0.12.3")
     api("io.github.1c-syntax:supportconf:0.17.1")
     api("io.github.1c-syntax:bsl-context:0.9.2")
 
     // nullability annotations
-    api("org.jspecify:jspecify:1.0.0")
+    api("org.jspecify:jspecify:1.0.1")
 
     // JLanguageTool
     implementation("org.languagetool:languagetool-core:$languageToolVersion") {
@@ -318,6 +318,14 @@ jmh {
 // Дерево зависимостей проекта даёт в jmh-архиве больше 65535 записей — нужен zip64.
 tasks.named<Jar>("jmhJar") {
     isZip64 = true
+}
+
+// Грамматики bsl-parser собраны форком ANTLR (io.github.1c-syntax:antlr4) с несовместимой
+// версией сериализации ATN. В обычном classpath выигрывает форк, а при склейке uber-jar
+// классы апстрима затирают форковые, и разбор падает на "Could not deserialize ATN with
+// version 3 (expected 4)". Апстримный рантайм в jmh не нужен — исключаем его.
+configurations.named("jmhRuntimeClasspath") {
+    exclude(group = "org.antlr", module = "antlr4-runtime")
 }
 
 sentry {

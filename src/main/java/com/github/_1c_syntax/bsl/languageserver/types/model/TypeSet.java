@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Неизменяемый, hash-stable union типов.
@@ -146,6 +147,13 @@ public record TypeSet(
    *         наборов сохраняются, при пересечении ref union-ятся per-key.
    */
   public TypeSet union(TypeSet other) {
+    // Объединение набора с самим собой — это он же. Проверка по ссылке, а не по равенству:
+    // она бесплатна, а случай частый. При слиянии путей расчёта по потоку у переменной,
+    // которой ни одна ветка не касалась, по обеим сторонам лежит один и тот же набор —
+    // без этой проверки на каждой такой переменной создавались бы копии всех коллекций.
+    if (this == other) {
+      return this;
+    }
     if (other.isEmpty() && !other.hasDecorations()) {
       return this;
     }
@@ -200,6 +208,73 @@ public record TypeSet(
     var merged = new LinkedHashSet<>(this.refs);
     merged.add(ref);
     return new TypeSet(merged, this.elementTypes, this.localFields, this.lazyElements, this.lazyFields);
+  }
+
+  /**
+   * Сузить набор до одного типа: остаётся только {@code ref} со своими декорациями,
+   * декорации остальных типов отбрасываются.
+   * <p>
+   * Операция над множеством, а не проверка утверждения о типе: если {@code ref} в
+   * наборе нет, результат пуст. Решение, что делать в этом случае — довериться
+   * проверке типа в коде и подставить её тип или оставить набор как есть, — принимает
+   * вызывающий.
+   *
+   * @param ref тип, до которого сужается набор.
+   * @return набор из одного типа; {@link #EMPTY}, если такого типа в наборе не было.
+   */
+  public TypeSet retaining(TypeRef ref) {
+    if (!refs.contains(ref)) {
+      return EMPTY;
+    }
+    return filtered(kept -> kept.equals(ref));
+  }
+
+  /**
+   * Убрать из набора один тип вместе с его декорациями.
+   *
+   * @param ref убираемый тип.
+   * @return набор без указанного типа; текущий набор, если его там не было;
+   *     {@link #EMPTY}, если он был единственным.
+   */
+  public TypeSet without(TypeRef ref) {
+    if (!refs.contains(ref)) {
+      return this;
+    }
+    if (refs.size() == 1) {
+      return EMPTY;
+    }
+    return filtered(kept -> !kept.equals(ref));
+  }
+
+  /** Набор из типов, прошедших отбор, вместе с их декорациями. */
+  private TypeSet filtered(Predicate<TypeRef> keep) {
+    var keptRefs = new LinkedHashSet<TypeRef>();
+    for (var ref : refs) {
+      if (keep.test(ref)) {
+        keptRefs.add(ref);
+      }
+    }
+    return new TypeSet(
+      keptRefs,
+      filterByKey(elementTypes, keep),
+      filterByKey(localFields, keep),
+      filterByKey(lazyElements, keep),
+      filterByKey(lazyFields, keep)
+    );
+  }
+
+  /** Декорационная мапа без записей по отсеянным типам. */
+  private static <V> Map<TypeRef, V> filterByKey(Map<TypeRef, V> source, Predicate<TypeRef> keep) {
+    if (source.isEmpty()) {
+      return source;
+    }
+    var copy = new LinkedHashMap<TypeRef, V>();
+    for (var entry : source.entrySet()) {
+      if (keep.test(entry.getKey())) {
+        copy.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return copy;
   }
 
   /**
@@ -264,6 +339,33 @@ public record TypeSet(
     }
     var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
     bucket.merge(name, new LocalField(types, description), LocalField::merge);
+    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields);
+  }
+
+  /**
+   * Прикрепить к указанному {@code ref} сразу несколько полей «открытого» объекта данных.
+   * <p>
+   * Набор неизменяемый, поэтому каждое добавление копирует уже накопленные поля: набирать
+   * их по одному — квадратично по их числу. Там, где поля известны разом (колонки таблицы,
+   * ключи из doc-комментария), нужен этот метод, а не {@link #withField} в цикле.
+   *
+   * @param ref    тип-владелец полей (добавляется в набор, если отсутствует).
+   * @param fields добавляемые поля по именам; пустая карта ничего не меняет.
+   * @return новый {@link TypeSet} с дополненным {@code localFields[ref]}.
+   */
+  public TypeSet withFields(TypeRef ref, Map<String, LocalField> fields) {
+    if (fields.isEmpty()) {
+      return this;
+    }
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    // Чужие бакеты кладутся по ссылке: неизменяемую копию всего один раз сделает
+    // конструктор. Копируется только тот бакет, который меняем.
+    var merged = new LinkedHashMap<TypeRef, Map<String, LocalField>>(this.localFields);
+    var bucket = new LinkedHashMap<>(this.localFields.getOrDefault(ref, Map.of()));
+    for (var entry : fields.entrySet()) {
+      bucket.merge(entry.getKey(), entry.getValue(), LocalField::merge);
+    }
+    merged.put(ref, bucket);
     return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields);
   }
 

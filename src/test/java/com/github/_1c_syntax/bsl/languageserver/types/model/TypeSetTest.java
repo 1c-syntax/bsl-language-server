@@ -381,4 +381,90 @@ class TypeSetTest {
     assertThat(union.refs()).containsExactlyInAnyOrder(NUMBER, ARRAY);
     assertThat(union.getElementTypes(ARRAY).refs()).containsExactly(STRING);
   }
+
+  @Test
+  void retainingKeepsOnlyRequestedRef() {
+    // given
+    var ts = TypeSet.of(NUMBER, STRING, ARRAY);
+
+    // when
+    var narrowed = ts.retaining(STRING);
+
+    // then
+    assertThat(narrowed.refs()).containsExactly(STRING);
+  }
+
+  @Test
+  void retainingKeepsDecorationsOfKeptRef() {
+    // given: у оставляемого типа есть и элементы, и поля.
+    var ts = TypeSet.of(ARRAY, STRUCTURE)
+      .withElement(ARRAY, TypeSet.of(NUMBER))
+      .withField(STRUCTURE, "Ключ", TypeSet.of(STRING));
+
+    // when
+    var narrowed = ts.retaining(ARRAY);
+
+    // then
+    assertThat(narrowed.refs()).containsExactly(ARRAY);
+    assertThat(narrowed.getElementTypes(ARRAY).refs()).containsExactly(NUMBER);
+    assertThat(narrowed.localFields()).doesNotContainKey(STRUCTURE);
+  }
+
+  @Test
+  void retainingKeepsLazyDecorationsOfKeptRef() {
+    // given: декорации оставляемого типа заданы ленивыми ссылками.
+    var ts = TypeSet.of(ARRAY, STRUCTURE)
+      .withLazyElement(ARRAY, new LazyTypeSet("k", () -> TypeSet.of(NUMBER)))
+      .withLazyField(STRUCTURE, "Ключ", new LazyTypeSet("k2", () -> TypeSet.of(STRING)), "");
+
+    // when
+    var narrowed = ts.retaining(ARRAY);
+
+    // then
+    assertThat(narrowed.getElementTypes(ARRAY).refs()).containsExactly(NUMBER);
+    assertThat(narrowed.lazyFields()).doesNotContainKey(STRUCTURE);
+  }
+
+  @Test
+  void retainingUnknownRefGivesEmpty() {
+    // given
+    var ts = TypeSet.of(NUMBER, STRING);
+
+    // when / then
+    assertThat(ts.retaining(ARRAY)).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
+  void withoutDropsRefAndItsDecorations() {
+    // given
+    var ts = TypeSet.of(ARRAY, STRUCTURE)
+      .withElement(ARRAY, TypeSet.of(NUMBER))
+      .withField(STRUCTURE, "Ключ", TypeSet.of(STRING));
+
+    // when
+    var narrowed = ts.without(STRUCTURE);
+
+    // then
+    assertThat(narrowed.refs()).containsExactly(ARRAY);
+    assertThat(narrowed.getElementTypes(ARRAY).refs()).containsExactly(NUMBER);
+    assertThat(narrowed.localFields()).doesNotContainKey(STRUCTURE);
+  }
+
+  @Test
+  void withoutUnknownRefReturnsSelf() {
+    // given
+    var ts = TypeSet.of(NUMBER, STRING);
+
+    // when / then
+    assertThat(ts.without(ARRAY)).isSameAs(ts);
+  }
+
+  @Test
+  void withoutLastRefGivesEmpty() {
+    // given: единственный тип с декорацией — уходит вместе с ней.
+    var ts = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
+
+    // when / then
+    assertThat(ts.without(ARRAY)).isSameAs(TypeSet.EMPTY);
+  }
 }
