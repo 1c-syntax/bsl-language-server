@@ -225,6 +225,31 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void parameterReassignmentIsFlowSensitive() {
+    // given: у параметра позиция символа — это имя в подписи метода, а не присваивание.
+    // Раньше её принимали за присваивание, не находили в графе и выбрасывали параметр из
+    // расчёта целиком.
+    // when
+    var before = at("ДоПереприсваивания = Заголовок", "ДоПереприсваивания = ".length());
+    var after = at("ПослеПереприсваивания = Заголовок", "ПослеПереприсваивания = ".length());
+
+    // then
+    assertThat(qnames(before)).containsExactly("Строка");
+    assertThat(qnames(after)).containsExactly("Число");
+  }
+
+  @Test
+  void declaredVariableIsFlowSensitive() {
+    // given: у объявленной через «Перем» позиция символа — сама запись объявления, тоже не
+    // оператор графа.
+    // when
+    var types = at("ПослеОбъявленной = Объявленная", "ПослеОбъявленной = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
   void selfAssignmentAfterTypeChangeReadsOnlyPreviousType() {
     // given: правая часть читает ту же переменную, тип которой считается. Раньше такой
     // повторный вход уходил на объединение по области видимости, и к строке примешивалось

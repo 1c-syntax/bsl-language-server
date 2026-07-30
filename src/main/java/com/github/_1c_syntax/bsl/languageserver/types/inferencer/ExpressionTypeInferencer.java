@@ -1000,13 +1000,33 @@ public class ExpressionTypeInferencer {
     // Множество, а не список с проверкой contains: у переменной в длинном методе
     // присваиваний бывают десятки, и отсев повторов перебором давал квадрат.
     Set<Position> positions = new LinkedHashSet<>();
-    positions.add(variable.getSelectionRange().getStart());
+    if (declarationIsAssignment(variable)) {
+      positions.add(variable.getSelectionRange().getStart());
+    }
     for (var occurrence : referenceIndex.getReferencesTo(variable)) {
       if (occurrence.occurrenceType() == OccurrenceType.DEFINITION) {
         positions.add(occurrence.selectionRange().getStart());
       }
     }
     return positions;
+  }
+
+  /**
+   * Совпадает ли объявление переменной с присваиванием.
+   * <p>
+   * У переменной, созданной первым присваиванием, объявления как отдельной записи нет —
+   * её позиция и есть позиция присваивания. У параметра это имя в подписи метода, у
+   * объявленной через {@code Перем} — сама эта запись; ни то, ни другое оператором графа
+   * не является, и выдавать их за присваивания нельзя: расчёт счёл бы, что присваивание
+   * потерялось, и отказался бы от переменной целиком. Что известно на входе в тело, и так
+   * даёт входной факт.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если позиция символа указывает на присваивание.
+   */
+  private static boolean declarationIsAssignment(VariableSymbol variable) {
+    var kind = variable.getKind();
+    return kind != VariableKind.PARAMETER && kind != VariableKind.LOCAL;
   }
 
 
