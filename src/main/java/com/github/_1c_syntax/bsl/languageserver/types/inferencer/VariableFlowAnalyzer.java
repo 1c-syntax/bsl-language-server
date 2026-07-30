@@ -53,7 +53,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.Predicate;
 
 /**
  * Тип переменной в конкретной точке кода — расчёт по графу потока управления тела.
@@ -352,9 +352,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
    * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
    *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
-   * @param variables           переменные тела, за типами которых следит расчёт.
+   * @param variables           переменные тела, за типами которых следит расчёт. Зависят
+   *                            только от самого тела: окружение считается на всё тело разом
+   *                            и переиспользуется всеми запросами, поэтому набор переменных
+   *                            не может зависеть от того, про какую из них спросили первой.
+   * @param sharedWithOtherBodies видна ли переменная другим телам модуля: тогда её тип
+   *                            задаёт не только это тело, и любой вызов мог его сменить.
    * @param entryFact           тип переменной на входе в тело: объявленные типы параметра,
    *                            типы из аннотаций и прочее, что известно до первого присваивания.
+   *                            У переменной, видимой другим телам, это сводка по всему модулю —
+   *                            к ней же тип возвращается после вызовов.
    * @param definitionPositions позиции всех присваиваний переменной в документе;
    *                            учитываются только попавшие в это тело.
    * @param mutationPositions   позиции операторов, меняющих тип переменной на месте.
@@ -369,7 +376,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   public record FlowInputs(
     FlowSession session,
     boolean cacheable,
-    Supplier<Collection<VariableSymbol>> variables,
+    Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
+    Predicate<VariableSymbol> sharedWithOtherBodies,
     Function<VariableSymbol, TypeSet> entryFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
     Function<VariableSymbol, Collection<Position>> mutationPositions,
@@ -592,7 +600,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     Map<VariableSymbol, Integer> indexes = new IdentityHashMap<>();
     var variables = new ArrayList<VariableSymbol>();
     Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
-    for (var variable : inputs.variables().get()) {
+    for (var variable : inputs.variables().apply(body)) {
       var definitions = inputs.definitionPositions().apply(variable);
       var mutations = inputs.mutationPositions().apply(variable);
       // Если хоть одно изменение типа не легло в граф отдельным оператором, его вклад
@@ -659,6 +667,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private final List<VariableSymbol> variables;
     private final Map<VariableSymbol, Integer> indexes;
     private final Map<ParserRuleContext, List<Change>> changesByStatement;
+    /** Номера переменных, видимых другим телам: их тип сбрасывается на вызовах. */
+    private final List<Integer> shared;
 
     /**
      * Присваиваемые типы, уже посчитанные в этом расчёте. Каждый проход до неподвижной
@@ -695,6 +705,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       this.variables = variables;
       this.indexes = indexes;
       this.changesByStatement = changesByStatement;
+      this.shared = new ArrayList<>(0);
+      for (var i = 0; i < variables.size(); i++) {
+        if (inputs.sharedWithOtherBodies().test(variables.get(i))) {
+          shared.add(i);
+        }
+      }
     }
 
     /**
@@ -883,19 +899,63 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     private Environment applyStatement(ParserRuleContext statement, Environment incoming) {
       var changes = changesByStatement.get(statement);
-      if (changes == null) {
-        return incoming;
-      }
       var current = incoming;
-      for (var change : changes) {
-        var variable = change.variable();
-        var updated = change.definition()
-          ? assignedTypes.computeIfAbsent(
-            change.position(), position -> inputs.assigned().at(variable, statement, position))
-          : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
-        current = current.with(change.index(), updated, variables.size());
+      if (changes != null) {
+        for (var change : changes) {
+          var variable = change.variable();
+          var updated = change.definition()
+            ? assignedTypes.computeIfAbsent(
+              change.position(), position -> inputs.assigned().at(variable, statement, position))
+            : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
+          current = current.with(change.index(), updated, variables.size());
+        }
       }
-      return current;
+      return forgetSharedAfterCall(statement, changes, current);
+    }
+
+    /**
+     * Вернуть к сводке переменные, видимые другим телам, если оператор содержит вызов.
+     * <p>
+     * Вызванный метод мог присвоить такой переменной что угодно, поэтому дальше по коду
+     * известна только сводка по модулю — она же входной факт. Присваивание в самом
+     * операторе сильнее: оно происходит после того, как вызов вернул управление.
+     * Точность здесь оператора, а не выражения: если вызов и обращение стоят в одном
+     * операторе, обращение считается случившимся до вызова.
+     *
+     * @param statement оператор.
+     * @param changes   изменения этого оператора; {@code null}, если их нет.
+     * @param current   окружение после изменений оператора.
+     * @return окружение с возвращёнными к сводке переменными.
+     */
+    private Environment forgetSharedAfterCall(
+      ParserRuleContext statement,
+      @Nullable List<Change> changes,
+      Environment current
+    ) {
+      if (shared.isEmpty() || !layout.hasCall(statement)) {
+        return current;
+      }
+      var result = current;
+      for (var index : shared) {
+        if (assignedBy(changes, index)) {
+          continue;
+        }
+        result = result.with(index, entryEnvironment().get(index), variables.size());
+      }
+      return result;
+    }
+
+    /** Задаёт ли оператор тип переменной заново. */
+    private static boolean assignedBy(@Nullable List<Change> changes, int index) {
+      if (changes == null) {
+        return false;
+      }
+      for (var change : changes) {
+        if (change.index() == index && change.definition()) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 

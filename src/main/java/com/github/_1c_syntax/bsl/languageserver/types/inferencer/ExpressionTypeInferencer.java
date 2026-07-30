@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -43,6 +44,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
@@ -749,7 +751,7 @@ public class ExpressionTypeInferencer {
    * всеми присваиваниями и всеми изменениями на месте.
    * <p>
    * Слагаемые те же, что у расчёта по потоку управления, и считаются теми же методами —
-   * {@link #flowEntryFact}, {@link #definitionPositions}, {@link #applyMutation}. Разница
+   * {@link #declaredTypes}, {@link #definitionPositions}, {@link #applyMutation}. Разница
    * в том, что здесь они объединяются без учёта порядка и достижимости, а значит ответ
    * один на всю область видимости. Это отступной путь для случаев, где расчёт по потоку
    * неприменим (см. {@link #flowTypeAt}).
@@ -765,7 +767,7 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet inferVariableInternal(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
-    var acc = flowEntryFact(variable);
+    var acc = declaredTypes(variable);
     ctx.inProgress.put(variable, acc);
 
     for (var position : definitionPositions(variable)) {
@@ -786,15 +788,12 @@ public class ExpressionTypeInferencer {
    * @param terminal терминал использования.
    * @param ctx      контекст текущего инференса.
    * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим и нужен
-   *     общий путь: переменная модуля (её меняют из разных методов), использование в
-   *     другом документе либо неразмещаемое в графе присваивание. Отсутствие присваиваний
-   *     расчёту не мешает — тип такой переменной есть входной факт по всему телу.
+   *     общий путь: использование в другом документе либо неразмещаемое в графе
+   *     присваивание. Отсутствие присваиваний расчёту не мешает — тип такой переменной
+   *     есть входной факт по всему телу.
    */
   @Nullable
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
-    if (variable.getKind() == VariableKind.MODULE) {
-      return null;
-    }
     var owner = variable.getOwner();
     if (!owner.getUri().equals(ctx.documentContext.getUri())) {
       return null;
@@ -870,9 +869,6 @@ public class ExpressionTypeInferencer {
    */
   @Nullable
   private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition) {
-    if (variable.getKind() == VariableKind.MODULE) {
-      return null;
-    }
     var owner = variable.getOwner();
     var ctx = new InferenceContext(owner);
     try {
@@ -905,8 +901,9 @@ public class ExpressionTypeInferencer {
       // (внутри инференса другой переменной) мог быть усечён защитой от циклов,
       // и переиспользовать такой результат как самостоятельный нельзя.
       ctx.visited.size() <= 1,
-      () -> variablesSharingBody(variable),
-      this::flowEntryFact,
+      body -> variablesOfBody(owner, body),
+      target -> target.getKind() == VariableKind.MODULE,
+      target -> flowEntryFact(target, ctx),
       this::definitionPositions,
       target -> callsOf.apply(target).keySet(),
       (target, statement, position) ->
@@ -918,35 +915,56 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Переменные, живущие в том же теле, что и заданная: расчёт по потоку считает их все
-   * разом, одним поиском неподвижной точки.
+   * Переменные, видимые в теле: расчёт по потоку считает их все разом, одним поиском
+   * неподвижной точки.
    * <p>
-   * Общее тело определяется общей областью видимости — методом либо телом модуля.
-   * Переменные модуля (объявленные {@code Перем}) в расчёт не идут: их меняют из разных
-   * методов, и одного тела для ответа про них мало.
+   * Это переменные области видимости самого тела (метода либо тела модуля) плюс переменные
+   * модуля, объявленные {@code Перем}, — они видны из любого метода. Набор зависит только
+   * от тела: окружение считается на всё тело сразу и переиспользуется всеми запросами,
+   * поэтому от того, про какую переменную спросили первой, он зависеть не может.
    *
-   * @param variable переменная, чьё тело интересует.
-   * @return переменные этого тела вместе с самой заданной.
+   * @param owner документ с телом.
+   * @param body  тело, для которого идёт расчёт.
+   * @return переменные, видимые в этом теле.
    */
-  private List<VariableSymbol> variablesSharingBody(VariableSymbol variable) {
+  private static List<VariableSymbol> variablesOfBody(DocumentContext owner, BSLParser.CodeBlockContext body) {
     // Раскладку по областям видимости дерево символов уже держит готовой и ленивой —
     // своего перебора всех переменных модуля на каждый расчёт тела не нужно.
-    var scope = variable.getScope();
-    if (scope == null) {
-      return List.of(variable);
+    var symbolTree = owner.getSymbolTree();
+    var byScope = symbolTree.getVariablesByName();
+    SourceDefinedSymbol module = symbolTree.getModule();
+    SourceDefinedSymbol scope = scopeOfBody(symbolTree, body)
+      .map(SourceDefinedSymbol.class::cast)
+      .orElse(module);
+    var visible = new ArrayList<VariableSymbol>();
+    var inScope = byScope.get(scope);
+    if (inScope != null) {
+      visible.addAll(inScope.values());
     }
-    var inScope = variable.getOwner().getSymbolTree().getVariablesByName().get(scope);
-    if (inScope == null || inScope.isEmpty()) {
-      return List.of(variable);
-    }
-    // Переменные модуля из расчёта исключены: их меняют из разных методов, одного тела мало.
-    var siblings = new ArrayList<VariableSymbol>(inScope.size());
-    for (var candidate : inScope.values()) {
-      if (candidate.getKind() != VariableKind.MODULE) {
-        siblings.add(candidate);
+    if (scope != module) {
+      // Переменные модуля видны из метода, а созданные присваиванием в теле модуля — нет.
+      var atModuleLevel = byScope.get(module);
+      if (atModuleLevel != null) {
+        for (var candidate : atModuleLevel.values()) {
+          if (candidate.getKind() == VariableKind.MODULE) {
+            visible.add(candidate);
+          }
+        }
       }
     }
-    return siblings.isEmpty() ? List.of(variable) : siblings;
+    return visible;
+  }
+
+  /**
+   * Область видимости тела — метод, которому оно принадлежит.
+   *
+   * @param symbolTree дерево символов документа.
+   * @param body       тело.
+   * @return символ метода; пусто, если это тело модуля, а не метода.
+   */
+  private static Optional<MethodSymbol> scopeOfBody(SymbolTree symbolTree, BSLParser.CodeBlockContext body) {
+    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
+    return sub == null ? Optional.empty() : symbolTree.getMethodSymbol(sub);
   }
 
   /**
@@ -987,12 +1005,31 @@ public class ExpressionTypeInferencer {
   }
 
   /**
+   * Тип переменной на входе в тело.
+   * <p>
+   * У переменной, живущей в одном теле, это объявленное: типы параметра, типизирующий
+   * комментарий и прочее, что известно до первого присваивания. У переменной модуля этого
+   * мало: её значение мог оставить любой другой метод, поэтому на входе берётся сводка по
+   * всей области видимости — объединение всех её присваиваний и изменений.
+   *
+   * @param variable переменная.
+   * @param ctx      контекст текущего инференса.
+   * @return типы на входе в тело; пустой набор, если ничего не известно.
+   */
+  private TypeSet flowEntryFact(VariableSymbol variable, InferenceContext ctx) {
+    if (variable.getKind() == VariableKind.MODULE) {
+      return inferVariable(variable, ctx);
+    }
+    return declaredTypes(variable);
+  }
+
+  /**
    * Тип переменной до первого присваивания: то, что известно из объявления, а не из кода.
    *
    * @param variable переменная.
-   * @return типы на входе в тело; пустой набор, если ничего не объявлено.
+   * @return типы из объявления; пустой набор, если ничего не объявлено.
    */
-  private TypeSet flowEntryFact(VariableSymbol variable) {
+  private TypeSet declaredTypes(VariableSymbol variable) {
     var entry = TypeSet.EMPTY;
     for (var source : variableTypeSources) {
       entry = entry.union(source.typesOf(variable));
