@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,12 +100,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   private final Map<URI, Map<BSLParser.CodeBlockContext, FlowLayout>> layoutsByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<BSLParser.CodeBlockContext, Facts>> factsByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Map<VariableSymbol, TypeSet>> cellsByUri = new ConcurrentHashMap<>();
 
   /**
    * Расчёты по телам, идущие прямо сейчас в рамках одного вывода типов.
    * <p>
    * Вывод типа присваивания просит типы переменных из правой части, и если они из того же
-   * тела, запрос приходит посреди его же расчёта. Без этой памятки он не нашёл бы готового
+   * тела, запрос приходит посреди его же расчёта. Без этого списка он не нашёл бы готового
    * ответа в кэше и запустил бы расчёт тела заново — тем глубже, чем длиннее цепочка
    * зависимостей между переменными. Вместо этого он читает строящееся окружение.
    * <p>
@@ -114,6 +116,19 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   public static final class FlowSession {
 
     private final Map<BSLParser.CodeBlockContext, Pass> active = new IdentityHashMap<>();
+
+    /**
+     * Ячейки переменных, видимых другим телам: пока идут круги — приближения, после —
+     * посчитанные значения. Запрос, пришедший в середину кругов, читает отсюда, иначе
+     * круги запускались бы заново из самих себя.
+     */
+    private final Map<VariableSymbol, TypeSet> cells = new IdentityHashMap<>();
+
+    /** Документы, для которых ячейки в этом выводе типов уже посчитаны. */
+    private final Set<URI> cellsDone = new HashSet<>();
+
+    /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
+    private boolean cellsComputing;
   }
 
   /**
@@ -240,7 +255,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private record Facts(
     Map<VariableSymbol, Integer> indexes,
     Map<ParserRuleContext, Environment> beforeStatement,
-    Map<ParserRuleContext, List<Change>> changesByStatement
+    Map<ParserRuleContext, List<Change>> changesByStatement,
+    Environment leaving
   ) {
 
     /** Номер переменной в окружении; {@code null}, если расчёт по потоку к ней неприменим. */
@@ -358,10 +374,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    *                            не может зависеть от того, про какую из них спросили первой.
    * @param sharedWithOtherBodies видна ли переменная другим телам модуля: тогда её тип
    *                            задаёт не только это тело, и любой вызов мог его сменить.
-   * @param entryFact           тип переменной на входе в тело: объявленные типы параметра,
-   *                            типы из аннотаций и прочее, что известно до первого присваивания.
-   *                            У переменной, видимой другим телам, это объединение по всей
-   *                            области видимости — к нему же тип возвращается после вызовов.
+   * @param declaredFact        что о переменной объявлено помимо кода: типы параметра,
+   *                            типизирующий комментарий и прочее, известное до первого
+   *                            присваивания. У переменной, видимой другим телам, это лишь
+   *                            начальное приближение — вход ей считает {@link #sharedEntryFact}.
    * @param definitionPositions позиции всех присваиваний переменной в документе;
    *                            учитываются только попавшие в это тело.
    * @param mutationPositions   позиции операторов, меняющих тип переменной на месте.
@@ -378,7 +394,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     boolean cacheable,
     Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
     Predicate<VariableSymbol> sharedWithOtherBodies,
-    Function<VariableSymbol, TypeSet> entryFact,
+    Function<VariableSymbol, TypeSet> declaredFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
     Function<VariableSymbol, Collection<Position>> mutationPositions,
     AssignedTypes assigned,
@@ -453,6 +469,133 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * Тип переменной, видимой другим телам, на входе в любое тело.
+   * <p>
+   * Значение такой переменной задаёт не одно тело: её мог оставить любой метод, который
+   * успел отработать. Ответ — объединение того, с чем управление <b>покидает</b> тела,
+   * где она меняется: значений на выходе и значений перед каждым вызовом. Тела, которые
+   * её только читают, выпускают её такой же, какой получили, и ничего не добавляют.
+   *
+   * @param documentContext контекст документа с переменной.
+   * @param variable        переменная.
+   * @param inputs          исходные данные расчёта.
+   * @return тип на входе в тело.
+   */
+  private TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
+    var settled = cellsByUri.getOrDefault(documentContext.getUri(), Map.of()).get(variable);
+    if (settled != null) {
+      return settled;
+    }
+    return inputs.session().cells.getOrDefault(variable, inputs.declaredFact().apply(variable));
+  }
+
+  /**
+   * Посчитать ячейки всех переменных документа, видимых другим телам, — если они ещё не
+   * посчитаны в этом выводе типов.
+   * <p>
+   * Зависимость круговая: чтобы посчитать тело, нужен вход переменной, а чтобы узнать
+   * вход — посчитать тела. Разрывается приближениями, как и цикл внутри тела: начинаем с
+   * объявленного, считаем тела, объединяем полученное со входом и повторяем, пока
+   * значения не перестанут расти.
+   * <p>
+   * Считается <b>до</b> того, как запрошенное тело попадёт в список идущих расчётов:
+   * иначе тело, с которого всё началось, само в ячейки не попало бы — а оно ровно то,
+   * где переменная чаще всего и меняется.
+   *
+   * @param documentContext контекст документа.
+   * @param body            тело, расчёт которого запрошен: по нему берётся набор переменных.
+   * @param inputs          исходные данные расчёта.
+   */
+  private void ensureCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs) {
+    var session = inputs.session();
+    var uri = documentContext.getUri();
+    if (session.cellsComputing || !session.cellsDone.add(uri)) {
+      return;
+    }
+    session.cellsComputing = true;
+    try {
+      var shared = sharedVariablesOf(body, inputs);
+      for (var variable : shared) {
+        session.cells.put(variable, inputs.declaredFact().apply(variable));
+      }
+      grow(documentContext, shared, inputs);
+      if (inputs.cacheable()) {
+        var byVariable = cellsByUri.computeIfAbsent(uri, key -> new ConcurrentHashMap<>());
+        shared.forEach(variable -> byVariable.putIfAbsent(variable, session.cells.get(variable)));
+      }
+    } finally {
+      session.cellsComputing = false;
+    }
+  }
+
+  /** Переменные тела, видимые другим телам: у переменных модуля набор один на весь документ. */
+  private static List<VariableSymbol> sharedVariablesOf(BSLParser.CodeBlockContext body, FlowInputs inputs) {
+    var shared = new ArrayList<VariableSymbol>(0);
+    for (var variable : inputs.variables().apply(body)) {
+      if (inputs.sharedWithOtherBodies().test(variable)) {
+        shared.add(variable);
+      }
+    }
+    return shared;
+  }
+
+  /** Круги по телам, меняющим эти переменные, пока хоть одна ячейка растёт. */
+  private void grow(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
+    var session = inputs.session();
+    var bodies = changedBodiesOf(documentContext, shared, inputs);
+    for (var round = 0; round < MAX_PASSES && !bodies.isEmpty(); round++) {
+      var grown = false;
+      for (var body : bodies) {
+        // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
+        // и через круг устареют.
+        var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
+        for (var variable : shared) {
+          var index = facts.indexOf(variable);
+          if (index == null) {
+            continue;
+          }
+          var united = session.cells.get(variable).union(facts.leaving().get(index));
+          grown |= !united.equals(session.cells.put(variable, united));
+        }
+      }
+      if (!grown) {
+        break;
+      }
+    }
+  }
+
+  /** Тела, в которых эти переменные меняются, — по одному на тело и без повторов. */
+  private List<BSLParser.CodeBlockContext> changedBodiesOf(
+    DocumentContext documentContext,
+    List<VariableSymbol> shared,
+    FlowInputs inputs
+  ) {
+    var bodies = new ArrayList<BSLParser.CodeBlockContext>(1);
+    for (var variable : shared) {
+      var positions = new ArrayList<Position>(inputs.definitionPositions().apply(variable));
+      positions.addAll(inputs.mutationPositions().apply(variable));
+      for (var position : positions) {
+        var body = bodyAt(documentContext, position);
+        if (body != null && !containsIdentical(bodies, body)) {
+          bodies.add(body);
+        }
+      }
+    }
+    return bodies;
+  }
+
+  /** Есть ли в списке этот же самый узел: тела сравниваются по ссылке, а не по содержимому. */
+  private static boolean containsIdentical(List<BSLParser.CodeBlockContext> bodies,
+                                           BSLParser.CodeBlockContext body) {
+    for (var known : bodies) {
+      if (known == body) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Удалить кэши по URI документа.
    *
    * @param uri URI документа.
@@ -461,6 +604,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   public void clear(URI uri) {
     layoutsByUri.remove(uri);
     factsByUri.remove(uri);
+    cellsByUri.remove(uri);
   }
 
   /**
@@ -593,6 +737,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     FlowLayout layout,
     FlowInputs inputs
   ) {
+    // До того, как тело попадёт в список идущих расчётов: круги по ячейкам считают и его
+    // тоже, а тело из этого списка отдало бы им пустой вклад.
+    ensureCells(documentContext, body, inputs);
     // Каждой переменной, попавшей в расчёт, достаётся номер — её место в окружении.
     // Окружение хранится массивом по этим номерам, а не картой: копия массива на десяток
     // элементов дешевле копирования и перехеширования карты, а копий тут много — на
@@ -617,14 +764,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       collectChanges(layout, variable, index, mutations, false, changesByStatement);
     }
     if (variables.isEmpty()) {
-      return new Facts(Map.of(), Map.of(), Map.of());
+      return new Facts(Map.of(), Map.of(), Map.of(), Environment.EMPTY);
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
-    var pass = new Pass(graph, layout, inputs, variables, indexes, changesByStatement);
+    var pass = new Pass(this, documentContext, graph, layout, inputs, variables, indexes, changesByStatement);
     var active = inputs.session().active;
     active.put(body, pass);
     try {
-      return new Facts(indexes, pass.computeStatementFacts(), changesByStatement);
+      return pass.computeFacts();
     } finally {
       active.remove(body);
     }
@@ -660,6 +807,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   private static final class Pass {
 
+    private final VariableFlowAnalyzer analyzer;
+    private final DocumentContext documentContext;
     private final ControlFlowGraph graph;
     private final FlowLayout layout;
     private final FlowInputs inputs;
@@ -687,11 +836,20 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     @Nullable
     private Environment entry;
 
+    /**
+     * Окружение, с которым управление покидает тело: объединение значений перед каждым
+     * вызовом. Нужно переменным, видимым другим телам: вызванный метод застаёт их
+     * такими, какими они были в точке вызова.
+     */
+    private Environment leaving = Environment.EMPTY;
+
     /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
     private final Map<CfgVertex, Environment> outgoing = new IdentityHashMap<>();
     private final Map<CfgVertex, Environment> outgoingInput = new IdentityHashMap<>();
 
     private Pass(
+      VariableFlowAnalyzer analyzer,
+      DocumentContext documentContext,
       ControlFlowGraph graph,
       FlowLayout layout,
       FlowInputs inputs,
@@ -699,6 +857,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       Map<VariableSymbol, Integer> indexes,
       Map<ParserRuleContext, List<Change>> changesByStatement
     ) {
+      this.analyzer = analyzer;
+      this.documentContext = documentContext;
       this.graph = graph;
       this.layout = layout;
       this.inputs = inputs;
@@ -714,12 +874,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
 
     /**
-     * Окружение перед каждым оператором тела. Считается один раз: сперва окружения по
-     * вершинам до неподвижной точки, затем один проход по операторам каждой вершины.
+     * Окружение перед каждым оператором тела и окружение на выходе из него. Считается
+     * один раз: сперва окружения по вершинам до неподвижной точки, затем один проход по
+     * операторам каждой вершины.
      *
-     * @return окружение перед каждым оператором графа.
+     * @return окружения тела.
      */
-    private Map<ParserRuleContext, Environment> computeStatementFacts() {
+    private Facts computeFacts() {
       var byVertex = computeEntryFacts();
       for (var vertex : layout.orderedVertices()) {
         // Через тот же кэш выхода: к концу поиска неподвижной точки он уже посчитан для
@@ -727,7 +888,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         // ним не нужны и повторные вызовы колбэков мутаторов.
         outgoingOf(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
       }
-      return beforeStatement;
+      // Окружение на входе в вершину выхода — это и есть окружение на выходе из тела:
+      // в неё сходятся все пути, включая Возврат из середины.
+      var exit = byVertex.getOrDefault(graph.getExitPoint(), Environment.EMPTY);
+      return new Facts(indexes, beforeStatement, changesByStatement, exit.union(leaving));
     }
 
     /**
@@ -787,11 +951,21 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         var types = Environment.blank(variables.size());
         var current = types;
         for (var i = 0; i < variables.size(); i++) {
-          current = current.with(i, inputs.entryFact().apply(variables.get(i)), variables.size());
+          current = current.with(i, entryFactOf(variables.get(i)), variables.size());
         }
         entry = current;
       }
       return entry;
+    }
+
+    /**
+     * Тип переменной на входе в это тело. У переменной, живущей в одном теле, это
+     * объявленное о ней; у видимой другим телам — то, с чем из тел выходят.
+     */
+    private TypeSet entryFactOf(VariableSymbol variable) {
+      return inputs.sharedWithOtherBodies().test(variable)
+        ? analyzer.cellOf(documentContext, variable, inputs)
+        : inputs.declaredFact().apply(variable);
     }
 
     /**
@@ -936,6 +1110,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       if (shared.isEmpty() || !layout.hasCall(statement)) {
         return current;
       }
+      // То, что переменная содержит перед вызовом, вызванный метод видит — значит это
+      // часть её значения на входе в другие тела, наравне со значением на выходе.
+      leaving = leaving.union(current);
       var result = current;
       for (var index : shared) {
         if (assignedBy(changes, index)) {

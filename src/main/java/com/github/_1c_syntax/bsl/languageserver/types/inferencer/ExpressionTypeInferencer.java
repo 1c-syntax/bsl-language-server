@@ -903,7 +903,7 @@ public class ExpressionTypeInferencer {
       ctx.visited.size() <= 1,
       body -> variablesOfBody(owner, body),
       target -> target.getKind() == VariableKind.MODULE,
-      target -> flowEntryFact(target, ctx),
+      this::declaredTypes,
       this::definitionPositions,
       target -> callsOf.apply(target).keySet(),
       (target, statement, position) ->
@@ -1015,25 +1015,6 @@ public class ExpressionTypeInferencer {
         return guardConditionNarrowing.compile(condition, owner).narrowBefore(variable, position, incoming);
       }
     };
-  }
-
-  /**
-   * Тип переменной на входе в тело.
-   * <p>
-   * У переменной, живущей в одном теле, это объявленное: типы параметра, типизирующий
-   * комментарий и прочее, что известно до первого присваивания. У переменной модуля этого
-   * мало: её значение мог оставить любой другой метод, поэтому на входе берётся объединение
-   * по всей области видимости — все её присваивания и изменения разом, без учёта порядка.
-   *
-   * @param variable переменная.
-   * @param ctx      контекст текущего инференса.
-   * @return типы на входе в тело; пустой набор, если ничего не известно.
-   */
-  private TypeSet flowEntryFact(VariableSymbol variable, InferenceContext ctx) {
-    if (variable.getKind() == VariableKind.MODULE) {
-      return inferVariable(variable, ctx);
-    }
-    return declaredTypes(variable);
   }
 
   /**

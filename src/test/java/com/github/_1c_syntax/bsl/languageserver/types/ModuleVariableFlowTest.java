@@ -88,6 +88,28 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
       .contains("Режим");
   }
 
+  @Test
+  void valueBeforeCallIsVisibleToAnotherBody() {
+    // given: вызванный метод застаёт переменную такой, какой она была в точке вызова, —
+    // значит это часть её значения на входе в другие тела.
+    // when
+    var types = at("ВЧужомТеле = ПередВызовом", "ВЧужомТеле = ".length());
+
+    // then
+    assertThat(qnames(types)).contains("Структура");
+  }
+
+  @Test
+  void intermediateValueDoesNotLeaveItsBody() {
+    // given: `Промежуточный` дважды присваивается подряд без вызовов между присваиваниями,
+    // поэтому первый тип другие тела увидеть не могут.
+    // when
+    var types = at("ВДругомТеле = Промежуточный", "ВДругомТеле = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Соответствие");
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
     var documentContext = doc();
     return typeService.expressionTypesAt(documentContext, positionOf(documentContext, marker, offsetInMarker + 1));
