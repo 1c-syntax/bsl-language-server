@@ -100,6 +100,28 @@ class GuardNarrowingTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void checkNarrowsTheRestOfConjunction() {
+    // given: `Значение <> Неопределено И СтрДлина(Значение) > 0` — ко второй проверке первая
+    // уже верна, иначе до неё бы не дошли.
+    // when
+    var types = at("СтрДлина(Значение) > 0 Тогда", "СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void checkDoesNotNarrowAcrossDisjunction() {
+    // given: `Значение <> Неопределено ИЛИ …` — вторая часть считается как раз тогда, когда
+    // первая ложна, поэтому её утверждение переносить нельзя.
+    // when
+    var types = at("СтрДлина(Значение) > 1 Тогда", "СтрДлина(".length());
+
+    // then: сужения нет, тип остаётся объявленным.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Строка", "Неопределено");
+  }
+
+  @Test
   void whileConditionNarrowsInsideLoop() {
     // given: условие цикла «Пока» верно на каждой итерации тела.
     // when

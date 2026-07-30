@@ -39,8 +39,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionN
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.eclipse.lsp4j.Position;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -97,11 +100,25 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
    * @param type     проверяемый тип; {@code null} — проверка на {@code Неопределено}.
    * @param equality было ли сравнение на равенство: {@code <>} переворачивает смысл.
    */
-  private record Assertion(SourceDefinedSymbol variable, @Nullable TypeRef type, boolean equality) {
+  private record Assertion(
+    SourceDefinedSymbol variable,
+    @Nullable TypeRef type,
+    boolean equality,
+    @Nullable Position endsAt
+  ) {
 
     /** То же утверждение с обратным знаком — для проверки под отрицанием. */
     private Assertion negated() {
-      return new Assertion(variable, type, !equality);
+      return new Assertion(variable, type, !equality, endsAt);
+    }
+
+    /** Заканчивается ли проверка, из которой снято утверждение, раньше указанной точки. */
+    private boolean endsBefore(Position position) {
+      if (endsAt == null) {
+        return false;
+      }
+      return endsAt.getLine() < position.getLine()
+        || endsAt.getLine() == position.getLine() && endsAt.getCharacter() <= position.getCharacter();
     }
 
     /** Применить утверждение к типу на указанной ветке. */
@@ -181,6 +198,32 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
       for (var assertion : assertions) {
         if (assertion.variable().equals(variable)) {
           narrowed = assertion.apply(whenTrue, narrowed);
+        }
+      }
+      return narrowed;
+    }
+
+    /**
+     * Сузить тип переменной внутри самого условия — по проверкам, стоящим левее указанной точки.
+     * <p>
+     * В конъюнкции до правой части доходят только тогда, когда левая оказалась истинной:
+     * в {@code Если Х <> Неопределено И Х.Поле = 5} ко второй проверке первая уже верна.
+     * Поэтому проверки левее точки применяются как истинные независимо от того, по какой
+     * ветке пойдёт условие в целом.
+     * <p>
+     * Дизъюнкция сюда не попадает: разбор условия с {@code ИЛИ} не даёт утверждений вовсе,
+     * и это правильно — правая часть считается как раз тогда, когда левая ложна.
+     *
+     * @param variable переменная, тип которой сужается.
+     * @param position точка внутри условия, для которой нужен тип.
+     * @param incoming тип переменной на входе в условие.
+     * @return суженный тип; исходный, если левее точки про переменную ничего не утверждается.
+     */
+    public TypeSet narrowBefore(SourceDefinedSymbol variable, Position position, TypeSet incoming) {
+      var narrowed = incoming;
+      for (var assertion : assertions) {
+        if (assertion.variable().equals(variable) && assertion.endsBefore(position)) {
+          narrowed = assertion.apply(true, narrowed);
         }
       }
       return narrowed;
@@ -295,13 +338,26 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
     }
     var equality = operator == BslOperator.EQUAL;
 
+    var endsAt = endOf(check);
     var typeCheck = typeCheckOf(binary, documentContext);
     if (typeCheck != null) {
       var resolved = typeRegistry.resolve(typeCheck.typeName(), documentContext.getFileType()).orElse(null);
-      return resolved == null ? null : new Assertion(typeCheck.variable(), resolved, equality);
+      return resolved == null ? null : new Assertion(typeCheck.variable(), resolved, equality, endsAt);
     }
     var undefinedCheck = undefinedCheckOf(binary, documentContext);
-    return undefinedCheck == null ? null : new Assertion(undefinedCheck, null, equality);
+    return undefinedCheck == null ? null : new Assertion(undefinedCheck, null, equality, endsAt);
+  }
+
+  /**
+   * Точка, на которой заканчивается проверка в тексте.
+   *
+   * @param check узел проверки.
+   * @return точка за последним её символом; {@code null}, если узел не привязан к тексту.
+   */
+  @Nullable
+  private static Position endOf(BslExpression check) {
+    var ast = check.getRepresentingAst();
+    return ast instanceof ParserRuleContext rule ? Ranges.create(rule).getEnd() : null;
   }
 
   /**

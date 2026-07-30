@@ -973,6 +973,16 @@ public class ExpressionTypeInferencer {
       public Set<? extends SourceDefinedSymbol> variablesOf(BSLParser.ExpressionContext condition) {
         return guardConditionNarrowing.compile(condition, owner).variables();
       }
+
+      @Override
+      public TypeSet narrowBefore(
+        VariableSymbol variable,
+        BSLParser.ExpressionContext condition,
+        Position position,
+        TypeSet incoming
+      ) {
+        return guardConditionNarrowing.compile(condition, owner).narrowBefore(variable, position, incoming);
+      }
     };
   }
 
