@@ -37,7 +37,9 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 
 ## Стек
 
-- **Java**, компиляция таргетится на **Java 21**; поддерживаемый рантайм — 17/21/25 (CI: 21 и 25).
+- **Java**, компиляция таргетится на **Java 21** (`targetCompatibility = VERSION_21`), поэтому и
+  минимальный рантайм — 21: байт-код версии 65 более старая JVM не загрузит. CI собирает и гоняет
+  тесты на 21 и 25, на трёх ОС.
 - **Gradle 9.6** (wrapper, Kotlin DSL — `build.gradle.kts`); **Spring Boot 4** (DI, кэш, websocket, MCP).
 - Парсер [`bsl-parser`](https://github.com/1c-syntax/bsl-parser) (ANTLR4, грамматики BSL и SDBL-запросов);
   метаданные 1С — [`mdclasses`](https://github.com/1c-syntax/mdclasses); LSP — Eclipse LSP4J.
