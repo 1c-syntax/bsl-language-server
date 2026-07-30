@@ -542,10 +542,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     for (var variable : inputs.variables().get()) {
       var definitions = inputs.definitionPositions().apply(variable);
       var mutations = inputs.mutationPositions().apply(variable);
-      // Присваиваний нет — расчёту нечего перекрывать; а если хоть одно изменение типа не
-      // легло в граф отдельным оператором, его вклад потерялся бы. И там, и там точнее
-      // прежний путь с обходом всей области видимости.
-      if (definitions.isEmpty() || !allPlaced(layout, definitions) || !allPlaced(layout, mutations)) {
+      // Если хоть одно изменение типа не легло в граф отдельным оператором, его вклад
+      // потерялся бы — тогда точнее прежний путь с обходом всей области видимости.
+      // Отсутствие присваиваний расчёту не мешает: тип такой переменной — входной факт по
+      // всему телу, и это тот же ответ, что дал бы обход области видимости.
+      if (!allPlaced(layout, definitions) || !allPlaced(layout, mutations)) {
         continue;
       }
       var index = variables.size();
