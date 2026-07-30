@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785433342793,
+  "lastUpdate": 1785435794181,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41261,6 +41261,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.688941515352346",
             "extra": "mean: 93.38489929835002 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a7b0af8af22c70a627be21d1b2dbd826dc9fcafa",
+          "message": "Merge pull request #4321 from 1c-syntax/fix/collection-returns-in-signatures\n\nУточнённый тип строки коллекции доезжает до подсказки автодополнения",
+          "timestamp": "2026-07-30T19:14:55+02:00",
+          "tree_id": "c3e9d26aa71fbfe90e77dd7640cb339f9e230d65",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a7b0af8af22c70a627be21d1b2dbd826dc9fcafa"
+        },
+        "date": 1785435783851,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.51266439755757,
+            "unit": "sec",
+            "range": "stddev: 2.6972027119955864",
+            "extra": "mean: 93.51266439755757 sec\nrounds: 3"
           }
         ]
       }
