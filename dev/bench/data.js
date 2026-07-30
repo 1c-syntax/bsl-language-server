@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785409714791,
+  "lastUpdate": 1785416183878,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41168,6 +41168,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.726403479290197",
             "extra": "mean: 94.5882641474406 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0afc8702fb2e805759080267d7eec11bbbeb3a52",
+          "message": "Merge pull request #4327 from 1c-syntax/feature/flow-reentry\n\nfix(types): расчёт по потоку не отступает на повторном входе и на параметрах",
+          "timestamp": "2026-07-30T14:17:41+02:00",
+          "tree_id": "fc92ddbd53a3194dd0785faf958187a4029ccdfc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0afc8702fb2e805759080267d7eec11bbbeb3a52"
+        },
+        "date": 1785416171596,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.8787751197815,
+            "unit": "sec",
+            "range": "stddev: 0.3343048813986593",
+            "extra": "mean: 93.8787751197815 sec\nrounds: 3"
           }
         ]
       }
