@@ -787,7 +787,8 @@ public class ExpressionTypeInferencer {
    * @param ctx      контекст текущего инференса.
    * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим и нужен
    *     общий путь: переменная модуля (её меняют из разных методов), использование в
-   *     другом документе, отсутствие присваиваний либо неразмещаемое в графе присваивание.
+   *     другом документе либо неразмещаемое в графе присваивание. Отсутствие присваиваний
+   *     расчёту не мешает — тип такой переменной есть входной факт по всему телу.
    */
   @Nullable
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
@@ -990,8 +991,9 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Позиции всех присваиваний переменной: объявление (первое присваивание содержится в
-   * самом символе) плюс {@code DEFINITION}-вхождения из индекса ссылок.
+   * Позиции всех присваиваний переменной: {@code DEFINITION}-вхождения из индекса ссылок
+   * плюс позиция самого символа — но только у переменной, созданной первым присваиванием,
+   * где объявления как отдельной записи нет (см. {@link #declarationIsAssignment}).
    *
    * @param variable переменная.
    * @return позиции присваиваний без повторов.
@@ -1026,7 +1028,9 @@ public class ExpressionTypeInferencer {
    */
   private static boolean declarationIsAssignment(VariableSymbol variable) {
     var kind = variable.getKind();
-    return kind != VariableKind.PARAMETER && kind != VariableKind.LOCAL;
+    return kind != VariableKind.PARAMETER
+      && kind != VariableKind.LOCAL
+      && kind != VariableKind.MODULE;
   }
 
 
