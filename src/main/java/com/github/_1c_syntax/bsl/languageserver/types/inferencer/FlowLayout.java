@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -95,8 +96,7 @@ final class FlowLayout {
   private final int bodyEndLine;
 
   /** Операторы с вызовами: считаются по первому требованию, см. {@link #hasCall}. */
-  @Nullable
-  private volatile Set<ParserRuleContext> callStatements;
+  private final Lazy<Set<ParserRuleContext>> callStatements = new Lazy<>(this::findCallStatements);
 
   private FlowLayout(
     List<Slot> slots,
@@ -297,21 +297,18 @@ final class FlowLayout {
    * @return {@code true}, если внутри оператора есть вызов метода.
    */
   boolean hasCall(ParserRuleContext statement) {
-    var known = callStatements;
-    if (known == null) {
-      var found = new HashSet<ParserRuleContext>();
-      for (var slot : slots) {
-        if (containsCall(slot)) {
-          found.add(slot.statement());
-        }
+    return callStatements.getOrCompute().contains(statement);
+  }
+
+  /** Найти операторы, внутри которых есть вызов. */
+  private Set<ParserRuleContext> findCallStatements() {
+    var found = new HashSet<ParserRuleContext>();
+    for (var slot : slots) {
+      if (containsCall(slot)) {
+        found.add(slot.statement());
       }
-      // Публикуется неизменяемым: набор считается по первому требованию из любого потока,
-      // и делить между ними изменяемую коллекцию нельзя. Двойная работа при гонке
-      // безвредна — набор от расчёта не зависит.
-      known = Set.copyOf(found);
-      callStatements = known;
     }
-    return known.contains(statement);
+    return Set.copyOf(found);
   }
 
   /**
