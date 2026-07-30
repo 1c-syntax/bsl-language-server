@@ -259,6 +259,27 @@ final class FlowLayout {
   }
 
   /**
+   * Является ли оператор выражением условия ветвления или цикла {@code Пока}.
+   * <p>
+   * Отличать нужно потому, что внутри условия значим порядок проверок, а внутри обычного
+   * оператора — нет.
+   *
+   * @param statement оператор графа.
+   * @return {@code true}, если это условие своей вершины.
+   */
+  boolean isCondition(ParserRuleContext statement) {
+    var slot = byStatement.get(statement);
+    if (slot == null) {
+      return false;
+    }
+    var vertex = slot.vertex();
+    if (vertex instanceof ConditionalVertex conditional) {
+      return conditional.getExpression() == statement;
+    }
+    return vertex instanceof WhileLoopVertex loop && loop.getExpression() == statement;
+  }
+
+  /**
    * Оператор, накрывающий позицию; {@code null}, если такого нет.
    * <p>
    * Двоичный поиск по отсортированным операторам: запрос типа приходит на каждое

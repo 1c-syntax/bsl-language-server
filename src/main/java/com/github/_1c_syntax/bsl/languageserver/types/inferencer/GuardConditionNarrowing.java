@@ -32,15 +32,21 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.util.Positions;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -68,11 +74,21 @@ import java.util.concurrent.ConcurrentHashMap;
  * Оба сравнения работают и в обратную сторону ({@code <>} против {@code =}), и на
  * ложной ветке — с противоположным смыслом.
  * <p>
- * Условие разбирается только как <b>конъюнкция</b> таких проверок: каждая из них верна
- * на истинной ветке, поэтому сужения накладываются одно на другое. Дизъюнкция не сужает
- * ничего — из {@code А ИЛИ Б} на истинной ветке не следует ни одна из частей. На ложной
- * ветке сужение применяется только к условию из одной проверки: отрицание конъюнкции —
- * это дизъюнкция, и какая именно часть оказалась ложной, неизвестно.
+ * Условие разбирается как <b>цепочка</b> таких проверок, соединённых одним оператором —
+ * либо {@code И}, либо {@code ИЛИ}; отрицание меняет их местами по законам де Моргана.
+ * Смешанная цепочка ({@code А И Б ИЛИ В}) не сужает ничего: из исхода условия не следует
+ * исход отдельной проверки.
+ * <p>
+ * Сужение даётся с двух сторон:
+ * <ul>
+ *   <li><b>на рёбрах ветвления</b> — истинность конъюнкции даёт истинность каждого звена,
+ *       ложность дизъюнкции — ложность каждого; на обратной ветке неизвестно, какое звено
+ *       решило исход, поэтому сужает только условие из одной проверки;</li>
+ *   <li><b>внутри самого условия</b> — вычисление цепочки сокращённое, поэтому раз до звена
+ *       дошли, предыдущие в конъюнкции истинны, а в дизъюнкции ложны:
+ *       {@code Если Х = Неопределено ИЛИ СтрДлина(Х) = 0} во второй проверке видит {@code Х}
+ *       заполненным.</li>
+ * </ul>
  */
 @Component
 @WorkspaceScope
@@ -97,7 +113,11 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
    * @param type     проверяемый тип; {@code null} — проверка на {@code Неопределено}.
    * @param equality было ли сравнение на равенство: {@code <>} переворачивает смысл.
    */
-  private record Assertion(SourceDefinedSymbol variable, @Nullable TypeRef type, boolean equality) {
+  private record Assertion(
+    SourceDefinedSymbol variable,
+    @Nullable TypeRef type,
+    boolean equality
+  ) {
 
     /** То же утверждение с обратным знаком — для проверки под отрицанием. */
     private Assertion negated() {
@@ -122,44 +142,61 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Разобранное охраняющее условие: сколько в нём проверок и что из них следует про
+   * Одно звено цепочки проверок: участок текста, который оно занимает, и утверждение,
+   * которое из него следует.
+   *
+   * @param range     участок звена; {@code null}, если узел не привязан к тексту.
+   * @param assertion утверждение о типе; {@code null}, если из звена ничего не следует.
+   */
+  private record ChainLink(@Nullable Range range, @Nullable Assertion assertion) {
+
+    /** Говорит ли звено что-нибудь про эту переменную. */
+    private boolean mentions(SourceDefinedSymbol variable) {
+      return assertion != null && assertion.variable().equals(variable);
+    }
+  }
+
+  /**
+   * Разобранное охраняющее условие: цепочка его проверок и что из них следует про
    * анализируемую переменную.
    * <p>
    * Разбор и резолв переменной делаются один раз, а применение к типу — сколько угодно:
    * расчёт по потоку идёт проходами и спрашивает одно и то же условие многократно.
    *
-   * @param conjunctCount общее число проверок в конъюнкции, включая не относящиеся к переменной.
-   * @param assertions    утверждения, снятые с проверок про эту переменную.
-   * @param variables     переменные, о которых условие что-то утверждает. Считаются при
-   *                      разборе и хранятся готовыми: расчёт по потоку спрашивает их на
-   *                      каждом ребре ветки в каждом проходе, и собирать набор заново
-   *                      выходило дороже, чем сэкономленные вызовы сужения.
+   * @param connector чем соединены проверки: {@code AND}, {@code OR} либо {@code null},
+   *                  если условие цепочкой одного вида не является и сужать по нему нельзя.
+   * @param links     звенья цепочки в порядке вычисления — том, в котором их выдало дерево
+   *                  выражения. Звено без утверждения тоже нужно: оно занимает своё место в
+   *                  цепочке, и обращение может стоять именно в нём.
+   * @param variables переменные, о которых условие что-то утверждает. Считаются при
+   *                  разборе и хранятся готовыми: расчёт по потоку спрашивает их на каждом
+   *                  ребре ветки в каждом проходе, и собирать набор заново выходило дороже,
+   *                  чем сэкономленные вызовы сужения.
    */
   public record CompiledGuard(
-    int conjunctCount,
-    List<Assertion> assertions,
+    @Nullable BslOperator connector,
+    List<ChainLink> links,
     Set<SourceDefinedSymbol> variables
   ) {
 
     /** Условие, из которого про переменную ничего не следует. */
-    public static final CompiledGuard NONE = new CompiledGuard(0, List.of(), Set.of());
+    public static final CompiledGuard NONE = new CompiledGuard(null, List.of(), Set.of());
 
     /**
      * Скомпилированное условие с посчитанным набором переменных.
      *
-     * @param conjunctCount общее число проверок в конъюнкции.
-     * @param assertions    утверждения по проверкам.
-     * @return скомпилированное условие.
+     * @param connector чем соединены проверки.
+     * @param links     звенья цепочки в порядке вычисления.
+     * @return скомпилированное условие; {@link #NONE}, если утверждений нет вовсе.
      */
-    static CompiledGuard of(int conjunctCount, List<Assertion> assertions) {
-      if (assertions.isEmpty()) {
-        return NONE;
-      }
+    static CompiledGuard of(@Nullable BslOperator connector, List<ChainLink> links) {
       Set<SourceDefinedSymbol> mentioned = Collections.newSetFromMap(new IdentityHashMap<>());
-      for (var assertion : assertions) {
-        mentioned.add(assertion.variable());
+      for (var link : links) {
+        if (link.assertion() != null) {
+          mentioned.add(link.assertion().variable());
+        }
       }
-      return new CompiledGuard(conjunctCount, assertions, mentioned);
+      return mentioned.isEmpty() ? NONE : new CompiledGuard(connector, List.copyOf(links), mentioned);
     }
 
     /**
@@ -167,23 +204,74 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
      *
      * @param variable переменная, тип которой сужается: условие может утверждать что-то
      *                 про несколько переменных, берутся только её проверки.
-     * @param whenTrue ветка: {@code true} — истинная, {@code false} — ложная.
+     * @param whenTrue ветка: {@code true} — истинная, {@code false} — ложная. Конъюнкция сужает
+     *                 истинную ветку, дизъюнкция — ложную.
      * @param incoming тип переменной перед условием.
      * @return суженный тип; исходный, если сужать нечем.
      */
     public TypeSet apply(SourceDefinedSymbol variable, boolean whenTrue, TypeSet incoming) {
-      // На ложной ветке отрицание конъюнкции даёт дизъюнкцию: какая часть оказалась
-      // ложной, неизвестно, поэтому сужает только условие из одной проверки.
-      if (assertions.isEmpty() || !whenTrue && conjunctCount > 1) {
+      // Истинность конъюнкции даёт истинность каждого звена, ложность дизъюнкции — ложность
+      // каждого: исход ветки переносится на все звенья как есть. Обратные ветки неоднозначны —
+      // неизвестно, какое звено решило исход, — там сужает только условие из одной проверки.
+      var determined = connector == BslOperator.OR ? !whenTrue : whenTrue;
+      if (!determined && links.size() > 1) {
         return incoming;
       }
       var narrowed = incoming;
-      for (var assertion : assertions) {
-        if (assertion.variable().equals(variable)) {
-          narrowed = assertion.apply(whenTrue, narrowed);
+      for (var link : links) {
+        if (link.mentions(variable)) {
+          narrowed = link.assertion().apply(whenTrue, narrowed);
         }
       }
       return narrowed;
+    }
+
+    /**
+     * Сузить тип переменной внутри самого условия — по звеньям цепочки перед тем, в котором
+     * стоит точка.
+     * <p>
+     * Вычисление цепочки в 1С сокращённое, поэтому раз до звена дошли, про предыдущие известно,
+     * чем они кончились: в конъюнкции они истинны, в дизъюнкции — ложны. В
+     * {@code Если Х <> Неопределено И СтрДлина(Х) > 0} ко второй проверке первая уже верна,
+     * а в {@code Если Х = Неопределено ИЛИ СтрДлина(Х) = 0} — как раз неверна, что тоже сужает.
+     * Знак берётся независимо от того, по какой ветке пойдёт условие в целом.
+     *
+     * @param variable переменная, тип которой сужается.
+     * @param position точка внутри условия, для которой нужен тип.
+     * @param incoming тип переменной на входе в условие.
+     * @return суженный тип; исходный, если перед звеном с точкой про переменную ничего
+     *     не утверждается.
+     */
+    public TypeSet narrowBefore(SourceDefinedSymbol variable, Position position, TypeSet incoming) {
+      // Звено, в котором стоит обращение: дальше него утверждения не действуют, потому что
+      // те проверки ещё не вычислялись. Ищется по вхождению точки в участок звена — это
+      // отношение «часть-целое», а не сравнение порядка; сам порядок задан деревом.
+      var here = indexOf(position);
+      if (here <= 0) {
+        // Звена с точкой нет, либо она в самом первом — предыдущих проверок нет.
+        return incoming;
+      }
+      // В конъюнкции до звена доходят, когда предыдущие ИСТИННЫ; в дизъюнкции — когда ЛОЖНЫ.
+      var previousHold = connector == BslOperator.AND;
+      var narrowed = incoming;
+      for (var i = 0; i < here; i++) {
+        var link = links.get(i);
+        if (link.mentions(variable)) {
+          narrowed = link.assertion().apply(previousHold, narrowed);
+        }
+      }
+      return narrowed;
+    }
+
+    /** Номер звена, чей участок текста накрывает точку; {@code -1}, если такого нет. */
+    private int indexOf(Position position) {
+      for (var i = 0; i < links.size(); i++) {
+        var range = links.get(i).range();
+        if (range != null && Ranges.containsPosition(range, position)) {
+          return i;
+        }
+      }
+      return -1;
     }
   }
 
@@ -227,51 +315,70 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
       return CompiledGuard.NONE;
     }
     var checks = new ArrayList<Conjunct>();
-    if (!collectConjuncts(tree, false, checks)) {
+    var connector = collectChain(tree, false, checks);
+    if (connector == null && checks.size() > 1) {
+      // Цепочка смешанная: из исхода условия не следует исход отдельной проверки.
       return CompiledGuard.NONE;
     }
-    var assertions = new ArrayList<Assertion>();
+    var links = new ArrayList<ChainLink>(checks.size());
     for (var conjunct : checks) {
       var assertion = assertionOf(conjunct.check(), documentContext);
-      if (assertion != null) {
-        assertions.add(conjunct.negated() ? assertion.negated() : assertion);
+      if (assertion != null && conjunct.negated()) {
+        assertion = assertion.negated();
       }
+      links.add(new ChainLink(rangeOf(conjunct.check()), assertion));
     }
-    return CompiledGuard.of(checks.size(), List.copyOf(assertions));
+    return CompiledGuard.of(connector, links);
   }
 
   /**
-   * Разложить условие на проверки, соединённые {@code И}, с учётом отрицаний.
+   * Разложить условие на цепочку проверок, соединённых одним и тем же оператором.
    * <p>
    * Отрицание не отбрасывается, а переворачивает смысл проверки: {@code Не Х = Неопределено}
-   * — то же, что {@code Х <> Неопределено}. По законам де Моргана отрицание над {@code ИЛИ}
-   * даёт конъюнкцию отрицаний, поэтому под {@code Не} разбирается уже дизъюнкция, а не
+   * — то же, что {@code Х <> Неопределено}. По законам де Моргана отрицание меняет местами
+   * конъюнкцию и дизъюнкцию, поэтому под {@code Не} цепочка из {@code ИЛИ} читается как
    * конъюнкция; двойное отрицание возвращает исходный смысл.
+   * <p>
+   * Смешанная цепочка не разбирается: {@code И} связывает крепче, поэтому
+   * {@code А И Б ИЛИ В} — это {@code (А И Б) ИЛИ В}, и из ложности левой части не следует
+   * ложность {@code А} по отдельности. Порядок звеньев — тот, в котором их выдаёт дерево,
+   * то есть порядок вычисления.
    *
-   * @param node     узел условия.
-   * @param negated  находится ли узел под нечётным числом отрицаний.
-   * @param target   список, куда складываются проверки вместе с их знаком.
-   * @return {@code false}, если встретилась дизъюнкция — тогда сужать нельзя.
+   * @param node    узел условия.
+   * @param negated находится ли узел под нечётным числом отрицаний.
+   * @param target  список, куда складываются проверки вместе с их знаком.
+   * @return оператор, соединяющий звенья, с поправкой на отрицания; {@code null}, если
+   *     цепочка смешанная и сужать по ней нельзя.
    */
-  private static boolean collectConjuncts(BslExpression node, boolean negated, List<Conjunct> target) {
+  @Nullable
+  private static BslOperator collectChain(BslExpression node, boolean negated, List<Conjunct> target) {
     if (node instanceof UnaryOperationNode unary && unary.getOperator() == BslOperator.NOT) {
-      return collectConjuncts(unary.getOperand(), !negated, target);
+      return collectChain(unary.getOperand(), !negated, target);
     }
-    if (node instanceof BinaryOperationNode binary) {
-      var operator = binary.getOperator();
+    if (node instanceof BinaryOperationNode binary
+      && (binary.getOperator() == BslOperator.AND || binary.getOperator() == BslOperator.OR)) {
       // Под отрицанием конъюнкция и дизъюнкция меняются местами.
-      var conjunction = negated ? BslOperator.OR : BslOperator.AND;
-      var disjunction = negated ? BslOperator.AND : BslOperator.OR;
-      if (operator == disjunction) {
-        return false;
-      }
-      if (operator == conjunction) {
-        return collectConjuncts(binary.getLeft(), negated, target)
-          && collectConjuncts(binary.getRight(), negated, target);
-      }
+      var effective = binary.getOperator() == BslOperator.AND
+        ? (negated ? BslOperator.OR : BslOperator.AND)
+        : (negated ? BslOperator.AND : BslOperator.OR);
+      var left = collectChain(binary.getLeft(), negated, target);
+      var right = collectChain(binary.getRight(), negated, target);
+      return sameConnector(effective, left) && sameConnector(effective, right) ? effective : null;
     }
     target.add(new Conjunct(node, negated));
-    return true;
+    return null;
+  }
+
+  /**
+   * Совместимо ли звено с оператором цепочки: либо это отдельная проверка (своего оператора
+   * не имеет), либо вложенная цепочка того же вида.
+   *
+   * @param connector оператор цепочки.
+   * @param link      оператор звена; {@code null} — отдельная проверка.
+   * @return {@code true}, если звено не ломает однородность цепочки.
+   */
+  private static boolean sameConnector(BslOperator connector, @Nullable BslOperator link) {
+    return link == null || link == connector;
   }
 
   /**
@@ -302,6 +409,69 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
     }
     var undefinedCheck = undefinedCheckOf(binary, documentContext);
     return undefinedCheck == null ? null : new Assertion(undefinedCheck, null, equality);
+  }
+
+  /**
+   * Участок текста, который занимает узел выражения вместе со своим поддеревом.
+   * <p>
+   * Узел операции привязан к тексту одним лишь оператором, а операнды — своими контекстами,
+   * поэтому участок всего подвыражения собирается обходом поддерева.
+   *
+   * @param node узел выражения.
+   * @return участок узла; {@code null}, если к тексту не привязан ни один узел поддерева.
+   */
+  @Nullable
+  private static Range rangeOf(BslExpression node) {
+    var own = ownRangeOf(node);
+    return switch (node.getNodeType()) {
+      case BINARY_OP -> {
+        BinaryOperationNode binary = node.cast();
+        yield enclosing(enclosing(own, rangeOf(binary.getLeft())), rangeOf(binary.getRight()));
+      }
+      case UNARY_OP -> enclosing(own, rangeOf(((UnaryOperationNode) node.cast()).getOperand()));
+      case TERNARY_OP -> {
+        TernaryOperatorNode ternary = node.cast();
+        var covered = enclosing(own, rangeOf(ternary.getCondition()));
+        covered = enclosing(covered, rangeOf(ternary.getTruePart()));
+        yield enclosing(covered, rangeOf(ternary.getFalsePart()));
+      }
+      case CALL -> {
+        AbstractCallNode call = node.cast();
+        var covered = own;
+        for (var argument : call.arguments()) {
+          covered = enclosing(covered, rangeOf(argument));
+        }
+        yield covered;
+      }
+      default -> own;
+    };
+  }
+
+  /** Участок текста самого узла, без поддерева; {@code null}, если узел к тексту не привязан. */
+  @Nullable
+  private static Range ownRangeOf(BslExpression node) {
+    var ast = node.getRepresentingAst();
+    return ast == null ? null : Ranges.create(ast);
+  }
+
+  /**
+   * Наименьший участок, накрывающий оба переданных.
+   *
+   * @param first  первый участок; {@code null}, если его нет.
+   * @param second второй участок; {@code null}, если его нет.
+   * @return общий участок; {@code null}, если нет ни одного из двух.
+   */
+  @Nullable
+  private static Range enclosing(@Nullable Range first, @Nullable Range second) {
+    if (first == null) {
+      return second;
+    }
+    if (second == null) {
+      return first;
+    }
+    var start = Positions.isBefore(second.getStart(), first.getStart()) ? second.getStart() : first.getStart();
+    var end = Positions.isBefore(first.getEnd(), second.getEnd()) ? second.getEnd() : first.getEnd();
+    return new Range(start, end);
   }
 
   /**

@@ -100,6 +100,90 @@ class GuardNarrowingTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void checkNarrowsTheRestOfConjunction() {
+    // given: `Значение <> Неопределено И СтрДлина(Значение) > 0` — ко второй проверке первая
+    // уже верна, иначе до неё бы не дошли.
+    // when
+    var types = at("СтрДлина(Значение) > 0 Тогда", "СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void checkNarrowsTheRestOfDisjunctionWithOppositeSign() {
+    // given: `Значение = Неопределено ИЛИ СтрДлина(Значение) = 0` — до второй проверки доходят,
+    // когда первая ЛОЖНА, то есть значение заполнено.
+    // when
+    var types = at("СтрДлина(Значение) = 0 Тогда", "СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void disjunctionOfChecksNarrowsFalseBranch() {
+    // given: `А ИЛИ Б` ложно только когда ложны обе части.
+    // when
+    var types = at("ВетвьНепустого = Значение", "ВетвьНепустого = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void disjunctionOfChecksDoesNotNarrowTrueBranch() {
+    // given: из истинности `А ИЛИ Б` не следует ни одна из частей.
+    // when
+    var types = at("ВетвьПустого = Значение", "ВетвьПустого = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Строка", "Неопределено");
+  }
+
+  @Test
+  void checkDoesNotNarrowAcrossDisjunctionOfOppositeSign() {
+    // given: `Значение <> Неопределено ИЛИ СтрДлина(Значение) > 1` — во второй части значение
+    // как раз не заполнено, и переносить туда первую проверку как истинную нельзя.
+    // when
+    var types = at("СтрДлина(Значение) > 1 Тогда", "СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Неопределено");
+  }
+
+  @Test
+  void checkDoesNotNarrowLinksBeforeItself() {
+    // given: `СтрДлина(Значение) > 0 И Значение <> Неопределено` — проверка на Неопределено стоит
+    // ПОСЛЕ обращения и на момент его вычисления ещё ничего не утверждает.
+    // when
+    var types = at("СтрДлина(Значение) > 0 И Значение", "СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Строка", "Неопределено");
+  }
+
+  @Test
+  void mixedChainDoesNotNarrow() {
+    // given: `А И Б ИЛИ В` — из исхода условия не следует исход отдельной проверки.
+    // when
+    var types = at("ПослеСмешанной = Значение", "ПослеСмешанной = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Строка", "Неопределено");
+  }
+
+  @Test
+  void mixedChainDoesNotNarrowInsideCondition() {
+    // given: в `А И Б ИЛИ В` порядок вычисления не даёт связи между звеньями разных видов.
+    // when
+    var types = at("СтрДлина(Значение) > 0 ИЛИ", "СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Строка", "Неопределено");
+  }
+
+  @Test
   void whileConditionNarrowsInsideLoop() {
     // given: условие цикла «Пока» верно на каждой итерации тела.
     // when

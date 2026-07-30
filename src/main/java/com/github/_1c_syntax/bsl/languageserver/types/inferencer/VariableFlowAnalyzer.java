@@ -324,6 +324,26 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      * @return переменные из условия; пусто, если условие ни о чём не говорит.
      */
     Set<? extends SourceDefinedSymbol> variablesOf(BSLParser.ExpressionContext condition);
+
+    /**
+     * Как условие сужает тип переменной внутри самого себя — по проверкам, вычисляемым
+     * до указанной точки.
+     * <p>
+     * Вычисление цепочки проверок сокращённое: раз до точки дошли, предыдущие проверки
+     * в конъюнкции истинны, а в дизъюнкции ложны — и то и другое сужает.
+     *
+     * @param variable  переменная, тип которой сужается.
+     * @param condition выражение условия.
+     * @param position  точка внутри условия.
+     * @param incoming  тип переменной на входе в условие.
+     * @return суженный тип; исходный, если до точки про переменную ничего не утверждается.
+     */
+    TypeSet narrowBefore(
+      VariableSymbol variable,
+      BSLParser.ExpressionContext condition,
+      Position position,
+      TypeSet incoming
+    );
   }
 
   /**
@@ -386,7 +406,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (useStatement == null) {
       return null;
     }
-    return typeAtStatement(documentContext, body, layout, useStatement, use, false, variable, inputs);
+    return typeAtStatement(
+      documentContext, body, layout, useStatement, use, Ranges.create(use).getStart(), false, variable, inputs);
   }
 
   /**
@@ -419,7 +440,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (useStatement == null) {
       return null;
     }
-    return typeAtStatement(documentContext, body, layout, useStatement, null, atDefinition, variable, inputs);
+    return typeAtStatement(
+      documentContext, body, layout, useStatement, null, position, atDefinition, variable, inputs);
   }
 
   /**
@@ -460,6 +482,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     FlowLayout layout,
     ParserRuleContext useStatement,
     @Nullable ParserRuleContext useNode,
+    Position usePosition,
     boolean atDefinition,
     VariableSymbol variable,
     FlowInputs inputs
@@ -485,12 +508,42 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       ? atDefinition
       : change != null && change.definition() && Ranges.containsPosition(Ranges.create(useNode), change.position());
     if (!inclusive || change == null) {
-      return before;
+      return narrowedInsideCondition(layout, useStatement, usePosition, variable, before, inputs);
     }
     // Использование стоит на самом изменении — нужен тип после него.
     return change.definition()
       ? inputs.assigned().at(variable, useStatement, change.position())
       : inputs.mutations().apply(variable, change.position(), before);
+  }
+
+  /**
+   * Тип, суженный проверками внутри самого условия — теми, что вычисляются до точки обращения.
+   * <p>
+   * Сужение по ветвям применяется к рёбрам, то есть к коду за условием. Но и внутри условия
+   * порядок значим: раз до проверки дошли, предыдущие в конъюнкции истинны, а в дизъюнкции ложны.
+   *
+   * @param layout       раскладка тела.
+   * @param useStatement оператор, в котором стоит обращение.
+   * @param usePosition  точка обращения.
+   * @param variable     переменная.
+   * @param before       тип на входе в оператор.
+   * @param inputs       исходные данные расчёта.
+   * @return суженный тип; исходный, если оператор не условие либо до точки про переменную
+   *     ничего не утверждается.
+   */
+  private static TypeSet narrowedInsideCondition(
+    FlowLayout layout,
+    ParserRuleContext useStatement,
+    Position usePosition,
+    VariableSymbol variable,
+    TypeSet before,
+    FlowInputs inputs
+  ) {
+    if (!(useStatement instanceof BSLParser.ExpressionContext condition)
+      || !layout.isCondition(useStatement)) {
+      return before;
+    }
+    return inputs.narrowing().narrowBefore(variable, condition, usePosition, before);
   }
 
   /**
