@@ -65,7 +65,6 @@ import com.github._1c_syntax.bsl.mdo.children.WebServiceOperationParameter;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -81,69 +80,6 @@ import static org.mockito.Mockito.when;
  * без поднятия Spring/HBK.
  */
 class ConfigurationTypesProviderHelpersTest {
-
-  // === registerChildrenOf ===
-
-  @Test
-  void registerChildrenOf_informationRegister_returnsTriple() {
-    MD ir = InformationRegister.builder().name("РС1").build();
-    var children = ConfigurationTypesProvider.registerChildrenOf(ir);
-    assertThat(children).isNotNull();
-    assertThat(children.dimensions()).isNotNull();
-    assertThat(children.resources()).isNotNull();
-    assertThat(children.attributes()).isNotNull();
-  }
-
-  @Test
-  void registerChildrenOf_accumulationRegister_returnsTriple() {
-    MD r = AccumulationRegister.builder().name("РН1").build();
-    assertThat(ConfigurationTypesProvider.registerChildrenOf(r)).isNotNull();
-  }
-
-  @Test
-  void registerChildrenOf_accountingRegister_returnsTriple() {
-    MD r = AccountingRegister.builder().name("РБ1").build();
-    assertThat(ConfigurationTypesProvider.registerChildrenOf(r)).isNotNull();
-  }
-
-  @Test
-  void registerChildrenOf_calculationRegister_returnsTriple() {
-    MD r = CalculationRegister.builder().name("РР1").build();
-    assertThat(ConfigurationTypesProvider.registerChildrenOf(r)).isNotNull();
-  }
-
-  @Test
-  void registerChildrenOf_nonRegister_returnsNull() {
-    MD catalog = Catalog.builder().name("Контрагенты").build();
-    assertThat(ConfigurationTypesProvider.registerChildrenOf(catalog)).isNull();
-  }
-
-  // === putAttributeNames ===
-
-  @Test
-  void putAttributeNames_nonEmpty_putsKey() {
-    var attr = ObjectAttribute.builder().name("Контрагент").build();
-    var sink = new HashMap<String, List<String>>();
-    ConfigurationTypesProvider.putAttributeNames(sink, "Имя реквизита", List.of(attr));
-    assertThat(sink).containsKey("Имя реквизита");
-    assertThat(sink.get("Имя реквизита")).containsExactly("Контрагент");
-  }
-
-  @Test
-  void putAttributeNames_emptyList_doesNotPut() {
-    var sink = new HashMap<String, List<String>>();
-    ConfigurationTypesProvider.putAttributeNames(sink, "X", List.of());
-    assertThat(sink).isEmpty();
-  }
-
-  @Test
-  void putAttributeNames_blankNames_skipped() {
-    var blank = ObjectAttribute.builder().name("").build();
-    var named = ObjectAttribute.builder().name("Имя1").build();
-    var sink = new LinkedHashMap<String, List<String>>();
-    ConfigurationTypesProvider.putAttributeNames(sink, "K", List.of(blank, named));
-    assertThat(sink.get("K")).containsExactly("Имя1");
-  }
 
   // === tryRegister early returns (smoke без NPE) ===
 
@@ -197,7 +133,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
+      var provider = newProvider(registry, serverProvider, globalScope, lsConfig, mcs);
 
       provider.tryRegister();
       // ConfigurationType "СправочникМенеджер.Контрагенты" должен быть зарегистрирован.
@@ -237,8 +173,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-        new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
+      var provider = newProvider(registry, serverProvider, globalScope, lsConfig, mcs);
 
       provider.tryRegister();
 
@@ -278,8 +213,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
+      var provider = newProvider(registry, serverProvider, globalScope, lsConfig, mcs);
 
       provider.tryRegister();
       assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
@@ -322,7 +256,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
+      var provider = newProvider(registry, serverProvider, globalScope, lsConfig, mcs);
 
       provider.tryRegister();
 
@@ -375,8 +309,22 @@ class ConfigurationTypesProviderHelpersTest {
     var lsConfig = mock(
       LanguageServerConfiguration.class);
     var mcs = mock(MetadataCollectionSpecializer.class);
+    return newProvider(registry, serverProvider, globalScope, lsConfig, mcs);
+  }
+
+  /**
+   * Провайдер с настоящими коллабораторами поверх переданных моков. Индекс регистраторов
+   * общий с {@link RegisterTypesRegistrar}: провайдер его наполняет, регистратор читает.
+   */
+  private static ConfigurationTypesProvider newProvider(TypeRegistry registry,
+                                                        ServerContextProvider serverProvider,
+                                                        GlobalScopeProvider globalScope,
+                                                        LanguageServerConfiguration lsConfig,
+                                                        MetadataCollectionSpecializer mcs) {
+    var recorderIndex = new RecorderIndex();
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
+      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry),
+      new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex, new SimpleAsyncTaskExecutor());
   }
 
   // === memberPlaceholderName ===
@@ -913,8 +861,7 @@ class ConfigurationTypesProviderHelpersTest {
       var lsConfig = mock(
         LanguageServerConfiguration.class);
       var mcs = mock(MetadataCollectionSpecializer.class);
-      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
-        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry), new RecorderIndex(), new SimpleAsyncTaskExecutor());
+      var provider = newProvider(registry, serverProvider, globalScope, lsConfig, mcs);
       assertion.accept(registry, provider);
     } finally {
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
