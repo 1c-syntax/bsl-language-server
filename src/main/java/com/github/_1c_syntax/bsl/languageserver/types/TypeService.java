@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -92,7 +93,11 @@ public class TypeService implements SelfMemberClassifier {
   public TypeSet typesAt(Reference reference) {
     var sourceDefined = reference.getSourceDefinedSymbol();
     if (sourceDefined.isPresent()) {
-      return typesOfSymbol(sourceDefined.get());
+      // Ссылка позиционна, поэтому и ответ позиционный: тип переменной берётся в точке
+      // ссылки — с учётом присваиваний и вставок, случившихся на путях к ней. Прежний
+      // ответ «про переменную в целом» остаётся у typesOfSymbol.
+      var atUse = inferencer.inferVariableAt(reference);
+      return atUse != null ? atUse : typesOfSymbol(sourceDefined.get());
     }
     if (reference.symbol() instanceof PlatformMemberSymbol platformMember) {
       var returnTypes = platformMember.getDescriptor().returnTypes();
@@ -115,6 +120,29 @@ public class TypeService implements SelfMemberClassifier {
    */
   public TypeSet typesOfSymbol(SourceDefinedSymbol symbol) {
     return inferencer.inferSymbol(symbol);
+  }
+
+  /**
+   * Тип символа в указанной точке его документа — позиционный ответ там, где обращения к
+   * символу в этой точке нет и {@link Reference} не существует.
+   * <p>
+   * Для переменной это тип с учётом присваиваний и изменений на месте, случившихся на
+   * путях к точке. Для остальных символов позиция смысла не имеет, и ответ тот же, что
+   * у {@link #typesOfSymbol(SourceDefinedSymbol)}.
+   *
+   * @param symbol   символ, чей тип нужен.
+   * @param position точка в документе символа.
+   * @return набор типов в этой точке; если расчёт по потоку неприменим (переменная
+   *     модуля, точка вне тела), — ответ по всей области видимости.
+   */
+  public TypeSet typesOfSymbolAt(SourceDefinedSymbol symbol, Position position) {
+    if (symbol instanceof VariableSymbol variable) {
+      var atPoint = inferencer.inferVariableAt(variable, position);
+      if (atPoint != null) {
+        return atPoint;
+      }
+    }
+    return typesOfSymbol(symbol);
   }
 
   /**
@@ -879,11 +907,20 @@ public class TypeService implements SelfMemberClassifier {
    * здесь нельзя: он накрыл бы незавершённое {@code Ресивер.Член} и не разрешил член.
    */
   private TypeSet receiverSegmentTypes(DocumentContext documentContext, Position receiverEnd) {
-    var fromIndex = referenceResolver.findReference(documentContext.getUri(), receiverEnd)
-      .map(this::typesAt)
-      .orElse(TypeSet.EMPTY);
+    var reference = referenceResolver.findReference(documentContext.getUri(), receiverEnd).orElse(null);
+    var fromIndex = reference == null ? TypeSet.EMPTY : typesAt(reference);
+    // Ссылка на переменную уже дала позиционный ответ — сравнивать не с чем, а расчёт
+    // выражения в той же точке был бы вторым таким же проходом по методу.
+    if (!fromIndex.isEmpty() && isVariableReference(reference)) {
+      return fromIndex;
+    }
     var fromExpression = expressionTypesAt(documentContext, receiverEnd);
     if (fromIndex.isEmpty()) {
+      return fromExpression;
+    }
+    // Индекс ссылок отдаёт тип символа целиком, а инференс считает его в этой точке кода:
+    // внутри ветки с проверкой типа набор сужен. Более узкий набор — точнее.
+    if (narrowsSameTypes(fromExpression, fromIndex)) {
       return fromExpression;
     }
     // Индекс ссылок отдаёт ОБЪЯВЛЕННЫЙ тип члена, без уточнений, добытых на месте:
@@ -891,6 +928,32 @@ public class TypeService implements SelfMemberClassifier {
     // `ТЧ.ВыгрузитьКолонку("Цена")` — нетипизированный массив. Если инференс дал те
     // же типы, но с уточнениями, берём его: он строго информативнее.
     return refinesSameTypes(fromExpression, fromIndex) ? fromExpression : fromIndex;
+  }
+
+  /**
+   * Ведёт ли ссылка на переменную или параметр.
+   *
+   * @param reference ссылка; {@code null} — ссылки нет.
+   * @return {@code true}, если ссылка указывает на переменную.
+   */
+  private static boolean isVariableReference(@Nullable Reference reference) {
+    return reference != null
+      && reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol;
+  }
+
+  /**
+   * Сужает ли {@code candidate} набор {@code base}: непустое строгое подмножество его
+   * типов. Так выглядит результат проверки типа в коде — набор в этой точке уже, чем
+   * объявленный у символа.
+   *
+   * @param candidate проверяемый набор.
+   * @param base      набор, с которым сравнивается.
+   * @return {@code true}, если кандидат — непустое строгое подмножество базы.
+   */
+  private static boolean narrowsSameTypes(TypeSet candidate, TypeSet base) {
+    return !candidate.isEmpty()
+      && candidate.size() < base.size()
+      && base.refs().containsAll(candidate.refs());
   }
 
   /**
@@ -923,7 +986,7 @@ public class TypeService implements SelfMemberClassifier {
       return Optional.empty();
     }
     var line = lines[position.getLine()];
-    var col = Math.min(position.getCharacter(), line.length());
+    var col = Math.clamp(position.getCharacter(), 0, line.length());
     var i = col;
     while (i > 0 && isIdentChar(line.charAt(i - 1))) {
       i--;

@@ -842,12 +842,13 @@ public final class CompletionProvider {
       if (matches(variable.getName(), prefix)) {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
-        // Тип переменной в detail. Инференс идёт только по видимым (модульным + текущего
-        // метода) совпавшим с префиксом переменным и кэшируется по символу
-        // (InferredVariableTypeIndex), так что стоимость — единицы вызовов однократно
-        // до прогрева кэша; полезность подсказки её перевешивает.
-        var varType = typeService.typesOfSymbol(variable).refs().stream().findFirst().orElse(null);
-        applyDetail(item, "", formatTypeName(varType, scriptVariant));
+        // Тип переменной в detail — в точке курсора: подсказка про то, что переменная
+        // содержит здесь, а не про всё, что она содержала когда-либо в своей области
+        // видимости. Инференс идёт только по видимым (модульным + текущего метода)
+        // совпавшим с префиксом переменным и кэшируется, так что стоимость — единицы
+        // вызовов однократно до прогрева кэша; полезность подсказки её перевешивает.
+        var varTypes = typeService.typesOfSymbolAt(variable, position);
+        applyDetail(item, "", formatTypeNames(varTypes, scriptVariant));
         applySortText(item, BUCKET_LOCAL, false);
         applyCommitCharacters(item);
         items.add(item);
@@ -1509,7 +1510,7 @@ public final class CompletionProvider {
         // Необязательный параметр помечаем «?» после имени: ИмяПараметра?.
         sb.append('?');
       }
-      var typeLabel = formatParamTypeName(p.types(), scriptVariant);
+      var typeLabel = formatTypeNames(p.types(), scriptVariant);
       if (!typeLabel.isEmpty()) {
         sb.append(": ").append(typeLabel);
       }
@@ -1519,11 +1520,19 @@ public final class CompletionProvider {
   }
 
   /**
-   * Читаемое имя типа параметра для {@link #formatParameterList}: имена всех типов набора через
-   * «{@code  | }», пустая строка — если тип неизвестен (у нетипизированных параметров, например
-   * локальных методов). Использует тот же {@link #formatTypeName}, что и тип возврата.
+   * Читаемые имена всех типов набора через «{@code  | }»; пустая строка — если тип неизвестен
+   * (у нетипизированных параметров, например локальных методов). Одинаковые короткие имена
+   * не повторяются: у разных полных имён последний сегмент может совпадать.
+   * <p>
+   * Набор из нескольких типов — обычное дело: параметр может принимать любой из них, а
+   * переменная в точке слияния путей держит их все, и показывать из набора один было бы
+   * неправдой. Использует тот же {@link #formatTypeName}, что и тип возврата.
+   *
+   * @param types         набор типов.
+   * @param scriptVariant язык отображаемых имён.
+   * @return имена через «{@code  | }»; пустая строка, если показывать нечего.
    */
-  private String formatParamTypeName(TypeSet types, Language scriptVariant) {
+  private String formatTypeNames(TypeSet types, Language scriptVariant) {
     return types.refs().stream()
       .map(ref -> formatTypeName(ref, scriptVariant))
       .filter(name -> !name.isEmpty())
@@ -1635,6 +1644,7 @@ public final class CompletionProvider {
     var dot = displayName.lastIndexOf('.');
     return dot < 0 ? displayName : displayName.substring(dot + 1);
   }
+
 
   private static String formatSignaturesCount(int count, Language scriptVariant) {
     if (scriptVariant == Language.EN) {

@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.index;
+package com.github._1c_syntax.bsl.languageserver.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -45,7 +45,7 @@ import java.net.URI;
  * наследникам достаточно реализовать {@link #clear(URI)}. Сама база бином не
  * является.
  */
-abstract class AbstractDocumentLifecycleClearableIndex {
+public abstract class AbstractDocumentLifecycleClearableIndex {
 
   /**
    * Удалить записи индекса, относящиеся к данному URI документа.

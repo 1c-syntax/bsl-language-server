@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildingParseTreeVisitor;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -31,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
@@ -53,7 +55,16 @@ import java.util.stream.Collectors;
     DiagnosticTag.SUSPICIOUS
   }
 )
+@RequiredArgsConstructor
 public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
+
+  /** Настройки построения графа: рёбра итераций циклов не нужны — недостижимость они не меняют. */
+  private static final CfgBuildOptions CFG_OPTIONS = CfgBuildOptions.defaults()
+    .withLoopIterations(false)
+    .withPreprocessorConditions(true)
+    .withAdjacentDeadCode(false);
+
+  private final ControlFlowGraphIndex controlFlowGraphIndex;
 
   // кэш диапазонов зарегистрированных ошибок
   private final List<Range> errorRanges = new ArrayList<>();
@@ -130,12 +141,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void appendUnreachableCode(BSLParser.CodeBlockContext ctx) {
-    var builder = new CfgBuildingParseTreeVisitor();
-    builder.producePreprocessorConditions(true);
-    builder.produceLoopIterations(false);
-    builder.determineAdjacentDeadCode(false);
-
-    var graph = builder.buildGraph(ctx);
+    var graph = controlFlowGraphIndex.graphOf(documentContext, ctx, CFG_OPTIONS);
     var deadCode = graph.vertexSet().stream()
       .filter(vertex -> vertex != graph.getEntryPoint() && vertex.getClass() != ExitVertex.class)
       .filter(vertex -> graph.inDegreeOf(vertex) == 0)

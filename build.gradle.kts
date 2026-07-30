@@ -320,6 +320,14 @@ tasks.named<Jar>("jmhJar") {
     isZip64 = true
 }
 
+// Грамматики bsl-parser собраны форком ANTLR (io.github.1c-syntax:antlr4) с несовместимой
+// версией сериализации ATN. В обычном classpath выигрывает форк, а при склейке uber-jar
+// классы апстрима затирают форковые, и разбор падает на "Could not deserialize ATN with
+// version 3 (expected 4)". Апстримный рантайм в jmh не нужен — исключаем его.
+configurations.named("jmhRuntimeClasspath") {
+    exclude(group = "org.antlr", module = "antlr4-runtime")
+}
+
 sentry {
     org.set("1c-syntax")
     projectName.set("bsl-language-server")
