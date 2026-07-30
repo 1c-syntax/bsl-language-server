@@ -23,9 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -131,6 +133,15 @@ final class FlowLayout {
         var header = loop.getLoopHeader();
         var bounds = header.expression();
         addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
+      } else if (vertex instanceof ConditionalVertex conditional) {
+        // Само условие «Если …» отдельным оператором в граф не попадает, а обращения к
+        // переменным в нём — самое частое место, где спрашивают тип. Регистрируем выражение
+        // условия: типы в нём — те, что пришли на вход вершины, ещё не суженные этим же
+        // условием (сужение применяется к рёбрам ветвления, то есть дальше).
+        addSlot(slots, byStatement, conditional.getExpression(), conditional.getExpression().getStop(), vertex);
+      } else if (vertex instanceof WhileLoopVertex loop) {
+        // Условие «Пока …» — то же самое.
+        addSlot(slots, byStatement, loop.getExpression(), loop.getExpression().getStop(), vertex);
       }
     }
     // Операторы графа занимают непересекающиеся участки текста (составные операторы в
@@ -222,7 +233,15 @@ final class FlowLayout {
     if (vertex instanceof ForeachLoopVertex loop) {
       return List.of(loop.getLoopHeader());
     }
-    return vertex instanceof ForLoopVertex loop ? List.of(loop.getLoopHeader()) : List.of();
+    if (vertex instanceof ForLoopVertex loop) {
+      return List.of(loop.getLoopHeader());
+    }
+    // Условие типов не меняет, но окружение перед ним запоминается — оттуда отвечают на
+    // запрос про переменную, стоящую в самом условии.
+    if (vertex instanceof ConditionalVertex conditional) {
+      return List.of(conditional.getExpression());
+    }
+    return vertex instanceof WhileLoopVertex loop ? List.of(loop.getExpression()) : List.of();
   }
 
   /** Вершина, которой принадлежит оператор; {@code null}, если оператора в графе нет. */

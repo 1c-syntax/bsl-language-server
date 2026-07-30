@@ -195,6 +195,25 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void typeInsideIfConditionIsFlowSensitive() {
+    // given: обращение стоит в самом условии — это самое частое место, где спрашивают тип.
+    // when
+    var types = at("Если СтрДлина(Значение) > 0", "Если СтрДлина(".length());
+
+    // then: не объединение по области видимости, где было бы ещё и Число.
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
+  void typeInsideWhileConditionIsFlowSensitive() {
+    // given / when
+    var types = at("Пока СтрДлина(Значение) > 100", "Пока СтрДлина(".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Строка");
+  }
+
+  @Test
   void typeFlowsThroughAnotherVariable() {
     // given: тип «Вторая» получается из «Первой», которую перед этим переприсвоили.
     // Расчёт по потоку спрашивает тип «Первой» посреди расчёта того же тела.
