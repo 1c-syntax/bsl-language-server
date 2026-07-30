@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785419796515,
+  "lastUpdate": 1785433342793,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41230,6 +41230,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.834408335227989",
             "extra": "mean: 91.58666984240215 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c020ba63bec5ee45d9824e3f81cd5a0036109565",
+          "message": "Merge pull request #4329 from 1c-syntax/feature/module-variables-flow\n\nfeat(types): переменные модуля в расчёте по потоку",
+          "timestamp": "2026-07-30T19:02:41+02:00",
+          "tree_id": "b4ac2d5de9bbb316386bac01ff14402e37b5bd32",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c020ba63bec5ee45d9824e3f81cd5a0036109565"
+        },
+        "date": 1785433331393,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.38489929835002,
+            "unit": "sec",
+            "range": "stddev: 2.688941515352346",
+            "extra": "mean: 93.38489929835002 sec\nrounds: 3"
           }
         ]
       }
