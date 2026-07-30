@@ -1510,7 +1510,7 @@ public final class CompletionProvider {
         // Необязательный параметр помечаем «?» после имени: ИмяПараметра?.
         sb.append('?');
       }
-      var typeLabel = formatParamTypeName(p.types(), scriptVariant);
+      var typeLabel = formatTypeNames(p.types(), scriptVariant);
       if (!typeLabel.isEmpty()) {
         sb.append(": ").append(typeLabel);
       }
@@ -1520,11 +1520,19 @@ public final class CompletionProvider {
   }
 
   /**
-   * Читаемое имя типа параметра для {@link #formatParameterList}: имена всех типов набора через
-   * «{@code  | }», пустая строка — если тип неизвестен (у нетипизированных параметров, например
-   * локальных методов). Использует тот же {@link #formatTypeName}, что и тип возврата.
+   * Читаемые имена всех типов набора через «{@code  | }»; пустая строка — если тип неизвестен
+   * (у нетипизированных параметров, например локальных методов). Одинаковые короткие имена
+   * не повторяются: у разных полных имён последний сегмент может совпадать.
+   * <p>
+   * Набор из нескольких типов — обычное дело: параметр может принимать любой из них, а
+   * переменная в точке слияния путей держит их все, и показывать из набора один было бы
+   * неправдой. Использует тот же {@link #formatTypeName}, что и тип возврата.
+   *
+   * @param types         набор типов.
+   * @param scriptVariant язык отображаемых имён.
+   * @return имена через «{@code  | }»; пустая строка, если показывать нечего.
    */
-  private String formatParamTypeName(TypeSet types, Language scriptVariant) {
+  private String formatTypeNames(TypeSet types, Language scriptVariant) {
     return types.refs().stream()
       .map(ref -> formatTypeName(ref, scriptVariant))
       .filter(name -> !name.isEmpty())
@@ -1637,23 +1645,6 @@ public final class CompletionProvider {
     return dot < 0 ? displayName : displayName.substring(dot + 1);
   }
 
-  /**
-   * Короткие имена всех типов набора через запятую — так же, как их показывает hover.
-   * <p>
-   * Переменная может держать несколько типов сразу: в точке слияния путей после
-   * {@code Если … Иначе …} набор из двух типов — обычное дело, и показывать из него
-   * один было бы неправдой.
-   *
-   * @param types         набор типов.
-   * @param scriptVariant язык отображаемых имён.
-   * @return имена через запятую; пустая строка, если показывать нечего.
-   */
-  private String formatTypeNames(TypeSet types, Language scriptVariant) {
-    return types.refs().stream()
-      .map(ref -> formatTypeName(ref, scriptVariant))
-      .filter(name -> !name.isEmpty())
-      .collect(Collectors.joining(", "));
-  }
 
   private static String formatSignaturesCount(int count, Language scriptVariant) {
     if (scriptVariant == Language.EN) {

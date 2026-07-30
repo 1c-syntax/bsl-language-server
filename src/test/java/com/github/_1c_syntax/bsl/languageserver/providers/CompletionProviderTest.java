@@ -593,8 +593,9 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var item = completionItem(documentContext, new Position(6, 13), "Значение");
 
     // then: показывать один тип из двух было бы неправдой. Порядок не проверяем — он идёт
-    // от обхода графа, а не от порядка веток в тексте.
-    assertThat(item.getDetail().split(", "))
+    // от обхода графа, а не от порядка веток в тексте. Разделитель — тот же, что у типов
+    // параметра в сигнатуре.
+    assertThat(item.getDetail().split(" \\| "))
       .as("в detail должны быть все типы переменной в точке курсора")
       .containsExactlyInAnyOrder("Число", "Строка");
   }

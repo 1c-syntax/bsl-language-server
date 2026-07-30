@@ -53,7 +53,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -188,25 +187,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         }
       }
       return merged == null ? this : new Environment(merged);
-    }
-
-    /**
-     * Окружение, к каждой переменной которого применено преобразование, — так работает
-     * сужение по охраняющему условию на ребре ветки. Если ни один тип не изменился,
-     * возвращается это же окружение: условие обычно говорит про одну переменную из многих.
-     */
-    Environment map(IntFunction<TypeSet> transform) {
-      TypeSet[] mapped = null;
-      for (var i = 0; i < types.length; i++) {
-        var narrowed = transform.apply(i);
-        if (mapped == null && !narrowed.equals(types[i])) {
-          mapped = types.clone();
-        }
-        if (mapped != null) {
-          mapped[i] = narrowed;
-        }
-      }
-      return mapped == null ? this : new Environment(mapped);
     }
 
     /** Копия массива нужной длины: пустое окружение растягивается до размера тела. */
@@ -672,7 +652,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private Map<ParserRuleContext, Environment> computeStatementFacts() {
       var byVertex = computeEntryFacts();
       for (var vertex : layout.orderedVertices()) {
-        applyStatements(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
+        // Через тот же кэш выхода: к концу поиска неподвижной точки он уже посчитан для
+        // этих же входных окружений, и повторный проход по операторам не нужен — вместе с
+        // ним не нужны и повторные вызовы колбэков мутаторов.
+        outgoingOf(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
       }
       return beforeStatement;
     }

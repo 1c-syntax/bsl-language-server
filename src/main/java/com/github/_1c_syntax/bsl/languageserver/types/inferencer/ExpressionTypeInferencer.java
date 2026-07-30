@@ -805,10 +805,11 @@ public class ExpressionTypeInferencer {
     ctx.flowInProgress.add(variable);
     try {
       return variableFlowAnalyzer.typeAt(owner, use, variable, flowInputs(variable, ctx));
-    } catch (RuntimeException e) {
+    } catch (StackOverflowError | RuntimeException e) {
       // Расчёт по потоку — уточнение, а не единственный источник типа. Если он сорвался
-      // (например, граф не построился на неожиданной форме кода), тип должен дать прежний
-      // путь, а не общий перехват в infer(), который обнулил бы всё выражение целиком.
+      // (например, граф не построился на неожиданной форме кода либо рекурсия ушла слишком
+      // глубоко), тип должен дать прежний путь, а не общий перехват в infer(), который
+      // обнулил бы всё выражение целиком.
       LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
       return null;
     } finally {
@@ -846,8 +847,7 @@ public class ExpressionTypeInferencer {
    * Тип переменной в указанной точке документа, которому она принадлежит.
    * <p>
    * Точка не обязана быть обращением к переменной: расчёт отвечает на вопрос, что
-   * переменная содержит в этом месте кода. Так тип узнаёт автодополнение — там обращения
-   * ещё нет, пользователь только набирает имя.
+   * переменная содержит в этом месте кода.
    *
    * @param variable переменная.
    * @param position точка в теле, для которой нужен тип.
@@ -955,8 +955,7 @@ public class ExpressionTypeInferencer {
    * спрашивает одни и те же условия многократно, а разбор тянет резолв переменной через
    * индекс — самую дорогую часть шага.
    *
-   * @param variable переменная, тип которой сужается.
-   * @param owner    документ с условиями.
+   * @param owner документ с условиями.
    * @return колбэк для {@link VariableFlowAnalyzer}.
    */
   private VariableFlowAnalyzer.GuardNarrowing narrowingCallback(DocumentContext owner) {
