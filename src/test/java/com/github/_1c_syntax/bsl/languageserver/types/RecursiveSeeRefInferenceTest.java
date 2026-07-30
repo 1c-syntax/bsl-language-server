@@ -101,7 +101,7 @@ class RecursiveSeeRefInferenceTest extends AbstractServerContextAwareTest {
       .orElseThrow();
     var node = dc.getSymbolTree().getVariableSymbol("Узел", method).orElseThrow();
 
-    var t = inferencer.inferSymbol(node);
+    var t = inferencer.inferVariableAt(TestTypeQueries.declarationOf(node));
 
     assertThat(t.getAllFieldNames())
       .as("промежуточный уровень рекурсии раскрывается в узел с полями Значение/Потомки")

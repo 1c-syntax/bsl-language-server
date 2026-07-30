@@ -91,13 +91,10 @@ public class TypeService implements SelfMemberClassifier {
    * @return набор типов значения ссылки; {@link TypeSet#EMPTY}, если тип не определяется.
    */
   public TypeSet typesAt(Reference reference) {
-    var sourceDefined = reference.getSourceDefinedSymbol();
-    if (sourceDefined.isPresent()) {
+    if (reference.getSourceDefinedSymbol().isPresent()) {
       // Ссылка позиционна, поэтому и ответ позиционный: тип переменной берётся в точке
-      // ссылки — с учётом присваиваний и вставок, случившихся на путях к ней. Прежний
-      // ответ «про переменную в целом» остаётся у typesOfSymbol.
-      var atUse = inferencer.inferVariableAt(reference);
-      return atUse != null ? atUse : typesOfSymbol(sourceDefined.get());
+      // ссылки — с учётом присваиваний и вставок, случившихся на путях к ней.
+      return inferencer.inferVariableAt(reference);
     }
     if (reference.symbol() instanceof PlatformMemberSymbol platformMember) {
       var returnTypes = platformMember.getDescriptor().returnTypes();
@@ -109,40 +106,27 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
-   * Тип source-defined символа (переменная/параметр/метод/модуль) напрямую, без
-   * оборачивания в {@link Reference}. Для параметра — приоритет: висячий
-   * doc-комментарий, затем (для параметров обработчиков платформенных
-   * событий) контракт события, затем тип, наследуемый от переопределяемого
-   * метода.
+   * Типы, объявленные о переменной помимо кода: типизирующий комментарий, тип параметра,
+   * аннотация внедрения. То, что кладут в переменную тела, сюда не входит — это
+   * {@link #typesAt(Reference)}.
    *
-   * @param symbol символ, чей тип нужен.
-   * @return набор типов символа; {@link TypeSet#EMPTY}, если не выводится.
+   * @param variable переменная.
+   * @return объявленные типы; {@link TypeSet#EMPTY}, если о переменной ничего не объявлено.
    */
-  public TypeSet typesOfSymbol(SourceDefinedSymbol symbol) {
-    return inferencer.inferSymbol(symbol);
+  public TypeSet declaredTypesOf(VariableSymbol variable) {
+    return inferencer.declaredTypes(variable);
   }
 
   /**
-   * Тип символа в указанной точке его документа — позиционный ответ там, где обращения к
-   * символу в этой точке нет и {@link Reference} не существует.
-   * <p>
-   * Для переменной это тип с учётом присваиваний и изменений на месте, случившихся на
-   * путях к точке. Для остальных символов позиция смысла не имеет, и ответ тот же, что
-   * у {@link #typesOfSymbol(SourceDefinedSymbol)}.
+   * Тип переменной в указанной точке её документа — позиционный ответ там, где обращения
+   * к переменной в этой точке нет и {@link Reference} не существует.
    *
-   * @param symbol   символ, чей тип нужен.
-   * @param position точка в документе символа.
-   * @return набор типов в этой точке; если расчёт по потоку неприменим (переменная
-   *     модуля, точка вне тела), — ответ по всей области видимости.
+   * @param variable переменная.
+   * @param position точка в документе переменной.
+   * @return набор типов в этой точке.
    */
-  public TypeSet typesOfSymbolAt(SourceDefinedSymbol symbol, Position position) {
-    if (symbol instanceof VariableSymbol variable) {
-      var atPoint = inferencer.inferVariableAt(variable, position);
-      if (atPoint != null) {
-        return atPoint;
-      }
-    }
-    return typesOfSymbol(symbol);
+  public TypeSet typesOfVariableAt(VariableSymbol variable, Position position) {
+    return inferencer.inferVariableAt(variable, position);
   }
 
   /**

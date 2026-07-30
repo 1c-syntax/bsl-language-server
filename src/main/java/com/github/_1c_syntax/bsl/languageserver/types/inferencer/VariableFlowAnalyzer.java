@@ -46,6 +46,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -124,8 +125,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     private final Map<VariableSymbol, TypeSet> cells = new IdentityHashMap<>();
 
-    /** Документы, для которых ячейки в этом выводе типов уже посчитаны. */
-    private final Set<URI> cellsDone = new HashSet<>();
+    /** Переменные, ячейки которых в этом выводе типов уже посчитаны. */
+    private final Set<VariableSymbol> cellsDone = Collections.newSetFromMap(new IdentityHashMap<>());
 
     /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
     private boolean cellsComputing;
@@ -469,6 +470,40 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * Тип переменной по всей её области видимости — ответ там, где точки исполнения нет.
+   * <p>
+   * Так спрашивают про объявление ({@code Перем Кэш;} оператором не является) и про
+   * прочие места вне операторов. Ответ — то, с чем переменная <b>покидает</b> свою
+   * область: у переменной модуля это её ячейка, собранная по всем телам, у переменной
+   * одного тела — значения на выходе из него и перед его вызовами.
+   *
+   * @param documentContext контекст документа с переменной.
+   * @param declaration     позиция объявления переменной: по ней ищется её тело.
+   * @param variable        переменная.
+   * @param inputs          исходные данные расчёта.
+   * @return тип переменной по области видимости.
+   */
+  public TypeSet typesAcrossScope(
+    DocumentContext documentContext,
+    Position declaration,
+    VariableSymbol variable,
+    FlowInputs inputs
+  ) {
+    var body = bodyAt(documentContext, declaration);
+    if (body != null) {
+      var facts = factsOf(documentContext, body, layoutOf(documentContext, body), inputs);
+      var index = facts.indexOf(variable);
+      if (index != null) {
+        return facts.leaving().get(index);
+      }
+    }
+    // Тела у объявления нет либо переменная в нём не живёт — так стоит `Перем` уровня
+    // модуля. Значение такой переменной оставляют тела, и оно как раз в её ячейке.
+    ensureCellsFor(documentContext, List.of(variable), inputs);
+    return cellOf(documentContext, variable, inputs);
+  }
+
+  /**
    * Тип переменной, видимой другим телам, на входе в любое тело.
    * <p>
    * Значение такой переменной задаёт не одно тело: её мог оставить любой метод, который
@@ -507,28 +542,44 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    */
   private void ensureCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs) {
-    var session = inputs.session();
-    var uri = documentContext.getUri();
-    if (session.cellsComputing || session.cellsDone.contains(uri)) {
+    if (inputs.session().cellsComputing) {
       return;
     }
-    var shared = sharedVariablesOf(body, inputs);
-    session.cellsDone.add(uri);
+    ensureCellsFor(documentContext, sharedVariablesOf(body, inputs), inputs);
+  }
+
+  /**
+   * Посчитать ячейки перечисленных переменных — тех из них, у которых ячейки ещё нет.
+   *
+   * @param documentContext контекст документа.
+   * @param shared          переменные, видимые другим телам.
+   * @param inputs          исходные данные расчёта.
+   */
+  private void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
+    var session = inputs.session();
+    var uri = documentContext.getUri();
     // Готовые ячейки — общие на весь документ и переживают отдельный вывод типов. Без
     // этой проверки круги гонялись бы заново на каждый запрос типа: своя память о них
     // заводится на один вывод, а запросов на документ тысячи.
-    if (shared.isEmpty() || cellsByUri.getOrDefault(uri, Map.of()).keySet().containsAll(shared)) {
+    var settled = cellsByUri.getOrDefault(uri, Map.of());
+    var pending = new ArrayList<VariableSymbol>(shared.size());
+    for (var variable : shared) {
+      if (!settled.containsKey(variable) && session.cellsDone.add(variable)) {
+        pending.add(variable);
+      }
+    }
+    if (pending.isEmpty()) {
       return;
     }
     session.cellsComputing = true;
     try {
-      for (var variable : shared) {
+      for (var variable : pending) {
         session.cells.put(variable, inputs.declaredFact().apply(variable));
       }
-      grow(documentContext, shared, inputs);
+      grow(documentContext, pending, inputs);
       if (inputs.cacheable()) {
         var byVariable = cellsByUri.computeIfAbsent(uri, key -> new ConcurrentHashMap<>());
-        shared.forEach(variable -> byVariable.putIfAbsent(variable, session.cells.get(variable)));
+        pending.forEach(variable -> byVariable.putIfAbsent(variable, session.cells.get(variable)));
       }
     } finally {
       session.cellsComputing = false;
@@ -896,8 +947,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         outgoingOf(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
       }
       // Окружение на входе в вершину выхода — это и есть окружение на выходе из тела:
-      // в неё сходятся все пути, включая Возврат из середины.
-      var exit = byVertex.getOrDefault(graph.getExitPoint(), Environment.EMPTY);
+      // в неё сходятся все пути, включая Возврат из середины. Факта у неё может не быть
+      // (тело пустое либо выход недостижим) — тогда с чем вошли, с тем и вышли.
+      var exit = byVertex.getOrDefault(graph.getExitPoint(), entryEnvironment());
       return new Facts(indexes, beforeStatement, changesByStatement, exit.union(leaving));
     }
 
@@ -1194,14 +1246,23 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         return function == null ? null : function.subCodeBlock().codeBlock();
       }
     }
-    var fileCodeBlock = ast.fileCodeBlock();
-    if (fileCodeBlock == null) {
-      return null;
+    // Тело модуля в дереве может быть не одно: код до объявлений методов (так пишут на
+    // OneScript) и после них (так требует 1С). Отдаём блок, только если он правда
+    // накрывает позицию: иначе расчёт пошёл бы по чужому телу.
+    var beforeSubs = ast.fileCodeBlockBeforeSub();
+    var covering = covering(beforeSubs == null ? null : beforeSubs.codeBlock(), position);
+    if (covering != null) {
+      return covering;
     }
-    // Тело модуля в дереве может быть не одно (код до и после объявлений методов), и
-    // добраться отсюда можно не до всякого. Отдаём блок, только если он правда накрывает
-    // позицию: иначе расчёт пошёл бы по чужому телу.
-    var codeBlock = fileCodeBlock.codeBlock();
+    var fileCodeBlock = ast.fileCodeBlock();
+    return covering(fileCodeBlock == null ? null : fileCodeBlock.codeBlock(), position);
+  }
+
+  /** Блок кода, если он есть и накрывает позицию. */
+  private static BSLParser.@Nullable CodeBlockContext covering(
+    BSLParser.@Nullable CodeBlockContext codeBlock,
+    Position position
+  ) {
     return codeBlock != null && Ranges.containsPosition(Ranges.create(codeBlock), position) ? codeBlock : null;
   }
 }

@@ -349,23 +349,6 @@ public class OpenDataObjectInference {
   }
 
   /**
-   * Применить все изменения на месте по всей области видимости переменной — без учёта
-   * порядка, поэтому поле видно по всей области видимости, а не с места своей вставки.
-   *
-   * @param variable переменная-получатель.
-   * @param base     тип, накопленный по присваиваниям.
-   * @param types    колбэк вывода типов значений.
-   * @return тип с полями и колонками; исходный, если изменений на месте нет.
-   */
-  public TypeSet applyAll(VariableSymbol variable, TypeSet base, ExpressionTypes types) {
-    var result = base;
-    for (var call : mutatorsOf(variable).values()) {
-      result = apply(variable, call, result, types);
-    }
-    return result;
-  }
-
-  /**
    * Типы поля, записанного на наборе, — по имени.
    * <p>
    * Смотрится раньше членов самого типа: поле, объявленное автором в коде, точнее

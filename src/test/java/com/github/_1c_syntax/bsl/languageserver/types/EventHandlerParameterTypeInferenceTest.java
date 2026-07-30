@@ -83,7 +83,7 @@ class EventHandlerParameterTypeInferenceTest extends AbstractServerContextAwareT
     var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписи").orElseThrow();
     var variable = documentContext.getSymbolTree().getVariableSymbol("Отказ", method).orElseThrow();
 
-    var types = inferencer.inferSymbol(variable);
+    var types = inferencer.inferVariableAt(TestTypeQueries.declarationOf(variable));
 
     assertThat(types.refs()).extracting(TypeRef::qualifiedName).contains("Булево");
   }
@@ -108,7 +108,7 @@ class EventHandlerParameterTypeInferenceTest extends AbstractServerContextAwareT
     var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписи").orElseThrow();
     var lishniy = documentContext.getSymbolTree().getVariableSymbol("Лишний", method).orElseThrow();
 
-    var types = inferencer.inferSymbol(lishniy);
+    var types = inferencer.inferVariableAt(TestTypeQueries.declarationOf(lishniy));
 
     // Если для лишнего параметра inference что-то вернул — это не Булево из contract.
     assertThat(types.refs()).extracting(TypeRef::qualifiedName)
@@ -130,7 +130,7 @@ class EventHandlerParameterTypeInferenceTest extends AbstractServerContextAwareT
     var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписи").orElseThrow();
     var variable = documentContext.getSymbolTree().getVariableSymbol("Отказ", method).orElseThrow();
 
-    var types = inferencer.inferSymbol(variable);
+    var types = inferencer.inferVariableAt(TestTypeQueries.declarationOf(variable));
 
     assertThat(types.refs()).isEmpty();
   }

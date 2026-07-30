@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
-import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -107,7 +106,6 @@ public class ExpressionTypeInferencer {
 
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
-  private final InferredVariableTypeIndex inferredVariableTypeIndex;
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
@@ -135,23 +133,6 @@ public class ExpressionTypeInferencer {
     } catch (StackOverflowError | RuntimeException e) {
       return TypeSet.EMPTY;
     }
-  }
-
-  /**
-   * Вывести типы символа (метод, переменная, параметр).
-   */
-  public TypeSet inferSymbol(SourceDefinedSymbol symbol) {
-    if (symbol instanceof MethodSymbol method) {
-      return symbolTypeIndex.getDeclaredReturnTypes(method);
-    }
-    if (symbol instanceof VariableSymbol variable) {
-      var ctx = new InferenceContext(variable.getOwner());
-      return inferVariable(variable, ctx);
-    }
-    if (symbol instanceof ModuleSymbol module) {
-      return scopeMemberTypeResolver.moduleType(module);
-    }
-    return TypeSet.EMPTY;
   }
 
   // ---------------------------------------------------------------------------
@@ -268,13 +249,13 @@ public class ExpressionTypeInferencer {
       if (target instanceof PlatformMemberSymbol platformMember) {
         return platformMember.getDescriptor().returnTypes();
       }
-      // Source-defined переменная/метод — их тип (даже честно пустой), с защитой от цикла.
+      // Переменная — её тип в этой точке кода, даже честно пустой: невыведенный тип
+      // нельзя подменять self-свойством того же имени.
       if (target instanceof VariableSymbol variable) {
-        var byFlow = flowTypeAt(variable, terminal, ctx);
-        return byFlow != null ? byFlow : sourceSymbolType(variable, ctx);
+        return flowTypeAt(variable, terminal, ctx);
       }
       if (target instanceof MethodSymbol method) {
-        return sourceSymbolType(method, ctx);
+        return methodReturnType(method, ctx);
       }
       // Иначе вид символа здесь не типизируем — падаем на фоллбэк ниже.
     }
@@ -682,164 +663,73 @@ public class ExpressionTypeInferencer {
   // ---------------------------------------------------------------------------
 
   /**
-   * Тип source-defined символа-цели ссылки (переменной/метода) с защитой от цикла инференса.
-   * Результат всегда присутствует, даже если сам тип — пустой {@link TypeSet#EMPTY}: честно
-   * невыведенный тип нельзя подменять self-свойством того же имени.
+   * Возвращаемые типы вызванного метода с защитой от цикла инференса. Результат всегда
+   * присутствует, даже если сам тип — пустой {@link TypeSet#EMPTY}: честно невыведенный
+   * тип нельзя подменять self-свойством того же имени.
    */
-  private TypeSet sourceSymbolType(SourceDefinedSymbol symbol, InferenceContext ctx) {
-    if (!ctx.visited.add(symbol)) {
-      // Цикл: для переменной-аккумулятора возвращаем накопленный к этому моменту
-      // тип (см. inProgress), для прочих символов — пусто, как и раньше.
-      return ctx.inProgress.getOrDefault(symbol, TypeSet.EMPTY);
+  private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
+    if (!ctx.visited.add(method)) {
+      return TypeSet.EMPTY;
     }
     try {
-      if (symbol instanceof MethodSymbol method) {
-        return symbolTypeIndex.getDeclaredReturnTypes(method);
-      }
-      return inferVariable((VariableSymbol) symbol, ctx);
+      return symbolTypeIndex.getDeclaredReturnTypes(method);
     } finally {
-      ctx.visited.remove(symbol);
+      ctx.visited.remove(method);
     }
-  }
-
-  /**
-   * Тип переменной = union по позиции её декларации + всем DEFINITION-обращениям
-   * из {@code ReferenceIndex}. Декларация нужна, т.к. {@code ReferenceIndexFiller}
-   * фильтрует first-assignment (initialization) — она содержится в самом
-   * {@link VariableSymbol#getSelectionRange()}.
-   * <p>
-   * Для параметра метода — добавляются типы, объявленные в JsDoc
-   * (секция {@code // Параметры:}).
-   */
-  private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
-    // Кэш ключуется только по VariableSymbol, без fileType. Это корректно, потому что
-    // fileType документа детерминирован самой переменной (variable.getOwner().getFileType()),
-    // а inferSymbol всегда заводит ctx.documentContext == variable.getOwner() — то есть
-    // одна и та же переменная не инферится в двух разных fileType-контекстах.
-    var cached = inferredVariableTypeIndex.get(variable);
-    if (cached != null) {
-      return cached;
-    }
-
-    // Повторный вход в инференс той же переменной (self-reference в одном из её
-    // присваиваний) — возвращаем накопленный к этому моменту тип, а не гоняем
-    // тело второй раз (иначе частичный результат затёр бы себя и потерялся, #4205).
-    var partial = ctx.inProgress.get(variable);
-    if (partial != null) {
-      return partial;
-    }
-    ctx.inProgress.put(variable, TypeSet.EMPTY);
-    try {
-      var acc = inferVariableInternal(variable, ctx);
-      // Кэшируем только «чистый корень» инференса (visited содержит максимум саму
-      // переменную). Вложенный вызов (внутри инференса другой переменной, visited
-      // ≥ 2) мог быть усечён цикл-гардом и зависит от порядка обхода — его результат
-      // некорректно переиспользовать как самостоятельный. Перф от этого не страдает:
-      // горячий путь (ресивер member-доступа) — всегда корень, а вложенные выводы
-      // и так покрыты кэшем своего корня.
-      if (ctx.visited.size() <= 1) {
-        inferredVariableTypeIndex.put(variable, acc);
-      }
-      return acc;
-    } finally {
-      ctx.inProgress.remove(variable);
-    }
-  }
-
-  /**
-   * Тело инференса переменной без кэш-обвязки: известное на входе в тело, объединённое со
-   * всеми присваиваниями и всеми изменениями на месте.
-   * <p>
-   * Слагаемые те же, что у расчёта по потоку управления, и считаются теми же методами —
-   * {@link #declaredTypes}, {@link #definitionPositions}, {@link #applyMutation}. Разница
-   * в том, что здесь они объединяются без учёта порядка и достижимости, а значит ответ
-   * один на всю область видимости. Это отступной путь для случаев, где расчёт по потоку
-   * неприменим (см. {@link #flowTypeAt}).
-   * <p>
-   * По мере объединения присваиваний растущий тип публикуется в
-   * {@link InferenceContext#inProgress}: так ссылка переменной на саму себя
-   * ({@code Строка = Строка + "…"}) резолвится в тип из предыдущих присваиваний,
-   * а не в {@link TypeSet#EMPTY}.
-   *
-   * @param variable переменная.
-   * @param ctx      контекст текущего инференса.
-   * @return тип переменной по всей области видимости.
-   */
-  private TypeSet inferVariableInternal(VariableSymbol variable, InferenceContext ctx) {
-    var owner = variable.getOwner();
-    var acc = declaredTypes(variable);
-    ctx.inProgress.put(variable, acc);
-
-    for (var position : definitionPositions(variable)) {
-      acc = acc.union(inferFromDefinitionPosition(owner, position, ctx));
-      ctx.inProgress.put(variable, acc);
-    }
-    acc = attachDefaultElementTypes(acc);
-    acc = openDataObjectInference.applyAll(variable, acc, node -> inferInternal(node, ctx));
-    return acc;
   }
 
   /**
    * Тип переменной в точке использования, рассчитанный по потоку управления тела:
    * присваивание перекрывает прежний тип, в точках слияния путей типы объединяются.
-   * Точнее объединения по всем присваиваниям, которое даёт {@link #inferVariable}.
    *
    * @param variable переменная.
    * @param terminal терминал использования.
    * @param ctx      контекст текущего инференса.
-   * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим и нужен
-   *     общий путь: использование в другом документе либо неразмещаемое в графе
-   *     присваивание. Отсутствие присваиваний расчёту не мешает — тип такой переменной
+   * @return тип в этой точке; пустой набор, если переменная не из этого документа либо
+   *     расчёт сорвался. Отсутствие присваиваний расчёту не мешает — тип такой переменной
    *     есть входной факт по всему телу.
    */
-  @Nullable
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
     var owner = variable.getOwner();
-    if (!owner.getUri().equals(ctx.documentContext.getUri())) {
-      return null;
-    }
-    if (!(terminal.getParent() instanceof ParserRuleContext use)) {
-      return null;
+    if (!owner.getUri().equals(ctx.documentContext.getUri())
+      || !(terminal.getParent() instanceof ParserRuleContext use)) {
+      return TypeSet.EMPTY;
     }
     // Повторный вход по той же переменной здесь не отсекается: у `Х = Х + 1` правая часть
     // спрашивает тип посреди расчёта того же тела, и ответ у расчёта есть — окружение перед
-    // текущим оператором. Отказ отдал бы объединение по всей области видимости, то есть
-    // примешал бы типы из присваиваний ниже по коду. Зацикливания не будет: строящееся
-    // окружение отвечает чтением из карты, не запуская расчёт заново.
+    // текущим оператором. Зацикливания не будет: строящееся окружение отвечает чтением из
+    // карты, не запуская расчёт заново.
     try {
-      return variableFlowAnalyzer.typeAt(owner, use, variable, flowInputs(variable, ctx));
+      var inputs = flowInputs(variable, ctx);
+      var byFlow = variableFlowAnalyzer.typeAt(owner, use, variable, inputs);
+      return byFlow == null
+        ? variableFlowAnalyzer.typesAcrossScope(owner, Ranges.create(use).getStart(), variable, inputs)
+        : byFlow;
     } catch (StackOverflowError | RuntimeException e) {
-      // Расчёт по потоку — уточнение, а не единственный источник типа. Если он сорвался
-      // (например, граф не построился на неожиданной форме кода либо рекурсия ушла слишком
-      // глубоко), тип должен дать прежний путь, а не общий перехват в infer(), который
-      // обнулил бы всё выражение целиком.
+      // Срыв расчёта (граф не построился на неожиданной форме кода либо рекурсия ушла
+      // слишком глубоко) оставляет переменной объявленное о ней, а не обнуляет всё
+      // выражение, как сделал бы общий перехват в infer().
       LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
-      return null;
+      return declaredTypes(variable);
     }
   }
 
   /**
    * Тип переменной в точке, на которую указывает ссылка, — с учётом того, какие
    * присваивания и изменения на месте уже случились на путях к ней.
-   * <p>
-   * Отличается от {@link #inferSymbol(SourceDefinedSymbol)}, который отвечает про
-   * переменную в целом, объединяя всё по её области видимости. Узел дерева разбора
-   * не нужен: расчёт находит тело и оператор по позиции.
    *
    * @param reference ссылка на переменную — несёт и документ, и позицию.
-   * @return тип в этой точке; {@code null}, если ссылка не на переменную текущего
-   *     документа либо расчёт по потоку неприменим.
+   * @return тип в этой точке; пустой набор, если ссылка не на переменную своего документа.
    */
-  @Nullable
   public TypeSet inferVariableAt(Reference reference) {
     if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)
       || !variable.getOwner().getUri().equals(reference.uri())) {
-      return null;
+      return TypeSet.EMPTY;
     }
     return inferVariableAt(
       variable,
       reference.selectionRange().getStart(),
-      // Ссылка на само присваивание спрашивает про тип до него, а не после.
+      // Ссылка на само присваивание спрашивает про тип после него, а не до.
       reference.occurrenceType() == OccurrenceType.DEFINITION
     );
   }
@@ -852,29 +742,38 @@ public class ExpressionTypeInferencer {
    *
    * @param variable переменная.
    * @param position точка в теле, для которой нужен тип.
-   * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим.
+   * @return тип в этой точке.
    */
-  @Nullable
   public TypeSet inferVariableAt(VariableSymbol variable, Position position) {
     return inferVariableAt(variable, position, false);
   }
 
   /**
    * Тип переменной в точке с уточнением, стоит ли точка на самом присваивании.
+   * <p>
+   * Точки исполнения в позиции может и не быть — так спрашивают про объявление
+   * ({@code Перем Кэш;} оператором не является). Тогда ответ даётся по всей области
+   * видимости переменной: то, с чем она эту область покидает.
    *
    * @param variable     переменная.
    * @param position     точка в теле, для которой нужен тип.
-   * @param atDefinition стоит ли точка на присваивании: тогда берётся тип до него.
-   * @return тип в этой точке; {@code null}, если расчёт по потоку неприменим.
+   * @param atDefinition стоит ли точка на присваивании: тогда берётся тип после него.
+   * @return тип в этой точке.
    */
-  @Nullable
   private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition) {
     var owner = variable.getOwner();
     var ctx = new InferenceContext(owner);
     try {
-      return variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, flowInputs(variable, ctx));
+      var inputs = flowInputs(variable, ctx);
+      var atPoint = variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, inputs);
+      return atPoint == null
+        ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs)
+        : atPoint;
     } catch (StackOverflowError | RuntimeException e) {
-      return null;
+      // Срыв расчёта (граф не построился на неожиданной форме кода либо рекурсия ушла
+      // слишком глубоко) оставляет переменной объявленное о ней, а не обнуляет её тип.
+      LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
+      return declaredTypes(variable);
     }
   }
 
@@ -1023,7 +922,7 @@ public class ExpressionTypeInferencer {
    * @param variable переменная.
    * @return типы из объявления; пустой набор, если ничего не объявлено.
    */
-  private TypeSet declaredTypes(VariableSymbol variable) {
+  public TypeSet declaredTypes(VariableSymbol variable) {
     var entry = TypeSet.EMPTY;
     for (var source : variableTypeSources) {
       entry = entry.union(source.typesOf(variable));

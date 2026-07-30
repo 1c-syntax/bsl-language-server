@@ -104,7 +104,7 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
     VariableSymbol variable = dc.getSymbolTree()
       .getVariableSymbol(varName, method)
       .orElseThrow();
-    return inferencer.inferSymbol(variable);
+    return inferencer.inferVariableAt(TestTypeQueries.declarationOf(variable));
   }
 
   private TypeSet inferVar(String varName) {

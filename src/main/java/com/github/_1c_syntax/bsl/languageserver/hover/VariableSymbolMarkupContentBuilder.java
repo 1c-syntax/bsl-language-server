@@ -65,6 +65,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
   private static final String TYPE_KEY = "type";
+  private static final String TYPE_FROM_CODE_KEY = "typeFromCode";
 
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
@@ -89,9 +90,16 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     var variableInfo = getVariableInfo(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
 
-    // тип (выведенный)
-    var typesInfo = getInferredTypes(symbol, typeService.typesAt(reference));
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typesInfo);
+    // объявленное о переменной — комментарием, объявлением параметра, аннотацией внедрения
+    var declared = typeService.declaredTypesOf(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, getTypes(symbol, declared, TYPE_KEY));
+
+    // то, что кладут в переменную тела: показывается отдельно, чтобы не выдавать
+    // вычисленное по коду за объявленное
+    var fromCode = typeService.typesAt(reference);
+    if (!fromCode.equals(declared)) {
+      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, getTypes(symbol, fromCode, TYPE_FROM_CODE_KEY));
+    }
 
     // местоположение переменной
     var location = descriptionFormatter.getLocation(symbol);
@@ -140,7 +148,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     return resources.getResourceString(getClass(), key);
   }
 
-  private String getInferredTypes(VariableSymbol symbol, TypeSet types) {
+  private String getTypes(VariableSymbol symbol, TypeSet types, String headerKey) {
     if (types.isEmpty()) {
       return "";
     }
@@ -151,7 +159,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       .map(ref -> inlineTypeLabel(types, ref, lang, false))
       .collect(Collectors.joining(" | "));
 
-    var sb = new StringBuilder("%s: %s".formatted(getResourceString(TYPE_KEY), header));
+    var sb = new StringBuilder("%s: %s".formatted(getResourceString(headerKey), header));
 
     // Содержимое «открытых» объектов (Структура/Соответствие/Фиксированные,
     // строка ТаблицыЗначений) рендерим маркдаун-списком под заголовком типа.

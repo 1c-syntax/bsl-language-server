@@ -88,6 +88,10 @@ class VariableSymbolStructureRenderTest {
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
     when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "type")).thenReturn("Тип");
+    when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "typeFromCode"))
+      .thenReturn("Тип по коду");
+    // Объявленного о переменной в этих тестах нет: проверяется отрисовка вычисленного по коду.
+    when(typeService.declaredTypesOf(symbol)).thenReturn(TypeSet.EMPTY);
     when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "moduleVariable"))
       .thenReturn("Переменная уровня модуля");
 
@@ -130,7 +134,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: Структура")
+      .contains("Тип по коду: Структура")
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`")
       .doesNotContain("{");
@@ -147,7 +151,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: Соответствие")
+      .contains("Тип по коду: Соответствие")
       .contains("* **Ключ1**: `Строка`");
   }
 
@@ -162,7 +166,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ФиксированнаяСтруктура")
+      .contains("Тип по коду: ФиксированнаяСтруктура")
       .contains("* **Код**: `Число`");
   }
 
@@ -177,7 +181,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ФиксированноеСоответствие")
+      .contains("Тип по коду: ФиксированноеСоответствие")
       .contains("* **Логин**: `Строка`");
   }
 
@@ -194,7 +198,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений")
+      .contains("Тип по коду: ТаблицаЗначений из СтрокаТаблицыЗначений")
       .contains("* **Сумма**: `Число`");
   }
 
