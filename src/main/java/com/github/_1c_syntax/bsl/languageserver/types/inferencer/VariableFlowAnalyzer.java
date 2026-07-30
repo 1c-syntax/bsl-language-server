@@ -509,12 +509,19 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private void ensureCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs) {
     var session = inputs.session();
     var uri = documentContext.getUri();
-    if (session.cellsComputing || !session.cellsDone.add(uri)) {
+    if (session.cellsComputing || session.cellsDone.contains(uri)) {
+      return;
+    }
+    var shared = sharedVariablesOf(body, inputs);
+    session.cellsDone.add(uri);
+    // Готовые ячейки — общие на весь документ и переживают отдельный вывод типов. Без
+    // этой проверки круги гонялись бы заново на каждый запрос типа: своя память о них
+    // заводится на один вывод, а запросов на документ тысячи.
+    if (shared.isEmpty() || cellsByUri.getOrDefault(uri, Map.of()).keySet().containsAll(shared)) {
       return;
     }
     session.cellsComputing = true;
     try {
-      var shared = sharedVariablesOf(body, inputs);
       for (var variable : shared) {
         session.cells.put(variable, inputs.declaredFact().apply(variable));
       }
