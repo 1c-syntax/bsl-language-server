@@ -683,22 +683,31 @@ final class FormPlatformTypes {
    * @param baseTypeRu    ru-имя платформенного типа данных формы
    * @param baseTypeEn    en-имя того же типа
    * @param specializable {@code true}, если состав свойств известен и под реквизит
-   *                      имеет смысл заводить специализацию
+   *                      имеет смысл заводить специализацию по прикладному типу
+   * @param itemTypeRu    ru-имя типа строки; {@code null} — вид не коллекция
+   * @param itemTypeEn    en-имя типа строки
    */
   enum FormDataKind {
-    STRUCTURE(FORM_DATA_STRUCTURE_RU, FORM_DATA_STRUCTURE_EN, true),
-    STRUCTURE_WITH_COLLECTION("ДанныеФормыСтруктураСКоллекцией", "FormDataStructureWithCollection", true),
-    COLLECTION(FORM_DATA_COLLECTION_RU, FORM_DATA_COLLECTION_EN, false),
-    TREE("ДанныеФормыДерево", "FormDataTree", false);
+    STRUCTURE(FORM_DATA_STRUCTURE_RU, FORM_DATA_STRUCTURE_EN, true, null, null),
+    STRUCTURE_WITH_COLLECTION("ДанныеФормыСтруктураСКоллекцией", "FormDataStructureWithCollection",
+      true, null, null),
+    COLLECTION(FORM_DATA_COLLECTION_RU, FORM_DATA_COLLECTION_EN, false,
+      FORM_DATA_COLLECTION_ITEM_RU, FORM_DATA_COLLECTION_ITEM_EN),
+    TREE("ДанныеФормыДерево", "FormDataTree", false, "ДанныеФормыЭлементДерева", "FormDataTreeItem");
 
     private final String baseTypeRu;
     private final String baseTypeEn;
     private final boolean specializable;
+    private final @Nullable String itemTypeRu;
+    private final @Nullable String itemTypeEn;
 
-    FormDataKind(String baseTypeRu, String baseTypeEn, boolean specializable) {
+    FormDataKind(String baseTypeRu, String baseTypeEn, boolean specializable,
+                 @Nullable String itemTypeRu, @Nullable String itemTypeEn) {
       this.baseTypeRu = baseTypeRu;
       this.baseTypeEn = baseTypeEn;
       this.specializable = specializable;
+      this.itemTypeRu = itemTypeRu;
+      this.itemTypeEn = itemTypeEn;
     }
 
     String baseTypeRu() {
@@ -710,16 +719,23 @@ final class FormPlatformTypes {
     }
 
     /**
-     * {@code true}, если под конкретный реквизит стоит заводить свой тип. У таблиц и
-     * деревьев значений заводить нечего: их колонки объявлены в {@code Form.xml}
-     * блоком {@code <Columns>}, а mdclasses его не отдаёт — специализация вышла бы
-     * пустой копией базового типа.
+     * {@code true}, если состав свойств данных формы повторяет прикладной тип реквизита
+     * и под него стоит завести специализацию. У таблиц и деревьев значений прикладного
+     * типа с нужным составом нет — их колонки объявлены в самой форме, поэтому
+     * специализируются они не отсюда, а от {@link #itemTypeRu()}.
      */
-    // TODO mdclasses#666: когда колонки реквизитов появятся в модели — сделать
-    //  специализируемыми и эти два вида: колонки лягут свойствами строки коллекции
-    //  ровно так же, как реквизиты объекта ложатся свойствами структуры данных формы.
     boolean specializable() {
       return specializable;
+    }
+
+    /** Тип строки коллекции; {@code null} — вид не коллекция, строк у него нет. */
+    @Nullable String itemTypeRu() {
+      return itemTypeRu;
+    }
+
+    /** En-имя типа строки; {@code null} — вид не коллекция. */
+    @Nullable String itemTypeEn() {
+      return itemTypeEn;
     }
   }
 

@@ -62,8 +62,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Регистрирует синтетический тип на каждую форму конфигурации — тот тип, который
@@ -348,7 +351,7 @@ public class FormTypesProvider {
     // Типы реквизитов — исключение: их надо посчитать сразу, потому что под них
     // регистрируются типы данных формы, а регистрация изнутри ленивого источника
     // сбивала бы epoch кэша членов во время его же пересчёта.
-    var attributeTypes = prepareAttributeTypes(data.getAttributes(), kind);
+    var attributeTypes = prepareAttributeTypes(data.getAttributes(), kind, suffixRu);
     typeRegistry.registerMemberSource(formRef,
       () -> buildAttributeMembers(data.getAttributes(), attributeTypes), FileType.BSL);
     typeRegistry.registerMemberSource(formRef,
@@ -563,18 +566,12 @@ public class FormTypesProvider {
    * по приоритету: у типа, которого нет в синтакс-помощнике, параметров не окажется.
    */
   private List<MemberDescriptor> parameterExtensionParameters(List<FormAttribute> attributes, FormKind kind) {
-    for (var attribute : attributes) {
-      for (var valueType : attribute.getValueType().getTypes()) {
-        var candidates = FormPlatformTypes.parameterExtensionTypeNames(valueType.fullName().getRu(), kind);
-        for (var candidate : candidates) {
-          var parameters = formParametersResolver.parametersOf(candidate);
-          if (!parameters.isEmpty()) {
-            return parameters;
-          }
-        }
-      }
-    }
-    return List.of();
+    return mainAttributeTypeNames(attributes, valueTypeRu ->
+      FormPlatformTypes.parameterExtensionTypeNames(valueTypeRu, kind))
+      .map(formParametersResolver::parametersOf)
+      .filter(parameters -> !parameters.isEmpty())
+      .findFirst()
+      .orElse(List.of());
   }
 
   /**
@@ -675,7 +672,8 @@ public class FormTypesProvider {
    * <p>
    * У обычной формы преобразования нет: там реквизит — сам прикладной объект.
    */
-  private Map<String, TypeSet> prepareAttributeTypes(List<FormAttribute> attributes, FormKind kind) {
+  private Map<String, TypeSet> prepareAttributeTypes(List<FormAttribute> attributes, FormKind kind,
+                                                     String suffixRu) {
     if (attributes.isEmpty()) {
       return Map.of();
     }
@@ -687,20 +685,20 @@ public class FormTypesProvider {
       }
       var declared = ValueTypes.resolve(typeRegistry, attribute.getValueType());
       byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
-        kind == FormKind.MANAGED ? formDataTypes(declared) : declared);
+        kind == FormKind.MANAGED ? formDataTypes(declared, attribute, kind, suffixRu) : declared);
     }
     return Map.copyOf(byName);
   }
 
   /** Объявленные типы реквизита, переведённые в типы данных формы. */
-  private TypeSet formDataTypes(TypeSet declared) {
+  private TypeSet formDataTypes(TypeSet declared, FormAttribute attribute, FormKind kind, String suffixRu) {
     if (declared.isEmpty()) {
       return declared;
     }
     var converted = new ArrayList<TypeRef>(declared.refs().size());
     var changed = false;
     for (var ref : declared.refs()) {
-      var formDataRef = formDataTypeRef(ref);
+      var formDataRef = formDataTypeRef(ref, attribute, kind, suffixRu);
       changed |= formDataRef != null;
       converted.add(formDataRef == null ? ref : formDataRef);
     }
@@ -712,15 +710,58 @@ public class FormTypesProvider {
    *
    * @return тип данных формы; {@code null}, если тип переносится на форму как есть.
    */
-  private @Nullable TypeRef formDataTypeRef(TypeRef declaredRef) {
+  private @Nullable TypeRef formDataTypeRef(TypeRef declaredRef, FormAttribute attribute, FormKind kind,
+                                            String suffixRu) {
     var dataKind = FormPlatformTypes.formDataKindOf(declaredRef.qualifiedName());
     if (dataKind == null) {
       return null;
+    }
+    if (dataKind.itemTypeRu() != null) {
+      return registerAttributeCollection(attribute, dataKind, kind, suffixRu);
     }
     if (!dataKind.specializable()) {
       return typeRegistry.resolve(dataKind.baseTypeRu()).orElse(null);
     }
     return formDataTypes.computeIfAbsent(declaredRef, ref -> registerFormData(ref, dataKind));
+  }
+
+  /**
+   * Регистрирует данные формы под реквизит-таблицу или дерево значений: колонки такого
+   * реквизита объявлены в самой форме (блок {@code <Columns>}) и ложатся свойствами
+   * строки — так же, как колонки табличной части ложатся в строку её зеркала.
+   * <p>
+   * Тип заводится на реквизит конкретной формы, а не на прикладной тип: две формы с
+   * реквизитом-{@code ТаблицаЗначений} — это две разные таблицы с разными колонками.
+   *
+   * @return тип коллекции; базовый {@code ДанныеФормыКоллекция}/{@code ДанныеФормыДерево},
+   *   если колонок нет — специализировать тогда нечем.
+   */
+  private @Nullable TypeRef registerAttributeCollection(FormAttribute attribute,
+                                                        FormPlatformTypes.FormDataKind dataKind,
+                                                        FormKind kind, String suffixRu) {
+    var itemTypeRu = Objects.requireNonNullElse(dataKind.itemTypeRu(), "");
+    var itemTypeEn = Objects.requireNonNullElse(dataKind.itemTypeEn(), "");
+    var collectionBase = typeRegistry.resolve(dataKind.baseTypeRu()).orElse(null);
+    var itemBase = typeRegistry.resolve(itemTypeRu).orElse(null);
+    var columns = attribute.getColumns();
+    if (columns.isEmpty() || collectionBase == null || itemBase == null) {
+      return collectionBase;
+    }
+    var suffix = suffixRu + "." + attribute.getName();
+    var itemRef = registerFormDataMirror(itemTypeRu, itemTypeEn, suffix, "", itemBase);
+    var collectionRef = registerFormDataMirror(
+      dataKind.baseTypeRu(), dataKind.baseTypeEn(), suffix, "", collectionBase);
+    // Порядок важен: явный тип элемента должен быть задан до наследования, иначе
+    // выиграет обобщённая строка базового типа (см. registerTabularSectionData).
+    typeRegistry.registerDefaultElementTypes(collectionRef, List.of(itemRef));
+    typeRegistry.inheritCollectionTraits(collectionRef, collectionBase, FileType.BSL);
+
+    // Колонки — это те же реквизиты формы, только вложенные: у них есть и свои типы,
+    // и заголовки, и собственные колонки, если колонка сама таблица.
+    var columnTypes = prepareAttributeTypes(columns, kind, suffix);
+    typeRegistry.registerMemberSource(itemRef,
+      () -> buildAttributeMembers(columns, columnTypes), FileType.BSL);
+    return collectionRef;
   }
 
   /**
@@ -1064,29 +1105,38 @@ public class FormTypesProvider {
   }
 
   /**
-   * Тип-расширение формы по её основному реквизиту. Признака «основной» в mdclasses нет,
-   * поэтому берётся первый реквизит, тип которого вообще даёт расширение — у формы такой
-   * ровно один (реквизит основных данных).
+   * Тип-расширение формы по её основному реквизиту — тому, что несёт основные данные
+   * формы. Именно он решает, каким расширением дополняется форма: реквизит
+   * {@code ДокументОбъект.Х} даёт «Расширение управляемой формы для документа».
    */
-  // TODO mdclasses#650: заменить эвристику на явный признак FormAttribute.isMainAttribute().
-  //  Тот же перебор дублируется в parameterExtensionParameters — после появления признака
-  //  оба сведутся к «найти основной реквизит и взять его тип».
   private @Nullable TypeRef resolveExtension(Form form, @Nullable MD owner,
                                             List<FormAttribute> attributes, FormKind kind) {
     if (kind == FormKind.ORDINARY) {
       return resolveOrdinaryExtension(form, owner);
     }
-    for (var attribute : attributes) {
-      for (var valueType : attribute.getValueType().getTypes()) {
-        for (var candidate : FormPlatformTypes.extensionTypeNames(valueType.fullName().getRu(), kind)) {
-          var resolved = typeRegistry.resolve(candidate).orElse(null);
-          if (resolved != null) {
-            return resolved;
-          }
-        }
-      }
-    }
-    return null;
+    return mainAttributeTypeNames(attributes, valueTypeRu ->
+      FormPlatformTypes.extensionTypeNames(valueTypeRu, kind))
+      .map(typeRegistry::resolve)
+      .flatMap(Optional::stream)
+      .findFirst()
+      .orElse(null);
+  }
+
+  /**
+   * Имена платформенных типов, которые сопоставлены типам основного реквизита формы.
+   * Реквизит объявлен составным типом, поэтому имён может быть несколько; порядок
+   * сохраняется — он и задаёт приоритет.
+   *
+   * @param attributes реквизиты формы.
+   * @param namesOf    что искать по ru-имени типа значения.
+   * @return имена типов-кандидатов; пусто — основного реквизита у формы нет.
+   */
+  private static Stream<String> mainAttributeTypeNames(List<FormAttribute> attributes,
+                                                       Function<String, List<String>> namesOf) {
+    return attributes.stream()
+      .filter(FormAttribute::isMainAttribute)
+      .flatMap(attribute -> attribute.getValueType().getTypes().stream())
+      .flatMap(valueType -> namesOf.apply(valueType.fullName().getRu()).stream());
   }
 
   /**

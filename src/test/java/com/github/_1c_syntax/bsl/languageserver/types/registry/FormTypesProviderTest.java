@@ -533,6 +533,26 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
       .doesNotContain("ПриЗаписиНаСервере");
   }
 
+  @Test
+  void valueTableAttributeCarriesItsColumns() {
+    // Колонки реквизита-таблицы объявлены в самой форме, а не в прикладном типе:
+    // это данные формы, которых в конфигурации нет вовсе.
+    var table = member(DOCUMENT_FORM, MemberKind.PROPERTY, "ТаблицаПодбора");
+    assertThat(table).isNotNull();
+    var tableType = table.returnTypes().refs().iterator().next();
+    assertThat(typeRegistry.displayName(tableType, Language.RU))
+      .as("наружу показывается платформенное имя, а не синтетический суффикс")
+      .isEqualTo("ДанныеФормыКоллекция");
+
+    var rowType = typeRegistry.getDefaultElementTypes(tableType).refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(rowType, FileType.BSL)))
+      .as("колонки лежат в строке коллекции — как у зеркала табличной части")
+      .contains("Номенклатура", "Количество");
+    assertThat(find(typeRegistry.getMembers(rowType, FileType.BSL), MemberKind.PROPERTY, "Номенклатура")
+      .returnTypes().refs().iterator().next().qualifiedName())
+      .isEqualTo("СправочникСсылка.Справочник1");
+  }
+
   /** Тип элемента формы по его имени в коллекции элементов. */
   private TypeRef itemMemberType(String formMdoRef, String itemName) {
     var itemsType = typeRegistry.resolve("ВсеЭлементыФормы." + formMdoRef).orElseThrow();
