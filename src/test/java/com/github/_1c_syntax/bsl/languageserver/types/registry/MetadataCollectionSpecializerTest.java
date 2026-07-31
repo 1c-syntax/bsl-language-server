@@ -232,12 +232,9 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     assertThat(member).isNotNull();
 
     var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
-    var names = memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL));
-    assertThat(names)
-      .as("общие для вида стандартные реквизиты на месте")
-      .contains("Ссылка", "Код", "Наименование");
-    assertThat(names)
-      .as("реквизиты иерархии у неиерархического справочника не показываются")
+    assertThat(memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL)))
+      .as("общие для вида реквизиты на месте, а реквизиты иерархии не показываются")
+      .contains("Ссылка", "Код", "Наименование")
       .doesNotContain("Родитель", "ЭтоГруппа", "Parent", "IsFolder");
   }
 
