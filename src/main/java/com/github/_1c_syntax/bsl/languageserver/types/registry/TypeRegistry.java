@@ -106,16 +106,17 @@ public class TypeRegistry {
    */
   private final MemberMetadataIndex memberMetadataIndex;
 
-  /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
-  private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
-  /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
-  private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
   /**
    * Состав определяемых типов конфигурации. Своего {@link TypeRef} у определяемого типа
    * нет — за именем стоит набор, поэтому в {@link #aliasIndex} ему места нет
    * (см. {@link #resolveSet(String)}).
    */
-  private final DefinedTypesIndex definedTypes = new DefinedTypesIndex();
+  private final DefinedTypesIndex definedTypes;
+
+  /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
+  private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
+  /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
+  private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -291,8 +292,8 @@ public class TypeRegistry {
    * <p>
    * Определяемый тип — не тип, а именованное описание типов: собственного
    * {@link TypeRef} у него нет и быть не может, потому что за именем стоит набор.
-   * Поэтому имена типов резолвятся <b>этим</b> методом везде, где ответом может быть
-   * набор — в типах реквизитов метаданных и в типах, объявленных в BSLDoc.
+   * Вложенные определяемые типы раскрываются вглубь, до настоящих типов; имена,
+   * за которыми типа нет, отбрасываются.
    *
    * @param name имя типа: платформенное, конфигурационное либо определяемого типа.
    * @return типы за этим именем; {@link TypeSet#EMPTY}, если имя не зарегистрировано.

@@ -37,6 +37,7 @@ import org.mockito.Mockito;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Unit-тесты {@link ConfigurationTypesProvider#registerCommonLibraryExpansion}
@@ -47,7 +48,8 @@ class RegisterCommonLibraryExpansionTest {
 
   private final TypeRegistry registry = new TypeRegistry(
     List.of(),
-    Mockito.mock(MemberMetadataIndex.class)
+    mock(MemberMetadataIndex.class),
+    mock(DefinedTypesIndex.class)
   );
 
   /**

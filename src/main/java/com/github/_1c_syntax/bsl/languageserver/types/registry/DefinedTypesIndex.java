@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
@@ -43,9 +45,12 @@ import java.util.function.Function;
  * метаданных наравне с прочими объектами, и то, на что он ссылается, к этому моменту
  * может быть ещё не зарегистрировано. Имена превращаются в типы на чтении.
  * <p>
- * Индекс конкурентный, внешней синхронизации не требует.
+ * Индекс конкурентный, внешней синхронизации не требует. Определяемые типы — свойство
+ * конкретной конфигурации, поэтому индекс живёт по экземпляру на workspace.
  */
-final class DefinedTypesIndex {
+@Component
+@WorkspaceScope
+public class DefinedTypesIndex {
 
   /** Lowercased имя определяемого типа ↔ имена типов, из которых он собран. */
   private final Map<String, List<String>> compositions = new ConcurrentHashMap<>();
@@ -56,7 +61,7 @@ final class DefinedTypesIndex {
    * @param qualifiedName полное имя определяемого типа ({@code ОпределяемыйТип.Сумма}).
    * @param composition   имена типов, из которых он собран.
    */
-  void register(String qualifiedName, List<String> composition) {
+  public void register(String qualifiedName, List<String> composition) {
     compositions.put(qualifiedName.toLowerCase(Locale.ROOT), List.copyOf(composition));
   }
 
@@ -66,7 +71,7 @@ final class DefinedTypesIndex {
    * @param name имя типа.
    * @return {@code true}, если имя принадлежит определяемому типу.
    */
-  boolean knows(String name) {
+  public boolean knows(String name) {
     return compositions.containsKey(name.toLowerCase(Locale.ROOT));
   }
 
@@ -79,7 +84,7 @@ final class DefinedTypesIndex {
    * @param resolve поиск типа по имени.
    * @return состав; {@link TypeSet#EMPTY}, если имя не принадлежит определяемому типу.
    */
-  TypeSet compositionOf(String name, Function<String, TypeSet> resolve) {
+  public TypeSet compositionOf(String name, Function<String, TypeSet> resolve) {
     var key = name.toLowerCase(Locale.ROOT);
     var composition = compositions.get(key);
     if (composition == null) {

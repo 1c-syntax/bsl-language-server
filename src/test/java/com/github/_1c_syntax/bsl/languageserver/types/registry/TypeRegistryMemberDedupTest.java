@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * {@link TypeRegistry#getMembers} объединяет members из нескольких источников,
@@ -44,7 +45,7 @@ class TypeRegistryMemberDedupTest {
 
   @BeforeEach
   void setUp() {
-    typeRegistry = new TypeRegistry(List.of(), new MemberMetadataIndex());
+    typeRegistry = new TypeRegistry(List.of(), new MemberMetadataIndex(), mock(DefinedTypesIndex.class));
     typeRegistry.bootstrap();
   }
 

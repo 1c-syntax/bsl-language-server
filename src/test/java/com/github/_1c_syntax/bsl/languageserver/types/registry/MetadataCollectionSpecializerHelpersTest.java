@@ -53,6 +53,7 @@ import org.mockito.Mockito;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Unit-тесты на pure-static helpers {@link MetadataCollectionSpecializer} —
@@ -295,7 +296,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void childReturnType_overrideExisting_returnsResolvedRef() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var registerRef = registry.registerConfigurationType("ОбъектМетаданных: РегистрНакопления.ОстаткиТоваров");
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ЗначениеСвойстваОбъектаМетаданных");
     var defaultSet = TypeSet.of(elementRef);
@@ -310,7 +311,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void childReturnType_overrideMissing_internsPlatformRef() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var elementRef = new TypeRef(TypeKind.PLATFORM, "X");
     var defaultSet = TypeSet.of(elementRef);
 
@@ -324,7 +325,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void childReturnType_noChildAndNoOverride_returnsDefault() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Документ");
     var defaultSet = TypeSet.of(elementRef);
 
@@ -337,7 +338,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void childReturnType_blankChildName_returnsDefault() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Документ");
     var defaultSet = TypeSet.of(elementRef);
 
@@ -352,7 +353,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void childReturnType_namedChild_internsPerOwnerRef() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: ТабличнаяЧасть");
     var defaultSet = TypeSet.of(elementRef);
 
@@ -439,7 +440,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void buildGroupCollectionMembers_emptyBase_returnsEmpty() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var baseRef = new TypeRef(TypeKind.PLATFORM, "Пусто");
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Документ");
     var result = MetadataCollectionSpecializer.buildGroupCollectionMembers(
@@ -450,7 +451,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void buildGroupCollectionMembers_genericWithMdos_materializesNames() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var baseRef = registry.registerConfigurationType("Кол");
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Документ");
     var generic = MemberDescriptor.genericProperty("<X>",
@@ -472,7 +473,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void buildGroupCollectionMembers_elementReturningMethod_replacesReturnType() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var baseRef = registry.registerConfigurationType("Кол2");
     var anyRef = registry.registerConfigurationType("Произвольный");
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Справочник");
@@ -500,7 +501,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void buildPerOwnerCollectionMembers_fallbackBranchMaterializesChildrenWithoutGenericTemplate() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var baseRef = new TypeRef(TypeKind.PLATFORM, "Пусто");  // нет members → fallback
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Реквизит");
     var children = java.util.List.of(
@@ -516,7 +517,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void buildPerOwnerCollectionMembers_genericExpansion_callsChildReturnType() {
     var registry = new TypeRegistry(java.util.List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var baseRef = registry.registerConfigurationType("ОснПодколлекция");
     var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Реквизит");
     var generic = MemberDescriptor.genericProperty("<X>",

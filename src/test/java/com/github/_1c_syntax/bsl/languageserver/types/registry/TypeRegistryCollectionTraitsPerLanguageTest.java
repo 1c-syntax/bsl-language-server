@@ -27,12 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Коллекционные/enum-признаки типа разрезаны по языку файла: одно и то же имя
@@ -61,7 +61,8 @@ class TypeRegistryCollectionTraitsPerLanguageTest {
       List.of(),
       true
     );
-    var registry = new TypeRegistry(List.of(bslProviderOf(decl)), Mockito.mock(MemberMetadataIndex.class));
+    var registry = new TypeRegistry(List.of(bslProviderOf(decl)),
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
 
     // when
     registry.bootstrap();

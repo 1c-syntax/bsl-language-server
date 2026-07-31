@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Unit-тесты на загрузку BSL-части {@link GlobalScopeProvider} из bsl-context:
@@ -64,7 +65,7 @@ class GlobalScopeProviderBslContextTest {
   // поэтому передаём заглушку.
   private static GlobalScopeProvider scope(ContextProvider provider) {
     return new GlobalScopeProvider(holderOf(provider),
-      new TypeRegistry(List.of(), org.mockito.Mockito.mock(MemberMetadataIndex.class)));
+      new TypeRegistry(List.of(), mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class)));
   }
 
   @Test
