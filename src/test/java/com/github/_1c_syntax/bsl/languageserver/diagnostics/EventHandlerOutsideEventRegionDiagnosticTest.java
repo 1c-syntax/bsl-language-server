@@ -61,6 +61,10 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   @MockitoBean
   FormHandlerRoleIndex formHandlerRoleIndex;
 
+  @org.springframework.beans.factory.annotation.Autowired
+  private com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider
+    diagnosticObjectProvider;
+
   EventHandlerOutsideEventRegionDiagnosticTest() {
     super(EventHandlerOutsideEventRegionDiagnostic.class);
   }
@@ -78,6 +82,28 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   private void stubRole(String methodName, FormHandlerRoleIndex.Role role, String owner) {
     when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.eq(methodName)))
       .thenReturn(Optional.of(new FormHandlerRoleIndex.Handler(role, owner)));
+  }
+
+  @Test
+  void quickFixWorksOnAFreshDiagnosticInstance() {
+    // Репорт: NPE в codeAction. Диагностика — prototype-бин, и quick fix прилетает
+    // на экземпляр, который ещё ничего не проверял: документ там приходит аргументом,
+    // а поле documentContext пустое.
+    var src = """
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+      """;
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    Assertions.assertThat(diagnostics).hasSize(1);
+
+    var freshInstance = diagnosticObjectProvider.get(EventHandlerOutsideEventRegionDiagnostic.class);
+    var fixes = freshInstance.getQuickFixes(diagnostics, fakeParams(documentContext), documentContext);
+
+    Assertions.assertThat(fixes).hasSize(1);
   }
 
   @Test

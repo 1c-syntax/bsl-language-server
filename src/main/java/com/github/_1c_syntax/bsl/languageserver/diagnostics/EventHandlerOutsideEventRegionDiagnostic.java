@@ -105,8 +105,8 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
   }
 
   private void checkMethod(MethodSymbol method) {
-    var expectedRegion = expectedRegion(method);
-    if (isInEventRegion(method, expectedRegion)) {
+    var expectedRegion = expectedRegion(method, documentContext);
+    if (isInEventRegion(method, expectedRegion, documentContext)) {
       return;
     }
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
@@ -117,11 +117,14 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * Область, в которой обработчик обязан лежать по стандарту. У модуля формы она
    * зависит от того, кем обработчик объявлен: событие формы, событие элемента шапки,
    * событие элемента таблицы и действие команды живут в разных областях.
+   * <p>
+   * Документ передаётся параметром, а не берётся из поля: на пути quick fix'а поле не
+   * заполнено — там контекст приходит аргументом.
    *
    * @return имя области; пусто, если модуль формы, а объявитель обработчика неизвестен —
    *   тогда годится любая из форменных областей.
    */
-  private Optional<String> expectedRegion(MethodSymbol method) {
+  private Optional<String> expectedRegion(MethodSymbol method, DocumentContext documentContext) {
     if (documentContext.getModuleType() != ModuleType.FormModule) {
       return Optional.of(OBJECT_TARGET_REGION);
     }
@@ -142,7 +145,8 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * Лежит ли метод там, где положено. Если конкретная область известна — сравниваем
    * с ней (в обеих локалях), иначе принимаем любую область обработчиков.
    */
-  private boolean isInEventRegion(MethodSymbol method, Optional<String> expectedRegion) {
+  private boolean isInEventRegion(MethodSymbol method, Optional<String> expectedRegion,
+                                  DocumentContext documentContext) {
     var regionOpt = method.getRegion();
     if (regionOpt.isEmpty()) {
       return false;
@@ -212,7 +216,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     }
     // Область берётся по первому методу: fix-all группирует методы одной области,
     // а разные роли дают разные области — их правки не смешиваются.
-    var targetRegion = expectedRegion(methods.get(0)).orElse(
+    var targetRegion = expectedRegion(methods.get(0), documentContext).orElse(
       documentContext.getModuleType() == ModuleType.FormModule
         ? Keywords.FORM_EVENT_HANDLERS_REGION.getRu() : OBJECT_TARGET_REGION);
     var existingRegion = findRegionByName(documentContext, targetRegion);
