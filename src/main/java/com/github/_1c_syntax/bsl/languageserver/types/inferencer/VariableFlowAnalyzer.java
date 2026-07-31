@@ -582,6 +582,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (pending.isEmpty()) {
       return;
     }
+    // Признак возвращается к прежнему значению, а не гасится: круги по одной переменной
+    // могут запуститься из кругов по другой, и снятие признака открыло бы внешним кругам
+    // дорогу запускать себя заново.
+    var outerComputing = session.cellsComputing;
     session.cellsComputing = true;
     try {
       for (var variable : pending) {
@@ -593,7 +597,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         pending.forEach(variable -> byVariable.putIfAbsent(variable, session.cells.get(variable)));
       }
     } finally {
-      session.cellsComputing = false;
+      session.cellsComputing = outerComputing;
     }
   }
 
