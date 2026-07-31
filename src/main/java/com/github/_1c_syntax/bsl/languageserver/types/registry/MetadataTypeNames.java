@@ -28,10 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
  * <p>
  * Синтетические типы дерева ({@code ОбъектМетаданных: Справочник.Контрагенты},
  * {@code КоллекцияОбъектовМетаданных.Реквизиты.Контрагенты}) заводит
- * {@link MetadataCollectionSpecializer} — здесь собраны их имена и предикаты,
- * чтобы потребители снаружи ({@code semantictokens}, hover) могли отличить
- * <b>объект</b> метаданных от <b>коллекции</b> объектов, не зная, как эти имена
- * складываются.
+ * {@link MetadataCollectionSpecializer} — здесь собраны их имена, чтобы
+ * потребители снаружи ({@code semantictokens}) могли отличить <b>объект</b>
+ * метаданных от коллекции объектов, не зная, как эти имена складываются.
  */
 public final class MetadataTypeNames {
 
@@ -54,16 +53,5 @@ public final class MetadataTypeNames {
    */
   public static boolean isMetadataObject(TypeRef ref) {
     return ref.qualifiedName().startsWith(METADATA_OBJECT);
-  }
-
-  /**
-   * Описывает ли тип коллекцию объектов дерева метаданных
-   * ({@code КоллекцияОбъектовМетаданных.Справочники}).
-   *
-   * @param ref тип.
-   * @return {@code true} — за типом стоит коллекция объектов метаданных.
-   */
-  public static boolean isMetadataCollection(TypeRef ref) {
-    return ref.qualifiedName().startsWith(METADATA_COLLECTION);
   }
 }
