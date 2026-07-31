@@ -715,8 +715,9 @@ public class ExpressionTypeInferencer {
       }
       return byFlow;
     } catch (StackOverflowError | RuntimeException e) {
-      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {}",
-        variable.getName(), at(variable.getSelectionRange().getStart()), owner.getUri(), e);
+      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {} {}",
+        variable.getName(), at(variable.getSelectionRange().getStart()),
+        owner.getUri(), at(Ranges.create(use).getStart()), e);
       return TypeSet.EMPTY;
     }
   }
@@ -726,7 +727,8 @@ public class ExpressionTypeInferencer {
    * присваивания и изменения на месте уже случились на путях к ней.
    *
    * @param reference ссылка на переменную — несёт и документ, и позицию.
-   * @return тип в этой точке; пустой набор, если ссылка не на переменную своего документа.
+   * @return тип в этой точке; пустой набор, если ссылка не на переменную своего документа
+   *     либо расчёт по потоку сорвался — тогда срыв пишется в журнал ошибкой.
    */
   public TypeSet inferVariableAt(Reference reference) {
     if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)) {
@@ -754,7 +756,8 @@ public class ExpressionTypeInferencer {
    *
    * @param variable переменная.
    * @param position точка в теле, для которой нужен тип.
-   * @return тип в этой точке.
+   * @return тип в этой точке; пустой набор, если расчёт по потоку сорвался — тогда срыв
+   *     пишется в журнал ошибкой.
    */
   public TypeSet inferVariableAt(VariableSymbol variable, Position position) {
     return inferVariableAt(variable, position, false);
@@ -770,7 +773,8 @@ public class ExpressionTypeInferencer {
    * @param variable     переменная.
    * @param position     точка в теле, для которой нужен тип.
    * @param atDefinition стоит ли точка на присваивании: тогда берётся тип после него.
-   * @return тип в этой точке.
+   * @return тип в этой точке; пустой набор, если расчёт по потоку сорвался — тогда срыв
+   *     пишется в журнал ошибкой.
    */
   private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition) {
     var owner = variable.getOwner();
@@ -782,8 +786,9 @@ public class ExpressionTypeInferencer {
         ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs)
         : atPoint;
     } catch (StackOverflowError | RuntimeException e) {
-      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {}",
-        variable.getName(), at(variable.getSelectionRange().getStart()), owner.getUri(), e);
+      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {} {}",
+        variable.getName(), at(variable.getSelectionRange().getStart()),
+        owner.getUri(), at(position), e);
       return TypeSet.EMPTY;
     }
   }
