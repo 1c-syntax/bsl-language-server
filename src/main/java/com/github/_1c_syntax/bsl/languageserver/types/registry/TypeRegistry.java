@@ -111,14 +111,11 @@ public class TypeRegistry {
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
   /**
-   * Состав определяемых типов конфигурации: lowercased имя → имена типов, из которых
-   * он собран. Своего {@link TypeRef} у определяемого типа нет — за именем стоит набор,
-   * поэтому в {@link #aliasIndex} ему места нет (см. {@link #resolveSet(String)}).
-   * Состав хранится именами, а не ссылками: определяемый тип читается из метаданных
-   * наравне с прочими объектами, и то, на что он ссылается, может быть ещё не
-   * зарегистрировано.
+   * Состав определяемых типов конфигурации. Своего {@link TypeRef} у определяемого типа
+   * нет — за именем стоит набор, поэтому в {@link #aliasIndex} ему места нет
+   * (см. {@link #resolveSet(String)}).
    */
-  private final Map<String, List<String>> definedTypes = new ConcurrentHashMap<>();
+  private final DefinedTypesIndex definedTypes = new DefinedTypesIndex();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -304,38 +301,10 @@ public class TypeRegistry {
     if (name.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    var key = name.toLowerCase(Locale.ROOT);
-    var composition = definedTypes.get(key);
-    if (composition == null) {
-      return resolve(name).map(TypeSet::of).orElse(TypeSet.EMPTY);
+    if (definedTypes.knows(name)) {
+      return definedTypes.compositionOf(name, this::asTypeSet);
     }
-    var unfolded = new HashSet<String>();
-    unfolded.add(key);
-    return unfold(composition, unfolded);
-  }
-
-  /**
-   * Раскрыть состав определяемого типа. Определяемый тип может ссылаться на другой
-   * определяемый — и на себя; {@code unfolded} хранит уже раскрытые имена, чтобы
-   * такая ссылка не увела разбор в бесконечность.
-   */
-  private TypeSet unfold(List<String> composition, Set<String> unfolded) {
-    var result = TypeSet.EMPTY;
-    for (var name : composition) {
-      var key = name.toLowerCase(Locale.ROOT);
-      var nested = definedTypes.get(key);
-      if (nested != null) {
-        if (unfolded.add(key)) {
-          result = result.union(unfold(nested, unfolded));
-        }
-        continue;
-      }
-      var ref = aliasIndex.get(key);
-      if (ref != null) {
-        result = result.union(TypeSet.of(ref));
-      }
-    }
-    return result;
+    return asTypeSet(name);
   }
 
   /**
@@ -345,7 +314,11 @@ public class TypeRegistry {
    * @param composition   имена типов, из которых он собран.
    */
   public void registerDefinedType(String qualifiedName, List<String> composition) {
-    definedTypes.put(qualifiedName.toLowerCase(Locale.ROOT), List.copyOf(composition));
+    definedTypes.register(qualifiedName, composition);
+  }
+
+  private TypeSet asTypeSet(String name) {
+    return resolve(name).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**
