@@ -457,6 +457,44 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     return memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL));
   }
 
+  @Test
+  void metadataCollectionIsIterableAndCarriesItsElementType() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // У части коллекций элементы вообще не адресуются по имени: синтакс-помощник
+    // для «ОписанияХарактеристик» знает только обход и обращение по индексу. Без типа
+    // элемента такая коллекция для пользователя пустая — до её содержимого не добраться.
+    var characteristics = collectionRef("Характеристики");
+    assertThat(typeRegistry.getDefaultElementTypes(characteristics).refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ОписаниеХарактеристик");
+    assertThat(typeRegistry.supportsForEach(characteristics, FileType.BSL))
+      .as("обход Для Каждого")
+      .isTrue();
+    assertThat(typeRegistry.supportsIndexAccess(characteristics, FileType.BSL))
+      .as("обращение по индексу")
+      .isTrue();
+
+    // То же и у коллекций, которые адресуются по имени, — обход им тоже положен.
+    assertThat(typeRegistry.getDefaultElementTypes(collectionRef("Реквизиты")).refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ОбъектМетаданных: Реквизит");
+    assertThat(typeRegistry.getDefaultElementTypes(collectionRef("ДополнительныеИндексы")).refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ДополнительныйИндекс");
+  }
+
+  /** Специализированный тип коллекции иерархического справочника фикстуры. */
+  private TypeRef collectionRef(String collectionName) {
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM,
+      "ОбъектМетаданных: Справочник.СправочникСМенеджером");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), collectionName);
+    assertThat(member).as("property %s на per-MDO типе", collectionName).isNotNull();
+    return typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+  }
+
   // --- helpers ---
 
   private static MemberDescriptor findMember(Collection<MemberDescriptor> members, String name) {

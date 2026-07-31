@@ -610,6 +610,12 @@ public class MetadataCollectionSpecializer {
     var perCollName = spec.baseCollectionName() + "." + spec.ru() + "." + ownerSuffix;
     var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollName);
     registerSubChildOwners(children, elementRef, ownerSuffix);
+    // Коллекция остаётся коллекцией: обход `Для Каждого` и индексатор дают её элемент.
+    // Для коллекций, где элементы вообще не адресуются по имени (характеристики,
+    // дополнительные индексы, ввод на основании), это единственный способ до них
+    // добраться — синтакс-помощник у них так и пишет: обход и обращение по индексу.
+    typeRegistry.registerDefaultElementTypes(perCollRef, List.of(elementRef));
+    typeRegistry.inheritCollectionTraits(perCollRef, baseRef, FileType.BSL);
     var capturedBase = baseRef;
     var capturedElement = elementRef;
     var capturedChildren = children;
