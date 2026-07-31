@@ -551,15 +551,32 @@ final class FormPlatformTypes {
   private static final String RECORDER_FILTER_PARAMETER = "ПараметрОтборПоРегистратору";
 
   /**
+   * Параметр-основание: у управляемой формы он лежит в структуре параметров
+   * ({@code Параметры.Основание}), у обычной — свойством расширения
+   * ({@code ПараметрОснование}). Тип у обоих не объявлен: платформе он не известен,
+   * пока не посмотреть в метаданные владельца.
+   */
+  private static final Set<String> BASIS_PARAMETERS = Set.of("Основание", "ПараметрОснование");
+
+  /**
    * Указывает ли параметр обычной формы на посторонний объект, а не на владельца формы.
    *
    * @param member член типа-расширения обычной формы.
    * @return {@code true}, если подставлять в его тип имя владельца формы нельзя.
    */
-  // TODO: типизировать по владельцу подчинённого справочника (`Catalog.getOwners()`) —
-  //  так же, как отбор по регистратору типизируется по документам-регистраторам.
   static boolean parameterOfAnotherObject(MemberDescriptor member) {
     return PARAMETERS_OF_ANOTHER_OBJECT.stream().anyMatch(member::matches);
+  }
+
+  /**
+   * Передаётся ли параметром объект-основание. Допустимые типы ограничены списком
+   * {@code ВводитсяНаОсновании} владельца формы, а платформа объявляет параметр без типа.
+   *
+   * @param member параметр формы (член структуры параметров либо расширения обычной формы).
+   * @return {@code true}, если это параметр-основание.
+   */
+  static boolean parameterOfBasis(MemberDescriptor member) {
+    return BASIS_PARAMETERS.stream().anyMatch(member::matches);
   }
 
   /**

@@ -138,6 +138,12 @@ public class FormTypesProvider {
    */
   private static final String MODULE_SUFFIX = " (модуль)";
 
+  /** Суффикс имени ссылочного типа: {@code Документ.Документ1} → {@code ДокументСсылка.Документ1}. */
+  private static final String REF_SUFFIX = "Ссылка";
+
+  /** Тип параметра, передавать в который нечего. */
+  private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
+
   private static final BilingualString THIS_FORM_DESCRIPTION = BilingualString.of(
     "Форма, в модуле которой выполняется код. Устаревшее имя — используйте ЭтотОбъект.",
     "The form whose module executes the code. Obsolete name — use ThisObject instead.");
@@ -333,7 +339,7 @@ public class FormTypesProvider {
           parameterOwnerNames(form, owner),
           ownerObjectNames(owner));
         typeRegistry.registerMemberOverride(formRef,
-          () -> ordinaryParameters(extensionRef, parameterOwner), FileType.BSL);
+          () -> ordinaryParameters(extensionRef, parameterOwner, owner), FileType.BSL);
       }
     }
     // Члены собираются внутри источников, а не здесь: у крупной конфигурации формы
@@ -357,7 +363,7 @@ public class FormTypesProvider {
     //  процедур-обработчиков команд (`КомандаФормы.Действие`): их надо добавлять в
     //  buildEventMembers, иначе обработчик команды не считается обработчиком.
     var itemsRef = registerItemsCollection(form, kind, suffixRu);
-    var parametersRef = registerParametersStructure(form, kind, suffixRu);
+    var parametersRef = registerParametersStructure(form, kind, suffixRu, owner);
     typeRegistry.registerMemberOverride(formRef,
       () -> buildSelfMembers(kind, formRef, itemsRef, parametersRef, null), FileType.BSL);
     registerModuleType(form, kind, formRef, itemsRef, parametersRef, owner);
@@ -423,7 +429,8 @@ public class FormTypesProvider {
   // TODO mdclasses#651: добавить сюда параметры, объявленные в самой форме (блок
   //  <Parameters> в Form.xml) — они ложатся в ту же структуру рядом со стандартными.
   //  Собираются как реквизиты (имя + ValueTypeDescription), см. buildAttributeMembers.
-  private @Nullable TypeRef registerParametersStructure(Form form, FormKind kind, String suffixRu) {
+  private @Nullable TypeRef registerParametersStructure(Form form, FormKind kind, String suffixRu,
+                                                        @Nullable MD owner) {
     if (kind != FormKind.MANAGED) {
       // У обычной формы отдельные параметры платформа отдаёт свойствами расширения
       // (`ПараметрОснование`, `ПараметрОбъектКопирования`), структуры `Параметры` нет.
@@ -440,7 +447,8 @@ public class FormTypesProvider {
       suffixRu, FormPlatformTypes.mdoSuffixEn(form), structureRef);
     var ownerName = ownerName(form);
     typeRegistry.registerMemberSource(parametersRef,
-      () -> specializeByOwner(concat(baseParameters, extensionParameters), ownerName), FileType.BSL);
+      () -> withBasisType(specializeByOwner(concat(baseParameters, extensionParameters), ownerName), owner),
+      FileType.BSL);
     // Параметров у формы единицы, и знать их состав важнее, чем имя типа: показываем
     // список целиком. Данные основного реквизита так не помечаем — свойств там сотни.
     if (structureRef != null) {
@@ -477,6 +485,47 @@ public class FormTypesProvider {
         : parameter.specialize(Map.of(placeholder, ownerName)));
     }
     return List.copyOf(result);
+  }
+
+  /**
+   * Проставляет тип параметру-основанию. Платформа объявляет его без типа: какие объекты
+   * допустимы, известно только из метаданных владельца формы ({@code ВводитсяНаОсновании}).
+   *
+   * @param parameters параметры формы.
+   * @param owner      объект, которому подчинена форма.
+   * @return они же; у параметра-основания проставлен тип.
+   */
+  private List<MemberDescriptor> withBasisType(List<MemberDescriptor> parameters, @Nullable MD owner) {
+    if (parameters.stream().noneMatch(FormPlatformTypes::parameterOfBasis)) {
+      return parameters;
+    }
+    var basisTypes = basisTypes(owner);
+    return parameters.stream()
+      .map(parameter -> FormPlatformTypes.parameterOfBasis(parameter)
+        ? parameter.withReturnTypes(basisTypes)
+        : parameter)
+      .toList();
+  }
+
+  /**
+   * Типы объектов, которые допустимо передать основанием. Свойство
+   * {@code ВводитсяНаОсновании} перечисляет сами объекты, а основанием передаётся ссылка
+   * на объект — поэтому имена типов ссылочные.
+   *
+   * @param owner объект, которому подчинена форма.
+   * @return объединение ссылочных типов; {@code Неопределено}, если объект ни на чём
+   *   не вводится — тогда передавать в параметр нечего.
+   */
+  private TypeSet basisTypes(@Nullable MD owner) {
+    if (owner == null) {
+      return UNDEFINED;
+    }
+    var refs = MdoPropertyAccessors.basedOn(owner).stream()
+      .map(basis -> typeNameWithSuffix(basis.getMdoRefRu(), REF_SUFFIX))
+      .map(typeRegistry::resolve)
+      .flatMap(Optional::stream)
+      .toList();
+    return refs.isEmpty() ? UNDEFINED : TypeSet.of(refs);
   }
 
   /** Имя MD-объекта, которому подчинена форма; для общей формы — пусто. */
@@ -1100,7 +1149,11 @@ public class FormTypesProvider {
 
   /** {@code Документ.Документ1} + {@code Объект} → {@code ДокументОбъект.Документ1}. */
   private static String objectTypeName(MD owner, String suffix) {
-    var mdoRef = owner.getMdoReference().getMdoRefRu();
+    return typeNameWithSuffix(owner.getMdoReference().getMdoRefRu(), suffix);
+  }
+
+  /** Имя типа из mdoRef и суффикса вида: {@code Справочник.Х} + {@code Ссылка}. */
+  private static String typeNameWithSuffix(String mdoRef, String suffix) {
     var dot = mdoRef.indexOf('.');
     return dot < 0 ? mdoRef : mdoRef.substring(0, dot) + suffix + mdoRef.substring(dot);
   }
@@ -1116,12 +1169,15 @@ public class FormTypesProvider {
    * Override, а не обычный источник: те же члены приходят из расширения формы с
    * необработанным плейсхолдером и должны проиграть дедуп в {@code getMembers}.
    */
-  // TODO mdclasses#652: `ПараметрОснование` сузить по списку `ВводитсяНаОсновании`
-  //  владельца — так же, как `Основание` у управляемых форм (см. FormParametersResolver).
-  //  Тип у него не объявлен вовсе, поэтому подстановкой имени он не типизируется.
-  private List<MemberDescriptor> ordinaryParameters(TypeRef extensionRef, OrdinaryFormOwner owner) {
+  private List<MemberDescriptor> ordinaryParameters(TypeRef extensionRef, OrdinaryFormOwner owner,
+                                                    @Nullable MD ownerMd) {
     var result = new ArrayList<MemberDescriptor>();
     for (var member : typeRegistry.getMembers(extensionRef, FileType.BSL)) {
+      if (FormPlatformTypes.parameterOfBasis(member)) {
+        // Плейсхолдера в нём нет — типа не объявлено вовсе, он берётся из метаданных.
+        result.add(member.withReturnTypes(basisTypes(ownerMd)));
+        continue;
+      }
       var bound = PlaceholderBinder.bind(typeRegistry, member, specializationNames(member, owner));
       if (bound == null) {
         // Не подставилось — возможно, объявление ссылается на чужое семейство

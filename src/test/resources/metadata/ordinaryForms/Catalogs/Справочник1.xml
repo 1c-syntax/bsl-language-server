@@ -68,7 +68,9 @@
 			<AuxiliaryChoiceForm/>
 			<AuxiliaryFolderChoiceForm/>
 			<IncludeHelpInContents>false</IncludeHelpInContents>
-			<BasedOn/>
+			<BasedOn>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.Документ1</xr:Item>
+			</BasedOn>
 			<DataLockFields/>
 			<DataLockControlMode>Managed</DataLockControlMode>
 			<FullTextSearch>Use</FullTextSearch>

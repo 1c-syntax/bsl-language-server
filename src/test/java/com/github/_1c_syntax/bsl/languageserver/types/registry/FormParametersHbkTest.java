@@ -115,6 +115,21 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void basisIsTypedByTheObjectsItIsEnteredOnBasisOf() {
+    // Тип у параметра не объявлен: платформа не знает, что допустимо передать
+    // основанием, пока не посмотреть `ВводитсяНаОсновании` владельца формы.
+    assertThat(qualifiedNames(parameter(DOCUMENT_FORM, "Основание")))
+      .containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  @Test
+  void basisOfObjectEnteredOnNoBasisIsUndefined() {
+    // Справочник ни на чём не вводится — передавать в параметр нечего.
+    assertThat(qualifiedNames(parameter(CATALOG_ITEM_FORM, "Основание")))
+      .containsExactly("Неопределено");
+  }
+
+  @Test
   void objectInfrastructureIsFilteredOutOfFormData() {
     // Полный набор инфраструктурных свойств объекта есть только в синтакс-помощнике:
     // в JSON-фолбэке из них объявлен один ЭтотОбъект.
