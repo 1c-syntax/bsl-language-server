@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -99,7 +100,7 @@ public class NavigationCommandBuilder {
    * @param targets  Цели перехода (объявления производителей).
    * @return Команда с идентификатором, выбранным под клиента.
    */
-  public Command gotoCommand(String title, String tooltip, URI uri, Position position, List<Location> targets) {
+  public Command gotoCommand(String title, @Nullable String tooltip, URI uri, Position position, List<Location> targets) {
     var multiple = targets.size() == 1 ? MULTIPLE_GOTO : MULTIPLE_PEEK;
     var commandId = isVsCodeLike() ? VS_CODE_GOTO_COMMAND : BUILTIN_GOTO_COMMAND;
     var command = new Command(title, commandId, List.of(uri.toString(), position, targets, multiple));
@@ -117,7 +118,7 @@ public class NavigationCommandBuilder {
    * @param locations Местоположения использований.
    * @return Команда с идентификатором, выбранным под клиента.
    */
-  public Command referencesCommand(String title, String tooltip, URI uri, Position position, List<Location> locations) {
+  public Command referencesCommand(String title, @Nullable String tooltip, URI uri, Position position, List<Location> locations) {
     var commandId = isVsCodeLike() ? VS_CODE_REFERENCES_COMMAND : BUILTIN_REFERENCES_COMMAND;
     var command = new Command(title, commandId, List.of(uri.toString(), position, locations));
     command.setTooltip(tooltip);
