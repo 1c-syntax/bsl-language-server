@@ -704,17 +704,20 @@ public class ExpressionTypeInferencer {
     // текущим оператором. Зацикливания не будет: строящееся окружение отвечает чтением из
     // карты, не запуская расчёт заново.
     try {
-      var inputs = flowInputs(variable, ctx);
-      var byFlow = variableFlowAnalyzer.typeAt(owner, use, variable, inputs);
-      return byFlow == null
-        ? variableFlowAnalyzer.typesAcrossScope(owner, Ranges.create(use).getStart(), variable, inputs)
-        : byFlow;
+      var byFlow = variableFlowAnalyzer.typeAt(owner, use, variable, flowInputs(variable, ctx));
+      if (byFlow == null) {
+        // Обращение к переменной есть, а расчёт его не разместил — это дефект расчёта, а не
+        // особенность кода 1С. Подменять ответ нечем: любая подмена скрыла бы дефект.
+        LOGGER.error("Обращение к переменной {} (объявлена {}) не размещено в расчёте по потоку: {} {}",
+          variable.getName(), at(variable.getSelectionRange().getStart()),
+          owner.getUri(), at(Ranges.create(use).getStart()));
+        return TypeSet.EMPTY;
+      }
+      return byFlow;
     } catch (StackOverflowError | RuntimeException e) {
-      // Страховка: граф мог не построиться на неожиданной форме кода, рекурсия — уйти
-      // слишком глубоко. Переменной остаётся объявленное о ней, а не обнулённое всё
-      // выражение, как сделал бы общий перехват в infer().
-      LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
-      return declaredTypes(variable);
+      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {}",
+        variable.getName(), at(variable.getSelectionRange().getStart()), owner.getUri(), e);
+      return TypeSet.EMPTY;
     }
   }
 
@@ -779,11 +782,20 @@ public class ExpressionTypeInferencer {
         ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs)
         : atPoint;
     } catch (StackOverflowError | RuntimeException e) {
-      // Срыв расчёта (граф не построился на неожиданной форме кода либо рекурсия ушла
-      // слишком глубоко) оставляет переменной объявленное о ней, а не обнуляет её тип.
-      LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
-      return declaredTypes(variable);
+      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {}",
+        variable.getName(), at(variable.getSelectionRange().getStart()), owner.getUri(), e);
+      return TypeSet.EMPTY;
     }
+  }
+
+  /**
+   * Позиция в записи «строка:колонка», считая от единицы, — как её показывает редактор.
+   *
+   * @param position позиция, считающая от нуля.
+   * @return запись позиции для журнала.
+   */
+  private static String at(Position position) {
+    return (position.getLine() + 1) + ":" + (position.getCharacter() + 1);
   }
 
   /**
