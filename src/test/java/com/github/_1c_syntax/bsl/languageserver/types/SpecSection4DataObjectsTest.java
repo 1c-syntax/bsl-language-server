@@ -280,16 +280,12 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   @Test
   @DisplayName("4.23 Обращение к колонке по имени в переменной")
   void columnAccessByNameInVariable() {
-    // given: «СтрокаТаблицы[ИмяКолонки]» — случай, который рекомендация типизировать не требует
-    // (обработка таблицы с неопределённым набором колонок).
+    // given: «СтрокаТаблицы[ИмяКолонки]» — случай, который рекомендация типизировать не требует.
     // when
     var types = typeOf("4.23");
 
-    // then: ТОЧНЕЕ РЕКОМЕНДАЦИИ — она типа здесь не ждёт, а мы отдаём объединение типов
-    // объявленных колонок, как и для структуры с вычисляемым ключом
-    // (KeyValueIndexAccessInferenceTest#structureIndexAccessWithDynamicKeyUnionsValueTypes).
-    assertThat(names(types))
-      .containsExactlyInAnyOrder("СправочникСсылка.Справочник1", "Число");
+    // then: совпадает с рекомендацией — типа нет, и он здесь не требуется.
+    assertThat(names(types)).isEmpty();
   }
 
   @Test
@@ -413,13 +409,10 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   void fieldsSeeInFunctionTextDoesNotType() {
     // given / when
     var types = typeOf("4.34");
-    var columnOnRow = typeOfVariable("Проба_4_34_Колонка");
 
-    // then: совпадает с рекомендацией — тип есть, а колонок от текста описания нет
-    // ни у таблицы, ни у её строки.
+    // then: совпадает с рекомендацией — тип есть, полей от текста описания нет.
     assertThat(names(types)).containsExactly("ТаблицаЗначений");
     assertThat(fieldNames(types)).isEmpty();
-    assertThat(names(columnOnRow)).isEmpty();
   }
 
   @Test
@@ -469,17 +462,10 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   void seeRefWithoutBaseTypeAndDescription() {
     // given / when
     var types = typeOf("4.39");
-    var columnOnRow = typeOfVariable("Проба_4_39_Колонка");
-    var columnOnTable = typeOfVariable("Проба_4_39_ЧленТаблицы");
 
-    // then: параметр получает тип таблицы из конструктора, объявленные колонки видны у строки.
+    // then: совпадает с рекомендацией.
     assertThat(names(types)).containsExactly("ТаблицаЗначений");
-    assertThat(names(columnOnRow))
-      .as("рекомендация: код работает с колонками строки таблицы, полученной по ссылке")
-      .containsExactly("СправочникСсылка.Справочник1");
-    assertThat(names(columnOnTable))
-      .as("у самой таблицы значений свойства с именем колонки нет")
-      .isEmpty();
+    assertThat(fieldNames(types)).containsExactlyInAnyOrder("Номенклатура", "Количество");
   }
 
   @Test

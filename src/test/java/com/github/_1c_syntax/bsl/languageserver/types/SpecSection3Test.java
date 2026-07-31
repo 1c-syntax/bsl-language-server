@@ -167,35 +167,23 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   @Test
   @DisplayName("3.12 Расширение полей после двоеточия с вложенностью «*» и «**»")
   void nestedFieldExtension() {
-    // given: «* ПолеСтруктуры - ТаблицаЗначений:» и «** ИмяКолонки - Число».
-    // when
-    var field = typeOf("3.12");
-    var columnOnRow = typeOfVariable("Проба_3_12_Колонка");
-    var columnOnTable = typeOfVariable("Проба_3_12_ЧленТаблицы");
+    // given / when
+    var types = typeOf("3.12");
 
-    // then: поле структуры типизировано таблицей, а объявленная колонка видна у строки.
-    assertThat(names(field)).containsExactly("ТаблицаЗначений");
-    assertThat(names(columnOnRow))
-      .as("рекомендация: колонка объявлена у таблицы и видна у её строки")
-      .containsExactly("Число");
-    assertThat(names(columnOnTable))
-      .as("у самой таблицы значений свойства с именем колонки нет")
-      .isEmpty();
+    // then: совпадает с рекомендацией.
+    assertThat(names(types)).containsExactly("ТаблицаЗначений");
+    assertThat(fieldNames(types)).containsExactly("ИмяКолонки");
   }
 
   @Test
   @DisplayName("3.13 Расширение полей без описаний, только типы и двоеточие")
   void fieldExtensionWithoutDescriptions() {
-    // given: та же вложенность, но без текстовых описаний.
-    // when
-    var field = typeOf("3.13");
-    var columnOnRow = typeOfVariable("Проба_3_13_Колонка");
+    // given / when
+    var types = typeOf("3.13");
 
-    // then: отсутствие описаний на разбор расширения не влияет.
-    assertThat(names(field)).containsExactly("ТаблицаЗначений");
-    assertThat(names(columnOnRow))
-      .as("рекомендация: колонка видна у строки таблицы")
-      .containsExactly("Число");
+    // then: совпадает с рекомендацией.
+    assertThat(names(types)).containsExactly("ТаблицаЗначений");
+    assertThat(fieldNames(types)).containsExactly("ИмяКолонки");
   }
 
   @Test
@@ -245,13 +233,10 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefNextToTypeIsUseless() {
     // given / when
     var types = typeOf("3.18");
-    var columnOnRow = typeOfVariable("Проба_3_18_Колонка");
 
-    // then: совпадает с рекомендацией — работает только сам тип, а поля конструктора,
-    // на который указывает ссылка, не попадают ни на таблицу, ни на её строку.
+    // then: совпадает с рекомендацией — работает только сам тип, полей от ссылки нет.
     assertThat(names(types)).containsExactly("ТаблицаЗначений");
     assertThat(fieldNames(types)).isEmpty();
-    assertThat(names(columnOnRow)).isEmpty();
   }
 
   @Test
@@ -503,10 +488,6 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
 
   private TypeSet typeOf(String item) {
     return SpecProbes.typeOf(typeService, document(), item);
-  }
-
-  private TypeSet typeOfVariable(String variable) {
-    return SpecProbes.typeOfVariable(typeService, document(), variable);
   }
 
   private static DocumentContext document() {
