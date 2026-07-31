@@ -102,7 +102,9 @@ public class DefinedTypesIndex {
       var nested = compositions.get(key);
       if (nested == null) {
         result = result.union(resolve.apply(name));
-      } else if (unfolded.add(key)) {
+        continue;
+      }
+      if (unfolded.add(key)) {
         result = result.union(unfold(nested, unfolded, resolve));
       }
     }
