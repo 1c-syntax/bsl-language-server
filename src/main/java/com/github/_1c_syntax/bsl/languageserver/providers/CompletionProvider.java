@@ -847,7 +847,7 @@ public final class CompletionProvider {
         // видимости. Инференс идёт только по видимым (модульным + текущего метода)
         // совпавшим с префиксом переменным и кэшируется, так что стоимость — единицы
         // вызовов однократно до прогрева кэша; полезность подсказки её перевешивает.
-        var varTypes = typeService.typesOfSymbolAt(variable, position);
+        var varTypes = typeService.typesOfVariableAt(variable, position);
         applyDetail(item, "", formatTypeNames(varTypes, scriptVariant));
         applySortText(item, BUCKET_LOCAL, false);
         applyCommitCharacters(item);

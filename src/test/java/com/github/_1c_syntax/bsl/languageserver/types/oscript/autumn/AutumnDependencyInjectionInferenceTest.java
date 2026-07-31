@@ -27,19 +27,18 @@ import org.eclipse.lsp4j.Location;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.TestTypeQueries;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,8 +49,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterClass
 class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareTest {
 
-  private static final Path FIXTURE_ROOT =
-    Path.of("src/test/resources/oscript-libraries/autumn-di").toAbsolutePath();
+  private static final String FIXTURE_ROOT = "src/test/resources/oscript-libraries/autumn-di";
+  private static final String APPLICATION = FIXTURE_ROOT + "/src/Приложение.os";
+  private static final String CONSTRUCTOR_CONSUMER = FIXTURE_ROOT + "/src/ПотребительВКонструкторе.os";
 
   @Autowired
   private OScriptLibraryIndex index;
@@ -65,8 +65,9 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   void setup() {
     initServerContext(FIXTURE_ROOT, false);
     index.reindex(context);
-    var uri = Absolute.uri(FIXTURE_ROOT.resolve("src/Приложение.os").toUri());
-    consumer = context.getDocument(uri);
+    // Документ берётся с содержимым: через getDocument он заводится пустым, без дерева
+    // разбора, и расчёт типа по коду по нему работать не может.
+    consumer = TestUtils.getDocumentContextFromFile(APPLICATION, context);
   }
 
   @Test
@@ -318,8 +319,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   void injectedParameterResolvesAtUsageAndFlowsIntoField() {
     // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
     // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.
-    var path = FIXTURE_ROOT.resolve("src/ПотребительВКонструкторе.os").toString();
-    var doc = TestUtils.getDocumentContextFromFile(path, context);
+    var doc = TestUtils.getDocumentContextFromFile(CONSTRUCTOR_CONSUMER, context);
     var lines = doc.getContentList();
 
     int usageLine = -1;
@@ -360,7 +360,6 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   private static Reference referenceOf(DocumentContext documentContext, VariableSymbol variableSymbol) {
-    return Reference.of(documentContext.getSymbolTree().getModule(), variableSymbol,
-      new Location(documentContext.getUri().toString(), variableSymbol.getSelectionRange()), OccurrenceType.DEFINITION);
+    return TestTypeQueries.declarationOf(variableSymbol);
   }
 }

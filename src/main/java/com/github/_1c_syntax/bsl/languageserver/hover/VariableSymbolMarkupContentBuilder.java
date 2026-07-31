@@ -66,6 +66,9 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private static final String EXPORT_KEY = "export";
   private static final String TYPE_KEY = "type";
 
+  /** Пометка типа, выведенного из кода, а не объявленного о переменной. */
+  private static final String FROM_CODE_MARK = "*";
+
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
@@ -89,8 +92,9 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     var variableInfo = getVariableInfo(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
 
-    // тип (выведенный)
-    var typesInfo = getInferredTypes(symbol, typeService.typesAt(reference));
+    // тип в этой точке; вычисленное по коду помечается звёздочкой, чтобы не выдавать
+    // его за объявленное комментарием, параметром или аннотацией внедрения
+    var typesInfo = getTypes(symbol, typeService.typesAt(reference), typeService.declaredTypesOf(symbol));
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typesInfo);
 
     // местоположение переменной
@@ -140,15 +144,25 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     return resources.getResourceString(getClass(), key);
   }
 
-  private String getInferredTypes(VariableSymbol symbol, TypeSet types) {
+  /**
+   * Раздел типа переменной.
+   *
+   * @param symbol   переменная.
+   * @param types    типы в точке обращения.
+   * @param declared объявленное о переменной: остальные типы вычислены по коду и
+   *                 помечаются звёздочкой.
+   * @return текст раздела; пусто, если типов нет.
+   */
+  private String getTypes(VariableSymbol symbol, TypeSet types, TypeSet declared) {
     if (types.isEmpty()) {
       return "";
     }
     // Hover — элемент интерфейса, поэтому язык отображения берём из настроек
     // LS (configuration), а не из ScriptVariant (язык исходников).
     var lang = configuration.getLanguage();
+    var declaredRefs = declared.refs();
     String header = types.refs().stream()
-      .map(ref -> inlineTypeLabel(types, ref, lang, false))
+      .map(ref -> inlineTypeLabel(types, ref, lang, false) + (declaredRefs.contains(ref) ? "" : FROM_CODE_MARK))
       .collect(Collectors.joining(" | "));
 
     var sb = new StringBuilder("%s: %s".formatted(getResourceString(TYPE_KEY), header));

@@ -195,7 +195,7 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
       .map(Optional::get)
       .findFirst()
       .orElseThrow();
-    return inferencer.inferSymbol(variable);
+    return inferencer.inferVariableAt(TestTypeQueries.declarationOf(variable));
   }
 
   private DocumentContext chainedDoc() {

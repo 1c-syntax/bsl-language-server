@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Кэш выведенных типов выражений, разрезанный по URI документа и ключуемый по
  * AST-узлу выражения.
  * <p>
- * Дополняет {@link InferredVariableTypeIndex} (кэш по символу переменной) для
+ * Держит типы
  * <b>не-переменных</b> ресиверов — цепочек {@code А.Б.В}, обращений к менеджерам
  * конфигурации ({@code Справочники.X}, {@code РегистрыСведений.Y}) и общим
  * модулям, результатов вызовов. На большом модуле один и тот же ресивер
@@ -55,12 +55,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * при перепарсинге документа узлы получают новые идентичности, а старый бакет
  * URI сбрасывается по событию изменения содержимого.
  * <p>
- * Инвалидация — та же модель, что у {@link InferredVariableTypeIndex}: per-URI
+ * Инвалидация — per-URI
  * через {@link AbstractDocumentLifecycleClearableIndex} (изменение / очистка
  * вторичных данных / закрытие / удаление документа) плюс полный сброс на
  * регистрацию конфигурационных типов. Кросс-документные зависимости типа при
- * правке чужого модуля не сбрасываются — как и в {@link InferredVariableTypeIndex}
- * / {@link SymbolTypeIndex}.
+ * правке чужого модуля не сбрасываются — как и в {@link SymbolTypeIndex}.
  */
 @Component
 @WorkspaceScope
@@ -100,8 +99,7 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
   /**
    * Полный сброс после регистрации конфигурационных типов: до неё член-доступы
    * на конфигурационных типах инферились в пусто (реестр ещё не заполнен), и эти
-   * «пустые» результаты надо пересчитать. Симметрично
-   * {@link InferredVariableTypeIndex#handleConfigurationTypesRegistered}.
+   * «пустые» результаты надо пересчитать.
    */
   @EventListener
   public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {

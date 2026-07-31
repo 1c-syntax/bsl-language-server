@@ -87,13 +87,18 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void twoTypesFromSymbol() {
+  void typeOfTwiceAssignedVariableIsTakenAtItsFirstAssignment() {
+    // given: `ДваТипа = "Строка"; ДваТипа = 0;` — объявления `Перем` у переменной нет,
+    // её объявление и есть первое присваивание.
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var variableSymbol = documentContext.getSymbolTree()
       .getVariableSymbol("ДваТипа", documentContext.getSymbolTree().getModule()).orElseThrow();
-    var reference = referenceOf(documentContext, variableSymbol);
-    var types = typeService.typesAt(reference);
-    assertThat(types.refs()).hasSize(2);
+
+    // when
+    var types = typeService.typesAt(referenceOf(documentContext, variableSymbol));
+
+    // then: ответ позиционный, поэтому это тип после первого присваивания, а не оба разом.
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
   }
 
   @Test
@@ -129,12 +134,7 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
   }
 
   private static Reference referenceOf(DocumentContext documentContext, VariableSymbol variableSymbol) {
-    return Reference.of(
-      documentContext.getSymbolTree().getModule(),
-      variableSymbol,
-      new Location(documentContext.getUri().toString(), variableSymbol.getSelectionRange()),
-      OccurrenceType.DEFINITION
-    );
+    return TestTypeQueries.declarationOf(variableSymbol);
   }
 
   @Test
