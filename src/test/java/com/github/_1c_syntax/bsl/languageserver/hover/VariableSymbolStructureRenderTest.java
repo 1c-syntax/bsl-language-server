@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -123,8 +124,8 @@ class VariableSymbolStructureRenderTest {
    * @param label ожидаемая подпись типа.
    * @return выражение для {@code containsPattern}.
    */
-  private static String typeLine(String label) {
-    return "(?m)^Тип: " + Pattern.quote(label) + "$";
+  private static Pattern typeLine(String label) {
+    return CaseInsensitivePattern.compile("(?m)^Тип: " + Pattern.quote(label) + "$");
   }
 
   private static TypeRef platform(String name) {

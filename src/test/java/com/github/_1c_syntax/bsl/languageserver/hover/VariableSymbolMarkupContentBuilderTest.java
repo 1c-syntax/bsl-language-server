@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.eclipse.lsp4j.Location;
@@ -265,8 +266,8 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
    * @param label ожидаемая подпись типа.
    * @return выражение для {@code containsPattern}.
    */
-  private static String typeLine(String label) {
-    return "(?m)^Тип: " + Pattern.quote(label) + "$";
+  private static Pattern typeLine(String label) {
+    return CaseInsensitivePattern.compile("(?m)^Тип: " + Pattern.quote(label) + "$");
   }
 
   @Test
