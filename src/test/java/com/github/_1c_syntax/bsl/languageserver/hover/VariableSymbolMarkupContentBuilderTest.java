@@ -268,9 +268,8 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     // when
     var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
-    // then: тип не объявлен, а вычислен по присваиванию — это видно по заголовку раздела
-    assertThat(content).contains("Тип по коду: Строка");
-    assertThat(content).doesNotContain("Тип: Строка");
+    // then: тип не объявлен, а вычислен по присваиванию — это видно по звёздочке
+    assertThat(content).contains("Тип: Строка*");
   }
 
   @Test
@@ -288,7 +287,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: у структуры с полями элемент-итератор (КлючИЗначение) в заголовке не показываем.
     assertThat(content)
-      .contains("Тип по коду: Структура")
+      .contains("Тип: Структура*")
       .doesNotContain("КлючИЗначение")
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`");
@@ -310,7 +309,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: колонки строки ТЗ показываются маркдаун-списком.
     assertThat(content)
-      .contains("Тип по коду: ТаблицаЗначений из СтрокаТаблицыЗначений")
+      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений*")
       .contains("* **Сумма**");
   }
 

@@ -691,8 +691,12 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
     var owner = variable.getOwner();
-    if (!owner.getUri().equals(ctx.documentContext.getUri())
-      || !(terminal.getParent() instanceof ParserRuleContext use)) {
+    if (!owner.getUri().equals(ctx.documentContext.getUri())) {
+      // Переменная из другого документа: чужое дерево разбора не читаем, берём
+      // объявленное о ней — оно есть в самом символе.
+      return declaredTypes(variable);
+    }
+    if (!(terminal.getParent() instanceof ParserRuleContext use)) {
       return TypeSet.EMPTY;
     }
     // Повторный вход по той же переменной здесь не отсекается: у `Х = Х + 1` правая часть
@@ -706,8 +710,8 @@ public class ExpressionTypeInferencer {
         ? variableFlowAnalyzer.typesAcrossScope(owner, Ranges.create(use).getStart(), variable, inputs)
         : byFlow;
     } catch (StackOverflowError | RuntimeException e) {
-      // Срыв расчёта (граф не построился на неожиданной форме кода либо рекурсия ушла
-      // слишком глубоко) оставляет переменной объявленное о ней, а не обнуляет всё
+      // Страховка: граф мог не построиться на неожиданной форме кода, рекурсия — уйти
+      // слишком глубоко. Переменной остаётся объявленное о ней, а не обнулённое всё
       // выражение, как сделал бы общий перехват в infer().
       LOGGER.debug("Расчёт типа по потоку не удался для переменной {}", variable.getName(), e);
       return declaredTypes(variable);
@@ -722,9 +726,14 @@ public class ExpressionTypeInferencer {
    * @return тип в этой точке; пустой набор, если ссылка не на переменную своего документа.
    */
   public TypeSet inferVariableAt(Reference reference) {
-    if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)
-      || !variable.getOwner().getUri().equals(reference.uri())) {
+    if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)) {
       return TypeSet.EMPTY;
+    }
+    if (!variable.getOwner().getUri().equals(reference.uri())) {
+      // Переменная объявлена в другом документе: считать её по коду означало бы читать
+      // чужое дерево разбора, а этого мы не делаем. Остаётся объявленное о ней — оно
+      // берётся из самого символа.
+      return declaredTypes(variable);
     }
     return inferVariableAt(
       variable,

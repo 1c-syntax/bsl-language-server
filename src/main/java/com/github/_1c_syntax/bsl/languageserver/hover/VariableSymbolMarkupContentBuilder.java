@@ -65,7 +65,9 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
   private static final String TYPE_KEY = "type";
-  private static final String TYPE_FROM_CODE_KEY = "typeFromCode";
+
+  /** Пометка типа, выведенного из кода, а не объявленного о переменной. */
+  private static final String FROM_CODE_MARK = "*";
 
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
@@ -90,16 +92,10 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     var variableInfo = getVariableInfo(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
 
-    // объявленное о переменной — комментарием, объявлением параметра, аннотацией внедрения
-    var declared = typeService.declaredTypesOf(symbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, getTypes(symbol, declared, TYPE_KEY));
-
-    // то, что кладут в переменную тела: показывается отдельно, чтобы не выдавать
-    // вычисленное по коду за объявленное
-    var fromCode = typeService.typesAt(reference);
-    if (!fromCode.equals(declared)) {
-      descriptionFormatter.addSectionIfNotEmpty(markupBuilder, getTypes(symbol, fromCode, TYPE_FROM_CODE_KEY));
-    }
+    // тип в этой точке; вычисленное по коду помечается звёздочкой, чтобы не выдавать
+    // его за объявленное комментарием, параметром или аннотацией внедрения
+    var typesInfo = getTypes(symbol, typeService.typesAt(reference), typeService.declaredTypesOf(symbol));
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typesInfo);
 
     // местоположение переменной
     var location = descriptionFormatter.getLocation(symbol);
@@ -148,18 +144,28 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     return resources.getResourceString(getClass(), key);
   }
 
-  private String getTypes(VariableSymbol symbol, TypeSet types, String headerKey) {
+  /**
+   * Раздел типа переменной.
+   *
+   * @param symbol   переменная.
+   * @param types    типы в точке обращения.
+   * @param declared объявленное о переменной: остальные типы вычислены по коду и
+   *                 помечаются звёздочкой.
+   * @return текст раздела; пусто, если типов нет.
+   */
+  private String getTypes(VariableSymbol symbol, TypeSet types, TypeSet declared) {
     if (types.isEmpty()) {
       return "";
     }
     // Hover — элемент интерфейса, поэтому язык отображения берём из настроек
     // LS (configuration), а не из ScriptVariant (язык исходников).
     var lang = configuration.getLanguage();
+    var declaredRefs = declared.refs();
     String header = types.refs().stream()
-      .map(ref -> inlineTypeLabel(types, ref, lang, false))
+      .map(ref -> inlineTypeLabel(types, ref, lang, false) + (declaredRefs.contains(ref) ? "" : FROM_CODE_MARK))
       .collect(Collectors.joining(" | "));
 
-    var sb = new StringBuilder("%s: %s".formatted(getResourceString(headerKey), header));
+    var sb = new StringBuilder("%s: %s".formatted(getResourceString(TYPE_KEY), header));
 
     // Содержимое «открытых» объектов (Структура/Соответствие/Фиксированные,
     // строка ТаблицыЗначений) рендерим маркдаун-списком под заголовком типа.
