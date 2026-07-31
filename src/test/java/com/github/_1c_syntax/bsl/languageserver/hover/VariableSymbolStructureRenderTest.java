@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +47,7 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -88,8 +90,6 @@ class VariableSymbolStructureRenderTest {
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
     when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "type")).thenReturn("Тип");
-    // Объявленного о переменной в этих тестах нет: проверяется отрисовка вычисленного по коду.
-    when(typeService.declaredTypesOf(symbol)).thenReturn(TypeSet.EMPTY);
     when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "moduleVariable"))
       .thenReturn("Переменная уровня модуля");
 
@@ -115,6 +115,19 @@ class VariableSymbolStructureRenderTest {
     return builder.getContent(reference).getValue();
   }
 
+  /**
+   * Регулярное выражение на строку раздела типа целиком.
+   * <p>
+   * Проверка вхождением подстроки прошла бы и при вернувшейся пометке вычисленного
+   * по коду типа ({@code Тип: Строка*}) — привязка к концу строки её не пропустит.
+   *
+   * @param label ожидаемая подпись типа.
+   * @return выражение для {@code containsPattern}.
+   */
+  private static Pattern typeLine(String label) {
+    return CaseInsensitivePattern.compile("(?m)^Тип: " + Pattern.quote(label) + "$");
+  }
+
   private static TypeRef platform(String name) {
     return new TypeRef(TypeKind.PLATFORM, name);
   }
@@ -132,7 +145,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: Структура*")
+      .containsPattern(typeLine("Структура"))
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`")
       .doesNotContain("{");
@@ -149,7 +162,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: Соответствие*")
+      .containsPattern(typeLine("Соответствие"))
       .contains("* **Ключ1**: `Строка`");
   }
 
@@ -164,7 +177,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ФиксированнаяСтруктура*")
+      .containsPattern(typeLine("ФиксированнаяСтруктура"))
       .contains("* **Код**: `Число`");
   }
 
@@ -179,7 +192,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ФиксированноеСоответствие*")
+      .containsPattern(typeLine("ФиксированноеСоответствие"))
       .contains("* **Логин**: `Строка`");
   }
 
@@ -196,7 +209,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений*")
+      .containsPattern(typeLine("ТаблицаЗначений из СтрокаТаблицыЗначений"))
       .contains("* **Сумма**: `Число`");
   }
 

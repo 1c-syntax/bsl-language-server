@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.eclipse.lsp4j.Location;
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -255,6 +257,19 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     assertThat(content).contains("Тест");
   }
 
+  /**
+   * Регулярное выражение на строку раздела типа целиком.
+   * <p>
+   * Проверка вхождением подстроки прошла бы и при вернувшейся пометке вычисленного
+   * по коду типа ({@code Тип: Строка*}) — привязка к концу строки её не пропустит.
+   *
+   * @param label ожидаемая подпись типа.
+   * @return выражение для {@code containsPattern}.
+   */
+  private static Pattern typeLine(String label) {
+    return CaseInsensitivePattern.compile("(?m)^Тип: " + Pattern.quote(label) + "$");
+  }
+
   @Test
   void testInferredTypeShownInHover() {
     // given
@@ -268,8 +283,8 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     // when
     var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
-    // then: тип не объявлен, а вычислен по присваиванию — это видно по звёздочке
-    assertThat(content).contains("Тип: Строка*");
+    // then
+    assertThat(content).containsPattern(typeLine("Строка"));
   }
 
   @Test
@@ -287,7 +302,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: у структуры с полями элемент-итератор (КлючИЗначение) в заголовке не показываем.
     assertThat(content)
-      .contains("Тип: Структура*")
+      .containsPattern(typeLine("Структура"))
       .doesNotContain("КлючИЗначение")
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`");
@@ -309,7 +324,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: колонки строки ТЗ показываются маркдаун-списком.
     assertThat(content)
-      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений*")
+      .containsPattern(typeLine("ТаблицаЗначений из СтрокаТаблицыЗначений"))
       .contains("* **Сумма**");
   }
 
@@ -333,7 +348,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: ключи показаны с типами и описаниями из doc-комментария, без шума «из КлючИЗначение».
     assertThat(content)
-      .contains("Тип: Структура")
+      .containsPattern(typeLine("Структура"))
       .doesNotContain("КлючИЗначение")
       .contains("* **Адрес**: `Строка` — адрес сервера.")
       .contains("* **Порт**: `Число` — номер порта.");

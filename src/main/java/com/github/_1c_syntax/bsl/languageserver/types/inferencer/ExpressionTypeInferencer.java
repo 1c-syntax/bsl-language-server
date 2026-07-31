@@ -948,7 +948,7 @@ public class ExpressionTypeInferencer {
    * @param variable переменная.
    * @return типы из объявления; пустой набор, если ничего не объявлено.
    */
-  public TypeSet declaredTypes(VariableSymbol variable) {
+  private TypeSet declaredTypes(VariableSymbol variable) {
     var entry = TypeSet.EMPTY;
     for (var source : variableTypeSources) {
       entry = entry.union(source.typesOf(variable));
