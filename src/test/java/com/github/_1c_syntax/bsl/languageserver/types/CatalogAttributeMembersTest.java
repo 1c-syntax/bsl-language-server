@@ -93,6 +93,32 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void definedTypeInDocCommentReturnsItsComposition() {
+    // given: тип параметра объявлен определяемым типом в BSLDoc, а не в метаданных
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/DefinedTypeInDocComment.bsl");
+
+    var content = documentContext.getContent();
+    var marker = "X = Сумма";
+    int targetOffset = content.indexOf(marker) + "X = ".length();
+    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    int line = content.substring(0, targetOffset).split("\n").length - 1;
+    int charInLine = targetOffset - lineStart;
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
+
+    // then
+    assertThat(types.refs())
+      .as("параметр, объявленный ОпределяемыйТип.ОпределяемыйТип1 → его состав")
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactlyInAnyOrder("Число", "СправочникСсылка.Справочник1");
+  }
+
+  @Test
   void catalogAttributeAccessResolvesToAttributeType() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

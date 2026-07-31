@@ -40,10 +40,15 @@ hover, completion, signature help и ряд диагностик. См. корн
   типы. **`GlobalScopeProvider`** — глобальные функции/свойства, имена классов, ключевые слова
   (JSON `builtin-globals.json`), карта `moduleTypeByUri ↔ moduleUriByType`.
   Также `MemberMetadataIndex`, `StandardAttributesResolver`, `ValueTypes` (перевод
-  `ValueTypeDescription` mdclasses в `TypeSet`). **Определяемый тип своего типа не имеет** —
-  в реестре имени `ОпределяемыйТип.X` нет: `ValueTypes` подставляет вместо него состав,
-  собранный `ConfigurationTypesProvider` на регистрации (определяемый тип, сославшийся сам
-  на себя, раскрывается один раз).
+  `ValueTypeDescription` mdclasses в `TypeSet`).
+  **Определяемый тип — не тип, а именованный набор.** Своего `TypeRef` у него нет и быть
+  не может: за именем `ОпределяемыйТип.X` стоит несколько типов. Поэтому в `aliasIndex`
+  его нет, а состав лежит отдельно (`registerDefinedType`, наполняет
+  `ConfigurationTypesProvider`) и хранится **именами**, а не ссылками — определяемый тип
+  читается наравне с прочими объектами, и то, на что он ссылается, может быть ещё не
+  зарегистрировано. Имя, за которым может стоять набор, резолвится не `resolve`, а
+  **`resolveSet`** — так его спрашивают и типы реквизитов (`ValueTypes`), и типы из
+  BSLDoc (`index/SymbolTypeIndex`). Ссылка определяемого типа на себя раскрывается один раз.
 - **`index/`** — индексы «символ → тип»: **`SymbolTypeIndex`** (возвращаемые типы методов,
   типы параметров), `InferredVariableTypeIndex` (кэш типа по символу переменной),
   `InferredExpressionTypeIndex` (кэш типа по AST-узлу выражения — не-переменные ресиверы:

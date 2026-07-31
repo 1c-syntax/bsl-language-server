@@ -58,6 +58,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -109,6 +110,15 @@ public class TypeRegistry {
   private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+  /**
+   * Состав определяемых типов конфигурации: lowercased имя → имена типов, из которых
+   * он собран. Своего {@link TypeRef} у определяемого типа нет — за именем стоит набор,
+   * поэтому в {@link #aliasIndex} ему места нет (см. {@link #resolveSet(String)}).
+   * Состав хранится именами, а не ссылками: определяемый тип читается из метаданных
+   * наравне с прочими объектами, и то, на что он ссылается, может быть ещё не
+   * зарегистрировано.
+   */
+  private final Map<String, List<String>> definedTypes = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -276,6 +286,65 @@ public class TypeRegistry {
       return Optional.empty();
     }
     return Optional.ofNullable(aliasIndex.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Найти типы, скрытые за именем: у обычного имени это один тип, у определяемого —
+   * его состав.
+   * <p>
+   * Определяемый тип — не тип, а именованное описание типов: собственного
+   * {@link TypeRef} у него нет и быть не может, потому что за именем стоит набор.
+   * Поэтому имена типов резолвятся <b>этим</b> методом везде, где ответом может быть
+   * набор — в типах реквизитов метаданных и в типах, объявленных в BSLDoc.
+   *
+   * @param name имя типа: платформенное, конфигурационное либо определяемого типа.
+   * @return типы за этим именем; {@link TypeSet#EMPTY}, если имя не зарегистрировано.
+   */
+  public TypeSet resolveSet(String name) {
+    if (name == null || name.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var composition = definedTypes.get(name.toLowerCase(Locale.ROOT));
+    if (composition == null) {
+      return resolve(name).map(TypeSet::of).orElse(TypeSet.EMPTY);
+    }
+    var unfolded = new HashSet<String>();
+    unfolded.add(name.toLowerCase(Locale.ROOT));
+    return unfold(composition, unfolded);
+  }
+
+  /**
+   * Раскрыть состав определяемого типа. Определяемый тип может ссылаться на другой
+   * определяемый — и на себя; {@code unfolded} хранит уже раскрытые имена, чтобы
+   * такая ссылка не увела разбор в бесконечность.
+   */
+  private TypeSet unfold(List<String> composition, Set<String> unfolded) {
+    var result = TypeSet.EMPTY;
+    for (var name : composition) {
+      var key = name.toLowerCase(Locale.ROOT);
+      var nested = definedTypes.get(key);
+      if (nested != null) {
+        if (unfolded.add(key)) {
+          result = result.union(unfold(nested, unfolded));
+        }
+        continue;
+      }
+      var ref = aliasIndex.get(key);
+      if (ref != null) {
+        result = result.union(TypeSet.of(ref));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Запомнить состав определяемого типа конфигурации.
+   *
+   * @param qualifiedName полное имя определяемого типа ({@code ОпределяемыйТип.Сумма}).
+   * @param composition   имена типов, из которых он собран.
+   */
+  public void registerDefinedType(String qualifiedName, List<String> composition) {
+    definedTypes.put(qualifiedName.toLowerCase(Locale.ROOT), List.copyOf(composition));
   }
 
   /**

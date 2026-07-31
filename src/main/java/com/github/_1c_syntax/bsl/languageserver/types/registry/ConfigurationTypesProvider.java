@@ -187,12 +187,6 @@ public class ConfigurationTypesProvider {
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   /**
-   * Состав определяемых типов конфигурации. Заполняется на регистрации, читается позже —
-   * источники членов считают типы реквизитов лениво, уже после неё.
-   */
-  private volatile Map<String, ValueTypeDescription> definedTypes = Map.of();
-
-  /**
    * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
    *
    * @param event событие добавления workspace'а.
@@ -261,7 +255,7 @@ public class ConfigurationTypesProvider {
 
     // Состав определяемых типов нужен раньше любого реквизита: реквизит, объявленный
     // определяемым типом, получает типы не свои, а те, из которых тот собран.
-    definedTypes = collectDefinedTypes(children);
+    registerDefinedTypes(children);
     var commonAttributes = collectCommonAttributes(children);
     // «Регистр → его регистраторы» — только обходом документов: со стороны регистра
     // этих данных в метаданных нет. Нужно до регистрации типов регистров.
@@ -293,22 +287,21 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Состав определяемых типов конфигурации по полному ru-имени
-   * ({@code ОпределяемыйТип.Сумма}). Собственного типа у определяемого нет — в реестре
-   * такого имени не будет, поэтому реквизиту подставляется то, из чего он собран.
+   * Запомнить в реестре состав определяемых типов конфигурации. Собственного типа
+   * у определяемого нет: за именем {@code ОпределяемыйТип.Сумма} стоит набор, поэтому
+   * реестр отдаёт по такому имени состав, а не тип.
    *
    * @param children объекты метаданных конфигурации.
-   * @return состав по имени; пустая карта, если определяемых типов в конфигурации нет.
    */
-  private static Map<String, ValueTypeDescription> collectDefinedTypes(Iterable<MD> children) {
-    Map<String, ValueTypeDescription> definedTypeCompositions = new HashMap<>();
+  private void registerDefinedTypes(Iterable<MD> children) {
     for (var md : children) {
       if (md instanceof DefinedType definedType) {
-        definedTypeCompositions.put(
-          definedType.getMdoReference().getMdoRefRu(), definedType.getValueType());
+        var composition = definedType.getValueType().getTypes().stream()
+          .map(type -> type.fullName().getRu())
+          .toList();
+        typeRegistry.registerDefinedType(definedType.getMdoReference().getMdoRefRu(), composition);
       }
     }
-    return definedTypeCompositions;
   }
 
   private static List<CommonAttribute> collectCommonAttributes(Iterable<MD> children) {
@@ -1064,7 +1057,7 @@ public class ConfigurationTypesProvider {
   }
 
   private TypeSet resolveCommonAttributeReturnTypes(CommonAttribute ca) {
-    return ValueTypes.resolve(typeRegistry, definedTypes, ca.getValueType());
+    return ValueTypes.resolve(typeRegistry, ca.getValueType());
   }
 
   /**
@@ -1107,6 +1100,6 @@ public class ConfigurationTypesProvider {
    * composite-типа из нескольких {@code v8:Type}).
    */
   private TypeSet resolveAttributeReturnTypes(Attribute attribute) {
-    return ValueTypes.resolve(typeRegistry, definedTypes, attribute.getValueType());
+    return ValueTypes.resolve(typeRegistry, attribute.getValueType());
   }
 }
