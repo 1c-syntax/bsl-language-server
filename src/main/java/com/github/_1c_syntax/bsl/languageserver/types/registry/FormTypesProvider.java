@@ -153,11 +153,6 @@ public class FormTypesProvider {
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
 
-  /** Тип копии строки, которую отдаёт таблица формы. */
-  private static final String STRUCTURE_RU = "Структура";
-
-  private static final String STRUCTURE_EN = "Structure";
-
   /** Коллекция выделенных строк таблицы формы. */
   private static final BilingualString SELECTED_ROWS =
     BilingualString.of("ВыделенныеСтроки", "SelectedRows");
@@ -199,11 +194,11 @@ public class FormTypesProvider {
   private final Map<TypeRef, TypeRef> tabularSectionData = new HashMap<>();
 
   /**
-   * Копия строки коллекции данных формы: {@code ДанныеФормыКоллекция.…} →
-   * {@code Структура.…} с теми же колонками (см. {@link #registerRowCopy}). Её отдают
+   * Строка коллекции данных формы: {@code ДанныеФормыКоллекция.…} →
+   * {@code ДанныеФормыЭлементКоллекции.…} с её колонками. Её отдают
    * {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы над этой коллекцией.
    */
-  private final Map<TypeRef, TypeRef> rowCopyByCollection = new HashMap<>();
+  private final Map<TypeRef, TypeRef> rowByCollection = new HashMap<>();
 
   /**
    * RU-qualifiedName синтетического типа формы: {@code ФормаКлиентскогоПриложения.<mdoRef>}
@@ -321,6 +316,11 @@ public class FormTypesProvider {
    * «{@code ТекущиеДанные} и метод {@code ДанныеСтроки} возвращают структуру,
    * заполненную копией данных». Сами члены объявлены как {@code Произвольный}, поэтому
    * без такой подстановки цепочка от них обрывается.
+   * <p>
+   * Описание — не истина в последней инстанции: у таблицы над данными формы оно
+   * называет «структурой» обычную строку коллекции (см.
+   * {@link FormPlatformTypes.TableDataKind#currentDataTypeName}), а тип идентификатора
+   * не называет вовсе, хотя он известен из самих данных формы.
    */
   private void registerTableDataRules(FormPlatformTypes.TableDataKind dataKind, TypeRef tableRef) {
     var members = new ArrayList<MemberDescriptor>(3);
@@ -730,9 +730,9 @@ public class FormTypesProvider {
    * рантайм-типами.
    */
   /**
-   * Типы таблиц формы, у которых {@code ТекущиеДанные} — копия строки с колонками
-   * (табличная часть, реквизит-таблица или дерево значений). Такой тип заводится на
-   * <b>конкретную таблицу</b>, а не на вид данных: колонки у каждой свои.
+   * Типы таблиц формы, у которых {@code ТекущиеДанные} — строка отображаемой коллекции
+   * с её колонками (табличная часть, реквизит-таблица или дерево значений). Такой тип
+   * заводится на <b>конкретную таблицу</b>, а не на вид данных: колонки у каждой свои.
    * <p>
    * Считается на регистрации формы, а не в ленивом источнике членов: здесь
    * регистрируются типы, а регистрация изнутри {@code getMembers} сбивала бы epoch
@@ -755,9 +755,9 @@ public class FormTypesProvider {
       if (!(element instanceof FormTable) || element.getName().isBlank()) {
         continue;
       }
-      var rowCopyRef = rowCopyOf(element, attributeTypes, declaredTypes);
+      var rowRef = rowOf(element, attributeTypes, declaredTypes);
       var kindRef = tableTypeRef(element, declaredTypes);
-      if (rowCopyRef == null || kindRef == null) {
+      if (rowRef == null || kindRef == null) {
         continue;
       }
       var tableRef = typeRegistry.registerConfigurationType(
@@ -766,20 +766,20 @@ public class FormTypesProvider {
       typeRegistry.registerDisplayName(tableRef, BilingualString.of(
         typeRegistry.displayName(kindRef, Language.RU),
         typeRegistry.displayName(kindRef, Language.EN)));
-      typeRegistry.registerMemberOverride(tableRef, () -> currentDataMembers(rowCopyRef), FileType.BSL);
+      typeRegistry.registerMemberOverride(tableRef, () -> currentDataMembers(rowRef), FileType.BSL);
       result.put(element.getName().toLowerCase(Locale.ROOT), tableRef);
     }
     return Map.copyOf(result);
   }
 
   /**
-   * Копия строки для таблицы: путь к данным ведёт либо прямо в реквизит-таблицу формы,
-   * либо вглубь основного реквизита — в табличную часть объекта.
+   * Строка отображаемой таблицей коллекции: путь к данным ведёт либо прямо в
+   * реквизит-таблицу формы, либо вглубь основного реквизита — в табличную часть объекта.
    *
-   * @return тип копии строки; {@code null}, если у данных таблицы колонок нет.
+   * @return тип строки; {@code null}, если у данных таблицы колонок нет.
    */
-  private @Nullable TypeRef rowCopyOf(FormElement element, Map<String, TypeSet> attributeTypes,
-                                      Map<String, String> declaredTypes) {
+  private @Nullable TypeRef rowOf(FormElement element, Map<String, TypeSet> attributeTypes,
+                                  Map<String, String> declaredTypes) {
     var dataPath = element instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
     if (dataPath.isBlank()) {
       return null;
@@ -788,7 +788,7 @@ public class FormTypesProvider {
     if (separator < 0) {
       return attributeTypes.getOrDefault(dataPath.toLowerCase(Locale.ROOT), TypeSet.EMPTY)
         .refs().stream()
-        .map(rowCopyByCollection::get)
+        .map(rowByCollection::get)
         .filter(Objects::nonNull)
         .findFirst()
         .orElse(null);
@@ -802,22 +802,28 @@ public class FormTypesProvider {
       }
       current = propertyTypeRef(current, segment);
     }
-    // Путь идёт по прикладным типам, а копия строки живёт у зеркала табличной части.
+    // Путь идёт по прикладным типам, а строка данных формы живёт у зеркала табличной части.
     var mirror = current == null ? null : tabularSectionData.get(current);
-    return mirror == null ? null : rowCopyByCollection.get(mirror);
+    return mirror == null ? null : rowByCollection.get(mirror);
   }
 
-  /** {@code ТекущиеДанные} и {@code ДанныеСтроки} конкретной таблицы — копия её строки. */
-  private static List<MemberDescriptor> currentDataMembers(TypeRef rowCopyRef) {
+  /**
+   * {@code ТекущиеДанные} и {@code ДанныеСтроки} конкретной таблицы — строка её
+   * коллекции. Описание расширения называет это «структурой, заполненной копией
+   * данных», но проверка на платформе даёт
+   * {@code ТипЗнч(…ТекущиеДанные) = ДанныеФормыЭлементКоллекции}: «структура» там —
+   * про устройство значения, а не про тип.
+   */
+  private static List<MemberDescriptor> currentDataMembers(TypeRef rowRef) {
     return List.of(
       platformProperty(
         BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        rowCopyRef, BilingualString.EMPTY),
+        rowRef, BilingualString.EMPTY),
       MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
           List.of(new SignatureDescriptor(
             List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
               BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
-            TypeSet.of(rowCopyRef), BilingualString.EMPTY)))
+            TypeSet.of(rowRef), BilingualString.EMPTY)))
         .withBilingualName(ROW_DATA_METHOD));
   }
 
@@ -1096,7 +1102,7 @@ public class FormTypesProvider {
     var columnTypes = prepareAttributeTypes(columns, kind, suffix);
     MemberSource columnMembers = () -> buildAttributeMembers(columns, columnTypes);
     typeRegistry.registerMemberSource(itemRef, columnMembers, FileType.BSL);
-    registerRowCopy(collectionRef, suffix, columnMembers);
+    rowByCollection.put(collectionRef, itemRef);
     return collectionRef;
   }
 
@@ -1170,28 +1176,7 @@ public class FormTypesProvider {
         typeRegistry.getMembers(collectionBase, FileType.BSL), itemBase, itemRef,
         CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
     tabularSectionData.put(tabularSectionRef, collectionRef);
-    registerRowCopy(collectionRef, suffix, columns);
-  }
-
-  /**
-   * Копия строки, которую отдают {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы
-   * формы над этой коллекцией. Синтакс-помощник в описании расширения говорит именно
-   * «структуру, заполненную копией данных»: тип — {@code Структура}, а свойства у неё
-   * те же, что колонки строки. Изменение такой копии на данных формы не сказывается,
-   * поэтому подменять ею саму строку коллекции нельзя — она живёт отдельным типом.
-   *
-   * @param collectionRef тип коллекции данных формы.
-   * @param suffix        суффикс имени, общий с коллекцией и её строкой.
-   * @param columns       источник колонок.
-   */
-  private void registerRowCopy(TypeRef collectionRef, String suffix, MemberSource columns) {
-    var structureBase = typeRegistry.resolve(STRUCTURE_RU).orElse(null);
-    if (structureBase == null) {
-      return;
-    }
-    var copyRef = registerFormDataMirror(STRUCTURE_RU, STRUCTURE_EN, suffix, "", structureBase);
-    typeRegistry.registerMemberSource(copyRef, columns, FileType.BSL);
-    rowCopyByCollection.put(collectionRef, copyRef);
+    rowByCollection.put(collectionRef, itemRef);
   }
 
   /**

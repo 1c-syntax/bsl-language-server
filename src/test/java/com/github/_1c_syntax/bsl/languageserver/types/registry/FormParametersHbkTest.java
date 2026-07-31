@@ -282,25 +282,57 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void currentDataOfTableIsACopyOfItsRowWithColumns() {
-    // Описание расширения говорит «структуру, заполненную копией данных» — это именно
-    // `Структура`, но со свойствами-колонками своей строки. Тип заводится на конкретную
-    // таблицу: у каждой колонки свои.
-    var currentData = member("ТаблицаФормы.Документ.Документ1.Форма.ФормаДокумента.ТабличнаяЧасть1",
-      MemberKind.PROPERTY, "ТекущиеДанные");
+  void currentDataOfTableIsTheRowOfItsCollection() {
+    // Описание расширения говорит «структуру, заполненную копией данных», но на
+    // платформе ТипЗнч(Элементы.ТабличнаяЧасть1.ТекущиеДанные) даёт
+    // ДанныеФормыЭлементКоллекции: «структура» там про устройство значения, а не про тип.
+    // Тип заводится на конкретную таблицу: колонки у каждой свои.
+    var table = "ТаблицаФормы.Документ.Документ1.Форма.ФормаДокумента.ТабличнаяЧасть1";
+    var currentData = member(table, MemberKind.PROPERTY, "ТекущиеДанные");
     assertThat(currentData).isNotNull();
 
-    var copyRef = currentData.returnTypes().refs().iterator().next();
-    assertThat(copyRef.qualifiedName())
-      .as("копия строки — специализация Структуры, а не элемент коллекции")
-      .startsWith("Структура.");
-    assertThat(typeRegistry.displayName(copyRef, com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
-      .isEqualTo("Структура");
-    assertThat(names(typeRegistry.getMembers(copyRef, FileType.BSL)))
-      .as("свойства копии — колонки табличной части")
+    var rowRef = currentData.returnTypes().refs().iterator().next();
+    assertThat(rowRef.qualifiedName())
+      .as("строка коллекции данных формы, а не копия-структура")
+      .startsWith("ДанныеФормыЭлементКоллекции.");
+    assertThat(typeRegistry.displayName(rowRef, com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
+      .isEqualTo("ДанныеФормыЭлементКоллекции");
+    assertThat(names(typeRegistry.getMembers(rowRef, FileType.BSL)))
+      .as("свойства строки — колонки табличной части")
       .contains("Реквизит1")
-      .as("методы Структуры на месте")
-      .contains("Вставить");
+      .as("методы строки данных формы на месте")
+      .contains("ПолучитьИдентификатор");
+
+    assertThat(qualifiedNames(member(table, MemberKind.METHOD, "ДанныеСтроки")))
+      .containsExactly(rowRef.qualifiedName());
+  }
+
+  @Test
+  void rowOfFormDataIsAddressedByNumber() {
+    // Репорт: `Элементы.Товары.ТекущаяСтрока` оставался Произвольным. Описание
+    // расширения тип идентификатора не называет, но его называют сами данные формы:
+    // ПолучитьИдентификатор() строки отдаёт Число, НайтиПоИдентификатору() его принимает.
+    var rowMembers = typeRegistry.getMembers(
+      typeRegistry.resolve("ДанныеФормыЭлементКоллекции").orElseThrow(), FileType.BSL);
+    var identifier = rowMembers.stream()
+      .filter(m -> m.matches("ПолучитьИдентификатор"))
+      .findFirst()
+      .orElseThrow();
+    assertThat(identifier.signatures().get(0).returnTypes().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Число");
+
+    var table = "ТаблицаФормы.ТабличнаяЧасть";
+    assertThat(qualifiedNames(member(table, MemberKind.PROPERTY, "ТекущаяСтрока")))
+      .containsExactly("Число");
+    var selectedRows = member(table, MemberKind.PROPERTY, "ВыделенныеСтроки");
+    assertThat(qualifiedNames(selectedRows))
+      .as("массив идентификаторов — сам массив остаётся Массивом")
+      .containsExactly("Массив.Число");
+    assertThat(typeRegistry.getDefaultElementTypes(selectedRows.returnTypes().refs().iterator().next()).refs())
+      .as("а вот его элементы — числа")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Число");
   }
 
   @Test
