@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785501133615,
+  "lastUpdate": 1785503514319,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41447,6 +41447,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.743354546947724",
             "extra": "mean: 94.64916427930196 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5bcafbfecc06948fcc0c2ebb9618b458375a0543",
+          "message": "Merge pull request #4343 from 1c-syntax/feat/metadata-semantic-tokens\n\nЦепочка обращения к дереву метаданных размечается семантическими токенами целиком",
+          "timestamp": "2026-07-31T21:35:41+10:00",
+          "tree_id": "b4e5731b71cfd495629309bf320646875b264561",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5bcafbfecc06948fcc0c2ebb9618b458375a0543"
+        },
+        "date": 1785503502151,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.75636148452759,
+            "unit": "sec",
+            "range": "stddev: 3.2609915326168735",
+            "extra": "mean: 94.75636148452759 sec\nrounds: 3"
           }
         ]
       }
