@@ -22,8 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.KnownStandardAttributes;
+import com.github._1c_syntax.bsl.mdo.Catalog;
+import com.github._1c_syntax.bsl.mdo.ChartOfCharacteristicTypes;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
+import com.github._1c_syntax.bsl.mdo.support.HierarchyType;
 import com.github._1c_syntax.bsl.types.MDOType;
 import org.jspecify.annotations.Nullable;
 
@@ -57,6 +60,12 @@ final class StandardAttributesResolver {
     Map.entry(MDOType.TABULAR_SECTION, "ОбъектМетаданных: ТабличнаяЧасть")
   );
 
+  /** Стандартный реквизит иерархического объекта — ссылка на родителя. */
+  private static final String PARENT = "Родитель";
+
+  /** Признак группы — есть только при иерархии групп и элементов. */
+  private static final String IS_FOLDER = "ЭтоГруппа";
+
   private StandardAttributesResolver() {
   }
 
@@ -71,12 +80,57 @@ final class StandardAttributesResolver {
     }
     var result = new ArrayList<ChildName>(names.size());
     for (var n : names) {
+      if (!appliesTo(md, n.getName())) {
+        continue;
+      }
       var entry = ChildName.bilingual(n.getName(), n.getAlias());
       if (entry != null) {
         result.add(entry);
       }
     }
     return List.copyOf(result);
+  }
+
+  /**
+   * Есть ли стандартный реквизит у конкретного объекта. Список от
+   * {@code KnownStandardAttributes} зависит только от вида объекта, а два реквизита
+   * зависят ещё и от его настроек:
+   * <ul>
+   *   <li>{@code Родитель} есть только у иерархического справочника или плана видов
+   *       характеристик;</li>
+   *   <li>{@code ЭтоГруппа} — только при иерархии групп и элементов: при иерархии
+   *       элементов групп не бывает.</li>
+   * </ul>
+   */
+  private static boolean appliesTo(MD md, String attributeName) {
+    if (PARENT.equalsIgnoreCase(attributeName)) {
+      return isHierarchical(md);
+    }
+    if (IS_FOLDER.equalsIgnoreCase(attributeName)) {
+      return isHierarchical(md) && hasFolders(md);
+    }
+    return true;
+  }
+
+  private static boolean isHierarchical(MD md) {
+    return switch (md) {
+      case Catalog catalog -> catalog.isHierarchical();
+      case ChartOfCharacteristicTypes chart -> chart.isHierarchical();
+      // Прочие виды объектов иерархичны по своей природе (план счетов) либо
+      // реквизита не имеют вовсе — тогда сюда и не попадём.
+      default -> true;
+    };
+  }
+
+  /**
+   * Бывают ли у иерархии этого объекта группы. Выбор вида иерархии есть только у
+   * справочника; у плана видов характеристик иерархия всегда групп и элементов.
+   */
+  private static boolean hasFolders(MD md) {
+    if (md instanceof Catalog catalog) {
+      return catalog.getHierarchyType() == HierarchyType.HIERARCHY_FOLDERS_AND_ITEMS;
+    }
+    return true;
   }
 
   static @Nullable String ownerTypeFor(MD md) {

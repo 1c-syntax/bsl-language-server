@@ -203,6 +203,45 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void inputByStringFieldsAreExpandedFromMdclasses() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Метаданные.Документы.Документ1.ВводПоСтроке → поля, перечисленные в <InputByString>.
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), "ВводПоСтроке");
+    assertThat(member).as("на per-MDO типе должно быть property ВводПоСтроке").isNotNull();
+
+    var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+    assertThat(memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL)))
+      .as("в фикстуре ввод по строке настроен на стандартный реквизит Номер")
+      .contains("Номер");
+  }
+
+  @Test
+  void hierarchyOnlyStandardAttributesAreSkippedForFlatCatalog() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Справочник1 в фикстуре неиерархический, значит `Родитель` и `ЭтоГруппа` у него
+    // не существуют — набор стандартных реквизитов зависит не только от вида объекта.
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Справочник.Справочник1");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), "СтандартныеРеквизиты");
+    assertThat(member).isNotNull();
+
+    var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+    var names = memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL));
+    assertThat(names)
+      .as("общие для вида стандартные реквизиты на месте")
+      .contains("Ссылка", "Код", "Наименование");
+    assertThat(names)
+      .as("реквизиты иерархии у неиерархического справочника не показываются")
+      .doesNotContain("Родитель", "ЭтоГруппа", "Parent", "IsFolder");
+  }
+
+  @Test
   void tabularSectionExposesStandardAttributes() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

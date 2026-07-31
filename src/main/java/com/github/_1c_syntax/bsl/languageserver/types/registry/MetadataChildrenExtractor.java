@@ -21,20 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.mdo.AccountingRegister;
+import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
+import com.github._1c_syntax.bsl.mdo.BusinessProcess;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
+import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
+import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
+import com.github._1c_syntax.bsl.mdo.ChartOfCharacteristicTypes;
 import com.github._1c_syntax.bsl.mdo.CommandOwner;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
+import com.github._1c_syntax.bsl.mdo.ExchangePlan;
 import com.github._1c_syntax.bsl.mdo.FormOwner;
+import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.Sequence;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.mdo.Task;
 import com.github._1c_syntax.bsl.mdo.TemplateOwner;
+import com.github._1c_syntax.bsl.mdo.storage.AdditionalIndex;
 import com.github._1c_syntax.bsl.mdo.support.AttributeKind;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import org.jspecify.annotations.Nullable;
@@ -168,6 +178,91 @@ final class MetadataChildrenExtractor {
 
   static List<ChildName> registerRecordsFor(MD md) {
     return md instanceof Document doc ? mdoReferenceNames(doc.getRegisterRecords()) : List.of();
+  }
+
+  /**
+   * Типы, на основании которых вводится объект ({@code ВводитсяНаОсновании}).
+   * <p>
+   * Интерфейса-владельца у свойства нет, поэтому виды объектов перечислены здесь
+   * (mdclasses#677). Проверять приходится каждый: свойство есть у восьми классов.
+   */
+  static List<ChildName> basedOnFor(MD md) {
+    return mdoReferenceNames(switch (md) {
+      case Catalog o -> o.getBasedOn();
+      case Document o -> o.getBasedOn();
+      case BusinessProcess o -> o.getBasedOn();
+      case Task o -> o.getBasedOn();
+      case ChartOfAccounts o -> o.getBasedOn();
+      case ChartOfCharacteristicTypes o -> o.getBasedOn();
+      case ChartOfCalculationTypes o -> o.getBasedOn();
+      case ExchangePlan o -> o.getBasedOn();
+      default -> List.of();
+    });
+  }
+
+  /** Поля, по которым доступен ввод по строке ({@code ВводПоСтроке}). */
+  static List<ChildName> inputByStringFor(MD md) {
+    return mdoReferenceNames(switch (md) {
+      case Catalog o -> o.getInputByString();
+      case Document o -> o.getInputByString();
+      case BusinessProcess o -> o.getInputByString();
+      case Task o -> o.getInputByString();
+      case ChartOfAccounts o -> o.getInputByString();
+      case ChartOfCharacteristicTypes o -> o.getInputByString();
+      case ChartOfCalculationTypes o -> o.getInputByString();
+      case ExchangePlan o -> o.getInputByString();
+      default -> List.of();
+    });
+  }
+
+  /** Поля блокировки данных ({@code ПоляБлокировкиДанных}). */
+  static List<ChildName> dataLockFieldsFor(MD md) {
+    return mdoReferenceNames(switch (md) {
+      case Catalog o -> o.getDataLockFields();
+      case Document o -> o.getDataLockFields();
+      case BusinessProcess o -> o.getDataLockFields();
+      case Task o -> o.getDataLockFields();
+      case ChartOfAccounts o -> o.getDataLockFields();
+      case ChartOfCharacteristicTypes o -> o.getDataLockFields();
+      case ChartOfCalculationTypes o -> o.getDataLockFields();
+      case ExchangePlan o -> o.getDataLockFields();
+      default -> List.of();
+    });
+  }
+
+  /**
+   * Дополнительные индексы объекта ({@code ДополнительныеИндексы}) — в отличие от
+   * прочих коллекций здесь у элемента собственное имя, а не имя объекта метаданных.
+   */
+  static List<ChildName> additionalIndexesFor(MD md) {
+    return additionalIndexNames(switch (md) {
+      case Catalog o -> o.getAdditionalIndexes();
+      case Document o -> o.getAdditionalIndexes();
+      case DocumentJournal o -> o.getAdditionalIndexes();
+      case BusinessProcess o -> o.getAdditionalIndexes();
+      case Task o -> o.getAdditionalIndexes();
+      case ChartOfAccounts o -> o.getAdditionalIndexes();
+      case ChartOfCharacteristicTypes o -> o.getAdditionalIndexes();
+      case ChartOfCalculationTypes o -> o.getAdditionalIndexes();
+      case ExchangePlan o -> o.getAdditionalIndexes();
+      case InformationRegister o -> o.getAdditionalIndexes();
+      case AccumulationRegister o -> o.getAdditionalIndexes();
+      case AccountingRegister o -> o.getAdditionalIndexes();
+      case CalculationRegister o -> o.getAdditionalIndexes();
+      case Sequence o -> o.getAdditionalIndexes();
+      default -> List.of();
+    });
+  }
+
+  private static List<ChildName> additionalIndexNames(Collection<AdditionalIndex> indexes) {
+    var result = new ArrayList<ChildName>(indexes.size());
+    for (var index : indexes) {
+      var entry = ChildName.of(index.getName());
+      if (entry != null) {
+        result.add(entry);
+      }
+    }
+    return List.copyOf(result);
   }
 
 }
