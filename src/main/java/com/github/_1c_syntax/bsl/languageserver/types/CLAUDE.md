@@ -39,7 +39,11 @@ hover, completion, signature help и ряд диагностик. См. корн
   `BslContext…`, `Configuration…`, `GlobalContext…`) регистрируют платформенные/конфигурационные
   типы. **`GlobalScopeProvider`** — глобальные функции/свойства, имена классов, ключевые слова
   (JSON `builtin-globals.json`), карта `moduleTypeByUri ↔ moduleUriByType`.
-  Также `MemberMetadataIndex`, `StandardAttributesResolver`.
+  Также `MemberMetadataIndex`, `StandardAttributesResolver`, `ValueTypes` (перевод
+  `ValueTypeDescription` mdclasses в `TypeSet`). **Определяемый тип своего типа не имеет** —
+  в реестре имени `ОпределяемыйТип.X` нет: `ValueTypes` подставляет вместо него состав,
+  собранный `ConfigurationTypesProvider` на регистрации (определяемый тип, сославшийся сам
+  на себя, раскрывается один раз).
 - **`index/`** — индексы «символ → тип»: **`SymbolTypeIndex`** (возвращаемые типы методов,
   типы параметров), `InferredVariableTypeIndex` (кэш типа по символу переменной),
   `InferredExpressionTypeIndex` (кэш типа по AST-узлу выражения — не-переменные ресиверы:

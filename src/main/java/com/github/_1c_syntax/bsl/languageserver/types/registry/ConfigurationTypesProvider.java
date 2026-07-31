@@ -42,6 +42,7 @@ import com.github._1c_syntax.bsl.mdo.CalculationRegister;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
+import com.github._1c_syntax.bsl.mdo.DefinedType;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -52,6 +53,7 @@ import com.github._1c_syntax.bsl.mdo.children.PredefinedValue;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MultiName;
+import com.github._1c_syntax.bsl.types.ValueTypeDescription;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -185,6 +187,12 @@ public class ConfigurationTypesProvider {
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   /**
+   * Состав определяемых типов конфигурации. Заполняется на регистрации, читается позже —
+   * источники членов считают типы реквизитов лениво, уже после неё.
+   */
+  private volatile Map<String, ValueTypeDescription> definedTypes = Map.of();
+
+  /**
    * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
    *
    * @param event событие добавления workspace'а.
@@ -251,6 +259,9 @@ public class ConfigurationTypesProvider {
   private void register(Iterable<MD> children) {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
+    // Состав определяемых типов нужен раньше любого реквизита: реквизит, объявленный
+    // определяемым типом, получает типы не свои, а те, из которых тот собран.
+    definedTypes = collectDefinedTypes(children);
     var commonAttributes = collectCommonAttributes(children);
     // «Регистр → его регистраторы» — только обходом документов: со стороны регистра
     // этих данных в метаданных нет. Нужно до регистрации типов регистров.
@@ -279,6 +290,25 @@ public class ConfigurationTypesProvider {
     metadataCollectionSpecializer.specialize();
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
+  }
+
+  /**
+   * Состав определяемых типов конфигурации по полному ru-имени
+   * ({@code ОпределяемыйТип.Сумма}). Собственного типа у определяемого нет — в реестре
+   * такого имени не будет, поэтому реквизиту подставляется то, из чего он собран.
+   *
+   * @param children объекты метаданных конфигурации.
+   * @return состав по имени; пустая карта, если определяемых типов в конфигурации нет.
+   */
+  private static Map<String, ValueTypeDescription> collectDefinedTypes(Iterable<MD> children) {
+    Map<String, ValueTypeDescription> definedTypeCompositions = new HashMap<>();
+    for (var md : children) {
+      if (md instanceof DefinedType definedType) {
+        definedTypeCompositions.put(
+          definedType.getMdoReference().getMdoRefRu(), definedType.getValueType());
+      }
+    }
+    return definedTypeCompositions;
   }
 
   private static List<CommonAttribute> collectCommonAttributes(Iterable<MD> children) {
@@ -1034,7 +1064,7 @@ public class ConfigurationTypesProvider {
   }
 
   private TypeSet resolveCommonAttributeReturnTypes(CommonAttribute ca) {
-    return ValueTypes.resolve(typeRegistry, ca.getValueType());
+    return ValueTypes.resolve(typeRegistry, definedTypes, ca.getValueType());
   }
 
   /**
@@ -1077,6 +1107,6 @@ public class ConfigurationTypesProvider {
    * composite-типа из нескольких {@code v8:Type}).
    */
   private TypeSet resolveAttributeReturnTypes(Attribute attribute) {
-    return ValueTypes.resolve(typeRegistry, attribute.getValueType());
+    return ValueTypes.resolve(typeRegistry, definedTypes, attribute.getValueType());
   }
 }

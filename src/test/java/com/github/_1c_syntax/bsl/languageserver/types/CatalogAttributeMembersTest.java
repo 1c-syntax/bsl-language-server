@@ -66,6 +66,33 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void catalogDefinedTypeAttributeAccessReturnsTypesOfDefinedType() {
+    // given: реквизит объявлен определяемым типом, а тот собран из числа и ссылки
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CatalogDefinedTypeAttributeAccess.bsl");
+
+    var content = documentContext.getContent();
+    var marker = "X = Объект.РеквизитОпределяемогоТипа";
+    int markerStart = content.indexOf(marker);
+    int targetOffset = markerStart + "X = Объект.".length();
+    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    int line = content.substring(0, targetOffset).split("\n").length - 1;
+    int charInLine = targetOffset - lineStart;
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
+
+    // then
+    assertThat(types.refs())
+      .as("Объект.РеквизитОпределяемогоТипа → состав ОпределяемыйТип1")
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactlyInAnyOrder("Число", "СправочникСсылка.Справочник1");
+  }
+
+  @Test
   void catalogAttributeAccessResolvesToAttributeType() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

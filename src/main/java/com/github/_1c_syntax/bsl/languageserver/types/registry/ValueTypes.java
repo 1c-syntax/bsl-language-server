@@ -26,9 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.types.ValueType;
 import com.github._1c_syntax.bsl.types.ValueTypeDescription;
 import lombok.experimental.UtilityClass;
-import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Перевод описания типа значения из mdclasses ({@link ValueTypeDescription}) в
@@ -42,28 +44,58 @@ public class ValueTypes {
    * Набор {@link TypeRef} для описания типа значения (union для composite-типа
    * из нескольких {@code v8:Type}). Нерезолвящиеся типы отбрасываются;
    * пустой результат — {@link TypeSet#EMPTY}.
+   *
+   * @param typeRegistry реестр типов, в котором ищутся имена.
+   * @param definedTypes состав определяемых типов конфигурации по их полному ru-имени:
+   *                     собственного типа у определяемого нет, вместо него подставляется
+   *                     то, из чего он собран.
+   * @param valueType    описание типа значения из метаданных.
+   * @return набор типов значения.
    */
-  public static TypeSet resolve(TypeRegistry typeRegistry, ValueTypeDescription valueType) {
-    if (valueType.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
+  public static TypeSet resolve(
+    TypeRegistry typeRegistry,
+    Map<String, ValueTypeDescription> definedTypes,
+    ValueTypeDescription valueType
+  ) {
     var refs = new LinkedHashSet<TypeRef>();
-    for (var type : valueType.getTypes()) {
-      var resolved = resolveOne(typeRegistry, type);
-      if (resolved != null) {
-        refs.add(resolved);
-      }
-    }
+    collect(typeRegistry, definedTypes, valueType, refs, new HashSet<>());
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   /**
-   * Резолв одного {@link ValueType} по его ru-имени. Примитивы и V8-типы
-   * ({@code ДинамическийСписок}, {@code ХранилищеЗначения}) и конфигурационные
-   * ссылки ({@code СправочникСсылка.X}) в реестре именованы одинаково, поэтому
-   * достаточно одного lookup'а по имени.
+   * Разложить описание в набор {@link TypeRef}. Имя, за которым стоит определяемый тип,
+   * раскрывается в его состав; {@code unfolded} хранит уже раскрытые имена, чтобы
+   * определяемый тип, сославшийся сам на себя, не увёл разбор в бесконечность.
    */
-  private static @Nullable TypeRef resolveOne(TypeRegistry typeRegistry, ValueType valueType) {
-    return typeRegistry.resolve(valueType.fullName().getRu()).orElse(null);
+  private static void collect(
+    TypeRegistry typeRegistry,
+    Map<String, ValueTypeDescription> definedTypes,
+    ValueTypeDescription valueType,
+    Set<TypeRef> refs,
+    Set<String> unfolded
+  ) {
+    if (valueType.isEmpty()) {
+      return;
+    }
+    for (var type : valueType.getTypes()) {
+      var name = nameOf(type);
+      var composition = definedTypes.get(name);
+      if (composition != null) {
+        if (unfolded.add(name)) {
+          collect(typeRegistry, definedTypes, composition, refs, unfolded);
+        }
+        continue;
+      }
+      typeRegistry.resolve(name).ifPresent(refs::add);
+    }
+  }
+
+  /**
+   * Имя типа значения, под которым он известен реестру. Примитивы, V8-типы
+   * ({@code ДинамическийСписок}, {@code ХранилищеЗначения}) и конфигурационные
+   * ссылки ({@code СправочникСсылка.X}) именованы там так же, как в метаданных.
+   */
+  private static String nameOf(ValueType valueType) {
+    return valueType.fullName().getRu();
   }
 }
