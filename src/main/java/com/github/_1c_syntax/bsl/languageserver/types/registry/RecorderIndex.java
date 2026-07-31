@@ -32,6 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс «регистр → документы, пишущие в него движения».
@@ -50,8 +51,14 @@ import java.util.Set;
 @WorkspaceScope
 public class RecorderIndex {
 
-  /** mdoRef регистра → имена документов-регистраторов в порядке обхода конфигурации. */
-  private volatile Map<String, List<String>> recordersByRegister = Map.of();
+  /**
+   * mdoRef регистра → имена документов-регистраторов в порядке обхода конфигурации.
+   * <p>
+   * Снимок целиком за атомарной ссылкой: сама карта неизменяема, меняется только то,
+   * на какую из них поле указывает.
+   */
+  private final AtomicReference<Map<String, List<String>>> recordersByRegister =
+    new AtomicReference<>(Map.of());
 
   /**
    * Перестраивает индекс по объектам конфигурации. Идемпотентен: повторный вызов
@@ -68,7 +75,7 @@ public class RecorderIndex {
     }
     Map<String, List<String>> built = LinkedHashMap.newLinkedHashMap(collected.size());
     collected.forEach((register, documents) -> built.put(register, List.copyOf(documents)));
-    recordersByRegister = Collections.unmodifiableMap(built);
+    recordersByRegister.set(Collections.unmodifiableMap(built));
   }
 
   /**
@@ -78,7 +85,7 @@ public class RecorderIndex {
    * @return имена документов; пусто — регистр независимый либо движений в него никто не пишет.
    */
   public List<String> recordersOf(String registerMdoRef) {
-    return recordersByRegister.getOrDefault(registerMdoRef, List.of());
+    return recordersByRegister.get().getOrDefault(registerMdoRef, List.of());
   }
 
   private static void indexDocument(Document document, Map<String, Set<String>> sink) {
