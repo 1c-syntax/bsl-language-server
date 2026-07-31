@@ -177,12 +177,41 @@ final class MetadataChildrenExtractor {
 
   /** Поля, по которым доступен ввод по строке ({@code ВводПоСтроке}). */
   static List<ChildName> inputByStringFor(MD md) {
-    return mdoReferenceNames(MdoPropertyAccessors.inputByString(md));
+    return fieldNames(MdoPropertyAccessors.inputByString(md));
   }
 
   /** Поля блокировки данных ({@code ПоляБлокировкиДанных}). */
   static List<ChildName> dataLockFieldsFor(MD md) {
-    return mdoReferenceNames(MdoPropertyAccessors.dataLockFields(md));
+    return fieldNames(MdoPropertyAccessors.dataLockFields(md));
+  }
+
+  /**
+   * Имена элементов списка полей — только имена, без подмены типа возврата.
+   * <p>
+   * Отличие от {@link #mdoReferenceNames}: там ссылка ведёт на сам объект метаданных
+   * ({@code Движения} → {@code ОбъектМетаданных: РегистрНакопления.Х}), а здесь элемент
+   * коллекции — {@code Поле} списка полей, а не описание объекта, на который поле
+   * указывает. Подмена типа увела бы разыменование не туда: у {@code Поле} свой состав.
+   */
+  private static List<ChildName> fieldNames(Collection<MdoReference> refs) {
+    var result = new ArrayList<ChildName>(refs.size());
+    for (var ref : refs) {
+      var entry = ChildName.of(shortNameOf(ref));
+      if (entry != null) {
+        result.add(entry);
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  /** {@code Catalog.Х.StandardAttribute.Владелец} → {@code Владелец}. */
+  private static String shortNameOf(MdoReference ref) {
+    var qualifiedName = ref.getMdoRefRu();
+    if (qualifiedName.isBlank()) {
+      qualifiedName = ref.getMdoRef();
+    }
+    var dot = qualifiedName.lastIndexOf('.');
+    return dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
   }
 
   /**

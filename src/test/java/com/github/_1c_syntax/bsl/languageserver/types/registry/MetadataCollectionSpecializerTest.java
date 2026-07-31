@@ -217,6 +217,12 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     assertThat(memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL)))
       .as("в фикстуре ввод по строке настроен на стандартный реквизит Номер")
       .contains("Номер");
+
+    // Элемент списка полей — `Поле`, а не описание объекта, на который поле указывает:
+    // подмена типа увела бы разыменование в состав стандартного реквизита.
+    assertThat(findMember(typeRegistry.getMembers(collectionRef, FileType.BSL), "Номер").returnType()
+      .qualifiedName())
+      .isEqualTo("Поле");
   }
 
   @Test
