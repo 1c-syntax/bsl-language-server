@@ -48,6 +48,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -71,6 +72,15 @@ public class SymbolTypeIndex {
 
   /** Минимальное число сегментов квалифицированной ссылки ({@code Модуль.Метод}). */
   private static final int MIN_QUALIFIED_SEGMENTS = 2;
+
+  /**
+   * Коллекции, у которых поля из документирующего комментария описывают строку.
+   * Имена в нижнем регистре — сравнение регистронезависимое.
+   */
+  private static final Set<String> ROW_OWNING_COLLECTIONS = Set.of(
+    "таблицазначений", "valuetable",
+    "деревозначений", "valuetree"
+  );
 
   private final TypeRegistry typeRegistry;
 
@@ -420,14 +430,63 @@ public class SymbolTypeIndex {
     for (var td : descriptions) {
       var resolved = resolveTypeDescription(td, context);
       // У коллекций (`Соответствие из КлючИЗначение: * Ключ - ...`) поля описывают
-      // ЭЛЕМЕНТ и навешиваются внутри resolveCollection; у простых типов
-      // (`Структура: * Поле - ...`) — на сам тип.
+      // ЭЛЕМЕНТ и навешиваются внутри resolveCollection; у остальных записей
+      // адресата выбирает applyDeclaredFields.
       if (td.variant() != TypeDescription.Variant.COLLECTION) {
-        resolved = applyFields(resolved, td, context);
+        resolved = applyDeclaredFields(resolved, td, context);
       }
       acc = acc.union(resolved);
     }
     return acc;
+  }
+
+  /**
+   * Навесить поля из описания на того, кому они принадлежат.
+   * <p>
+   * У структуры и прочих типов с пользовательскими свойствами
+   * ({@code Структура: * Поле - ...}) поля — свойства самого типа. У таблицы и дерева
+   * значений ({@code ТаблицаЗначений: * Колонка - ...}) поля — колонки, то есть свойства
+   * СТРОКИ: у самой таблицы свойства с именем колонки нет. Тип строки в такой записи
+   * не указан (слова {@code из} нет), поэтому берётся из реестра — тот же, что видит
+   * обход {@code Для Каждого}.
+   * <p>
+   * Если тип строки реестру неизвестен, поля остаются на самом типе: запись ведёт себя
+   * как прежде.
+   *
+   * @param base    разрешённые типы описания.
+   * @param td      описание типа с полями.
+   * @param context контекст разворачивания {@code см.}-ссылок.
+   * @return типы с навешенными полями.
+   */
+  private TypeSet applyDeclaredFields(TypeSet base, TypeDescription td, ResolutionContext context) {
+    if (base.refs().isEmpty()) {
+      return base;
+    }
+    var headRef = base.refs().iterator().next();
+    if (!fieldsDescribeRow(headRef)) {
+      return applyFields(base, td, context);
+    }
+    var rowTypes = typeRegistry.getDefaultElementTypes(headRef);
+    if (rowTypes.isEmpty()) {
+      return applyFields(base, td, context);
+    }
+    var rowRef = rowTypes.refs().iterator().next();
+    return base.withElement(headRef, applyFields(TypeSet.of(rowRef), td, context));
+  }
+
+  /**
+   * Описывают ли поля из документирующего комментария строку коллекции, а не сам тип.
+   * <p>
+   * Так устроены таблица и дерево значений: пользовательских свойств у них нет,
+   * перечисленные поля — колонки. Табличная часть и данные формы сюда не входят:
+   * рекомендация предписывает для них запись с явным типом элемента
+   * ({@code ТабличнаяЧасть Из СтрокаТабличнойЧасти:}), которая идёт другой веткой.
+   *
+   * @param ref головной тип описания.
+   * @return {@code true}, если поля описывают строку.
+   */
+  private static boolean fieldsDescribeRow(TypeRef ref) {
+    return ROW_OWNING_COLLECTIONS.contains(ref.qualifiedName().toLowerCase(Locale.ROOT));
   }
 
   /**
