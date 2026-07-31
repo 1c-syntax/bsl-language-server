@@ -287,22 +287,25 @@ public class MetadataCollectionSpecializer {
       MetadataChildrenExtractor::registerRecordsFor),
 
     // ВводитсяНаОсновании — типы, на основании которых вводится объект.
-    // В mdclasses нет удобного getter'а — оставляем только returnType chain.
     new CollectionSpec("ВводитсяНаОсновании", "BasedOn",
       BASE_COLLECTION_PROPERTY_VALUE, "ЗначениеСвойстваОбъектаМетаданных",
-      ANY, md -> List.of()),
+      ANY, MetadataChildrenExtractor::basedOnFor),
 
     // Поля ввода по строке / блокировки данных — СписокПолей с элементами «Поле».
     new CollectionSpec("ВводПоСтроке", "InputByString",
-      BASE_COLLECTION_FIELD_LIST, "Поле", ANY, md -> List.of()),
+      BASE_COLLECTION_FIELD_LIST, "Поле", ANY, MetadataChildrenExtractor::inputByStringFor),
     new CollectionSpec("ПоляБлокировкиДанных", "DataLockFields",
-      BASE_COLLECTION_FIELD_LIST, "Поле", ANY, md -> List.of()),
+      BASE_COLLECTION_FIELD_LIST, "Поле", ANY, MetadataChildrenExtractor::dataLockFieldsFor),
 
     // Дополнительные индексы — элементы «ДополнительныйИндекс».
     new CollectionSpec(BASE_COLLECTION_ADDITIONAL_INDEXES, "AdditionalIndexes",
-      BASE_COLLECTION_ADDITIONAL_INDEXES, "ДополнительныйИндекс", ANY, md -> List.of()),
+      BASE_COLLECTION_ADDITIONAL_INDEXES, "ДополнительныйИндекс",
+      ANY, MetadataChildrenExtractor::additionalIndexesFor),
 
     // Характеристики плана видов характеристик — элементы «ОписаниеХарактеристик».
+    // Имена не разворачиваются, и дело не в данных: у `Characteristic` в mdclasses
+    // имени нет вовсе — описание характеристик это набор ссылок на таблицы и поля.
+    // Обращаться к ним по имени негде, поэтому остаётся только returnType-цепочка.
     new CollectionSpec("Характеристики", "Characteristics",
       BASE_COLLECTION_CHARACTERISTICS, "ОписаниеХарактеристик", ANY, md -> List.of())
   );
@@ -607,6 +610,12 @@ public class MetadataCollectionSpecializer {
     var perCollName = spec.baseCollectionName() + "." + spec.ru() + "." + ownerSuffix;
     var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollName);
     registerSubChildOwners(children, elementRef, ownerSuffix);
+    // Коллекция остаётся коллекцией: обход `Для Каждого` и индексатор дают её элемент.
+    // Для коллекций, где элементы вообще не адресуются по имени (характеристики,
+    // дополнительные индексы, ввод на основании), это единственный способ до них
+    // добраться — синтакс-помощник у них так и пишет: обход и обращение по индексу.
+    typeRegistry.registerDefaultElementTypes(perCollRef, List.of(elementRef));
+    typeRegistry.inheritCollectionTraits(perCollRef, baseRef, FileType.BSL);
     var capturedBase = baseRef;
     var capturedElement = elementRef;
     var capturedChildren = children;

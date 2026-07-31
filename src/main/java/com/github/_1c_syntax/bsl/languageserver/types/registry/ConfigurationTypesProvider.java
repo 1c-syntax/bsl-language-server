@@ -354,6 +354,7 @@ public class ConfigurationTypesProvider {
     var familyCore = fullName.getRu();
     registerFamilySpecializations(familyCore, name);
     registerTypesRegistrar.registerFamilyFixups(md, familyCore, name);
+    registerHierarchySuppressions(md, familyCore, name);
     registerDerivedSpecializations(md, name);
     if (md instanceof DocumentJournal journal) {
       registerDocumentJournalColumnMembers(journal, familyCore, name);
@@ -690,6 +691,32 @@ public class ConfigurationTypesProvider {
         genericExpander.registerFamilySpecializations(familyCore,
           Map.of(parameters.get(0), mdName));
       }
+    }
+  }
+
+  /**
+   * Убирает реквизиты иерархии там, где их не существует: у неиерархического справочника
+   * нет ни {@code Родитель}, ни {@code ЭтоГруппа}, а при иерархии элементов нет
+   * {@code ЭтоГруппа}.
+   * <p>
+   * Платформа объявляет их у всего семейства сразу, поэтому перекрыть их нечем — член
+   * приходится именно убирать (см. {@link TypeRegistry#registerMemberSuppression}).
+   * Подавление вешается на все типы семейства: где реквизита и так нет, оно безвредно.
+   */
+  private void registerHierarchySuppressions(MD md, String familyCore, String mdName) {
+    var absent = StandardAttributesResolver.hierarchyAttributesAbsentIn(md);
+    if (absent.isEmpty()) {
+      return;
+    }
+    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
+      var parameters = typeRegistry.getTypeParameters(generic);
+      if (parameters.size() != 1) {
+        continue;
+      }
+      var bindings = Map.of(parameters.get(0), mdName);
+      typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName())
+        .filter(specialized -> !specialized.equals(generic))
+        .ifPresent(specialized -> typeRegistry.registerMemberSuppression(specialized, absent, FileType.BSL));
     }
   }
 

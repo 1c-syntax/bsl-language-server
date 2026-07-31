@@ -203,6 +203,48 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void inputByStringFieldsAreExpandedFromMdclasses() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Метаданные.Документы.Документ1.ВводПоСтроке → поля, перечисленные в <InputByString>.
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), "ВводПоСтроке");
+    assertThat(member).as("на per-MDO типе должно быть property ВводПоСтроке").isNotNull();
+
+    var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+    assertThat(memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL)))
+      .as("в фикстуре ввод по строке настроен на стандартный реквизит Номер")
+      .contains("Номер");
+
+    // Элемент списка полей — `Поле`, а не описание объекта, на который поле указывает:
+    // подмена типа увела бы разыменование в состав стандартного реквизита.
+    assertThat(findMember(typeRegistry.getMembers(collectionRef, FileType.BSL), "Номер").returnType()
+      .qualifiedName())
+      .isEqualTo("Поле");
+  }
+
+  @Test
+  void hierarchyOnlyStandardAttributesAreSkippedForFlatCatalog() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Справочник1 в фикстуре неиерархический, значит `Родитель` и `ЭтоГруппа` у него
+    // не существуют — набор стандартных реквизитов зависит не только от вида объекта.
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Справочник.Справочник1");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), "СтандартныеРеквизиты");
+    assertThat(member).isNotNull();
+
+    var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+    assertThat(memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL)))
+      .as("общие для вида реквизиты на месте, а реквизиты иерархии не показываются")
+      .contains("Ссылка", "Код", "Наименование")
+      .doesNotContain("Родитель", "ЭтоГруппа", "Parent", "IsFolder");
+  }
+
+  @Test
   void tabularSectionExposesStandardAttributes() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
@@ -374,6 +416,86 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     assertThat(getMethod.returnType().qualifiedName())
       .as("Получить() на КоллекцияОбъектовМетаданных.Документы → ОбъектМетаданных: Документ")
       .isEqualTo("ОбъектМетаданных: Документ");
+  }
+
+  @Test
+  void basedOnAndDataLockFieldsAndIndexesAreExpandedFromMdclasses() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    assertThat(collectionNames("ВводитсяНаОсновании"))
+      .as("в фикстуре справочник вводится на основании Документ1")
+      .contains("Документ1");
+    assertThat(collectionNames("ПоляБлокировкиДанных"))
+      .as("поле блокировки — стандартный реквизит Владелец")
+      .contains("Владелец");
+    assertThat(collectionNames("ДополнительныеИндексы"))
+      .as("у дополнительного индекса собственное имя, а не имя объекта метаданных")
+      .contains("ИндексПоВладельцу");
+  }
+
+  @Test
+  void hierarchyStandardAttributesArePresentForHierarchicalCatalog() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Обратная сторона hierarchyOnlyStandardAttributesAreSkippedForFlatCatalog:
+    // у иерархического справочника с группами оба реквизита на месте.
+    assertThat(collectionNames("СтандартныеРеквизиты"))
+      .contains("Родитель", "ЭтоГруппа");
+  }
+
+  /**
+   * Имена членов коллекции иерархического справочника фикстуры — той, на которую
+   * указывает одноимённое property его per-MDO типа.
+   */
+  private List<String> collectionNames(String collectionName) {
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM,
+      "ОбъектМетаданных: Справочник.СправочникСМенеджером");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), collectionName);
+    assertThat(member).as("property %s на per-MDO типе", collectionName).isNotNull();
+    var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+    return memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL));
+  }
+
+  @Test
+  void metadataCollectionIsIterableAndCarriesItsElementType() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // У части коллекций элементы вообще не адресуются по имени: синтакс-помощник
+    // для «ОписанияХарактеристик» знает только обход и обращение по индексу. Без типа
+    // элемента такая коллекция для пользователя пустая — до её содержимого не добраться.
+    var characteristics = collectionRef("Характеристики");
+    assertThat(typeRegistry.getDefaultElementTypes(characteristics).refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ОписаниеХарактеристик");
+    assertThat(typeRegistry.supportsForEach(characteristics, FileType.BSL))
+      .as("обход Для Каждого")
+      .isTrue();
+    assertThat(typeRegistry.supportsIndexAccess(characteristics, FileType.BSL))
+      .as("обращение по индексу")
+      .isTrue();
+
+    // То же и у коллекций, которые адресуются по имени, — обход им тоже положен.
+    assertThat(typeRegistry.getDefaultElementTypes(collectionRef("Реквизиты")).refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ОбъектМетаданных: Реквизит");
+    assertThat(typeRegistry.getDefaultElementTypes(collectionRef("ДополнительныеИндексы")).refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ДополнительныйИндекс");
+  }
+
+  /** Специализированный тип коллекции иерархического справочника фикстуры. */
+  private TypeRef collectionRef(String collectionName) {
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM,
+      "ОбъектМетаданных: Справочник.СправочникСМенеджером");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), collectionName);
+    assertThat(member).as("property %s на per-MDO типе", collectionName).isNotNull();
+    return typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
   }
 
   // --- helpers ---

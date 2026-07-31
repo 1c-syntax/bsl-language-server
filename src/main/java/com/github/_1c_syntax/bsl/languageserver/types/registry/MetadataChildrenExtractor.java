@@ -170,4 +170,64 @@ final class MetadataChildrenExtractor {
     return md instanceof Document doc ? mdoReferenceNames(doc.getRegisterRecords()) : List.of();
   }
 
+  /** Типы, на основании которых вводится объект ({@code ВводитсяНаОсновании}). */
+  static List<ChildName> basedOnFor(MD md) {
+    return mdoReferenceNames(MdoPropertyAccessors.basedOn(md));
+  }
+
+  /** Поля, по которым доступен ввод по строке ({@code ВводПоСтроке}). */
+  static List<ChildName> inputByStringFor(MD md) {
+    return fieldNames(MdoPropertyAccessors.inputByString(md));
+  }
+
+  /** Поля блокировки данных ({@code ПоляБлокировкиДанных}). */
+  static List<ChildName> dataLockFieldsFor(MD md) {
+    return fieldNames(MdoPropertyAccessors.dataLockFields(md));
+  }
+
+  /**
+   * Имена элементов списка полей — только имена, без подмены типа возврата.
+   * <p>
+   * Отличие от {@link #mdoReferenceNames}: там ссылка ведёт на сам объект метаданных
+   * ({@code Движения} → {@code ОбъектМетаданных: РегистрНакопления.Х}), а здесь элемент
+   * коллекции — {@code Поле} списка полей, а не описание объекта, на который поле
+   * указывает. Подмена типа увела бы разыменование не туда: у {@code Поле} свой состав.
+   */
+  private static List<ChildName> fieldNames(Collection<MdoReference> refs) {
+    var result = new ArrayList<ChildName>(refs.size());
+    for (var ref : refs) {
+      var entry = ChildName.of(shortNameOf(ref));
+      if (entry != null) {
+        result.add(entry);
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  /** {@code Catalog.Х.StandardAttribute.Владелец} → {@code Владелец}. */
+  private static String shortNameOf(MdoReference ref) {
+    var qualifiedName = ref.getMdoRefRu();
+    if (qualifiedName.isBlank()) {
+      qualifiedName = ref.getMdoRef();
+    }
+    var dot = qualifiedName.lastIndexOf('.');
+    return dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
+  }
+
+  /**
+   * Дополнительные индексы объекта ({@code ДополнительныеИндексы}) — в отличие от
+   * прочих коллекций здесь у элемента собственное имя, а не имя объекта метаданных.
+   */
+  static List<ChildName> additionalIndexesFor(MD md) {
+    var indexes = MdoPropertyAccessors.additionalIndexes(md);
+    var result = new ArrayList<ChildName>(indexes.size());
+    for (var index : indexes) {
+      var entry = ChildName.of(index.getName());
+      if (entry != null) {
+        result.add(entry);
+      }
+    }
+    return List.copyOf(result);
+  }
+
 }
