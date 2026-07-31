@@ -323,7 +323,8 @@ class ConfigurationTypesProviderHelpersTest {
                                                         MetadataCollectionSpecializer mcs) {
     var recorderIndex = new RecorderIndex();
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry),
+      new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
+      new ServiceModuleEventRegistrar(registry),
       new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex, new SimpleAsyncTaskExecutor());
   }
 

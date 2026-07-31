@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -39,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
+import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
@@ -70,6 +72,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -178,6 +181,7 @@ public class ConfigurationTypesProvider {
   private final LanguageServerConfiguration configuration;
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
+  private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
   private final RecorderIndex recorderIndex;
@@ -367,6 +371,7 @@ public class ConfigurationTypesProvider {
     registerFamilySpecializations(familyCore, name);
     registerTypesRegistrar.registerFamilyFixups(md, familyCore, name);
     registerHierarchySuppressions(md, familyCore, name);
+    catalogOwnerTypes.registerOwnerMembers(md, familyCore, name);
     registerDerivedSpecializations(md, name);
     if (md instanceof DocumentJournal journal) {
       registerDocumentJournalColumnMembers(journal, familyCore, name);
@@ -683,7 +688,6 @@ public class ConfigurationTypesProvider {
       return typeRegistry.getMembers(parent, FileType.BSL);
     }, FileType.BSL);
   }
-
   /**
    * Регистрирует специализации ВСЕХ зарегистрированных дженериков семейства
    * (с qualifiedName, начинающимся с {@code familyCore}) для конкретного
@@ -908,6 +912,12 @@ public class ConfigurationTypesProvider {
       var description = platformDescriptions.getOrDefault(lc, BilingualString.EMPTY);
       var meta = platformMetadata.getOrDefault(lc, PlatformMetadata.EMPTY);
       var returnTypes = resolveAttributeReturnTypes(attribute);
+      if (returnTypes.isEmpty() && attribute instanceof StandardAttribute) {
+        // Стандартный реквизит платформа объявляет сама — с типом, описанием и мета.
+        // mdclasses про его тип знает не всегда (у `Владелец` типа нет вовсе), и
+        // бестиповый дубль отсюда только перекрыл бы объявление платформы.
+        continue;
+      }
       var primaryName = bilingualName.primary();
       MemberDescriptor descriptor;
       if (returnTypes.isEmpty()) {
