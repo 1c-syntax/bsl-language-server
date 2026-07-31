@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -125,7 +126,7 @@ class HierarchyMemberSuppressionTest extends AbstractServerContextAwareTest {
     var ref = typeRegistry.resolve(typeName).orElseThrow();
     return typeRegistry.getMembers(ref, FileType.BSL).stream()
       .filter(member -> member.kind() == MemberKind.PROPERTY)
-      .map(member -> member.name())
+      .map(MemberDescriptor::name)
       .toList();
   }
 }
