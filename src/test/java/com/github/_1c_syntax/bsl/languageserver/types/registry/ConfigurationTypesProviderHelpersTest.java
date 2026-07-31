@@ -127,7 +127,7 @@ class ConfigurationTypesProviderHelpersTest {
       when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var globalScope = mock(GlobalScopeProvider.class);
       var lsConfig = mock(
         LanguageServerConfiguration.class);
@@ -167,7 +167,8 @@ class ConfigurationTypesProviderHelpersTest {
         ServerContextProvider.class);
       when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
-      var registry = new TypeRegistry(List.of(), mock(MemberMetadataIndex.class));
+      var registry = new TypeRegistry(List.of(), mock(MemberMetadataIndex.class),
+        mock(DefinedTypesIndex.class));
       var globalScope = mock(GlobalScopeProvider.class);
       var lsConfig = mock(
         LanguageServerConfiguration.class);
@@ -207,7 +208,7 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var globalScope = mock(GlobalScopeProvider.class);
       var lsConfig = mock(
         LanguageServerConfiguration.class);
@@ -250,7 +251,7 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
       var registry = new TypeRegistry(List.of(),
-        mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var globalScope = mock(GlobalScopeProvider.class);
       var lsConfig = mock(
         LanguageServerConfiguration.class);
@@ -303,7 +304,7 @@ class ConfigurationTypesProviderHelpersTest {
   private static ConfigurationTypesProvider newProviderWith(
       ServerContextProvider serverProvider) {
     var registry = new TypeRegistry(List.of(),
-      mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var globalScope = mock(GlobalScopeProvider.class);
     var lsConfig = mock(
       LanguageServerConfiguration.class);
@@ -331,7 +332,7 @@ class ConfigurationTypesProviderHelpersTest {
   @Test
   void memberPlaceholderName_typeWithGenericMember_extractsPlaceholder() {
     var memberIndex = mock(MemberMetadataIndex.class);
-    var registry = new TypeRegistry(List.of(), memberIndex);
+    var registry = new TypeRegistry(List.of(), memberIndex, mock(DefinedTypesIndex.class));
     var ref = registry.registerConfigurationType("ПеречислениеМенеджер.X");
     var generic = MemberDescriptor.genericProperty("<Имя значения>",
         registry.registerConfigurationType("ПеречислениеСсылка.X"), "")
@@ -844,7 +845,7 @@ class ConfigurationTypesProviderHelpersTest {
         }
       };
       var rawRegistry = new TypeRegistry(List.of(pack),
-        mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       rawRegistry.bootstrap();
       var registry = registryFn.apply(rawRegistry);
       var configuration = mock(Configuration.class);
@@ -870,7 +871,7 @@ class ConfigurationTypesProviderHelpersTest {
   @Test
   void memberPlaceholderName_noGenericMember_returnsEmpty() {
     var registry = new TypeRegistry(List.of(),
-      mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var ref = registry.registerConfigurationType("Тип");
     var regular = MemberDescriptor.property("Регулярный",
       new TypeRef(TypeKind.PLATFORM, "Строка"));

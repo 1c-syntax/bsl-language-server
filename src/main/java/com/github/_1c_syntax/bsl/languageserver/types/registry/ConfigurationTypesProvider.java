@@ -42,6 +42,7 @@ import com.github._1c_syntax.bsl.mdo.CalculationRegister;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
+import com.github._1c_syntax.bsl.mdo.DefinedType;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -52,6 +53,7 @@ import com.github._1c_syntax.bsl.mdo.children.PredefinedValue;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MultiName;
+import com.github._1c_syntax.bsl.types.ValueTypeDescription;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -294,12 +296,22 @@ public class ConfigurationTypesProvider {
   /**
    * Обработка одного MD-объекта в {@link #register}: регистрация менеджера,
    * объектных/ссылочных типов, family-специализаций, expansion'ов для
-   * Enum/Journal/регистров, алиасов и member'а для namespace.
+   * Enum/Journal/регистров, алиасов и member'а для namespace. Определяемый тип
+   * вместо типа отдаёт реестру свой состав — типа у него нет.
    *
    * @return {@code true} если MD относится к {@link #MANAGER_TYPES} и был зарегистрирован.
    */
   private boolean processMdoChild(MD md, List<CommonAttribute> commonAttributes,
                                   Map<MDOType, List<MemberDescriptor>> collectionMembersByType) {
+    if (md instanceof DefinedType definedType) {
+      // За именем определяемого типа стоит набор, а не тип, поэтому реестру отдаётся
+      // состав. Реквизиты считаются лениво, уже после регистрации, — успеть до них
+      // достаточно здесь.
+      typeRegistry.registerDefinedType(
+        definedType.getMdoReference().getMdoRefRu(),
+        definedType.getValueType().getTypes().stream().map(type -> type.fullName().getRu()).toList());
+      return false;
+    }
     var mdoType = md.getMdoType();
     if (!MANAGER_TYPES.contains(mdoType)) {
       return false;

@@ -448,7 +448,7 @@ public class SymbolTypeIndex {
     return switch (td.variant()) {
       case HYPERLINK ->
         resolveSeeReference(td.name(), context.owner(), context.fileType(), context.visited());
-      case SIMPLE -> resolveOne(td.name()).map(TypeSet::of).orElse(TypeSet.EMPTY);
+      case SIMPLE -> resolveSimple(td.name());
       case COLLECTION -> resolveCollection((CollectionTypeDescription) td, context);
     };
   }
@@ -561,5 +561,20 @@ public class SymbolTypeIndex {
     var head = name.trim();
     return typeRegistry.resolve(head)
       .or(() -> Optional.of(typeRegistry.intern(TypeKind.USER, head)));
+  }
+
+  /**
+   * Простое имя типа из описания. За именем определяемого типа стоит набор, поэтому
+   * имя сперва спрашивается у реестра как набор; всё прочее — один тип, а незнакомое
+   * имя остаётся пользовательским типом, как и было.
+   */
+  private TypeSet resolveSimple(String name) {
+    if (name.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    var byName = typeRegistry.resolveSet(name.trim());
+    return byName.isEmpty()
+      ? resolveOne(name).map(TypeSet::of).orElse(TypeSet.EMPTY)
+      : byName;
   }
 }

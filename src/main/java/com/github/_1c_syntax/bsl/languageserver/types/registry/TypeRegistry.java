@@ -105,6 +105,13 @@ public class TypeRegistry {
    */
   private final MemberMetadataIndex memberMetadataIndex;
 
+  /**
+   * Состав определяемых типов конфигурации. Своего {@link TypeRef} у определяемого типа
+   * нет — за именем стоит набор, поэтому в {@link #aliasIndex} ему места нет
+   * (см. {@link #resolveSet(String)}).
+   */
+  private final DefinedTypesIndex definedTypes;
+
   /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
   private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
@@ -276,6 +283,42 @@ public class TypeRegistry {
       return Optional.empty();
     }
     return Optional.ofNullable(aliasIndex.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Найти типы, скрытые за именем: у обычного имени это один тип, у определяемого —
+   * его состав.
+   * <p>
+   * Определяемый тип — не тип, а именованное описание типов: собственного
+   * {@link TypeRef} у него нет и быть не может, потому что за именем стоит набор.
+   * Вложенные определяемые типы раскрываются вглубь, до настоящих типов; имена,
+   * за которыми типа нет, отбрасываются.
+   *
+   * @param name имя типа: платформенное, конфигурационное либо определяемого типа.
+   * @return типы за этим именем; {@link TypeSet#EMPTY}, если имя не зарегистрировано.
+   */
+  public TypeSet resolveSet(String name) {
+    if (name.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    if (definedTypes.knows(name)) {
+      return definedTypes.compositionOf(name, this::asTypeSet);
+    }
+    return asTypeSet(name);
+  }
+
+  /**
+   * Запомнить состав определяемого типа конфигурации.
+   *
+   * @param qualifiedName полное имя определяемого типа ({@code ОпределяемыйТип.Сумма}).
+   * @param composition   имена типов, из которых он собран.
+   */
+  public void registerDefinedType(String qualifiedName, List<String> composition) {
+    definedTypes.register(qualifiedName, composition);
+  }
+
+  private TypeSet asTypeSet(String name) {
+    return resolve(name).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**

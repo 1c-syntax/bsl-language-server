@@ -26,9 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.types.ValueType;
 import com.github._1c_syntax.bsl.types.ValueTypeDescription;
 import lombok.experimental.UtilityClass;
-import org.jspecify.annotations.Nullable;
-
-import java.util.LinkedHashSet;
 
 /**
  * Перевод описания типа значения из mdclasses ({@link ValueTypeDescription}) в
@@ -42,28 +39,32 @@ public class ValueTypes {
    * Набор {@link TypeRef} для описания типа значения (union для composite-типа
    * из нескольких {@code v8:Type}). Нерезолвящиеся типы отбрасываются;
    * пустой результат — {@link TypeSet#EMPTY}.
+   *
+   * @param typeRegistry реестр типов, в котором ищутся имена.
+   * @param valueType    описание типа значения из метаданных.
+   * @return типы значения.
    */
   public static TypeSet resolve(TypeRegistry typeRegistry, ValueTypeDescription valueType) {
     if (valueType.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    var refs = new LinkedHashSet<TypeRef>();
+    var result = TypeSet.EMPTY;
     for (var type : valueType.getTypes()) {
-      var resolved = resolveOne(typeRegistry, type);
-      if (resolved != null) {
-        refs.add(resolved);
-      }
+      result = result.union(typeRegistry.resolveSet(nameOf(type)));
     }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    return result;
   }
 
   /**
-   * Резолв одного {@link ValueType} по его ru-имени. Примитивы и V8-типы
+   * Имя типа значения, под которым он известен реестру. Примитивы, V8-типы
    * ({@code ДинамическийСписок}, {@code ХранилищеЗначения}) и конфигурационные
-   * ссылки ({@code СправочникСсылка.X}) в реестре именованы одинаково, поэтому
-   * достаточно одного lookup'а по имени.
+   * ссылки ({@code СправочникСсылка.X}) именованы там так же, как в метаданных;
+   * за именем определяемого типа стоит его состав.
+   *
+   * @param valueType тип значения из метаданных.
+   * @return имя для поиска в реестре.
    */
-  private static @Nullable TypeRef resolveOne(TypeRegistry typeRegistry, ValueType valueType) {
-    return typeRegistry.resolve(valueType.fullName().getRu()).orElse(null);
+  private static String nameOf(ValueType valueType) {
+    return valueType.fullName().getRu();
   }
 }

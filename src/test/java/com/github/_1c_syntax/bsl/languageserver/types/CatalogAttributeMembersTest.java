@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -63,6 +64,59 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
       .as("Объект.СоставнойРеквизит → {Строка, Число} (xs:string + xs:decimal)")
       .extracting(ref -> ref.qualifiedName())
       .containsExactlyInAnyOrder("Строка", "Число");
+  }
+
+  @Test
+  void catalogDefinedTypeAttributeAccessReturnsTypesOfDefinedType() {
+    // given: реквизит объявлен определяемым типом, а тот собран из числа и ссылки
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CatalogDefinedTypeAttributeAccess.bsl");
+
+    var content = documentContext.getContent();
+    var marker = "X = Объект.РеквизитОпределяемогоТипа";
+    int markerStart = content.indexOf(marker);
+    int targetOffset = markerStart + "X = Объект.".length();
+    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    int line = content.substring(0, targetOffset).split("\n").length - 1;
+    int charInLine = targetOffset - lineStart;
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
+
+    // then
+    assertThat(types.refs())
+      .as("Объект.РеквизитОпределяемогоТипа → состав ОпределяемыйТип1")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Число", "СправочникСсылка.Справочник1");
+  }
+
+  @Test
+  void definedTypeInDocCommentReturnsItsComposition() {
+    // given: тип параметра объявлен определяемым типом в BSLDoc, а не в метаданных
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/DefinedTypeInDocComment.bsl");
+
+    var content = documentContext.getContent();
+    var marker = "X = Сумма";
+    int targetOffset = content.indexOf(marker) + "X = ".length();
+    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    int line = content.substring(0, targetOffset).split("\n").length - 1;
+    int charInLine = targetOffset - lineStart;
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
+
+    // then
+    assertThat(types.refs())
+      .as("параметр, объявленный ОпределяемыйТип.ОпределяемыйТип1 → его состав")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Число", "СправочникСсылка.Справочник1");
   }
 
   @Test

@@ -27,12 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Unit-тесты {@link TypeRegistry#expandedMembers}: snapshot-материализация
@@ -44,7 +44,8 @@ class TypeRegistryExpandedMembersTest {
 
   private final TypeRegistry registry = new TypeRegistry(
     List.of(),
-    Mockito.mock(MemberMetadataIndex.class)
+    mock(MemberMetadataIndex.class),
+    mock(DefinedTypesIndex.class)
   );
 
   @Test

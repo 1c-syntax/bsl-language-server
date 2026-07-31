@@ -32,6 +32,8 @@ import org.mockito.Mockito;
 import java.net.URI;
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+
 /**
  * Покрытие early-return веток {@link ConfigurationGenericExpander} —
  * отсутствие workspace, отсутствие контекста, пустая конфигурация.
@@ -42,7 +44,7 @@ class ConfigurationGenericExpanderTest {
   void registerCommonLibraryExpansions_noWorkspace_noOp() {
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
     WorkspaceContextHolder.clear();
     expander.registerCommonLibraryExpansions();
@@ -58,7 +60,7 @@ class ConfigurationGenericExpanderTest {
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of());
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var expander = new ConfigurationGenericExpander(registry, serverProvider);
       expander.registerCommonLibraryExpansions();
       Mockito.verify(serverProvider).getAllContexts();
@@ -82,7 +84,7 @@ class ConfigurationGenericExpanderTest {
       var serverProvider = Mockito.mock(ServerContextProvider.class);
       Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var registry = new TypeRegistry(List.of(),
-        Mockito.mock(MemberMetadataIndex.class));
+        mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var expander = new ConfigurationGenericExpander(registry, serverProvider);
       expander.registerCommonLibraryExpansions();
       Mockito.verify(configuration).isEmpty();
@@ -95,7 +97,7 @@ class ConfigurationGenericExpanderTest {
   @Test
   void registerExternalDataSourceSpecializations_emptyBindings_noOp() {
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
     expander.registerFamilySpecializations("X", java.util.Map.of());
@@ -122,7 +124,7 @@ class ConfigurationGenericExpanderTest {
       .cube(goodCube)
       .build();
     var registry = new TypeRegistry(List.of(),
-      Mockito.mock(MemberMetadataIndex.class));
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
     expander.registerExternalDataSourceSpecializations(List.of(eds));
