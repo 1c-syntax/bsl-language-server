@@ -130,6 +130,23 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void handlerOfElementEventTakesContractFromTheElementType() {
+    // Контракт `ПриИзменении` объявлен у ПолеФормы, а не у формы: без типа элемента
+    // обработчику досталась бы заглушка «обработчик события формы OnChange».
+    var handler = member(DOCUMENT_FORM, MemberKind.EVENT, "Реквизит1ПриИзменении");
+    assertThat(handler).isNotNull();
+
+    assertThat(handler.signatures())
+      .as("сигнатура пришла из синтакс-помощника — пусть и без параметров, "
+        + "их у события поля формы платформа не объявляет")
+      .isNotEmpty();
+    assertThat(handler.description())
+      .as("описание — платформенное, а не заглушка по имени события")
+      .isNotEmpty()
+      .doesNotContain("OnChange");
+  }
+
+  @Test
   void objectInfrastructureIsFilteredOutOfFormData() {
     // Полный набор инфраструктурных свойств объекта есть только в синтакс-помощнике:
     // в JSON-фолбэке из них объявлен один ЭтотОбъект.

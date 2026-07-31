@@ -43,8 +43,11 @@ import com.github._1c_syntax.bsl.mdo.FormOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.children.ObjectForm;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormCommand;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElementType;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormParameter;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormEventHandler;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormEventHandlerOwner;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDataPathOwner;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElement;
 import com.github._1c_syntax.bsl.types.MultiLanguageString;
@@ -103,25 +106,19 @@ import java.util.stream.Stream;
  *
  * <h2>Известные ограничения</h2>
  * <ul>
- *   <li>События <b>элементов</b> формы ({@code <Events>} внутри элемента) mdclasses
- *       0.20.0 не разбирает — {@link com.github._1c_syntax.bsl.mdo.storage.FormData#getHandlers()}
- *       отдаёт только события уровня формы. Как только связка появится в mdclasses,
- *       достаточно расширить {@link #collectHandlers}.</li>
  *   <li>Служебные элементы ({@code ContextMenu}, {@code ExtendedTooltip},
- *       {@code AutoCommandBar}) в {@code getPlainItems()} не приходят и в коллекцию
+ *       {@code AutoCommandBar}) в {@code getPlainElements()} не приходят и в коллекцию
  *       элементов не попадают — вместе с их содержимым, то есть и кнопки
  *       автоматической командной панели формы.</li>
  *   <li>Расширение <b>таблицы</b> формы выбирается по корню её {@code ПутьКДанным}, то есть
  *       по типу реквизита. Если реквизит не найден или его тип не опознан, таблица
  *       остаётся с базовой {@code ТаблицаФормы} — без свойств вида данных.</li>
- *   <li>Колонки реквизитов-таблиц и деревьев ({@code <Columns>} в {@code Form.xml})
- *       mdclasses не отдаёт, поэтому {@code ТаблицаЗначений} и {@code ДеревоЗначений}
- *       получают базовые {@code ДанныеФормыКоллекция}/{@code ДанныеФормыДерево} —
- *       с методами и обходом, но без колонок.</li>
  *   <li>У <b>обычной</b> формы типизируется только сама форма. Её элементы —
  *       {@code ПолеВвода}, {@code ТабличноеПоле}, {@code Надпись} — живут в отдельной
  *       иерархии, которая здесь не моделируется, поэтому остаются без типа: подмешать
  *       им типы управляемой формы было бы ошибкой.</li>
+ *   <li>Контракта у обработчика <b>команды</b> нет: платформа передаёт в него параметр
+ *       {@code Команда}, но в синтакс-помощнике этого не объявляет.</li>
  * </ul>
  */
 @Component
@@ -355,21 +352,18 @@ public class FormTypesProvider {
     typeRegistry.registerMemberSource(formRef,
       () -> buildAttributeMembers(data.getAttributes(), attributeTypes), FileType.BSL);
     typeRegistry.registerMemberSource(formRef,
-      () -> buildEventMembers(collectHandlers(form), baseRef, extensionRef), FileType.BSL);
+      () -> concat(buildEventMembers(collectHandlers(form, kind, baseRef, extensionRef)),
+        buildCommandHandlers(data.getCommands())), FileType.BSL);
 
-    // Override, а не обычный источник: `Элементы`/`Параметры`/`ЭтотОбъект` есть и у
-    // базового типа, но с обобщёнными типами — специализированные должны выигрывать
-    // дедуп в getMembers.
-    // TODO mdclasses#649: когда появятся команды формы — зарегистрировать
-    //  `КомандыФормы.<mdoRef>` по образцу коллекции элементов и перекрыть им свойство
-    //  `Команды`, которое сейчас остаётся обобщённым. Оттуда же берутся имена
-    //  процедур-обработчиков команд (`КомандаФормы.Действие`): их надо добавлять в
-    //  buildEventMembers, иначе обработчик команды не считается обработчиком.
+    // Override, а не обычный источник: `Элементы`/`Параметры`/`Команды`/`ЭтотОбъект`
+    // есть и у базового типа, но с обобщёнными типами — специализированные должны
+    // выигрывать дедуп в getMembers.
     var itemsRef = registerItemsCollection(form, kind, suffixRu);
     var parametersRef = registerParametersStructure(form, kind, suffixRu, owner);
+    var commandsRef = registerCommandsCollection(form, kind, suffixRu);
     typeRegistry.registerMemberOverride(formRef,
-      () -> buildSelfMembers(kind, formRef, itemsRef, parametersRef, null), FileType.BSL);
-    registerModuleType(form, kind, formRef, itemsRef, parametersRef, owner);
+      () -> buildSelfMembers(kind, formRef, itemsRef, parametersRef, commandsRef, null), FileType.BSL);
+    registerModuleType(form, kind, formRef, itemsRef, parametersRef, commandsRef, owner);
     return true;
   }
 
@@ -384,7 +378,8 @@ public class FormTypesProvider {
    * Имя синтетическое и наружу не показывается: отображаемым остаётся имя самой формы.
    */
   private void registerModuleType(Form form, FormKind kind, TypeRef formRef, @Nullable TypeRef itemsRef,
-                                  @Nullable TypeRef parametersRef, @Nullable MD owner) {
+                                  @Nullable TypeRef parametersRef, @Nullable TypeRef commandsRef,
+                                  @Nullable MD owner) {
     if (kind != FormKind.ORDINARY) {
       return;
     }
@@ -404,7 +399,7 @@ public class FormTypesProvider {
     }
     typeRegistry.registerExtension(moduleRef, injectedRef, FileType.BSL);
     typeRegistry.registerMemberOverride(moduleRef,
-      () -> buildSelfMembers(kind, formRef, itemsRef, parametersRef, injectedRef), FileType.BSL);
+      () -> buildSelfMembers(kind, formRef, itemsRef, parametersRef, commandsRef, injectedRef), FileType.BSL);
   }
 
   /**
@@ -422,16 +417,13 @@ public class FormTypesProvider {
 
   /**
    * Тип структуры параметров формы ({@code ДанныеФормыСтруктура.<mdoRef>}). Наполняется
-   * стандартными параметрами платформы: общими для любой формы и специфичными для вида
-   * основных данных (см. {@link FormParametersResolver}). Параметры, объявленные в
-   * самой форме, сюда пока не попадают — mdclasses их не отдаёт.
+   * из двух источников: стандартные параметры платформы — общие для любой формы и
+   * специфичные для вида основных данных (см. {@link FormParametersResolver}), — плюс
+   * объявленные в самой форме (блок {@code <Parameters>}).
    * <p>
    * Generic-плейсхолдеры в типах параметров ({@code Ключ} у справочника объявлен как
    * {@code СправочникСсылка.<Имя справочника>}) подставляются именем владельца формы.
    */
-  // TODO mdclasses#651: добавить сюда параметры, объявленные в самой форме (блок
-  //  <Parameters> в Form.xml) — они ложатся в ту же структуру рядом со стандартными.
-  //  Собираются как реквизиты (имя + ValueTypeDescription), см. buildAttributeMembers.
   private @Nullable TypeRef registerParametersStructure(Form form, FormKind kind, String suffixRu,
                                                         @Nullable MD owner) {
     if (kind != FormKind.MANAGED) {
@@ -441,7 +433,8 @@ public class FormTypesProvider {
     }
     var baseParameters = formParametersResolver.parametersOf(kind.baseTypeRu());
     var extensionParameters = parameterExtensionParameters(form.getData().getAttributes(), kind);
-    if (baseParameters.isEmpty() && extensionParameters.isEmpty()) {
+    var ownParameters = form.getData().getParameters();
+    if (baseParameters.isEmpty() && extensionParameters.isEmpty() && ownParameters.isEmpty()) {
       return null;
     }
     var structureRef = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_STRUCTURE_RU).orElse(null);
@@ -450,7 +443,8 @@ public class FormTypesProvider {
       suffixRu, FormPlatformTypes.mdoSuffixEn(form), structureRef);
     var ownerName = ownerName(form);
     typeRegistry.registerMemberSource(parametersRef,
-      () -> withBasisType(specializeByOwner(concat(baseParameters, extensionParameters), ownerName), owner),
+      () -> declaredFirst(buildParameterMembers(ownParameters),
+        withBasisType(specializeByOwner(concat(baseParameters, extensionParameters), ownerName), owner)),
       FileType.BSL);
     // Параметров у формы единицы, и знать их состав важнее, чем имя типа: показываем
     // список целиком. Данные основного реквизита так не помечаем — свойств там сотни.
@@ -458,6 +452,48 @@ public class FormTypesProvider {
       typeRegistry.registerOpenStructure(parametersRef, structureRef);
     }
     return parametersRef;
+  }
+
+  /**
+   * Параметры, объявленные в самой форме. Собираются как реквизиты — имя и объявленный
+   * тип, — но в типы данных формы не переводятся: параметром передают значение как есть.
+   *
+   * @param parameters блок {@code <Parameters>} формы.
+   * @return дескрипторы параметров как свойств структуры.
+   */
+  private List<MemberDescriptor> buildParameterMembers(List<FormParameter> parameters) {
+    if (parameters.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<MemberDescriptor>(parameters.size());
+    for (var parameter : parameters) {
+      var name = parameter.getName();
+      if (name.isBlank()) {
+        continue;
+      }
+      result.add(MemberDescriptor.property(name, ValueTypes.resolve(typeRegistry, parameter.getValueType()), "")
+        .withBilingualName(neutral(name)));
+    }
+    return List.copyOf(result);
+  }
+
+  /**
+   * Объединяет объявленные в форме параметры со стандартными: при совпадении имён
+   * выигрывает объявление формы — оно и есть то, что реально приходит в параметр.
+   */
+  private static List<MemberDescriptor> declaredFirst(List<MemberDescriptor> declared,
+                                                      List<MemberDescriptor> standard) {
+    if (declared.isEmpty()) {
+      return standard;
+    }
+    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(declared.size() + standard.size());
+    for (var member : declared) {
+      byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
+    }
+    for (var member : standard) {
+      byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
+    }
+    return List.copyOf(byName.values());
   }
 
   private static List<MemberDescriptor> concat(List<MemberDescriptor> first, List<MemberDescriptor> second) {
@@ -596,21 +632,97 @@ public class FormTypesProvider {
   }
 
   /**
-   * Свойства, указывающие на саму форму и на её коллекцию элементов. У базового типа
-   * они тоже есть, но ведут на обобщённые {@code ФормаКлиентскогоПриложения} и
-   * {@code ВсеЭлементыФормы} — без этой замены разыменование
-   * {@code ЭтотОбъект.Реквизит} и {@code Элементы.Кнопка} не работало бы.
+   * Тип коллекции команд формы ({@code КомандыФормы.<mdoRef>}): устроен как коллекция
+   * элементов, только имена берутся из блока {@code <Commands>}, а тип у всех один —
+   * {@code КомандаФормы}.
+   *
+   * @return тип коллекции; {@code null}, если команд у формы нет — тогда свойство
+   *   {@code Команды} остаётся обобщённым.
+   */
+  private @Nullable TypeRef registerCommandsCollection(Form form, FormKind kind, String suffixRu) {
+    var commands = form.getData().getCommands();
+    if (kind != FormKind.MANAGED || commands.isEmpty()) {
+      return null;
+    }
+    var commandsRef = registerWithAlias(
+      FormPlatformTypes.FORM_COMMANDS_RU + "." + suffixRu,
+      FormPlatformTypes.FORM_COMMANDS_EN + "." + FormPlatformTypes.mdoSuffixEn(form));
+    var baseRef = typeRegistry.resolve(FormPlatformTypes.FORM_COMMANDS_RU).orElse(null);
+    if (baseRef != null) {
+      typeRegistry.registerExtension(commandsRef, baseRef, FileType.BSL);
+      typeRegistry.inheritCollectionTraits(commandsRef, baseRef, FileType.BSL);
+    }
+    var commandRef = typeRegistry.resolve(FormPlatformTypes.FORM_COMMAND_RU).orElse(null);
+    typeRegistry.registerMemberSource(commandsRef, () -> buildCommandMembers(commands, commandRef), FileType.BSL);
+    return commandsRef;
+  }
+
+  /** Команды формы как свойства коллекции: имя из {@code Form.xml}, тип у всех общий. */
+  private static List<MemberDescriptor> buildCommandMembers(List<FormCommand> commands,
+                                                            @Nullable TypeRef commandRef) {
+    var types = commandRef == null ? TypeSet.EMPTY : TypeSet.of(commandRef);
+    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(commands.size());
+    for (var command : commands) {
+      var name = command.getName();
+      if (name.isBlank()) {
+        continue;
+      }
+      byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
+        MemberDescriptor.property(name, types, "")
+          .withBilingualName(neutral(name))
+          .withBilingualDescription(bilingual(command.getTitle())));
+    }
+    return List.copyOf(byName.values());
+  }
+
+  /**
+   * Процедуры-обработчики команд. Обработчик команды объявлен не событием, а действием
+   * ({@code <Action>}), но по сути это то же самое: процедура модуля формы, которую
+   * зовёт платформа. Контракта в синтакс-помощнике у него нет — параметр {@code Команда}
+   * платформа передаёт, не объявляя.
+   */
+  private static List<MemberDescriptor> buildCommandHandlers(List<FormCommand> commands) {
+    if (commands.isEmpty()) {
+      return List.of();
+    }
+    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(commands.size());
+    for (var command : commands) {
+      var action = command.getAction();
+      if (action.isBlank()) {
+        continue;
+      }
+      byName.putIfAbsent(action.toLowerCase(Locale.ROOT),
+        MemberDescriptor.event(action, "", List.of())
+          .withBilingualName(neutral(action))
+          .withBilingualDescription(BilingualString.of(
+            "Обработчик команды формы «" + command.getName() + "».",
+            "Handler of the form command \"" + command.getName() + "\".")));
+    }
+    return List.copyOf(byName.values());
+  }
+
+  /**
+   * Свойства, указывающие на саму форму, её коллекцию элементов и коллекцию команд.
+   * У базового типа они тоже есть, но ведут на обобщённые
+   * {@code ФормаКлиентскогоПриложения} и {@code ВсеЭлементыФормы} — без этой замены
+   * разыменование {@code ЭтотОбъект.Реквизит} и {@code Элементы.Кнопка} не работало бы.
    */
   private static List<MemberDescriptor> buildSelfMembers(FormKind kind, TypeRef formRef, TypeRef itemsRef,
                                                          @Nullable TypeRef parametersRef,
+                                                         @Nullable TypeRef commandsRef,
                                                          @Nullable TypeRef injectedRef) {
-    var members = new ArrayList<MemberDescriptor>(4);
+    var members = new ArrayList<MemberDescriptor>(5);
     members.add(platformProperty(
       BilingualString.of(kind.itemsPropertyRu(), kind.itemsPropertyEn()), itemsRef, BilingualString.EMPTY));
     if (parametersRef != null) {
       members.add(platformProperty(
         BilingualString.of(FormPlatformTypes.PARAMETERS_PROPERTY_RU, FormPlatformTypes.PARAMETERS_PROPERTY_EN),
         parametersRef, BilingualString.EMPTY));
+    }
+    if (commandsRef != null) {
+      members.add(platformProperty(
+        BilingualString.of(FormPlatformTypes.COMMANDS_PROPERTY_RU, FormPlatformTypes.COMMANDS_PROPERTY_EN),
+        commandsRef, BilingualString.EMPTY));
     }
     // У обычной формы `ЭтотОбъект` не существует вовсе: он появляется только в модуле
     // формы объекта — и ведёт на сам объект, чей контекст туда инжечен
@@ -895,7 +1007,7 @@ public class FormTypesProvider {
   }
 
   /**
-   * Элементы формы как свойства коллекции. {@code getPlainItems()} уже плоский —
+   * Элементы формы как свойства коллекции. {@code getPlainElements()} уже плоский —
    * в управляемой форме коллекция {@code Элементы} тоже плоская независимо от
    * вложенности групп.
    */
@@ -1036,37 +1148,60 @@ public class FormTypesProvider {
   }
 
   /**
-   * Объявленные в {@code Form.xml} обработчики. Сейчас — только уровня формы:
-   * события элементов mdclasses не разбирает (см. ограничения в javadoc класса).
+   * Объявленный в {@code Form.xml} обработчик вместе с типами, где искать контракт
+   * его события. У обработчика формы это её расширение и базовый тип, у обработчика
+   * элемента — тип самого элемента: {@code Нажатие} объявлено у {@code КнопкаФормы},
+   * {@code ПриИзменении} — у {@code ПолеФормы}.
+   *
+   * @param handler       пара «событие → имя процедуры модуля».
+   * @param contractTypes типы-источники контракта, в порядке приоритета.
    */
-  // TODO mdclasses#648: как только у FormItem появятся обработчики, дособрать их здесь.
-  //  Контракт события брать не с формы, а с типа элемента-владельца
-  //  (FormPlatformTypes.itemTypeName): «Нажатие» есть у КнопкаФормы, «ПриИзменении» —
-  //  у ПолеФормы. Значит, вместе с парой «событие → обработчик» нужен и сам элемент,
-  //  а findEventContract должен принимать тип-источник от вызывающей стороны.
-  private static List<FormEventHandler> collectHandlers(Form form) {
-    return form.getData().getEventHandlers();
+  private record HandlerSource(FormEventHandler handler, List<TypeRef> contractTypes) {
+  }
+
+  /**
+   * Объявленные в {@code Form.xml} обработчики — и самой формы, и её элементов.
+   * Элементы перебираются плоским списком, поэтому вложенные в группы тоже попадают.
+   */
+  private List<HandlerSource> collectHandlers(Form form, FormKind kind, @Nullable TypeRef baseRef,
+                                              @Nullable TypeRef extensionRef) {
+    var data = form.getData();
+    var formTypes = Stream.of(extensionRef, baseRef).filter(Objects::nonNull).toList();
+    var result = new ArrayList<HandlerSource>(data.getEventHandlers().size());
+    for (var handler : data.getEventHandlers()) {
+      result.add(new HandlerSource(handler, formTypes));
+    }
+    var attributeTypes = attributeTypesByName(data.getAttributes());
+    for (var element : data.getPlainElements()) {
+      if (!(element instanceof FormEventHandlerOwner handlerOwner)) {
+        continue;
+      }
+      var elementTypes = itemTypes(element, attributeTypes, kind).refs().stream().toList();
+      for (var handler : handlerOwner.getEventHandlers()) {
+        result.add(new HandlerSource(handler, elementTypes));
+      }
+    }
+    return result;
   }
 
   /**
    * EVENT-члены типа формы: имя — объявленный в {@code Form.xml} обработчик, контракт
    * (сигнатура, описание, метаданные) — платформенное событие с тем же именем.
-   * Если контракт не нашёлся (нет HBK либо событие элемента), член всё равно
+   * Если контракт не нашёлся (нет HBK либо событие неизвестно), член всё равно
    * регистрируется: факт «этот метод — обработчик события» важен сам по себе.
    */
-  private List<MemberDescriptor> buildEventMembers(List<FormEventHandler> handlers,
-                                                   @Nullable TypeRef baseRef,
-                                                   @Nullable TypeRef extensionRef) {
+  private List<MemberDescriptor> buildEventMembers(List<HandlerSource> handlers) {
     if (handlers.isEmpty()) {
       return List.of();
     }
     var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(handlers.size());
-    for (var handler : handlers) {
+    for (var source : handlers) {
+      var handler = source.handler();
       var handlerName = handler.handler();
       if (handlerName.isBlank()) {
         continue;
       }
-      var contract = findEventContract(handler.event(), extensionRef, baseRef);
+      var contract = findEventContract(handler.event(), source.contractTypes());
       var descriptor = contract == null
         ? MemberDescriptor.event(handlerName, "", List.of())
         .withBilingualDescription(unknownEventDescription(handler.event()))
@@ -1079,17 +1214,20 @@ public class FormTypesProvider {
 
   /**
    * Контракт события по его каноническому имени из {@code Form.xml} (имя приходит в
-   * английском написании). Расширение просматривается первым: события работы с
-   * данными объявлены именно на нём.
+   * английском написании). Типы просматриваются по порядку: у формы расширение идёт
+   * первым — события работы с данными объявлены именно на нём.
    */
-  private @Nullable MemberDescriptor findEventContract(String eventName,
-                                                       @Nullable TypeRef extensionRef,
-                                                       @Nullable TypeRef baseRef) {
+  private @Nullable MemberDescriptor findEventContract(String eventName, List<TypeRef> contractTypes) {
     if (eventName.isBlank()) {
       return null;
     }
-    var found = eventOn(extensionRef, eventName);
-    return found == null ? eventOn(baseRef, eventName) : found;
+    for (var typeRef : contractTypes) {
+      var found = eventOn(typeRef, eventName);
+      if (found != null) {
+        return found;
+      }
+    }
+    return null;
   }
 
   private @Nullable MemberDescriptor eventOn(@Nullable TypeRef typeRef, String eventName) {

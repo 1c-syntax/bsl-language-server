@@ -372,6 +372,15 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void handlersDeclaredOnElementsBecomeEventsOfTheForm() {
+    // <InputField name="Реквизит1"><Events><Event name="OnChange">Реквизит1ПриИзменении</Event>.
+    // Обработчик объявлен у элемента, а живёт в модуле формы — значит и событием он
+    // должен стать у формы. Контракт события приходит из синтакс-помощника
+    // (см. FormParametersHbkTest), но сам факт «это обработчик» от него не зависит.
+    assertThat(member(DOCUMENT_FORM, MemberKind.EVENT, "Реквизит1ПриИзменении")).isNotNull();
+  }
+
+  @Test
   void handlerOfBaseFormEventTakesContractFromTheFormType() {
     // <Event name="OnCreateAtServer">ПриСозданииНаСервере</Event> — событие
     // самой ФормаКлиентскогоПриложения, расширение тут ни при чём.
@@ -531,6 +540,44 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
     assertThat(member(DOCUMENT_LIST_FORM, MemberKind.EVENT, "ПриПовторномОткрытии")).isNotNull();
     assertThat(names(membersOf(DOCUMENT_LIST_FORM)))
       .doesNotContain("ПриЗаписиНаСервере");
+  }
+
+  @Test
+  void commandsOfTheFormAreInItsOwnCommandsCollection() {
+    var commands = member(DOCUMENT_FORM, MemberKind.PROPERTY, "Команды");
+    assertThat(commands).isNotNull();
+    var commandsType = commands.returnTypes().refs().iterator().next();
+    assertThat(commandsType.qualifiedName())
+      .as("коллекция команд — своя у каждой формы, а не обобщённая КомандыФормы")
+      .isEqualTo("КомандыФормы.Документ.Документ1.Форма.ФормаДокумента");
+
+    var command = find(typeRegistry.getMembers(commandsType, FileType.BSL),
+      MemberKind.PROPERTY, "ЗаполнитьПоОснованию");
+    assertThat(command).isNotNull();
+    assertThat(command.returnTypes().refs().iterator().next().qualifiedName()).isEqualTo("КомандаФормы");
+  }
+
+  @Test
+  void commandActionIsAHandlerOfTheForm() {
+    // <Command name="ЗаполнитьПоОснованию"><Action>ЗаполнитьПоОснованиюКоманда</Action>.
+    // Обработчик команды объявлен действием, а не событием, но это та же процедура
+    // модуля формы, которую зовёт платформа.
+    assertThat(member(DOCUMENT_FORM, MemberKind.EVENT, "ЗаполнитьПоОснованиюКоманда")).isNotNull();
+  }
+
+  @Test
+  void parametersDeclaredInTheFormAreInTheParametersStructure() {
+    // Собственные параметры формы приходят из mdclasses и не зависят от синтакс-помощника:
+    // структура `Параметры` появляется даже там, где стандартных параметров нет.
+    var parameters = member(DOCUMENT_FORM, MemberKind.PROPERTY, "Параметры");
+    assertThat(parameters).isNotNull();
+    var parametersType = parameters.returnTypes().refs().iterator().next();
+    var members = typeRegistry.getMembers(parametersType, FileType.BSL);
+
+    assertThat(names(members)).contains("ПодобранныйТовар", "РежимПодбора");
+    assertThat(find(members, MemberKind.PROPERTY, "ПодобранныйТовар")
+      .returnTypes().refs().iterator().next().qualifiedName())
+      .isEqualTo("СправочникСсылка.Справочник1");
   }
 
   @Test

@@ -817,6 +817,21 @@ final class FormPlatformTypes {
 
   static final String PARAMETERS_PROPERTY_EN = "Parameters";
 
+  /** Коллекция команд управляемой формы: у обычной команд нет вовсе. */
+  static final String FORM_COMMANDS_RU = "КомандыФормы";
+
+  static final String FORM_COMMANDS_EN = "FormCommands";
+
+  /** Одна команда формы — то, что лежит в коллекции. */
+  static final String FORM_COMMAND_RU = "КомандаФормы";
+
+  static final String FORM_COMMAND_EN = "FormCommand";
+
+  /** Имя свойства формы, отдающего коллекцию команд. */
+  static final String COMMANDS_PROPERTY_RU = "Команды";
+
+  static final String COMMANDS_PROPERTY_EN = "Commands";
+
   /**
    * Часть qualifiedName синтетического типа формы после имени базового типа —
    * ссылка на объект метаданных формы ({@code Документ.Документ1.Форма.ФормаДокумента},

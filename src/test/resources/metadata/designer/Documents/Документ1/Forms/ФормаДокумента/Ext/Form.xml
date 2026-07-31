@@ -23,6 +23,9 @@
 		<InputField name="Реквизит1" id="7">
 			<DataPath>Объект.Реквизит1</DataPath>
 			<EditMode>EnterOnInput</EditMode>
+			<Events>
+				<Event name="OnChange">Реквизит1ПриИзменении</Event>
+			</Events>
 			<ContextMenu name="Реквизит1КонтекстноеМеню" id="8"/>
 			<ExtendedTooltip name="Реквизит1РасширеннаяПодсказка" id="9"/>
 		</InputField>
@@ -138,4 +141,28 @@
 			</Columns>
 		</Attribute>
 	</Attributes>
+	<Commands>
+		<Command name="ЗаполнитьПоОснованию" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Заполнить по основанию</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ЗаполнитьПоОснованиюКоманда</Action>
+		</Command>
+	</Commands>
+	<Parameters>
+		<Parameter name="ПодобранныйТовар">
+			<Type>
+				<v8:Type>cfg:CatalogRef.Справочник1</v8:Type>
+			</Type>
+		</Parameter>
+		<Parameter name="РежимПодбора">
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+			<KeyParameter>true</KeyParameter>
+		</Parameter>
+	</Parameters>
 </Form>
