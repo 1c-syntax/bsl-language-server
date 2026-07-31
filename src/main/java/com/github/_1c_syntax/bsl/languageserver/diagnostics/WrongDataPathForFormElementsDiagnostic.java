@@ -29,7 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.storage.form.FormItem;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormDataPathOwner;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormElement;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
 
@@ -62,8 +63,8 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
     }
   }
 
-  private static boolean wrongDataPath(FormItem formItem) {
-    return formItem.getDataPath().startsWith("~");
+  private static boolean wrongDataPath(FormElement formItem) {
+    return formItem instanceof FormDataPathOwner owner && owner.getDataPath().startsWith("~");
   }
 
   private static boolean haveFormModules(Form form) {
@@ -99,7 +100,7 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
     if (formData.isEmpty()) {
       return;
     }
-    formData.getPlainItems()
+    formData.getPlainElements()
       .stream()
       .filter(WrongDataPathForFormElementsDiagnostic::wrongDataPath)
       .forEach(formItem -> diagnosticStorage.addDiagnostic(diagnosticRange,
