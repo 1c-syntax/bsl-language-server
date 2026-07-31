@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785514895508,
+  "lastUpdate": 1785526992259,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41540,6 +41540,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.12837055373399228",
             "extra": "mean: 93.93777044614156 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6fb9c399ebd1976c5fc0e07c6fb2d73b5a850c10",
+          "message": "Merge pull request #4344 from 1c-syntax/claude/asterisk-variable-types-g8l52w\n\nrevert(hover): убрана звёздочка у вычисленного по коду типа",
+          "timestamp": "2026-07-31T20:47:24+02:00",
+          "tree_id": "24d2685ec002cd07feacbcc3e053cfc04881e8eb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6fb9c399ebd1976c5fc0e07c6fb2d73b5a850c10"
+        },
+        "date": 1785526980954,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.28998692830403,
+            "unit": "sec",
+            "range": "stddev: 2.3487139681863862",
+            "extra": "mean: 93.28998692830403 sec\nrounds: 3"
           }
         ]
       }
