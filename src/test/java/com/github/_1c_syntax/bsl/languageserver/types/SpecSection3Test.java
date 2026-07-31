@@ -253,12 +253,19 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   @Test
   @DisplayName("3.20 Ссылка на тип в возвращаемом значении")
   void seeRefInReturnValue() {
-    // given: «Возвращаемое значение: См. Справочник.Справочник1.Реквизит1».
+    // given: пример рекомендации — «Возвращаемое значение: См. Справочник.Товары.ЕдиницыИзмерения»,
+    // то есть ссылка на табличную часть.
     // when
     var types = typeOf("3.20");
+    var attribute = typeOfVariable("Проба_3_20_Реквизит");
 
-    // then: совпадает с рекомендацией.
-    assertThat(names(types)).containsExactly("Строка");
+    // then
+    assertThat(names(types))
+      .as("рекомендация: возвращаемое значение получает тип по ссылке")
+      .containsExactly("ТабличнаяЧасть");
+    assertThat(names(attribute))
+      .as("рекомендация: с этим типом работают как с табличной частью — обходят и читают реквизит")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -279,11 +286,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToTabularSection() {
     // given / when
     var types = typeOf("3.22");
+    var attribute = typeOfVariable("Проба_3_22_Реквизит");
 
     // then
     assertThat(names(types))
       .as("рекомендация: параметр получает тип табличной части")
-      .containsExactly("СправочникТабличнаяЧасть.Справочник1.ТабличнаяЧасть1");
+      .containsExactly("ТабличнаяЧасть");
+    assertThat(names(attribute))
+      .as("рекомендация: табличную часть обходят и читают реквизит её строки")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -291,11 +302,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToTabularSectionRow() {
     // given / when
     var types = typeOf("3.23");
+    var attribute = typeOfVariable("Проба_3_23_Реквизит");
 
     // then: рекомендация предписывает эту запись, отмечая, что 1C:EDT её пока не поддерживает.
     assertThat(names(types))
       .as("рекомендация: параметр получает тип строки табличной части")
-      .containsExactly("СправочникТабличнаяЧастьСтрока.Справочник1.ТабличнаяЧасть1");
+      .containsExactly("СтрокаТабличнойЧасти");
+    assertThat(names(attribute))
+      .as("рекомендация: у строки табличной части читают её реквизит")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -325,11 +340,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToXdtoObject() {
     // given / when
     var types = typeOf("3.26");
+    var street = typeOfVariable("Проба_3_26_Улица");
 
-    // then: имя типа задаст реализация; рекомендации важно, что тип есть.
+    // then: имени типа рекомендация не называет, поведение — да (строка 692: «Адрес.Улица»).
     assertThat(names(types))
       .as("рекомендация: параметр получает тип объекта XDTO-пакета")
       .isNotEmpty();
+    assertThat(names(street))
+      .as("рекомендация: у объекта XDTO доступны его свойства")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -337,11 +356,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void xdtoFactoryCreateGivesObjectType() {
     // given / when
     var types = typeOf("3.27");
+    var street = typeOfVariable("Проба_3_27_Улица");
 
-    // then
+    // then: пример рекомендации (строки 689-692) заканчивается «Адрес.Улица = "...";».
     assertThat(names(types))
       .as("рекомендация: созданный фабрикой объект получает тип из указанного пакета")
       .isNotEmpty();
+    assertThat(names(street))
+      .as("рекомендация: у созданного объекта доступны свойства его типа")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -349,11 +372,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void inlineSeeRefToXdtoType() {
     // given / when
     var types = typeOf("3.28");
+    var street = typeOfVariable("Проба_3_28_Улица");
 
-    // then
+    // then: пример рекомендации (строки 705-706) заканчивается «Адрес.Улица = "...";».
     assertThat(names(types))
       .as("рекомендация: строчная ссылка задаёт тип, когда пакет вычисляется в коде")
       .isNotEmpty();
+    assertThat(names(street))
+      .as("рекомендация: у объекта с типом из строчной ссылки доступны его свойства")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -361,11 +388,20 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToForm() {
     // given / when
     var types = typeOf("3.29");
+    var objectAttribute = typeOfVariable("Проба_3_29_Ссылка");
+    var formItem = typeOfVariable("Проба_3_29_Элемент");
 
-    // then: тот же тип формы, что отдаёт «ПолучитьФорму» по строке-литералу.
+    // then: поведение из рекомендации (строки 1605-1606) — «Форма.Объект.Ссылка» и
+    // «Форма.Элементы.Артикул».
     assertThat(names(types))
       .as("рекомендация: параметр получает тип формы")
-      .containsExactly("ФормаКлиентскогоПриложения.Справочник.Справочник1.Форма.ФормаЭлемента");
+      .containsExactly("ФормаКлиентскогоПриложения");
+    assertThat(names(objectAttribute))
+      .as("рекомендация: через форму доступен реквизит её основного реквизита")
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(names(formItem))
+      .as("рекомендация: через форму доступен её элемент")
+      .containsExactly("ПолеФормы");
   }
 
   @Test
@@ -373,11 +409,16 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToFormAttribute() {
     // given / when
     var types = typeOf("3.30");
+    var attribute = typeOfVariable("Проба_3_30_Реквизит");
 
-    // then: у управляемой формы за основным реквизитом стоят данные формы.
+    // then: имя типа — из рекомендации (строки 1535, 1588), где основной реквизит формы
+    // описан как «ДанныеФормыСтруктура».
     assertThat(names(types))
       .as("рекомендация: параметр получает тип реквизита формы")
-      .containsExactly("ДанныеФормыСтруктура.СправочникОбъект.Справочник1");
+      .containsExactly("ДанныеФормыСтруктура");
+    assertThat(names(attribute))
+      .as("рекомендация: у реквизита формы читают реквизиты объекта")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -385,11 +426,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToFormItem() {
     // given / when
     var types = typeOf("3.31");
+    var currentData = typeOfVariable("Проба_3_31_ТекущиеДанные");
 
-    // then
+    // then: поведение из рекомендации (строки 749-754) — «Список.ТекущиеДанные.Артикул».
     assertThat(names(types))
       .as("рекомендация: параметр получает тип элемента формы")
       .containsExactly("ТаблицаФормы");
+    assertThat(names(currentData))
+      .as("рекомендация: через элемент формы читают текущие данные списка")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -398,11 +443,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
     // given: параметр объявлен обобщённым типом ТаблицаФормы.
     // when
     var types = typeOf("3.32");
+    var attribute = typeOfVariable("Проба_3_32_Реквизит");
 
-    // then: рекомендация предписывает именно этот путь вместо ссылки на текущие данные.
+    // then: пример рекомендации (строка 753) — «ЗначениеАртикула = Список.ТекущиеДанные.Артикул».
     assertThat(names(types))
       .as("рекомендация: «ТекущиеДанные» элемента формы дают строку его данных")
       .isNotEmpty();
+    assertThat(names(attribute))
+      .as("рекомендация: у текущих данных читают реквизит списка")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -410,11 +459,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToFormTableRow() {
     // given / when
     var types = typeOf("3.33");
+    var attribute = typeOfVariable("Проба_3_33_Реквизит");
 
-    // then: рекомендация предписывает эту запись, отмечая, что 1C:EDT её пока не поддерживает.
+    // then: имя типа взято из записи рекомендации (строка 765).
     assertThat(names(types))
       .as("рекомендация: параметр получает тип строки таблицы формы")
-      .isNotEmpty();
+      .containsExactly("ДанныеФормыЭлементКоллекции");
+    assertThat(names(attribute))
+      .as("рекомендация: у строки таблицы формы читают её реквизит")
+      .containsExactly("Строка");
   }
 
   // --- Ссылки на типы объектов кода -------------------------------------------
@@ -436,11 +489,15 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToObjectModuleMethodParameter() {
     // given / when
     var types = typeOf("3.35");
+    var element = typeOfVariable("Проба_3_35_Элемент");
 
-    // then
+    // then: у метода-цели параметр объявлен как «Массив из Строка».
     assertThat(names(types))
       .as("рекомендация: параметр получает объявленный тип параметра метода модуля объекта")
       .containsExactly("Массив");
+    assertThat(names(element))
+      .as("рекомендация: вместе с типом приходит объявленный тип его элементов")
+      .containsExactly("Строка");
   }
 
   @Test
@@ -488,6 +545,10 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
 
   private TypeSet typeOf(String item) {
     return SpecProbes.typeOf(typeService, document(), item);
+  }
+
+  private TypeSet typeOfVariable(String variable) {
+    return SpecProbes.typeOfVariable(typeService, document(), variable);
   }
 
   private static DocumentContext document() {

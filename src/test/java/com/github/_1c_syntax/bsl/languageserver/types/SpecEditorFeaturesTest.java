@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CompletionItem;
@@ -44,8 +45,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.jspecify.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,6 +65,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @CleanupContextBeforeClassAndAfterClass
 class SpecEditorFeaturesTest extends AbstractServerContextAwareTest {
+
+  /** Действие «создать или дозаполнить описание метода» (пункт 2.16). */
+  private static final String GENERATE_METHOD_DESCRIPTION = "source.generateMethodDescription";
+
+  /** Действие «показать структуру документирующего комментария» (пункт 2.17). */
+  private static final String SHOW_DESCRIPTION_STRUCTURE = "source.showDescriptionStructure";
+
+  /** Действие «включить строгую типизацию в модулях» (пункт 2.25). */
+  private static final String ENABLE_STRICT_TYPES = "source.enableStrictTypes";
 
   @Autowired
   private CompletionProvider completionProvider;
@@ -206,36 +220,36 @@ class SpecEditorFeaturesTest extends AbstractServerContextAwareTest {
   @DisplayName("2.16 Генератор документирующего описания метода")
   void docCommentGenerator() {
     // given / when
-    var titles = codeActionTitles();
+    var identifiers = codeActionIdentifiers();
 
     // then
-    assertThat(titles)
+    assertThat(identifiers)
       .as("рекомендация: описание метода можно создать и дозаполнить по расчётным типам")
-      .anyMatch(title -> title.matches("(?iu).*(описани|документир).*"));
+      .contains(GENERATE_METHOD_DESCRIPTION);
   }
 
   @Test
   @DisplayName("2.17 Панель структуры документирующего комментария")
   void docCommentStructureView() {
     // given / when
-    var titles = codeActionTitles();
+    var identifiers = codeActionIdentifiers();
 
     // then
-    assertThat(titles)
+    assertThat(identifiers)
       .as("рекомендация: структуру описания видно так, как её прочитал разбор")
-      .anyMatch(title -> title.matches("(?iu).*структур.*(коммент|описани).*"));
+      .contains(SHOW_DESCRIPTION_STRUCTURE);
   }
 
   @Test
   @DisplayName("2.25 Групповое включение строгой типизации по проекту или списку объектов")
   void groupStrictTypingCommand() {
     // given / when
-    var titles = codeActionTitles();
+    var identifiers = codeActionIdentifiers();
 
     // then
-    assertThat(titles)
+    assertThat(identifiers)
       .as("рекомендация: строгую типизацию включают командой сразу для группы модулей")
-      .anyMatch(title -> title.matches("(?iu).*(strict|строг).*"));
+      .contains(ENABLE_STRICT_TYPES);
   }
 
   @Test
@@ -277,7 +291,13 @@ class SpecEditorFeaturesTest extends AbstractServerContextAwareTest {
       .orElse("");
   }
 
-  private List<String> codeActionTitles() {
+  /**
+   * Идентификаторы кодовых действий на объявлении метода: вид действия и команда,
+   * которую оно запускает.
+   *
+   * @return идентификаторы доступных действий.
+   */
+  private List<String> codeActionIdentifiers() {
     var documentContext = TestUtils.getDocumentContext("""
       // Описание метода.
       //
@@ -295,8 +315,17 @@ class SpecEditorFeaturesTest extends AbstractServerContextAwareTest {
     params.setContext(codeActionContext);
 
     return codeActionProvider.getCodeActions(params, documentContext).stream()
-      .map(action -> action.isRight() ? action.getRight().getTitle() : action.getLeft().getTitle())
+      .flatMap(action -> action.isRight()
+        ? Stream.of(action.getRight().getKind(), commandOf(action.getRight()))
+        : Stream.of(action.getLeft().getCommand()))
+      .filter(Objects::nonNull)
+      .distinct()
       .sorted()
       .toList();
+  }
+
+  @Nullable
+  private static String commandOf(CodeAction codeAction) {
+    return codeAction.getCommand() == null ? null : codeAction.getCommand().getCommand();
   }
 }

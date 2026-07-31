@@ -86,6 +86,8 @@ class SpecFormModuleTest extends AbstractServerContextAwareTest {
         Если Элемент <> Неопределено Тогда
           Проба_4_57 = Элемент;
           Использование(Проба_4_57);
+          Проба_4_57_Видимость = Элемент.Видимость;
+          Использование(Проба_4_57_Видимость);
         КонецЕсли;
       КонецПроцедуры
 
@@ -96,10 +98,16 @@ class SpecFormModuleTest extends AbstractServerContextAwareTest {
 
     // when
     var types = SpecProbes.typeOfVariable(typeService, documentContext, "Проба_4_57");
+    var visibility = SpecProbes.typeOfVariable(typeService, documentContext, "Проба_4_57_Видимость");
 
-    // then: совпадает с рекомендацией — элемент формы найден по строковому имени
-    // (FormModuleInferenceTest#formItemByLiteralNameIsTheSameItemAsByQualifiedName).
-    assertThat(names(types)).isNotEmpty();
+    // then: поведение из рекомендации (строки 1702-1704) — после проверки на Неопределено
+    // у элемента читают «Видимость».
+    assertThat(names(types))
+      .as("рекомендация: «Элементы.Найти» даёт элемент формы")
+      .containsExactly("ПолеФормы");
+    assertThat(names(visibility))
+      .as("рекомендация: «Элемент.Видимость = Ложь»")
+      .containsExactly("Булево");
   }
 
   @Test
@@ -119,11 +127,12 @@ class SpecFormModuleTest extends AbstractServerContextAwareTest {
       //  см. НовыйСложныйОбъектДанных
       &НаКлиенте
       Функция РеквизитПроизвольный()
-        Возврат Неопределено;
+        Возврат РеквизитПроизвольный;
       КонецФункции
 
       &НаКлиенте
       Процедура Тест()
+        РеквизитПроизвольный = НовыйСложныйОбъектДанных();
         Проба_4_59 = РеквизитПроизвольный();
         Использование(Проба_4_59);
       КонецПроцедуры
@@ -158,11 +167,12 @@ class SpecFormModuleTest extends AbstractServerContextAwareTest {
       //  см. НовыйСложныйОбъектДанных
       &НаКлиенте
       Функция РеквизитПроизвольный()
-        Возврат Неопределено;
+        Возврат РеквизитПроизвольный;
       КонецФункции
 
       &НаКлиенте
       Процедура Тест()
+        РеквизитПроизвольный = НовыйСложныйОбъектДанных();
         Проба_4_60 = РеквизитПроизвольный().Ссылка;
         Использование(Проба_4_60);
       КонецПроцедуры

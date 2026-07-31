@@ -67,9 +67,13 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
     var afterPerem = typeOfVariable("Проба_4_1_1");
     var afterInitialization = typeOfVariable("Проба_4_1_2");
 
-    // then: совпадает с рекомендацией — правильный вариант типизирован, неправильный нет.
-    assertThat(afterPerem.isEmpty()).isTrue();
-    assertThat(names(afterInitialization)).containsExactly("СправочникСсылка.Справочник1");
+    // then
+    assertThat(names(afterPerem))
+      .as("рекомендация: объявленная через «Перем» переменная имеет тип Неопределено (пункт 2.8)")
+      .containsExactly("Неопределено");
+    assertThat(names(afterInitialization))
+      .as("рекомендация: инициализация значением задаёт тип переменной")
+      .containsExactly("СправочникСсылка.Справочник1");
   }
 
   @Test
@@ -329,9 +333,13 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   void mapContentIsNotTypedByInlineComment() {
     // given / when
     var types = typeOf("4.27");
+    var value = typeOfVariable("Проба_4_27_Значение");
 
-    // then: совпадает с рекомендацией — так это не работает.
+    // then: совпадает с рекомендацией — тип из строчного комментария до значения не доходит.
     assertThat(elementNames(types)).containsExactly("КлючИЗначение");
+    assertThat(names(value))
+      .as("рекомендация: «Соответствие из Строка - тут так не сработает»")
+      .doesNotContain("Строка");
   }
 
   @Test
@@ -373,9 +381,13 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   void valueListContentIsNotTypedByInlineComment() {
     // given / when
     var types = typeOf("4.31");
+    var value = typeOfVariable("Проба_4_31_Значение");
 
-    // then: совпадает с рекомендацией — так это не работает.
+    // then: совпадает с рекомендацией — тип из строчного комментария до значения не доходит.
     assertThat(elementNames(types)).containsExactly("ЭлементСпискаЗначений");
+    assertThat(names(value))
+      .as("рекомендация: тип значения списка в строке задать нельзя")
+      .doesNotContain("Строка");
   }
 
   @Test

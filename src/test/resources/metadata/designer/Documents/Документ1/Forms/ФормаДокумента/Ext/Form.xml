@@ -105,5 +105,8 @@
 				<Field>Объект.RegisterRecords</Field>
 			</UseAlways>
 		</Attribute>
+		<Attribute name="РеквизитПроизвольный" id="2">
+			<Type/>
+		</Attribute>
 	</Attributes>
 </Form>

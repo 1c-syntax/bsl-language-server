@@ -49,8 +49,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterClass
 class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest {
 
-  private static final String FORM_TYPE =
-    "ФормаКлиентскогоПриложения.Справочник.Справочник1.Форма.ФормаЭлемента";
+  /** Имя типа формы, как его пишет рекомендация. */
+  private static final String FORM_TYPE = "ФормаКлиентскогоПриложения";
 
   @Autowired
   private TypeService typeService;
@@ -88,11 +88,19 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
     // given: «Форма - см. Справочник.Справочник1.Форма.ФормаЭлемента», обращение к «Объект».
     // when
     var types = typeOf("4.45");
+    var reference = typeOfVariable("Проба_4_45_Ссылка");
+    var formItem = typeOfVariable("Проба_4_45_Элемент");
 
-    // then: та же ссылка на форму, что и в пункте 3.29.
+    // then: поведение из рекомендации (строки 1605-1606).
     assertThat(names(types))
       .as("рекомендация: через ссылку на форму доступен её основной реквизит")
-      .containsExactly("ДанныеФормыСтруктура.СправочникОбъект.Справочник1");
+      .containsExactly("ДанныеФормыСтруктура");
+    assertThat(names(reference))
+      .as("рекомендация: «Ссылка = Форма.Объект.Ссылка»")
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(names(formItem))
+      .as("рекомендация: «Форма.Элементы.Артикул.Видимость = Истина»")
+      .containsExactly("ПолеФормы");
   }
 
   @Test
@@ -112,9 +120,13 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
   void getFormByFullName() {
     // given / when
     var types = typeOf("4.47");
+    var reference = typeOfVariable("Проба_4_47_Ссылка");
 
-    // then: совпадает с рекомендацией.
+    // then: рекомендация требует, чтобы был доступен весь контекст этой формы.
     assertThat(names(types)).containsExactly(FORM_TYPE);
+    assertThat(names(reference))
+      .as("рекомендация: у полученной формы доступен её основной реквизит")
+      .containsExactly("СправочникСсылка.Справочник1");
   }
 
   @Test
@@ -122,9 +134,13 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
   void getFormThroughManager() {
     // given / when
     var types = typeOf("4.48");
+    var reference = typeOfVariable("Проба_4_48_Ссылка");
 
-    // then: совпадает с рекомендацией.
+    // then
     assertThat(names(types)).containsExactly(FORM_TYPE);
+    assertThat(names(reference))
+      .as("рекомендация: у полученной формы доступен её основной реквизит")
+      .containsExactly("СправочникСсылка.Справочник1");
   }
 
   @Test
@@ -146,8 +162,8 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
     // when
     var types = typeOf("4.50");
 
-    // then: ТОЧНЕЕ РЕКОМЕНДАЦИИ — она ждёт общий тип формы, мы отдаём конкретную форму
-    // объекта, и это строго больше информации. Проверяем наше поведение.
+    // then: рекомендация (строка 1626) говорит, что ссылки на основные формы возвращают
+    // общий тип «ФормаКлиентскогоПриложения».
     assertThat(names(types)).containsExactly(FORM_TYPE);
   }
 
@@ -232,10 +248,11 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
     // given / when
     var types = typeOf("4.66");
 
-    // then: имя типа макета задаст реализация; рекомендации важно, что тип есть.
+    // then: раздел рекомендации называется «Описание типов макетов СКД и Табличного
+    // документа», а макет фикстуры — табличный документ.
     assertThat(names(types))
       .as("рекомендация: строчная ссылка задаёт тип макета")
-      .isNotEmpty();
+      .containsExactly("ТабличныйДокумент");
   }
 
   @Test
@@ -243,14 +260,27 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
   void mixedTypeOfObjectCopy() {
     // given / when
     var types = typeOf("4.67");
+    var extraColumn = typeOfVariable("Проба_4_67_Колонка");
+    var objectAttribute = typeOfVariable("Проба_4_67_Реквизит");
 
-    // then: совпадает с рекомендацией — оба типа и дополнительная колонка на месте.
+    // then: рекомендация (строка 1845) допускает смешанный тип и добавление к нему
+    // дополнительных колонок для технических целей.
     assertThat(names(types))
       .containsExactlyInAnyOrder("Структура", "СправочникОбъект.Справочник1");
+    assertThat(names(extraColumn))
+      .as("рекомендация: дополнительная колонка смешанного типа доступна")
+      .containsExactly("Строка");
+    assertThat(names(objectAttribute))
+      .as("рекомендация: реквизиты объекта в смешанном типе доступны")
+      .containsExactly("Строка");
   }
 
   private TypeSet typeOf(String item) {
     return SpecProbes.typeOf(typeService, document(), item);
+  }
+
+  private TypeSet typeOfVariable(String variable) {
+    return SpecProbes.typeOfVariable(typeService, document(), variable);
   }
 
   private static DocumentContext document() {
