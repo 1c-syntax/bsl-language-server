@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextPlatformTypesProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -37,7 +39,9 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -142,6 +146,7 @@ public class PlatformMemberHoverBuilder {
         sb.append(": ").append(typeRegistry.displayName(descriptor.returnType(), lang));
       }
       sb.append("\n```\n");
+      appendOpenStructureFields(sb, descriptor.returnTypes(), lang);
     }
     if (owner != null) {
       sb.append("\n_").append(tr("memberOf")).append("_ `")
@@ -225,6 +230,67 @@ public class PlatformMemberHoverBuilder {
       }
     }
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
+  }
+
+  /**
+   * Дописывает состав свойств «открытой структуры» маркдаун-списком — так же, как
+   * hover переменной показывает поля {@code Структура}. Типы, у которых состав
+   * свойств не объявлен конфигурацией (см. {@code TypeRegistry#isOpenStructure}),
+   * пропускаются: у них полезно имя типа, а не перечисление сотен членов.
+   */
+  private void appendOpenStructureFields(StringBuilder sb, TypeSet types, Language lang) {
+    if (types == null || types.isEmpty()) {
+      return;
+    }
+    for (var ref : types.refs()) {
+      var base = typeRegistry.openStructureBase(ref);
+      if (base.isEmpty()) {
+        continue;
+      }
+      // Члены базового платформенного типа (`Свойство`, `ИсходныйКлючЗаписи`) полями
+      // не являются: конфигурация их не объявляла, и в списке они только мешают.
+      var inherited = new HashSet<String>();
+      for (var member : typeRegistry.getMembers(base.get(), FileType.BSL)) {
+        inherited.add(member.name().toLowerCase(Locale.ROOT));
+      }
+      for (var member : typeRegistry.getMembers(ref, FileType.BSL)) {
+        if (member.kind() != MemberKind.PROPERTY
+          || inherited.contains(member.name().toLowerCase(Locale.ROOT))) {
+          continue;
+        }
+        var description = member.displayDescription(lang);
+        var keyMarker = BslContextPlatformTypesProvider.KEY_PARAMETER_MARKER.forLanguage(lang);
+        var key = description.stripTrailing().endsWith(keyMarker);
+        if (key) {
+          description = description.stripTrailing();
+          description = description.substring(0, description.length() - keyMarker.length());
+        }
+
+        // Ключевой параметр — курсивом: признак «по нему форма ищется среди уже
+        // открытых» важнее прочего текста и должен читаться до описания.
+        var name = member.displayName(lang);
+        sb.append("\n* ").append(key ? "***" + name + "***" : "**" + name + "**");
+        var typeLabel = renderTypeSet(member.returnTypes(), lang);
+        if (!typeLabel.isEmpty()) {
+          sb.append(": ").append(typeLabel);
+        }
+        var text = asListItemLines(description);
+        if (!text.isBlank()) {
+          sb.append(" — ").append(text);
+        }
+      }
+    }
+  }
+
+  /**
+   * Готовит многоабзацный текст к вставке внутрь пункта markdown-списка: переносы
+   * сохраняются, но становятся «жёсткими» (два пробела в конце строки) и получают
+   * отступ по ширине маркера. Без этого продолжение выходит из пункта и встаёт
+   * отдельным абзацем, теряя привязку к своему полю; пустые строки между абзацами
+   * убираются — в списке они смотрятся разрывом.
+   */
+  private static String asListItemLines(String text) {
+    return text.strip().replaceAll("[ \\t]*\\R(?:[ \\t]*\\R)*[ \\t]*", "  \n  ");
   }
 
   /**

@@ -212,6 +212,28 @@ public class TypeRegistry {
   private final Map<TypeRef, BilingualString> displayNames = new ConcurrentHashMap<>();
 
   /**
+   * Типы, состав свойств которых задан конфигурацией и достаточно компактен, чтобы
+   * показывать его списком (см. {@link #registerOpenStructure}).
+   */
+  private final Map<TypeRef, TypeRef> openStructures = new ConcurrentHashMap<>();
+
+  /**
+   * Происхождение конкретного типа: из какого дженерика он вырос
+   * ({@code СправочникСсылка.Контрагенты} → {@code СправочникСсылка.<Имя справочника>}).
+   * Заполняется {@link #registerSpecialization}; первая регистрация выигрывает —
+   * конкретный тип рождается из одного дженерика, а повторный вызов лишь добавляет
+   * ещё один источник членов.
+   */
+  private final Map<TypeRef, TypeRef> specializedFrom = new ConcurrentHashMap<>();
+
+  /**
+   * Расширения типа: чьи члены в него подмешаны, в порядке регистрации
+   * (см. {@link #registerExtension}). Отвечает на вопрос «что вообще навешано на
+   * этот тип» — без него это выясняется только чтением кода-регистратора.
+   */
+  private final Map<TypeRef, List<TypeRef>> extensions = new ConcurrentHashMap<>();
+
+  /**
    * Двуязычные описания типов (ru + en) в разрезе языка — параллельный индекс к
    * {@link #descriptions}, который продолжает хранить scoped primary-форму
    * для legacy-логики. Заполняется из {@link TypePackProvider.TypeDecl#description()},
@@ -888,11 +910,12 @@ public class TypeRegistry {
    * (см. {@link #indexMemberMetadata}).
    * <p>
    * Переносятся <b>только members</b>. Коллекционные свойства (типы элементов,
-   * {@code Для Каждого}, индексатор) сознательно не копируются: метод используется и
-   * как «подмешать в тип members другого типа», когда у одного target'а несколько
-   * источников, и там «источник — коллекция» не значит «target — коллекция». Если
-   * специализация должна остаться коллекцией, позовите
-   * {@link #inheritCollectionTraits(TypeRef, TypeRef, FileType)} явно.
+   * {@code Для Каждого}, индексатор) сознательно не копируются: «источник — коллекция»
+   * не значит «target — коллекция». Если специализация должна остаться коллекцией,
+   * позовите {@link #inheritCollectionTraits(TypeRef, TypeRef, FileType)} явно.
+   * <p>
+   * Подмешать в тип члены другого типа <b>без</b> подстановки — это уже не
+   * специализация, а расширение: см. {@link #registerExtension}.
    *
    * @param specializedRef  целевой TypeRef, который должен «наследовать»
    *                        members generic-типа
@@ -909,8 +932,59 @@ public class TypeRegistry {
     }
     var safeBindings = Map.copyOf(bindings);
     registerSpecializedDisplayName(specializedRef, genericRef, safeBindings);
-    MemberSource source = () -> {
-      var raw = getMembers(genericRef, fileType);
+    specializedFrom.putIfAbsent(specializedRef, genericRef);
+    copyMembers(specializedRef, genericRef, safeBindings, fileType);
+  }
+
+  /**
+   * Зарегистрировать расширение типа: подмешать в {@code target} члены
+   * {@code source}'а как есть, без подстановки placeholder'ов.
+   * <p>
+   * Операция отличается от специализации не механикой, а смыслом: специализация
+   * <b>порождает</b> конкретный тип из дженерика, а расширение <b>дополняет</b> уже
+   * существующий тип. Так собираются формы (базовый тип + расширение по основному
+   * реквизиту + расширение вида элемента), строка динамического списка и объектный
+   * контекст модуля обычной формы — у одного target'а таких источников несколько.
+   * <p>
+   * Связь запоминается и доступна через {@link #extensionsOf(TypeRef)}: иначе узнать,
+   * что на типе висит, можно только чтением кода-регистратора.
+   *
+   * @param target   тип, который дополняется.
+   * @param source   тип, чьи члены подмешиваются.
+   * @param fileType язык файла, в котором расширение видимо.
+   */
+  public void registerExtension(TypeRef target, TypeRef source, FileType fileType) {
+    if (target == null || source == null) {
+      return;
+    }
+    extensions.computeIfAbsent(target, key -> new CopyOnWriteArrayList<>()).add(source);
+    copyMembers(target, source, Map.of(), fileType);
+  }
+
+  /**
+   * Дженерик, из которого вырос конкретный тип.
+   *
+   * @param ref конкретный тип.
+   * @return дженерик; пусто, если тип специализацией не порождался.
+   */
+  public Optional<TypeRef> genericOf(TypeRef ref) {
+    return Optional.ofNullable(specializedFrom.get(ref));
+  }
+
+  /**
+   * Типы, подмешанные в этот тип расширением, в порядке регистрации.
+   *
+   * @param ref тип.
+   * @return расширения; пустой список, если их нет.
+   */
+  public List<TypeRef> extensionsOf(TypeRef ref) {
+    return List.copyOf(extensions.getOrDefault(ref, List.of()));
+  }
+
+  /** Общая механика специализации и расширения: ленивый перенос членов источника. */
+  private void copyMembers(TypeRef target, TypeRef source, Map<String, String> bindings, FileType fileType) {
+    MemberSource memberSource = () -> {
+      var raw = getMembers(source, fileType);
       if (raw.isEmpty()) {
         return List.of();
       }
@@ -919,13 +993,13 @@ public class TypeRegistry {
         if (member.generic()) {
           continue;
         }
-        var specialized = member.specialize(safeBindings);
+        var specialized = member.specialize(bindings);
         result.add(specialized);
-        memberMetadataIndex.index(specializedRef, specialized);
+        memberMetadataIndex.index(target, specialized);
       }
       return result;
     };
-    registerMemberSource(specializedRef, source, fileType);
+    registerMemberSource(target, memberSource, fileType);
   }
 
   /**
@@ -1505,6 +1579,34 @@ public class TypeRegistry {
   /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
   public boolean supportsForEach(TypeRef ref, FileType fileType) {
     return collectionTraits.supportsForEach(ref, fileType);
+  }
+
+  /**
+   * Пометить тип как «открытую структуру» — набор именованных свойств, объявленный
+   * конфигурацией. У такого типа состав свойств информативен сам по себе, поэтому
+   * потребители вправе показывать его целиком (например, списком в hover'е), а не
+   * ограничиваться именем типа.
+   * <p>
+   * Помечать имеет смысл только компактные наборы: у типа с сотнями свойств
+   * развёрнутый список бесполезен.
+   *
+   * @param ref          ссылка на тип.
+   * @param inheritedFrom базовый платформенный тип, от которого {@code ref}
+   *                     унаследовал members. Его члены полями не считаются:
+   *                     конфигурация их не объявляла.
+   */
+  public void registerOpenStructure(TypeRef ref, TypeRef inheritedFrom) {
+    openStructures.put(ref, inheritedFrom);
+  }
+
+  /**
+   * Базовый тип открытой структуры (см. {@link #registerOpenStructure}).
+   *
+   * @param ref ссылка на тип.
+   * @return базовый тип; пусто, если тип открытой структурой не помечен.
+   */
+  public Optional<TypeRef> openStructureBase(TypeRef ref) {
+    return Optional.ofNullable(openStructures.get(ref));
   }
 
   /** {@code true}, если у типа разрешён индексатор {@code [...]} в данном языке файла. */

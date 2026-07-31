@@ -109,6 +109,7 @@ public class ExpressionTypeInferencer {
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
+  private final FormExpressionInference formExpressionInference;
   private final VariableCommentTypeResolver variableCommentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
@@ -356,6 +357,11 @@ public class ExpressionTypeInferencer {
       if (adjusted != null) {
         return adjusted;
       }
+      var formTypes = formExpressionInference.refinedCallTypes(
+        ctx.documentContext, leftTypes, memberName, call);
+      if (formTypes != null) {
+        return formTypes;
+      }
     }
     if (call == null || !ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
       return null;
@@ -433,13 +439,19 @@ public class ExpressionTypeInferencer {
     if (localMethod.isPresent()) {
       return symbolTypeIndex.getDeclaredReturnTypes(localMethod.get());
     }
-    // 2. Платформенная глобальная функция (СтрНайти и т.п.) — через
+    // 2. Открытие формы по имени: тип конкретной формы точнее, чем обобщённый
+    //    возвращаемый тип платформенной функции, поэтому проверяется до шага 3.
+    var formType = formExpressionInference.openedFormType(ctx.documentContext, name.getText(), call);
+    if (formType != null) {
+      return formType;
+    }
+    // 3. Платформенная глобальная функция (СтрНайти и т.п.) — через
     //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
     var globalReturn = scopeMemberTypeResolver.globalFunctionType(ctx.documentContext, name.getText());
     if (!globalReturn.isEmpty()) {
       return globalReturn;
     }
-    // 3. Неквалифицированный вызов платформенного метода self-типа модуля.
+    // 4. Неквалифицированный вызов платформенного метода self-типа модуля.
     //    Тот же self-тип, что и в inferIdentifier для свойств, здесь —
     //    MemberKind.METHOD.
     return scopeMemberTypeResolver.selfMemberType(ctx.documentContext, name.getText(), MemberKind.METHOD)
@@ -520,6 +532,11 @@ public class ExpressionTypeInferencer {
         union = union.union(values);
       }
       return union;
+    }
+    var byName = formExpressionInference.memberByLiteralName(
+      ctx.documentContext, leftTypes, OpenDataObjectInference.stringLiteralOf(node.getRight()));
+    if (byName != null) {
+      return byName;
     }
     TypeSet result = TypeSet.EMPTY;
     for (var ref : leftTypes.refs()) {
@@ -820,6 +837,13 @@ public class ExpressionTypeInferencer {
       callsByVariable
         .computeIfAbsent(target, key -> new Lazy<>(() -> openDataObjectInference.mutatorsOf(key)))
         .getOrCompute();
+    // Присваивание вида элементу формы — тоже изменение типа на месте, только записанное
+    // не вызовом, а присваиванием свойству; разбирается так же лениво.
+    Map<VariableSymbol, Lazy<Map<Position, BSLParser.AssignmentContext>>> kindsByVariable = new HashMap<>();
+    Function<VariableSymbol, Map<Position, BSLParser.AssignmentContext>> kindsOf = target ->
+      kindsByVariable
+        .computeIfAbsent(target, key -> new Lazy<>(() -> formExpressionInference.kindAssignmentsOf(key)))
+        .getOrCompute();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
@@ -830,15 +854,55 @@ public class ExpressionTypeInferencer {
       target -> target.getKind() == VariableKind.MODULE,
       this::declaredTypes,
       this::definitionPositions,
-      target -> callsOf.apply(target).keySet(),
+      target -> mutationPositions(callsOf.apply(target), kindsOf.apply(target)),
       (target, statement, position) ->
         attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
-      (target, position, incoming) -> openDataObjectInference.apply(
-        target, callsOf.apply(target).get(position), incoming, node -> inferInternal(node, ctx)),
+      (target, position, incoming) -> applyMutation(target, position, incoming, ctx,
+        callsOf.apply(target), kindsOf.apply(target)),
       narrowingCallback(owner)
     );
   }
 
+  /**
+   * Позиции всех изменений типа на месте — операторов-мутаторов и присваиваний вида.
+   *
+   * @param calls мутаторы по позициям.
+   * @param kinds присваивания вида по позициям.
+   * @return объединение позиций без повторов.
+   */
+  private static Collection<Position> mutationPositions(Map<Position, ?> calls, Map<Position, ?> kinds) {
+    if (kinds.isEmpty()) {
+      return calls.keySet();
+    }
+    Collection<Position> positions = new LinkedHashSet<>(calls.keySet());
+    positions.addAll(kinds.keySet());
+    return positions;
+  }
+
+  /**
+   * Вклад одного изменения на месте: по позиции определяется, какого оно вида.
+   *
+   * @param variable переменная-получатель.
+   * @param position позиция изменения.
+   * @param incoming тип переменной перед ним.
+   * @param ctx      контекст текущего инференса.
+   * @param calls    мутаторы этой переменной по позициям.
+   * @param kinds    присваивания вида этой переменной по позициям.
+   * @return изменённый тип; исходный, если по позиции ничего не нашлось.
+   */
+  private TypeSet applyMutation(VariableSymbol variable, Position position, TypeSet incoming, InferenceContext ctx,
+                                Map<Position, BSLParser.CallStatementContext> calls,
+                                Map<Position, BSLParser.AssignmentContext> kinds) {
+    var call = calls.get(position);
+    if (call != null) {
+      return openDataObjectInference.apply(variable, call, incoming, node -> inferInternal(node, ctx));
+    }
+    return formExpressionInference.applyKindAssignment(variable, kinds.get(position), incoming);
+  }
+
+  /**
+   * Переменные, живущие в том же теле, что и заданная: расчёт по потоку считает их все
+   * разом, одним поиском неподвижной точки.
   /**
    * Переменные, видимые в теле: расчёт по потоку считает их все разом, одним поиском
    * неподвижной точки.

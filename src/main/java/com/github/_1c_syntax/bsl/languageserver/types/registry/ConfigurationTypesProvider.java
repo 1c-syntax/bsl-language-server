@@ -183,6 +183,7 @@ public class ConfigurationTypesProvider {
   private final ConfigurationGenericExpander genericExpander;
   private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  private final FormTypesProvider formTypesProvider;
   private final RegisterTypesRegistrar registerTypesRegistrar;
   private final RecorderIndex recorderIndex;
   @Qualifier("platformTypesWarmupExecutor")
@@ -283,6 +284,10 @@ public class ConfigurationTypesProvider {
     // specialization КоллекцияОбъектовМетаданных по per-property element-type
     // из bsl-context + развёртывание имён детей коллекции из mdclasses.
     metadataCollectionSpecializer.specialize();
+
+    // Тип на каждую форму: реквизиты, элементы, расширение по основному реквизиту
+    // и обработчики событий из Form.xml.
+    formTypesProvider.register(children);
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
   }
@@ -634,6 +639,11 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerMemberSource(rowRef, columnSource, FileType.BSL);
       }
       registerTabularSectionPlatformMembers(rowRef, collRef, columnSource);
+      // Зеркало табличной части для управляемых форм заводится здесь, а не при
+      // регистрации формы: колонки уже под рукой, а форма узнаёт о табличных частях
+      // только из членов объектного типа — читать их из её ленивого источника нельзя.
+      formTypesProvider.registerTabularSectionData(collRef, columnSource);
+
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
     if (!tsMembers.isEmpty()) {
@@ -663,8 +673,8 @@ public class ConfigurationTypesProvider {
     if (genericColl == null || genericRow == null) {
       return;
     }
-    typeRegistry.registerSpecialization(rowRef, genericRow, Map.of(), FileType.BSL);
-    typeRegistry.registerSpecialization(collRef, genericColl, Map.of(), FileType.BSL);
+    typeRegistry.registerExtension(rowRef, genericRow, FileType.BSL);
+    typeRegistry.registerExtension(collRef, genericColl, FileType.BSL);
     typeRegistry.registerDefaultElementTypes(collRef, List.of(rowRef));
     typeRegistry.inheritCollectionTraits(collRef, genericColl, FileType.BSL);
 

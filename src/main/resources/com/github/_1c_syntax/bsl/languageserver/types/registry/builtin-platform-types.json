@@ -3301,8 +3301,311 @@
     ],
     "members": [
       {
+        "name": "<Имя реквизита>",
+        "nameRu": "<Имя реквизита>",
+        "nameEn": "<Attribute name>",
+        "kind": "PROPERTY",
+        "generic": true,
+        "description": "Реквизит формы, объявленный в конфигураторе."
+      },
+      {
+        "name": "Элементы",
+        "nameRu": "Элементы",
+        "nameEn": "Items",
+        "kind": "PROPERTY",
+        "returnType": "ВсеЭлементыФормы",
+        "accessMode": "READ",
+        "description": "Коллекция всех элементов формы."
+      },
+      {
+        "name": "Команды",
+        "nameRu": "Команды",
+        "nameEn": "Commands",
+        "kind": "PROPERTY",
+        "returnType": "КомандыФормы",
+        "accessMode": "READ",
+        "description": "Коллекция команд формы."
+      },
+      {
+        "name": "Параметры",
+        "nameRu": "Параметры",
+        "nameEn": "Parameters",
+        "kind": "PROPERTY",
+        "returnType": "ДанныеФормыСтруктура",
+        "accessMode": "READ",
+        "description": "Параметры, с которыми открыта форма."
+      },
+      {
+        "name": "Модифицированность",
+        "nameRu": "Модифицированность",
+        "nameEn": "Modified",
+        "kind": "PROPERTY",
+        "returnType": "Булево",
+        "description": "Признак изменения данных формы."
+      },
+      {
+        "name": "ТолькоПросмотр",
+        "nameRu": "ТолькоПросмотр",
+        "nameEn": "ReadOnly",
+        "kind": "PROPERTY",
+        "returnType": "Булево",
+        "description": "Запрет на изменение данных формы."
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "description": "Заголовок формы."
+      },
+      {
+        "name": "УникальныйИдентификатор",
+        "nameRu": "УникальныйИдентификатор",
+        "nameEn": "UUID",
+        "kind": "PROPERTY",
+        "returnType": "УникальныйИдентификатор",
+        "accessMode": "READ",
+        "description": "Уникальный идентификатор формы."
+      },
+      {
         "name": "ВладелецФормы",
         "kind": "PROPERTY"
+      },
+      {
+        "name": "ПриСозданииНаСервере",
+        "nameRu": "ПриСозданииНаСервере",
+        "nameEn": "OnCreateAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере при создании формы, до её отображения.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от создания формы."
+              },
+              {
+                "name": "СтандартнаяОбработка",
+                "nameRu": "СтандартнаяОбработка",
+                "nameEn": "StandardProcessing",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Истина",
+                "description": "Признак выполнения стандартной обработки."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриОткрытии",
+        "nameRu": "ПриОткрытии",
+        "nameEn": "OnOpen",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте при открытии формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от открытия формы."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриПовторномОткрытии",
+        "nameRu": "ПриПовторномОткрытии",
+        "nameEn": "OnReopen",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте при повторном открытии уже открытой формы.",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ПередЗакрытием",
+        "nameRu": "ПередЗакрытием",
+        "nameEn": "BeforeClose",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте перед закрытием формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от закрытия формы."
+              },
+              {
+                "name": "ЗавершениеРаботы",
+                "nameRu": "ЗавершениеРаботы",
+                "nameEn": "Exit",
+                "types": [
+                  "Булево"
+                ],
+                "description": "Признак закрытия формы при завершении работы приложения."
+              },
+              {
+                "name": "ТекстПредупреждения",
+                "nameRu": "ТекстПредупреждения",
+                "nameEn": "WarningText",
+                "types": [
+                  "Строка"
+                ],
+                "description": "Текст предупреждения, выводимого пользователю."
+              },
+              {
+                "name": "СтандартнаяОбработка",
+                "nameRu": "СтандартнаяОбработка",
+                "nameEn": "StandardProcessing",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Истина",
+                "description": "Признак выполнения стандартной обработки."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриЗакрытии",
+        "nameRu": "ПриЗакрытии",
+        "nameEn": "OnClose",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте после закрытия формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ЗавершениеРаботы",
+                "nameRu": "ЗавершениеРаботы",
+                "nameEn": "Exit",
+                "types": [
+                  "Булево"
+                ],
+                "description": "Признак закрытия формы при завершении работы приложения."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ОбработкаВыбора",
+        "nameRu": "ОбработкаВыбора",
+        "nameEn": "ChoiceProcessing",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте при получении результата выбора из подчинённой формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ВыбранноеЗначение",
+                "nameRu": "ВыбранноеЗначение",
+                "nameEn": "SelectedValue",
+                "description": "Результат выбора в подчинённой форме."
+              },
+              {
+                "name": "ИсточникВыбора",
+                "nameRu": "ИсточникВыбора",
+                "nameEn": "ChoiceSource",
+                "types": [
+                  "ФормаКлиентскогоПриложения"
+                ],
+                "description": "Форма, в которой осуществлён выбор."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ОбработкаОповещения",
+        "nameRu": "ОбработкаОповещения",
+        "nameEn": "NotificationProcessing",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте при получении оповещения.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ИмяСобытия",
+                "nameRu": "ИмяСобытия",
+                "nameEn": "EventName",
+                "types": [
+                  "Строка"
+                ],
+                "description": "Имя события оповещения."
+              },
+              {
+                "name": "Параметр",
+                "nameRu": "Параметр",
+                "nameEn": "Parameter",
+                "description": "Параметр оповещения."
+              },
+              {
+                "name": "Источник",
+                "nameRu": "Источник",
+                "nameEn": "Source",
+                "description": "Источник оповещения."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ОбработкаПроверкиЗаполненияНаСервере",
+        "nameRu": "ОбработкаПроверкиЗаполненияНаСервере",
+        "nameEn": "FillCheckProcessingAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере при проверке заполнения реквизитов формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от проверки."
+              },
+              {
+                "name": "ПроверяемыеРеквизиты",
+                "nameRu": "ПроверяемыеРеквизиты",
+                "nameEn": "CheckedAttributes",
+                "types": [
+                  "Массив"
+                ],
+                "description": "Массив путей к проверяемым реквизитам."
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "ИмяФормы",
@@ -3626,93 +3929,60 @@
   },
   {
     "kind": "TYPE",
-    "name": "СправочникОбъект.<Имя справочника>",
-    "members": [
-      {
-        "name": "<Имя реквизита>",
-        "kind": "PROPERTY",
-        "generic": true
-      },
-      {
-        "name": "<Имя табличной части>",
-        "kind": "PROPERTY",
-        "generic": true
-      },
-      {
-        "name": "<Имя общего реквизита>",
-        "kind": "PROPERTY",
-        "generic": true
-      },
-      {
-        "name": "ВерсияДанных",
-        "kind": "PROPERTY",
-        "returnType": "Строка"
-      },
-      {
-        "name": "Код",
-        "kind": "PROPERTY",
-        "returnType": "Строка"
-      },
-      {
-        "name": "Наименование",
-        "kind": "PROPERTY",
-        "returnType": "Строка"
-      },
-      {
-        "name": "ПометкаУдаления",
-        "kind": "PROPERTY",
-        "returnType": "Булево"
-      },
-      {
-        "name": "Ссылка",
-        "kind": "PROPERTY",
-        "returnType": "СправочникСсылка.<Имя справочника>",
-        "accessMode": "READ"
-      },
-      {
-        "name": "ЭтотОбъект",
-        "nameRu": "ЭтотОбъект",
-        "nameEn": "ThisObject",
-        "kind": "PROPERTY",
-        "returnType": "СправочникОбъект.<Имя справочника>",
-        "accessMode": "READ"
-      },
-      {
-        "name": "Записать",
-        "kind": "METHOD",
-        "description": "Записывает элемент справочника в базу данных.",
-        "signatures": [
-          {
-            "parameters": []
-          }
-        ]
-      },
-      {
-        "name": "Прочитать",
-        "kind": "METHOD",
-        "description": "Считывает данные элемента справочника из базы данных.",
-        "signatures": [
-          {
-            "parameters": []
-          }
-        ]
-      },
-      {
-        "name": "Метаданные",
-        "kind": "METHOD",
-        "signatures": [
-          {
-            "parameters": []
-          }
-        ],
-        "returnType": "ОбъектМетаданных: Справочник"
-      }
-    ]
-  },
-  {
-    "kind": "TYPE",
     "name": "СправочникМенеджер.<Имя справочника>",
     "members": [
+      {
+        "name": "ПолучитьФормуСписка",
+        "kind": "METHOD",
+        "returnType": "Форма",
+        "description": "Получает форму списка справочника.",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ПолучитьФормуВыбора",
+        "kind": "METHOD",
+        "returnType": "Форма",
+        "description": "Получает форму списка для выбора элементов справочника.",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ПолучитьФормуНовогоЭлемента",
+        "kind": "METHOD",
+        "returnType": "Форма",
+        "description": "Получает форму нового элемента справочника.",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ПолучитьФорму",
+        "kind": "METHOD",
+        "returnType": "Форма",
+        "description": "Получает форму справочника по её имени.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Форма",
+                "types": [
+                  "Строка"
+                ],
+                "description": "Имя формы, как оно задано в конфигураторе."
+              }
+            ]
+          }
+        ]
+      },
       {
         "name": "НайтиПоКоду",
         "kind": "METHOD",
@@ -4499,6 +4769,1266 @@
         "returnType": "ОбщийМодуль",
         "sinceVersion": "8.3.3",
         "description": "Ссылка на текущий общий модуль."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДинамическийСписок",
+    "nameRu": "ДинамическийСписок",
+    "nameEn": "DynamicList",
+    "description": "Реквизит формы, отображающий данные списка с отбором, порядком и оформлением.",
+    "members": [
+      {
+        "name": "ОсновнаяТаблица",
+        "nameRu": "ОсновнаяТаблица",
+        "nameEn": "MainTable",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "ПроизвольныйЗапрос",
+        "nameRu": "ПроизвольныйЗапрос",
+        "nameEn": "CustomQuery",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "ТекстЗапроса",
+        "nameRu": "ТекстЗапроса",
+        "nameEn": "QueryText",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "ДинамическоеСчитываниеДанных",
+        "nameRu": "ДинамическоеСчитываниеДанных",
+        "nameEn": "DynamicDataRead",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "Отбор",
+        "nameRu": "Отбор",
+        "nameEn": "Filter",
+        "kind": "PROPERTY",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Порядок",
+        "nameRu": "Порядок",
+        "nameEn": "Order",
+        "kind": "PROPERTY",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Параметры",
+        "nameRu": "Параметры",
+        "nameEn": "Parameters",
+        "kind": "PROPERTY",
+        "accessMode": "READ"
+      },
+      {
+        "name": "УсловноеОформление",
+        "nameRu": "УсловноеОформление",
+        "nameEn": "ConditionalAppearance",
+        "kind": "PROPERTY",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Группировка",
+        "nameRu": "Группировка",
+        "nameEn": "Group",
+        "kind": "PROPERTY",
+        "accessMode": "READ"
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДанныеФормыЭлементКоллекции",
+    "nameRu": "ДанныеФормыЭлементКоллекции",
+    "nameEn": "FormDataCollectionItem",
+    "description": "Строка коллекции данных формы.",
+    "members": [
+      {
+        "name": "ПолучитьИдентификатор",
+        "nameRu": "ПолучитьИдентификатор",
+        "nameEn": "GetID",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает идентификатор строки."
+      }
+    ]
+  },
+  {
+    "kind": "COLLECTION",
+    "name": "ДанныеФормыКоллекция",
+    "nameRu": "ДанныеФормыКоллекция",
+    "nameEn": "FormDataCollection",
+    "description": "Данные формы, представленные коллекцией строк.",
+    "supportsForEach": true,
+    "elementTypes": [
+      "ДанныеФормыЭлементКоллекции"
+    ],
+    "members": [
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыЭлементКоллекции",
+        "description": "Добавляет строку в конец коллекции."
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает количество строк коллекции."
+      },
+      {
+        "name": "НайтиПоИдентификатору",
+        "nameRu": "НайтиПоИдентификатору",
+        "nameEn": "FindByID",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыЭлементКоллекции",
+        "description": "Возвращает строку по идентификатору."
+      },
+      {
+        "name": "НайтиСтроки",
+        "nameRu": "НайтиСтроки",
+        "nameEn": "FindRows",
+        "kind": "METHOD",
+        "returnType": "Массив",
+        "description": "Возвращает массив строк, отвечающих условию отбора."
+      },
+      {
+        "name": "Выгрузить",
+        "nameRu": "Выгрузить",
+        "nameEn": "Unload",
+        "kind": "METHOD",
+        "returnType": "ТаблицаЗначений",
+        "description": "Выгружает данные коллекции в таблицу значений."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДанныеФормыЭлементДерева",
+    "nameRu": "ДанныеФормыЭлементДерева",
+    "nameEn": "FormDataTreeItem",
+    "description": "Строка дерева данных формы.",
+    "members": [
+      {
+        "name": "ПолучитьИдентификатор",
+        "nameRu": "ПолучитьИдентификатор",
+        "nameEn": "GetID",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает идентификатор строки."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДанныеФормыДерево",
+    "nameRu": "ДанныеФормыДерево",
+    "nameEn": "FormDataTree",
+    "description": "Данные формы, представленные деревом строк.",
+    "members": [
+      {
+        "name": "НайтиПоИдентификатору",
+        "nameRu": "НайтиПоИдентификатору",
+        "nameEn": "FindByID",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыЭлементДерева",
+        "description": "Возвращает строку дерева по идентификатору."
+      }
+    ]
+  },
+  {
+    "kind": "COLLECTION",
+    "name": "ДанныеФормыСтруктураСКоллекцией",
+    "nameRu": "ДанныеФормыСтруктураСКоллекцией",
+    "nameEn": "FormDataStructureWithCollection",
+    "description": "Данные формы, представленные набором именованных свойств и коллекцией строк.",
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
+    "elementTypes": [
+      "ДанныеФормыЭлементКоллекции"
+    ],
+    "members": [
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыЭлементКоллекции",
+        "description": "Добавляет строку в конец коллекции."
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает количество строк коллекции."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДанныеФормыСтруктура",
+    "nameRu": "ДанныеФормыСтруктура",
+    "nameEn": "FormDataStructure",
+    "description": "Данные формы, представленные набором именованных свойств.",
+    "members": [
+      {
+        "name": "Свойство",
+        "nameRu": "Свойство",
+        "nameEn": "Property",
+        "kind": "METHOD",
+        "returnType": "Булево",
+        "description": "Проверяет наличие свойства и получает его значение.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Имя",
+                "nameRu": "Имя",
+                "nameEn": "Name",
+                "types": [
+                  "Строка"
+                ],
+                "description": "Имя проверяемого свойства."
+              },
+              {
+                "name": "Значение",
+                "nameRu": "Значение",
+                "nameEn": "Value",
+                "optional": true,
+                "description": "Значение найденного свойства."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "COLLECTION",
+    "name": "ВсеЭлементыФормы",
+    "nameRu": "ВсеЭлементыФормы",
+    "nameEn": "FormAllItems",
+    "description": "Коллекция всех элементов управляемой формы, независимо от вложенности в группы.",
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
+    "elementTypes": [
+      "ГруппаФормы",
+      "ДекорацияФормы",
+      "КнопкаФормы",
+      "ПолеФормы",
+      "ТаблицаФормы",
+      "ДополнениеЭлементаФормы"
+    ],
+    "members": [
+      {
+        "name": "<Имя элемента управления>",
+        "nameRu": "<Имя элемента управления>",
+        "nameEn": "<Control name>",
+        "kind": "PROPERTY",
+        "generic": true,
+        "description": "Элемент формы, объявленный в конфигураторе."
+      },
+      {
+        "name": "Найти",
+        "nameRu": "Найти",
+        "nameEn": "Find",
+        "kind": "METHOD",
+        "description": "Возвращает элемент формы по имени либо Неопределено.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Имя",
+                "nameRu": "Имя",
+                "nameEn": "Name",
+                "types": [
+                  "Строка"
+                ],
+                "description": "Имя искомого элемента формы."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает количество элементов формы."
+      },
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "returnTypes": [
+          "ГруппаФормы",
+          "ДекорацияФормы",
+          "КнопкаФормы",
+          "ПолеФормы",
+          "ТаблицаФормы"
+        ],
+        "description": "Добавляет новый элемент формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Имя",
+                "nameRu": "Имя",
+                "nameEn": "Name",
+                "types": [
+                  "Строка"
+                ],
+                "description": "Имя нового элемента."
+              },
+              {
+                "name": "Тип",
+                "nameRu": "Тип",
+                "nameEn": "Type",
+                "types": [
+                  "Тип"
+                ],
+                "description": "Тип нового элемента."
+              },
+              {
+                "name": "Родитель",
+                "nameRu": "Родитель",
+                "nameEn": "Parent",
+                "optional": true,
+                "description": "Элемент-владелец добавляемого элемента."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Удалить",
+        "nameRu": "Удалить",
+        "nameEn": "Delete",
+        "kind": "METHOD",
+        "description": "Удаляет элемент формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Элемент",
+                "nameRu": "Элемент",
+                "nameEn": "Item",
+                "description": "Удаляемый элемент формы."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПолеФормы",
+    "nameRu": "ПолеФормы",
+    "nameEn": "FormField",
+    "description": "Элемент управляемой формы, отображающий значение реквизита.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Видимость",
+        "nameRu": "Видимость",
+        "nameEn": "Visible",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "Доступность",
+        "nameRu": "Доступность",
+        "nameEn": "Enabled",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "ТолькоПросмотр",
+        "nameRu": "ТолькоПросмотр",
+        "nameEn": "ReadOnly",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "ПутьКДанным",
+        "nameRu": "ПутьКДанным",
+        "nameEn": "DataPath",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ТаблицаФормы",
+    "nameRu": "ТаблицаФормы",
+    "nameEn": "FormTable",
+    "description": "Элемент управляемой формы, отображающий табличные данные.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Видимость",
+        "nameRu": "Видимость",
+        "nameEn": "Visible",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "ТекущиеДанные",
+        "nameRu": "ТекущиеДанные",
+        "nameEn": "CurrentData",
+        "kind": "PROPERTY",
+        "accessMode": "READ",
+        "description": "Данные текущей строки таблицы."
+      },
+      {
+        "name": "ТекущаяСтрока",
+        "nameRu": "ТекущаяСтрока",
+        "nameEn": "CurrentRow",
+        "kind": "PROPERTY",
+        "description": "Идентификатор текущей строки таблицы."
+      },
+      {
+        "name": "ВыделенныеСтроки",
+        "nameRu": "ВыделенныеСтроки",
+        "nameEn": "SelectedRows",
+        "kind": "PROPERTY",
+        "accessMode": "READ",
+        "description": "Коллекция идентификаторов выделенных строк."
+      },
+      {
+        "name": "ПутьКДанным",
+        "nameRu": "ПутьКДанным",
+        "nameEn": "DataPath",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Обновить",
+        "nameRu": "Обновить",
+        "nameEn": "Refresh",
+        "kind": "METHOD",
+        "description": "Обновляет отображаемые в таблице данные."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КомпоновщикНастроекКомпоновкиДанных",
+    "description": "Компоновщик настроек компоновки данных.",
+    "members": [
+      {
+        "name": "Настройки",
+        "kind": "PROPERTY",
+        "returnType": "НастройкиКомпоновкиДанных",
+        "description": "Настройки компоновки данных."
+      },
+      {
+        "name": "ФиксированныеНастройки",
+        "kind": "PROPERTY",
+        "returnType": "НастройкиКомпоновкиДанных",
+        "description": "Фиксированные настройки компоновки данных."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "НастройкиКомпоновкиДанных",
+    "description": "Настройка компоновки данных в целом.",
+    "members": [
+      {
+        "name": "Выбор",
+        "kind": "PROPERTY",
+        "returnType": "ВыбранныеПоляКомпоновкиДанных",
+        "description": "Основной набор выбранных полей."
+      },
+      {
+        "name": "Отбор",
+        "kind": "PROPERTY",
+        "returnType": "ОтборКомпоновкиДанных",
+        "description": "Основной отбор."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение таблицы формы для выбранных полей компоновки данных",
+    "description": "Дополнительные свойства таблицы формы, отображающей выбранные поля компоновки данных.",
+    "members": []
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение таблицы формы для отбора компоновки данных",
+    "description": "Дополнительные свойства таблицы формы, отображающей отбор компоновки данных.",
+    "members": []
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение таблицы формы для динамического списка",
+    "description": "Дополнительные свойства и события таблицы формы, отображающей динамический список.",
+    "members": [
+      {
+        "name": "АвтоОбновление",
+        "kind": "PROPERTY",
+        "returnType": "Булево",
+        "description": "Признак автоматического обновления списка."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение данных строки для динамического списка",
+    "description": "Дополнительные свойства данных строки таблицы динамического списка, когда в списке задано условное оформление.",
+    "members": []
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение группы формы для обычной группы",
+    "nameRu": "Расширение группы формы для обычной группы",
+    "description": "Дополнительные свойства группы формы вида «обычная группа».",
+    "members": [
+      {
+        "name": "ЦветФона",
+        "nameRu": "ЦветФона",
+        "nameEn": "BackColor",
+        "kind": "PROPERTY",
+        "returnType": "Цвет",
+        "description": "Цвет фона группы."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ГруппаФормы",
+    "nameRu": "ГруппаФормы",
+    "nameEn": "FormGroup",
+    "description": "Элемент управляемой формы, объединяющий другие элементы.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Видимость",
+        "nameRu": "Видимость",
+        "nameEn": "Visible",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "Доступность",
+        "nameRu": "Доступность",
+        "nameEn": "Enabled",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "ТекущаяСтраница",
+        "nameRu": "ТекущаяСтраница",
+        "nameEn": "CurrentPage",
+        "kind": "PROPERTY",
+        "returnType": "ГруппаФормы",
+        "description": "Активная страница группы с видом «Страницы»."
+      },
+      {
+        "name": "ПодчиненныеЭлементы",
+        "nameRu": "ПодчиненныеЭлементы",
+        "nameEn": "ChildItems",
+        "kind": "PROPERTY",
+        "accessMode": "READ",
+        "description": "Коллекция подчинённых элементов группы."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КнопкаФормы",
+    "nameRu": "КнопкаФормы",
+    "nameEn": "FormButton",
+    "description": "Элемент управляемой формы, связанный с командой.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Видимость",
+        "nameRu": "Видимость",
+        "nameEn": "Visible",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "Доступность",
+        "nameRu": "Доступность",
+        "nameEn": "Enabled",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      },
+      {
+        "name": "ИмяКоманды",
+        "nameRu": "ИмяКоманды",
+        "nameEn": "CommandName",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДекорацияФормы",
+    "nameRu": "ДекорацияФормы",
+    "nameEn": "FormDecoration",
+    "description": "Оформительский элемент управляемой формы: надпись или картинка.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Видимость",
+        "nameRu": "Видимость",
+        "nameEn": "Visible",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ДополнениеЭлементаФормы",
+    "nameRu": "ДополнениеЭлементаФормы",
+    "nameEn": "FormItemAddition",
+    "description": "Служебный элемент управляемой формы: строка поиска, состояние просмотра, управление поиском.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Видимость",
+        "nameRu": "Видимость",
+        "nameEn": "Visible",
+        "kind": "PROPERTY",
+        "returnType": "Булево"
+      }
+    ]
+  },
+  {
+    "kind": "COLLECTION",
+    "name": "КомандыФормы",
+    "nameRu": "КомандыФормы",
+    "nameEn": "FormCommands",
+    "description": "Коллекция команд управляемой формы.",
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
+    "elementTypes": [
+      "КомандаФормы"
+    ],
+    "members": [
+      {
+        "name": "Найти",
+        "nameRu": "Найти",
+        "nameEn": "Find",
+        "kind": "METHOD",
+        "returnType": "КомандаФормы",
+        "description": "Возвращает команду формы по имени."
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает количество команд формы."
+      },
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "returnType": "КомандаФормы",
+        "description": "Добавляет новую команду формы."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КомандаФормы",
+    "nameRu": "КомандаФормы",
+    "nameEn": "FormCommand",
+    "description": "Команда управляемой формы.",
+    "members": [
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "accessMode": "READ"
+      },
+      {
+        "name": "Заголовок",
+        "nameRu": "Заголовок",
+        "nameEn": "Title",
+        "kind": "PROPERTY",
+        "returnType": "Строка"
+      },
+      {
+        "name": "Действие",
+        "nameRu": "Действие",
+        "nameEn": "Action",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "description": "Имя процедуры модуля формы, выполняемой командой."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы клиентского приложения для объектов",
+    "nameRu": "Расширение формы клиентского приложения для объектов",
+    "nameEn": "Client application form extension for objects",
+    "description": "Расширение управляемой формы, основной реквизит которой — объект конфигурации.",
+    "members": [
+      {
+        "name": "ПередЗаписью",
+        "nameRu": "ПередЗаписью",
+        "nameEn": "BeforeWrite",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте перед записью объекта.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от записи."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи объекта."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПередЗаписьюНаСервере",
+        "nameRu": "ПередЗаписьюНаСервере",
+        "nameEn": "BeforeWriteAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере перед записью объекта.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от записи."
+              },
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Записываемый объект."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи объекта."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриЗаписиНаСервере",
+        "nameRu": "ПриЗаписиНаСервере",
+        "nameEn": "OnWriteAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере после записи объекта, в транзакции записи.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от записи."
+              },
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Записанный объект."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи объекта."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПослеЗаписиНаСервере",
+        "nameRu": "ПослеЗаписиНаСервере",
+        "nameEn": "AfterWriteAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере после записи объекта, вне транзакции.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Записанный объект."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи объекта."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПослеЗаписи",
+        "nameRu": "ПослеЗаписи",
+        "nameEn": "AfterWrite",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте после записи объекта.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи объекта."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриЧтенииНаСервере",
+        "nameRu": "ПриЧтенииНаСервере",
+        "nameEn": "OnReadAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере после чтения объекта в данные формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Прочитанный объект."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы элемента справочника",
+    "nameRu": "Расширение формы элемента справочника",
+    "description": "Расширение обычной формы, назначенной основной формой элемента справочника.",
+    "members": [
+      {
+        "name": "ПараметрОбъектКопирования",
+        "kind": "PROPERTY",
+        "returnType": "СправочникСсылка.<Имя справочника>",
+        "description": "Содержит ссылку на копируемый объект."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы списка справочника",
+    "nameRu": "Расширение формы списка справочника",
+    "description": "Расширение обычной формы, назначенной основной формой списка или выбора справочника.",
+    "members": [
+      {
+        "name": "ПараметрТекущаяСтрока",
+        "kind": "PROPERTY",
+        "returnType": "СправочникСсылка.<Имя справочника>",
+        "description": "Позиционирует список на строку с указанным значением при открытии формы."
+      },
+      {
+        "name": "ПараметрОтборПоВладельцу",
+        "kind": "PROPERTY",
+        "returnType": "СправочникСсылка.<Имя справочника>",
+        "description": "Начальное значение владельца, по которому отбирается список подчинённого справочника."
+      },
+      {
+        "name": "ПараметрВыборПоВладельцу",
+        "kind": "PROPERTY",
+        "returnType": "СправочникСсылка.<Имя справочника>",
+        "description": "Владелец, по которому может быть осуществлён выбор элемента подчинённого справочника."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы списка записей регистра сведений",
+    "nameRu": "Расширение формы списка записей регистра сведений",
+    "description": "Расширение обычной формы, назначенной основной формой списка записей регистра сведений.",
+    "members": [
+      {
+        "name": "ПараметрТекущаяСтрока",
+        "kind": "PROPERTY",
+        "returnType": "РегистрСведенийКлючЗаписи.<Имя регистра сведений>",
+        "description": "Позиционирует список на запись с указанным ключом при открытии формы."
+      },
+      {
+        "name": "ПараметрОтборПоРегистратору",
+        "kind": "PROPERTY",
+        "returnType": "ДокументСсылка.<Имя документа>",
+        "description": "Начальное значение отбора по регистратору при открытии формы списка."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "РегистрРасчетаКлючЗаписи.<Имя регистра расчета>",
+    "description": "Ключ записи регистра расчёта, однозначно определяющий запись.",
+    "members": []
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы списка записей регистра расчета",
+    "description": "Расширение обычной формы, назначенной основной формой списка записей регистра расчёта.",
+    "members": [
+      {
+        "name": "ПараметрТекущаяСтрока",
+        "kind": "PROPERTY",
+        "returnType": "РегистрНакопленияКлючЗаписи.<Имя регистра накопления>",
+        "description": "Позиционирует список на запись с указанным ключом при открытии формы."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы журнала документов",
+    "nameRu": "Расширение формы журнала документов",
+    "description": "Расширение обычной формы, назначенной основной формой журнала документов.",
+    "members": [
+      {
+        "name": "ПараметрТекущаяСтрока",
+        "kind": "PROPERTY",
+        "returnType": "ДокументСсылка.<Имя документа>",
+        "description": "Позиционирует журнал на строку с указанным документом при открытии формы."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Расширение формы клиентского приложения для документа",
+    "nameRu": "Расширение формы клиентского приложения для документа",
+    "nameEn": "Client application form extension for documents",
+    "description": "Расширение управляемой формы, основной реквизит которой — документ.",
+    "members": [
+      {
+        "name": "ПередЗаписью",
+        "nameRu": "ПередЗаписью",
+        "nameEn": "BeforeWrite",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте перед записью документа.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от записи."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи документа."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПередЗаписьюНаСервере",
+        "nameRu": "ПередЗаписьюНаСервере",
+        "nameEn": "BeforeWriteAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере перед записью документа.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от записи."
+              },
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Записываемый документ."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи документа."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриЗаписиНаСервере",
+        "nameRu": "ПриЗаписиНаСервере",
+        "nameEn": "OnWriteAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере после записи документа, в транзакции записи.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "Отказ",
+                "nameRu": "Отказ",
+                "nameEn": "Cancel",
+                "types": [
+                  "Булево"
+                ],
+                "defaultValue": "Ложь",
+                "description": "Признак отказа от записи."
+              },
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Записанный документ."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи документа."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПослеЗаписиНаСервере",
+        "nameRu": "ПослеЗаписиНаСервере",
+        "nameEn": "AfterWriteAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере после записи документа, вне транзакции.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Записанный документ."
+              },
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи документа."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПослеЗаписи",
+        "nameRu": "ПослеЗаписи",
+        "nameEn": "AfterWrite",
+        "kind": "EVENT",
+        "description": "Вызывается на клиенте после записи документа.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ПараметрыЗаписи",
+                "nameRu": "ПараметрыЗаписи",
+                "nameEn": "WriteParameters",
+                "types": [
+                  "Структура"
+                ],
+                "description": "Параметры записи документа."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПриЧтенииНаСервере",
+        "nameRu": "ПриЧтенииНаСервере",
+        "nameEn": "OnReadAtServer",
+        "kind": "EVENT",
+        "description": "Вызывается на сервере после чтения документа в данные формы.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "ТекущийОбъект",
+                "nameRu": "ТекущийОбъект",
+                "nameEn": "CurrentObject",
+                "description": "Прочитанный документ."
+              }
+            ]
+          }
+        ]
       }
     ]
   }

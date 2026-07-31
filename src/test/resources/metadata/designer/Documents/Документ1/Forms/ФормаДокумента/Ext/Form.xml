@@ -93,6 +93,11 @@
 				</InputField>
 			</ChildItems>
 		</Table>
+		<Table name="ВыбранныеПоля" id="40">
+			<Representation>Tree</Representation>
+			<DataPath>Компоновщик.Настройки.Выбор</DataPath>
+			<RowFilter xsi:nil="true"/>
+		</Table>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">
@@ -104,6 +109,11 @@
 			<UseAlways>
 				<Field>Объект.RegisterRecords</Field>
 			</UseAlways>
+		</Attribute>
+		<Attribute name="Компоновщик" id="2">
+			<Type>
+				<v8:Type>v8:SettingsComposer</v8:Type>
+			</Type>
 		</Attribute>
 	</Attributes>
 </Form>

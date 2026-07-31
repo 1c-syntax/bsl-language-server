@@ -62,9 +62,10 @@ import java.util.stream.Collectors;
  * <p>
  * Результат кэшируется в {@link com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex}.
  * <p>
- * Формы — отдельный путь: имя обработчика декларируется в {@code Form.xml}
- * блоке {@code <Events>}, и сопоставление идёт XML → method-by-name. Эта
- * ветка реализуется отдельно.
+ * Форма — единственный owner, у которого имя обработчика не совпадает с именем
+ * события: связка объявлена в {@code Form.xml}. Поиск здесь всё равно идёт по имени,
+ * потому что {@link FormTypesProvider} заранее вешает контракты событий на тип формы
+ * уже под объявленными именами обработчиков.
  */
 @Component
 @WorkspaceScope
@@ -346,6 +347,11 @@ public class EventHandlerResolver implements EventHandlerClassifier {
    * — прямой qualifiedName типа из HBK без специализации по имени.
    */
   private Optional<TypeRef> resolveOwnerType(DocumentContext documentContext, ModuleType moduleType) {
+    if (moduleType == ModuleType.FormModule) {
+      return documentContext.getMdObject()
+        .flatMap(md -> ConfigurationModuleMembersProvider.selfTypeQualifiedName(moduleType, md))
+        .flatMap(typeRegistry::resolve);
+    }
     var fixed = MODULE_TYPE_TO_FIXED_OWNER_RU.get(moduleType);
     if (fixed != null) {
       return typeRegistry.resolve(fixed);
