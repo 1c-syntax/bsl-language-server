@@ -259,14 +259,6 @@ public class ConfigurationTypesProvider {
     recorderIndex.index(children);
     int count = 0;
     for (var md : children) {
-      if (md instanceof DefinedType definedType) {
-        // Собственного типа у определяемого нет: за его именем стоит набор, поэтому
-        // реестру отдаётся состав. Реквизиты считаются лениво, уже после регистрации,
-        // так что успеть до них достаточно здесь.
-        typeRegistry.registerDefinedType(
-          definedType.getMdoReference().getMdoRefRu(),
-          definedType.getValueType().getTypes().stream().map(type -> type.fullName().getRu()).toList());
-      }
       if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
         count++;
       }
@@ -304,12 +296,22 @@ public class ConfigurationTypesProvider {
   /**
    * Обработка одного MD-объекта в {@link #register}: регистрация менеджера,
    * объектных/ссылочных типов, family-специализаций, expansion'ов для
-   * Enum/Journal/регистров, алиасов и member'а для namespace.
+   * Enum/Journal/регистров, алиасов и member'а для namespace. Определяемый тип
+   * вместо типа отдаёт реестру свой состав — типа у него нет.
    *
    * @return {@code true} если MD относится к {@link #MANAGER_TYPES} и был зарегистрирован.
    */
   private boolean processMdoChild(MD md, List<CommonAttribute> commonAttributes,
                                   Map<MDOType, List<MemberDescriptor>> collectionMembersByType) {
+    if (md instanceof DefinedType definedType) {
+      // За именем определяемого типа стоит набор, а не тип, поэтому реестру отдаётся
+      // состав. Реквизиты считаются лениво, уже после регистрации, — успеть до них
+      // достаточно здесь.
+      typeRegistry.registerDefinedType(
+        definedType.getMdoReference().getMdoRefRu(),
+        definedType.getValueType().getTypes().stream().map(type -> type.fullName().getRu()).toList());
+      return false;
+    }
     var mdoType = md.getMdoType();
     if (!MANAGER_TYPES.contains(mdoType)) {
       return false;
