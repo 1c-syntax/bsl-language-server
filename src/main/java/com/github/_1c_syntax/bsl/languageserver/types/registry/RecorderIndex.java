@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.MD;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,13 +41,17 @@ import java.util.Set;
  * документов конфигурации. Из него типизируется всё, что платформа объявляет через
  * {@code ДокументСсылка.<Имя документа>}: стандартный реквизит {@code Регистратор}
  * записи регистра и параметр {@code ПараметрОтборПоРегистратору} обычной формы списка.
+ * <p>
+ * Индекс собирается целиком и публикуется одной ссылкой на неизменяемую карту, а не
+ * наполняется на месте. Так читателю не нужно ни знать про поток регистрации, ни ловить
+ * полусобранное состояние в момент пересборки: он либо видит прежнюю карту, либо новую.
  */
 @Component
 @WorkspaceScope
 public class RecorderIndex {
 
   /** mdoRef регистра → имена документов-регистраторов в порядке обхода конфигурации. */
-  private final Map<String, Set<String>> recordersByRegister = new LinkedHashMap<>();
+  private volatile Map<String, List<String>> recordersByRegister = Map.of();
 
   /**
    * Перестраивает индекс по объектам конфигурации. Идемпотентен: повторный вызов
@@ -55,12 +60,15 @@ public class RecorderIndex {
    * @param children объекты метаданных конфигурации.
    */
   public void index(Iterable<MD> children) {
-    recordersByRegister.clear();
+    Map<String, Set<String>> collected = new LinkedHashMap<>();
     for (var md : children) {
       if (md instanceof Document document) {
-        indexDocument(document);
+        indexDocument(document, collected);
       }
     }
+    Map<String, List<String>> built = LinkedHashMap.newLinkedHashMap(collected.size());
+    collected.forEach((register, documents) -> built.put(register, List.copyOf(documents)));
+    recordersByRegister = Collections.unmodifiableMap(built);
   }
 
   /**
@@ -70,17 +78,16 @@ public class RecorderIndex {
    * @return имена документов; пусто — регистр независимый либо движений в него никто не пишет.
    */
   public List<String> recordersOf(String registerMdoRef) {
-    return List.copyOf(recordersByRegister.getOrDefault(registerMdoRef, Set.of()));
+    return recordersByRegister.getOrDefault(registerMdoRef, List.of());
   }
 
-  private void indexDocument(Document document) {
+  private static void indexDocument(Document document, Map<String, Set<String>> sink) {
     var documentName = shortName(document.getMdoReference().getMdoRefRu());
     if (documentName.isBlank()) {
       return;
     }
     for (var register : document.getRegisterRecords()) {
-      recordersByRegister
-        .computeIfAbsent(register.getMdoRefRu(), key -> new LinkedHashSet<>())
+      sink.computeIfAbsent(register.getMdoRefRu(), key -> new LinkedHashSet<>())
         .add(documentName);
     }
   }

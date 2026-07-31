@@ -87,6 +87,18 @@ class RegisterRecorderTypesTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void rebuildingTheIndexReplacesItsContentInsteadOfAppending() {
+    // Индекс публикуется целиком, поэтому повторная сборка по другому набору объектов
+    // не оставляет от прежней ничего — ни лишних регистров, ни лишних документов.
+    recorderIndex.index(List.of());
+    assertThat(recorderIndex.recordersOf("РегистрБухгалтерии.РегистрБухгалтерии1")).isEmpty();
+
+    recorderIndex.index(context.getConfiguration().getChildrenByMdoRef().values());
+    assertThat(recorderIndex.recordersOf("РегистрБухгалтерии.РегистрБухгалтерии1"))
+      .containsExactly("Документ1");
+  }
+
+  @Test
   void memberDeclaredWithForeignRegisterFamilyIsFixedUp() {
     // Ошибка синтакс-помощника: у РегистрБухгалтерииНаборЗаписей метод Вставить
     // объявлен возвращающим РегистрНакопленияЗапись.<Имя регистра накопления>,
