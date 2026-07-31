@@ -415,6 +415,48 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
       .isEqualTo("ОбъектМетаданных: Документ");
   }
 
+  @Test
+  void basedOnAndDataLockFieldsAndIndexesAreExpandedFromMdclasses() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    assertThat(collectionNames("ВводитсяНаОсновании"))
+      .as("в фикстуре справочник вводится на основании Документ1")
+      .contains("Документ1");
+    assertThat(collectionNames("ПоляБлокировкиДанных"))
+      .as("поле блокировки — стандартный реквизит Владелец")
+      .contains("Владелец");
+    assertThat(collectionNames("ДополнительныеИндексы"))
+      .as("у дополнительного индекса собственное имя, а не имя объекта метаданных")
+      .contains("ИндексПоВладельцу");
+  }
+
+  @Test
+  void hierarchyStandardAttributesArePresentForHierarchicalCatalog() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Обратная сторона hierarchyOnlyStandardAttributesAreSkippedForFlatCatalog:
+    // у иерархического справочника с группами оба реквизита на месте.
+    assertThat(collectionNames("СтандартныеРеквизиты"))
+      .contains("Родитель", "ЭтоГруппа");
+  }
+
+  /**
+   * Имена членов коллекции иерархического справочника фикстуры — той, на которую
+   * указывает одноимённое property его per-MDO типа.
+   */
+  private List<String> collectionNames(String collectionName) {
+    var perMdoTypeRef = typeRegistry.intern(TypeKind.PLATFORM,
+      "ОбъектМетаданных: Справочник.СправочникСМенеджером");
+    var member = findMember(typeRegistry.getMembers(perMdoTypeRef, FileType.BSL), collectionName);
+    assertThat(member).as("property %s на per-MDO типе", collectionName).isNotNull();
+    var collectionRef = typeRegistry.intern(TypeKind.PLATFORM, member.returnType().qualifiedName());
+    return memberNames(typeRegistry.getMembers(collectionRef, FileType.BSL));
+  }
+
   // --- helpers ---
 
   private static MemberDescriptor findMember(Collection<MemberDescriptor> members, String name) {
