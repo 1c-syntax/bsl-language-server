@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785508709240,
+  "lastUpdate": 1785514895508,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41509,6 +41509,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1728956448619965",
             "extra": "mean: 92.34688727060954 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e992a7a69a8439fe7dd94f53222da0a2985635c9",
+          "message": "Merge pull request #4320 from BaniBaushev/feat/code-lens-command-tooltip\n\nfeat(code-lens): tooltip у команд линз (LSP 3.18)",
+          "timestamp": "2026-07-31T15:12:00+02:00",
+          "tree_id": "9c7d63c721450a537a6852a55255f81172006519",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e992a7a69a8439fe7dd94f53222da0a2985635c9"
+        },
+        "date": 1785514883887,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.93777044614156,
+            "unit": "sec",
+            "range": "stddev: 0.12837055373399228",
+            "extra": "mean: 93.93777044614156 sec\nrounds: 3"
           }
         ]
       }
