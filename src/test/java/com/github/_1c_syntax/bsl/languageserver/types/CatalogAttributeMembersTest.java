@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -88,7 +89,7 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
     // then
     assertThat(types.refs())
       .as("Объект.РеквизитОпределяемогоТипа → состав ОпределяемыйТип1")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactlyInAnyOrder("Число", "СправочникСсылка.Справочник1");
   }
 
@@ -114,7 +115,7 @@ class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
     // then
     assertThat(types.refs())
       .as("параметр, объявленный ОпределяемыйТип.ОпределяемыйТип1 → его состав")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactlyInAnyOrder("Число", "СправочникСсылка.Справочник1");
   }
 

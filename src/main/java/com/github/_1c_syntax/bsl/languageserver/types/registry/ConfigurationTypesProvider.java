@@ -253,15 +253,20 @@ public class ConfigurationTypesProvider {
   private void register(Iterable<MD> children) {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
-    // Состав определяемых типов нужен раньше любого реквизита: реквизит, объявленный
-    // определяемым типом, получает типы не свои, а те, из которых тот собран.
-    registerDefinedTypes(children);
     var commonAttributes = collectCommonAttributes(children);
     // «Регистр → его регистраторы» — только обходом документов: со стороны регистра
     // этих данных в метаданных нет. Нужно до регистрации типов регистров.
     recorderIndex.index(children);
     int count = 0;
     for (var md : children) {
+      if (md instanceof DefinedType definedType) {
+        // Собственного типа у определяемого нет: за его именем стоит набор, поэтому
+        // реестру отдаётся состав. Реквизиты считаются лениво, уже после регистрации,
+        // так что успеть до них достаточно здесь.
+        typeRegistry.registerDefinedType(
+          definedType.getMdoReference().getMdoRefRu(),
+          definedType.getValueType().getTypes().stream().map(type -> type.fullName().getRu()).toList());
+      }
       if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
         count++;
       }
@@ -284,24 +289,6 @@ public class ConfigurationTypesProvider {
     metadataCollectionSpecializer.specialize();
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
-  }
-
-  /**
-   * Запомнить в реестре состав определяемых типов конфигурации. Собственного типа
-   * у определяемого нет: за именем {@code ОпределяемыйТип.Сумма} стоит набор, поэтому
-   * реестр отдаёт по такому имени состав, а не тип.
-   *
-   * @param children объекты метаданных конфигурации.
-   */
-  private void registerDefinedTypes(Iterable<MD> children) {
-    for (var md : children) {
-      if (md instanceof DefinedType definedType) {
-        var composition = definedType.getValueType().getTypes().stream()
-          .map(type -> type.fullName().getRu())
-          .toList();
-        typeRegistry.registerDefinedType(definedType.getMdoReference().getMdoRefRu(), composition);
-      }
-    }
   }
 
   private static List<CommonAttribute> collectCommonAttributes(Iterable<MD> children) {

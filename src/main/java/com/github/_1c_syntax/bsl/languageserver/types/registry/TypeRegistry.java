@@ -301,15 +301,16 @@ public class TypeRegistry {
    * @return типы за этим именем; {@link TypeSet#EMPTY}, если имя не зарегистрировано.
    */
   public TypeSet resolveSet(String name) {
-    if (name == null || name.isEmpty()) {
+    if (name.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    var composition = definedTypes.get(name.toLowerCase(Locale.ROOT));
+    var key = name.toLowerCase(Locale.ROOT);
+    var composition = definedTypes.get(key);
     if (composition == null) {
       return resolve(name).map(TypeSet::of).orElse(TypeSet.EMPTY);
     }
     var unfolded = new HashSet<String>();
-    unfolded.add(name.toLowerCase(Locale.ROOT));
+    unfolded.add(key);
     return unfold(composition, unfolded);
   }
 

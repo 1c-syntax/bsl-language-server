@@ -569,7 +569,7 @@ public class SymbolTypeIndex {
    * имя остаётся пользовательским типом, как и было.
    */
   private TypeSet resolveSimple(String name) {
-    if (name == null || name.isBlank()) {
+    if (name.isBlank()) {
       return TypeSet.EMPTY;
     }
     var byName = typeRegistry.resolveSet(name.trim());
