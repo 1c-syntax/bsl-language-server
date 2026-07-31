@@ -82,7 +82,7 @@ class NavigationCommandBuilderTest {
     var targets = List.of(location(10));
 
     // when
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    var command = builder.gotoCommand("title", "tooltip", URI_VALUE, POSITION, targets);
 
     // then
     assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_GOTO_COMMAND);
@@ -97,7 +97,7 @@ class NavigationCommandBuilderTest {
     var targets = List.of(location(10));
 
     // when
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    var command = builder.gotoCommand("title", "tooltip", URI_VALUE, POSITION, targets);
 
     // then
     assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.BUILTIN_GOTO_COMMAND);
@@ -110,7 +110,7 @@ class NavigationCommandBuilderTest {
     var targets = List.of(location(10), location(20));
 
     // when
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    var command = builder.gotoCommand("title", "tooltip", URI_VALUE, POSITION, targets);
 
     // then
     assertThat(command.getArguments()).containsExactly(URI_VALUE.toString(), POSITION, targets, "peek");
@@ -123,7 +123,7 @@ class NavigationCommandBuilderTest {
     var locations = List.of(location(10), location(20));
 
     // when
-    var command = builder.referencesCommand("title", URI_VALUE, POSITION, locations);
+    var command = builder.referencesCommand("title", "tooltip", URI_VALUE, POSITION, locations);
 
     // then
     assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_REFERENCES_COMMAND);
@@ -137,10 +137,36 @@ class NavigationCommandBuilderTest {
     var locations = List.of(location(10));
 
     // when
-    var command = builder.referencesCommand("title", URI_VALUE, POSITION, locations);
+    var command = builder.referencesCommand("title", "tooltip", URI_VALUE, POSITION, locations);
 
     // then
     assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.BUILTIN_REFERENCES_COMMAND);
+  }
+
+  @Test
+  void gotoCommandSetsTooltipWhenProvided() {
+    // given
+    var builder = builderForVsCodeLikeClient();
+    var targets = List.of(new Location(URI_VALUE.toString(), new Range(POSITION, POSITION)));
+
+    // when
+    var command = builder.gotoCommand("title", "tooltip text", URI_VALUE, POSITION, targets);
+
+    // then
+    assertThat(command.getTooltip()).isEqualTo("tooltip text");
+  }
+
+  @Test
+  void referencesCommandSetsTooltipWhenProvided() {
+    // given
+    var builder = builderForVsCodeLikeClient();
+    var locations = List.of(new Location(URI_VALUE.toString(), new Range(POSITION, POSITION)));
+
+    // when
+    var command = builder.referencesCommand("title", "tooltip text", URI_VALUE, POSITION, locations);
+
+    // then
+    assertThat(command.getTooltip()).isEqualTo("tooltip text");
   }
 
   @Test
@@ -150,9 +176,9 @@ class NavigationCommandBuilderTest {
     var targets = List.of(location(10));
 
     // when
-    builder.gotoCommand("title", URI_VALUE, POSITION, targets);
-    builder.gotoCommand("title", URI_VALUE, POSITION, targets);
-    builder.referencesCommand("title", URI_VALUE, POSITION, targets);
+    builder.gotoCommand("title", "tooltip", URI_VALUE, POSITION, targets);
+    builder.gotoCommand("title", "tooltip", URI_VALUE, POSITION, targets);
+    builder.referencesCommand("title", "tooltip", URI_VALUE, POSITION, targets);
 
     // then
     verify(clientCapabilitiesHolder, times(1)).isVsCodeLikeClient();
@@ -167,7 +193,7 @@ class NavigationCommandBuilderTest {
 
     // when
     builder.handleInitializeEvent(initializeEvent());
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
+    var command = builder.gotoCommand("title", "tooltip", URI_VALUE, POSITION, targets);
 
     // then
     assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_GOTO_COMMAND);

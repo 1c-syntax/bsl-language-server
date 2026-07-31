@@ -71,11 +71,17 @@ public class InjectionPointCodeLensSupplier
   private final AutumnNavigation autumnNavigation;
   private final NavigationCommandBuilder navigationCommandBuilder;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     return documentContext.getFileType() == FileType.OS;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
     var symbolTree = documentContext.getSymbolTree();
@@ -100,6 +106,9 @@ public class InjectionPointCodeLensSupplier
     return codeLenses;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, InjectionPointCodeLensData data) {
     var locations = autumnNavigation.producerLocations(data.getBeanName(), data.isCollection());
@@ -109,11 +118,15 @@ public class InjectionPointCodeLensSupplier
 
     var title = title(data, locations.size());
     var position = unresolved.getRange().getStart();
-    var command = navigationCommandBuilder.gotoCommand(title, documentContext.getUri(), position, locations);
+    var tooltip = resources.getResourceString(getClass(), "tooltip");
+    var command = navigationCommandBuilder.gotoCommand(title, tooltip, documentContext.getUri(), position, locations);
     unresolved.setCommand(command);
     return unresolved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<InjectionPointCodeLensData> getCodeLensDataClass() {
     return InjectionPointCodeLensData.class;
@@ -140,6 +153,13 @@ public class InjectionPointCodeLensSupplier
       });
   }
 
+  /**
+   * Заголовок линзы по числу найденных производителей.
+   *
+   * @param data          Данные линзы (имя желудя, признак параметра конструктора).
+   * @param producerCount Число найденных производителей.
+   * @return Локализованный заголовок линзы.
+   */
   private String title(InjectionPointCodeLensData data, int producerCount) {
     // Линзы параметров конструктора рендерятся стопкой над строкой конструктора —
     // без имени желудя они неотличимы друг от друга, поэтому имя включается в заголовок.

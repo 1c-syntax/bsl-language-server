@@ -204,7 +204,7 @@ class InjectionPointCodeLensSupplierTest {
     when(autumnNavigation.producerLocations("Лог", false)).thenReturn(List.of(expectedLocation));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.gotoCommand(
-      anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), eq(List.of(expectedLocation))))
+      anyString(), anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), eq(List.of(expectedLocation))))
       .thenReturn(command);
     var unresolved = unresolvedLens("Лог", false);
 
@@ -223,7 +223,7 @@ class InjectionPointCodeLensSupplierTest {
     when(autumnNavigation.producerLocations("Обработчик", true))
       .thenReturn(List.of(new Location(PRODUCER_URI.toString(), PRODUCER_RANGE)));
     var command = new Command("title", "command", List.of());
-    when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
+    when(navigationCommandBuilder.gotoCommand(anyString(), anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
       .thenReturn(command);
     var unresolved = unresolvedLens("Обработчик", true);
 
@@ -301,7 +301,7 @@ class InjectionPointCodeLensSupplierTest {
     when(autumnNavigation.producerLocations("Лог", false))
       .thenReturn(List.of(new Location(PRODUCER_URI.toString(), PRODUCER_RANGE)));
     var command = new Command("title", "command", List.of());
-    when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
+    when(navigationCommandBuilder.gotoCommand(anyString(), anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
       .thenReturn(command);
     var unresolved = new CodeLens(MEMBER_RANGE);
     unresolved.setData(new InjectionPointCodeLensSupplier.InjectionPointCodeLensData(
@@ -313,7 +313,7 @@ class InjectionPointCodeLensSupplierTest {
     // then
     var titleCaptor = ArgumentCaptor.forClass(String.class);
     verify(navigationCommandBuilder)
-      .gotoCommand(titleCaptor.capture(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList());
+      .gotoCommand(titleCaptor.capture(), anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList());
     assertThat(titleCaptor.getValue()).contains("Лог");
   }
 

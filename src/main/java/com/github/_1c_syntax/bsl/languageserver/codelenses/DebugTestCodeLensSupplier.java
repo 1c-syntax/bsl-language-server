@@ -66,6 +66,14 @@ public class DebugTestCodeLensSupplier
   @SuppressWarnings("NullAway.Init")
   private DebugTestCodeLensSupplier self;
 
+  /**
+   * Конструктор поставщика линз отладки теста.
+   *
+   * @param configuration           Конфигурация language server.
+   * @param clientCapabilitiesHolder Хранилище клиентских возможностей.
+   * @param testRunnerAdapter       Адаптер внешнего раннера тестов.
+   * @param resources               Локализованные ресурсы сервера.
+   */
   public DebugTestCodeLensSupplier(
     LanguageServerConfiguration configuration,
     ClientCapabilitiesHolder clientCapabilitiesHolder,
@@ -127,6 +135,7 @@ public class DebugTestCodeLensSupplier
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "title"));
+    command.setTooltip(resources.getResourceString(getClass(), "tooltip"));
     command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 
@@ -136,6 +145,13 @@ public class DebugTestCodeLensSupplier
 
   }
 
+  /**
+   * Построить неразрешённую линзу отладки теста по символу тестового метода.
+   *
+   * @param method          Символ тестового метода.
+   * @param documentContext Контекст документа.
+   * @return Неразрешённая линза с данными для последующего резолва.
+   */
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
     var testId = method.getName();
     var codeLensData = new DebugTestCodeLensSupplier.DebugTestCodeLensData(documentContext.getUri(), getId(), testId);

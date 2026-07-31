@@ -50,6 +50,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   implements CodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
+  private static final String TOOLTIP_KEY = "tooltip";
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
   /**
@@ -59,6 +60,14 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
 
   private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
+  /**
+   * Локализованные ресурсы сервера.
+   */
+  private final Resources resources;
+
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
     var complexityThreshold = getComplexityThreshold();
@@ -69,6 +78,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
       .collect(Collectors.toList());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
     var methodName = data.getMethodName();
@@ -76,7 +88,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
 
-      var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
+      var title = resources.getResourceString(getClass(), TITLE_KEY, complexity);
       var arguments = new ToggleComplexityInlayHintsCommandArguments(
         data.getUri(),
         commandSupplier.getId(),
@@ -84,6 +96,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
       );
 
       var command = commandSupplier.createCommand(title, arguments);
+      command.setTooltip(resources.getResourceString(getClass(), TOOLTIP_KEY));
 
       unresolved.setCommand(command);
     });
@@ -91,6 +104,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     return unresolved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<ComplexityCodeLensData> getCodeLensDataClass() {
     return ComplexityCodeLensData.class;
@@ -104,6 +120,11 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
 
+  /**
+   * Порог сложности из настроек линзы ({@code complexityThreshold}).
+   *
+   * @return Порог сложности; {@code -1} (показывать всегда), если не задан.
+   */
   private int getComplexityThreshold() {
     var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
@@ -113,6 +134,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     }
   }
 
+  /**
+   * Построить неразрешённую линзу сложности по символу метода.
+   *
+   * @param methodSymbol    Символ метода.
+   * @param documentContext Контекст документа.
+   * @return Неразрешённая линза с данными для последующего резолва.
+   */
   private CodeLens toCodeLens(MethodSymbol methodSymbol, DocumentContext documentContext) {
     var data = new ComplexityCodeLensData(documentContext.getUri(), getId(), methodSymbol.getName());
 

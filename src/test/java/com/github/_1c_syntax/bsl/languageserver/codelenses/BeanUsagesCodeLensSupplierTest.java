@@ -138,7 +138,7 @@ class BeanUsagesCodeLensSupplierTest {
     when(autumnNavigation.componentUsageLocations(PRODUCER_URI)).thenReturn(expectedLocations);
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
-      anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(expectedLocations)))
+      anyString(), anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(expectedLocations)))
       .thenReturn(command);
     var unresolved = new CodeLens(CONSTRUCTOR_RANGE);
     var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "ПриСозданииОбъекта", true);
@@ -183,7 +183,7 @@ class BeanUsagesCodeLensSupplierTest {
     when(autumnNavigation.factoryMethodUsageLocations(PRODUCER_URI, "СоздатьЛог")).thenReturn(expectedLocations);
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
-      anyString(), eq(PRODUCER_URI), eq(FACTORY_METHOD_RANGE.getStart()), eq(expectedLocations)))
+      anyString(), anyString(), eq(PRODUCER_URI), eq(FACTORY_METHOD_RANGE.getStart()), eq(expectedLocations)))
       .thenReturn(command);
     var unresolved = new CodeLens(FACTORY_METHOD_RANGE);
     var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "СоздатьЛог", false);
@@ -203,7 +203,7 @@ class BeanUsagesCodeLensSupplierTest {
     when(autumnNavigation.componentUsageLocations(PRODUCER_URI)).thenReturn(List.of());
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
-      anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(List.of())))
+      anyString(), anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(List.of())))
       .thenReturn(command);
     var unresolved = new CodeLens(CONSTRUCTOR_RANGE);
     var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "ПриСозданииОбъекта", true);

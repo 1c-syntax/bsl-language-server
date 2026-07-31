@@ -65,6 +65,8 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
   private static final String GOTO_PRODUCER_KEY = "gotoProducer";
   private static final String GOTO_PRODUCER_MANY_KEY = "gotoProducerMany";
   private static final String SHOW_USAGES_KEY = "showUsages";
+  private static final String GOTO_TOOLTIP_KEY = "gotoTooltip";
+  private static final String USAGES_TOOLTIP_KEY = "usagesTooltip";
 
   private final Resources resources;
   private final AutumnComponentInferencer componentInferencer;
@@ -126,7 +128,8 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
     var title = locations.size() == 1
       ? resources.getResourceString(getClass(), GOTO_PRODUCER_KEY, bean.name())
       : resources.getResourceString(getClass(), GOTO_PRODUCER_MANY_KEY, bean.name(), locations.size());
-    var command = navigationCommandBuilder.gotoCommand(title, documentContext.getUri(), position, locations);
+    var tooltip = resources.getResourceString(getClass(), GOTO_TOOLTIP_KEY);
+    var command = navigationCommandBuilder.gotoCommand(title, tooltip, documentContext.getUri(), position, locations);
     return Optional.of(toAction(command.getTitle(), command));
   }
 
@@ -160,7 +163,8 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
 
   private CodeAction usagesAction(URI uri, Position position, List<Location> locations) {
     var title = resources.getResourceString(getClass(), SHOW_USAGES_KEY, locations.size());
-    var command = navigationCommandBuilder.referencesCommand(title, uri, position, locations);
+    var tooltip = resources.getResourceString(getClass(), USAGES_TOOLTIP_KEY);
+    var command = navigationCommandBuilder.referencesCommand(title, tooltip, uri, position, locations);
     return toAction(title, command);
   }
 

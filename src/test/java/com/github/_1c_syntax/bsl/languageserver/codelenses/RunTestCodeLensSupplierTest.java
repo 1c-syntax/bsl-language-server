@@ -110,6 +110,7 @@ class RunTestCodeLensSupplierTest {
 
     // then
     assertThat(resolvedCodeLens.getCommand()).isNotNull();
+    assertThat(resolvedCodeLens.getCommand().getTooltip()).isNotBlank();
   }
 
   private void initializeServer(String clientName) {

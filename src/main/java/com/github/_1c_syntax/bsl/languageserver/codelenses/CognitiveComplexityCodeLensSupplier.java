@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.commands.ToggleCognitiveComplexi
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -37,11 +38,19 @@ import java.util.Map;
 @Order(4)
 public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
+  /**
+   * Конструктор поставщика линз когнитивной сложности.
+   *
+   * @param configuration  Конфигурация language server.
+   * @param commandSupplier Поставщик команды переключения inlay-хинтов когнитивной сложности.
+   * @param resources      Локализованные ресурсы сервера.
+   */
   public CognitiveComplexityCodeLensSupplier(
     LanguageServerConfiguration configuration,
-    ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier
+    ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier,
+    Resources resources
   ) {
-    super(configuration, commandSupplier);
+    super(configuration, commandSupplier, resources);
   }
 
   @Override

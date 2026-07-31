@@ -115,7 +115,7 @@ class AutumnNavigationCodeActionSupplierTest {
     when(autumnNavigation.producerLocations("Лог", false))
       .thenReturn(List.of(new Location(PRODUCER_URI.toString(), range(7))));
     var command = new Command("title", "command", List.of());
-    when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
+    when(navigationCommandBuilder.gotoCommand(anyString(), anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
       .thenReturn(command);
 
     // when
@@ -145,7 +145,7 @@ class AutumnNavigationCodeActionSupplierTest {
     when(autumnNavigation.producerLocations("Лог", false))
       .thenReturn(List.of(new Location(PRODUCER_URI.toString(), range(7))));
     var command = new Command("title", "command", List.of());
-    when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
+    when(navigationCommandBuilder.gotoCommand(anyString(), anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
       .thenReturn(command);
 
     // when
@@ -169,7 +169,7 @@ class AutumnNavigationCodeActionSupplierTest {
       .thenReturn(List.of(new Location(PRODUCER_URI.toString(), range(3))));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
-      anyString(), eq(CONSUMER_URI), eq(CONSTRUCTOR_NAME_RANGE.getStart()), anyList()))
+      anyString(), anyString(), eq(CONSUMER_URI), eq(CONSTRUCTOR_NAME_RANGE.getStart()), anyList()))
       .thenReturn(command);
 
     // when
@@ -193,7 +193,7 @@ class AutumnNavigationCodeActionSupplierTest {
       .thenReturn(List.of(new Location(PRODUCER_URI.toString(), range(3))));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
-      anyString(), eq(CONSUMER_URI), eq(FACTORY_METHOD_NAME_RANGE.getStart()), anyList()))
+      anyString(), anyString(), eq(CONSUMER_URI), eq(FACTORY_METHOD_NAME_RANGE.getStart()), anyList()))
       .thenReturn(command);
 
     // when
