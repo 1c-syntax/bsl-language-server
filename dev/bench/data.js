@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785491890580,
+  "lastUpdate": 1785492736507,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41354,6 +41354,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.3929002646281017",
             "extra": "mean: 93.96037324269612 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e7a5bae3de982376cef9c088b14cd68ad1c71340",
+          "message": "Merge pull request #4331 from 1c-syntax/feature/mdclasses-form-model\n\nПереработанная модель содержимого формы из mdclasses",
+          "timestamp": "2026-07-31T08:54:00+02:00",
+          "tree_id": "ecbeadd3dbc48892cb5f6d3ed953bc2ac4568474",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e7a5bae3de982376cef9c088b14cd68ad1c71340"
+        },
+        "date": 1785492725154,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.47043506304423,
+            "unit": "sec",
+            "range": "stddev: 1.1425958623336907",
+            "extra": "mean: 94.47043506304423 sec\nrounds: 3"
           }
         ]
       }
