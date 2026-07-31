@@ -98,7 +98,7 @@ import org.jspecify.annotations.Nullable;
 @RequiredArgsConstructor
 public class MetadataCollectionSpecializer {
 
-  private static final String BASE_COLLECTION_METADATA = "КоллекцияОбъектовМетаданных";
+  private static final String BASE_COLLECTION_METADATA = MetadataTypeNames.METADATA_COLLECTION;
   private static final String BASE_COLLECTION_STD_ATTR = "ОписанияСтандартныхРеквизитов";
   private static final String BASE_COLLECTION_PROPERTY_VALUE = "КоллекцияЗначенийСвойстваОбъектаМетаданных";
   private static final String BASE_COLLECTION_FIELD_LIST = "СписокПолей";

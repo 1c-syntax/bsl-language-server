@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.MetadataTypeNames;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -59,6 +60,13 @@ import java.util.List;
  * </ul>
  * Идентификаторы, перекрытые локальной переменной/параметром, пропускаются —
  * локальный символ имеет приоритет.
+ * <p>
+ * <b>Цепочка после корня</b> размечается целиком, пока резолвятся члены: имя объекта
+ * конфигурации ({@code Справочники.Контрагенты}, {@code Метаданные.Справочники.Контрагенты})
+ * → {@code Class}, значение перечисления → {@code EnumMember}, остальные свойства
+ * ({@code Метаданные.Справочники}, {@code ….Реквизиты}, {@code ….Тип}) →
+ * {@code Property + DefaultLibrary}. Как только очередное имя не резолвится, разметка
+ * цепочки прекращается: выдуманный тип хуже отсутствия подсветки.
  */
 @Component
 @RequiredArgsConstructor
@@ -184,9 +192,16 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     if (ownerType.equals(returnType)) {
       // self-typed property — значение enum (.UTF8).
       helper.addRange(entries, Ranges.create(idNode), SemanticTokenTypes.EnumMember);
-    } else if (returnType.kind() == TypeKind.CONFIGURATION) {
-      // mdo-ссылка (Справочники.Контрагенты).
+    } else if (returnType.kind() == TypeKind.CONFIGURATION || MetadataTypeNames.isMetadataObject(returnType)) {
+      // Имя объекта конфигурации: mdo-ссылка (Справочники.Контрагенты) либо объект
+      // дерева метаданных (Метаданные.Справочники.Контрагенты). Формально это
+      // свойство, но в коде оно читается как имя объекта — красим так же.
       helper.addRange(entries, Ranges.create(idNode), SemanticTokenTypes.Class);
+    } else {
+      // Прочие звенья цепочки — обычные свойства платформенных объектов
+      // (`Метаданные.Справочники`, `….Реквизиты`, `….Тип`). Без этого вся цепочка
+      // после глобального имени оставалась неразмеченной.
+      helper.addRange(entries, Ranges.create(idNode), SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS);
     }
     return returnType;
   }
