@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,6 +98,27 @@ class HierarchyMemberSuppressionTest extends AbstractServerContextAwareTest {
     assertThat(propertyNames("СправочникСсылка.Справочник1"))
       .as("подавление снимает только объявленное, а не всё подряд")
       .contains("Код", "Наименование", "Ссылка", "ПометкаУдаления");
+  }
+
+  @Test
+  void hierarchyOfItemsKeepsParentButNotIsFolder() {
+    // Третий режим: иерархия есть, а групп в ней не бывает — значит нет и признака группы.
+    assertThat(propertyNames("СправочникСсылка.СправочникБезГрупп"))
+      .contains("Родитель")
+      .doesNotContain("ЭтоГруппа");
+  }
+
+  @Test
+  void suppressionSurvivesNonCanonicalReference() {
+    // Источники членов находятся и по неканонической ссылке — через индекс алиасов.
+    // Подавления обязаны идти тем же путём, иначе подавленный член вернулся бы боком.
+    var canonical = typeRegistry.resolve("СправочникСсылка.Справочник1").orElseThrow();
+    var alien = new TypeRef(TypeKind.PLATFORM, canonical.qualifiedName());
+    assertThat(alien).isNotEqualTo(canonical);
+    assertThat(typeRegistry.getMembers(alien, FileType.BSL))
+      .as("по неканонической ссылке члены есть — значит и подавление должно действовать")
+      .isNotEmpty()
+      .noneMatch(member -> member.matches("Родитель") || member.matches("ЭтоГруппа"));
   }
 
   private List<String> propertyNames(String typeName) {

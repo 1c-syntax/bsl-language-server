@@ -204,6 +204,7 @@
 			<CommonAttribute>ОбщийРеквизит1</CommonAttribute>
 			<Catalog>Справочник1</Catalog>
 			<Catalog>СправочникСМенеджером</Catalog>
+			<Catalog>СправочникБезГрупп</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
 			<FilterCriterion>КритерийОтбора1</FilterCriterion>
 			<Document>Документ1</Document>

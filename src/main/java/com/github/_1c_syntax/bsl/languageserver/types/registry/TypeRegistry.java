@@ -581,7 +581,7 @@ public class TypeRegistry {
     // Ключ дедупликации — (kind, имя): метод и свойство с одинаковым именем —
     // разные члены (например, self-completion может видеть self-метод и
     // одноимённую self-переменную типа), один не должен вытеснять другой.
-    var suppressed = memberSuppressions.get(fileType).getOrDefault(ref, Set.of());
+    var suppressed = resolveSuppressions(ref, fileType);
     var byNameAndKind = new LinkedHashMap<MemberKey, MemberDescriptor>();
     for (var source : List.copyOf(resolveMemberSources(ref, fileType))) {
       for (var member : source.getMembers()) {
@@ -634,12 +634,36 @@ public class TypeRegistry {
     var byRef = memberSources.get(fileType);
     var sources = byRef.get(ref);
     if (sources == null) {
-      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
-      if (canonical != null && !canonical.equals(ref)) {
+      var canonical = canonicalOf(ref);
+      if (canonical != null) {
         sources = byRef.get(canonical);
       }
     }
     return asSourceList(sources);
+  }
+
+  /**
+   * Подавления для типа — тем же путём, что и источники членов.
+   * <p>
+   * Путь обязан совпадать: если ref не канонический, источники находятся по канону, а
+   * подавления — нет, и подавленный член вернулся бы в ответ через «боковую» ссылку.
+   */
+  private Set<String> resolveSuppressions(TypeRef ref, FileType fileType) {
+    var byRef = memberSuppressions.get(fileType);
+    var names = byRef.get(ref);
+    if (names == null) {
+      var canonical = canonicalOf(ref);
+      if (canonical != null) {
+        names = byRef.get(canonical);
+      }
+    }
+    return names == null ? Set.of() : names;
+  }
+
+  /** Канонический ref по имени; {@code null}, если он же и передан либо алиаса нет. */
+  private @Nullable TypeRef canonicalOf(TypeRef ref) {
+    var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+    return canonical != null && !canonical.equals(ref) ? canonical : null;
   }
 
   /**
