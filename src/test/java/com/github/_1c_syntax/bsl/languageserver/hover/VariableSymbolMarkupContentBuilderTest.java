@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -255,6 +256,19 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     assertThat(content).contains("Тест");
   }
 
+  /**
+   * Регулярное выражение на строку раздела типа целиком.
+   * <p>
+   * Проверка вхождением подстроки прошла бы и при вернувшейся пометке вычисленного
+   * по коду типа ({@code Тип: Строка*}) — привязка к концу строки её не пропустит.
+   *
+   * @param label ожидаемая подпись типа.
+   * @return выражение для {@code containsPattern}.
+   */
+  private static String typeLine(String label) {
+    return "(?m)^Тип: " + Pattern.quote(label) + "$";
+  }
+
   @Test
   void testInferredTypeShownInHover() {
     // given
@@ -269,7 +283,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     // then
-    assertThat(content).contains("Тип: Строка");
+    assertThat(content).containsPattern(typeLine("Строка"));
   }
 
   @Test
@@ -287,7 +301,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: у структуры с полями элемент-итератор (КлючИЗначение) в заголовке не показываем.
     assertThat(content)
-      .contains("Тип: Структура")
+      .containsPattern(typeLine("Структура"))
       .doesNotContain("КлючИЗначение")
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`");
@@ -309,7 +323,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: колонки строки ТЗ показываются маркдаун-списком.
     assertThat(content)
-      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений")
+      .containsPattern(typeLine("ТаблицаЗначений из СтрокаТаблицыЗначений"))
       .contains("* **Сумма**");
   }
 
@@ -333,7 +347,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     // then: ключи показаны с типами и описаниями из doc-комментария, без шума «из КлючИЗначение».
     assertThat(content)
-      .contains("Тип: Структура")
+      .containsPattern(typeLine("Структура"))
       .doesNotContain("КлючИЗначение")
       .contains("* **Адрес**: `Строка` — адрес сервера.")
       .contains("* **Порт**: `Число` — номер порта.");
