@@ -153,6 +153,19 @@ public class FormTypesProvider {
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
 
+  /** Тип копии строки, которую отдаёт таблица формы. */
+  private static final String STRUCTURE_RU = "Структура";
+
+  private static final String STRUCTURE_EN = "Structure";
+
+  /** Коллекция выделенных строк таблицы формы. */
+  private static final BilingualString SELECTED_ROWS =
+    BilingualString.of("ВыделенныеСтроки", "SelectedRows");
+
+  private static final String ARRAY_RU = "Массив";
+
+  private static final String ARRAY_EN = "Array";
+
   private static final BilingualString THIS_FORM_DESCRIPTION = BilingualString.of(
     "Форма, в модуле которой выполняется код. Устаревшее имя — используйте ЭтотОбъект.",
     "The form whose module executes the code. Obsolete name — use ThisObject instead.");
@@ -184,6 +197,13 @@ public class FormTypesProvider {
    * {@code ДанныеФормыКоллекция.…} (см. {@link #registerTabularSectionData}).
    */
   private final Map<TypeRef, TypeRef> tabularSectionData = new HashMap<>();
+
+  /**
+   * Копия строки коллекции данных формы: {@code ДанныеФормыКоллекция.…} →
+   * {@code Структура.…} с теми же колонками (см. {@link #registerRowCopy}). Её отдают
+   * {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы над этой коллекцией.
+   */
+  private final Map<TypeRef, TypeRef> rowCopyByCollection = new HashMap<>();
 
   /**
    * RU-qualifiedName синтетического типа формы: {@code ФормаКлиентскогоПриложения.<mdoRef>}
@@ -283,7 +303,75 @@ public class FormTypesProvider {
         typeRegistry.displayName(baseRef, Language.EN)));
       tableDataKindTypes.put(dataKind, kindRef);
       registerRowDataKindType(dataKind, kindRef);
+      registerTableDataRules(dataKind, kindRef);
     }
+  }
+
+  /** Свойства таблицы, тип которых зависит от вида отображаемых данных. */
+  private static final BilingualString CURRENT_ROW = BilingualString.of("ТекущаяСтрока", "CurrentRow");
+  private static final BilingualString CURRENT_PARENT =
+    BilingualString.of("ТекущийРодитель", "CurrentParent");
+  private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
+
+  /**
+   * Уточняет члены таблицы формы по виду отображаемых данных. Синтакс-помощник
+   * описывает эти правила текстом в описании расширения, а не объявлением типов:
+   * «в качестве значений для свойств {@code ТекущаяСтрока}, {@code ТекущийРодитель} …
+   * используется идентификатор типа {@code ИдентификаторКомпоновкиДанных}»,
+   * «{@code ТекущиеДанные} и метод {@code ДанныеСтроки} возвращают структуру,
+   * заполненную копией данных». Сами члены объявлены как {@code Произвольный}, поэтому
+   * без такой подстановки цепочка от них обрывается.
+   */
+  private void registerTableDataRules(FormPlatformTypes.TableDataKind dataKind, TypeRef tableRef) {
+    var members = new ArrayList<MemberDescriptor>(3);
+    var rowIdRef = resolveOrNull(dataKind.rowIdTypeName());
+    if (rowIdRef != null) {
+      members.add(platformProperty(CURRENT_ROW, rowIdRef, BilingualString.EMPTY));
+      members.add(platformProperty(CURRENT_PARENT, rowIdRef, BilingualString.EMPTY));
+      var selectedRowsRef = registerIdentifierArray(rowIdRef);
+      if (selectedRowsRef != null) {
+        members.add(platformProperty(SELECTED_ROWS, selectedRowsRef, BilingualString.EMPTY));
+      }
+    }
+    var currentDataRef = resolveOrNull(dataKind.currentDataTypeName());
+    if (currentDataRef != null) {
+      members.add(platformProperty(
+        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
+        currentDataRef, BilingualString.EMPTY));
+      members.add(MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
+          List.of(new SignatureDescriptor(
+            List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
+              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
+            TypeSet.of(currentDataRef), BilingualString.EMPTY)))
+        .withBilingualName(ROW_DATA_METHOD));
+    }
+    if (!members.isEmpty()) {
+      typeRegistry.registerMemberOverride(tableRef, () -> members, FileType.BSL);
+    }
+  }
+
+  private @Nullable TypeRef resolveOrNull(@Nullable String typeName) {
+    return typeName == null ? null : typeRegistry.resolve(typeName).orElse(null);
+  }
+
+  /**
+   * Массив идентификаторов строк — то, что лежит в {@code ВыделенныеСтроки}. Платформа
+   * объявляет там обычный {@code Массив}, а описание расширения говорит, чем он заполнен;
+   * без специализации обход {@code Для Каждого Идентификатор Из ВыделенныеСтроки} терял
+   * тип элемента.
+   *
+   * @param elementRef тип элемента массива.
+   * @return специализация массива; {@code null}, если самого {@code Массив} в реестре нет.
+   */
+  private @Nullable TypeRef registerIdentifierArray(TypeRef elementRef) {
+    var arrayBase = typeRegistry.resolve(ARRAY_RU).orElse(null);
+    if (arrayBase == null) {
+      return null;
+    }
+    var arrayRef = registerFormDataMirror(ARRAY_RU, ARRAY_EN, elementRef.qualifiedName(), "", arrayBase);
+    typeRegistry.registerDefaultElementTypes(arrayRef, List.of(elementRef));
+    typeRegistry.inheritCollectionTraits(arrayRef, arrayBase, FileType.BSL);
+    return arrayRef;
   }
 
   /**
@@ -376,7 +464,8 @@ public class FormTypesProvider {
     // Override, а не обычный источник: `Элементы`/`Параметры`/`Команды`/`ЭтотОбъект`
     // есть и у базового типа, но с обобщёнными типами — специализированные должны
     // выигрывать дедуп в getMembers.
-    var itemsRef = registerItemsCollection(form, kind, suffixRu);
+    var tableTypes = prepareTableTypes(data, kind, suffixRu, attributeTypes);
+    var itemsRef = registerItemsCollection(form, kind, suffixRu, tableTypes);
     var parametersRef = registerParametersStructure(form, kind, suffixRu, owner);
     var commandsRef = registerCommandsCollection(form, kind, suffixRu);
     typeRegistry.registerMemberOverride(formRef,
@@ -640,7 +729,100 @@ public class FormTypesProvider {
    * {@code <Имя элемента управления>} заменяется реальными элементами формы с их
    * рантайм-типами.
    */
-  private TypeRef registerItemsCollection(Form form, FormKind kind, String suffixRu) {
+  /**
+   * Типы таблиц формы, у которых {@code ТекущиеДанные} — копия строки с колонками
+   * (табличная часть, реквизит-таблица или дерево значений). Такой тип заводится на
+   * <b>конкретную таблицу</b>, а не на вид данных: колонки у каждой свои.
+   * <p>
+   * Считается на регистрации формы, а не в ленивом источнике членов: здесь
+   * регистрируются типы, а регистрация изнутри {@code getMembers} сбивала бы epoch
+   * кэша во время его же пересчёта.
+   *
+   * @param data           содержимое формы.
+   * @param kind           вид формы.
+   * @param suffixRu       суффикс имени типов этой формы.
+   * @param attributeTypes типы реквизитов формы (уже переведённые в данные формы).
+   * @return {@code имя элемента (lower) → тип таблицы}; пусто, если таких таблиц нет.
+   */
+  private Map<String, TypeRef> prepareTableTypes(FormData data, FormKind kind, String suffixRu,
+                                                 Map<String, TypeSet> attributeTypes) {
+    if (kind != FormKind.MANAGED) {
+      return Map.of();
+    }
+    var declaredTypes = attributeTypesByName(data.getAttributes());
+    var result = new HashMap<String, TypeRef>();
+    for (var element : data.getPlainElements()) {
+      if (!(element instanceof FormTable) || element.getName().isBlank()) {
+        continue;
+      }
+      var rowCopyRef = rowCopyOf(element, attributeTypes, declaredTypes);
+      var kindRef = tableTypeRef(element, declaredTypes);
+      if (rowCopyRef == null || kindRef == null) {
+        continue;
+      }
+      var tableRef = typeRegistry.registerConfigurationType(
+        FormPlatformTypes.tableTypeName() + "." + suffixRu + "." + element.getName());
+      typeRegistry.registerExtension(tableRef, kindRef, FileType.BSL);
+      typeRegistry.registerDisplayName(tableRef, BilingualString.of(
+        typeRegistry.displayName(kindRef, Language.RU),
+        typeRegistry.displayName(kindRef, Language.EN)));
+      typeRegistry.registerMemberOverride(tableRef, () -> currentDataMembers(rowCopyRef), FileType.BSL);
+      result.put(element.getName().toLowerCase(Locale.ROOT), tableRef);
+    }
+    return Map.copyOf(result);
+  }
+
+  /**
+   * Копия строки для таблицы: путь к данным ведёт либо прямо в реквизит-таблицу формы,
+   * либо вглубь основного реквизита — в табличную часть объекта.
+   *
+   * @return тип копии строки; {@code null}, если у данных таблицы колонок нет.
+   */
+  private @Nullable TypeRef rowCopyOf(FormElement element, Map<String, TypeSet> attributeTypes,
+                                      Map<String, String> declaredTypes) {
+    var dataPath = element instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
+    if (dataPath.isBlank()) {
+      return null;
+    }
+    var separator = dataPath.indexOf('.');
+    if (separator < 0) {
+      return attributeTypes.getOrDefault(dataPath.toLowerCase(Locale.ROOT), TypeSet.EMPTY)
+        .refs().stream()
+        .map(rowCopyByCollection::get)
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+    }
+    var rootName = dataPath.substring(0, separator).toLowerCase(Locale.ROOT);
+    var rootType = declaredTypes.getOrDefault(rootName, "");
+    var current = rootType.isBlank() ? null : typeRegistry.resolve(rootType).orElse(null);
+    for (var segment : dataPath.substring(separator + 1).split("\\.")) {
+      if (current == null) {
+        return null;
+      }
+      current = propertyTypeRef(current, segment);
+    }
+    // Путь идёт по прикладным типам, а копия строки живёт у зеркала табличной части.
+    var mirror = current == null ? null : tabularSectionData.get(current);
+    return mirror == null ? null : rowCopyByCollection.get(mirror);
+  }
+
+  /** {@code ТекущиеДанные} и {@code ДанныеСтроки} конкретной таблицы — копия её строки. */
+  private static List<MemberDescriptor> currentDataMembers(TypeRef rowCopyRef) {
+    return List.of(
+      platformProperty(
+        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
+        rowCopyRef, BilingualString.EMPTY),
+      MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
+          List.of(new SignatureDescriptor(
+            List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
+              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
+            TypeSet.of(rowCopyRef), BilingualString.EMPTY)))
+        .withBilingualName(ROW_DATA_METHOD));
+  }
+
+  private TypeRef registerItemsCollection(Form form, FormKind kind, String suffixRu,
+                                          Map<String, TypeRef> tableTypes) {
     var itemsRef = registerWithAlias(
       kind.itemsTypeRu() + "." + suffixRu,
       kind.itemsTypeEn() + "." + FormPlatformTypes.mdoSuffixEn(form));
@@ -650,7 +832,7 @@ public class FormTypesProvider {
       typeRegistry.inheritCollectionTraits(itemsRef, itemsBaseRef, FileType.BSL);
     }
     typeRegistry.registerMemberSource(itemsRef,
-      () -> buildItemMembers(form.getData().getPlainElements(), form.getData().getAttributes(), kind),
+      () -> buildItemMembers(form.getData().getPlainElements(), form.getData().getAttributes(), kind, tableTypes),
       FileType.BSL);
     return itemsRef;
   }
@@ -912,8 +1094,9 @@ public class FormTypesProvider {
     // Колонки — это те же реквизиты формы, только вложенные: у них есть и свои типы,
     // и заголовки, и собственные колонки, если колонка сама таблица.
     var columnTypes = prepareAttributeTypes(columns, kind, suffix);
-    typeRegistry.registerMemberSource(itemRef,
-      () -> buildAttributeMembers(columns, columnTypes), FileType.BSL);
+    MemberSource columnMembers = () -> buildAttributeMembers(columns, columnTypes);
+    typeRegistry.registerMemberSource(itemRef, columnMembers, FileType.BSL);
+    registerRowCopy(collectionRef, suffix, columnMembers);
     return collectionRef;
   }
 
@@ -987,6 +1170,28 @@ public class FormTypesProvider {
         typeRegistry.getMembers(collectionBase, FileType.BSL), itemBase, itemRef,
         CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
     tabularSectionData.put(tabularSectionRef, collectionRef);
+    registerRowCopy(collectionRef, suffix, columns);
+  }
+
+  /**
+   * Копия строки, которую отдают {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы
+   * формы над этой коллекцией. Синтакс-помощник в описании расширения говорит именно
+   * «структуру, заполненную копией данных»: тип — {@code Структура}, а свойства у неё
+   * те же, что колонки строки. Изменение такой копии на данных формы не сказывается,
+   * поэтому подменять ею саму строку коллекции нельзя — она живёт отдельным типом.
+   *
+   * @param collectionRef тип коллекции данных формы.
+   * @param suffix        суффикс имени, общий с коллекцией и её строкой.
+   * @param columns       источник колонок.
+   */
+  private void registerRowCopy(TypeRef collectionRef, String suffix, MemberSource columns) {
+    var structureBase = typeRegistry.resolve(STRUCTURE_RU).orElse(null);
+    if (structureBase == null) {
+      return;
+    }
+    var copyRef = registerFormDataMirror(STRUCTURE_RU, STRUCTURE_EN, suffix, "", structureBase);
+    typeRegistry.registerMemberSource(copyRef, columns, FileType.BSL);
+    rowCopyByCollection.put(collectionRef, copyRef);
   }
 
   /**
@@ -1053,7 +1258,7 @@ public class FormTypesProvider {
    * вложенности групп.
    */
   private List<MemberDescriptor> buildItemMembers(List<FormElement> items, List<FormAttribute> attributes,
-                                                  FormKind formKind) {
+                                                  FormKind formKind, Map<String, TypeRef> tableTypes) {
     if (items.isEmpty()) {
       return List.of();
     }
@@ -1064,7 +1269,7 @@ public class FormTypesProvider {
       if (name.isBlank()) {
         continue;
       }
-      var types = itemTypes(item, attributeTypes, formKind);
+      var types = itemTypes(item, attributeTypes, formKind, tableTypes);
       var descriptor = MemberDescriptor.property(name, types, "")
         .withBilingualName(neutral(name))
         .withBilingualDescription(bilingual(item.getTitle()));
@@ -1078,7 +1283,8 @@ public class FormTypesProvider {
    * из {@link #registerItemKindTypes}, иначе просто базовый рантайм-тип. Таблица —
    * особый случай: её расширение выбирается по данным, а не по виду.
    */
-  private TypeSet itemTypes(FormElement item, Map<String, String> attributeTypesByName, FormKind formKind) {
+  private TypeSet itemTypes(FormElement item, Map<String, String> attributeTypesByName, FormKind formKind,
+                            Map<String, TypeRef> tableTypes) {
     if (formKind == FormKind.ORDINARY) {
       // У обычной формы своя иерархия элементов — `ПолеВвода`, `ТабличноеПоле`,
       // `Надпись`, `Флажок` — со своими расширениями. Она здесь не моделируется, а
@@ -1088,6 +1294,12 @@ public class FormTypesProvider {
     }
     var elementType = item.getType();
     if (elementType == FormElementType.TABLE) {
+      // Тип на конкретную таблицу заводится, только когда у её строки есть колонки
+      // (см. prepareTableTypes); иначе хватает общего типа по виду данных.
+      var ownRef = tableTypes.get(item.getName().toLowerCase(Locale.ROOT));
+      if (ownRef != null) {
+        return TypeSet.of(ownRef);
+      }
       var tableRef = tableTypeRef(item, attributeTypesByName);
       if (tableRef != null) {
         return TypeSet.of(tableRef);
@@ -1217,7 +1429,7 @@ public class FormTypesProvider {
       if (!(element instanceof FormEventHandlerOwner handlerOwner)) {
         continue;
       }
-      var elementTypes = itemTypes(element, attributeTypes, kind).refs().stream().toList();
+      var elementTypes = itemTypes(element, attributeTypes, kind, Map.of()).refs().stream().toList();
       for (var handler : handlerOwner.getEventHandlers()) {
         result.add(new HandlerSource(handler, elementTypes, true));
       }

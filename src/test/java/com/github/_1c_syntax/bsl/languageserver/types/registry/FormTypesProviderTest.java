@@ -503,6 +503,23 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void everyElementKindOfTheModelHasItsExtension() {
+    // Пропуск вида означает молча потерянные свойства элемента: у поля дендрограммы
+    // расширение было бы, но константы в mdclasses не существовало (mdclasses#665).
+    var withoutExtension = java.util.Arrays.stream(FormElementType.values())
+      .filter(kind -> kind != FormElementType.UNKNOWN && kind != FormElementType.TABLE)
+      .filter(kind -> FormPlatformTypes.itemTypeName(kind) != null)
+      .filter(kind -> FormPlatformTypes.itemExtensionTypeName(kind) == null)
+      .map(FormPlatformTypes::itemKindSuffix)
+      .toList();
+
+    assertThat(withoutExtension)
+      .as("у кнопок расширения по виду нет — вся специфика в самой КнопкаФормы")
+      .containsExactlyInAnyOrder("ОбычнаяКнопка", "Гиперссылка",
+        "КнопкаКоманднойПанели", "ГиперссылкаКоманднойПанели");
+  }
+
+  @Test
   void unknownOwnerKindHasNoOrdinaryExtension() {
     assertThat(FormPlatformTypes.ordinaryExtensionTypeName(MDOType.SUBSYSTEM, DefaultFormKind.LIST_FORM))
       .as("у подсистемы форм нет — расширения быть не может")

@@ -233,6 +233,77 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void everyTableDataKindResolvesBothItsTypeAndItsExtension() {
+    // Вид данных таблицы связывает два имени: тип, который лежит за `ПутьКДанным`,
+    // и расширение таблицы под него. Имена не выводятся друг из друга — у «выбора»
+    // тип называется `ВыбранныеПоляКомпоновкиДанных`, — поэтому каждое проверяется
+    // по синтакс-помощнику, иначе опечатка молча оставит таблицу без свойств.
+    for (var dataKind : FormPlatformTypes.TableDataKind.values()) {
+      assertThat(typeRegistry.resolve(dataKind.extensionName()))
+        .as("расширение %s", dataKind.extensionName())
+        .isPresent();
+      if (dataKind == FormPlatformTypes.TableDataKind.TABULAR_SECTION) {
+        // Единственный вид, чей суффикс — не имя типа, а семейство: у табличной части
+        // тип свой на каждый объект (`ДокументТабличнаяЧасть.Заказ`).
+        continue;
+      }
+      assertThat(typeRegistry.resolve(dataKind.suffix()))
+        .as("тип данных %s", dataKind.suffix())
+        .isPresent();
+    }
+  }
+
+  @Test
+  void tableOverDataCompositionSpeaksInCompositionIdentifiers() {
+    // Синтакс-помощник описывает это текстом в описании расширения, а не типами:
+    // сами свойства объявлены как «Произвольный», и без подстановки цепочка от
+    // `ТекущаяСтрока` обрывалась.
+    var selectedFields = "ТаблицаФормы.ВыбранныеПоляКомпоновкиДанных";
+    assertThat(qualifiedNames(member(selectedFields, MemberKind.PROPERTY, "ТекущаяСтрока")))
+      .containsExactly("ИдентификаторКомпоновкиДанных");
+    assertThat(qualifiedNames(member(selectedFields, MemberKind.PROPERTY, "ТекущийРодитель")))
+      .containsExactly("ИдентификаторКомпоновкиДанных");
+    assertThat(qualifiedNames(member(selectedFields, MemberKind.PROPERTY, "ТекущиеДанные")))
+      .as("по описанию это копия данных строки, а не сами данные формы")
+      .containsExactly("Структура");
+    assertThat(qualifiedNames(member(selectedFields, MemberKind.METHOD, "ДанныеСтроки")))
+      .containsExactly("Структура");
+  }
+
+  @Test
+  void tableOverGanttChartHasItsOwnIdentifier() {
+    var gantt = "ТаблицаФормы.ДиаграммаГанта";
+
+    assertThat(qualifiedNames(member(gantt, MemberKind.PROPERTY, "ТекущаяСтрока")))
+      .containsExactly("ИдентификаторЗначенияДиаграммыГанта");
+    assertThat(qualifiedNames(member(gantt, MemberKind.PROPERTY, "ТекущиеДанные")))
+      .as("у диаграммы Ганта это данные формы с колонками, а не копия-структура")
+      .containsExactly("ДанныеФормыСтруктура");
+  }
+
+  @Test
+  void currentDataOfTableIsACopyOfItsRowWithColumns() {
+    // Описание расширения говорит «структуру, заполненную копией данных» — это именно
+    // `Структура`, но со свойствами-колонками своей строки. Тип заводится на конкретную
+    // таблицу: у каждой колонки свои.
+    var currentData = member("ТаблицаФормы.Документ.Документ1.Форма.ФормаДокумента.ТабличнаяЧасть1",
+      MemberKind.PROPERTY, "ТекущиеДанные");
+    assertThat(currentData).isNotNull();
+
+    var copyRef = currentData.returnTypes().refs().iterator().next();
+    assertThat(copyRef.qualifiedName())
+      .as("копия строки — специализация Структуры, а не элемент коллекции")
+      .startsWith("Структура.");
+    assertThat(typeRegistry.displayName(copyRef, com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
+      .isEqualTo("Структура");
+    assertThat(names(typeRegistry.getMembers(copyRef, FileType.BSL)))
+      .as("свойства копии — колонки табличной части")
+      .contains("Реквизит1")
+      .as("методы Структуры на месте")
+      .contains("Вставить");
+  }
+
+  @Test
   void sourceRecordKeyStaysOnlyOnRecordFormOfInformationRegister() {
     // `ИсходныйКлючЗаписи` объявлен у самой ДанныеФормыСтруктура и потому достаётся
     // по наследству любой форме. Смысл он имеет только у формы записи регистра
@@ -278,9 +349,10 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
       .contains("ПриПолученииДанныхНаСервере");
 
     var tabularSection = itemMemberType("Документ.Документ1.Форма.ФормаДокумента", "ТабличнаяЧасть1");
-    assertThat(tabularSection.qualifiedName())
+    assertThat(typeRegistry.extensionsOf(tabularSection))
       .as("таблица над табличной частью получает своё расширение, а не списочное")
-      .isEqualTo("ТаблицаФормы.ТабличнаяЧасть");
+      .extracting(TypeRef::qualifiedName)
+      .contains("ТаблицаФормы.ТабличнаяЧасть");
     assertThat(names(typeRegistry.getMembers(tabularSection, FileType.BSL)))
       .contains("ОтборСтрок");
   }
