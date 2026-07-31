@@ -36,8 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.mdo.AccountingRegister;
-import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
@@ -46,7 +44,6 @@ import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
-import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.bsl.mdo.PredefinedDataOwner;
@@ -68,7 +65,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -181,6 +177,8 @@ public class ConfigurationTypesProvider {
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  private final RegisterTypesRegistrar registerTypesRegistrar;
+  private final RecorderIndex recorderIndex;
   @Qualifier("platformTypesWarmupExecutor")
   private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
@@ -254,6 +252,9 @@ public class ConfigurationTypesProvider {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
     var commonAttributes = collectCommonAttributes(children);
+    // «Регистр → его регистраторы» — только обходом документов: со стороны регистра
+    // этих данных в метаданных нет. Нужно до регистрации типов регистров.
+    recorderIndex.index(children);
     int count = 0;
     for (var md : children) {
       if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
@@ -352,6 +353,7 @@ public class ConfigurationTypesProvider {
     }
     var familyCore = fullName.getRu();
     registerFamilySpecializations(familyCore, name);
+    registerTypesRegistrar.registerFamilyFixups(md, familyCore, name);
     registerDerivedSpecializations(md, name);
     if (md instanceof DocumentJournal journal) {
       registerDocumentJournalColumnMembers(journal, familyCore, name);
@@ -362,9 +364,10 @@ public class ConfigurationTypesProvider {
     if (md instanceof PredefinedDataOwner predefinedDataOwner) {
       registerPredefinedValueExpansion(ref, familyCore, name, predefinedDataOwner);
     }
-    var registerChildren = registerChildrenOf(md);
+    var registerChildren = RegisterTypesRegistrar.registerChildrenOf(md);
     if (registerChildren != null) {
-      registerRegisterRecordExpansion(familyCore, name, registerChildren);
+      registerTypesRegistrar.registerRecordSetCollectionMembers(familyCore, name);
+      registerTypesRegistrar.registerRecordExpansion(familyCore, name, registerChildren);
     }
   }
 
@@ -613,7 +616,6 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerMemberSource(rowRef, columnSource, FileType.BSL);
       }
       registerTabularSectionPlatformMembers(rowRef, collRef, columnSource);
-
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
     if (!tsMembers.isEmpty()) {
@@ -782,78 +784,6 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Триплет имён детей регистра (измерения/ресурсы/реквизиты), полученный
-   * из конкретного MD-класса регистра. {@code null} — для не-регистров.
-   */
-  record RegisterChildren(List<? extends Attribute> dimensions,
-                          List<? extends Attribute> resources,
-                          List<? extends Attribute> attributes) {
-  }
-
-  static @Nullable RegisterChildren registerChildrenOf(MD md) {
-    return switch (md) {
-      case InformationRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
-      case AccumulationRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
-      case AccountingRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
-      case CalculationRegister r ->
-        new RegisterChildren(r.getDimensions(), r.getResources(), customAttributesOf(r.getAttributes()));
-      default -> null;
-    };
-  }
-
-  /**
-   * Отфильтровывает {@link StandardAttribute} (Период/Регистратор/Активность/…):
-   * {@code getAttributes()} регистра возвращает их вперемешку с собственными
-   * реквизитами, но они уже приходят как обычные bilingual-члены generic-типа
-   * записи ({@code РегистрХХХЗапись.<Имя>}) из bsl-context — без фильтра
-   * плейсхолдер {@code <Имя реквизита>} материализовал бы их второй раз,
-   * одноязычными (под английским написанием).
-   */
-  private static List<? extends Attribute> customAttributesOf(List<? extends Attribute> attributes) {
-    return attributes.stream().filter(a -> !(a instanceof StandardAttribute)).toList();
-  }
-
-  /**
-   * Регистрирует expansion generic-property {@code <Имя измерения>/<Имя ресурса>/
-   * <Имя реквизита>} на типе записи регистра ({@code РегистрСведенийЗапись.<Имя>}
-   * и аналоги для других семейств регистров). Имена детей берутся из mdclasses;
-   * мета — наследуется от HBK-template'ов.
-   *
-   * @param familyCore ru-часть имени семейства ({@code "РегистрСведений"} и т.п.)
-   * @param regName    имя регистра в конфигурации
-   * @param children   измерения/ресурсы/реквизиты регистра
-   */
-  private void registerRegisterRecordExpansion(String familyCore, String regName, RegisterChildren children) {
-    var generic = typeRegistry.findAllGenericsByFamilyCore(familyCore + "Запись").stream()
-      .findFirst()
-      .orElse(null);
-    if (generic == null) {
-      return;
-    }
-    var parameters = typeRegistry.getTypeParameters(generic);
-    if (parameters.size() != 1) {
-      return;
-    }
-    var typeBindings = Map.of(parameters.get(0), regName);
-    var specializedName = TypeRef.specialize(generic, typeBindings).qualifiedName();
-    var specialized = typeRegistry.resolve(specializedName).orElse(null);
-    if (specialized == null) {
-      return;
-    }
-    var expansions = new LinkedHashMap<String, List<String>>();
-    putAttributeNames(expansions, "Имя измерения", children.dimensions());
-    putAttributeNames(expansions, "Имя ресурса", children.resources());
-    putAttributeNames(expansions, "Имя реквизита", children.attributes());
-    if (expansions.isEmpty()) {
-      return;
-    }
-    typeRegistry.registerMemberExpansion(specialized, generic, typeBindings, expansions, FileType.BSL);
-  }
-
-  /**
    * Графы журнала документов как property-члены на типе журнала
    * ({@code ЖурналДокументов.<имя>}). Источник имён и типов — mdclasses
    * ({@link DocumentJournal#getColumns()}); все колонки реализуют
@@ -897,18 +827,6 @@ public class ConfigurationTypesProvider {
       if (!recalcName.isBlank()) {
         registerFamilySpecializations("Перерасчет", recalcName);
       }
-    }
-  }
-
-  /** Кладёт в expansion-map имена непустых атрибутов под ключом-placeholder'ом. */
-  static void putAttributeNames(Map<String, List<String>> sink, String placeholder,
-                                List<? extends Attribute> attributes) {
-    var names = attributes.stream()
-      .map(Attribute::getName)
-      .filter(n -> !n.isBlank())
-      .toList();
-    if (!names.isEmpty()) {
-      sink.put(placeholder, names);
     }
   }
 
