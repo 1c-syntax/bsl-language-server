@@ -103,13 +103,30 @@ final class StandardAttributesResolver {
    * </ul>
    */
   private static boolean appliesTo(MD md, String attributeName) {
-    if (PARENT.equalsIgnoreCase(attributeName)) {
-      return isHierarchical(md);
-    }
-    if (IS_FOLDER.equalsIgnoreCase(attributeName)) {
-      return isHierarchical(md) && hasFolders(md);
+    for (var absent : hierarchyAttributesAbsentIn(md)) {
+      if (absent.equalsIgnoreCase(attributeName)) {
+        return false;
+      }
     }
     return true;
+  }
+
+  /**
+   * Стандартные реквизиты иерархии, которых у этого объекта нет.
+   * <p>
+   * Тот же ответ нужен дважды: коллекции {@code Метаданные.<Объект>.СтандартныеРеквизиты}
+   * (не показывать в списке) и прикладным типам {@code СправочникСсылка.<Имя>} /
+   * {@code СправочникОбъект.<Имя>} (подавить объявленный платформой член). Решение о
+   * применимости при этом одно, поэтому и живёт в одном месте.
+   *
+   * @param md объект метаданных.
+   * @return имена отсутствующих реквизитов; пустой список — все на месте.
+   */
+  static List<String> hierarchyAttributesAbsentIn(MD md) {
+    if (!isHierarchical(md)) {
+      return List.of(PARENT, IS_FOLDER);
+    }
+    return hasFolders(md) ? List.of() : List.of(IS_FOLDER);
   }
 
   private static boolean isHierarchical(MD md) {

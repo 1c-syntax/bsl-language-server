@@ -212,6 +212,13 @@ public class TypeRegistry {
    */
   private final Map<FileType, Map<TypeRef, BilingualString>> typeDescriptionsBilingual = perFileType();
 
+  /**
+   * Члены, которых у типа не существует, — по языку файла (см.
+   * {@link #registerMemberSuppression}). Хранятся именами, а не дескрипторами:
+   * подавление объявляется до того, как члены собраны.
+   */
+  private final Map<FileType, Map<TypeRef, Set<String>>> memberSuppressions = perFileType();
+
   /** Пустой контейнер с разрезами по всем языкам. */
   private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
     return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
@@ -574,9 +581,13 @@ public class TypeRegistry {
     // Ключ дедупликации — (kind, имя): метод и свойство с одинаковым именем —
     // разные члены (например, self-completion может видеть self-метод и
     // одноимённую self-переменную типа), один не должен вытеснять другой.
+    var suppressed = memberSuppressions.get(fileType).getOrDefault(ref, Set.of());
     var byNameAndKind = new LinkedHashMap<MemberKey, MemberDescriptor>();
     for (var source : List.copyOf(resolveMemberSources(ref, fileType))) {
       for (var member : source.getMembers()) {
+        if (isSuppressed(member, suppressed)) {
+          continue;
+        }
         byNameAndKind.putIfAbsent(
           new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT)), member);
       }
@@ -584,6 +595,20 @@ public class TypeRegistry {
     // Неизменяемый список: память шарится между вызовами, случайная мутация
     // упадёт сразу (все потребители только итерируют).
     return List.copyOf(byNameAndKind.values());
+  }
+
+  /**
+   * Подавлен ли член (см. {@link #registerMemberSuppression}). Сравнение идёт по
+   * дескриптору, а не по строке имени, — иначе подавление сняло бы член только в
+   * том написании, которым его назвали.
+   */
+  private static boolean isSuppressed(MemberDescriptor member, Set<String> suppressed) {
+    for (var name : suppressed) {
+      if (member.matches(name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -689,6 +714,33 @@ public class TypeRegistry {
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
+    membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * Объявить, что членов с такими именами у типа не существует.
+   * <p>
+   * Источник умеет только <b>перекрыть</b> член, но не убрать: {@code registerMemberOverride}
+   * встаёт в начало списка, а дедуп берёт первое вхождение. Когда член приходит из объявления
+   * платформы, а применимость его зависит от конфигурации, перекрывать нечем — нужно убрать.
+   * Так у неиерархического справочника не существует {@code Родитель} и {@code ЭтоГруппа},
+   * хотя платформа объявляет их у всего семейства справочников.
+   * <p>
+   * Подавление сравнивает имена через {@link MemberDescriptor#matches(String)}, то есть
+   * снимает член в обоих написаниях: подавлять по строке было бы ошибкой — английское имя
+   * пережило бы подавление.
+   *
+   * @param ref         тип, у которого членов нет.
+   * @param memberNames имена подавляемых членов (ru либо en, регистр не важен).
+   * @param fileType    язык файла-потребителя.
+   */
+  public void registerMemberSuppression(TypeRef ref, Collection<String> memberNames, FileType fileType) {
+    if (memberNames.isEmpty()) {
+      return;
+    }
+    memberSuppressions.get(fileType)
+      .computeIfAbsent(ref, key -> ConcurrentHashMap.newKeySet())
+      .addAll(memberNames);
     membersEpoch.incrementAndGet();
   }
 
