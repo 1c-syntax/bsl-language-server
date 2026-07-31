@@ -106,18 +106,6 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
-   * Типы, объявленные о переменной помимо кода: типизирующий комментарий, тип параметра,
-   * аннотация внедрения. То, что кладут в переменную тела, сюда не входит — это
-   * {@link #typesAt(Reference)}.
-   *
-   * @param variable переменная.
-   * @return объявленные типы; {@link TypeSet#EMPTY}, если о переменной ничего не объявлено.
-   */
-  public TypeSet declaredTypesOf(VariableSymbol variable) {
-    return inferencer.declaredTypes(variable);
-  }
-
-  /**
    * Тип переменной в указанной точке её документа — позиционный ответ там, где обращения
    * к переменной в этой точке нет и {@link Reference} не существует.
    *

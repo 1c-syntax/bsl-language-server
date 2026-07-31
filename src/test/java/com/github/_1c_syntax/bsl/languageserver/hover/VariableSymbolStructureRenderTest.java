@@ -88,8 +88,6 @@ class VariableSymbolStructureRenderTest {
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
     when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "type")).thenReturn("Тип");
-    // Объявленного о переменной в этих тестах нет: проверяется отрисовка вычисленного по коду.
-    when(typeService.declaredTypesOf(symbol)).thenReturn(TypeSet.EMPTY);
     when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "moduleVariable"))
       .thenReturn("Переменная уровня модуля");
 
@@ -132,7 +130,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: Структура*")
+      .contains("Тип: Структура")
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`")
       .doesNotContain("{");
@@ -149,7 +147,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: Соответствие*")
+      .contains("Тип: Соответствие")
       .contains("* **Ключ1**: `Строка`");
   }
 
@@ -164,7 +162,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ФиксированнаяСтруктура*")
+      .contains("Тип: ФиксированнаяСтруктура")
       .contains("* **Код**: `Число`");
   }
 
@@ -179,7 +177,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ФиксированноеСоответствие*")
+      .contains("Тип: ФиксированноеСоответствие")
       .contains("* **Логин**: `Строка`");
   }
 
@@ -196,7 +194,7 @@ class VariableSymbolStructureRenderTest {
 
     // then
     assertThat(content)
-      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений*")
+      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений")
       .contains("* **Сумма**: `Число`");
   }
 
