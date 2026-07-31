@@ -52,10 +52,12 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Тип переменной в конкретной точке кода — расчёт по графу потока управления тела.
@@ -102,6 +104,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private final Map<URI, Map<BSLParser.CodeBlockContext, FlowLayout>> layoutsByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<BSLParser.CodeBlockContext, Facts>> factsByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<VariableSymbol, TypeSet>> cellsByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Места изменения переменной, уже спрошенные у вызывающего.
+   * <p>
+   * За ними стоит обход индекса ссылок, а спрашивают их на каждое тело, где переменная
+   * видна: у переменной модуля это все тела документа. Без этой памяти обход индекса
+   * повторялся бы столько раз, сколько в модуле методов.
+   */
+  private final Map<URI, Map<VariableSymbol, Changes>> changesByUri = new ConcurrentHashMap<>();
 
   /**
    * Расчёты по телам, идущие прямо сейчас в рамках одного вывода типов.
@@ -628,29 +639,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     List<VariableSymbol> shared,
     FlowInputs inputs
   ) {
-    var bodies = new ArrayList<BSLParser.CodeBlockContext>(1);
+    // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
+    Set<BSLParser.CodeBlockContext> bodies = Collections.newSetFromMap(new IdentityHashMap<>());
     for (var variable : shared) {
-      var positions = new ArrayList<Position>(inputs.definitionPositions().apply(variable));
-      positions.addAll(inputs.mutationPositions().apply(variable));
-      for (var position : positions) {
-        var body = bodyAt(documentContext, position);
-        if (body != null && !containsIdentical(bodies, body)) {
-          bodies.add(body);
-        }
-      }
+      var changes = changesOf(documentContext, variable, inputs);
+      Stream.concat(changes.definitions().stream(), changes.mutations().stream())
+        .map(position -> bodyAt(documentContext, position))
+        .filter(Objects::nonNull)
+        .forEach(bodies::add);
     }
-    return bodies;
-  }
-
-  /** Есть ли в списке этот же самый узел: тела сравниваются по ссылке, а не по содержимому. */
-  private static boolean containsIdentical(List<BSLParser.CodeBlockContext> bodies,
-                                           BSLParser.CodeBlockContext body) {
-    for (var known : bodies) {
-      if (known == body) {
-        return true;
-      }
-    }
-    return false;
+    return List.copyOf(bodies);
   }
 
   /**
@@ -663,6 +661,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     layoutsByUri.remove(uri);
     factsByUri.remove(uri);
     cellsByUri.remove(uri);
+    changesByUri.remove(uri);
   }
 
   /**
@@ -788,6 +787,31 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     return previous == null ? computed : previous;
   }
 
+  /**
+   * Места изменения переменной по всему документу: присваивания и операторы-мутаторы.
+   *
+   * @param documentContext контекст документа.
+   * @param variable        переменная.
+   * @param inputs          исходные данные расчёта.
+   * @return места изменения; спрашиваются у вызывающего один раз на переменную.
+   */
+  private Changes changesOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
+    return changesByUri
+      .computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
+      .computeIfAbsent(variable, key -> new Changes(
+        inputs.definitionPositions().apply(key),
+        inputs.mutationPositions().apply(key)));
+  }
+
+  /**
+   * Места изменения одной переменной.
+   *
+   * @param definitions позиции присваиваний.
+   * @param mutations   позиции операторов, меняющих тип на месте.
+   */
+  private record Changes(Collection<Position> definitions, Collection<Position> mutations) {
+  }
+
   /** Собрать изменения типов по операторам и посчитать по ним окружения тела. */
   private Facts compute(
     DocumentContext documentContext,
@@ -806,8 +830,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var variables = new ArrayList<VariableSymbol>();
     Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
     for (var variable : inputs.variables().apply(body)) {
-      var definitions = inputs.definitionPositions().apply(variable);
-      var mutations = inputs.mutationPositions().apply(variable);
+      var changes = changesOf(documentContext, variable, inputs);
+      var definitions = changes.definitions();
+      var mutations = changes.mutations();
       // Если хоть одно изменение типа не легло в граф отдельным оператором, его вклад
       // потерялся бы — тогда точнее прежний путь с обходом всей области видимости.
       // Отсутствие присваиваний расчёту не мешает: тип такой переменной — входной факт по
