@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785492736507,
+  "lastUpdate": 1785497469184,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41385,6 +41385,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1425958623336907",
             "extra": "mean: 94.47043506304423 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9913f829bb53648ecfb4d7eb2056651b04f3f303",
+          "message": "Merge pull request #4334 from 1c-syntax/feature/member-suppression\n\nРеестр умеет убирать члены, которых у типа не существует",
+          "timestamp": "2026-07-31T09:52:17+02:00",
+          "tree_id": "ca9b848469bb082e810571838a691c488c9a2427",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9913f829bb53648ecfb4d7eb2056651b04f3f303"
+        },
+        "date": 1785497458549,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.61377851168315,
+            "unit": "sec",
+            "range": "stddev: 2.392516187306287",
+            "extra": "mean: 93.61377851168315 sec\nrounds: 3"
           }
         ]
       }
