@@ -2254,10 +2254,37 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>A method whose name matches a platform event of the module's owner type (for example, <code>OnWrite</code> in a document object module) is treated as an event handler. By the BSL coding standard such methods must reside in the standard region:</p>
 <ul>
-<li>for object and similar modules — <code>#Region EventHandlers</code> (<code>#Область ОбработчикиСобытий</code>);</li>
-<li>for form modules — <code>#Region FormEventHandlers</code>, <code>#Region FormHeaderItemsEventHandlers</code>, <code>#Region FormTableItemsEventHandlers&lt;TableName&gt;</code> (plus their RU equivalents).</li>
+<li>for object and similar modules — <code>#Region EventHandlers</code> (<code>#Область ОбработчикиСобытий</code>).</li>
 </ul>
-<p>The diagnostic fires when such a method has no parent region or its region name differs.</p>
+<p>In a form module the region depends on <strong>what declares the handler</strong> in <code>Form.xml</code>:</p>
+<table>
+<thead>
+<tr>
+<th>what is handled</th>
+<th>region</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>an event of the form itself</td>
+<td><code>#Region FormEventHandlers</code></td>
+</tr>
+<tr>
+<td>an event of an item outside tables</td>
+<td><code>#Region FormHeaderItemsEventHandlers</code></td>
+</tr>
+<tr>
+<td>an event of a table item (or of the table itself)</td>
+<td><code>#Region FormTableItemsEventHandlers&lt;TableName&gt;</code></td>
+</tr>
+<tr>
+<td>a form command</td>
+<td><code>#Region FormCommandsEventHandlers</code></td>
+</tr>
+</tbody>
+</table>
+<p>RU region names are accepted as well. When the configuration is unavailable and the declaring entity cannot be determined, any of the form regions above will do.</p>
+<p>The diagnostic fires when such a method has no parent region, or its region is not the one the standard prescribes for it.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="c1">// Fires: OnWrite is a platform event, must be inside EventHandlers</span>
 <span class="cp">#Region Private</span>
@@ -2272,6 +2299,25 @@
 <span class="cp">#Region EventHandlers</span>
 
 <span class="k">Procedure</span> <span class="nf">OnWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>
+    <span class="c1">// ...</span>
+<span class="k">EndProcedure</span>
+
+<span class="cp">#EndRegion</span>
+</code></pre></div>
+<p>In a form module:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Fires: a command handler placed in the form events region</span>
+<span class="cp">#Region FormEventHandlers</span>
+
+<span class="k">Procedure</span> <span class="nf">FillCommand</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
+    <span class="c1">// ...</span>
+<span class="k">EndProcedure</span>
+
+<span class="cp">#EndRegion</span>
+
+<span class="c1">// Does not fire:</span>
+<span class="cp">#Region FormCommandsEventHandlers</span>
+
+<span class="k">Procedure</span> <span class="nf">FillCommand</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
     <span class="c1">// ...</span>
 <span class="k">EndProcedure</span>
 
