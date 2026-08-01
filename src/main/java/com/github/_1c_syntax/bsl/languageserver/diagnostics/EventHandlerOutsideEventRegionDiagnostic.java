@@ -101,6 +101,14 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     new TargetRegion(Keywords.EVENT_HANDLERS_REGION);
 
   /**
+   * Область событий самой формы. Она же — отступной вариант, когда объявитель
+   * обработчика неизвестен: назвать пользователю одну область всё равно надо, а из
+   * четырёх форменных эта общая.
+   */
+  private static final TargetRegion FORM_EVENTS_TARGET_REGION =
+    new TargetRegion(Keywords.FORM_EVENT_HANDLERS_REGION);
+
+  /**
    * Области модуля формы, куда допустимо класть обработчик, когда о нём известно
    * только то, что он обработчик: форма могла не прочитаться, а метод мог совпасть
    * с событием по имени, не будучи объявленным в {@code Form.xml}.
@@ -138,8 +146,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       return;
     }
     // Имя области — на языке модуля, а не интерфейса: его пользователю писать в коде.
-    var target = expectedRegion == null ? OBJECT_TARGET_REGION : expectedRegion;
-    var regionName = target.forVariant(scriptVariantOf(documentContext));
+    var regionName = orFallback(expectedRegion).forVariant(scriptVariantOf(documentContext));
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
       info.getMessage(method.getName(), regionName));
   }
@@ -179,9 +186,19 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       .orElse(null);
   }
 
+  /**
+   * Область, которую называем пользователю: {@link #expectedRegion} оставляет выбор
+   * открытым, когда объявитель обработчика неизвестен, а сообщение и quick fix обязаны
+   * назвать одну и ту же — иначе диагностика зовёт в одну область, а исправление
+   * создаёт другую.
+   */
+  private static TargetRegion orFallback(@Nullable TargetRegion expectedRegion) {
+    return expectedRegion == null ? FORM_EVENTS_TARGET_REGION : expectedRegion;
+  }
+
   private static TargetRegion regionOf(FormHandlerRoleIndex.Handler handler) {
     return switch (handler.role()) {
-      case FORM_EVENT -> new TargetRegion(Keywords.FORM_EVENT_HANDLERS_REGION);
+      case FORM_EVENT -> FORM_EVENTS_TARGET_REGION;
       case HEADER_ITEM_EVENT -> new TargetRegion(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION);
       case TABLE_ITEM_EVENT ->
         new TargetRegion(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START, handler.owner());
@@ -246,13 +263,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     // Область берётся по первому методу: fix-all группирует методы одной области,
     // а разные роли дают разные области — их правки не смешиваются.
     var variant = scriptVariantOf(documentContext);
-    var expected = expectedRegion(methods.get(0), documentContext);
-    if (expected == null) {
-      // Модуль формы, а объявитель обработчика неизвестен: кладём в область событий формы.
-      expected = documentContext.getModuleType() == ModuleType.FormModule
-        ? new TargetRegion(Keywords.FORM_EVENT_HANDLERS_REGION) : OBJECT_TARGET_REGION;
-    }
-    var targetRegion = expected.forVariant(variant);
+    var targetRegion = orFallback(expectedRegion(methods.get(0), documentContext)).forVariant(variant);
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());
