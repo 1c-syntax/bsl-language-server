@@ -150,16 +150,27 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     semanticElements.sort(Comparator.comparingInt(SemanticTokenEntry::line)
       .thenComparingInt(SemanticTokenEntry::start));
 
+    // Столбец, с которого каждая строка описания начинается в файле. У первой он известен
+    // из диапазона описания, у остальных это отступ строки: парсер отдаёт их элементы в
+    // координатах от начала комментария, не зная про отступ.
+    var lineOffsets = lineOffsets(lines.length, fileStartLine, fileStartChar, documentContext);
+
     // Group elements by line
     var elementsByLine = new HashMap<Integer, List<SemanticTokenEntry>>();
     for (var element : semanticElements) {
-      elementsByLine.computeIfAbsent(element.line(), k -> new ArrayList<>()).add(element);
+      var lineIdx = element.line() - fileStartLine;
+      var shift = lineIdx > 0 && lineIdx < lineOffsets.length ? lineOffsets[lineIdx] : 0;
+      var shifted = shift == 0
+        ? element
+        : new SemanticTokenEntry(element.line(), element.start() + shift, element.length(),
+          element.type(), element.modifiers());
+      elementsByLine.computeIfAbsent(element.line(), k -> new ArrayList<>()).add(shifted);
     }
 
     if (multilineTokenSupport) {
-      addBslDocTokensWithMultilineSupport(entries, lines, elementsByLine, fileStartLine, fileStartChar);
+      addBslDocTokensWithMultilineSupport(entries, lines, elementsByLine, fileStartLine, lineOffsets);
     } else {
-      addBslDocTokensPerLine(entries, lines, elementsByLine, fileStartLine, fileStartChar);
+      addBslDocTokensPerLine(entries, lines, elementsByLine, fileStartLine, lineOffsets);
     }
   }
 
@@ -168,13 +179,13 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     String[] lines,
     Map<Integer, List<SemanticTokenEntry>> elementsByLine,
     int fileStartLine,
-    int fileStartChar
+    int[] lineOffsets
   ) {
     int lineIdx = 0;
     while (lineIdx < lines.length) {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
-      int charOffset = (lineIdx == 0) ? fileStartChar : 0;
+      int charOffset = lineOffsets[lineIdx];
 
       var lineElements = elementsByLine.getOrDefault(fileLine, List.of());
 
@@ -191,7 +202,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
 
         int endLineIdx = lineIdx - 1;
         int startLine = fileStartLine + startLineIdx;
-        int startChar = (startLineIdx == 0) ? fileStartChar : 0;
+        int startChar = lineOffsets[startLineIdx];
 
         if (startLineIdx == endLineIdx) {
           int lineLength = lines[startLineIdx].length();
@@ -222,13 +233,13 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     String[] lines,
     Map<Integer, List<SemanticTokenEntry>> elementsByLine,
     int fileStartLine,
-    int fileStartChar
+    int[] lineOffsets
   ) {
     for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
       int lineLength = lineText.length();
-      int charOffset = (lineIdx == 0) ? fileStartChar : 0;
+      int charOffset = lineOffsets[lineIdx];
 
       var lineElements = elementsByLine.getOrDefault(fileLine, List.of());
 
@@ -320,6 +331,42 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   private boolean isResolvable(TypeDescription type, FileType fileType) {
     var name = DescriptionTypes.resolveName(type);
     return !name.isBlank() && typeService.resolve(name, fileType).isPresent();
+  }
+
+  /**
+   * Столбцы, с которых строки описания начинаются в файле.
+   *
+   * @param lineCount       число строк описания.
+   * @param fileStartLine   строка файла, с которой начинается описание.
+   * @param fileStartChar   столбец начала первой строки описания.
+   * @param documentContext документ с описанием.
+   * @return столбец на каждую строку описания.
+   */
+  private static int[] lineOffsets(int lineCount, int fileStartLine, int fileStartChar,
+                                   DocumentContext documentContext) {
+    var offsets = new int[lineCount];
+    offsets[0] = fileStartChar;
+    var content = documentContext.getContentList();
+    for (var lineIdx = 1; lineIdx < lineCount; lineIdx++) {
+      var fileLine = fileStartLine + lineIdx;
+      offsets[lineIdx] = fileLine < content.length ? indentOf(content[fileLine]) : 0;
+    }
+    return offsets;
+  }
+
+  /**
+   * Столбец первого непробельного символа строки.
+   *
+   * @param line текст строки.
+   * @return столбец; длина строки, если непробельных символов в ней нет.
+   */
+  private static int indentOf(String line) {
+    for (var index = 0; index < line.length(); index++) {
+      if (!Character.isWhitespace(line.charAt(index))) {
+        return index;
+      }
+    }
+    return line.length();
   }
 
   private void addDocCommentRange(List<SemanticTokenEntry> entries, int line, int start, int length) {

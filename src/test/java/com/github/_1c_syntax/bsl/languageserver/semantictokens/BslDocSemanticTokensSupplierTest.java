@@ -240,11 +240,13 @@ class BslDocSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then: ключевое слово подсвечивается по своей реальной позиции — с учётом отступа
-    // (столбец 7 = четыре пробела, «//» и пробел), а не со столбца 3.
+    // then: элементы подсвечиваются по своим реальным позициям — с учётом отступа
+    // строки описания, а не так, будто описание начинается со столбца 0.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(0, 7, 10, SemanticTokenTypes.Macro,
-        Set.of(SemanticTokenModifiers.Documentation), "Параметры:")
+        Set.of(SemanticTokenModifiers.Documentation), "Параметры:"),
+      new ExpectedToken(1, 16, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
     ));
   }
 
