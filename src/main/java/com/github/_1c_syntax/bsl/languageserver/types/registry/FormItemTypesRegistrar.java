@@ -106,6 +106,7 @@ class FormItemTypesRegistrar {
    * реестру для различения видов, а пользователю показывать надо реальный тип значения.
    */
   void registerItemKindTypes() {
+    registerTypelessMemberTypes();
     for (var elementType : FormElementType.values()) {
       var baseName = FormPlatformTypes.itemTypeName(elementType);
       var extensionName = FormPlatformTypes.itemExtensionTypeName(elementType);
@@ -129,6 +130,49 @@ class FormItemTypesRegistrar {
       itemKindTypes.put(elementType, kindRef);
     }
     registerTableDataKindTypes();
+  }
+
+  /**
+   * Проставляет тип свойствам элементов формы, которые платформа объявила без него
+   * (см. {@link FormPlatformTypes#TYPELESS_MEMBER_TYPES}). Всё остальное — описание,
+   * двуязычное имя, режим доступа, версии — берётся у самого платформенного объявления:
+   * доопределяется ровно тип, а не член целиком.
+   * <p>
+   * Члены владельца читаются здесь же, на регистрации, а в источник уходит уже готовый
+   * список: источник живёт на том же типе, чьи члены читает, и ленивое чтение зациклило
+   * бы {@code getMembers}. Читать можно: платформенные типы зарегистрированы
+   * {@code TypeRegistry.bootstrap()} задолго до регистрации форм.
+   */
+  private void registerTypelessMemberTypes() {
+    FormPlatformTypes.TYPELESS_MEMBER_TYPES.forEach((ownerName, typeByMember) -> {
+      var ownerRef = typeRegistry.resolve(ownerName).orElse(null);
+      if (ownerRef == null) {
+        // Нет синтакс-помощника: в JSON-фолбэке этих свойств нет вовсе.
+        return;
+      }
+      var retyped = new ArrayList<MemberDescriptor>(typeByMember.size());
+      for (var member : typeRegistry.getMembers(ownerRef, FileType.BSL)) {
+        var typeName = memberTypeName(typeByMember, member);
+        var typeRef = typeName == null ? null : typeRegistry.resolve(typeName).orElse(null);
+        if (typeRef != null) {
+          retyped.add(member.withReturnTypes(TypeSet.of(typeRef)));
+        }
+      }
+      if (!retyped.isEmpty()) {
+        typeRegistry.registerMemberOverride(ownerRef, () -> retyped, FileType.BSL);
+      }
+    });
+  }
+
+  /**
+   * Имя типа, которым надо доопределить свойство; {@code null} — свойства в словаре нет
+   * либо платформа тип у него всё-таки объявила (тогда её объявление и остаётся).
+   */
+  private static @Nullable String memberTypeName(Map<String, String> typeByMember, MemberDescriptor member) {
+    if (member.kind() != MemberKind.PROPERTY || !member.returnTypes().isEmpty()) {
+      return null;
+    }
+    return typeByMember.get(member.name());
   }
 
   /**

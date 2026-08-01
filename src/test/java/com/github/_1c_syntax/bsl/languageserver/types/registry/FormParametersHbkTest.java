@@ -391,6 +391,49 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
       .contains("ОтборСтрок");
   }
 
+  @Test
+  void memberDeclaredWithoutTypeGetsTheTypePlatformNamesElsewhere() {
+    // Репорт: Элементы.<таблица>.АвтоОтметкаНезаполненного показывалось без типа.
+    // Блок «Тип» в синтакс-помощнике есть не у всякого свойства; у одноимённого
+    // свойства поля ввода платформа объявляет Булево — его и проставляем.
+    var table = itemMemberType("Документ.Документ1.Форма.ФормаДокумента", "ТабличнаяЧасть1");
+    var members = typeRegistry.getMembers(table, FileType.BSL);
+
+    var autoMark = members.stream().filter(m -> m.matches("АвтоОтметкаНезаполненного"))
+      .findFirst().orElseThrow();
+    assertThat(qualifiedNames(autoMark)).containsExactly("Булево");
+    assertThat(autoMark.description())
+      .as("платформенное описание доопределение типа не затирает")
+      .contains("ОтметкаНезаполненного");
+
+    // Второй случай того же дефекта: свойство и его тип названы одинаково.
+    var behavior = members.stream()
+      .filter(m -> m.matches("ПоведениеПриНедоступностиОсновногоСервера"))
+      .findFirst().orElseThrow();
+    assertThat(qualifiedNames(behavior))
+      .containsExactly("ПоведениеПриНедоступностиОсновногоСервера");
+  }
+
+  @Test
+  void everyTypelessMemberOfTheDictionaryIsStillDeclaredThatWay() {
+    // Словарь доопределений сверяется с платформой целиком: и владелец, и тип
+    // значения должны резолвиться, а само свойство — существовать и оставаться
+    // без типа. Иначе запись либо промахнулась именем, либо платформа тип
+    // объявила и доопределять больше нечего.
+    FormPlatformTypes.TYPELESS_MEMBER_TYPES.forEach((ownerName, typeByMember) -> {
+      var ownerRef = typeRegistry.resolve(ownerName).orElseThrow(
+        () -> new AssertionError("не резолвится тип-владелец " + ownerName));
+      var declared = typeRegistry.getMembers(ownerRef, FileType.BSL);
+      typeByMember.forEach((memberName, typeName) -> {
+        assertThat(typeRegistry.resolve(typeName))
+          .as("тип значения %s (%s.%s)", typeName, ownerName, memberName)
+          .isPresent();
+        assertThat(declared).as("свойство %s.%s", ownerName, memberName)
+          .anyMatch(m -> m.matches(memberName));
+      });
+    });
+  }
+
   /** Тип элемента формы по его имени в коллекции элементов. */
   private TypeRef itemMemberType(String formMdoRef, String itemName) {
     var itemsType = typeRegistry.resolve("ВсеЭлементыФормы." + formMdoRef).orElseThrow();
