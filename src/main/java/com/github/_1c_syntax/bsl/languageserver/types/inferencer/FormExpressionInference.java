@@ -234,7 +234,13 @@ public class FormExpressionInference {
       || typeCall.arguments().size() != 1) {
       return null;
     }
-    var typeFunction = typeCall.getName().getText().toLowerCase(Locale.ROOT);
+    // Имя вызова у сломанного разбора отсутствует: `methodName().IDENTIFIER()` в
+    // построителе дерева выражений отдаёт null на error-узле.
+    var typeCallName = typeCall.getName();
+    if (typeCallName == null) {
+      return null;
+    }
+    var typeFunction = typeCallName.getText().toLowerCase(Locale.ROOT);
     if (!TYPE_FUNCTION_RU.equals(typeFunction) && !TYPE_FUNCTION_EN.equals(typeFunction)) {
       return null;
     }

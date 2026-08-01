@@ -43,13 +43,13 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Типы элементов управляемой формы: рантайм-тип по виду элемента, коллекция
@@ -84,12 +84,15 @@ class FormItemTypesRegistrar {
   private final FormDataTypesRegistrar formDataTypes;
   private final FormTypeFactory typeFactory;
 
-  /** Тип на вид элемента формы: база + расширение вида (см. {@link #registerItemKindTypes}). */
-  private final Map<FormElementType, TypeRef> itemKindTypes = new EnumMap<>(FormElementType.class);
+  /**
+   * Тип на вид элемента формы: база + расширение вида (см. {@link #registerItemKindTypes}).
+   * Заполняется на регистрации конфигурации, читается позже из ленивых источников членов
+   * на потоках запросов, поэтому карта конкурентная — как и у соседей по пакету.
+   */
+  private final Map<FormElementType, TypeRef> itemKindTypes = new ConcurrentHashMap<>();
 
   /** Тип на вид данных таблицы формы (см. {@link #registerTableDataKindTypes}). */
-  private final Map<TableDataKind, TypeRef> tableDataKindTypes =
-    new EnumMap<>(TableDataKind.class);
+  private final Map<TableDataKind, TypeRef> tableDataKindTypes = new ConcurrentHashMap<>();
 
   /**
    * Регистрирует по одному типу на вид элемента формы — «базовый рантайм-тип плюс

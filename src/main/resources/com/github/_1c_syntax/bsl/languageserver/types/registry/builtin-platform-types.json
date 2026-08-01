@@ -4928,6 +4928,14 @@
         "kind": "METHOD",
         "returnType": "Число",
         "description": "Возвращает идентификатор строки."
+      },
+      {
+        "name": "ПолучитьЭлементы",
+        "nameRu": "ПолучитьЭлементы",
+        "nameEn": "GetItems",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыКоллекцияЭлементовДерева",
+        "description": "Возвращает коллекцию подчиненных строк."
       }
     ]
   },
@@ -4945,6 +4953,44 @@
         "kind": "METHOD",
         "returnType": "ДанныеФормыЭлементДерева",
         "description": "Возвращает строку дерева по идентификатору."
+      },
+      {
+        "name": "ПолучитьЭлементы",
+        "nameRu": "ПолучитьЭлементы",
+        "nameEn": "GetItems",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыКоллекцияЭлементовДерева",
+        "description": "Возвращает коллекцию строк верхнего уровня."
+      }
+    ]
+  },
+  {
+    "kind": "COLLECTION",
+    "name": "ДанныеФормыКоллекцияЭлементовДерева",
+    "nameRu": "ДанныеФормыКоллекцияЭлементовДерева",
+    "nameEn": "FormDataTreeItemCollection",
+    "description": "Коллекция подчиненных строк дерева данных формы.",
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
+    "elementTypes": [
+      "ДанныеФормыЭлементДерева"
+    ],
+    "members": [
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "returnType": "ДанныеФормыЭлементДерева",
+        "description": "Добавляет строку в коллекцию."
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Возвращает количество строк коллекции."
       }
     ]
   },

@@ -223,6 +223,10 @@ public class ConfigurationModuleMembersProvider {
     var prev = registeredByUri.put(documentContext.getUri(), ref);
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
+      // Источник уже зарегистрирован, но содержимое изменилось (rebuild): он лениво
+      // читает символьное дерево, и без сброса memo в модуле формы остались бы
+      // экспортные методы и переменные предыдущей редакции — как и в общем пути выше.
+      typeRegistry.invalidateMembers(ref);
       return;
     }
 

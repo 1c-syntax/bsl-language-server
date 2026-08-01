@@ -253,7 +253,14 @@ public class FormTypesProvider {
     // Роли считаются сразу: имена дешевле членов (в реестр не ходим), а знать, кем
     // объявлен обработчик, нужно снаружи системы типов — стандартным областям модуля
     // и hover'у.
-    formHandlerRoleIndex.register(formRef, collectHandlerRoles(data));
+    var handlerRoles = collectHandlerRoles(data);
+    formHandlerRoleIndex.register(formRef, handlerRoles);
+    if (kind == FormKind.ORDINARY) {
+      // За модулем обычной формы стоит отдельный тип (см. registerModuleType), и именно
+      // его резолвит EventHandlerResolver — под именем формы роли оттуда не видны.
+      formHandlerRoleIndex.register(
+        typeRegistry.registerConfigurationType(moduleTypeQualifiedName(form)), handlerRoles);
+    }
 
     // Override, а не обычный источник: `Элементы`/`Параметры`/`Команды`/`ЭтотОбъект`
     // есть и у базового типа, но с обобщёнными типами — специализированные должны

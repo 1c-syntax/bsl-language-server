@@ -251,6 +251,7 @@ public class PlatformMemberHoverBuilder {
     if (types == null || types.isEmpty()) {
       return;
     }
+    var keyMarker = BslContextPlatformTypesProvider.KEY_PARAMETER_MARKER.forLanguage(lang);
     for (var ref : types.refs()) {
       var base = typeRegistry.openStructureBase(ref);
       if (base.isEmpty()) {
@@ -263,31 +264,35 @@ public class PlatformMemberHoverBuilder {
         inherited.add(member.name().toLowerCase(Locale.ROOT));
       }
       for (var member : typeRegistry.getMembers(ref, FileType.BSL)) {
-        if (member.kind() != MemberKind.PROPERTY
-          || inherited.contains(member.name().toLowerCase(Locale.ROOT))) {
-          continue;
-        }
-        var description = member.displayDescription(lang);
-        var keyMarker = BslContextPlatformTypesProvider.KEY_PARAMETER_MARKER.forLanguage(lang);
-        var key = description.stripTrailing().endsWith(keyMarker);
-        if (key) {
-          description = description.stripTrailing();
-          description = description.substring(0, description.length() - keyMarker.length());
-        }
-
-        // Ключевой параметр — курсивом: признак «по нему форма ищется среди уже
-        // открытых» важнее прочего текста и должен читаться до описания.
-        var name = member.displayName(lang);
-        sb.append("\n* ").append(key ? "***" + name + "***" : "**" + name + "**");
-        var typeLabel = renderTypeSet(member.returnTypes(), lang);
-        if (!typeLabel.isEmpty()) {
-          sb.append(": ").append(typeLabel);
-        }
-        var text = asListItemLines(description);
-        if (!text.isBlank()) {
-          sb.append(" — ").append(text);
+        if (member.kind() == MemberKind.PROPERTY
+          && !inherited.contains(member.name().toLowerCase(Locale.ROOT))) {
+          appendFieldLine(sb, member, keyMarker, lang);
         }
       }
+    }
+  }
+
+  /**
+   * Одно поле «открытой структуры» пунктом списка. Ключевой параметр набран курсивом:
+   * признак «по нему форма ищется среди уже открытых» важнее прочего текста и должен
+   * читаться до описания.
+   */
+  private void appendFieldLine(StringBuilder sb, MemberDescriptor member, String keyMarker, Language lang) {
+    var description = member.displayDescription(lang);
+    var key = description.stripTrailing().endsWith(keyMarker);
+    if (key) {
+      description = description.stripTrailing();
+      description = description.substring(0, description.length() - keyMarker.length());
+    }
+    var name = member.displayName(lang);
+    sb.append("\n* ").append(key ? "***" + name + "***" : "**" + name + "**");
+    var typeLabel = renderTypeSet(member.returnTypes(), lang);
+    if (!typeLabel.isEmpty()) {
+      sb.append(": ").append(typeLabel);
+    }
+    var text = asListItemLines(description);
+    if (!text.isBlank()) {
+      sb.append(" — ").append(text);
     }
   }
 

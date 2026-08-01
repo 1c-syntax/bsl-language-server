@@ -36,12 +36,12 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Типы данных управляемой формы: во что превращается реквизит, объявленный в
@@ -66,20 +66,20 @@ class FormDataTypesRegistrar {
    * Общий на всю рабочую область: данные одного прикладного типа устроены одинаково
    * во всех формах, где он встречается.
    */
-  private final Map<TypeRef, TypeRef> formDataTypes = new HashMap<>();
+  private final Map<TypeRef, TypeRef> formDataTypes = new ConcurrentHashMap<>();
 
   /**
    * Зеркало табличной части в данных формы: {@code ДокументТабличнаяЧасть.X.Y} →
    * {@code ДанныеФормыКоллекция.…} (см. {@link #registerTabularSectionData}).
    */
-  private final Map<TypeRef, TypeRef> tabularSectionData = new HashMap<>();
+  private final Map<TypeRef, TypeRef> tabularSectionData = new ConcurrentHashMap<>();
 
   /**
    * Строка коллекции данных формы: {@code ДанныеФормыКоллекция.…} →
    * {@code ДанныеФормыЭлементКоллекции.…} с её колонками. Её отдают
    * {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы над этой коллекцией.
    */
-  private final Map<TypeRef, TypeRef> rowByCollection = new HashMap<>();
+  private final Map<TypeRef, TypeRef> rowByCollection = new ConcurrentHashMap<>();
 
   /**
    * Реквизиты формы как свойства её типа. Тип — результат преобразования объявленного
