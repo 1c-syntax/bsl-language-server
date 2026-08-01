@@ -67,10 +67,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 class FormItemTypesRegistrar {
 
-  private final TypeRegistry typeRegistry;
-  private final FormDataTypesRegistrar formDataTypes;
-  private final FormTypeFactory typeFactory;
-
   /** Коллекция выделенных строк таблицы формы. */
   private static final BilingualString SELECTED_ROWS =
     BilingualString.of("ВыделенныеСтроки", "SelectedRows");
@@ -83,6 +79,10 @@ class FormItemTypesRegistrar {
   private static final BilingualString CURRENT_PARENT =
     BilingualString.of("ТекущийРодитель", "CurrentParent");
   private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
+
+  private final TypeRegistry typeRegistry;
+  private final FormDataTypesRegistrar formDataTypes;
+  private final FormTypeFactory typeFactory;
 
   /** Тип на вид элемента формы: база + расширение вида (см. {@link #registerItemKindTypes}). */
   private final Map<FormElementType, TypeRef> itemKindTypes = new EnumMap<>(FormElementType.class);
@@ -144,7 +144,7 @@ class FormItemTypesRegistrar {
    * {@code TypeRegistry.bootstrap()} задолго до регистрации форм.
    */
   private void registerTypelessMemberTypes() {
-    FormPlatformTypes.TYPELESS_MEMBER_TYPES.forEach((ownerName, typeByMember) -> {
+    FormPlatformTypes.TYPELESS_MEMBER_TYPES.forEach((String ownerName, Map<String, String> typeByMember) -> {
       var ownerRef = typeRegistry.resolve(ownerName).orElse(null);
       if (ownerRef == null) {
         // Нет синтакс-помощника: в JSON-фолбэке этих свойств нет вовсе.

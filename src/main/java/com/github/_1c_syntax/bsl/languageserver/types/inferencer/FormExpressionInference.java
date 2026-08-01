@@ -95,6 +95,9 @@ public class FormExpressionInference {
   private static final String TYPE_FUNCTION_RU = "тип";
   private static final String TYPE_FUNCTION_EN = "type";
 
+  /** Тип, в который преобразуют, у обеих функций стоит вторым параметром. */
+  private static final int TYPE_ARGUMENT_INDEX = 1;
+
   private final TypeRegistry typeRegistry;
   private final FormByNameResolver formByNameResolver;
   private final FormAttributeTypeIndex formAttributeTypeIndex;
@@ -226,7 +229,8 @@ public class FormExpressionInference {
    */
   private @Nullable TypeSet typeArgument(MethodCallNode call, DocumentContext documentContext) {
     var arguments = call.arguments();
-    if (arguments.size() < 2 || !(arguments.get(1) instanceof MethodCallNode typeCall)
+    if (arguments.size() <= TYPE_ARGUMENT_INDEX
+      || !(arguments.get(TYPE_ARGUMENT_INDEX) instanceof MethodCallNode typeCall)
       || typeCall.arguments().size() != 1) {
       return null;
     }

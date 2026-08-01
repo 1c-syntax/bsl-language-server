@@ -247,7 +247,8 @@ public class FormTypesProvider {
     // расширения — но там тип параметра остаётся обобщённым
     // (`ДокументОбъект.<Имя документа>`), а здесь подставлен владелец формы.
     typeRegistry.registerMemberOverride(formRef,
-      () -> FormPlatformTypes.concat(buildEventMembers(collectHandlers(form, kind, baseRef, extensionRef), FormPlatformTypes.ownerName(form)),
+      () -> FormPlatformTypes.concat(
+        buildEventMembers(collectHandlers(form, kind, baseRef, extensionRef), FormPlatformTypes.ownerName(form)),
         formParameters.buildCommandHandlers(data.getCommands())), FileType.BSL);
     // Роли считаются сразу: имена дешевле членов (в реестр не ходим), а знать, кем
     // объявлен обработчик, нужно снаружи системы типов — стандартным областям модуля
@@ -384,7 +385,7 @@ public class FormTypesProvider {
     for (var handler : data.getEventHandlers()) {
       result.add(new HandlerSource(handler, formTypes, false));
     }
-    var attributeTypes = formItemTypes.attributeTypesByName(data.getAttributes());
+    var attributeTypes = FormItemTypesRegistrar.attributeTypesByName(data.getAttributes());
     for (var element : data.getPlainElements()) {
       if (!(element instanceof FormEventHandlerOwner handlerOwner)) {
         continue;
