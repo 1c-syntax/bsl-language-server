@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,7 +53,7 @@ class MemberDescriptorSpecializeTest {
       false,
       PlatformMetadata.EMPTY);
 
-    var specialized = member.specialize(Map.of("Имя справочника", "X"));
+    var specialized = member.specialize(Map.of("Имя справочника", "X"), UnaryOperator.identity());
     var returnNames = specialized.returnTypes().refs().stream().map(TypeRef::qualifiedName).toList();
     assertThat(returnNames).containsExactlyInAnyOrder("СправочникОбъект.X", "Неопределено");
 
@@ -64,14 +65,14 @@ class MemberDescriptorSpecializeTest {
   @Test
   void specializeIsNoOpWhenNoPlaceholderInDescriptor() {
     var member = MemberDescriptor.property("Имя", new TypeRef(TypeKind.PRIMITIVE, "Строка"));
-    var specialized = member.specialize(Map.of("Имя справочника", "X"));
+    var specialized = member.specialize(Map.of("Имя справочника", "X"), UnaryOperator.identity());
     assertThat(specialized).isSameAs(member);
   }
 
   @Test
   void specializeIsNoOpWithEmptyBindings() {
     var member = MemberDescriptor.property("Ссылка", CATALOG_REF_GENERIC);
-    var specialized = member.specialize(Map.of());
+    var specialized = member.specialize(Map.of(), UnaryOperator.identity());
     assertThat(specialized).isSameAs(member);
   }
 
@@ -93,7 +94,7 @@ class MemberDescriptorSpecializeTest {
       false,
       PlatformMetadata.EMPTY);
 
-    var specialized = event.specialize(Map.of("Имя справочника", "Контрагенты"));
+    var specialized = event.specialize(Map.of("Имя справочника", "Контрагенты"), UnaryOperator.identity());
 
     var params = specialized.signatures().get(0).parameters();
     assertThat(params.get(0).types().refs().iterator().next().qualifiedName())
@@ -130,7 +131,7 @@ class MemberDescriptorSpecializeTest {
       false,
       meta);
 
-    var specialized = member.specialize(Map.of("Имя справочника", "X"));
+    var specialized = member.specialize(Map.of("Имя справочника", "X"), UnaryOperator.identity());
     assertThat(specialized.name()).isEqualTo("Ссылка");
     assertThat(specialized.description()).isEqualTo("описание");
     assertThat(specialized.metadata()).isSameAs(meta);

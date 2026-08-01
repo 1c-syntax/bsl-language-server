@@ -259,20 +259,14 @@ public record MemberDescriptor(
   /**
    * Возвращает копию дескриптора, в которой placeholder'ы {@code <X>} в
    * {@link #returnTypes} и {@link SignatureDescriptor#returnType} заменены
-   * по {@code bindings}.
-   */
-  public MemberDescriptor specialize(Map<String, String> bindings) {
-    return specialize(bindings, UnaryOperator.identity());
-  }
-
-  /**
-   * То же, что {@link #specialize(Map)}, но каждая полученная ссылка на тип пропускается
-   * через {@code canonicalizer}.
+   * по {@code bindings}, а каждая полученная ссылка на тип пропущена через
+   * {@code canonicalizer}.
    * <p>
-   * Структурная подстановка имени сохраняет {@link com.github._1c_syntax.bsl.languageserver.types.model.TypeKind}
-   * шаблона, поэтому специализация платформенного шаблона даёт платформенную ссылку и
-   * на конфигурационный тип. Канонизация приводит её к той, что зарегистрирована в
-   * реестре под этим именем.
+   * Структурная подстановка имени сохраняет {@link TypeKind} шаблона, поэтому
+   * специализация платформенного шаблона даёт платформенную ссылку и на
+   * конфигурационный тип. Канонизация приводит её к той, что зарегистрирована в
+   * реестре под этим именем: иначе за одним именем оказываются две разные ссылки,
+   * и объединение наборов их не схлопывает.
    *
    * @param bindings      placeholder → имя заменителя.
    * @param canonicalizer приведение ссылки к канонической.

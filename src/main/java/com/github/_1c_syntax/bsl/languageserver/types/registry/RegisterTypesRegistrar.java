@@ -253,7 +253,7 @@ public class RegisterTypesRegistrar {
       if (member.generic()) {
         continue;
       }
-      var specialized = member.specialize(bindings);
+      var specialized = member.specialize(bindings, typeRegistry::canonicalRef);
       var fixed = RegisterFamilies.ownFamilyMember(typeRegistry, specialized, familyCore, mdName);
       if (fixed == null) {
         fixed = PlaceholderBinder.bind(typeRegistry, specialized, recorders);
