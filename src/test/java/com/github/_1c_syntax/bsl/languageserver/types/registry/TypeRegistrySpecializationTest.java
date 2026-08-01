@@ -105,6 +105,29 @@ class TypeRegistrySpecializationTest {
   }
 
   @Test
+  void specializedMemberTypesAreCanonicalRefsFromRegistry() {
+    // given: generic пришёл из синтакс-помощника платформенным, а тип с тем же именем,
+    // что получится после подстановки, зарегистрирован как конфигурационный.
+    var generic = typeRegistry.resolve("СправочникСсылка.<Имя справочника>").orElseThrow();
+    var objectRef = typeRegistry.registerConfigurationType("СправочникОбъект.Канонический");
+
+    // when
+    var specRef = typeRegistry.registerSpecialization(
+      "СправочникСсылка.Канонический", generic,
+      Map.of("Имя справочника", "Канонический"),
+      FileType.BSL);
+    var getObject = typeRegistry.getMembers(specRef, FileType.BSL).stream()
+      .filter(member -> "ПолучитьОбъект".equals(member.name()))
+      .findFirst().orElseThrow();
+
+    // then: специализация не плодит вторую ссылку на тот же тип — иначе объединение
+    // наборов её не схлопнуло бы и один тип показывался бы дважды.
+    assertThat(getObject.returnType())
+      .as("тип возврата специализированного члена — канонический ref из реестра")
+      .isEqualTo(objectRef);
+  }
+
+  @Test
   void specializedTypeDisplayNameIsBilingualFromGenericDisplay() {
     // Двуязычное display-имя специализации: ru — из qualifiedName, en —
     // структурная подстановка MD-имени в en-написание display-имени generic'а

@@ -993,7 +993,7 @@ public class TypeRegistry {
         if (member.generic()) {
           continue;
         }
-        var specialized = member.specialize(bindings);
+        var specialized = member.specialize(bindings, this::canonicalRef);
         result.add(specialized);
         memberMetadataIndex.index(target, specialized);
       }
@@ -1725,6 +1725,22 @@ public class TypeRegistry {
 
   private void addAlias(String name, TypeRef ref) {
     aliasIndex.put(name.toLowerCase(Locale.ROOT), ref);
+  }
+
+  /**
+   * Каноническая ссылка на тип с этим именем — та, что зарегистрирована в реестре.
+   * <p>
+   * Структурная специализация шаблона ({@code СправочникСсылка.<Имя>} →
+   * {@code СправочникСсылка.Справочник1}) сохраняет вид шаблона, а шаблоны приходят из
+   * синтакс-помощника платформенными. Без приведения за одним именем оказываются две
+   * ссылки разного вида, и объединение наборов их не схлопывает.
+   *
+   * @param ref ссылка после структурной специализации.
+   * @return зарегистрированная ссылка с этим именем; исходная, если такого имени в
+   *     реестре нет.
+   */
+  private TypeRef canonicalRef(TypeRef ref) {
+    return resolve(ref.qualifiedName()).orElse(ref);
   }
 
   private static Type hydrate(TypeRef ref) {
