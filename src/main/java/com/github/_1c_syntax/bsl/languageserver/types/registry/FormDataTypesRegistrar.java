@@ -138,6 +138,29 @@ class FormDataTypesRegistrar {
     return Map.copyOf(byName);
   }
 
+  /**
+   * Типы реквизитов формы <b>до</b> перевода в данные формы: {@code имя реквизита
+   * (lower) → объявленный в {@code Form.xml} тип}. Ровно их отдаёт обратное
+   * преобразование {@code РеквизитФормыВЗначение} (см. {@link FormAttributeTypeIndex}).
+   *
+   * @param attributes реквизиты формы.
+   * @return объявленные типы; пусто, если реквизитов нет.
+   */
+  Map<String, TypeSet> declaredAttributeTypes(List<FormAttribute> attributes) {
+    if (attributes.isEmpty()) {
+      return Map.of();
+    }
+    var byName = LinkedHashMap.<String, TypeSet>newLinkedHashMap(attributes.size());
+    for (var attribute : attributes) {
+      var name = attribute.getName();
+      if (!name.isBlank()) {
+        byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
+          ValueTypes.resolve(typeRegistry, attribute.getValueType()));
+      }
+    }
+    return Map.copyOf(byName);
+  }
+
   /** Объявленные типы реквизита, переведённые в типы данных формы. */
   private TypeSet formDataTypes(TypeSet declared, FormAttribute attribute, FormKind kind, String suffixRu) {
     if (declared.isEmpty()) {

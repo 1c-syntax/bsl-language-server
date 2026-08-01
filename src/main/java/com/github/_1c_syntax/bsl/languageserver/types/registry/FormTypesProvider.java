@@ -157,6 +157,7 @@ public class FormTypesProvider {
   private final FormParametersResolver formParametersResolver;
   private final RecorderIndex recorderIndex;
   private final FormHandlerRoleIndex formHandlerRoleIndex;
+  private final FormAttributeTypeIndex formAttributeTypeIndex;
   private final FormDataTypesRegistrar formDataTypes;
   private final FormItemTypesRegistrar formItemTypes;
   private final FormTypeFactory typeFactory;
@@ -236,6 +237,11 @@ public class FormTypesProvider {
     var attributeTypes = formDataTypes.prepareAttributeTypes(data.getAttributes(), kind, suffixRu);
     typeRegistry.registerMemberSource(formRef,
       () -> formDataTypes.buildAttributeMembers(data.getAttributes(), attributeTypes), FileType.BSL);
+    if (kind == FormKind.MANAGED) {
+      // Объявленный тип реквизита свойством формы не выставишь — там данные формы, —
+      // но именно его отдаёт обратное преобразование `РеквизитФормыВЗначение`.
+      formAttributeTypeIndex.register(formRef, formDataTypes.declaredAttributeTypes(data.getAttributes()));
+    }
     // Override, а не обычный источник: если обработчик назван каноническим именем
     // события (так конфигуратор делает по умолчанию), то же имя приходит и от
     // расширения — но там тип параметра остаётся обобщённым

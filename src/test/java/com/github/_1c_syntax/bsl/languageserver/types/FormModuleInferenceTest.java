@@ -206,6 +206,75 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void attributeConvertedToValueGetsTheTypeItIsDeclaredWith() {
+    // На форме за реквизитом стоят данные формы, но обратное преобразование
+    // возвращает ровно то, чем реквизит объявлен в Form.xml.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        ОбъектДокумента = РеквизитФормыВЗначение("Объект");
+        Таблица = РеквизитФормыВЗначение("ТаблицаПодбора");
+        ПоАнглийски = FormAttributeToValue("Объект");
+        ЧерезФорму = ЭтотОбъект.РеквизитФормыВЗначение("Объект");
+        НетТакогоРеквизита = РеквизитФормыВЗначение("НетТакого");
+      КонецПроцедуры
+      """);
+
+    assertThat(typesAtRhs(documentContext, "ОбъектДокумента"))
+      .containsExactly("ДокументОбъект.Документ1");
+    assertThat(typesAtRhs(documentContext, "Таблица")).containsExactly("ТаблицаЗначений");
+    assertThat(typesAtRhs(documentContext, "ПоАнглийски"))
+      .containsExactly("ДокументОбъект.Документ1");
+    assertThat(typesAtRhs(documentContext, "ЧерезФорму"))
+      .as("та же функция через получателя-форму")
+      .containsExactly("ДокументОбъект.Документ1");
+    assertThat(typesAtRhs(documentContext, "НетТакогоРеквизита"))
+      .as("выдумывать тип по несуществующему имени нельзя")
+      .doesNotContain("ДокументОбъект.Документ1");
+  }
+
+  @Test
+  void explicitTypeArgumentWinsOverTheDeclaredOne() {
+    // У ДанныеФормыВЗначение второй параметр обязателен, у РеквизитФормыВЗначение —
+    // нет, но если он передан, преобразование идёт именно в него.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        ИзДанных = ДанныеФормыВЗначение(Объект, Тип("ДокументОбъект.Документ1"));
+        ИзРеквизита = РеквизитФормыВЗначение("ТаблицаПодбора", Тип("ДокументОбъект.Документ1"));
+        ПоАнглийски = FormDataToValue(Объект, Type("ДокументОбъект.Документ1"));
+      КонецПроцедуры
+      """);
+
+    assertThat(typesAtRhs(documentContext, "ИзДанных"))
+      .containsExactly("ДокументОбъект.Документ1");
+    assertThat(typesAtRhs(documentContext, "ИзРеквизита"))
+      .as("переданный тип выигрывает у объявленного типа реквизита")
+      .containsExactly("ДокументОбъект.Документ1");
+    assertThat(typesAtRhs(documentContext, "ПоАнглийски"))
+      .containsExactly("ДокументОбъект.Документ1");
+  }
+
+  @Test
+  void conversionArgumentsFromVariablesStayGeneric() {
+    // Ни имя реквизита, ни тип статически неизвестны — выводить не из чего.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        ИмяРеквизита = "Объект";
+        ТипЗначения = Тип("ДокументОбъект.Документ1");
+        ПоИмениИзПеременной = РеквизитФормыВЗначение(ИмяРеквизита);
+        ПоТипуИзПеременной = ДанныеФормыВЗначение(Объект, ТипЗначения);
+      КонецПроцедуры
+      """);
+
+    assertThat(typesAtRhs(documentContext, "ПоИмениИзПеременной"))
+      .doesNotContain("ДокументОбъект.Документ1");
+    assertThat(typesAtRhs(documentContext, "ПоТипуИзПеременной"))
+      .doesNotContain("ДокументОбъект.Документ1");
+  }
+
+  @Test
   void formItemByLiteralNameIsTheSameItemAsByQualifiedName() {
     // `Элементы["Кнопка"]` и `Элементы.Найти("Кнопка")` — тот же элемент, что и
     // `Элементы.Кнопка`, только имя записано строкой.

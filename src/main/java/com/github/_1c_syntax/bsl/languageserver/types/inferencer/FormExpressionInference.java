@@ -26,8 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.index.AssignmentByReceiverIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormAttributeTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -37,6 +40,7 @@ import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -48,9 +52,10 @@ import java.util.Set;
  * Форма — единственный вид модуля, у которого прикладной смысл выражения не выводится
  * из объявлений платформы: {@code ОткрытьФорму("Справочник.Товары.ФормаСписка")}
  * объявлено возвращающим обобщённую {@code ФормаКлиентскогоПриложения}, элемент формы
- * бывает назван строкой ({@code Элементы["Кнопка"]}), а вид созданного в коде элемента
- * задаётся отдельной строкой кода. Всё это — свойства 1С, а не свойства узлов выражения,
- * поэтому живёт здесь, а не в {@link ExpressionTypeInferencer}.
+ * бывает назван строкой ({@code Элементы["Кнопка"]}), вид созданного в коде элемента
+ * задаётся отдельной строкой кода, а обратное преобразование данных формы возвращает
+ * прикладной объект, объявленный как {@code Произвольный}. Всё это — свойства 1С, а не
+ * свойства узлов выражения, поэтому живёт здесь, а не в {@link ExpressionTypeInferencer}.
  */
 @Component
 @WorkspaceScope
@@ -71,8 +76,29 @@ public class FormExpressionInference {
   private static final String KIND_PROPERTY_RU = "Вид";
   private static final String KIND_PROPERTY_EN = "Kind";
 
+  /**
+   * Обратное преобразование реквизита формы: {@code РеквизитФормыВЗначение("Объект")}.
+   * Метод самой формы, поэтому зовётся и без квалификации (в её модуле), и через
+   * получателя.
+   */
+  private static final Set<String> ATTRIBUTE_TO_VALUE_FUNCTIONS =
+    Set.of("реквизитформывзначение", "formattributetovalue");
+
+  /**
+   * Обратное преобразование данных формы: {@code ДанныеФормыВЗначение(Объект, Тип("…"))}.
+   * Глобальная функция; тип второго параметра обязателен.
+   */
+  private static final Set<String> DATA_TO_VALUE_FUNCTIONS =
+    Set.of("данныеформывзначение", "formdatatovalue");
+
+  /** Конструктор значения типа: {@code Тип("ДокументОбъект.Заказ")}. */
+  private static final String TYPE_FUNCTION_RU = "тип";
+  private static final String TYPE_FUNCTION_EN = "type";
+
   private final TypeRegistry typeRegistry;
   private final FormByNameResolver formByNameResolver;
+  private final FormAttributeTypeIndex formAttributeTypeIndex;
+  private final GlobalScopeProvider globalScopeProvider;
   private final AssignmentByReceiverIndex assignmentByReceiverIndex;
 
   /**
@@ -131,7 +157,90 @@ public class FormExpressionInference {
     if (isFindByName(memberName)) {
       return memberByLiteralName(documentContext, receiver, firstStringLiteral(call));
     }
-    return null;
+    return convertedValueType(documentContext, memberName, call, receiver);
+  }
+
+  /**
+   * Тип значения, полученного обратным преобразованием данных формы.
+   * <p>
+   * На форме за объектным реквизитом стоят не сам объект, а его данные, и работать с ним
+   * как с объектом можно только на сервере, преобразовав обратно:
+   * <ul>
+   *   <li>{@code ДанныеФормыВЗначение(Данные, Тип("ДокументОбъект.Заказ"))} — тип всегда
+   *       задан вторым параметром, он обязателен;</li>
+   *   <li>{@code РеквизитФормыВЗначение("Объект")} — тип берётся из объявления реквизита
+   *       в {@code Form.xml}: это {@code ДокументОбъект.Заказ}, а не
+   *       {@code ДанныеФормыСтруктура}, которой реквизит выглядит на форме. Второй
+   *       параметр, если он есть, тип задаёт и здесь.</li>
+   * </ul>
+   * Тип, собранный в переменной ({@code РеквизитФормыВЗначение(ИмяРеквизита)}), статически
+   * неизвестен — тогда работает объявленный возврат платформенной функции.
+   *
+   * @param documentContext документ с вызовом.
+   * @param methodName      имя вызываемой функции.
+   * @param call            узел вызова.
+   * @param receiver        типы получателя; {@code null} — вызов без квалификации.
+   * @return тип результата; {@code null}, если это не обратное преобразование либо
+   *     статически определить тип нечем.
+   */
+  public @Nullable TypeSet convertedValueType(DocumentContext documentContext, String methodName,
+                                              MethodCallNode call, @Nullable TypeSet receiver) {
+    var name = methodName.toLowerCase(Locale.ROOT);
+    var attributeToValue = ATTRIBUTE_TO_VALUE_FUNCTIONS.contains(name);
+    if (!attributeToValue && !DATA_TO_VALUE_FUNCTIONS.contains(name)) {
+      return null;
+    }
+    var explicitType = typeArgument(call, documentContext);
+    if (explicitType != null) {
+      return explicitType;
+    }
+    return attributeToValue ? declaredAttributeType(documentContext, call, receiver) : null;
+  }
+
+  /**
+   * Объявленный тип реквизита, названного первым аргументом. Форма берётся у получателя,
+   * а при вызове без квалификации — у модуля, в котором стоит вызов: своя форма и есть
+   * получатель.
+   */
+  private @Nullable TypeSet declaredAttributeType(DocumentContext documentContext, MethodCallNode call,
+                                                  @Nullable TypeSet receiver) {
+    var attributeName = firstStringLiteral(call);
+    if (attributeName == null || attributeName.isBlank()) {
+      return null;
+    }
+    Collection<TypeRef> forms = receiver != null
+      ? receiver.refs()
+      : globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).stream().toList();
+    var result = TypeSet.EMPTY;
+    for (var formRef : forms) {
+      result = result.union(formAttributeTypeIndex.declaredType(formRef, attributeName.trim()));
+    }
+    return result.isEmpty() ? null : result;
+  }
+
+  /**
+   * Тип из второго аргумента вызова — {@code Тип("ДокументОбъект.Заказ")}.
+   *
+   * @return тип с таким именем; {@code null}, если второго аргумента нет, это не
+   *     {@code Тип(…)} со строковым литералом либо такого типа в реестре нет.
+   */
+  private @Nullable TypeSet typeArgument(MethodCallNode call, DocumentContext documentContext) {
+    var arguments = call.arguments();
+    if (arguments.size() < 2 || !(arguments.get(1) instanceof MethodCallNode typeCall)
+      || typeCall.arguments().size() != 1) {
+      return null;
+    }
+    var typeFunction = typeCall.getName().getText().toLowerCase(Locale.ROOT);
+    if (!TYPE_FUNCTION_RU.equals(typeFunction) && !TYPE_FUNCTION_EN.equals(typeFunction)) {
+      return null;
+    }
+    var typeName = OpenDataObjectInference.stringLiteralOf(typeCall.arguments().get(0));
+    if (typeName == null || typeName.isBlank()) {
+      return null;
+    }
+    return typeRegistry.resolve(typeName.trim(), documentContext.getFileType())
+      .map(TypeSet::of)
+      .orElse(null);
   }
 
   /**

@@ -327,7 +327,8 @@ class ConfigurationTypesProviderHelpersTest {
     var formParametersResolver =
       new FormParametersResolver(new BslContextHolder(mock(PlatformContextProviderFactory.class)));
     var formTypesProvider = new FormTypesProvider(registry, formParametersResolver, recorderIndex,
-      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), formDataTypesRegistrar,
+      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), new FormAttributeTypeIndex(),
+      formDataTypesRegistrar,
       new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
       new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
         recorderIndex));

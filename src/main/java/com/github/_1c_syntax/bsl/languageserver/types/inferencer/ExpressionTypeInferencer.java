@@ -445,6 +445,14 @@ public class ExpressionTypeInferencer {
     if (formType != null) {
       return formType;
     }
+    // 2а. Обратное преобразование данных формы — та же причина: у обеих функций
+    //     объявленный возврат обобщённый (`Произвольный`), а прикладной тип известен
+    //     из аргументов вызова либо из объявления реквизита.
+    var convertedValue = formExpressionInference.convertedValueType(
+      ctx.documentContext, name.getText(), call, null);
+    if (convertedValue != null) {
+      return convertedValue;
+    }
     // 3. Платформенная глобальная функция (СтрНайти и т.п.) — через
     //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
     var globalReturn = scopeMemberTypeResolver.globalFunctionType(ctx.documentContext, name.getText());
