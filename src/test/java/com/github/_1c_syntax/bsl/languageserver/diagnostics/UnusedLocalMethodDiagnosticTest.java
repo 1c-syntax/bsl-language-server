@@ -173,7 +173,7 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   void testManagedFormFlagsOnlyMethodsThatAreNotHandlers() {
     // Обработчики управляемой формы объявлены в Form.xml и висят EVENT-членами на её
     // типе: и событие самой формы, и событие элемента, и действие команды.
-    var documentContext = formModuleWith("""
+    var formModule = formModuleWith("""
       &НаСервере
       Процедура ПриЗаписиНаСервере(Отказ, ТекущийОбъект, ПараметрыЗаписи)
       КонецПроцедуры
@@ -191,7 +191,7 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
       КонецПроцедуры
       """);
 
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = getDiagnostics(formModule);
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true).hasRange(13, 10, 22);
@@ -202,7 +202,7 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
     // Обработчик ожидания подключается именем-строкой, и это единственное обращение к
     // нему в модуле. Такой вызов индексируется как ссылка (см. AttachedHandlers) —
     // иначе на управляемых формах реальной конфигурации набегают сотни ложных.
-    var documentContext = formModuleWith("""
+    var formModule = formModuleWith("""
       &НаКлиенте
       Процедура ПодключитьПроверку()
         ПодключитьОбработчикОжидания("ПроверитьФоновоеЗадание", 1, Истина);
@@ -218,7 +218,7 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
       КонецПроцедуры
       """);
 
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = getDiagnostics(formModule);
 
     assertThat(diagnostics)
       .as("сама ПодключитьПроверку никем не вызвана, а подключённые ею — вызваны")
