@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -33,8 +36,10 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -61,16 +66,26 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   @MockitoBean
   FormHandlerRoleIndex formHandlerRoleIndex;
 
-  @org.springframework.beans.factory.annotation.Autowired
-  private com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider
-    diagnosticObjectProvider;
+  @Autowired
+  private DiagnosticObjectProvider diagnosticObjectProvider;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  private Language initialLanguage;
 
   EventHandlerOutsideEventRegionDiagnosticTest() {
     super(EventHandlerOutsideEventRegionDiagnostic.class);
   }
 
+  @AfterEach
+  void restoreLanguage() {
+    configuration.setLanguage(initialLanguage);
+  }
+
   @BeforeEach
   void resetResolver() {
+    initialLanguage = configuration.getLanguage();
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(false);
     // По умолчанию объявитель обработчика неизвестен: так ведёт себя модуль, чью
@@ -104,6 +119,60 @@ class EventHandlerOutsideEventRegionDiagnosticTest
     var fixes = freshInstance.getQuickFixes(diagnostics, fakeParams(documentContext), documentContext);
 
     Assertions.assertThat(fixes).hasSize(1);
+  }
+
+  @Test
+  void regionIsNamedInTheScriptVariantOfTheProject() {
+    // Область называем в варианте встроенного языка проекта, а не по-русски всегда.
+    // У одиночного файла конфигурации нет, поэтому вариант берётся с языка сервера.
+    var src = """
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+      """;
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
+    stubRole("ПриОткрытии", FormHandlerRoleIndex.Role.FORM_EVENT, "");
+    configuration.setLanguage(Language.EN);
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getMessage().getLeft())
+      .as("имя области в сообщении")
+      .contains("FormEventHandlers")
+      .doesNotContain("ОбработчикиСобытийФормы");
+
+    var inserted = edits(getQuickFixes(diagnostics.get(0), documentContext).get(0), documentContext).stream()
+      .map(TextEdit::getNewText)
+      .filter(text -> text.contains("ПриОткрытии"))
+      .findFirst()
+      .orElseThrow();
+    Assertions.assertThat(inserted)
+      .as("и в создаваемой области — вместе с директивами")
+      .contains("#Region FormEventHandlers")
+      .contains("#EndRegion");
+  }
+
+  @Test
+  void englishRegionCountsAsTheRightOne() {
+    // Модуль назвал области по-английски — диагностика этого не замечает и молчит.
+    var src = """
+      #Region FormEventHandlers
+
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+
+      #EndRegion
+      """;
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
+    stubRole("ПриОткрытии", FormHandlerRoleIndex.Role.FORM_EVENT, "");
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    Assertions.assertThat(diagnosticInstance.getDiagnostics(documentContext)).isEmpty();
   }
 
   @Test

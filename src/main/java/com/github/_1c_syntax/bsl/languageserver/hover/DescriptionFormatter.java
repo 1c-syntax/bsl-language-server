@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -186,8 +187,9 @@ public class DescriptionFormatter {
    * @param method метод модуля формы; {@code null} — контекста нет.
    * @return имя команды; {@code null}, если метод — обработчик события, а не команды.
    */
-  private @org.jspecify.annotations.Nullable String commandOf(@org.jspecify.annotations.Nullable
-                                                              MethodSymbol method) {
+  private @org.jspecify.annotations.Nullable String commandOf(
+    @org.jspecify.annotations.Nullable MethodSymbol method
+  ) {
     if (method == null) {
       return null;
     }
@@ -266,13 +268,13 @@ public class DescriptionFormatter {
     ParameterDescriptor parameter, Map<Integer, String> userDescriptions, int index,
     @org.jspecify.annotations.Nullable MethodSymbol method
   ) {
-    var name = pickName(parameter, method, index);
     var lang = configuration.getLanguage();
+    var name = pickName(parameter, method, index, lang);
     var types = parameter.types().refs().stream()
       .map(ref -> typeRegistry.displayName(ref, lang))
       .collect(Collectors.joining(" | "));
     var line = PARAMETER_TEMPLATE.formatted(name, types);
-    var contractDescription = parameter.bilingualDescription().ru();
+    var contractDescription = parameter.bilingualDescription().forLanguage(lang);
     var userDescription = userDescriptions.getOrDefault(index, "");
     if (!contractDescription.isBlank() && !userDescription.isBlank()) {
       line = line + " — " + contractDescription + " / " + userDescription;
@@ -292,11 +294,12 @@ public class DescriptionFormatter {
    * бы вторым {@code СтандартнаяОбработка}.
    */
   private static String pickName(
-    ParameterDescriptor parameter, @org.jspecify.annotations.Nullable MethodSymbol method, int index
+    ParameterDescriptor parameter, @org.jspecify.annotations.Nullable MethodSymbol method, int index,
+    Language language
   ) {
-    var ru = parameter.bilingualName().ru();
-    if (!ru.isBlank()) {
-      return ru;
+    var fromContract = parameter.bilingualName().forLanguage(language);
+    if (!fromContract.isBlank()) {
+      return fromContract;
     }
     if (method != null && index < method.getParameters().size()) {
       var fromCode = method.getParameters().get(index).getName();
@@ -304,7 +307,7 @@ public class DescriptionFormatter {
         return fromCode;
       }
     }
-    return parameter.bilingualName().en();
+    return "";
   }
 
   /**
@@ -328,7 +331,7 @@ public class DescriptionFormatter {
       return "";
     }
     return parameterAt(contractOpt.get(), paramIndex)
-      .map(p -> p.bilingualDescription().ru())
+      .map(p -> p.bilingualDescription().forLanguage(configuration.getLanguage()))
       .orElse("");
   }
 
