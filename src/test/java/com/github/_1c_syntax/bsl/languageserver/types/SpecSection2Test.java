@@ -127,8 +127,8 @@ class SpecSection2Test extends AbstractServerContextAwareTest {
   }
 
   @Test
-  @DisplayName("2.8 Переменная, объявленная через «Перем» без комментария, типа не получает")
-  void declaredVariableWithoutCommentHasNoType() {
+  @DisplayName("2.8 Переменная, объявленная через «Перем» без комментария, содержит Неопределено")
+  void declaredVariableWithoutCommentIsUndefined() {
     // given: значение переменной присваивается только внутри цикла.
     // when
     var types = typeOf("2.8");
