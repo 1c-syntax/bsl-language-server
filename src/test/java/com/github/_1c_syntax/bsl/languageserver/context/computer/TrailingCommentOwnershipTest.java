@@ -59,6 +59,7 @@ class TrailingCommentOwnershipTest {
   void trailingCommentDoesNotDescribeNextMethod() {
     // given
     var documentContext = TestUtils.getDocumentContext("""
+      // Описание первой.
       Процедура Первая() Экспорт
       КонецПроцедуры // хвостовой комментарий первой
       Процедура Вторая() Экспорт
@@ -70,6 +71,11 @@ class TrailingCommentOwnershipTest {
 
     // then
     assertThat(methods).extracting(method -> method.getName()).containsExactly("Первая", "Вторая");
+    assertThat(methods.get(0).getDescription())
+      .as("собственное описание метода сохраняется")
+      .isPresent()
+      .hasValueSatisfying(description ->
+        assertThat(description.getDescription()).contains("Описание первой."));
     assertThat(methods.get(1).getDescription())
       .as("комментарий после «КонецПроцедуры» описывает не следующий метод")
       .isEmpty();
