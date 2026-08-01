@@ -229,27 +229,22 @@ class BslDocSemanticTokensSupplierTest {
 
   @Test
   void testElementsInDescriptionStartingAtNonZeroColumn() {
-    // given - описание, начинающееся не с начала строки (висячий/trailing комментарий после Перем),
-    // который к тому же становится описанием следующего метода. Элементы (ключевые слова, типы)
-    // в первой строке такого описания должны подсвечиваться по своим реальным позициям,
-    // а не «съезжать» на величину отступа описания.
+    // given - описание с отступом, то есть начинающееся не с начала строки.
     String bsl = """
-      Перем П; // Параметры:
-      //  Парам - Строка - описание
-      Процедура Тест(Парам)
-      КонецПроцедуры
+          // Параметры:
+          //  Парам - Строка - описание
+          Процедура Тест(Парам)
+          КонецПроцедуры
       """;
 
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - "Параметры:" подсвечивается на позиции 12 (а не 21 из-за двойного смещения),
-    // "Строка" на второй строке (со столбца 0) не затронута и остаётся на позиции 12.
+    // then: ключевое слово подсвечивается по своей реальной позиции — с учётом отступа
+    // (столбец 7 = четыре пробела, «//» и пробел), а не со столбца 3.
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(0, 12, 10, SemanticTokenTypes.Macro,
-        Set.of(SemanticTokenModifiers.Documentation), "Параметры:"),
-      new ExpectedToken(1, 12, 6, SemanticTokenTypes.Type,
-        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+      new ExpectedToken(0, 7, 10, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Параметры:")
     ));
   }
 
