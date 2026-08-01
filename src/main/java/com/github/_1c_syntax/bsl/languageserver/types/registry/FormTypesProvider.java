@@ -191,15 +191,27 @@ public class FormTypesProvider {
     formItemTypes.registerItemKindTypes();
     var count = 0;
     for (var md : children) {
-      if (md instanceof CommonForm commonForm) {
-        count += registerForm(commonForm, null) ? 1 : 0;
-      } else if (md instanceof FormOwner formOwner) {
-        for (var form : formOwner.getForms()) {
-          count += registerForm(form, md) ? 1 : 0;
-        }
-      }
+      count += registerFormsOf(md);
     }
     LOGGER.debug("Form types registered: {}", count);
+  }
+
+  /**
+   * Формы одного объекта метаданных: общая форма сама себе владелец, у прочих формы
+   * лежат внутри. Объект, форм не имеющий, даёт ноль.
+   */
+  private int registerFormsOf(MD md) {
+    if (md instanceof CommonForm commonForm) {
+      return registerForm(commonForm, null) ? 1 : 0;
+    }
+    if (!(md instanceof FormOwner formOwner)) {
+      return 0;
+    }
+    var count = 0;
+    for (var form : formOwner.getForms()) {
+      count += registerForm(form, md) ? 1 : 0;
+    }
+    return count;
   }
 
   private boolean registerForm(Form form, @Nullable MD owner) {
@@ -318,7 +330,7 @@ public class FormTypesProvider {
    * @param form форма конфигурации.
    * @return qualifiedName типа модуля; для управляемой формы — имя самой формы.
    */
-    public static String moduleTypeQualifiedName(Form form) {
+  public static String moduleTypeQualifiedName(Form form) {
     var formName = selfTypeQualifiedName(form);
     return FormKind.of(form.getFormType()) == FormKind.ORDINARY ? formName + MODULE_SUFFIX : formName;
   }

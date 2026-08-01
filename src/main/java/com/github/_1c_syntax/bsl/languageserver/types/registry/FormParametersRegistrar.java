@@ -68,12 +68,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 class FormParametersRegistrar {
 
-  private final TypeRegistry typeRegistry;
-  private final FormParametersResolver formParametersResolver;
-  private final FormDataTypesRegistrar formDataTypes;
-  private final FormTypeFactory typeFactory;
-  private final RecorderIndex recorderIndex;
-
   /** Суффикс имени ссылочного типа: {@code Документ.Документ1} → {@code ДокументСсылка.Документ1}. */
   private static final String REF_SUFFIX = "Ссылка";
 
@@ -82,6 +76,12 @@ class FormParametersRegistrar {
 
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
+
+  private final TypeRegistry typeRegistry;
+  private final FormParametersResolver formParametersResolver;
+  private final FormDataTypesRegistrar formDataTypes;
+  private final FormTypeFactory typeFactory;
+  private final RecorderIndex recorderIndex;
 
   /**
    * Что подставлять в плейсхолдеры параметров обычной формы.

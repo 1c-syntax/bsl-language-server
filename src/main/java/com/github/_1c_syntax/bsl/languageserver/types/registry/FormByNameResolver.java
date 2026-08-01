@@ -101,7 +101,7 @@ public class FormByNameResolver {
    *   типы форм ещё не зарегистрированы.
    */
   public Optional<TypeRef> resolve(DocumentContext documentContext, String formName) {
-    if (formName == null || formName.isBlank()) {
+    if (formName.isBlank()) {
       return Optional.empty();
     }
     var exact = resolveExactName(formName);
@@ -134,11 +134,11 @@ public class FormByNameResolver {
       return Optional.empty();
     }
     var ownerName = formName.substring(0, separator);
-    var kindName = formName.substring(separator + 1);
     var owner = findFormOwner(documentContext, ownerName);
     if (owner.isEmpty()) {
       return Optional.empty();
     }
+    var kindName = formName.substring(separator + 1);
     for (var kind : DefaultFormKind.values()) {
       if (!matchesKind(kind, kindName)) {
         continue;

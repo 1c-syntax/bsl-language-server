@@ -210,13 +210,13 @@ class FormDataTypesRegistrar {
                                                         FormDataKind dataKind,
                                                         FormKind kind, String suffixRu) {
     var itemTypeRu = Objects.requireNonNullElse(dataKind.itemTypeRu(), "");
-    var itemTypeEn = Objects.requireNonNullElse(dataKind.itemTypeEn(), "");
     var collectionBase = typeRegistry.resolve(dataKind.baseTypeRu()).orElse(null);
     var itemBase = typeRegistry.resolve(itemTypeRu).orElse(null);
     var columns = attribute.getColumns();
     if (columns.isEmpty() || collectionBase == null || itemBase == null) {
       return collectionBase;
     }
+    var itemTypeEn = Objects.requireNonNullElse(dataKind.itemTypeEn(), "");
     var suffix = suffixRu + "." + attribute.getName();
     var itemRef = registerFormDataMirror(itemTypeRu, itemTypeEn, suffix, "", itemBase);
     var collectionRef = registerFormDataMirror(

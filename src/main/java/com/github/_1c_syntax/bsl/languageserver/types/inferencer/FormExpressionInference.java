@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -58,6 +59,7 @@ import java.util.Set;
  * свойства узлов выражения, поэтому живёт здесь, а не в {@link ExpressionTypeInferencer}.
  */
 @Component
+@Slf4j
 @WorkspaceScope
 @RequiredArgsConstructor
 public class FormExpressionInference {
@@ -390,6 +392,9 @@ public class FormExpressionInference {
     try {
       return documentContext.getAst();
     } catch (RuntimeException e) {
+      // Вывод типа — не то место, где падать из-за нечитаемого документа: без AST
+      // уточнения по присвоенному виду просто не будет.
+      LOGGER.debug("AST is unavailable for {}", documentContext.getUri(), e);
       return null;
     }
   }
