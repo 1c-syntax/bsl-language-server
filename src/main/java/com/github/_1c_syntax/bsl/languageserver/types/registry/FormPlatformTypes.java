@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.MDOType;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -615,6 +616,41 @@ final class FormPlatformTypes {
 
   /** Параметр формы списка записей регистра, отбирающий записи по регистратору. */
   private static final String RECORDER_FILTER_PARAMETER = "ПараметрОтборПоРегистратору";
+
+  /** Параметр формы списка: строка, на которую список встаёт при открытии. */
+  private static final String CURRENT_ROW_PARAMETER = "ПараметрТекущаяСтрока";
+
+  /**
+   * Параметры расширения, которых у этой формы не существует вовсе. Платформа
+   * объявляет их одинаково для всего вида объектов, а есть они не у всех: отбор по
+   * владельцу — только у подчинённого справочника, отбор по регистратору — только у
+   * регистра, подчинённого регистратору, текущая строка журнала — только когда в него
+   * зарегистрирован хоть один документ.
+   * <p>
+   * Такие члены нужно именно <b>убирать</b>: тип у них объявлен через плейсхолдер, и
+   * оставленный «обобщённым» параметр и в автодополнении выглядит существующим, и
+   * тянет за собой невалидное имя типа ({@code ДокументСсылка.<Имя документа>}).
+   *
+   * @param rowNames      имена для строки списка (у журнала — его документы).
+   * @param ownerNames    имена владельцев объекта, которому подчинена форма.
+   * @param recorderNames имена документов, пишущих движения в этот регистр.
+   * @return имена параметров, которых у формы нет; подавлять их можно и на форме,
+   *   где они и не объявлены — подавление сверяется по имени.
+   */
+  static List<String> absentParameters(List<String> rowNames, List<String> ownerNames,
+                                       List<String> recorderNames) {
+    var absent = new ArrayList<String>();
+    if (rowNames.isEmpty()) {
+      absent.add(CURRENT_ROW_PARAMETER);
+    }
+    if (ownerNames.isEmpty()) {
+      absent.addAll(PARAMETERS_OF_ANOTHER_OBJECT);
+    }
+    if (recorderNames.isEmpty()) {
+      absent.add(RECORDER_FILTER_PARAMETER);
+    }
+    return absent;
+  }
 
   /**
    * Параметр-основание: у управляемой формы он лежит в структуре параметров

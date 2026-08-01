@@ -438,6 +438,13 @@ public class FormTypesProvider {
           ownerObjectNames(owner));
         typeRegistry.registerMemberOverride(formRef,
           () -> ordinaryParameters(extensionRef, parameterOwner, owner), FileType.BSL);
+        // Подавление — сразу, а не в ленивом источнике: реестр хранит его именами, и
+        // список надо знать на регистрации. Индекс регистраторов к этому моменту уже
+        // наполнен (ConfigurationTypesProvider индексирует их до регистрации форм).
+        typeRegistry.registerMemberSuppression(formRef,
+          FormPlatformTypes.absentParameters(parameterOwner.names(), parameterOwner.ownerNames(),
+            recorderIndex.recordersOf(parameterOwner.mdoRef())),
+          FileType.BSL);
       }
     }
     // Члены собираются внутри источников, а не здесь: у крупной конфигурации формы

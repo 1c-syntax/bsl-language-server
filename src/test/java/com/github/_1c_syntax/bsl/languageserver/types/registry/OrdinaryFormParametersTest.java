@@ -112,11 +112,35 @@ class OrdinaryFormParametersTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void currentRowOfEmptyDocumentJournalStaysGeneric() {
-    // В журнал не зарегистрировано ни одного документа — подставлять нечего,
-    // и параметр остаётся обобщённым, а не получает выдуманный тип.
-    assertThat(typeNames(EMPTY_JOURNAL_LIST_FORM, CURRENT_ROW))
-      .containsExactly("ДокументСсылка.<Имя документа>");
+  void currentRowDisappearsFromJournalWithoutRegisteredDocuments() {
+    // В журнал не зарегистрировано ни одного документа — строке списка неоткуда взяться.
+    // Оставлять параметр «обобщённым» нельзя: в автодополнении он выглядел бы рабочим,
+    // а за ним стоял бы невалидный `ДокументСсылка.<Имя документа>`.
+    assertThat(memberNames(EMPTY_JOURNAL_LIST_FORM)).doesNotContain(CURRENT_ROW);
+    assertThat(memberNames(JOURNAL_LIST_FORM))
+      .as("у журнала с документами параметр на месте")
+      .contains(CURRENT_ROW);
+  }
+
+  @Test
+  void ownerFilterDisappearsFromCatalogWithoutOwners() {
+    // Отбор по владельцу существует только у подчинённого справочника.
+    var listForm = "Форма.Справочник.Справочник2.Форма.ФормаСписка";
+    assertThat(memberNames(listForm))
+      .doesNotContain("ПараметрОтборПоВладельцу", "ПараметрВыборПоВладельцу")
+      .as("остальные параметры расширения при этом на месте")
+      .contains(CURRENT_ROW);
+  }
+
+  @Test
+  void recorderFilterDisappearsFromRegisterWithoutRecorders() {
+    // Движения в регистр расчёта в фикстуре не пишет ни один документ — отбирать
+    // по регистратору нечему.
+    var listForm = "Форма.РегистрРасчета.РегистрРасчета1.Форма.ФормаСписка";
+    assertThat(memberNames(listForm))
+      .doesNotContain("ПараметрОтборПоРегистратору")
+      .as("остальные параметры расширения при этом на месте")
+      .contains(CURRENT_ROW);
   }
 
   @Test
