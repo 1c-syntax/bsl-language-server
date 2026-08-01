@@ -525,11 +525,11 @@ public class SymbolTypeIndex {
    *
    * @param ref      тип, к которому относится описание полей.
    * @param fileType язык, на котором ищется член-коллекция строк.
-   * @return тип элемента; {@code null} у структуроподобных типов, где описанные поля
-   *     принадлежат самому типу, и у типов, элемент которых реестру неизвестен.
+   * @return тип элемента; {@code null} у типов, где описанные поля принадлежат самому
+   *     типу, и у тех, элемент которых реестру неизвестен.
    */
   private @Nullable TypeRef collectionElement(TypeRef ref, FileType fileType) {
-    if (OpenDataObjectInference.isStructureLike(ref.qualifiedName())) {
+    if (!OpenDataObjectInference.isElementBearingCollection(ref.qualifiedName())) {
       return null;
     }
     var direct = firstRef(typeRegistry.getDefaultElementTypes(ref));
