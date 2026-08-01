@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785526992259,
+  "lastUpdate": 1785604849341,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41571,6 +41571,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.3487139681863862",
             "extra": "mean: 93.28998692830403 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "50d66d6057cb636827b498ce057f89c388161f38",
+          "message": "Merge pull request #4357 from 1c-syntax/fix/unused-local-method-managed-forms\n\nUnusedLocalMethod проверяет управляемые формы и не срабатывает на модуле неизвестного типа",
+          "timestamp": "2026-08-01T18:05:30+02:00",
+          "tree_id": "77785cdd4eb677f1ef13901f5b4a6537be121f51",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/50d66d6057cb636827b498ce057f89c388161f38"
+        },
+        "date": 1785604818822,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 97.12732704480489,
+            "unit": "sec",
+            "range": "stddev: 1.6042074766310088",
+            "extra": "mean: 97.12732704480489 sec\nrounds: 3"
           }
         ]
       }
