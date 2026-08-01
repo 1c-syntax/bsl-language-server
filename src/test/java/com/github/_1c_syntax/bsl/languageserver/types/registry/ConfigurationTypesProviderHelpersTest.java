@@ -322,13 +322,14 @@ class ConfigurationTypesProviderHelpersTest {
                                                         LanguageServerConfiguration lsConfig,
                                                         MetadataCollectionSpecializer mcs) {
     var recorderIndex = new RecorderIndex();
+    var formDataTypesRegistrar = new FormDataTypesRegistrar(registry);
     var formTypesProvider = new FormTypesProvider(registry,
       new FormParametersResolver(new BslContextHolder(mock(PlatformContextProviderFactory.class))), recorderIndex,
-      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)));
+      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), formDataTypesRegistrar);
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
       new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
       new ServiceModuleEventRegistrar(registry),
-      formTypesProvider, new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
+      formTypesProvider, formDataTypesRegistrar, new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
       new SimpleAsyncTaskExecutor());
   }
 

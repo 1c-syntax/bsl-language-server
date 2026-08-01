@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElementType;
 import com.github._1c_syntax.bsl.mdo.support.DefaultFormKind;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.MultiLanguageString;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -319,6 +321,31 @@ final class FormPlatformTypes {
   static final String COMMANDS_PROPERTY_EN = "Commands";
 
   private FormPlatformTypes() {
+  }
+
+  /**
+   * Имя, одинаковое в обеих локалях: имена реквизитов, элементов и обработчиков
+   * задаёт конфигурация, перевода у них нет — но в автодополнении они должны
+   * появляться независимо от языка интерфейса.
+   *
+   * @param name имя из метаданных.
+   * @return двуязычное имя с одинаковыми написаниями.
+   */
+  static BilingualString neutral(String name) {
+    return BilingualString.of(name, name);
+  }
+
+  /**
+   * Многоязычная строка метаданных как двуязычная строка модели.
+   *
+   * @param value значение из метаданных (синоним, заголовок).
+   * @return двуязычная строка; пустая, если значения нет.
+   */
+  static BilingualString bilingual(MultiLanguageString value) {
+    if (value.isEmpty()) {
+      return BilingualString.EMPTY;
+    }
+    return BilingualString.of(value.get("ru"), value.get("en"));
   }
 
   /**

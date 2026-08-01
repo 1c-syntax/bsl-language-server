@@ -184,6 +184,7 @@ public class ConfigurationTypesProvider {
   private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
   private final FormTypesProvider formTypesProvider;
+  private final FormDataTypesRegistrar formDataTypesRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
   private final RecorderIndex recorderIndex;
   @Qualifier("platformTypesWarmupExecutor")
@@ -642,7 +643,7 @@ public class ConfigurationTypesProvider {
       // Зеркало табличной части для управляемых форм заводится здесь, а не при
       // регистрации формы: колонки уже под рукой, а форма узнаёт о табличных частях
       // только из членов объектного типа — читать их из её ленивого источника нельзя.
-      formTypesProvider.registerTabularSectionData(collRef, columnSource);
+      formDataTypesRegistrar.registerTabularSectionData(collRef, columnSource);
 
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
