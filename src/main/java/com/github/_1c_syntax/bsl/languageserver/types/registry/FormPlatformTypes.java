@@ -25,7 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.children.ObjectForm;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElementType;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.support.DefaultFormKind;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -37,6 +39,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Соответствие «сущность формы из mdclasses → платформенный тип синтакс-помощника».
@@ -744,6 +748,52 @@ final class FormPlatformTypes {
 
   static String mdoSuffixEn(Form form) {
     return form.getMdoReference().getMdoRef();
+  }
+
+
+  static List<MemberDescriptor> concat(List<MemberDescriptor> first, List<MemberDescriptor> second) {
+    if (second.isEmpty()) {
+      return first;
+    }
+    var result = new ArrayList<MemberDescriptor>(first.size() + second.size());
+    result.addAll(first);
+    result.addAll(second);
+    return result;
+  }
+
+  /** Имя MD-объекта, которому подчинена форма; для общей формы — пусто. */
+  static String ownerName(Form form) {
+    return form instanceof ObjectForm objectForm ? shortName(objectForm.getOwner().getMdoRefRu()) : "";
+  }
+
+  /** {@code Документ.Документ1} → {@code Документ1}. */
+  static String shortName(String mdoRef) {
+    var dot = mdoRef.lastIndexOf('.');
+    return dot < 0 ? mdoRef : mdoRef.substring(dot + 1);
+  }
+
+  /**
+   * Имена платформенных типов, которые сопоставлены типам основного реквизита формы.
+   * Реквизит объявлен составным типом, поэтому имён может быть несколько; порядок
+   * сохраняется — он и задаёт приоритет.
+   *
+   * @param attributes реквизиты формы.
+   * @param namesOf    что искать по ru-имени типа значения.
+   * @return имена типов-кандидатов; пусто — основного реквизита у формы нет.
+   */
+  static Stream<String> mainAttributeTypeNames(List<FormAttribute> attributes,
+                                                       Function<String, List<String>> namesOf) {
+    return attributes.stream()
+      .filter(FormAttribute::isMainAttribute)
+      .flatMap(attribute -> attribute.getValueType().getTypes().stream())
+      .flatMap(valueType -> namesOf.apply(valueType.fullName().getRu()).stream());
+  }
+
+
+  /** Имя типа из mdoRef и суффикса вида: {@code Справочник.Х} + {@code Ссылка}. */
+  static String typeNameWithSuffix(String mdoRef, String suffix) {
+    var dot = mdoRef.indexOf('.');
+    return dot < 0 ? mdoRef : mdoRef.substring(0, dot) + suffix + mdoRef.substring(dot);
   }
 
 }

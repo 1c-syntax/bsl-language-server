@@ -324,10 +324,13 @@ class ConfigurationTypesProviderHelpersTest {
     var recorderIndex = new RecorderIndex();
     var formDataTypesRegistrar = new FormDataTypesRegistrar(registry);
     var typeFactory = new FormTypeFactory(registry);
-    var formTypesProvider = new FormTypesProvider(registry,
-      new FormParametersResolver(new BslContextHolder(mock(PlatformContextProviderFactory.class))), recorderIndex,
+    var formParametersResolver =
+      new FormParametersResolver(new BslContextHolder(mock(PlatformContextProviderFactory.class)));
+    var formTypesProvider = new FormTypesProvider(registry, formParametersResolver, recorderIndex,
       new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), formDataTypesRegistrar,
-      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory);
+      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
+      new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
+        recorderIndex));
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
       new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
       new ServiceModuleEventRegistrar(registry),
