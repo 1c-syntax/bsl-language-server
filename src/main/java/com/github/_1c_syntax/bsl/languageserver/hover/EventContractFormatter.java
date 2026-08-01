@@ -71,14 +71,10 @@ public class EventContractFormatter {
   private final TypeRegistry typeRegistry;
   private final LanguageServerConfiguration configuration;
 
-  public String getEventHandlerSection(MemberDescriptor event) {
-    return getEventHandlerSection(null, event);
-  }
-
   /**
-   * Перегрузка с контекстным методом: к платформенному описанию события
-   * подмешивается пользовательское описание метода из шапки-комментария.
-   * Платформенное описание идёт первым, пользовательское — следом.
+   * Секция-шапка «Обработчик события платформы: {@code <имя>}» с платформенным
+   * описанием события; к нему подмешивается пользовательское описание метода из
+   * шапки-комментария. Платформенное описание идёт первым, пользовательское — следом.
    * <p>
    * Обработчик команды формы событием не является, поэтому и называется иначе —
    * и назван в шапке именем команды, а не процедуры: имя процедуры и так стоит
@@ -133,15 +129,10 @@ public class EventContractFormatter {
       .orElse(null);
   }
 
-  public String getParametersSection(MemberDescriptor eventContract) {
-    return getParametersSection(null, eventContract);
-  }
-
   /**
-   * Перегрузка с контекстным методом: к описанию параметра из контракта
-   * подмешивается пользовательское описание из шапки-комментария метода
-   * (если оно есть). Платформенное описание идёт первым, затем пользовательское
-   * под отдельным префиксом.
+   * Секция «Параметры» по контракту события: имя, типы и описание каждого параметра
+   * из синтакс-помощника. К описанию параметра подмешивается пользовательское из
+   * шапки-комментария метода, если оно есть: платформенное идёт первым.
    */
   public String getParametersSection(@Nullable MethodSymbol method, MemberDescriptor eventContract) {
     if (eventContract.signatures().isEmpty()) {

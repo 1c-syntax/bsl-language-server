@@ -194,6 +194,48 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   }
 
   @Test
+  void userDescriptionsAreMergedWithTheContractOnes() {
+    // Шапка-комментарий метода дополняет платформенное описание, а не заменяет его:
+    // назначение метода идёт следом за описанием события, описание параметра — через
+    // косую от контрактного. Параметр, которого в шапке нет, остаётся с одним
+    // платформенным описанием, а параметр без описания в контракте — с одним
+    // пользовательским.
+    var cancel = new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false,
+      BilingualString.of("Признак отказа от записи.", "Write cancel flag."), "");
+    var mode = new ParameterDescriptor(BilingualString.of("РежимЗаписи", "WriteMode"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка")), false, BilingualString.EMPTY, "");
+    var contract = MemberDescriptor.event("ПередЗаписью", "Возникает перед записью объекта.",
+      List.of(new SignatureDescriptor(List.of(cancel, mode), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПередЗаписью")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      // Не даёт записать документ без склада.
+      //
+      // Параметры:
+      //   Отказ - Булево - выставляем, если склад не заполнен
+      //   РежимЗаписи - Строка - режим, в котором идёт запись
+      //
+      Процедура ПередЗаписью(Отказ, РежимЗаписи)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПередЗаписью").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .as("описание события и назначение метода стоят рядом")
+      .contains("Возникает перед записью объекта.")
+      .contains("Не даёт записать документ без склада.")
+      .as("у параметра с обоими описаниями они идут через косую")
+      .contains("Признак отказа от записи. / выставляем, если склад не заполнен")
+      .as("у параметра без контрактного описания остаётся пользовательское")
+      .contains("РежимЗаписи**: Строка — режим, в котором идёт запись");
+  }
+
+  @Test
   void parametersAreNamedAfterTheContractNotTheCode() {
     // Репорт: у ПередЗакрытием(Отказ, СтандартнаяОбработка) в списке параметров
     // `СтандартнаяОбработка` показывалась дважды — второй параметр контракта
@@ -281,7 +323,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   @Test
   void hoverWithEmptySignaturesShowsNoParametersSection() {
     // Контракт без signatures — секция параметров не выводится (ветка
-    // signatures.isEmpty() в getParametersSection(MemberDescriptor)).
+    // signatures.isEmpty() в getParametersSection).
     var contract = MemberDescriptor.event(
       "ПриЗаписи",
       "Возникает при записи.",
