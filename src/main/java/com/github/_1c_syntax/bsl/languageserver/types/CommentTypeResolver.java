@@ -44,13 +44,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Тип, объявленный автором в висячем комментарии рядом с кодом — единый для обоих языков
+ * Тип, объявленный автором в комментарии рядом с кодом — единый для обоих языков
  * (BSL и OneScript) и для всех мест, где такой комментарий признаётся объявлением:
  * <ul>
  *   <li>объявление переменной: {@code Перем Х; // Строка -} или {@code Перем Х; // см. Метод};</li>
+ *   <li>комментарий над объявлением: {@code // Дата - момент обновления} строкой выше
+ *       {@code Перем Х;};</li>
  *   <li>строка присваивания: {@code Х = Ф(); // Строка -} — «типизация локальной переменной
  *       в строке» из методической рекомендации.</li>
  * </ul>
+ * Висячий комментарий приоритетнее: он стоит вплотную к объявлению.
  * Разбор един намеренно: один и тот же комментарий обязан пониматься одинаково и когда
  * переменную спрашивают как член типа (провайдеры членов модулей), и когда её тип выводят
  * по коду ({@link VariableTypeSource}).
@@ -61,7 +64,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class TrailingCommentTypeResolver implements VariableTypeSource {
+public class CommentTypeResolver implements VariableTypeSource {
 
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
@@ -79,9 +82,9 @@ public class TrailingCommentTypeResolver implements VariableTypeSource {
   }
 
   /**
-   * Тип переменной из её висячего комментария.
+   * Тип переменной из её комментария — висячего либо стоящего над объявлением.
    * <ul>
-   *   <li>прямые типы {@code trailingDescription.getTypes()} ({@code // Массив из Число} —
+   *   <li>прямые типы описания ({@code // Массив из Число} —
    *       тип-голова через {@link DescriptionTypes#resolveName});</li>
    *   <li>если прямых типов нет — {@code См.}-ссылки {@code getLinks()}
    *       ({@code // см. НовыйСложно}): неквалифицированная ссылка на функцию того же модуля
@@ -96,13 +99,36 @@ public class TrailingCommentTypeResolver implements VariableTypeSource {
    * @return {@link TypeSet} (возможно с {@code localFields}); {@link TypeSet#EMPTY}, если тип не выводится.
    */
   public TypeSet resolve(VariableSymbol variable, FileType fileType) {
-    var trailing = variable.getDescription()
-      .flatMap(description -> description.getTrailingDescription())
-      .orElse(null);
-    if (trailing == null) {
+    var description = variable.getDescription().orElse(null);
+    if (description == null) {
       return TypeSet.EMPTY;
     }
-    return typesOfTrailing(trailing.getTypes(), trailing.getLinks(), variable.getOwner(), fileType);
+    var owner = variable.getOwner();
+    var trailing = description.getTrailingDescription().orElse(null);
+    if (trailing != null) {
+      var fromTrailing = typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, fileType);
+      if (!fromTrailing.isEmpty()) {
+        return fromTrailing;
+      }
+    }
+    if (!ownComment(description)) {
+      return TypeSet.EMPTY;
+    }
+    return typesOfComment(description.getTypes(), description.getLinks(), owner, fileType);
+  }
+
+  /**
+   * Принадлежит ли описание самой переменной, а не соседней строке кода.
+   * <p>
+   * Комментарий, дописанный в конце предыдущего объявления, парсер отдаёт и как описание
+   * следующего — по строкам он ведь стоит выше. Отличить можно по началу: собственное
+   * описание начинается со своей строки, а чужое висячее — после кода.
+   *
+   * @param description описание переменной.
+   * @return {@code true}, если описание — комментарий над объявлением.
+   */
+  private static boolean ownComment(VariableDescription description) {
+    return description.getRange().startCharacter() == 0;
   }
 
   /**
@@ -127,12 +153,12 @@ public class TrailingCommentTypeResolver implements VariableTypeSource {
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
-    return typesOfTrailing(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
   }
 
   /**
-   * Общий разбор висячей части описания: прямые типы приоритетнее, к {@code см.}-ссылкам
-   * обращаемся, только если тип не указан явно.
+   * Общий разбор описания: прямые типы приоритетнее, к {@code см.}-ссылкам обращаемся,
+   * только если тип не указан явно.
    *
    * @param types    типы из описания.
    * @param links    ссылки из описания.
@@ -140,7 +166,7 @@ public class TrailingCommentTypeResolver implements VariableTypeSource {
    * @param fileType язык, на котором резолвятся имена.
    * @return найденные типы; пустой набор, если не нашлось ни одного.
    */
-  private TypeSet typesOfTrailing(
+  private TypeSet typesOfComment(
     @Nullable List<TypeDescription> types,
     List<Hyperlink> links,
     DocumentContext owner,

@@ -320,7 +320,7 @@ public class SymbolTypeIndex {
    * Единая точка разворачивания {@code См.}-ссылок: используется и индексацией
    * возвращаемых значений, и выводом типов параметров
    * ({@code ExpressionTypeInferencer}), и резолвером висячих комментариев
-   * переменных ({@code TrailingCommentTypeResolver}).
+   * переменных ({@code CommentTypeResolver}).
    *
    * @param link     имя/ссылка из {@code См.}-ссылки (без текста описания).
    * @param owner    документ-владелец — для поиска локальной функции.

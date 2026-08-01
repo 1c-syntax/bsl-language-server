@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
-import com.github._1c_syntax.bsl.languageserver.types.TrailingCommentTypeResolver;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,7 +77,7 @@ class OScriptModuleMembersProviderTest {
   @Mock
   private OScriptIterable oScriptIterable;
   @Mock
-  private TrailingCommentTypeResolver trailingCommentTypeResolver;
+  private CommentTypeResolver commentTypeResolver;
 
   private OScriptModuleMembersProvider provider;
 
@@ -85,7 +85,7 @@ class OScriptModuleMembersProviderTest {
   void setUp() {
     provider = new OScriptModuleMembersProvider(
       typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelations, oScriptIterable,
-      trailingCommentTypeResolver);
+      commentTypeResolver);
   }
 
   @Test
