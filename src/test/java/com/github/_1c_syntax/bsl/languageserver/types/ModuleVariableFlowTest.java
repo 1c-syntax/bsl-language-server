@@ -58,22 +58,24 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
 
   @Test
   void callResetsTypeToScopeUnion() {
-    // given: вызванный метод мог присвоить переменной что угодно.
+    // given: вызванный метод мог присвоить переменной что угодно — включая состояние
+    // от объявления, ведь тело модуля «Кэш» не инициализирует.
     // when
     var types = at("ПослеВызова = Кэш", "ПослеВызова = ".length());
 
     // then
-    assertThat(qnames(types)).containsExactlyInAnyOrder("Соответствие", "Массив");
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Соответствие", "Массив");
   }
 
   @Test
   void useBeforeFirstAssignmentTakesScopeUnion() {
-    // given: до присваивания в этом теле переменная содержит то, что оставил другой метод.
+    // given: до присваивания в этом теле переменная содержит то, что оставил другой метод,
+    // либо «Неопределено» от объявления — тело модуля «Кэш» не инициализирует.
     // when
     var types = at("ДоПрисваивания = Кэш", "ДоПрисваивания = ".length());
 
     // then
-    assertThat(qnames(types)).containsExactlyInAnyOrder("Соответствие", "Массив");
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Соответствие", "Массив");
   }
 
   @Test
@@ -106,8 +108,20 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
     // when
     var types = at("ВДругомТеле = Промежуточный", "ВДругомТеле = ".length());
 
-    // then
-    assertThat(qnames(types)).containsExactly("Соответствие");
+    // then: «Массив» своё тело не покинул; «Неопределено» — состояние до первого вызова,
+    // тело модуля «Промежуточный» не инициализирует.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Соответствие");
+  }
+
+  @Test
+  void initializationInModuleBodyLeavesNoUndefined() {
+    // given: «Перем ИнициализированнаяВТелеМодуля;» без комментария, присваивание — в теле
+    // модуля, которое отрабатывает раньше любой процедуры.
+    // when
+    var types = at("ИзТелаМодуля = ИнициализированнаяВТелеМодуля", "ИзТелаМодуля = ".length());
+
+    // then: состояние «до присваивания» из процедуры наблюдать неоткуда.
+    assertThat(qnames(types)).containsExactly("Массив");
   }
 
   private TypeSet at(String marker, int offsetInMarker) {

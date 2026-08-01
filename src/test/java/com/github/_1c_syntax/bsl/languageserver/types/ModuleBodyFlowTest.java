@@ -51,6 +51,27 @@ class ModuleBodyFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void assignmentInConstructorLeavesNoUndefined() {
+    // given: поле класса присваивают в «ПриСозданииОбъекта» — он отрабатывает при создании
+    // объекта, до любого обращения к полям.
+    // when
+    var types = at("ИзКонструктора = Сохранённый", "ИзКонструктора = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Массив");
+  }
+
+  @Test
+  void fieldWithoutAssignmentsIsUndefined() {
+    // given: поле класса, которому нигде не присваивают значение.
+    // when
+    var types = at("БезКонструктора = БезПрисваиванийВКонструкторе", "БезКонструктора = ".length());
+
+    // then: объявление через «Перем» даёт значение «Неопределено».
+    assertThat(qnames(types)).containsExactly("Неопределено");
+  }
+
+  @Test
   void typeBeforeReassignmentIsTheFirstOne() {
     // given / when
     var types = at("ПослеЧисла = Значение", "ПослеЧисла = ".length());

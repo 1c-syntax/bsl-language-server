@@ -67,7 +67,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
+    assertThat(blocks).hasSize(4);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем ИмяБезОписания
@@ -78,7 +78,11 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
       Переменная уровня модуля
 
       """);
-    assertThat(blocks.get(2)).matches("""
+    assertThat(blocks.get(2)).isEqualTo("""
+      Тип: Неопределено
+
+      """);
+    assertThat(blocks.get(3)).matches("""
       \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
 
       """);
@@ -98,7 +102,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(4);
+    assertThat(blocks).hasSize(5);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем Имя_ОписаниеСправаОднойСтрокой
@@ -109,11 +113,15 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
       Переменная уровня модуля
 
       """);
-    assertThat(blocks.get(2)).matches("""
-      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+    assertThat(blocks.get(2)).isEqualTo("""
+      Тип: Неопределено
 
       """);
     assertThat(blocks.get(3)).matches("""
+      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+
+      """);
+    assertThat(blocks.get(4)).matches("""
       описание
 
       """);
@@ -134,7 +142,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(4);
+    assertThat(blocks).hasSize(5);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем Имя_ОписаниеСверхуДвеСтроки_Функция
@@ -145,12 +153,16 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
       Локальная переменная метода ИмяФункции
 
       """);
-    assertThat(blocks.get(2)).matches("""
+    assertThat(blocks.get(2)).isEqualTo("""
+      Тип: Неопределено
+
+      """);
+    assertThat(blocks.get(3)).matches("""
       \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
 
       """);
     // TODO баг - нет \n для многострочного описания переменной
-    assertThat(blocks.get(3)).matches("""
+    assertThat(blocks.get(4)).matches("""
       описание 1 строка
       2 строка
 
@@ -172,7 +184,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(4);
+    assertThat(blocks).hasSize(5);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция
@@ -183,11 +195,15 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
       Локальная переменная метода ИмяФункции
 
       """);
-    assertThat(blocks.get(2)).matches("""
-      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+    assertThat(blocks.get(2)).isEqualTo("""
+      Тип: Неопределено
 
       """);
     assertThat(blocks.get(3)).matches("""
+      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+
+      """);
+    assertThat(blocks.get(4)).matches("""
       описание 1 строка
       2 строка
 

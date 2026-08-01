@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
@@ -63,11 +64,13 @@ class ExpressionTypeInferencerSelfPropertyFallbackTest extends AbstractServerCon
     var documentContext = TestUtils.getDocumentContext(OBJECT_MODULE_URI, content, context);
 
     // "Реквизит1" на строке "Б = Реквизит1;" — явно объявленная (Перем) локальная
-    // переменная без единого присваивания: её тип честно не выведен (EMPTY), а
-    // НЕ тип одноимённого self-реквизита (Строка).
+    // переменная без единого присваивания: она содержит Неопределено, а НЕ тип
+    // одноимённого self-реквизита (Строка).
     var types = typeService.expressionTypesAt(documentContext, new Position(2, 6));
 
-    assertThat(types.refs()).isEmpty();
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
   }
 
   @Test
