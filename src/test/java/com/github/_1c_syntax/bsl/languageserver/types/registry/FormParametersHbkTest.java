@@ -136,14 +136,19 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
     var handler = member(DOCUMENT_FORM, MemberKind.EVENT, "Реквизит1ПриИзменении");
     assertThat(handler).isNotNull();
 
-    assertThat(handler.signatures())
-      .as("сигнатура пришла из синтакс-помощника — пусть и без параметров, "
-        + "их у события поля формы платформа не объявляет")
-      .isNotEmpty();
     assertThat(handler.description())
       .as("описание — платформенное, а не заглушка по имени события")
       .isNotEmpty()
       .doesNotContain("OnChange");
+    assertThat(handler.signatures()).isNotEmpty();
+    assertThat(handler.signatures().get(0).parameters())
+      .as("платформа передаёт в обработчик сам элемент, но в синтакс-помощнике "
+        + "этого параметра нет — он дописывается первым")
+      .extracting(p -> p.bilingualName().ru())
+      .containsExactly("Элемент");
+    assertThat(handler.signatures().get(0).parameters().get(0).types().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ПолеФормы.ПолеВвода");
   }
 
   @Test
@@ -209,6 +214,18 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
       .contains("Имя", "Заголовок", "Видимость")
       .as("члены расширения поля ввода")
       .contains("КнопкаВыбора", "Формат", "АвтоОтметкаНезаполненного");
+  }
+
+  @Test
+  void sourceRecordKeyStaysOnlyOnRecordFormOfInformationRegister() {
+    // `ИсходныйКлючЗаписи` объявлен у самой ДанныеФормыСтруктура и потому достаётся
+    // по наследству любой форме. Смысл он имеет только у формы записи регистра
+    // сведений: платформа кладёт туда ключ записи, открытой на изменение.
+    assertThat(names(parametersOf(DOCUMENT_FORM)))
+      .doesNotContain("ИсходныйКлючЗаписи");
+    assertThat(names(parametersOf(
+      "ФормаКлиентскогоПриложения.РегистрСведений.РегистрСведений1.Форма.ФормаЗаписи")))
+      .contains("ИсходныйКлючЗаписи");
   }
 
   @Test

@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -38,6 +40,7 @@ import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.CommonForm;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
+import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.FormOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -46,10 +49,13 @@ import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormCommand;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElementType;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormParameter;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormTable;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormEventHandler;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormEventHandlerOwner;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDataPathOwner;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElement;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormElementOwner;
+import com.github._1c_syntax.bsl.mdo.storage.FormData;
 import com.github._1c_syntax.bsl.types.MultiLanguageString;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -144,6 +150,9 @@ public class FormTypesProvider {
   /** Тип параметра, передавать в который нечего. */
   private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
 
+  /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
+  private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
+
   private static final BilingualString THIS_FORM_DESCRIPTION = BilingualString.of(
     "Форма, в модуле которой выполняется код. Устаревшее имя — используйте ЭтотОбъект.",
     "The form whose module executes the code. Obsolete name — use ThisObject instead.");
@@ -151,6 +160,7 @@ public class FormTypesProvider {
   private final TypeRegistry typeRegistry;
   private final FormParametersResolver formParametersResolver;
   private final RecorderIndex recorderIndex;
+  private final FormHandlerRoleIndex formHandlerRoleIndex;
 
   /** Уже обработанные формы — защита от повторной регистрации источников. */
   private final Set<TypeRef> registeredForms = new HashSet<>();
@@ -354,6 +364,10 @@ public class FormTypesProvider {
     typeRegistry.registerMemberSource(formRef,
       () -> concat(buildEventMembers(collectHandlers(form, kind, baseRef, extensionRef)),
         buildCommandHandlers(data.getCommands())), FileType.BSL);
+    // Роли считаются сразу: имена дешевле членов (в реестр не ходим), а знать, кем
+    // объявлен обработчик, нужно снаружи системы типов — стандартным областям модуля
+    // и hover'у.
+    formHandlerRoleIndex.register(formRef, collectHandlerRoles(data));
 
     // Override, а не обычный источник: `Элементы`/`Параметры`/`Команды`/`ЭтотОбъект`
     // есть и у базового типа, но с обобщёнными типами — специализированные должны
@@ -450,6 +464,12 @@ public class FormTypesProvider {
     // список целиком. Данные основного реквизита так не помечаем — свойств там сотни.
     if (structureRef != null) {
       typeRegistry.registerOpenStructure(parametersRef, structureRef);
+    }
+    if (!(owner instanceof InformationRegister)) {
+      // `ИсходныйКлючЗаписи` объявлен у самой ДанныеФормыСтруктура и потому достаётся
+      // по наследству любой форме. Смысл он имеет только у формы записи регистра
+      // сведений: платформа кладёт туда ключ записи, которую открыли на изменение.
+      typeRegistry.registerMemberSuppression(parametersRef, List.of(SOURCE_RECORD_KEY), FileType.BSL);
     }
     return parametersRef;
   }
@@ -678,13 +698,13 @@ public class FormTypesProvider {
   /**
    * Процедуры-обработчики команд. Обработчик команды объявлен не событием, а действием
    * ({@code <Action>}), но по сути это то же самое: процедура модуля формы, которую
-   * зовёт платформа. Контракта в синтакс-помощнике у него нет — параметр {@code Команда}
-   * платформа передаёт, не объявляя.
+   * зовёт платформа.
    */
-  private static List<MemberDescriptor> buildCommandHandlers(List<FormCommand> commands) {
+  private List<MemberDescriptor> buildCommandHandlers(List<FormCommand> commands) {
     if (commands.isEmpty()) {
       return List.of();
     }
+    var signatures = List.of(commandHandlerSignature());
     var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(commands.size());
     for (var command : commands) {
       var action = command.getAction();
@@ -692,13 +712,30 @@ public class FormTypesProvider {
         continue;
       }
       byName.putIfAbsent(action.toLowerCase(Locale.ROOT),
-        MemberDescriptor.event(action, "", List.of())
+        MemberDescriptor.event(action, "", signatures)
           .withBilingualName(neutral(action))
           .withBilingualDescription(BilingualString.of(
             "Обработчик команды формы «" + command.getName() + "».",
             "Handler of the form command \"" + command.getName() + "\".")));
     }
     return List.copyOf(byName.values());
+  }
+
+  /**
+   * Контракт обработчика команды. В синтакс-помощнике его нет: платформа передаёт
+   * в обработчик саму команду, но нигде этого не объявляет — сигнатура собирается здесь.
+   */
+  private SignatureDescriptor commandHandlerSignature() {
+    var commandTypes = typeRegistry.resolve(FormPlatformTypes.FORM_COMMAND_RU)
+      .map(TypeSet::of)
+      .orElse(TypeSet.EMPTY);
+    return new SignatureDescriptor(
+      List.of(new ParameterDescriptor(
+        BilingualString.of("Команда", "Command"), commandTypes, false,
+        BilingualString.of("Команда формы, которой вызван обработчик.",
+          "The form command the handler was invoked by."),
+        "")),
+      TypeSet.EMPTY, BilingualString.EMPTY);
   }
 
   /**
@@ -1156,7 +1193,7 @@ public class FormTypesProvider {
    * @param handler       пара «событие → имя процедуры модуля».
    * @param contractTypes типы-источники контракта, в порядке приоритета.
    */
-  private record HandlerSource(FormEventHandler handler, List<TypeRef> contractTypes) {
+  private record HandlerSource(FormEventHandler handler, List<TypeRef> contractTypes, boolean ofElement) {
   }
 
   /**
@@ -1169,7 +1206,7 @@ public class FormTypesProvider {
     var formTypes = Stream.of(extensionRef, baseRef).filter(Objects::nonNull).toList();
     var result = new ArrayList<HandlerSource>(data.getEventHandlers().size());
     for (var handler : data.getEventHandlers()) {
-      result.add(new HandlerSource(handler, formTypes));
+      result.add(new HandlerSource(handler, formTypes, false));
     }
     var attributeTypes = attributeTypesByName(data.getAttributes());
     for (var element : data.getPlainElements()) {
@@ -1178,10 +1215,70 @@ public class FormTypesProvider {
       }
       var elementTypes = itemTypes(element, attributeTypes, kind).refs().stream().toList();
       for (var handler : handlerOwner.getEventHandlers()) {
-        result.add(new HandlerSource(handler, elementTypes));
+        result.add(new HandlerSource(handler, elementTypes, true));
       }
     }
     return result;
+  }
+
+  /**
+   * Кем объявлен каждый обработчик формы: ею самой, элементом шапки, элементом таблицы
+   * или командой. Нужно снаружи системы типов — стандартной области модуля и hover'у
+   * (см. {@link FormHandlerRoleIndex}).
+   *
+   * @param data содержимое формы.
+   * @return роли по имени процедуры-обработчика в нижнем регистре.
+   */
+  private static Map<String, FormHandlerRoleIndex.Handler> collectHandlerRoles(FormData data) {
+    var roles = new HashMap<String, FormHandlerRoleIndex.Handler>();
+    for (var handler : data.getEventHandlers()) {
+      putRole(roles, handler.handler(), FormHandlerRoleIndex.Role.FORM_EVENT, "");
+    }
+    collectElementRoles(data.getElements(), "", roles);
+    for (var command : data.getCommands()) {
+      putRole(roles, command.getAction(), FormHandlerRoleIndex.Role.COMMAND, command.getName());
+    }
+    return roles;
+  }
+
+  /**
+   * Роли обработчиков элементов. Обход идёт по дереву, а не по плоскому списку:
+   * область стандартного модуля у события элемента таблицы своя
+   * ({@code ОбработчикиСобытийЭлементовТаблицыФормы<Имя таблицы>}), и узнать таблицу
+   * можно только по тому, внутри какого элемента лежит вложенный.
+   *
+   * @param elements элементы одного уровня.
+   * @param tableName таблица, внутри которой они лежат; пусто — шапка формы.
+   * @param roles     накопитель.
+   */
+  private static void collectElementRoles(List<FormElement> elements, String tableName,
+                                          Map<String, FormHandlerRoleIndex.Handler> roles) {
+    for (var element : elements) {
+      // Сама таблица «своя» для своей же области: её события лежат там же, где события
+      // её колонок. Имя области — не константа, а шаблон: суффиксом идёт имя того
+      // самого элемента-таблицы, в котором лежит обработчик.
+      var ownerTable = element instanceof FormTable ? element.getName() : tableName;
+      if (element instanceof FormEventHandlerOwner handlerOwner) {
+        var role = ownerTable.isEmpty()
+          ? FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT
+          : FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT;
+        var owner = ownerTable.isEmpty() ? element.getName() : ownerTable;
+        for (var handler : handlerOwner.getEventHandlers()) {
+          putRole(roles, handler.handler(), role, owner);
+        }
+      }
+      if (element instanceof FormElementOwner elementOwner) {
+        collectElementRoles(elementOwner.getElements(), ownerTable, roles);
+      }
+    }
+  }
+
+  private static void putRole(Map<String, FormHandlerRoleIndex.Handler> roles, String handlerName,
+                              FormHandlerRoleIndex.Role role, String owner) {
+    if (handlerName.isBlank()) {
+      return;
+    }
+    roles.putIfAbsent(handlerName.toLowerCase(Locale.ROOT), new FormHandlerRoleIndex.Handler(role, owner));
   }
 
   /**
@@ -1206,10 +1303,54 @@ public class FormTypesProvider {
         ? MemberDescriptor.event(handlerName, "", List.of())
         .withBilingualDescription(unknownEventDescription(handler.event()))
         : contract;
+      if (source.ofElement()) {
+        descriptor = withElementParameter(descriptor, source.contractTypes());
+      }
       byName.putIfAbsent(handlerName.toLowerCase(Locale.ROOT),
         descriptor.withBilingualName(neutral(handlerName)));
     }
     return List.copyOf(byName.values());
+  }
+
+  /** Первый параметр обработчика события элемента — сам элемент. */
+  private static final BilingualString ELEMENT_PARAMETER = BilingualString.of("Элемент", "Item");
+
+  /**
+   * Дописывает в контракт события элемента первый параметр — сам элемент. Платформа
+   * передаёт его в каждый обработчик события элемента формы, но в синтакс-помощнике
+   * не объявляет: там у события элемента объявлены только «свои» параметры, а то и
+   * вовсе ни одного. Остальные параметры сдвигаются.
+   *
+   * @param contract     контракт события (возможно, без сигнатур вовсе).
+   * @param elementTypes типы элемента-владельца события.
+   * @return контракт, у которого в каждой сигнатуре первым идёт {@code Элемент}.
+   */
+  private static MemberDescriptor withElementParameter(MemberDescriptor contract, List<TypeRef> elementTypes) {
+    var element = new ParameterDescriptor(ELEMENT_PARAMETER, TypeSet.of(elementTypes), false,
+      BilingualString.of("Элемент формы, событие которого обрабатывается.",
+        "The form item whose event is being handled."), "");
+    if (contract.signatures().isEmpty()) {
+      return contract.withSignatures(List.of(
+        new SignatureDescriptor(List.of(element), TypeSet.EMPTY, BilingualString.EMPTY)));
+    }
+    var signatures = contract.signatures().stream()
+      .map(signature -> withFirstParameter(signature, element))
+      .toList();
+    return contract.withSignatures(signatures);
+  }
+
+  /** Сигнатура с добавленным первым параметром; если он там уже есть — она же. */
+  private static SignatureDescriptor withFirstParameter(SignatureDescriptor signature,
+                                                        ParameterDescriptor first) {
+    var parameters = signature.parameters();
+    if (!parameters.isEmpty() && parameters.get(0).bilingualName().equals(first.bilingualName())) {
+      return signature;
+    }
+    var shifted = new ArrayList<ParameterDescriptor>(parameters.size() + 1);
+    shifted.add(first);
+    shifted.addAll(parameters);
+    return new SignatureDescriptor(shifted, signature.returnTypes(), signature.bilingualDescription(),
+      signature.metadata());
   }
 
   /**

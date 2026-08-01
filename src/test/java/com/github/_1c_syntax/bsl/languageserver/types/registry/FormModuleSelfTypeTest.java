@@ -60,6 +60,9 @@ class FormModuleSelfTypeTest extends AbstractServerContextAwareTest {
   @Autowired
   private EventContractsIndex eventContractsIndex;
 
+  @Autowired
+  private FormHandlerRoleIndex formHandlerRoleIndex;
+
   @BeforeEach
   void setUp() {
     initServerContextOnce(Absolute.path(PATH_TO_METADATA));
@@ -117,6 +120,27 @@ class FormModuleSelfTypeTest extends AbstractServerContextAwareTest {
 
     var method = documentContext.getSymbolTree().getMethodSymbol("ПриЗаписиНаСервере").orElseThrow();
     assertThat(method).isInstanceOf(EventMethodSymbol.class);
+  }
+
+  @Test
+  void handlerRolesAreTakenFromTheFormItself() {
+    // Стандартная область у обработчика зависит от того, кем он объявлен, а у событий
+    // элементов таблицы имя области — шаблон: суффиксом идёт имя самой таблицы.
+    var documentContext = documentContext(DOCUMENT_FORM_MODULE);
+
+    assertThat(formHandlerRoleIndex.roleOf(documentContext, "ПриЗаписиНаСервере"))
+      .contains(new FormHandlerRoleIndex.Handler(FormHandlerRoleIndex.Role.FORM_EVENT, ""));
+    assertThat(formHandlerRoleIndex.roleOf(documentContext, "Реквизит1ПриИзменении"))
+      .contains(new FormHandlerRoleIndex.Handler(FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Реквизит1"));
+    assertThat(formHandlerRoleIndex.roleOf(documentContext, "ТабличнаяЧасть1Реквизит1ПриИзменении"))
+      .as("владелец — таблица, в которой лежит колонка, а не сама колонка")
+      .contains(new FormHandlerRoleIndex.Handler(
+        FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT, "ТабличнаяЧасть1"));
+    assertThat(formHandlerRoleIndex.roleOf(documentContext, "ЗаполнитьПоОснованиюКоманда"))
+      .contains(new FormHandlerRoleIndex.Handler(FormHandlerRoleIndex.Role.COMMAND, "ЗаполнитьПоОснованию"));
+    assertThat(formHandlerRoleIndex.roleOf(documentContext, "ТестОписанийОповещения"))
+      .as("процедура без объявления в Form.xml роли не имеет")
+      .isEmpty();
   }
 
   @Test

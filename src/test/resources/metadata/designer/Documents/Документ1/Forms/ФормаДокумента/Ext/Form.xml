@@ -85,6 +85,9 @@
 				<InputField name="ТабличнаяЧасть1Реквизит1" id="32">
 					<DataPath>Объект.ТабличнаяЧасть1.Реквизит1</DataPath>
 					<EditMode>EnterOnInput</EditMode>
+					<Events>
+						<Event name="OnChange">ТабличнаяЧасть1Реквизит1ПриИзменении</Event>
+					</Events>
 					<ContextMenu name="ТабличнаяЧасть1Реквизит1КонтекстноеМеню" id="33"/>
 					<ExtendedTooltip name="ТабличнаяЧасть1Реквизит1РасширеннаяПодсказка" id="34"/>
 				</InputField>
