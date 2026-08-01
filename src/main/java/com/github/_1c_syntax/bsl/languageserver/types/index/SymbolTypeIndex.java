@@ -73,6 +73,9 @@ public class SymbolTypeIndex {
   /** Минимальное число сегментов квалифицированной ссылки ({@code Модуль.Метод}). */
   private static final int MIN_QUALIFIED_SEGMENTS = 2;
 
+  /** Коллекция строк — у дерева значений строки лежат в ней, а не в самом дереве. */
+  private static final String ROWS = "Строки";
+
   private final TypeRegistry typeRegistry;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
@@ -492,11 +495,12 @@ public class SymbolTypeIndex {
       return base;
     }
     var headRef = base.refs().iterator().next();
-    // У таблицы значений описанные звёздочками имена — это колонки, а они принадлежат
-    // строке таблицы, а не самой таблице: обращения вида «Таблица.Цена» в 1С нет.
-    var rowRef = valueTableRow(headRef);
-    var fieldsRef = rowRef == null ? headRef : rowRef;
-    var result = rowRef == null ? base : TypeSet.of(rowRef);
+    // У коллекции описанные звёздочками имена — это свойства её элемента, а не её самой:
+    // обращений вида «Таблица.Цена» или «Соответствие.Ключ» в 1С нет. Собственные
+    // свойства бывают только у структуроподобных типов — им поля и остаются.
+    var elementRef = collectionElement(headRef, context.fileType());
+    var fieldsRef = elementRef == null ? headRef : elementRef;
+    var result = elementRef == null ? base : TypeSet.of(elementRef);
     for (var field : fields) {
       var eager = TypeSet.EMPTY;
       for (var fieldType : field.types()) {
@@ -512,21 +516,38 @@ public class SymbolTypeIndex {
         result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
       }
     }
-    return rowRef == null ? result : base.withElement(headRef, result);
+    return elementRef == null ? result : base.withElement(headRef, result);
   }
 
   /**
-   * Строка таблицы значений — тип её элемента из реестра.
+   * Элемент коллекции — строка таблицы или дерева, элемент табличной части или
+   * коллекции формы, пара «ключ и значение» соответствия.
    *
-   * @param ref тип, к которому относится описание полей.
-   * @return строка таблицы; {@code null}, если это не таблица значений либо тип её
-   *     строки реестру неизвестен.
+   * @param ref      тип, к которому относится описание полей.
+   * @param fileType язык, на котором ищется член-коллекция строк.
+   * @return тип элемента; {@code null} у структуроподобных типов, где описанные поля
+   *     принадлежат самому типу, и у типов, элемент которых реестру неизвестен.
    */
-  private @Nullable TypeRef valueTableRow(TypeRef ref) {
-    if (!OpenDataObjectInference.isValueTableLike(ref.qualifiedName())) {
+  private @Nullable TypeRef collectionElement(TypeRef ref, FileType fileType) {
+    if (OpenDataObjectInference.isStructureLike(ref.qualifiedName())) {
       return null;
     }
-    return typeRegistry.getDefaultElementTypes(ref).refs().stream().findFirst().orElse(null);
+    var direct = firstRef(typeRegistry.getDefaultElementTypes(ref));
+    if (direct != null) {
+      return direct;
+    }
+    // Дерево значений само не обходится: его строки лежат в отдельной коллекции «Строки»,
+    // и колонки описания принадлежат строке именно этой коллекции.
+    return typeRegistry.findMember(ref, MemberKind.PROPERTY, ROWS, fileType)
+      .map(MemberDescriptor::returnTypes)
+      .map(SymbolTypeIndex::firstRef)
+      .map(typeRegistry::getDefaultElementTypes)
+      .map(SymbolTypeIndex::firstRef)
+      .orElse(null);
+  }
+
+  private static @Nullable TypeRef firstRef(TypeSet types) {
+    return types.refs().stream().findFirst().orElse(null);
   }
 
   /**

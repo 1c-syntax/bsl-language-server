@@ -119,6 +119,44 @@ class ValueTableColumnsFieldsInferenceTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void treeColumnsFromDescriptionBecomeRowFields() {
+    // given: колонки дерева объявлены в описании возвращаемого значения функции.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext,
+      "F = СтрокаДерева.Наименование", "F = СтрокаДерева.".length() + 1);
+
+    // then
+    assertThat(types.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void mapFieldsFromDescriptionBecomeElementFields() {
+    // given: у соответствия описаны «Ключ» и «Значение» — это свойства элемента
+    // «КлючИЗначение», а не самого соответствия: обращения к нему через точку в 1С нет.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    // when
+    var keyTypes = inferAtMarker(documentContext,
+      "G = ЭлементСоответствия.Ключ", "G = ЭлементСоответствия.".length() + 1);
+    var valueTypes = inferAtMarker(documentContext,
+      "H = ЭлементСоответствия.Значение", "H = ЭлементСоответствия.".length() + 1);
+
+    // then
+    assertThat(keyTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+    assertThat(valueTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Число");
+  }
+
+  @Test
   void columnTypeExtractedFromTypeDescriptionConstructor() {
     // Колонки.Добавить("Имя", Новый ОписаниеТипов("Число")) — колонка должна иметь тип Число.
     var content = """
