@@ -80,7 +80,7 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
 
     assertThat(ru).isPresent();
     assertThat(en).isPresent();
-    assertThat(en.get()).isEqualTo(ru.get());
+    assertThat(en).contains(ru.orElseThrow());
     assertThat(typeService.displayName(ru.get(), Language.RU)).isEqualTo(DOCUMENT_FORM);
     assertThat(typeService.displayName(ru.get(), Language.EN))
       .isEqualTo("ClientApplicationForm.Document.Документ1.Form.ФормаДокумента");
@@ -360,7 +360,7 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Test
   void declaredHandlersBecomeEventsNamedAfterTheHandler() {
-    // Form.xml: <Event name="OnWriteAtServer">ПриЗаписиНаСервере</Event>;
+    // В Form.xml событие OnWriteAtServer объявлено обработчиком ПриЗаписиНаСервере.
     // контракт события берётся из расширения формы документа.
     var handler = member(DOCUMENT_FORM, MemberKind.EVENT, "ПриЗаписиНаСервере");
 

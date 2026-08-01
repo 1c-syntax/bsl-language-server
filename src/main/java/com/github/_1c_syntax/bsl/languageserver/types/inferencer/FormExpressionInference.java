@@ -40,6 +40,7 @@ import org.springframework.stereotype.Component;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Знания о формах, нужные при выводе типа выражения.
@@ -55,6 +56,16 @@ import java.util.Map;
 @WorkspaceScope
 @RequiredArgsConstructor
 public class FormExpressionInference {
+
+  /**
+   * Платформенные функции, первым параметром которых идёт имя формы (в нижнем регистре,
+   * оба языка). {@code ОткрытьФормуМодально} устарела, но в коде на режиме совместимости
+   * встречается и типизируется так же.
+   */
+  private static final Set<String> FORM_OPENING_FUNCTIONS = Set.of(
+    "получитьформу", "getform",
+    "открытьформу", "openform",
+    "открытьформумодально", "openformmodal");
 
   /** Свойство элемента формы, задающее его вид: {@code Элемент.Вид = ВидГруппыФормы.Страницы}. */
   private static final String KIND_PROPERTY_RU = "Вид";
@@ -91,16 +102,8 @@ public class FormExpressionInference {
       .orElse(null);
   }
 
-  /**
-   * Платформенные функции, первым параметром которых идёт имя формы.
-   * {@code ОткрытьФормуМодально} устарела, но в коде на режиме совместимости
-   * встречается и типизируется так же.
-   */
   private static boolean isFormOpeningFunction(String methodName) {
-    var lower = methodName.toLowerCase(Locale.ROOT);
-    return lower.equals("получитьформу") || lower.equals("getform")
-      || lower.equals("открытьформу") || lower.equals("openform")
-      || lower.equals("открытьформумодально") || lower.equals("openformmodal");
+    return FORM_OPENING_FUNCTIONS.contains(methodName.toLowerCase(Locale.ROOT));
   }
 
   /**

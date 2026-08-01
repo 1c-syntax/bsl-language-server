@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,7 @@ class FormModuleSelfTypeTest extends AbstractServerContextAwareTest {
     assertThat(globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()))
       .isPresent()
       .get()
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .isEqualTo("ФормаКлиентскогоПриложения.Документ.Документ1.Форма.ФормаДокумента");
   }
 

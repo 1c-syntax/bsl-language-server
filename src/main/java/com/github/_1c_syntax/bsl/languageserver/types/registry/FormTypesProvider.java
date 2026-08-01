@@ -158,12 +158,20 @@ public class FormTypesProvider {
     BilingualString.of("ВыделенныеСтроки", "SelectedRows");
 
   private static final String ARRAY_RU = "Массив";
-
   private static final String ARRAY_EN = "Array";
-
   private static final BilingualString THIS_FORM_DESCRIPTION = BilingualString.of(
     "Форма, в модуле которой выполняется код. Устаревшее имя — используйте ЭтотОбъект.",
     "The form whose module executes the code. Obsolete name — use ThisObject instead.");
+
+  /** Свойства таблицы, тип которых зависит от вида отображаемых данных. */
+  private static final BilingualString CURRENT_ROW = BilingualString.of("ТекущаяСтрока", "CurrentRow");
+  private static final BilingualString CURRENT_PARENT =
+    BilingualString.of("ТекущийРодитель", "CurrentParent");
+
+  private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
+
+  /** Первый параметр обработчика события элемента — сам элемент. */
+  private static final BilingualString ELEMENT_PARAMETER = BilingualString.of("Элемент", "Item");
 
   private final TypeRegistry typeRegistry;
   private final FormParametersResolver formParametersResolver;
@@ -302,12 +310,6 @@ public class FormTypesProvider {
     }
   }
 
-  /** Свойства таблицы, тип которых зависит от вида отображаемых данных. */
-  private static final BilingualString CURRENT_ROW = BilingualString.of("ТекущаяСтрока", "CurrentRow");
-  private static final BilingualString CURRENT_PARENT =
-    BilingualString.of("ТекущийРодитель", "CurrentParent");
-  private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
-
   /**
    * Уточняет члены таблицы формы по виду отображаемых данных. Синтакс-помощник
    * описывает эти правила текстом в описании расширения, а не объявлением типов:
@@ -323,7 +325,7 @@ public class FormTypesProvider {
    * идентификатора описание не называет вовсе, хотя он известен из самих данных формы.
    */
   private void registerTableDataRules(FormPlatformTypes.TableDataKind dataKind, TypeRef tableRef) {
-    var members = new ArrayList<MemberDescriptor>(3);
+    var members = new ArrayList<MemberDescriptor>();
     var rowIdRef = resolveOrNull(dataKind.rowIdTypeName());
     if (rowIdRef != null) {
       members.add(platformProperty(CURRENT_ROW, rowIdRef, BilingualString.EMPTY));
@@ -731,12 +733,6 @@ public class FormTypesProvider {
   }
 
   /**
-   * Тип коллекции элементов формы ({@code ВсеЭлементыФормы.<mdoRef>}): платформенные
-   * методы коллекции наследуются от базового типа, а generic-слот
-   * {@code <Имя элемента управления>} заменяется реальными элементами формы с их
-   * рантайм-типами.
-   */
-  /**
    * Типы таблиц формы, у которых {@code ТекущиеДанные} — строка отображаемой коллекции
    * с её колонками (табличная часть, реквизит-таблица или дерево значений). Такой тип
    * заводится на <b>конкретную таблицу</b>, а не на вид данных: колонки у каждой свои.
@@ -834,6 +830,12 @@ public class FormTypesProvider {
         .withBilingualName(ROW_DATA_METHOD));
   }
 
+  /**
+   * Тип коллекции элементов формы ({@code ВсеЭлементыФормы.<mdoRef>}): платформенные
+   * методы коллекции наследуются от базового типа, а generic-слот
+   * {@code <Имя элемента управления>} заменяется реальными элементами формы с их
+   * рантайм-типами.
+   */
   private TypeRef registerItemsCollection(Form form, FormKind kind, String suffixRu,
                                           Map<String, TypeRef> tableTypes) {
     var itemsRef = registerWithAlias(
@@ -947,7 +949,7 @@ public class FormTypesProvider {
                                                          @Nullable TypeRef parametersRef,
                                                          @Nullable TypeRef commandsRef,
                                                          @Nullable TypeRef injectedRef) {
-    var members = new ArrayList<MemberDescriptor>(5);
+    var members = new ArrayList<MemberDescriptor>();
     members.add(platformProperty(
       BilingualString.of(kind.itemsPropertyRu(), kind.itemsPropertyEn()), itemsRef, BilingualString.EMPTY));
     if (parametersRef != null) {
@@ -1533,9 +1535,6 @@ public class FormTypesProvider {
     var placeholder = PlaceholderBinder.singlePlaceholder(contract);
     return placeholder == null ? contract : contract.specialize(Map.of(placeholder, ownerName));
   }
-
-  /** Первый параметр обработчика события элемента — сам элемент. */
-  private static final BilingualString ELEMENT_PARAMETER = BilingualString.of("Элемент", "Item");
 
   /**
    * Дописывает в контракт события элемента первый параметр — сам элемент. Платформа

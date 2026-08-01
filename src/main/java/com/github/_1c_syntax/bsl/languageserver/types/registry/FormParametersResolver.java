@@ -53,6 +53,12 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class FormParametersResolver {
 
+  /** Параметр-ссылка на копируемый объект. */
+  private static final String COPYING_VALUE = "ЗначениеКопирования";
+
+  /** Параметр-ссылка на открываемый объект. */
+  private static final String KEY = "Ключ";
+
   private final BslContextHolder bslContextHolder;
 
   private final AtomicReference<Map<String, List<MemberDescriptor>>> cache = new AtomicReference<>();
@@ -106,12 +112,6 @@ public class FormParametersResolver {
     }
     return Map.copyOf(byType);
   }
-
-  /** Параметр-ссылка на копируемый объект. */
-  private static final String COPYING_VALUE = "ЗначениеКопирования";
-
-  /** Параметр-ссылка на открываемый объект. */
-  private static final String KEY = "Ключ";
 
   /**
    * Достраивает тип параметра «значение копирования». В синтакс-помощнике он объявлен

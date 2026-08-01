@@ -42,6 +42,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -55,6 +56,14 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class PlatformMemberHoverBuilder {
+
+  /**
+   * Пробельный участок, внутри которого есть хотя бы один перенос строки: и одиночный
+   * перенос, и пустая строка между абзацами (см. {@link #asListItemLines}). Записан без
+   * вложенных квантификаторов — {@code (?:[ \t]*\R)*} внутри повторения даёт
+   * экспоненциальный откат на длинном тексте.
+   */
+  private static final Pattern LINE_BREAKS = Pattern.compile("[ \\t]*\\R\\s*");
 
   private final Resources resources;
   private final LanguageServerConfiguration configuration;
@@ -290,7 +299,7 @@ public class PlatformMemberHoverBuilder {
    * убираются — в списке они смотрятся разрывом.
    */
   private static String asListItemLines(String text) {
-    return text.strip().replaceAll("[ \\t]*\\R(?:[ \\t]*\\R)*[ \\t]*", "  \n  ");
+    return LINE_BREAKS.matcher(text.strip()).replaceAll("  \n  ");
   }
 
   /**

@@ -72,6 +72,23 @@ public class FormByNameResolver {
     FormPlatformTypes.FormKind.ORDINARY.baseTypeEn()
   );
 
+  /**
+   * Методы менеджера, отдающие основную форму объекта, и вид этой формы. Имени формы
+   * они не требуют: какую именно открывать — известно из роли формы у объекта.
+   * Имена проверяются по дескриптору члена, поэтому английские написания работают
+   * без отдельной таблицы.
+   */
+  private static final Map<String, DefaultFormKind> MANAGER_FORM_METHODS = Map.of(
+    "ПолучитьФормуСписка", DefaultFormKind.LIST_FORM,
+    "ПолучитьФормуВыбора", DefaultFormKind.CHOICE_FORM,
+    "ПолучитьФормуВыбораГруппы", DefaultFormKind.FOLDER_CHOICE_FORM,
+    "ПолучитьФормуНовогоЭлемента", DefaultFormKind.OBJECT_FORM,
+    "ПолучитьФормуНовойГруппы", DefaultFormKind.FOLDER_FORM,
+    "ПолучитьФормуНовогоДокумента", DefaultFormKind.OBJECT_FORM,
+    "ПолучитьФорму", DefaultFormKind.DEFAULT_FORM);
+
+  private static final List<String> MANAGER_SUFFIXES = List.of("Менеджер", "Manager");
+
   private final TypeRegistry typeRegistry;
 
   /**
@@ -133,21 +150,6 @@ public class FormByNameResolver {
     }
     return Optional.empty();
   }
-
-  /**
-   * Методы менеджера, отдающие основную форму объекта, и вид этой формы. Имени формы
-   * они не требуют: какую именно открывать — известно из роли формы у объекта.
-   * Имена проверяются по дескриптору члена, поэтому английские написания работают
-   * без отдельной таблицы.
-   */
-  private static final Map<String, DefaultFormKind> MANAGER_FORM_METHODS = Map.of(
-    "ПолучитьФормуСписка", DefaultFormKind.LIST_FORM,
-    "ПолучитьФормуВыбора", DefaultFormKind.CHOICE_FORM,
-    "ПолучитьФормуВыбораГруппы", DefaultFormKind.FOLDER_CHOICE_FORM,
-    "ПолучитьФормуНовогоЭлемента", DefaultFormKind.OBJECT_FORM,
-    "ПолучитьФормуНовойГруппы", DefaultFormKind.FOLDER_FORM,
-    "ПолучитьФормуНовогоДокумента", DefaultFormKind.OBJECT_FORM,
-    "ПолучитьФорму", DefaultFormKind.DEFAULT_FORM);
 
   /**
    * Тип формы, которую отдаёт метод менеджера объекта:
@@ -221,8 +223,6 @@ public class FormByNameResolver {
     }
     return null;
   }
-
-  private static final List<String> MANAGER_SUFFIXES = List.of("Менеджер", "Manager");
 
   /** Собственная форма объекта по имени: у методов менеджера оно относительное. */
   private static Optional<Form> ownForm(FormOwner owner, @Nullable String formName) {
