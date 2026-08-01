@@ -454,18 +454,25 @@ public class FormTypesProvider {
       // её колонок. Имя области — не константа, а шаблон: суффиксом идёт имя того
       // самого элемента-таблицы, в котором лежит обработчик.
       var ownerTable = element instanceof FormTable ? element.getName() : tableName;
-      if (element instanceof FormEventHandlerOwner handlerOwner) {
-        var role = ownerTable.isEmpty()
-          ? FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT
-          : FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT;
-        var owner = ownerTable.isEmpty() ? element.getName() : ownerTable;
-        for (var handler : handlerOwner.getEventHandlers()) {
-          putRole(roles, handler.handler(), role, owner);
-        }
-      }
+      collectOwnRoles(element, ownerTable, roles);
       if (element instanceof FormElementOwner elementOwner) {
         collectElementRoles(elementOwner.getElements(), ownerTable, roles);
       }
+    }
+  }
+
+  /** Роли обработчиков, объявленных самим элементом (без вложенных). */
+  private static void collectOwnRoles(FormElement element, String ownerTable,
+                                      Map<String, FormHandlerRoleIndex.Handler> roles) {
+    if (!(element instanceof FormEventHandlerOwner handlerOwner)) {
+      return;
+    }
+    var role = ownerTable.isEmpty()
+      ? FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT
+      : FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT;
+    var owner = ownerTable.isEmpty() ? element.getName() : ownerTable;
+    for (var handler : handlerOwner.getEventHandlers()) {
+      putRole(roles, handler.handler(), role, owner);
     }
   }
 
