@@ -62,6 +62,19 @@ class ModuleBodyFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void assignmentInEnglishNamedConstructorLeavesNoUndefined() {
+    // given: конструктор записан английским именем — то же самое, что «ПриСозданииОбъекта».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ModuleBodyFlowEnglishConstructor.os");
+
+    // when
+    var types = at(documentContext, "ИзКонструктора = Сохранённый", "ИзКонструктора = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Массив");
+  }
+
+  @Test
   void fieldWithoutAssignmentsIsUndefined() {
     // given: поле класса, которому нигде не присваивают значение.
     // when
@@ -99,7 +112,10 @@ class ModuleBodyFlowTest extends AbstractServerContextAwareTest {
   }
 
   private TypeSet at(String marker, int offsetInMarker) {
-    var documentContext = doc();
+    return at(doc(), marker, offsetInMarker);
+  }
+
+  private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);
     assertThat(markerStart).as("маркер '%s' найден в фикстуре", marker).isNotNegative();
