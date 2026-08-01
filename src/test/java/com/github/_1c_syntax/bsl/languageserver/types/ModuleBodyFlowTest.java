@@ -75,6 +75,17 @@ class ModuleBodyFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void assignmentUnderConditionInConstructorLeavesUndefined() {
+    // given: присваивание в конструкторе стоит внутри условия — выполнится оно или нет,
+    // из кода не следует.
+    // when
+    var types = at("ИзУсловияКонструктора = ПодУсловиемВКонструкторе", "ИзУсловияКонструктора = ".length());
+
+    // then: состояние от объявления остаётся наблюдаемым.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Массив");
+  }
+
+  @Test
   void fieldWithoutAssignmentsIsUndefined() {
     // given: поле класса, которому нигде не присваивают значение.
     // when

@@ -1064,11 +1064,13 @@ public class ExpressionTypeInferencer {
 
   /**
    * Есть ли у переменной модуля присваивание, которое заведомо выполняется раньше любого
-   * обращения к ней: в теле модуля или в конструкторе объекта.
+   * обращения к ней: безусловное присваивание в теле модуля или в конструкторе объекта.
    * <p>
    * Тело модуля отрабатывает раньше всех его процедур, а конструктор — при создании
    * объекта, до того как к его полям кто-то обратится. Значит состояние «до первого
    * присваивания» наблюдать неоткуда, и «Неопределено» от объявления в тип не входит.
+   * Присваивание внутри условия, цикла или попытки может не выполниться, поэтому таким
+   * доказательством не является.
    *
    * @param variable переменная.
    * @return {@code true}, если такое присваивание есть.
@@ -1077,15 +1079,42 @@ public class ExpressionTypeInferencer {
     if (variable.getKind() != VariableKind.MODULE) {
       return false;
     }
-    var symbolTree = variable.getOwner().getSymbolTree();
+    var owner = variable.getOwner();
+    var symbolTree = owner.getSymbolTree();
     for (var position : definitionPositions(variable)) {
       var enclosingMethod = enclosingMethod(symbolTree, position);
-      if (enclosingMethod.isEmpty()
-        || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName())) {
+      var runsBeforeAnyUse = enclosingMethod.isEmpty()
+        || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName());
+      if (runsBeforeAnyUse && unconditional(owner, position)) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * Выполняется ли оператор в этой позиции безусловно — то есть не вложен ни в условие,
+   * ни в цикл, ни в попытку.
+   *
+   * @param owner    документ с оператором.
+   * @param position позиция в документе.
+   * @return {@code true}, если вложенных ветвлений над оператором нет.
+   */
+  private static boolean unconditional(DocumentContext owner, Position position) {
+    var node = Trees.findTerminalNodeContainsPosition(owner.getAst(), position).orElse(null);
+    if (node == null) {
+      return false;
+    }
+    for (var parent = node.getParent(); parent != null; parent = parent.getParent()) {
+      if (parent instanceof BSLParser.IfStatementContext
+        || parent instanceof BSLParser.WhileStatementContext
+        || parent instanceof BSLParser.ForStatementContext
+        || parent instanceof BSLParser.ForEachStatementContext
+        || parent instanceof BSLParser.TryStatementContext) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
