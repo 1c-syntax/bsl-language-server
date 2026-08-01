@@ -97,7 +97,7 @@ public class TrailingCommentTypeResolver implements VariableTypeSource {
    */
   public TypeSet resolve(VariableSymbol variable, FileType fileType) {
     var trailing = variable.getDescription()
-      .flatMap(description -> description.getTrailingDescription())
+      .flatMap(VariableDescription::getTrailingDescription)
       .orElse(null);
     if (trailing == null) {
       return TypeSet.EMPTY;

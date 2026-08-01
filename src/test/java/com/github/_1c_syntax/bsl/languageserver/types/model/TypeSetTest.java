@@ -504,6 +504,28 @@ class TypeSetTest {
   }
 
   @Test
+  void mapRefsAppliesToLazyDecorationOnRead() {
+    // given: тип элемента отложен — источник вернёт неканоническую ссылку.
+    var alias = new TypeRef(TypeKind.PLATFORM, "Структура");
+    var canonical = new TypeRef(TypeKind.CONFIGURATION, "Структура");
+    var forced = new boolean[1];
+    var lazy = new LazyTypeSet("источник", () -> {
+      forced[0] = true;
+      return TypeSet.of(alias);
+    });
+    var ts = TypeSet.of(ARRAY).withLazyElement(ARRAY, lazy);
+
+    // when
+    var mapped = ts.mapRefs(ref -> alias.equals(ref) ? canonical : ref);
+
+    // then: приведение не форсит источник...
+    assertThat(forced[0]).as("ленивая декорация не вычисляется при приведении").isFalse();
+    // ...но применяется к тому, что он вернёт при чтении.
+    assertThat(mapped.getElementTypes(ARRAY).refs()).containsExactly(canonical);
+    assertThat(forced[0]).isTrue();
+  }
+
+  @Test
   void mapRefsWithoutChangesReturnsSelf() {
     // given
     var ts = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
