@@ -248,11 +248,19 @@ tasks.test {
         html.required.set(true)
     }
 
+    val isCi = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
+
     // Increase heap size to prevent OOM during test execution.
     // With CleanupContextBeforeClassAndAfterClass tests causing frequent Spring context reloads,
     // multiple contexts can be in memory simultaneously (old being GC'd while new is created).
-    // 3g gives enough headroom on GitHub Actions ubuntu-latest runners with 1 fork.
-    maxHeapSize = "3g"
+    //
+    // На CI все 650+ классов идут в одном форке, и туда же попадает импорт всех классов
+    // проекта в ArchitectureTest (ArchUnit строит граф целиком). Когда он выпадает после
+    // серии перезагрузок контекста, 3g перестаёт хватать: `build (25, ubuntu-latest)`
+    // валился `OutOfMemoryError: Java heap space` в `ClassGraphCreator`. У раннера 16 ГБ,
+    // форк один — 4g снимают вопрос. Локально форков до четырёх, поэтому там остаётся 3g:
+    // 4 × 4g не влезут в машину с 16 ГБ.
+    maxHeapSize = if (isCi) "4g" else "3g"
 
     // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
     // Использование форков, а не потоков, обусловлено тем, что многие тесты
@@ -267,7 +275,6 @@ tasks.test {
     // чтобы не упереться в OOM при `maxHeapSize=3g` на каждый форк.
     // Локально — половина доступных процессоров, ограниченная диапазоном
     // от 1 до 4.
-    val isCi = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
     maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
         ?: if (isCi) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 
