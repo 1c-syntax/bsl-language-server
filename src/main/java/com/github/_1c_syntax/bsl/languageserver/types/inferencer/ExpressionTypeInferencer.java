@@ -43,6 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -97,9 +98,6 @@ public class ExpressionTypeInferencer {
 
   /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
   private static final String ELEMENT_GETTER = "Получить";
-
-  /** Конструктор объекта: выполняется при создании, до любого обращения к полям. */
-  private static final String CONSTRUCTOR_NAME = "ПриСозданииОбъекта";
 
   private static final TypeRef NUMBER = new TypeRef(TypeKind.PRIMITIVE, "Число");
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
@@ -856,6 +854,19 @@ public class ExpressionTypeInferencer {
       kindsByVariable
         .computeIfAbsent(target, key -> new Lazy<>(() -> formExpressionInference.kindAssignmentsOf(key)))
         .getOrCompute();
+    // Объявленное о переменной расчёт спрашивает многократно — на входе в тело, в точках
+    // слияния и при возврате к объединению по области видимости. У переменной модуля за
+    // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
+    Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
+    Function<VariableSymbol, TypeSet> declaredOf = target -> {
+      var cached = declaredByVariable.get(target);
+      if (cached != null) {
+        return cached;
+      }
+      var computed = declaredTypes(target);
+      declaredByVariable.put(target, computed);
+      return computed;
+    };
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
@@ -864,7 +875,7 @@ public class ExpressionTypeInferencer {
       ctx.visited.size() <= 1,
       body -> variablesOfBody(owner, body),
       target -> target.getKind() == VariableKind.MODULE,
-      this::declaredTypes,
+      declaredOf,
       this::definitionPositions,
       target -> mutationPositions(callsOf.apply(target), kindsOf.apply(target)),
       (target, statement, position) ->
@@ -1066,17 +1077,30 @@ public class ExpressionTypeInferencer {
     if (variable.getKind() != VariableKind.MODULE) {
       return false;
     }
-    var methods = variable.getOwner().getSymbolTree().getMethods();
+    var symbolTree = variable.getOwner().getSymbolTree();
     for (var position : definitionPositions(variable)) {
-      var enclosing = methods.stream()
-        .filter(method -> Ranges.containsPosition(method.getRange(), position))
-        .findFirst()
-        .orElse(null);
-      if (enclosing == null || CONSTRUCTOR_NAME.equalsIgnoreCase(enclosing.getName())) {
+      var enclosingMethod = enclosingMethod(symbolTree, position);
+      if (enclosingMethod.isEmpty()
+        || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName())) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * Метод, в теле которого стоит позиция.
+   *
+   * @param symbolTree дерево символов документа.
+   * @param position   позиция в документе.
+   * @return метод; пусто, если позиция вне методов — то есть в теле модуля.
+   */
+  private static Optional<MethodSymbol> enclosingMethod(SymbolTree symbolTree, Position position) {
+    var symbol = symbolTree.getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
   }
 
   /**
