@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenc
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.AttachedHandlers;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
 import com.github._1c_syntax.bsl.languageserver.context.Modules;
@@ -293,7 +294,36 @@ public class ReferenceIndexFiller {
       documentContext.getSymbolTree().getMethodSymbol(methodNameText)
         .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
 
+      addHandlerAttachedByName(methodNameText, ctx.doCall());
+
       return super.visitGlobalMethodCall(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitMethodCall(BSLParser.MethodCallContext ctx) {
+      // Обработчик, подключённый именем-строкой у объекта:
+      // `Элементы.Товары.УстановитьДействие("ПриИзменении", "ТоварыПриИзменении")`.
+      // Тип получателя здесь не нужен: имя вызова само по себе однозначно.
+      addHandlerAttachedByName(ctx.methodName().getText(), ctx.doCall());
+
+      return super.visitMethodCall(ctx);
+    }
+
+    /**
+     * Регистрирует ссылку на процедуру, подключаемую вызовом по имени-строке
+     * (см. {@link AttachedHandlers}). Без неё такая процедура выглядит никем не
+     * вызываемой, а переименование её не задевает.
+     */
+    private void addHandlerAttachedByName(String methodName, BSLParser.@Nullable DoCallContext doCall) {
+      var index = AttachedHandlers.handlerArgumentIndex(methodName);
+      if (index.isEmpty() || doCall == null || doCall.callParamList() == null) {
+        return;
+      }
+      var parameters = doCall.callParamList().callParam();
+      if (parameters.size() <= index.getAsInt()) {
+        return;
+      }
+      addCallbackMethodCall(parameters.get(index.getAsInt()), documentContext.getMdoRef());
     }
 
     @Override
