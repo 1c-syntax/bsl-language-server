@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.OpenDataObjectInference;
 import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -491,23 +492,41 @@ public class SymbolTypeIndex {
       return base;
     }
     var headRef = base.refs().iterator().next();
-    var result = base;
+    // У таблицы значений описанные звёздочками имена — это колонки, а они принадлежат
+    // строке таблицы, а не самой таблице: обращения вида «Таблица.Цена» в 1С нет.
+    var rowRef = valueTableRow(headRef);
+    var fieldsRef = rowRef == null ? headRef : rowRef;
+    var result = rowRef == null ? base : TypeSet.of(rowRef);
     for (var field : fields) {
       var eager = TypeSet.EMPTY;
       for (var fieldType : field.types()) {
         var localFunction = localFunctionSeeRef(fieldType, context);
         if (localFunction != null) {
-          result = result.withLazyField(headRef, field.name(),
+          result = result.withLazyField(fieldsRef, field.name(),
             lazyReturnTypes(localFunction), fieldDescription(field));
         } else {
           eager = eager.union(resolveTypes(List.of(fieldType), context));
         }
       }
       if (!eager.isEmpty()) {
-        result = result.withField(headRef, field.name(), eager, fieldDescription(field));
+        result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
       }
     }
-    return result;
+    return rowRef == null ? result : base.withElement(headRef, result);
+  }
+
+  /**
+   * Строка таблицы значений — тип её элемента из реестра.
+   *
+   * @param ref тип, к которому относится описание полей.
+   * @return строка таблицы; {@code null}, если это не таблица значений либо тип её
+   *     строки реестру неизвестен.
+   */
+  private @Nullable TypeRef valueTableRow(TypeRef ref) {
+    if (!OpenDataObjectInference.isValueTableLike(ref.qualifiedName())) {
+      return null;
+    }
+    return typeRegistry.getDefaultElementTypes(ref).refs().stream().findFirst().orElse(null);
   }
 
   /**
