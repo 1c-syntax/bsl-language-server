@@ -899,7 +899,7 @@ public class TypeRegistry {
    *   <li>берёт members generic-типа через {@link #getMembers(TypeRef, FileType)};</li>
    *   <li>отфильтровывает {@link MemberDescriptor#generic()} (слотовые
    *       члены вида {@code <Имя реквизита>});</li>
-   *   <li>применяет {@link MemberDescriptor#specialize(Map)} к каждому
+   *   <li>применяет {@link MemberDescriptor#specialize(Map, UnaryOperator)} к каждому
    *       члену — подставляет {@code bindings} в возвращаемые типы и
    *       сигнатуры.</li>
    * </ol>
