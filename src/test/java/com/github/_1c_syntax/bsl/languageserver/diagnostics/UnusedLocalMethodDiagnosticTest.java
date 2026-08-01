@@ -21,15 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -38,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +53,14 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = PATH_TO_METADATA + "/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_MODULE_CONTENT = "src/test/resources/diagnostics/UnusedLocalMethodDiagnostic.bsl";
+  private static final String MANAGED_FORM_MODULE =
+    "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl";
+
+  @Autowired
+  private ReferenceIndex referenceIndex;
+
+  @Autowired
+  private EventContractsIndex eventContractsIndex;
 
   private CommonModule module;
   private DocumentContext documentContext;
@@ -151,6 +167,114 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
     List<Diagnostic> diagnostics = getDiagnostics(dc);
 
     assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testManagedFormFlagsOnlyMethodsThatAreNotHandlers() {
+    // Обработчики управляемой формы объявлены в Form.xml и висят EVENT-членами на её
+    // типе: и событие самой формы, и событие элемента, и действие команды.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура ПриЗаписиНаСервере(Отказ, ТекущийОбъект, ПараметрыЗаписи)
+      КонецПроцедуры
+
+      &НаКлиенте
+      Процедура Реквизит1ПриИзменении(Элемент)
+      КонецПроцедуры
+
+      &НаКлиенте
+      Процедура ЗаполнитьПоОснованиюКоманда(Команда)
+      КонецПроцедуры
+
+      &НаКлиенте
+      Процедура ЗабытыйМетод()
+      КонецПроцедуры
+      """);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true).hasRange(13, 10, 22);
+  }
+
+  @Test
+  void testHandlerAttachedByNameIsNotFlagged() {
+    // Обработчик ожидания подключается именем-строкой, и это единственное обращение к
+    // нему в модуле. Такой вызов индексируется как ссылка (см. AttachedHandlers) —
+    // иначе на управляемых формах реальной конфигурации набегают сотни ложных.
+    var documentContext = formModuleWith("""
+      &НаКлиенте
+      Процедура ПодключитьПроверку()
+        ПодключитьОбработчикОжидания("ПроверитьФоновоеЗадание", 1, Истина);
+        Элементы.ТабличнаяЧасть1.УстановитьДействие("ПриАктивизацииСтроки", "СтрокаАктивизирована");
+      КонецПроцедуры
+
+      &НаКлиенте
+      Процедура ПроверитьФоновоеЗадание()
+      КонецПроцедуры
+
+      &НаКлиенте
+      Процедура СтрокаАктивизирована(Элемент)
+      КонецПроцедуры
+      """);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics)
+      .as("сама ПодключитьПроверку никем не вызвана, а подключённые ею — вызваны")
+      .hasSize(1);
+    assertThat(diagnostics, true).hasRange(1, 10, 28);
+  }
+
+  @Test
+  void testOrdinaryFormIsSkipped() {
+    // У обычной формы своя иерархия элементов со своими событиями, в системе типов
+    // не смоделированная, — там забытым выглядел бы любой обработчик.
+    var dc = spy(TestUtils.getDocumentContext(readFixture()));
+    var form = mock(Form.class);
+    when(form.getFormType()).thenReturn(FormType.ORDINARY);
+    when(dc.getModuleType()).thenReturn(ModuleType.FormModule);
+    when(dc.getMdObject()).thenReturn(Optional.of(form));
+
+    assertThat(getDiagnostics(dc)).isEmpty();
+  }
+
+  @Test
+  void testUnknownModuleTypeIsSkipped() {
+    // #4326: одиночный .bsl, открытый вне проекта. Владельца модуля, а значит и его
+    // событий, не видно — каждый обработчик выглядит методом, которого никто не зовёт.
+    // Проверять надо на экземпляре, который считает синтакс-помощник загруженным:
+    // без HBK этот тип модуля и так не диагностируется, и тест бы ничего не доказывал.
+    var dc = spy(TestUtils.getDocumentContext(readFixture()));
+    when(dc.getModuleType()).thenReturn(ModuleType.UNKNOWN);
+
+    assertThat(diagnosticAsIfHbkLoaded().getDiagnostics(dc)).isEmpty();
+  }
+
+  /**
+   * Экземпляр диагностики, считающий синтакс-помощник загруженным. Ветку «HBK есть»
+   * иначе не проверить: на CI платформы нет, а от неё зависит, какие типы модулей
+   * вообще попадают в диагностирование.
+   */
+  private UnusedLocalMethodDiagnostic diagnosticAsIfHbkLoaded() {
+    var holder = new BslContextHolder(null) {
+      @Override
+      public Optional<ContextProvider> get() {
+        return Optional.of(mock(ContextProvider.class));
+      }
+    };
+    var diagnostic = new UnusedLocalMethodDiagnostic(referenceIndex, eventContractsIndex, holder);
+    diagnostic.setInfo(diagnosticInstance.getInfo());
+    return diagnostic;
+  }
+
+  /** Модуль управляемой формы документа с подменённым содержимым. */
+  private DocumentContext formModuleWith(String content) {
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var uri = Absolute.uri(Path.of(PATH_TO_METADATA, MANAGED_FORM_MODULE).toFile());
+    var formModule = context.addDocument(uri);
+    context.rebuildDocument(formModule, content, 1);
+    return formModule;
   }
 
   private void getObjectModuleDocumentContext() {
