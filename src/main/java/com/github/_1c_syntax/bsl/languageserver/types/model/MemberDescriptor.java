@@ -282,13 +282,13 @@ public record MemberDescriptor(
     if (bindings == null || bindings.isEmpty()) {
       return this;
     }
-    var newReturnTypes = TypeRef.map(TypeRef.specialize(returnTypes, bindings), canonicalizer);
+    var newReturnTypes = TypeRef.specialize(returnTypes, bindings).mapRefs(canonicalizer);
     var newSignatures = signatures;
     boolean signaturesChanged = false;
     if (!newSignatures.isEmpty()) {
       var rebuilt = new ArrayList<SignatureDescriptor>(newSignatures.size());
       for (var sig : newSignatures) {
-        var specializedReturn = TypeRef.map(TypeRef.specialize(sig.returnTypes(), bindings), canonicalizer);
+        var specializedReturn = TypeRef.specialize(sig.returnTypes(), bindings).mapRefs(canonicalizer);
         var specializedParameters = specializeParameters(sig.parameters(), bindings, canonicalizer);
         var returnChanged = !specializedReturn.equals(sig.returnTypes());
         var parametersChanged = !specializedParameters.equals(sig.parameters());
@@ -325,7 +325,7 @@ public record MemberDescriptor(
     List<ParameterDescriptor> rebuilt = null;
     for (var i = 0; i < params.size(); i++) {
       var p = params.get(i);
-      var specializedTypes = TypeRef.map(TypeRef.specialize(p.types(), bindings), canonicalizer);
+      var specializedTypes = TypeRef.specialize(p.types(), bindings).mapRefs(canonicalizer);
       if (specializedTypes.equals(p.types())) {
         if (rebuilt != null) {
           rebuilt.add(p);

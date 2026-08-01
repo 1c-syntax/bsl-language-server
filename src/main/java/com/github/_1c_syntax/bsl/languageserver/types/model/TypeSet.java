@@ -29,7 +29,9 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * Неизменяемый, hash-stable union типов.
@@ -196,6 +198,66 @@ public record TypeSet(
     }
 
     return new TypeSet(merged, mergedElements, mergedFields, mergedLazyElements, mergedLazyFields);
+  }
+
+  /**
+   * Применяет {@code mapper} к каждой ссылке набора — вместе с ключами декораций.
+   * <p>
+   * Нужно, чтобы после структурной специализации привести полученные ссылки к
+   * каноническим: иначе за одним именем оказываются две разные ссылки, и объединение
+   * наборов их не схлопывает. Декорации переезжают на новую ссылку, а если в одну
+   * каноническую ссылку сходятся несколько исходных — сливаются между собой.
+   *
+   * @param mapper преобразование ссылки.
+   * @return набор с преобразованными ссылками; исходный, если ни одна не изменилась.
+   */
+  public TypeSet mapRefs(UnaryOperator<TypeRef> mapper) {
+    var mappedRefs = new LinkedHashSet<TypeRef>();
+    var changed = false;
+    for (var ref : refs) {
+      var mapped = mapper.apply(ref);
+      changed = changed || !mapped.equals(ref);
+      mappedRefs.add(mapped);
+    }
+    if (!changed) {
+      return this;
+    }
+    return new TypeSet(
+      mappedRefs,
+      mapKeys(elementTypes, mapper, TypeSet::union),
+      mapNestedKeys(localFields, mapper, LocalField::merge),
+      mapKeys(lazyElements, mapper, LazyTypeSet::combine),
+      mapNestedKeys(lazyFields, mapper, LazyField::merge)
+    );
+  }
+
+  private static <V> Map<TypeRef, V> mapKeys(
+    Map<TypeRef, V> source,
+    UnaryOperator<TypeRef> mapper,
+    BinaryOperator<V> merger
+  ) {
+    if (source.isEmpty()) {
+      return source;
+    }
+    var result = new LinkedHashMap<TypeRef, V>();
+    source.forEach((ref, value) -> result.merge(mapper.apply(ref), value, merger));
+    return result;
+  }
+
+  private static <V> Map<TypeRef, Map<String, V>> mapNestedKeys(
+    Map<TypeRef, Map<String, V>> source,
+    UnaryOperator<TypeRef> mapper,
+    BinaryOperator<V> merger
+  ) {
+    if (source.isEmpty()) {
+      return source;
+    }
+    var result = new LinkedHashMap<TypeRef, Map<String, V>>();
+    source.forEach((ref, fields) -> {
+      var target = result.computeIfAbsent(mapper.apply(ref), key -> new LinkedHashMap<>());
+      fields.forEach((name, field) -> target.merge(name, field, merger));
+    });
+    return result;
   }
 
   /** Есть ли у набора декорации (element/field, в т.ч. ленивые). */
