@@ -205,9 +205,13 @@ public class ExecutorConfiguration {
   private record NamedForkJoinWorkerThreadFactory(String prefix) implements ForkJoinPool.ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-      var thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-      thread.setName(prefix + thread.getPoolIndex());
-      return thread;
+      return new ForkJoinWorkerThread(pool) {
+        @Override
+        protected void onStart() {
+          super.onStart();
+          setName(prefix + getPoolIndex());
+        }
+      };
     }
   }
 
@@ -218,15 +222,14 @@ public class ExecutorConfiguration {
   ) implements ForkJoinPool.ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-      var thread = new ForkJoinWorkerThread(pool) {
+      return new ForkJoinWorkerThread(pool) {
         @Override
         protected void onStart() {
           WorkspaceContextHolder.set(workspaceUri, workspaceName);
           super.onStart();
+          setName(prefix + workspaceName + "-" + getPoolIndex());
         }
       };
-      thread.setName(prefix + workspaceName + "-" + thread.getPoolIndex());
-      return thread;
     }
   }
 }
