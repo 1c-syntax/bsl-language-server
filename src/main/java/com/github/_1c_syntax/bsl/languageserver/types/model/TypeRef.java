@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.UnaryOperator;
 
 /**
  * Лёгкая ссылка-ключ на тип.
@@ -171,34 +170,6 @@ public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable
         changed = true;
       }
       rebuilt.add(specialized);
-    }
-    return changed ? TypeSet.of(rebuilt) : typeSet;
-  }
-
-  /**
-   * Применяет {@code mapper} к каждому {@link TypeRef} в {@link TypeSet}.
-   * <p>
-   * Нужно, чтобы после структурной специализации привести полученные ссылки к
-   * каноническим — тем, что зарегистрированы в реестре под этим именем. Иначе за одним
-   * именем оказываются две разные ссылки, различающиеся только {@link TypeKind},
-   * и объединение наборов их не схлопывает.
-   *
-   * @param typeSet исходный набор.
-   * @param mapper  преобразование ссылки.
-   * @return набор с преобразованными ссылками; исходный, если ни одна не изменилась.
-   */
-  public static TypeSet map(TypeSet typeSet, UnaryOperator<TypeRef> mapper) {
-    if (typeSet == null || typeSet.isEmpty()) {
-      return typeSet;
-    }
-    var rebuilt = new ArrayList<TypeRef>(typeSet.refs().size());
-    boolean changed = false;
-    for (var ref : typeSet.refs()) {
-      var mapped = mapper.apply(ref);
-      if (!mapped.equals(ref)) {
-        changed = true;
-      }
-      rebuilt.add(mapped);
     }
     return changed ? TypeSet.of(rebuilt) : typeSet;
   }
