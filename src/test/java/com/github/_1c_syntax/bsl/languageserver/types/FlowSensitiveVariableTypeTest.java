@@ -270,6 +270,17 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
     assertThat(qnames(types)).containsExactly("Строка");
   }
 
+  @Test
+  void undefinedFromDeclarationSurvivesMergeWithBranchAssignment() {
+    // given: «Перем ТолькоВВетке;», присваивание только внутри условия.
+    // when
+    var types = at("ПослеУсловия = ТолькоВВетке", "ПослеУсловия = ".length());
+
+    // then: путь мимо ветки приносит значение от объявления, поэтому после слияния
+    // видны оба состояния.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Булево");
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
     var documentContext = doc();
     var content = documentContext.getContent();

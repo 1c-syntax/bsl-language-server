@@ -210,8 +210,10 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // when
     var types = typeService.typesAt(referenceOf(consumer, variable("КонтроллерПоМаршруту")));
 
-    // then
-    assertThat(types.isEmpty()).isTrue();
+    // then: тип не внедрён — у переменной осталось «Неопределено» от объявления «Перем».
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
   }
 
   @Test
@@ -241,15 +243,17 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   @Test
-  void returnsEmptyForUnknownCollectionName() {
+  void doesNotInjectForUnknownCollectionName() {
     // given: имя коллекции не встречается ни как зарегистрированная реализация,
     // ни как имя типа.
 
     // when
     var types = typeService.typesAt(referenceOf(consumer, variable("НеизвестнаяКоллекция")));
 
-    // then
-    assertThat(types.isEmpty()).isTrue();
+    // then: тип не внедрён — у переменной осталось «Неопределено» от объявления «Перем».
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
   }
 
   @Test
@@ -286,8 +290,11 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // when
     var types = typeService.typesAt(referenceOf(consumer, variable("КомпозитБезПереноса")));
 
-    // then
-    assertThat(types.isEmpty()).isTrue();
+    // then: значение по умолчанию не перенесено, тип не внедрён — осталось «Неопределено»
+    // от объявления «Перем».
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
   }
 
   @Test

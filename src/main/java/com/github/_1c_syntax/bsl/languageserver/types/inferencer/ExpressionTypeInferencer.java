@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.TrailingCommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
@@ -97,6 +98,9 @@ public class ExpressionTypeInferencer {
   /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
   private static final String ELEMENT_GETTER = "Получить";
 
+  /** Конструктор объекта: выполняется при создании, до любого обращения к полям. */
+  private static final String CONSTRUCTOR_NAME = "ПриСозданииОбъекта";
+
   private static final TypeRef NUMBER = new TypeRef(TypeKind.PRIMITIVE, "Число");
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
   private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
@@ -110,7 +114,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final FormExpressionInference formExpressionInference;
-  private final VariableCommentTypeResolver variableCommentTypeResolver;
+  private final TrailingCommentTypeResolver trailingCommentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
@@ -1025,7 +1029,54 @@ public class ExpressionTypeInferencer {
     for (var source : variableTypeSources) {
       entry = entry.union(source.typesOf(variable));
     }
+    if (entry.isEmpty() && declaredByPerem(variable) && !assignedBeforeAnyUse(variable)) {
+      // Переменная, объявленная записью «Перем», до первого присваивания содержит
+      // «Неопределено» — это её значение, а не отсутствие сведений о типе. Дальше по телу
+      // присваивания его перекрывают, а в точке слияния путей он остаётся, если хотя бы
+      // один путь до присваивания не дошёл.
+      return TypeSet.of(UNDEFINED);
+    }
     return entry;
+  }
+
+  /**
+   * Объявлена ли переменная записью {@code Перем} — в отличие от переменной, созданной
+   * первым присваиванием, и от параметра метода.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если переменная объявлена записью {@code Перем}.
+   */
+  private static boolean declaredByPerem(VariableSymbol variable) {
+    var kind = variable.getKind();
+    return kind == VariableKind.LOCAL || kind == VariableKind.MODULE;
+  }
+
+  /**
+   * Есть ли у переменной модуля присваивание, которое заведомо выполняется раньше любого
+   * обращения к ней: в теле модуля или в конструкторе объекта.
+   * <p>
+   * Тело модуля отрабатывает раньше всех его процедур, а конструктор — при создании
+   * объекта, до того как к его полям кто-то обратится. Значит состояние «до первого
+   * присваивания» наблюдать неоткуда, и «Неопределено» от объявления в тип не входит.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если такое присваивание есть.
+   */
+  private boolean assignedBeforeAnyUse(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.MODULE) {
+      return false;
+    }
+    var methods = variable.getOwner().getSymbolTree().getMethods();
+    for (var position : definitionPositions(variable)) {
+      var enclosing = methods.stream()
+        .filter(method -> Ranges.containsPosition(method.getRange(), position))
+        .findFirst()
+        .orElse(null);
+      if (enclosing == null || CONSTRUCTOR_NAME.equalsIgnoreCase(enclosing.getName())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -1095,7 +1146,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(variableCommentTypeResolver.ofAssignment(owner, assignment));
+      return types.union(trailingCommentTypeResolver.ofAssignment(owner, assignment));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1147,7 +1198,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(variableCommentTypeResolver.ofAssignment(owner, assignment.get()));
+      result = result.union(trailingCommentTypeResolver.ofAssignment(owner, assignment.get()));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:

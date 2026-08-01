@@ -88,6 +88,52 @@ class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
       .containsExactly("Число");
   }
 
+  @Test
+  void moduleVarWithoutCommentIsUndefined() {
+    // given: объявление без типизирующего комментария и без присваиваний.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "Д = БезКомментария", "Д = ".length());
+
+    // then: «Перем» без иных сведений о типе даёт значение «Неопределено».
+    assertThat(types.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Неопределено");
+  }
+
+  @Test
+  void localPeremWithoutCommentIsUndefined() {
+    // given / when
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+    var types = inferAtMarker(documentContext, "Ж = БезТипа", "Ж = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Неопределено");
+  }
+
+  @Test
+  void moduleVarWithSeeRefCommentTakesConstructorType() {
+    // given: «Перем Х; // см. НовыйОбъектДанных» — ссылка на функцию того же модуля.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "Е = СсылкаНаКонструктор", "Е = ".length());
+
+    // then: приходит тип из описания функции вместе с её полями.
+    assertThat(types.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Структура");
+    var structureRef = types.refs().iterator().next();
+    assertThat(types.getLocalFields(structureRef).keySet())
+      .containsExactlyInAnyOrder("Ссылка", "Количество");
+  }
+
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     int markerStart = content.indexOf(marker);
