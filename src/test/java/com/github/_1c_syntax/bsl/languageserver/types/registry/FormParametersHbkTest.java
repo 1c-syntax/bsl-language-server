@@ -152,6 +152,22 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void eventContractIsSpecializedByFormOwner() {
+    // `ТекущийОбъект` у ПриЗаписиНаСервере объявлен обобщённо —
+    // `ДокументОбъект.<Имя документа>`, — а на конкретной форме известно, какой
+    // именно объект туда придёт.
+    var handler = member(DOCUMENT_FORM, MemberKind.EVENT, "ПриЗаписиНаСервере");
+    assertThat(handler).isNotNull();
+
+    var currentObject = handler.signatures().get(0).parameters().stream()
+      .filter(parameter -> "ТекущийОбъект".equals(parameter.bilingualName().ru()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(currentObject.types().refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("ДокументОбъект.Документ1");
+  }
+
+  @Test
   void objectInfrastructureIsFilteredOutOfFormData() {
     // Полный набор инфраструктурных свойств объекта есть только в синтакс-помощнике:
     // в JSON-фолбэке из них объявлен один ЭтотОбъект.

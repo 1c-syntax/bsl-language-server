@@ -361,8 +361,12 @@ public class FormTypesProvider {
     var attributeTypes = prepareAttributeTypes(data.getAttributes(), kind, suffixRu);
     typeRegistry.registerMemberSource(formRef,
       () -> buildAttributeMembers(data.getAttributes(), attributeTypes), FileType.BSL);
-    typeRegistry.registerMemberSource(formRef,
-      () -> concat(buildEventMembers(collectHandlers(form, kind, baseRef, extensionRef)),
+    // Override, а не обычный источник: если обработчик назван каноническим именем
+    // события (так конфигуратор делает по умолчанию), то же имя приходит и от
+    // расширения — но там тип параметра остаётся обобщённым
+    // (`ДокументОбъект.<Имя документа>`), а здесь подставлен владелец формы.
+    typeRegistry.registerMemberOverride(formRef,
+      () -> concat(buildEventMembers(collectHandlers(form, kind, baseRef, extensionRef), ownerName(form)),
         buildCommandHandlers(data.getCommands())), FileType.BSL);
     // Роли считаются сразу: имена дешевле членов (в реестр не ходим), а знать, кем
     // объявлен обработчик, нужно снаружи системы типов — стандартным областям модуля
@@ -1287,7 +1291,7 @@ public class FormTypesProvider {
    * Если контракт не нашёлся (нет HBK либо событие неизвестно), член всё равно
    * регистрируется: факт «этот метод — обработчик события» важен сам по себе.
    */
-  private List<MemberDescriptor> buildEventMembers(List<HandlerSource> handlers) {
+  private List<MemberDescriptor> buildEventMembers(List<HandlerSource> handlers, String ownerName) {
     if (handlers.isEmpty()) {
       return List.of();
     }
@@ -1302,7 +1306,7 @@ public class FormTypesProvider {
       var descriptor = contract == null
         ? MemberDescriptor.event(handlerName, "", List.of())
         .withBilingualDescription(unknownEventDescription(handler.event()))
-        : contract;
+        : specializeByOwner(contract, ownerName);
       if (source.ofElement()) {
         descriptor = withElementParameter(descriptor, source.contractTypes());
       }
@@ -1310,6 +1314,20 @@ public class FormTypesProvider {
         descriptor.withBilingualName(neutral(handlerName)));
     }
     return List.copyOf(byName.values());
+  }
+
+  /**
+   * Подставляет имя владельца формы в generic-плейсхолдеры контракта события. Тип
+   * параметра объявлен обобщённо ({@code ТекущийОбъект} у {@code ПриЗаписиНаСервере} —
+   * это {@code ДокументОбъект.<Имя документа>}), а на конкретной форме известно, какой
+   * именно объект туда придёт.
+   */
+  private static MemberDescriptor specializeByOwner(MemberDescriptor contract, String ownerName) {
+    if (ownerName.isEmpty()) {
+      return contract;
+    }
+    var placeholder = PlaceholderBinder.singlePlaceholder(contract);
+    return placeholder == null ? contract : contract.specialize(Map.of(placeholder, ownerName));
   }
 
   /** Первый параметр обработчика события элемента — сам элемент. */
