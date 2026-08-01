@@ -631,14 +631,22 @@ public class ExpressionTypeInferencer {
    * Если {@code ret} совпадает с одним из element-ref'ов коллекции на левом
    * типе — построить TypeSet с этим ref'ом и его {@code localFields} из
    * {@code elementSet} (то есть «передать» накопленные колонки/поля строки).
+   * Если же {@code ret} — коллекция, элемент которой и есть такая строка
+   * ({@code Дерево.Строки}), уточнение переезжает внутрь этой коллекции.
    * Иначе — обычный {@link TypeSet#of(TypeRef)}.
    */
-  @Nullable
-  private static TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
-    if (!elementSet.refs().contains(ret)) {
-      return TypeSet.of(ret);
+  private TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
+    if (elementSet.refs().contains(ret)) {
+      return TypeSet.of(ret).withFields(ret, elementSet.getLocalFields(ret));
     }
-    return TypeSet.of(ret).withFields(ret, elementSet.getLocalFields(ret));
+    var carried = TypeSet.EMPTY;
+    for (var elementRef : typeRegistry.getDefaultElementTypes(ret).refs()) {
+      if (elementSet.refs().contains(elementRef)) {
+        carried = carried.union(
+          TypeSet.of(elementRef).withFields(elementRef, elementSet.getLocalFields(elementRef)));
+      }
+    }
+    return carried.isEmpty() ? TypeSet.of(ret) : TypeSet.of(ret).withElement(ret, carried);
   }
 
   /**
