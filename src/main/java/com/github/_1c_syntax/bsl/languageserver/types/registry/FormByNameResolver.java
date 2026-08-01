@@ -66,10 +66,10 @@ public class FormByNameResolver {
    * на котором записана ссылка.
    */
   private static final List<String> FORM_TYPE_PREFIXES = List.of(
-    FormPlatformTypes.FormKind.MANAGED.baseTypeRu(),
-    FormPlatformTypes.FormKind.MANAGED.baseTypeEn(),
-    FormPlatformTypes.FormKind.ORDINARY.baseTypeRu(),
-    FormPlatformTypes.FormKind.ORDINARY.baseTypeEn()
+    FormKind.MANAGED.baseTypeRu(),
+    FormKind.MANAGED.baseTypeEn(),
+    FormKind.ORDINARY.baseTypeRu(),
+    FormKind.ORDINARY.baseTypeEn()
   );
 
   /**

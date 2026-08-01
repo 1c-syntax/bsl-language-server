@@ -238,11 +238,11 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
     // и расширение таблицы под него. Имена не выводятся друг из друга — у «выбора»
     // тип называется `ВыбранныеПоляКомпоновкиДанных`, — поэтому каждое проверяется
     // по синтакс-помощнику, иначе опечатка молча оставит таблицу без свойств.
-    for (var dataKind : FormPlatformTypes.TableDataKind.values()) {
+    for (var dataKind : TableDataKind.values()) {
       assertThat(typeRegistry.resolve(dataKind.extensionName()))
         .as("расширение %s", dataKind.extensionName())
         .isPresent();
-      if (dataKind == FormPlatformTypes.TableDataKind.TABULAR_SECTION) {
+      if (dataKind == TableDataKind.TABULAR_SECTION) {
         // Единственный вид, чей суффикс — не имя типа, а семейство: у табличной части
         // тип свой на каждый объект (`ДокументТабличнаяЧасть.Заказ`).
         continue;

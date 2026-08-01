@@ -91,7 +91,7 @@ final class FormPlatformTypes {
   private static final String FORM_TABLE = "ТаблицаФормы";
 
   /** Общая часть имени расширений таблицы формы — их два десятка. */
-  private static final String TABLE_EXTENSION_PREFIX = "Расширение таблицы формы для ";
+  static final String TABLE_EXTENSION_PREFIX = "Расширение таблицы формы для ";
   private static final String FORM_ITEM_ADDITION = "ДополнениеЭлементаФормы";
 
   /** Свойство таблицы формы, отдающее текущую строку данных. */
@@ -202,7 +202,7 @@ final class FormPlatformTypes {
   static final String FORM_DATA_COLLECTION_EN = "FormDataCollection";
 
   /** Идентификатор строки данных формы (см. {@link TableDataKind#rowIdTypeName}). */
-  private static final String NUMBER_RU = "Число";
+  static final String NUMBER_RU = "Число";
 
   /** Строка коллекции данных формы. */
   static final String FORM_DATA_COLLECTION_ITEM_RU = "ДанныеФормыЭлементКоллекции";
@@ -248,6 +248,60 @@ final class FormPlatformTypes {
     // Набор записей.
     "Отбор", "Записывать", "РасширенныеРежимыЗамещения");
 
+  /**
+   * Расширения обычной формы по объекту-владельцу: у списочной роли формы одно,
+   * у формы одного объекта — другое (см. {@link #ordinaryExtensionTypeName}).
+   * У журнала документов, критерия отбора, отчёта, обработки и константы форма ровно
+   * одна, и обе роли ведут на одно расширение: в mdclasses она приходит не формой
+   * списка, а основной (designer-свойство {@code <DefaultForm>}).
+   *
+   * @param listForm расширение формы списка; {@code null} — у вида её не бывает
+   * @param itemForm расширение формы одного объекта; {@code null} — её не бывает
+   */
+  private record OrdinaryExtension(@Nullable String listForm, @Nullable String itemForm) {
+
+    /** Вид, у которого форма одна на все роли. */
+    static OrdinaryExtension of(String single) {
+      return new OrdinaryExtension(single, single);
+    }
+  }
+
+  private static final Map<MDOType, OrdinaryExtension> ORDINARY_EXTENSION_BY_OWNER = Map.ofEntries(
+    Map.entry(MDOType.CATALOG,
+      new OrdinaryExtension("Расширение формы списка справочника", "Расширение формы элемента справочника")),
+    Map.entry(MDOType.DOCUMENT,
+      new OrdinaryExtension("Расширение формы списка документов", "Расширение формы документа")),
+    Map.entry(MDOType.DOCUMENT_JOURNAL, OrdinaryExtension.of("Расширение формы журнала документов")),
+    Map.entry(MDOType.TASK,
+      new OrdinaryExtension("Расширение формы списка задач", "Расширение формы задачи")),
+    Map.entry(MDOType.BUSINESS_PROCESS,
+      new OrdinaryExtension("Расширение формы списка бизнес-процессов",
+        "Расширение формы объекта бизнес-процесс")),
+    Map.entry(MDOType.CHART_OF_CHARACTERISTIC_TYPES,
+      new OrdinaryExtension("Расширение формы списка видов характеристик",
+        "Расширение формы элемента вида характеристик")),
+    Map.entry(MDOType.CHART_OF_ACCOUNTS,
+      new OrdinaryExtension("Расширение формы списка плана счетов",
+        "Расширение формы элемента плана счетов")),
+    Map.entry(MDOType.CHART_OF_CALCULATION_TYPES,
+      new OrdinaryExtension("Расширение формы списка видов расчета", "Расширение формы вида расчета")),
+    Map.entry(MDOType.EXCHANGE_PLAN,
+      new OrdinaryExtension("Расширение формы списка узлов", "Расширение формы узла")),
+    Map.entry(MDOType.ENUM, new OrdinaryExtension("Расширение формы списка перечисления", null)),
+    Map.entry(MDOType.FILTER_CRITERION, OrdinaryExtension.of("Расширение формы критерия отбора")),
+    Map.entry(MDOType.REPORT, OrdinaryExtension.of("Расширение формы отчета")),
+    Map.entry(MDOType.DATA_PROCESSOR, OrdinaryExtension.of("Расширение формы обработки")),
+    Map.entry(MDOType.CONSTANT, OrdinaryExtension.of("Расширение формы констант")),
+    Map.entry(MDOType.INFORMATION_REGISTER,
+      new OrdinaryExtension("Расширение формы списка записей регистра сведений",
+        "Расширение формы записи регистра сведений")),
+    Map.entry(MDOType.ACCUMULATION_REGISTER,
+      new OrdinaryExtension("Расширение формы списка записей регистра накопления", null)),
+    Map.entry(MDOType.ACCOUNTING_REGISTER,
+      new OrdinaryExtension("Расширение формы списка записей регистра бухгалтерии", null)),
+    Map.entry(MDOType.CALCULATION_REGISTER,
+      new OrdinaryExtension("Расширение формы списка записей регистра расчета", null)));
+
   /** Имя свойства формы, отдающего структуру параметров. */
   static final String PARAMETERS_PROPERTY_RU = "Параметры";
   static final String PARAMETERS_PROPERTY_EN = "Parameters";
@@ -265,72 +319,6 @@ final class FormPlatformTypes {
   static final String COMMANDS_PROPERTY_EN = "Commands";
 
   private FormPlatformTypes() {
-  }
-
-  /** Базовый тип формы и тип коллекции её элементов — по виду формы. */
-  enum FormKind {
-    /** Управляемая форма (8.2+). */
-    MANAGED("ФормаКлиентскогоПриложения", "ClientApplicationForm",
-      "ВсеЭлементыФормы", "FormAllItems", "Элементы", "Items"),
-    /**
-     * Обычная форма (8.1 и режим совместимости). Имя коллекции элементов в HBK занято
-     * дважды: {@code ЭлементыФормы}/{@code Controls} — коллекция обычной формы,
-     * {@code ЭлементыФормы}/{@code FormItems} — подчинённые элементы группы управляемой
-     * формы. Здесь имеется в виду первая (её отдаёт свойство {@code Форма.ЭлементыФормы}).
-     */
-    ORDINARY("Форма", "Form",
-      "ЭлементыФормы", "Controls", "ЭлементыФормы", "Controls");
-
-    private final String baseTypeRu;
-    private final String baseTypeEn;
-    private final String itemsTypeRu;
-    private final String itemsTypeEn;
-    private final String itemsPropertyRu;
-    private final String itemsPropertyEn;
-
-    FormKind(String baseTypeRu, String baseTypeEn, String itemsTypeRu, String itemsTypeEn,
-             String itemsPropertyRu, String itemsPropertyEn) {
-      this.baseTypeRu = baseTypeRu;
-      this.baseTypeEn = baseTypeEn;
-      this.itemsTypeRu = itemsTypeRu;
-      this.itemsTypeEn = itemsTypeEn;
-      this.itemsPropertyRu = itemsPropertyRu;
-      this.itemsPropertyEn = itemsPropertyEn;
-    }
-
-    String baseTypeRu() {
-      return baseTypeRu;
-    }
-
-    String baseTypeEn() {
-      return baseTypeEn;
-    }
-
-    String itemsTypeRu() {
-      return itemsTypeRu;
-    }
-
-    String itemsTypeEn() {
-      return itemsTypeEn;
-    }
-
-    /** Имя свойства формы, отдающего коллекцию элементов. */
-    String itemsPropertyRu() {
-      return itemsPropertyRu;
-    }
-
-    String itemsPropertyEn() {
-      return itemsPropertyEn;
-    }
-
-    /**
-     * Вид формы по значению из mdclasses. {@link FormType#UNKNOWN} трактуется
-     * как управляемая: неопознанные формы встречаются только в битых выгрузках,
-     * а управляемые составляют подавляющее большинство.
-     */
-    static FormKind of(FormType formType) {
-      return formType == FormType.ORDINARY ? ORDINARY : MANAGED;
-    }
   }
 
   /**
@@ -376,46 +364,58 @@ final class FormPlatformTypes {
    * @return qualifiedName типа-расширения; {@code null}, если у вида его нет.
    */
   static @Nullable String itemExtensionTypeName(FormElementType elementType) {
-    return switch (elementType) {
-      // Группы.
-      case USUAL_GROUP -> "Расширение группы формы для обычной группы";
-      case PAGE -> "Расширение группы формы для страницы";
-      case PAGES -> "Расширение группы формы для страниц";
-      case POPUP -> "Расширение группы формы для подменю";
-      case COMMAND_BAR -> "Расширение группы формы для командной панели";
-      case BUTTON_GROUP -> "Расширение группы формы для группы кнопок";
-      case COLUMN_GROUP -> "Расширение группы формы для группы колонок";
-      // Поля.
-      case INPUT_FIELD -> "Расширение поля формы для поля ввода";
-      case LABEL_FIELD -> "Расширение поля формы для поля надписи";
-      case CHECK_BOX_FIELD -> "Расширение поля формы для поля флажка";
-      case RADIO_BUTTON_FIELD -> "Расширение поля формы для поля переключателя";
-      case PICTURE_FIELD -> "Расширение поля формы для поля картинки";
-      case CALENDAR_FIELD -> "Расширение поля формы для поля календаря";
-      case PERIOD_FIELD -> "Расширение поля формы для поля периода";
-      case PROGRESS_BAR_FIELD -> "Расширение поля формы для поля индикатора";
-      case TRACK_BAR_FIELD -> "Расширение поля формы для поля полосы регулирования";
-      case TEXT_DOCUMENT_FIELD -> "Расширение поля формы для поля текстового документа";
-      case SPREAD_SHEET_DOCUMENT_FIELD -> "Расширение поля формы для поля табличного документа";
-      case HTML_DOCUMENT_FIELD -> "Расширение поля формы для поля HTML-документа";
-      case FORMATTED_DOCUMENT_FIELD -> "Расширение поля формы для поля форматированного документа";
-      case PDF_DOCUMENT_FIELD -> "Расширение поля формы для поля PDF-документа";
-      case GRAPHICAL_SCHEMA_FIELD -> "Расширение поля формы для поля графической схемы";
-      case GEOGRAPHICAL_SCHEMA_FIELD -> "Расширение поля формы для поля географической схемы";
-      case CHART_FIELD -> "Расширение поля формы для поля диаграммы";
-      case GANTT_CHART_FIELD -> "Расширение поля формы для поля диаграммы Ганта";
-      case PLANNER_FIELD -> "Расширение поля формы для поля планировщика";
-      case DENDROGRAM_FIELD -> "Расширение поля формы для поля дендрограммы";
-      // Декорации.
-      case LABEL_DECORATION -> "Расширение декорации формы для надписи";
-      case PICTURE_DECORATION -> "Расширение декорации формы для картинки";
-      // Дополнения элемента.
-      case SEARCH_STRING_ADDITION -> "Расширение дополнения элемента формы для отображения строки поиска";
-      case VIEW_STATUS_ADDITION -> "Расширение дополнения элемента формы для отображения состояния просмотра";
-      case SEARCH_CONTROL_ADDITION -> "Расширение дополнения элемента формы для отображения управления поиском";
-      default -> null;
-    };
+    return ITEM_EXTENSION_BY_KIND.get(elementType);
   }
+
+  /**
+   * Тип-расширение по виду элемента формы — картой, а не разбором по видам: имя
+   * расширения ни от чего, кроме самого вида, не зависит (см.
+   * {@link #itemExtensionTypeName}). Виды, которых здесь нет, расширения не имеют.
+   */
+  private static final Map<FormElementType, String> ITEM_EXTENSION_BY_KIND = Map.ofEntries(
+    // Группы.
+    Map.entry(FormElementType.USUAL_GROUP, "Расширение группы формы для обычной группы"),
+    Map.entry(FormElementType.PAGE, "Расширение группы формы для страницы"),
+    Map.entry(FormElementType.PAGES, "Расширение группы формы для страниц"),
+    Map.entry(FormElementType.POPUP, "Расширение группы формы для подменю"),
+    Map.entry(FormElementType.COMMAND_BAR, "Расширение группы формы для командной панели"),
+    Map.entry(FormElementType.BUTTON_GROUP, "Расширение группы формы для группы кнопок"),
+    Map.entry(FormElementType.COLUMN_GROUP, "Расширение группы формы для группы колонок"),
+    // Поля.
+    Map.entry(FormElementType.INPUT_FIELD, "Расширение поля формы для поля ввода"),
+    Map.entry(FormElementType.LABEL_FIELD, "Расширение поля формы для поля надписи"),
+    Map.entry(FormElementType.CHECK_BOX_FIELD, "Расширение поля формы для поля флажка"),
+    Map.entry(FormElementType.RADIO_BUTTON_FIELD, "Расширение поля формы для поля переключателя"),
+    Map.entry(FormElementType.PICTURE_FIELD, "Расширение поля формы для поля картинки"),
+    Map.entry(FormElementType.CALENDAR_FIELD, "Расширение поля формы для поля календаря"),
+    Map.entry(FormElementType.PERIOD_FIELD, "Расширение поля формы для поля периода"),
+    Map.entry(FormElementType.PROGRESS_BAR_FIELD, "Расширение поля формы для поля индикатора"),
+    Map.entry(FormElementType.TRACK_BAR_FIELD, "Расширение поля формы для поля полосы регулирования"),
+    Map.entry(FormElementType.TEXT_DOCUMENT_FIELD, "Расширение поля формы для поля текстового документа"),
+    Map.entry(FormElementType.SPREAD_SHEET_DOCUMENT_FIELD,
+      "Расширение поля формы для поля табличного документа"),
+    Map.entry(FormElementType.HTML_DOCUMENT_FIELD, "Расширение поля формы для поля HTML-документа"),
+    Map.entry(FormElementType.FORMATTED_DOCUMENT_FIELD,
+      "Расширение поля формы для поля форматированного документа"),
+    Map.entry(FormElementType.PDF_DOCUMENT_FIELD, "Расширение поля формы для поля PDF-документа"),
+    Map.entry(FormElementType.GRAPHICAL_SCHEMA_FIELD, "Расширение поля формы для поля графической схемы"),
+    Map.entry(FormElementType.GEOGRAPHICAL_SCHEMA_FIELD,
+      "Расширение поля формы для поля географической схемы"),
+    Map.entry(FormElementType.CHART_FIELD, "Расширение поля формы для поля диаграммы"),
+    Map.entry(FormElementType.GANTT_CHART_FIELD, "Расширение поля формы для поля диаграммы Ганта"),
+    Map.entry(FormElementType.PLANNER_FIELD, "Расширение поля формы для поля планировщика"),
+    Map.entry(FormElementType.DENDROGRAM_FIELD, "Расширение поля формы для поля дендрограммы"),
+    // Декорации.
+    Map.entry(FormElementType.LABEL_DECORATION, "Расширение декорации формы для надписи"),
+    Map.entry(FormElementType.PICTURE_DECORATION, "Расширение декорации формы для картинки"),
+    // Дополнения элемента.
+    Map.entry(FormElementType.SEARCH_STRING_ADDITION,
+      "Расширение дополнения элемента формы для отображения строки поиска"),
+    Map.entry(FormElementType.VIEW_STATUS_ADDITION,
+      "Расширение дополнения элемента формы для отображения состояния просмотра"),
+    Map.entry(FormElementType.SEARCH_CONTROL_ADDITION,
+      "Расширение дополнения элемента формы для отображения управления поиском"));
+
 
   /**
    * Суффикс синтетического типа элемента — имя его вида ({@code ОбычнаяГруппа},
@@ -427,156 +427,6 @@ final class FormPlatformTypes {
   }
 
   
-  /**
-   * Вид данных, отображаемых таблицей формы. Расширение таблицы — единственное, что
-   * определяется не видом элемента, а типом данных за ним: одна и та же
-   * {@code ТаблицаФормы} над динамическим списком и над табличной частью получает
-   * разные наборы свойств и событий.
-   *
-   * @param suffix        суффикс синтетического типа ({@code ТаблицаФормы.ДинамическийСписок})
-   * @param extensionName qualifiedName расширения таблицы в синтакс-помощнике
-   */
-  enum TableDataKind {
-    DYNAMIC_LIST("ДинамическийСписок", TABLE_EXTENSION_PREFIX + "динамического списка"),
-    TABULAR_SECTION("ТабличнаяЧасть", TABLE_EXTENSION_PREFIX + "табличных частей"),
-    VALUE_TABLE("ТаблицаЗначений", TABLE_EXTENSION_PREFIX + "таблицы значений"),
-    VALUE_TREE("ДеревоЗначений", TABLE_EXTENSION_PREFIX + "дерева значений"),
-    VALUE_LIST("СписокЗначений", TABLE_EXTENSION_PREFIX + "списка значений"),
-    // Части компоновщика настроек. Таблица над ними смотрит не на реквизит, а вглубь:
-    // `Отчет.КомпоновщикНастроек.Настройки.Выбор`. Имена типов сверены по
-    // синтакс-помощнику (`НастройкиКомпоновкиДанных`), а не выведены из имён расширений:
-    // у `Выбор` тип называется `ВыбранныеПоляКомпоновкиДанных`, а не `ВыборКомпоновкиДанных`.
-    DCS_SELECTED_FIELDS("ВыбранныеПоляКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "выбранных полей компоновки данных"),
-    DCS_FILTER("ОтборКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "отбора компоновки данных"),
-    DCS_ORDER("ПорядокКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "порядка компоновки данных"),
-    DCS_CONDITIONAL_APPEARANCE("УсловноеОформлениеКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "условного оформления компоновки данных"),
-    DCS_DATA_PARAMETERS("ЗначенияПараметровДанныхКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "значений параметров компоновки данных"),
-    DCS_USER_FIELDS("ПользовательскиеПоляКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "пользовательских полей компоновки данных"),
-    DCS_AVAILABLE_FIELDS("ДоступныеПоляКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "доступных полей компоновки данных"),
-    DCS_SETTINGS_STRUCTURE("КоллекцияЭлементовСтруктурыНастроекКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "структуры настроек компоновки данных"),
-    DCS_SETTINGS_STRUCTURE_ITEM("СтруктураНастроекКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "объекта структура настроек компоновки данных"),
-    DCS_GROUP_FIELDS("ПоляГруппировкиКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "полей группировки компоновки данных"),
-    DCS_APPEARANCE_FIELDS("ОформляемыеПоляКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "оформляемых полей компоновки данных"),
-    DCS_USER_SETTINGS("ПользовательскиеНастройкиКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "пользовательских настроек компоновки данных"),
-    DCS_USER_FIELD_CASE_VARIANTS("ВариантыПользовательскогоПоляВыборКомпоновкиДанных",
-      TABLE_EXTENSION_PREFIX + "вариантов пользовательского поля выбора компоновки данных"),
-    // Не компоновка: таблица над самой диаграммой Ганта и над отбором динамического списка.
-    GANTT_CHART("ДиаграммаГанта",
-      TABLE_EXTENSION_PREFIX + "диаграммы Ганта"),
-    FILTER("Отбор",
-      TABLE_EXTENSION_PREFIX + "отбора");
-
-    private final String suffix;
-    private final String extensionName;
-
-    TableDataKind(String suffix, String extensionName) {
-      this.suffix = suffix;
-      this.extensionName = extensionName;
-    }
-
-    String suffix() {
-      return suffix;
-    }
-
-    String extensionName() {
-      return extensionName;
-    }
-
-    /**
-     * Тип идентификатора строки — того, что лежит в {@code ТекущаяСтрока},
-     * {@code ТекущийРодитель} и в элементах {@code ВыделенныеСтроки}. Синтакс-помощник
-     * называет его в описании расширения: у частей компоновщика настроек это
-     * {@code ИдентификаторКомпоновкиДанных}, у диаграммы Ганта — свой идентификатор.
-     * Там, где таблица смотрит на данные формы, описание типа не называет, но он известен
-     * из самих данных: строку адресует числовой идентификатор
-     * ({@code ДанныеФормыЭлементКоллекции.ПолучитьИдентификатор}, обратно —
-     * {@code ДанныеФормыКоллекция.НайтиПоИдентификатору}).
-     *
-     * @return имя типа; {@code null} — тип неизвестен: у динамического списка это
-     *   значение ключевого поля (нужен источник данных, mdclasses#671), у списка значений
-     *   и отбора описание говорит только «идентификатор строки».
-     */
-    @Nullable String rowIdTypeName() {
-      return switch (this) {
-        case GANTT_CHART -> "ИдентификаторЗначенияДиаграммыГанта";
-        case TABULAR_SECTION, VALUE_TABLE, VALUE_TREE -> NUMBER_RU;
-        case DYNAMIC_LIST, VALUE_LIST, FILTER -> null;
-        default -> "ИдентификаторКомпоновкиДанных";
-      };
-    }
-
-    /**
-     * Тип, который отдают {@code ТекущиеДанные} и метод {@code ДанныеСтроки} у видов
-     * данных, где своей строки нет: части компоновщика настроек, отбор и диаграмма
-     * Ганта отдают {@code ДанныеФормыСтруктура} со свойствами-колонками.
-     * <p>
-     * Слову «структура» из описания расширения верить нельзя: тип {@code Структура}
-     * таблица формы не отдаёт нигде. Проверено на платформе:
-     * {@code ТипЗнч(Элементы.ТабличнаяЧасть1.ТекущиеДанные)} даёт
-     * {@code ДанныеФормыЭлементКоллекции}, а у таблиц над настройками компоновки
-     * ({@code КомпоновщикНастроек.Настройки} и её {@code Отбор}) —
-     * {@code ДанныеФормыСтруктура}. Оно и логично: таблица формы работает с данными
-     * формы, а не с обычными коллекциями.
-     *
-     * @return имя типа; {@code null} — у вида данных строка своя (зеркало табличной
-     *   части, таблицы или дерева значений, строка динамического списка), и тип
-     *   берётся оттуда: там видны колонки.
-     */
-    @Nullable String currentDataTypeName() {
-      return switch (this) {
-        case DYNAMIC_LIST, TABULAR_SECTION, VALUE_TABLE, VALUE_TREE -> null;
-        default -> FORM_DATA_STRUCTURE_RU;
-      };
-    }
-
-    /**
-     * Вид данных по типу реквизита, на который смотрит таблица.
-     *
-     * @param attributeTypeRu ru-имя типа реквизита в корне {@code ПутьКДанным} таблицы;
-     *                        пусто, если реквизит не найден.
-     * @param nested          {@code true}, если {@code ПутьКДанным} уходит вглубь
-     *                        реквизита ({@code Объект.ТабличнаяЧасть1}).
-     * @return вид данных; {@code null}, если тип не опознан и расширения не будет.
-     */
-    /**
-     * Вид данных по точному имени типа — без догадок про вложенность пути. Так
-     * опознаются части компоновщика настроек, до которых доходит проход
-     * {@code ПутьКДанным} через реестр.
-     *
-     * @param typeRu ru-имя типа данных, на которые смотрит таблица.
-     * @return вид данных; {@code null}, если тип не опознан.
-     */
-    static @Nullable TableDataKind byTypeName(String typeRu) {
-      for (var kind : values()) {
-        if (kind != TABULAR_SECTION && kind.suffix.equalsIgnoreCase(typeRu)) {
-          return kind;
-        }
-      }
-      return null;
-    }
-
-    static @Nullable TableDataKind of(String attributeTypeRu, boolean nested) {
-      var byType = byTypeName(attributeTypeRu);
-      if (byType != null) {
-        return byType;
-      }
-      // Таблица над частью реквизита — это табличная часть объекта
-      // (`Объект.Товары`): собственного типа у неё нет, опознаём по вложенности пути.
-      return nested ? TABULAR_SECTION : null;
-    }
-  }
 
   /** Базовый рантайм-тип таблицы формы — общий для всех видов её данных. */
   static String tableTypeName() {
@@ -672,35 +522,11 @@ final class FormPlatformTypes {
    * @return qualifiedName расширения; {@code null}, если для такой пары расширения нет.
    */
   static @Nullable String ordinaryExtensionTypeName(MDOType ownerType, DefaultFormKind formKind) {
-    var list = isListForm(formKind);
-    return switch (ownerType) {
-      case CATALOG -> list ? "Расширение формы списка справочника" : "Расширение формы элемента справочника";
-      case DOCUMENT -> list ? "Расширение формы списка документов" : "Расширение формы документа";
-      // У журнала и критерия отбора форма ровно одна, и в mdclasses она приходит
-      // не как форма списка, а как основная (designer-свойство <DefaultForm>).
-      case DOCUMENT_JOURNAL -> "Расширение формы журнала документов";
-      case TASK -> list ? "Расширение формы списка задач" : "Расширение формы задачи";
-      case BUSINESS_PROCESS ->
-        list ? "Расширение формы списка бизнес-процессов" : "Расширение формы объекта бизнес-процесс";
-      case CHART_OF_CHARACTERISTIC_TYPES ->
-        list ? "Расширение формы списка видов характеристик" : "Расширение формы элемента вида характеристик";
-      case CHART_OF_ACCOUNTS ->
-        list ? "Расширение формы списка плана счетов" : "Расширение формы элемента плана счетов";
-      case CHART_OF_CALCULATION_TYPES ->
-        list ? "Расширение формы списка видов расчета" : "Расширение формы вида расчета";
-      case EXCHANGE_PLAN -> list ? "Расширение формы списка узлов" : "Расширение формы узла";
-      case ENUM -> list ? "Расширение формы списка перечисления" : null;
-      case FILTER_CRITERION -> "Расширение формы критерия отбора";
-      case REPORT -> "Расширение формы отчета";
-      case DATA_PROCESSOR -> "Расширение формы обработки";
-      case CONSTANT -> "Расширение формы констант";
-      case INFORMATION_REGISTER ->
-        list ? "Расширение формы списка записей регистра сведений" : "Расширение формы записи регистра сведений";
-      case ACCUMULATION_REGISTER -> list ? "Расширение формы списка записей регистра накопления" : null;
-      case ACCOUNTING_REGISTER -> list ? "Расширение формы списка записей регистра бухгалтерии" : null;
-      case CALCULATION_REGISTER -> list ? "Расширение формы списка записей регистра расчета" : null;
-      default -> null;
-    };
+    var extension = ORDINARY_EXTENSION_BY_OWNER.get(ownerType);
+    if (extension == null) {
+      return null;
+    }
+    return isListForm(formKind) ? extension.listForm() : extension.itemForm();
   }
 
   /**
@@ -829,74 +655,6 @@ final class FormPlatformTypes {
     return (dot < 0 ? typeNameRu : typeNameRu.substring(0, dot)).toLowerCase(Locale.ROOT);
   }
 
-  /**
-   * Вид данных формы — тип, в который платформа превращает реквизит управляемой формы.
-   * Прикладные типы на форму не переносятся: клиент видит не объект, а его данные.
-   * <p>
-   * Соответствие задано платформой и от конфигурации не зависит: объект (в том числе
-   * менеджер значения константы и менеджер записи регистра) становится структурой,
-   * набор записей — структурой с коллекцией записей, таблица значений — коллекцией,
-   * дерево значений — деревом. Ссылки, примитивы, {@code СписокЗначений} и прочие
-   * переносимые типы остаются собой и в этот перечень не входят.
-   *
-   * @param baseTypeRu    ru-имя платформенного типа данных формы
-   * @param baseTypeEn    en-имя того же типа
-   * @param specializable {@code true}, если состав свойств известен и под реквизит
-   *                      имеет смысл заводить специализацию по прикладному типу
-   * @param itemTypeRu    ru-имя типа строки; {@code null} — вид не коллекция
-   * @param itemTypeEn    en-имя типа строки
-   */
-  enum FormDataKind {
-    STRUCTURE(FORM_DATA_STRUCTURE_RU, FORM_DATA_STRUCTURE_EN, true, null, null),
-    STRUCTURE_WITH_COLLECTION("ДанныеФормыСтруктураСКоллекцией", "FormDataStructureWithCollection",
-      true, null, null),
-    COLLECTION(FORM_DATA_COLLECTION_RU, FORM_DATA_COLLECTION_EN, false,
-      FORM_DATA_COLLECTION_ITEM_RU, FORM_DATA_COLLECTION_ITEM_EN),
-    TREE("ДанныеФормыДерево", "FormDataTree", false, "ДанныеФормыЭлементДерева", "FormDataTreeItem");
-
-    private final String baseTypeRu;
-    private final String baseTypeEn;
-    private final boolean specializable;
-    private final @Nullable String itemTypeRu;
-    private final @Nullable String itemTypeEn;
-
-    FormDataKind(String baseTypeRu, String baseTypeEn, boolean specializable,
-                 @Nullable String itemTypeRu, @Nullable String itemTypeEn) {
-      this.baseTypeRu = baseTypeRu;
-      this.baseTypeEn = baseTypeEn;
-      this.specializable = specializable;
-      this.itemTypeRu = itemTypeRu;
-      this.itemTypeEn = itemTypeEn;
-    }
-
-    String baseTypeRu() {
-      return baseTypeRu;
-    }
-
-    String baseTypeEn() {
-      return baseTypeEn;
-    }
-
-    /**
-     * {@code true}, если состав свойств данных формы повторяет прикладной тип реквизита
-     * и под него стоит завести специализацию. У таблиц и деревьев значений прикладного
-     * типа с нужным составом нет — их колонки объявлены в самой форме, поэтому
-     * специализируются они не отсюда, а от {@link #itemTypeRu()}.
-     */
-    boolean specializable() {
-      return specializable;
-    }
-
-    /** Тип строки коллекции; {@code null} — вид не коллекция, строк у него нет. */
-    @Nullable String itemTypeRu() {
-      return itemTypeRu;
-    }
-
-    /** En-имя типа строки; {@code null} — вид не коллекция. */
-    @Nullable String itemTypeEn() {
-      return itemTypeEn;
-    }
-  }
 
   /**
    * Переносится ли свойство прикладного типа в данные формы.

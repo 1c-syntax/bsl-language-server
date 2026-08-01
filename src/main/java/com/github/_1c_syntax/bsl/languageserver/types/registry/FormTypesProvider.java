@@ -33,8 +33,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.registry.FormPlatformTypes.FormKind;
-import com.github._1c_syntax.bsl.languageserver.types.registry.FormPlatformTypes.TableDataKind;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormKind;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TableDataKind;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.CommonForm;
@@ -185,8 +185,8 @@ public class FormTypesProvider {
   private final Map<FormElementType, TypeRef> itemKindTypes = new EnumMap<>(FormElementType.class);
 
   /** Тип на вид данных таблицы формы (см. {@link #registerTableDataKindTypes}). */
-  private final Map<FormPlatformTypes.TableDataKind, TypeRef> tableDataKindTypes =
-    new EnumMap<>(FormPlatformTypes.TableDataKind.class);
+  private final Map<TableDataKind, TypeRef> tableDataKindTypes =
+    new EnumMap<>(TableDataKind.class);
 
   /**
    * Тип данных формы по объявленному типу реквизита (см. {@link #registerFormData}).
@@ -293,7 +293,7 @@ public class FormTypesProvider {
     if (baseRef == null) {
       return;
     }
-    for (var dataKind : FormPlatformTypes.TableDataKind.values()) {
+    for (var dataKind : TableDataKind.values()) {
       var extensionRef = typeRegistry.resolve(dataKind.extensionName()).orElse(null);
       if (extensionRef == null) {
         continue;
@@ -321,10 +321,10 @@ public class FormTypesProvider {
    * <p>
    * Описание — не истина в последней инстанции: тип {@code Структура} таблица формы
    * не отдаёт нигде — там либо строка коллекции, либо {@code ДанныеФормыСтруктура}
-   * (см. {@link FormPlatformTypes.TableDataKind#currentDataTypeName}), — а тип
+   * (см. {@link TableDataKind#currentDataTypeName}), — а тип
    * идентификатора описание не называет вовсе, хотя он известен из самих данных формы.
    */
-  private void registerTableDataRules(FormPlatformTypes.TableDataKind dataKind, TypeRef tableRef) {
+  private void registerTableDataRules(TableDataKind dataKind, TypeRef tableRef) {
     var members = new ArrayList<MemberDescriptor>();
     var rowIdRef = resolveOrNull(dataKind.rowIdTypeName());
     if (rowIdRef != null) {
@@ -387,7 +387,7 @@ public class FormTypesProvider {
    * там оказывается строка именно этого вида данных. Колонки строки лягут на него же,
    * когда mdclasses начнёт отдавать источник данных списка (mdclasses#671).
    */
-  private void registerRowDataKindType(FormPlatformTypes.TableDataKind dataKind, TypeRef tableRef) {
+  private void registerRowDataKindType(TableDataKind dataKind, TypeRef tableRef) {
     var extensionName = FormPlatformTypes.rowDataExtensionName(dataKind);
     if (extensionName == null) {
       return;
@@ -1087,7 +1087,7 @@ public class FormTypesProvider {
    *   если колонок нет — специализировать тогда нечем.
    */
   private @Nullable TypeRef registerAttributeCollection(FormAttribute attribute,
-                                                        FormPlatformTypes.FormDataKind dataKind,
+                                                        FormDataKind dataKind,
                                                         FormKind kind, String suffixRu) {
     var itemTypeRu = Objects.requireNonNullElse(dataKind.itemTypeRu(), "");
     var itemTypeEn = Objects.requireNonNullElse(dataKind.itemTypeEn(), "");
@@ -1126,7 +1126,7 @@ public class FormTypesProvider {
    * Отображаемое имя остаётся базовым ({@code ДанныеФормыСтруктура}) — синтетическое
    * имя нужно реестру, а пользователю показывать надо реальный тип значения.
    */
-  private TypeRef registerFormData(TypeRef declaredRef, FormPlatformTypes.FormDataKind dataKind) {
+  private TypeRef registerFormData(TypeRef declaredRef, FormDataKind dataKind) {
     var baseRef = typeRegistry.resolve(dataKind.baseTypeRu()).orElse(null);
     var dataRef = registerFormDataMirror(dataKind.baseTypeRu(), dataKind.baseTypeEn(),
       typeRegistry.displayName(declaredRef, Language.RU),
@@ -1329,7 +1329,7 @@ public class FormTypesProvider {
     var walked = walkedDataKind(dataPath, separator, rootType);
     var dataKind = walked != null
       ? walked
-      : FormPlatformTypes.TableDataKind.of(rootType, separator >= 0);
+      : TableDataKind.of(rootType, separator >= 0);
     return dataKind == null ? null : tableDataKindTypes.get(dataKind);
   }
 
@@ -1359,7 +1359,7 @@ public class FormTypesProvider {
         return null;
       }
     }
-    return FormPlatformTypes.TableDataKind.byTypeName(current.qualifiedName());
+    return TableDataKind.byTypeName(current.qualifiedName());
   }
 
   /** Тип свойства с таким именем у типа; {@code null}, если свойства нет или он без типа. */

@@ -265,17 +265,17 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   @Test
   void objectFamiliesMapToFormDataKinds() {
     assertThat(FormPlatformTypes.formDataKindOf("ДокументОбъект.Документ1"))
-      .isEqualTo(FormPlatformTypes.FormDataKind.STRUCTURE);
+      .isEqualTo(FormDataKind.STRUCTURE);
     assertThat(FormPlatformTypes.formDataKindOf("КонстантаМенеджерЗначения.Константа1"))
-      .isEqualTo(FormPlatformTypes.FormDataKind.STRUCTURE);
+      .isEqualTo(FormDataKind.STRUCTURE);
     assertThat(FormPlatformTypes.formDataKindOf("РегистрСведенийНаборЗаписей.Регистр1"))
-      .isEqualTo(FormPlatformTypes.FormDataKind.STRUCTURE_WITH_COLLECTION);
+      .isEqualTo(FormDataKind.STRUCTURE_WITH_COLLECTION);
     assertThat(FormPlatformTypes.formDataKindOf("РегистрБухгалтерииНаборЗаписей.Регистр1"))
-      .isEqualTo(FormPlatformTypes.FormDataKind.STRUCTURE_WITH_COLLECTION);
+      .isEqualTo(FormDataKind.STRUCTURE_WITH_COLLECTION);
     assertThat(FormPlatformTypes.formDataKindOf("ТаблицаЗначений"))
-      .isEqualTo(FormPlatformTypes.FormDataKind.COLLECTION);
+      .isEqualTo(FormDataKind.COLLECTION);
     assertThat(FormPlatformTypes.formDataKindOf("ДеревоЗначений"))
-      .isEqualTo(FormPlatformTypes.FormDataKind.TREE);
+      .isEqualTo(FormDataKind.TREE);
   }
 
   @Test
@@ -398,20 +398,20 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
     // добавляет ЭтоГруппа), запасным — общее «Расширение объектов»: набор событий
     // у них один, и в JSON-фолбэке описано только общее.
     assertThat(FormPlatformTypes.extensionTypeNames("СправочникОбъект.Справочник1",
-      FormPlatformTypes.FormKind.MANAGED))
+      FormKind.MANAGED))
       .containsExactly("Расширение формы клиентского приложения для справочника",
         "Расширение формы клиентского приложения для объектов");
 
     // У отчёта события свои — подмена объектным расширением была бы враньём.
     assertThat(FormPlatformTypes.extensionTypeNames("ОтчетОбъект.Отчет1",
-      FormPlatformTypes.FormKind.MANAGED))
+      FormKind.MANAGED))
       .containsExactly("Расширение формы клиентского приложения для отчета");
 
     // Списочная форма членов уровня формы не получает, но параметры у неё есть.
     assertThat(FormPlatformTypes.extensionTypeNames("ДинамическийСписок",
-      FormPlatformTypes.FormKind.MANAGED)).isEmpty();
+      FormKind.MANAGED)).isEmpty();
     assertThat(FormPlatformTypes.parameterExtensionTypeNames("ДинамическийСписок",
-      FormPlatformTypes.FormKind.MANAGED))
+      FormKind.MANAGED))
       .containsExactly("Расширение формы клиентского приложения для динамического списка");
   }
 
@@ -420,7 +420,7 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
     // У обычной формы основной реквизит не достать — mdclasses не отдаёт её состав.
     // Зато известно, какой основной формой объекта она назначена, а это тот же признак.
     assertThat(FormPlatformTypes.extensionTypeNames("СправочникСписок.Справочник1",
-      FormPlatformTypes.FormKind.ORDINARY))
+      FormKind.ORDINARY))
       .as("по реквизиту расширение обычной формы больше не выбирается")
       .isEmpty();
 
@@ -534,10 +534,10 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
     // Форма настроек компоновки данных: основной реквизит — сам компоновщик,
     // расширение есть только у управляемого варианта.
     assertThat(FormPlatformTypes.extensionTypeNames("КомпоновщикНастроекКомпоновкиДанных",
-      FormPlatformTypes.FormKind.MANAGED))
+      FormKind.MANAGED))
       .containsExactly("Расширение формы клиентского приложения для компоновщика настроек");
     assertThat(FormPlatformTypes.extensionTypeNames("КомпоновщикНастроекКомпоновкиДанных",
-      FormPlatformTypes.FormKind.ORDINARY)).isEmpty();
+      FormKind.ORDINARY)).isEmpty();
   }
 
   @Test
