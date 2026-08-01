@@ -66,6 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Реестр известных типов.
@@ -1102,7 +1103,7 @@ public class TypeRegistry {
     var result = new ArrayList<MemberDescriptor>();
     for (var template : raw) {
       if (template.generic()) {
-        expandTemplate(template, memberExpansions, typeBindings, result);
+        expandTemplate(template, memberExpansions, typeBindings, result, this::canonicalRef);
       }
     }
     return result;
@@ -1111,7 +1112,8 @@ public class TypeRegistry {
   private static void expandTemplate(MemberDescriptor template,
                                      Map<String, List<String>> memberExpansions,
                                      Map<String, String> typeBindings,
-                                     List<MemberDescriptor> sink) {
+                                     List<MemberDescriptor> sink,
+                                     UnaryOperator<TypeRef> canonicalizer) {
     var ruName = template.bilingualName().primary();
     var ruPlaceholders = ContextNames.placeholders(ruName);
     var ruMatch = ruPlaceholders.stream()
@@ -1128,7 +1130,7 @@ public class TypeRegistry {
     var ruIndex = ruPlaceholders.indexOf(ruMatch);
     var enMatch = ruIndex >= 0 && ruIndex < enPlaceholders.size() ? enPlaceholders.get(ruIndex) : null;
     for (var value : memberExpansions.get(ruMatch.name())) {
-      sink.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings));
+      sink.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings, canonicalizer));
     }
   }
 
@@ -1142,7 +1144,8 @@ public class TypeRegistry {
                                                            Placeholder ruPlaceholder,
                                                            @Nullable Placeholder enPlaceholder,
                                                            String value,
-                                                           Map<String, String> typeBindings) {
+                                                           Map<String, String> typeBindings,
+                                                           UnaryOperator<TypeRef> canonicalizer) {
     var ruName = template.bilingualName().primary();
     var newRu = ruName.substring(0, ruPlaceholder.start()) + value + ruName.substring(ruPlaceholder.end());
     var enName = template.bilingualName().en();
@@ -1155,7 +1158,7 @@ public class TypeRegistry {
     var combined = new HashMap<>(typeBindings);
     combined.put(ruPlaceholder.name(), value);
     return template
-      .specialize(combined)
+      .specialize(combined, canonicalizer)
       .withBilingualName(BilingualString.of(newRu, newEn))
       .withGeneric(false);
   }
@@ -1739,7 +1742,7 @@ public class TypeRegistry {
    * @return зарегистрированная ссылка с этим именем; исходная, если такого имени в
    *     реестре нет.
    */
-  private TypeRef canonicalRef(TypeRef ref) {
+  TypeRef canonicalRef(TypeRef ref) {
     return resolve(ref.qualifiedName()).orElse(ref);
   }
 
