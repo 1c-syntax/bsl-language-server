@@ -138,8 +138,8 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       return;
     }
     // Имя области — на языке модуля, а не интерфейса: его пользователю писать в коде.
-    var regionName = (expectedRegion == null ? OBJECT_TARGET_REGION : expectedRegion)
-      .forVariant(scriptVariantOf(documentContext));
+    var target = expectedRegion == null ? OBJECT_TARGET_REGION : expectedRegion;
+    var regionName = target.forVariant(scriptVariantOf(documentContext));
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
       info.getMessage(method.getName(), regionName));
   }
