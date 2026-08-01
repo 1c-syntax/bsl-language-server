@@ -118,6 +118,21 @@ class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void moduleVarWithTypeCommentAboveDeclaration() {
+    // given: тип объявлен комментарием над записью «Перем», а не висячим.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "З = СКомментариемСверху", "З = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Дата");
+  }
+
+  @Test
   void moduleVarWithSeeRefCommentTakesConstructorType() {
     // given: «Перем Х; // см. НовыйОбъектДанных» — ссылка на функцию того же модуля.
     var documentContext = TestUtils.getDocumentContextFromFile(

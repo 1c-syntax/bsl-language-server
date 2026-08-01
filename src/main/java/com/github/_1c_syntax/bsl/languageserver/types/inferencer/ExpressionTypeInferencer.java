@@ -33,7 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.TrailingCommentTypeResolver;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
@@ -112,7 +112,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final FormExpressionInference formExpressionInference;
-  private final TrailingCommentTypeResolver trailingCommentTypeResolver;
+  private final CommentTypeResolver commentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
@@ -1048,7 +1048,7 @@ public class ExpressionTypeInferencer {
     for (var source : variableTypeSources) {
       entry = entry.union(source.typesOf(variable));
     }
-    if (entry.isEmpty() && declaredByPerem(variable) && !assignedBeforeAnyUse(variable)) {
+    if (entry.isEmpty() && declaredByVar(variable) && !assignedBeforeAnyUse(variable)) {
       // Переменная, объявленная записью «Перем», до первого присваивания содержит
       // «Неопределено» — это её значение, а не отсутствие сведений о типе. Дальше по телу
       // присваивания его перекрывают, а в точке слияния путей он остаётся, если хотя бы
@@ -1065,9 +1065,9 @@ public class ExpressionTypeInferencer {
    * @param variable переменная.
    * @return {@code true}, если переменная объявлена записью {@code Перем}.
    */
-  private static boolean declaredByPerem(VariableSymbol variable) {
+  private static boolean declaredByVar(VariableSymbol variable) {
     var kind = variable.getKind();
-    return kind == VariableKind.LOCAL || kind == VariableKind.MODULE;
+    return kind == VariableKind.LOCAL || kind == VariableKind.MODULE || kind == VariableKind.GLOBAL;
   }
 
   /**
@@ -1207,7 +1207,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(trailingCommentTypeResolver.ofAssignment(owner, assignment));
+      return types.union(commentTypeResolver.ofAssignment(owner, assignment));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1259,7 +1259,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(trailingCommentTypeResolver.ofAssignment(owner, assignment.get()));
+      result = result.union(commentTypeResolver.ofAssignment(owner, assignment.get()));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:

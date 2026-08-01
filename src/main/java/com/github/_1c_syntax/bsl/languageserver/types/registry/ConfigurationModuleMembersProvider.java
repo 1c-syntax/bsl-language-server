@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.TrailingCommentTypeResolver;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -95,7 +95,7 @@ public class ConfigurationModuleMembersProvider {
 
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
-  private final TrailingCommentTypeResolver trailingCommentTypeResolver;
+  private final CommentTypeResolver commentTypeResolver;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -319,7 +319,7 @@ public class ConfigurationModuleMembersProvider {
    * Экспортные {@code Перем X Экспорт} модулей объекта/набора записей и т.п.
    * становятся свойствами соответствующего типа ({@code СправочникОбъект.X}),
    * тип свойства выводится из висячего комментария декларации через общий
-   * {@link TrailingCommentTypeResolver}.
+   * {@link CommentTypeResolver}.
    */
   private List<MemberDescriptor> collectModuleMembers(DocumentContext documentContext) {
     var methodMembers = documentContext.getSymbolTree().getMethods().stream()
@@ -332,7 +332,7 @@ public class ConfigurationModuleMembersProvider {
   }
 
   private MemberDescriptor toVariableMember(VariableSymbol variable) {
-    var types = trailingCommentTypeResolver.resolve(variable, FileType.BSL);
+    var types = commentTypeResolver.resolve(variable, FileType.BSL);
     var description = variable.getDescription()
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
