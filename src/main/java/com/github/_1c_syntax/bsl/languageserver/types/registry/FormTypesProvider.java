@@ -317,10 +317,10 @@ public class FormTypesProvider {
    * заполненную копией данных». Сами члены объявлены как {@code Произвольный}, поэтому
    * без такой подстановки цепочка от них обрывается.
    * <p>
-   * Описание — не истина в последней инстанции: у таблицы над данными формы оно
-   * называет «структурой» обычную строку коллекции (см.
-   * {@link FormPlatformTypes.TableDataKind#currentDataTypeName}), а тип идентификатора
-   * не называет вовсе, хотя он известен из самих данных формы.
+   * Описание — не истина в последней инстанции: тип {@code Структура} таблица формы
+   * не отдаёт нигде — там либо строка коллекции, либо {@code ДанныеФормыСтруктура}
+   * (см. {@link FormPlatformTypes.TableDataKind#currentDataTypeName}), — а тип
+   * идентификатора описание не называет вовсе, хотя он известен из самих данных формы.
    */
   private void registerTableDataRules(FormPlatformTypes.TableDataKind dataKind, TypeRef tableRef) {
     var members = new ArrayList<MemberDescriptor>(3);

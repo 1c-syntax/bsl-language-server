@@ -263,11 +263,13 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
       .containsExactly("ИдентификаторКомпоновкиДанных");
     assertThat(qualifiedNames(member(selectedFields, MemberKind.PROPERTY, "ТекущийРодитель")))
       .containsExactly("ИдентификаторКомпоновкиДанных");
+    // Описание говорит «структуру, заполненную копией данных», но на платформе
+    // ТипЗнч(Элементы.КомпоновщикНастроекНастройкиОтбор.ТекущиеДанные) даёт
+    // ДанныеФормыСтруктура: обычную Структуру таблица формы не отдаёт нигде.
     assertThat(qualifiedNames(member(selectedFields, MemberKind.PROPERTY, "ТекущиеДанные")))
-      .as("по описанию это копия данных строки, а не сами данные формы")
-      .containsExactly("Структура");
+      .containsExactly("ДанныеФормыСтруктура");
     assertThat(qualifiedNames(member(selectedFields, MemberKind.METHOD, "ДанныеСтроки")))
-      .containsExactly("Структура");
+      .containsExactly("ДанныеФормыСтруктура");
   }
 
   @Test
