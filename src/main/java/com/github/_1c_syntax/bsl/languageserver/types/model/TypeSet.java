@@ -201,7 +201,8 @@ public record TypeSet(
   }
 
   /**
-   * Применяет {@code mapper} к каждой ссылке набора — вместе с ключами декораций.
+   * Применяет {@code mapper} к каждой ссылке набора — вместе с ключами декораций и
+   * ссылками внутри них: типами элементов коллекции и типами полей объекта.
    * <p>
    * Нужно, чтобы после структурной специализации привести полученные ссылки к
    * каноническим: иначе за одним именем оказываются две разные ссылки, и объединение
@@ -219,35 +220,45 @@ public record TypeSet(
       changed = changed || !mapped.equals(ref);
       mappedRefs.add(mapped);
     }
+    var mappedElements = mapKeys(elementTypes, mapper, TypeSet::union, types -> types.mapRefs(mapper));
+    var mappedFields = mapNestedKeys(localFields, mapper, LocalField::merge,
+      field -> new LocalField(field.types().mapRefs(mapper), field.description()));
+    changed = changed
+      || !mappedElements.equals(elementTypes)
+      || !mappedFields.equals(localFields);
     if (!changed) {
       return this;
     }
     return new TypeSet(
       mappedRefs,
-      mapKeys(elementTypes, mapper, TypeSet::union),
-      mapNestedKeys(localFields, mapper, LocalField::merge),
-      mapKeys(lazyElements, mapper, LazyTypeSet::combine),
-      mapNestedKeys(lazyFields, mapper, LazyField::merge)
+      mappedElements,
+      mappedFields,
+      // Ленивые декорации приводятся при вычислении: заглядывать в них здесь означало бы
+      // считать то, ради отсрочки чего они и заведены.
+      mapKeys(lazyElements, mapper, LazyTypeSet::combine, UnaryOperator.identity()),
+      mapNestedKeys(lazyFields, mapper, LazyField::merge, UnaryOperator.identity())
     );
   }
 
   private static <V> Map<TypeRef, V> mapKeys(
     Map<TypeRef, V> source,
     UnaryOperator<TypeRef> mapper,
-    BinaryOperator<V> merger
+    BinaryOperator<V> merger,
+    UnaryOperator<V> valueMapper
   ) {
     if (source.isEmpty()) {
       return source;
     }
     var result = new LinkedHashMap<TypeRef, V>();
-    source.forEach((ref, value) -> result.merge(mapper.apply(ref), value, merger));
+    source.forEach((ref, value) -> result.merge(mapper.apply(ref), valueMapper.apply(value), merger));
     return result;
   }
 
   private static <V> Map<TypeRef, Map<String, V>> mapNestedKeys(
     Map<TypeRef, Map<String, V>> source,
     UnaryOperator<TypeRef> mapper,
-    BinaryOperator<V> merger
+    BinaryOperator<V> merger,
+    UnaryOperator<V> valueMapper
   ) {
     if (source.isEmpty()) {
       return source;
@@ -255,7 +266,7 @@ public record TypeSet(
     var result = new LinkedHashMap<TypeRef, Map<String, V>>();
     source.forEach((ref, fields) -> {
       var target = result.computeIfAbsent(mapper.apply(ref), key -> new LinkedHashMap<>());
-      fields.forEach((name, field) -> target.merge(name, field, merger));
+      fields.forEach((name, field) -> target.merge(name, valueMapper.apply(field), merger));
     });
     return result;
   }

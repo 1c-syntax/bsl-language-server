@@ -467,4 +467,48 @@ class TypeSetTest {
     // when / then
     assertThat(ts.without(ARRAY)).isSameAs(TypeSet.EMPTY);
   }
+
+  @Test
+  void mapRefsMovesDecorationsToMappedRef() {
+    // given
+    var ts = TypeSet.of(ARRAY)
+      .withElement(ARRAY, TypeSet.of(NUMBER))
+      .withField(ARRAY, "Поле", TypeSet.of(STRING));
+    var renamed = new TypeRef(TypeKind.CONFIGURATION, "Массив");
+
+    // when
+    var mapped = ts.mapRefs(ref -> ARRAY.equals(ref) ? renamed : ref);
+
+    // then
+    assertThat(mapped.refs()).containsExactly(renamed);
+    assertThat(mapped.getElementTypes(renamed).refs()).containsExactly(NUMBER);
+    assertThat(mapped.getLocalFields(renamed)).containsOnlyKeys("Поле");
+  }
+
+  @Test
+  void mapRefsGoesIntoDecorationsWhenOuterRefUnchanged() {
+    // given: снаружи менять нечего, а внутри декораций ссылка неканоническая.
+    var innerAlias = new TypeRef(TypeKind.PLATFORM, "Структура");
+    var ts = TypeSet.of(ARRAY)
+      .withElement(ARRAY, TypeSet.of(innerAlias))
+      .withField(ARRAY, "Поле", TypeSet.of(innerAlias));
+    var canonical = new TypeRef(TypeKind.CONFIGURATION, "Структура");
+
+    // when
+    var mapped = ts.mapRefs(ref -> innerAlias.equals(ref) ? canonical : ref);
+
+    // then
+    assertThat(mapped.refs()).containsExactly(ARRAY);
+    assertThat(mapped.getElementTypes(ARRAY).refs()).containsExactly(canonical);
+    assertThat(mapped.getLocalFields(ARRAY).get("Поле").types().refs()).containsExactly(canonical);
+  }
+
+  @Test
+  void mapRefsWithoutChangesReturnsSelf() {
+    // given
+    var ts = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
+
+    // when / then
+    assertThat(ts.mapRefs(ref -> ref)).isSameAs(ts);
+  }
 }

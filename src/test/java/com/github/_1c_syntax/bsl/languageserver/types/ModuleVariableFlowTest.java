@@ -124,6 +124,17 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
     assertThat(qnames(types)).containsExactly("Массив");
   }
 
+  @Test
+  void initializationUnderConditionInModuleBodyLeavesUndefined() {
+    // given: присваивание стоит в теле модуля, но внутри условия — выполнится оно или нет,
+    // из кода не следует.
+    // when
+    var types = at("ИзУсловия = ИнициализированнаяПодУсловием", "ИзУсловия = ".length());
+
+    // then: состояние от объявления остаётся наблюдаемым.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Массив");
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
     var documentContext = doc();
     return typeService.expressionTypesAt(documentContext, positionOf(documentContext, marker, offsetInMarker + 1));
