@@ -23,6 +23,9 @@
 		<InputField name="Реквизит1" id="7">
 			<DataPath>Объект.Реквизит1</DataPath>
 			<EditMode>EnterOnInput</EditMode>
+			<Events>
+				<Event name="OnChange">Реквизит1ПриИзменении</Event>
+			</Events>
 			<ContextMenu name="Реквизит1КонтекстноеМеню" id="8"/>
 			<ExtendedTooltip name="Реквизит1РасширеннаяПодсказка" id="9"/>
 		</InputField>
@@ -82,6 +85,9 @@
 				<InputField name="ТабличнаяЧасть1Реквизит1" id="32">
 					<DataPath>Объект.ТабличнаяЧасть1.Реквизит1</DataPath>
 					<EditMode>EnterOnInput</EditMode>
+					<Events>
+						<Event name="OnChange">ТабличнаяЧасть1Реквизит1ПриИзменении</Event>
+					</Events>
 					<ContextMenu name="ТабличнаяЧасть1Реквизит1КонтекстноеМеню" id="33"/>
 					<ExtendedTooltip name="ТабличнаяЧасть1Реквизит1РасширеннаяПодсказка" id="34"/>
 				</InputField>
@@ -92,6 +98,11 @@
 					<ExtendedTooltip name="ТабличнаяЧасть1Реквизит2РасширеннаяПодсказка" id="37"/>
 				</InputField>
 			</ChildItems>
+		</Table>
+		<Table name="ВыбранныеПоля" id="40">
+			<Representation>Tree</Representation>
+			<DataPath>Компоновщик.Настройки.Выбор</DataPath>
+			<RowFilter xsi:nil="true"/>
 		</Table>
 	</ChildItems>
 	<Attributes>
@@ -105,5 +116,56 @@
 				<Field>Объект.RegisterRecords</Field>
 			</UseAlways>
 		</Attribute>
+		<Attribute name="Компоновщик" id="2">
+			<Type>
+				<v8:Type>v8:SettingsComposer</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ТаблицаПодбора" id="3">
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Номенклатура" id="4">
+					<Type>
+						<v8:Type>cfg:CatalogRef.Справочник1</v8:Type>
+					</Type>
+				</Column>
+				<Column name="Количество" id="5">
+					<Type>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>10</v8:Digits>
+							<v8:FractionDigits>3</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
 	</Attributes>
+	<Commands>
+		<Command name="ЗаполнитьПоОснованию" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Заполнить по основанию</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ЗаполнитьПоОснованиюКоманда</Action>
+		</Command>
+	</Commands>
+	<Parameters>
+		<Parameter name="ПодобранныйТовар">
+			<Type>
+				<v8:Type>cfg:CatalogRef.Справочник1</v8:Type>
+			</Type>
+		</Parameter>
+		<Parameter name="РежимПодбора">
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+			<KeyParameter>true</KeyParameter>
+		</Parameter>
+	</Parameters>
 </Form>

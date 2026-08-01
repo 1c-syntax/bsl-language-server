@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -133,6 +134,13 @@ public class ConfigurationModuleMembersProvider {
       var name = mdObject.getName();
       return name.isBlank() ? Optional.empty() : Optional.of(name);
     }
+    if (moduleType == ModuleType.FormModule) {
+      // Форма — не обёртка над MD-объектом, а самостоятельный тип с реквизитами и
+      // элементами; его имя строит FormTypesProvider (см. его javadoc).
+      return mdObject instanceof Form form
+        ? Optional.of(FormTypesProvider.moduleTypeQualifiedName(form))
+        : Optional.empty();
+    }
     var wrapperSuffix = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
     if (wrapperSuffix == null) {
       return Optional.empty();
@@ -149,6 +157,10 @@ public class ConfigurationModuleMembersProvider {
     var moduleType = documentContext.getModuleType();
     if (moduleType == ModuleType.CommonModule) {
       registerCommonModule(documentContext);
+      return;
+    }
+    if (moduleType == ModuleType.FormModule) {
+      registerFormModule(documentContext);
       return;
     }
     if (!MODULE_TYPE_TO_WRAPPER_RU.containsKey(moduleType)) {
@@ -192,6 +204,35 @@ public class ConfigurationModuleMembersProvider {
 
     typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
+  }
+
+  /**
+   * Модуль формы: связывает URI документа с типом формы (его состав —
+   * реквизиты/элементы/события — регистрирует {@link FormTypesProvider} из метаданных)
+   * и добавляет к нему экспортные методы и переменные самого модуля. Именно эта связь
+   * даёт в модуле формы разыменование {@code ЭтотОбъект.} и резолв неквалифицированных
+   * имён реквизитов и элементов.
+   */
+  private void registerFormModule(DocumentContext documentContext) {
+    var mdObjectOpt = documentContext.getMdObject();
+    if (mdObjectOpt.isEmpty() || !(mdObjectOpt.get() instanceof Form form)) {
+      return;
+    }
+    var ref = typeRegistry.registerConfigurationType(FormTypesProvider.moduleTypeQualifiedName(form));
+
+    var prev = registeredByUri.put(documentContext.getUri(), ref);
+    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
+    if (prev != null && prev.equals(ref)) {
+      // Источник уже зарегистрирован, но содержимое изменилось (rebuild): он лениво
+      // читает символьное дерево, и без сброса memo в модуле формы остались бы
+      // экспортные методы и переменные предыдущей редакции — как и в общем пути выше.
+      typeRegistry.invalidateMembers(ref);
+      return;
+    }
+
+    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    LOGGER.debug("Registered form module as member source for {} -> {}",
+      documentContext.getUri(), ref.qualifiedName());
   }
 
   private void registerCommonModule(DocumentContext documentContext) {

@@ -322,9 +322,21 @@ class ConfigurationTypesProviderHelpersTest {
                                                         LanguageServerConfiguration lsConfig,
                                                         MetadataCollectionSpecializer mcs) {
     var recorderIndex = new RecorderIndex();
+    var formDataTypesRegistrar = new FormDataTypesRegistrar(registry);
+    var typeFactory = new FormTypeFactory(registry);
+    var formParametersResolver =
+      new FormParametersResolver(new BslContextHolder(mock(PlatformContextProviderFactory.class)));
+    var formTypesProvider = new FormTypesProvider(registry, formParametersResolver, recorderIndex,
+      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), new FormAttributeTypeIndex(),
+      formDataTypesRegistrar,
+      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
+      new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
+        recorderIndex));
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
-      new ConfigurationGenericExpander(registry, serverProvider), new ServiceModuleEventRegistrar(registry),
-      new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex, new SimpleAsyncTaskExecutor());
+      new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
+      new ServiceModuleEventRegistrar(registry),
+      formTypesProvider, formDataTypesRegistrar, new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
+      new SimpleAsyncTaskExecutor());
   }
 
   // === memberPlaceholderName ===

@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -39,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
+import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
@@ -70,6 +72,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -178,7 +181,10 @@ public class ConfigurationTypesProvider {
   private final LanguageServerConfiguration configuration;
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
+  private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
+  private final FormTypesProvider formTypesProvider;
+  private final FormDataTypesRegistrar formDataTypesRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
   private final RecorderIndex recorderIndex;
   @Qualifier("platformTypesWarmupExecutor")
@@ -280,6 +286,10 @@ public class ConfigurationTypesProvider {
     // из bsl-context + развёртывание имён детей коллекции из mdclasses.
     metadataCollectionSpecializer.specialize();
 
+    // Тип на каждую форму: реквизиты, элементы, расширение по основному реквизиту
+    // и обработчики событий из Form.xml.
+    formTypesProvider.register(children);
+
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
   }
 
@@ -367,6 +377,7 @@ public class ConfigurationTypesProvider {
     registerFamilySpecializations(familyCore, name);
     registerTypesRegistrar.registerFamilyFixups(md, familyCore, name);
     registerHierarchySuppressions(md, familyCore, name);
+    catalogOwnerTypes.registerOwnerMembers(md, familyCore, name);
     registerDerivedSpecializations(md, name);
     if (md instanceof DocumentJournal journal) {
       registerDocumentJournalColumnMembers(journal, familyCore, name);
@@ -629,6 +640,11 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerMemberSource(rowRef, columnSource, FileType.BSL);
       }
       registerTabularSectionPlatformMembers(rowRef, collRef, columnSource);
+      // Зеркало табличной части для управляемых форм заводится здесь, а не при
+      // регистрации формы: колонки уже под рукой, а форма узнаёт о табличных частях
+      // только из членов объектного типа — читать их из её ленивого источника нельзя.
+      formDataTypesRegistrar.registerTabularSectionData(collRef, columnSource);
+
       tsMembers.add(MemberDescriptor.property(tsName, collRef));
     }
     if (!tsMembers.isEmpty()) {
@@ -658,8 +674,8 @@ public class ConfigurationTypesProvider {
     if (genericColl == null || genericRow == null) {
       return;
     }
-    typeRegistry.registerSpecialization(rowRef, genericRow, Map.of(), FileType.BSL);
-    typeRegistry.registerSpecialization(collRef, genericColl, Map.of(), FileType.BSL);
+    typeRegistry.registerExtension(rowRef, genericRow, FileType.BSL);
+    typeRegistry.registerExtension(collRef, genericColl, FileType.BSL);
     typeRegistry.registerDefaultElementTypes(collRef, List.of(rowRef));
     typeRegistry.inheritCollectionTraits(collRef, genericColl, FileType.BSL);
 
@@ -683,7 +699,6 @@ public class ConfigurationTypesProvider {
       return typeRegistry.getMembers(parent, FileType.BSL);
     }, FileType.BSL);
   }
-
   /**
    * Регистрирует специализации ВСЕХ зарегистрированных дженериков семейства
    * (с qualifiedName, начинающимся с {@code familyCore}) для конкретного
@@ -908,6 +923,12 @@ public class ConfigurationTypesProvider {
       var description = platformDescriptions.getOrDefault(lc, BilingualString.EMPTY);
       var meta = platformMetadata.getOrDefault(lc, PlatformMetadata.EMPTY);
       var returnTypes = resolveAttributeReturnTypes(attribute);
+      if (returnTypes.isEmpty() && attribute instanceof StandardAttribute) {
+        // Стандартный реквизит платформа объявляет сама — с типом, описанием и мета.
+        // mdclasses про его тип знает не всегда (у `Владелец` типа нет вовсе), и
+        // бестиповый дубль отсюда только перекрыл бы объявление платформы.
+        continue;
+      }
       var primaryName = bilingualName.primary();
       MemberDescriptor descriptor;
       if (returnTypes.isEmpty()) {

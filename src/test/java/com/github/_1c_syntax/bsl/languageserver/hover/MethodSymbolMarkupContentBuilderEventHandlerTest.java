@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Location;
@@ -65,8 +66,13 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
+  @MockitoBean
+  FormHandlerRoleIndex formHandlerRoleIndex;
+
   @BeforeEach
   void resetResolver() {
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
     when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
     // Классификация метода в EventMethodSymbol идёт через isEventHandler; у мок-бина делегируем
@@ -104,6 +110,31 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   }
 
   @Test
+  void hoverOfCommandHandlerNamesTheCommand() {
+    // Обработчик команды событием не является: платформа зовёт его по действию
+    // команды, а не по имени события — и в шапке правильнее видеть имя команды.
+    var contract = MemberDescriptor.event("ЗаполнитьКоманда", "Обработчик команды формы «Заполнить».", List.of());
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ЗаполнитьКоманда")))
+      .thenReturn(Optional.of(contract));
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.eq("ЗаполнитьКоманда")))
+      .thenReturn(Optional.of(new FormHandlerRoleIndex.Handler(FormHandlerRoleIndex.Role.COMMAND, "Заполнить")));
+
+    var src = """
+      Процедура ЗаполнитьКоманда(Команда)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ЗаполнитьКоманда").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .contains("Обработчик команды формы")
+      .contains("`Заполнить`")
+      .doesNotContain("Обработчик события платформы");
+  }
+
+  @Test
   void hoverIncludesEventPlatformMetadata() {
     // given — контракт события с непустыми метаданными синтакс-помощника (замечание + пример),
     // как их приносит bsl-context после #4304
@@ -134,6 +165,108 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
     assertThat(content)
       .contains("Срабатывает перед сохранением объекта в информационную базу.")
       .contains("Отказ = Истина;");
+  }
+
+  @Test
+  void parameterTypeIsShownByItsDisplayName() {
+    // Репорт: при русской раскладке в сигнатуре светился `Any`. qualifiedName —
+    // внутреннее имя типа, наружу идёт отображаемое.
+    var value = new ParameterDescriptor(
+      BilingualString.of("ВыбранноеЗначение", "SelectedValue"),
+      TypeSet.of(TypeRef.ANY), false, BilingualString.EMPTY, "");
+    var contract = MemberDescriptor.event("ОбработкаВыбора", "",
+      List.of(new SignatureDescriptor(List.of(value), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ОбработкаВыбора")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ОбработкаВыбора(ВыбранноеЗначение)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ОбработкаВыбора").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .contains("ВыбранноеЗначение**: Произвольный")
+      .doesNotContain(": Any");
+  }
+
+  @Test
+  void userDescriptionsAreMergedWithTheContractOnes() {
+    // Шапка-комментарий метода дополняет платформенное описание, а не заменяет его:
+    // назначение метода идёт следом за описанием события, описание параметра — через
+    // косую от контрактного. Параметр, которого в шапке нет, остаётся с одним
+    // платформенным описанием, а параметр без описания в контракте — с одним
+    // пользовательским.
+    var cancel = new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false,
+      BilingualString.of("Признак отказа от записи.", "Write cancel flag."), "");
+    var mode = new ParameterDescriptor(BilingualString.of("РежимЗаписи", "WriteMode"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка")), false, BilingualString.EMPTY, "");
+    var contract = MemberDescriptor.event("ПередЗаписью", "Возникает перед записью объекта.",
+      List.of(new SignatureDescriptor(List.of(cancel, mode), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПередЗаписью")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      // Не даёт записать документ без склада.
+      //
+      // Параметры:
+      //   Отказ - Булево - выставляем, если склад не заполнен
+      //   РежимЗаписи - Строка - режим, в котором идёт запись
+      //
+      Процедура ПередЗаписью(Отказ, РежимЗаписи)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПередЗаписью").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .as("описание события и назначение метода стоят рядом")
+      .contains("Возникает перед записью объекта.")
+      .contains("Не даёт записать документ без склада.")
+      .as("у параметра с обоими описаниями они идут через косую")
+      .contains("Признак отказа от записи. / выставляем, если склад не заполнен")
+      .as("у параметра без контрактного описания остаётся пользовательское")
+      .contains("РежимЗаписи**: Строка — режим, в котором идёт запись");
+  }
+
+  @Test
+  void parametersAreNamedAfterTheContractNotTheCode() {
+    // Репорт: у ПередЗакрытием(Отказ, СтандартнаяОбработка) в списке параметров
+    // `СтандартнаяОбработка` показывалась дважды — второй параметр контракта
+    // (`ЗавершениеРаботы`) выводился под именем из кода.
+    var cancel = new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false, BilingualString.EMPTY, "");
+    var shutdown = new ParameterDescriptor(BilingualString.of("ЗавершениеРаботы", "Exit"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false, BilingualString.EMPTY, "");
+    var standardProcessing = new ParameterDescriptor(
+      BilingualString.of("СтандартнаяОбработка", "StandardProcessing"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false, BilingualString.EMPTY, "");
+    var contract = MemberDescriptor.event("ПередЗакрытием", "",
+      List.of(new SignatureDescriptor(List.of(cancel, shutdown, standardProcessing), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПередЗакрытием")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПередЗакрытием(Отказ, СтандартнаяОбработка)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПередЗакрытием").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .as("параметры перечислены так, как их объявляет платформа")
+      .contains("ЗавершениеРаботы")
+      .satisfies(text -> assertThat(text.split("СтандартнаяОбработка\\*\\*", -1))
+        .as("`СтандартнаяОбработка` — один параметр, а не два")
+        .hasSize(2));
   }
 
   @Test
@@ -190,7 +323,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   @Test
   void hoverWithEmptySignaturesShowsNoParametersSection() {
     // Контракт без signatures — секция параметров не выводится (ветка
-    // signatures.isEmpty() в getParametersSection(MemberDescriptor)).
+    // signatures.isEmpty() в getParametersSection).
     var contract = MemberDescriptor.event(
       "ПриЗаписи",
       "Возникает при записи.",

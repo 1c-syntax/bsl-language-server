@@ -77,6 +77,29 @@ final class RegisterFamilies {
   }
 
   /**
+   * Член с типами, переписанными на своё семейство регистров, — когда владелец известен
+   * своим mdoRef'ом ({@code РегистрРасчета.Начисления}), а не разобранным на части.
+   *
+   * @param typeRegistry реестр, по которому проверяется существование типа.
+   * @param member       член с типом чужого семейства.
+   * @param ownerMdoRef  mdoRef регистра-владельца.
+   * @return член со своим типом; {@code null}, если владелец — не регистр либо
+   *     переписывать нечего.
+   */
+  static @Nullable MemberDescriptor ownFamilyMember(TypeRegistry typeRegistry, MemberDescriptor member,
+                                                    String ownerMdoRef) {
+    var dot = ownerMdoRef.indexOf('.');
+    if (dot <= 0 || dot == ownerMdoRef.length() - 1) {
+      return null;
+    }
+    var familyCore = ownerMdoRef.substring(0, dot);
+    if (!isRegisterFamily(familyCore)) {
+      return null;
+    }
+    return ownFamilyMember(typeRegistry, member, familyCore, ownerMdoRef.substring(dot + 1));
+  }
+
+  /**
    * Член с типами, переписанными на своё семейство регистров.
    *
    * @param typeRegistry реестр, по которому проверяется существование типа.

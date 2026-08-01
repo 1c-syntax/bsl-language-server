@@ -41,6 +41,7 @@ import java.util.StringJoiner;
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final DescriptionFormatter descriptionFormatter;
+  private final EventContractFormatter eventContractFormatter;
   private final EventContractsIndex eventContractsIndex;
   private final PlatformMetadataRenderer metadataRenderer;
 
@@ -80,7 +81,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // пользовательское purpose из шапки метода (если метод — обработчик)
     if (isEventHandler) {
       descriptionFormatter.addSectionIfNotEmpty(markupBuilder,
-        descriptionFormatter.getEventHandlerSection(symbol, eventContract.get()));
+        eventContractFormatter.getEventHandlerSection(symbol, eventContract.get()));
     } else {
       // описание метода для обычного метода
       var purposeSection = descriptionFormatter.getPurposeSection(symbol);
@@ -90,7 +91,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     // параметры: для обработчика — контракт события (имена/типы), иначе —
     // шапка-комментарий пользователя
     var parametersSection = isEventHandler
-      ? descriptionFormatter.getParametersSection(symbol, eventContract.get())
+      ? eventContractFormatter.getParametersSection(symbol, eventContract.get())
       : descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 

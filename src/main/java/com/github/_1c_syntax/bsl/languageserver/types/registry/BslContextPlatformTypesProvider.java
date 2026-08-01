@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.context.api.ContextConstructor;
 import com.github._1c_syntax.bsl.context.api.ContextEnum;
 import com.github._1c_syntax.bsl.context.api.ContextEnumValue;
 import com.github._1c_syntax.bsl.context.api.ContextEvent;
+import com.github._1c_syntax.bsl.context.api.ContextFormParameter;
 import com.github._1c_syntax.bsl.context.api.ContextMethod;
 import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
 import com.github._1c_syntax.bsl.context.api.ContextName;
@@ -90,6 +91,15 @@ import java.util.Set;
 @Component
 @WorkspaceScope
 public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
+
+  /**
+   * Пометка ключевого параметра формы. Признак {@link ContextFormParameter#isKey()}
+   * в {@link MemberDescriptor} переносить некуда, поэтому он живёт отдельным
+   * абзацем описания; потребители, которым нужен именно признак, а не текст,
+   * сверяются с этой константой.
+   */
+  public static final BilingualString KEY_PARAMETER_MARKER =
+    BilingualString.of("Ключевой параметр.", "Key parameter.");
 
   private final BslContextHolder contextHolder;
   private final Lazy<List<TypeDecl>> cached;
@@ -380,6 +390,44 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     ).withStandardLibrary(true);
   }
 
+
+  /**
+   * Параметр формы — свойство структуры {@code Форма.Параметры}, а не член самого
+   * типа формы, поэтому дескриптор строится здесь, но на тип не вешается: его
+   * забирает {@link FormParametersResolver} для синтетического типа параметров
+   * конкретной формы.
+   * <p>
+   * Признак ключевого параметра ({@link ContextFormParameter#isKey()}) в
+   * {@link MemberDescriptor} переносить некуда, поэтому он остаётся в описании —
+   * помечаем его отдельной строкой.
+   */
+  static MemberDescriptor toMemberDescriptor(ContextFormParameter parameter,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(parameter);
+    return MemberDescriptor.property(parameter.name().getName(), typeSet(parameter.types()), "")
+      .withBilingualName(bilingualName(parameter.name()))
+      .withBilingualDescription(BilingualString.of(
+        keyMarked(safe(parameter.description()), parameter.isKey(), KEY_PARAMETER_MARKER.ru()),
+        keyMarked(safe(en.description()), parameter.isKey(), KEY_PARAMETER_MARKER.en())))
+      .withMetadata(new PlatformMetadata(
+        parameter.sinceVersion(),
+        parameter.deprecatedSinceVersion(),
+        parameter.recommendedReplacements(),
+        Set.of(),
+        null,
+        BilingualString.EMPTY,
+        BilingualString.EMPTY,
+        List.of(),
+        List.of()))
+      .withStandardLibrary(true);
+  }
+
+  private static String keyMarked(String description, boolean key, String marker) {
+    if (!key) {
+      return description;
+    }
+    return description.isEmpty() ? marker : description + "\n\n" + marker;
+  }
 
   private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef valueRef,
                                                      Function<Object, EnAttachments> enLookup) {

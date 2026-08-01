@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.assertj.core.api.Assertions;
@@ -32,15 +36,18 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -56,14 +63,182 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
+  @MockitoBean
+  FormHandlerRoleIndex formHandlerRoleIndex;
+
+  @Autowired
+  private DiagnosticObjectProvider diagnosticObjectProvider;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  private Language initialLanguage;
+
   EventHandlerOutsideEventRegionDiagnosticTest() {
     super(EventHandlerOutsideEventRegionDiagnostic.class);
   }
 
+  @AfterEach
+  void restoreLanguage() {
+    configuration.setLanguage(initialLanguage);
+  }
+
   @BeforeEach
   void resetResolver() {
+    initialLanguage = configuration.getLanguage();
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(false);
+    // По умолчанию объявитель обработчика неизвестен: так ведёт себя модуль, чью
+    // форму не удалось прочитать, — тогда годится любая из форменных областей.
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
+  }
+
+  private void stubRole(String methodName, FormHandlerRoleIndex.Role role, String owner) {
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.eq(methodName)))
+      .thenReturn(Optional.of(new FormHandlerRoleIndex.Handler(role, owner)));
+  }
+
+  @Test
+  void quickFixWorksOnAFreshDiagnosticInstance() {
+    // Репорт: NPE в codeAction. Диагностика — prototype-бин, и quick fix прилетает
+    // на экземпляр, который ещё ничего не проверял: документ там приходит аргументом,
+    // а поле documentContext пустое.
+    var src = """
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+      """;
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
+    var documentContext = spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    Assertions.assertThat(diagnostics).hasSize(1);
+
+    var freshInstance = diagnosticObjectProvider.get(EventHandlerOutsideEventRegionDiagnostic.class);
+    var fixes = freshInstance.getQuickFixes(diagnostics, fakeParams(documentContext), documentContext);
+
+    Assertions.assertThat(fixes).hasSize(1);
+  }
+
+  @Test
+  void regionIsNamedInTheScriptVariantOfTheProject() {
+    // Область называем в варианте встроенного языка проекта, а не по-русски всегда.
+    // У одиночного файла конфигурации нет, поэтому вариант берётся с языка сервера.
+    var src = """
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+      """;
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
+    stubRole("ПриОткрытии", FormHandlerRoleIndex.Role.FORM_EVENT, "");
+    configuration.setLanguage(Language.EN);
+    var documentContext = spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getMessage().getLeft())
+      .as("имя области в сообщении")
+      .contains("FormEventHandlers")
+      .doesNotContain("ОбработчикиСобытийФормы");
+
+    var inserted = edits(getQuickFixes(diagnostics.get(0), documentContext).get(0), documentContext).stream()
+      .map(TextEdit::getNewText)
+      .filter(text -> text.contains("ПриОткрытии"))
+      .findFirst()
+      .orElseThrow();
+    Assertions.assertThat(inserted)
+      .as("и в создаваемой области — вместе с директивами")
+      .contains("#Region FormEventHandlers")
+      .contains("#EndRegion");
+  }
+
+  @Test
+  void englishRegionCountsAsTheRightOne() {
+    // Модуль назвал области по-английски — диагностика этого не замечает и молчит.
+    var src = """
+      #Region FormEventHandlers
+
+      Процедура ПриОткрытии(Отказ, СтандартнаяОбработка) Экспорт
+      КонецПроцедуры
+
+      #EndRegion
+      """;
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
+      .thenReturn(true);
+    stubRole("ПриОткрытии", FormHandlerRoleIndex.Role.FORM_EVENT, "");
+    var documentContext = spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    Assertions.assertThat(diagnosticInstance.getDiagnostics(documentContext)).isEmpty();
+  }
+
+  @Test
+  void commandHandlerBelongsToTheCommandsRegion() {
+    var src = """
+      #Область ОбработчикиКомандФормы
+
+      Процедура ЗаполнитьКоманда(Команда) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+
+      #Область ОбработчикиСобытийФормы
+
+      Процедура ПечатьКоманда(Команда) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+      """;
+    stubAsEventHandlers(Set.of("ЗаполнитьКоманда", "ПечатьКоманда"));
+    stubRole("ЗаполнитьКоманда", FormHandlerRoleIndex.Role.COMMAND, "Заполнить");
+    stubRole("ПечатьКоманда", FormHandlerRoleIndex.Role.COMMAND, "Печать");
+    var documentContext = spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    // Обработчик команды в области команд — на месте; в области событий формы — нет,
+    // хотя эта область тоже «обработчиковая».
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getRange().getStart().getLine()).isEqualTo(9);
+  }
+
+  @Test
+  void elementEventBelongsToTheRegionOfItsOwner() {
+    var src = """
+      #Область ОбработчикиСобытийЭлементовШапкиФормы
+
+      Процедура ДатаПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+
+      #Область ОбработчикиСобытийЭлементовТаблицыФормыТовары
+
+      Процедура ТоварыЦенаПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      Процедура СкладПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+      """;
+    stubAsEventHandlers(Set.of("ДатаПриИзменении", "ТоварыЦенаПриИзменении", "СкладПриИзменении"));
+    stubRole("ДатаПриИзменении", FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Дата");
+    stubRole("ТоварыЦенаПриИзменении", FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT, "Товары");
+    stubRole("СкладПриИзменении", FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Склад");
+    var documentContext = spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    // Элемент шапки в области шапки и элемент таблицы в области своей таблицы — на
+    // местах; элемент шапки в области таблицы — нет.
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getRange().getStart().getLine()).isEqualTo(12);
   }
 
   @Test
@@ -305,7 +480,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       .thenReturn(true);
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -326,7 +501,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       """;
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getContentList()).thenReturn(new String[0]);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -347,7 +522,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       """;
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);

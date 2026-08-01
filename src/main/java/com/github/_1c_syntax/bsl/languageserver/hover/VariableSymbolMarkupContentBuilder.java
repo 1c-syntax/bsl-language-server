@@ -68,6 +68,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
 
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
+  private final EventContractFormatter eventContractFormatter;
   private final Resources resources;
   private final TypeService typeService;
 
@@ -99,7 +100,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
 
     // описание параметра из контракта события (для обработчиков платформенных
     // событий) — приоритетнее doc-комментария, который может устаревать
-    var eventParamDescription = descriptionFormatter.getEventHandlerParameterDescription(symbol);
+    var eventParamDescription = eventContractFormatter.getEventHandlerParameterDescription(symbol);
     if (eventParamDescription != null && !eventParamDescription.isBlank()) {
       descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventParamDescription);
     } else {

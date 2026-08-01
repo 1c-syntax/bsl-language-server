@@ -102,6 +102,40 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void testFindHandlersAttachedByName() {
+    // Обработчик, подключённый именем-строкой, иначе выглядит никем не вызываемым:
+    // других обращений к нему в модуле нет.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexAttachedHandlers.bsl");
+    referenceIndexFiller.fill(documentContext);
+
+    assertThat(referencesTo(documentContext, "ОбработчикОжидания"))
+      .as("подключение и отключение — две ссылки")
+      .hasSize(2);
+    assertThat(referencesTo(documentContext, "ОбработчикАнглийский")).hasSize(1);
+    assertThat(referencesTo(documentContext, "ТоварыПриИзменении"))
+      .as("действие элемента формы — второй параметр вызова")
+      .hasSize(1);
+    assertThat(referencesTo(documentContext, "ЦенаПриИзменении")).hasSize(1);
+    assertThat(referencesTo(documentContext, "ДатаИзменена"))
+      .as("обработчик изменения данных — второй параметр, подключение и отключение")
+      .hasSize(2);
+
+    assertThat(referencesTo(documentContext, "ОбработчикИзПеременной"))
+      .as("имя собрано в переменной — статически неизвестно")
+      .isEmpty();
+    assertThat(referencesTo(documentContext, "ОбработчикСобытияПоИмениСобытия"))
+      .as("первый параметр УстановитьДействие — имя события, а не обработчика")
+      .isEmpty();
+  }
+
+  private List<Reference> referencesTo(DocumentContext documentContext, String methodName) {
+    var method = documentContext.getSymbolTree().getMethodSymbol(methodName);
+    assertThat(method).as("метод %s", methodName).isPresent();
+    return referenceIndex.getReferencesTo(method.get());
+  }
+
+  @Test
   void testFindNotifyDescriptionConfiguration() throws IOException {
     initServerContext(PATH_TO_METADATA);
 

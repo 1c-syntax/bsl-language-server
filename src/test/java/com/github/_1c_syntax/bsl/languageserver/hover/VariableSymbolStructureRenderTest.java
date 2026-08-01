@@ -73,6 +73,8 @@ class VariableSymbolStructureRenderTest {
   @Mock
   private DescriptionFormatter descriptionFormatter;
   @Mock
+  private EventContractFormatter eventContractFormatter;
+  @Mock
   private Resources resources;
   @Mock
   private TypeService typeService;
@@ -84,7 +86,7 @@ class VariableSymbolStructureRenderTest {
   @BeforeEach
   void setUp() {
     builder = new VariableSymbolMarkupContentBuilder(
-      configuration, descriptionFormatter, resources, typeService);
+      configuration, descriptionFormatter, eventContractFormatter, resources, typeService);
 
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))
