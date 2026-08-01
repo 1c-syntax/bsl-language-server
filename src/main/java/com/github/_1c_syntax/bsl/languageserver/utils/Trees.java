@@ -371,7 +371,7 @@ public final class Trees {
     }
 
     var previousToken = tokens.get(index - 1);
-    if (abortSearchComments(previousToken, currentToken)) {
+    if (abortSearchComments(tokens, previousToken, currentToken)) {
       return;
     }
 
@@ -382,9 +382,35 @@ public final class Trees {
     }
   }
 
-  private static boolean abortSearchComments(Token previousToken, Token currentToken) {
+  private static boolean abortSearchComments(List<Token> tokens, Token previousToken, Token currentToken) {
     int type = previousToken.getType();
-    return !VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH.contains(type) || isBlankLine(previousToken, currentToken);
+    return !VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH.contains(type)
+      || isBlankLine(previousToken, currentToken)
+      || isTrailingComment(tokens, previousToken);
+  }
+
+  /**
+   * Дописан ли комментарий в конец строки с кодом. Такой комментарий принадлежит тому
+   * оператору, за которым стоит, и описанием следующего символа быть не может.
+   *
+   * @param tokens список токенов документа.
+   * @param token  проверяемый токен.
+   * @return {@code true}, если это висячий комментарий чужого оператора.
+   */
+  private static boolean isTrailingComment(List<Token> tokens, Token token) {
+    if (token.getType() != BSLParser.LINE_COMMENT) {
+      return false;
+    }
+    for (var index = token.getTokenIndex() - 1; index >= 0; index--) {
+      var previous = tokens.get(index);
+      if (previous.getLine() != token.getLine()) {
+        return false;
+      }
+      if (previous.getType() != BSLParser.WHITE_SPACE) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isBlankLine(Token previousToken, Token currentToken) {
