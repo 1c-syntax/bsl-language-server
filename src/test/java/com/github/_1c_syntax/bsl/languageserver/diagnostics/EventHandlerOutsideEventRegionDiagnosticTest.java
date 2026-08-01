@@ -41,13 +41,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -110,7 +110,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       """;
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
     Assertions.assertThat(diagnostics).hasSize(1);
@@ -133,7 +133,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       .thenReturn(true);
     stubRole("ПриОткрытии", FormHandlerRoleIndex.Role.FORM_EVENT, "");
     configuration.setLanguage(Language.EN);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -169,7 +169,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
       .thenReturn(true);
     stubRole("ПриОткрытии", FormHandlerRoleIndex.Role.FORM_EVENT, "");
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     Assertions.assertThat(diagnosticInstance.getDiagnostics(documentContext)).isEmpty();
@@ -195,7 +195,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
     stubAsEventHandlers(Set.of("ЗаполнитьКоманда", "ПечатьКоманда"));
     stubRole("ЗаполнитьКоманда", FormHandlerRoleIndex.Role.COMMAND, "Заполнить");
     stubRole("ПечатьКоманда", FormHandlerRoleIndex.Role.COMMAND, "Печать");
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -230,7 +230,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
     stubRole("ДатаПриИзменении", FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Дата");
     stubRole("ТоварыЦенаПриИзменении", FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT, "Товары");
     stubRole("СкладПриИзменении", FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Склад");
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -480,7 +480,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       .thenReturn(true);
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -501,7 +501,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       """;
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getContentList()).thenReturn(new String[0]);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -522,7 +522,7 @@ class EventHandlerOutsideEventRegionDiagnosticTest
       """;
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриОткрытии")))
       .thenReturn(true);
-    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    var documentContext = spy(TestUtils.getDocumentContext(src));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     var diagnostics = diagnosticInstance.getDiagnostics(documentContext);

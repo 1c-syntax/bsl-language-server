@@ -40,6 +40,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.MultiName;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
+import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -137,7 +138,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       return;
     }
     // Имя области — на языке модуля, а не интерфейса: его пользователю писать в коде.
-    var regionName = expectedRegion.orElse(OBJECT_TARGET_REGION)
+    var regionName = (expectedRegion == null ? OBJECT_TARGET_REGION : expectedRegion)
       .forVariant(scriptVariantOf(documentContext));
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
       info.getMessage(method.getName(), regionName));
@@ -169,12 +170,13 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * @return имя области; пусто, если модуль формы, а объявитель обработчика неизвестен —
    *   тогда годится любая из форменных областей.
    */
-  private Optional<TargetRegion> expectedRegion(MethodSymbol method, DocumentContext documentContext) {
+  private @Nullable TargetRegion expectedRegion(MethodSymbol method, DocumentContext documentContext) {
     if (documentContext.getModuleType() != ModuleType.FormModule) {
-      return Optional.of(OBJECT_TARGET_REGION);
+      return OBJECT_TARGET_REGION;
     }
     return formHandlerRoleIndex.roleOf(documentContext, method.getName())
-      .map(EventHandlerOutsideEventRegionDiagnostic::regionOf);
+      .map(EventHandlerOutsideEventRegionDiagnostic::regionOf)
+      .orElse(null);
   }
 
   private static TargetRegion regionOf(FormHandlerRoleIndex.Handler handler) {
@@ -191,14 +193,14 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * Лежит ли метод там, где положено. Если конкретная область известна — сравниваем
    * с ней (в обеих локалях), иначе принимаем любую область обработчиков.
    */
-  private boolean isInEventRegion(MethodSymbol method, Optional<TargetRegion> expectedRegion,
-                                  DocumentContext documentContext) {
+  private static boolean isInEventRegion(MethodSymbol method, @Nullable TargetRegion expectedRegion,
+                                         DocumentContext documentContext) {
     var regionOpt = method.getRegion();
     if (regionOpt.isEmpty()) {
       return false;
     }
     var regionName = regionOpt.get().getName();
-    if (expectedRegion.isEmpty()) {
+    if (expectedRegion == null) {
       var lowerCased = regionName.toLowerCase(Locale.ROOT);
       return FORM_EVENT_REGION_PREFIXES.stream()
         .map(p -> p.toLowerCase(Locale.ROOT))
@@ -207,7 +209,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     if (documentContext.getModuleType() != ModuleType.FormModule) {
       return OBJECT_TARGET_REGION.matches(regionName);
     }
-    return expectedRegion.get().matches(regionName);
+    return expectedRegion.matches(regionName);
   }
 
   @Override
@@ -244,10 +246,13 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     // Область берётся по первому методу: fix-all группирует методы одной области,
     // а разные роли дают разные области — их правки не смешиваются.
     var variant = scriptVariantOf(documentContext);
-    var targetRegion = expectedRegion(methods.get(0), documentContext).orElse(
-        documentContext.getModuleType() == ModuleType.FormModule
-          ? new TargetRegion(Keywords.FORM_EVENT_HANDLERS_REGION) : OBJECT_TARGET_REGION)
-      .forVariant(variant);
+    var expected = expectedRegion(methods.get(0), documentContext);
+    if (expected == null) {
+      // Модуль формы, а объявитель обработчика неизвестен: кладём в область событий формы.
+      expected = documentContext.getModuleType() == ModuleType.FormModule
+        ? new TargetRegion(Keywords.FORM_EVENT_HANDLERS_REGION) : OBJECT_TARGET_REGION;
+    }
+    var targetRegion = expected.forVariant(variant);
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());
