@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 /**
  * Член типа (метод или свойство).
@@ -261,17 +262,34 @@ public record MemberDescriptor(
    * по {@code bindings}.
    */
   public MemberDescriptor specialize(Map<String, String> bindings) {
+    return specialize(bindings, UnaryOperator.identity());
+  }
+
+  /**
+   * То же, что {@link #specialize(Map)}, но каждая полученная ссылка на тип пропускается
+   * через {@code canonicalizer}.
+   * <p>
+   * Структурная подстановка имени сохраняет {@link com.github._1c_syntax.bsl.languageserver.types.model.TypeKind}
+   * шаблона, поэтому специализация платформенного шаблона даёт платформенную ссылку и
+   * на конфигурационный тип. Канонизация приводит её к той, что зарегистрирована в
+   * реестре под этим именем.
+   *
+   * @param bindings      placeholder → имя заменителя.
+   * @param canonicalizer приведение ссылки к канонической.
+   * @return специализированная копия дескриптора; {@code this}, если ничего не изменилось.
+   */
+  public MemberDescriptor specialize(Map<String, String> bindings, UnaryOperator<TypeRef> canonicalizer) {
     if (bindings == null || bindings.isEmpty()) {
       return this;
     }
-    var newReturnTypes = TypeRef.specialize(returnTypes, bindings);
+    var newReturnTypes = TypeRef.map(TypeRef.specialize(returnTypes, bindings), canonicalizer);
     var newSignatures = signatures;
     boolean signaturesChanged = false;
     if (!newSignatures.isEmpty()) {
       var rebuilt = new ArrayList<SignatureDescriptor>(newSignatures.size());
       for (var sig : newSignatures) {
-        var specializedReturn = TypeRef.specialize(sig.returnTypes(), bindings);
-        var specializedParameters = specializeParameters(sig.parameters(), bindings);
+        var specializedReturn = TypeRef.map(TypeRef.specialize(sig.returnTypes(), bindings), canonicalizer);
+        var specializedParameters = specializeParameters(sig.parameters(), bindings, canonicalizer);
         var returnChanged = !specializedReturn.equals(sig.returnTypes());
         var parametersChanged = !specializedParameters.equals(sig.parameters());
         if (returnChanged || parametersChanged) {
@@ -299,14 +317,15 @@ public record MemberDescriptor(
    * сравнение по ссылке сработало без аллокаций.
    */
   private static List<ParameterDescriptor> specializeParameters(List<ParameterDescriptor> params,
-                                                                Map<String, String> bindings) {
+                                                                Map<String, String> bindings,
+                                                                UnaryOperator<TypeRef> canonicalizer) {
     if (params.isEmpty()) {
       return params;
     }
     List<ParameterDescriptor> rebuilt = null;
     for (var i = 0; i < params.size(); i++) {
       var p = params.get(i);
-      var specializedTypes = TypeRef.specialize(p.types(), bindings);
+      var specializedTypes = TypeRef.map(TypeRef.specialize(p.types(), bindings), canonicalizer);
       if (specializedTypes.equals(p.types())) {
         if (rebuilt != null) {
           rebuilt.add(p);
