@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.assertj.core.api.Assertions;
@@ -39,6 +40,7 @@ import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.mockito.Mockito.when;
@@ -56,6 +58,9 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
+  @MockitoBean
+  FormHandlerRoleIndex formHandlerRoleIndex;
+
   EventHandlerOutsideEventRegionDiagnosticTest() {
     super(EventHandlerOutsideEventRegionDiagnostic.class);
   }
@@ -64,6 +69,81 @@ class EventHandlerOutsideEventRegionDiagnosticTest
   void resetResolver() {
     when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(false);
+    // По умолчанию объявитель обработчика неизвестен: так ведёт себя модуль, чью
+    // форму не удалось прочитать, — тогда годится любая из форменных областей.
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
+  }
+
+  private void stubRole(String methodName, FormHandlerRoleIndex.Role role, String owner) {
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.eq(methodName)))
+      .thenReturn(Optional.of(new FormHandlerRoleIndex.Handler(role, owner)));
+  }
+
+  @Test
+  void commandHandlerBelongsToTheCommandsRegion() {
+    var src = """
+      #Область ОбработчикиКомандФормы
+
+      Процедура ЗаполнитьКоманда(Команда) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+
+      #Область ОбработчикиСобытийФормы
+
+      Процедура ПечатьКоманда(Команда) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+      """;
+    stubAsEventHandlers(Set.of("ЗаполнитьКоманда", "ПечатьКоманда"));
+    stubRole("ЗаполнитьКоманда", FormHandlerRoleIndex.Role.COMMAND, "Заполнить");
+    stubRole("ПечатьКоманда", FormHandlerRoleIndex.Role.COMMAND, "Печать");
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    // Обработчик команды в области команд — на месте; в области событий формы — нет,
+    // хотя эта область тоже «обработчиковая».
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getRange().getStart().getLine()).isEqualTo(9);
+  }
+
+  @Test
+  void elementEventBelongsToTheRegionOfItsOwner() {
+    var src = """
+      #Область ОбработчикиСобытийЭлементовШапкиФормы
+
+      Процедура ДатаПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+
+      #Область ОбработчикиСобытийЭлементовТаблицыФормыТовары
+
+      Процедура ТоварыЦенаПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      Процедура СкладПриИзменении(Элемент) Экспорт
+      КонецПроцедуры
+
+      #КонецОбласти
+      """;
+    stubAsEventHandlers(Set.of("ДатаПриИзменении", "ТоварыЦенаПриИзменении", "СкладПриИзменении"));
+    stubRole("ДатаПриИзменении", FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Дата");
+    stubRole("ТоварыЦенаПриИзменении", FormHandlerRoleIndex.Role.TABLE_ITEM_EVENT, "Товары");
+    stubRole("СкладПриИзменении", FormHandlerRoleIndex.Role.HEADER_ITEM_EVENT, "Склад");
+    var documentContext = Mockito.spy(TestUtils.getDocumentContext(src));
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    var diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    // Элемент шапки в области шапки и элемент таблицы в области своей таблицы — на
+    // местах; элемент шапки в области таблицы — нет.
+    Assertions.assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics.get(0).getRange().getStart().getLine()).isEqualTo(12);
   }
 
   @Test

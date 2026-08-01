@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -65,50 +66,117 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
 
   /**
    * Имена областей-«обработчиков событий» по стандарту std455 — ru/en.
-   * Сравнение регистронезависимое; на форме допустимы расширенные варианты
-   * ({@code ОбработчикиСобытийФормы}, {@code ОбработчикиСобытийЭлементов*}),
-   * проверяем по префиксу.
+   * Сравнение регистронезависимое.
    */
   private static final String OBJECT_TARGET_REGION = Keywords.EVENT_HANDLERS_REGION.getRu();
-  private static final String FORM_TARGET_REGION = Keywords.FORM_EVENT_HANDLERS_REGION.getRu();
 
   private static final Set<String> OBJECT_EVENT_REGIONS = Set.of(
     Keywords.EVENT_HANDLERS_REGION.getRu(),
     Keywords.EVENT_HANDLERS_REGION.getEn()
   );
 
+  /**
+   * Области модуля формы, куда допустимо класть обработчик, когда о нём известно
+   * только то, что он обработчик: форма могла не прочитаться, а метод мог совпасть
+   * с событием по имени, не будучи объявленным в {@code Form.xml}.
+   */
   private static final Set<String> FORM_EVENT_REGION_PREFIXES = Set.of(
     Keywords.FORM_EVENT_HANDLERS_REGION.getRu(),
     Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getRu(),
     Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getRu(),
+    Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getRu(),
     Keywords.FORM_EVENT_HANDLERS_REGION.getEn(),
     Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn(),
-    Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getEn()
+    Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getEn(),
+    Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getEn()
   );
+
+  private final FormHandlerRoleIndex formHandlerRoleIndex;
+
+  public EventHandlerOutsideEventRegionDiagnostic(FormHandlerRoleIndex formHandlerRoleIndex) {
+    this.formHandlerRoleIndex = formHandlerRoleIndex;
+  }
 
   @Override
   public void check() {
-    var isFormModule = documentContext.getModuleType() == ModuleType.FormModule;
     documentContext.getSymbolTree().getMethods().stream()
       .filter(EventMethodSymbol.class::isInstance)
-      .filter(method -> !isInEventRegion(method, isFormModule))
-      .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(),
-        info.getMessage(method.getName())));
+      .forEach(this::checkMethod);
   }
 
-  private static boolean isInEventRegion(MethodSymbol method, boolean isFormModule) {
+  private void checkMethod(MethodSymbol method) {
+    var expectedRegion = expectedRegion(method);
+    if (isInEventRegion(method, expectedRegion)) {
+      return;
+    }
+    diagnosticStorage.addDiagnostic(method.getSubNameRange(),
+      info.getMessage(method.getName(), expectedRegion.orElse(OBJECT_TARGET_REGION)));
+  }
+
+  /**
+   * Область, в которой обработчик обязан лежать по стандарту. У модуля формы она
+   * зависит от того, кем обработчик объявлен: событие формы, событие элемента шапки,
+   * событие элемента таблицы и действие команды живут в разных областях.
+   *
+   * @return имя области; пусто, если модуль формы, а объявитель обработчика неизвестен —
+   *   тогда годится любая из форменных областей.
+   */
+  private Optional<String> expectedRegion(MethodSymbol method) {
+    if (documentContext.getModuleType() != ModuleType.FormModule) {
+      return Optional.of(OBJECT_TARGET_REGION);
+    }
+    return formHandlerRoleIndex.roleOf(documentContext, method.getName())
+      .map(EventHandlerOutsideEventRegionDiagnostic::regionOf);
+  }
+
+  private static String regionOf(FormHandlerRoleIndex.Handler handler) {
+    return switch (handler.role()) {
+      case FORM_EVENT -> Keywords.FORM_EVENT_HANDLERS_REGION.getRu();
+      case HEADER_ITEM_EVENT -> Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getRu();
+      case TABLE_ITEM_EVENT -> Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getRu() + handler.owner();
+      case COMMAND -> Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getRu();
+    };
+  }
+
+  /**
+   * Лежит ли метод там, где положено. Если конкретная область известна — сравниваем
+   * с ней (в обеих локалях), иначе принимаем любую область обработчиков.
+   */
+  private boolean isInEventRegion(MethodSymbol method, Optional<String> expectedRegion) {
     var regionOpt = method.getRegion();
     if (regionOpt.isEmpty()) {
       return false;
     }
     var regionName = regionOpt.get().getName().toLowerCase(Locale.ROOT);
-    return isFormModule
-      ? FORM_EVENT_REGION_PREFIXES.stream()
+    if (expectedRegion.isEmpty()) {
+      return FORM_EVENT_REGION_PREFIXES.stream()
         .map(p -> p.toLowerCase(Locale.ROOT))
-        .anyMatch(regionName::startsWith)
-      : OBJECT_EVENT_REGIONS.stream()
+        .anyMatch(regionName::startsWith);
+    }
+    if (documentContext.getModuleType() != ModuleType.FormModule) {
+      return OBJECT_EVENT_REGIONS.stream()
         .map(r -> r.toLowerCase(Locale.ROOT))
         .anyMatch(regionName::equals);
+    }
+    return regionName.equals(expectedRegion.get().toLowerCase(Locale.ROOT))
+      || regionName.equals(englishOf(expectedRegion.get()).toLowerCase(Locale.ROOT));
+  }
+
+  /** Английский вариант имени области — то же имя из {@link Keywords}, другая локаль. */
+  private static String englishOf(String regionRu) {
+    if (regionRu.startsWith(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getRu())) {
+      return Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getEn()
+        + regionRu.substring(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getRu().length());
+    }
+    if (regionRu.equals(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getRu())) {
+      return Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn();
+    }
+    if (regionRu.equals(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getRu())) {
+      return Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getEn();
+    }
+    return regionRu.equals(Keywords.FORM_EVENT_HANDLERS_REGION.getRu())
+      ? Keywords.FORM_EVENT_HANDLERS_REGION.getEn()
+      : Keywords.EVENT_HANDLERS_REGION.getEn();
   }
 
   @Override
@@ -142,8 +210,11 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     if (methodTexts.isEmpty()) {
       return List.of();
     }
-    var targetRegion = documentContext.getModuleType() == ModuleType.FormModule
-      ? FORM_TARGET_REGION : OBJECT_TARGET_REGION;
+    // Область берётся по первому методу: fix-all группирует методы одной области,
+    // а разные роли дают разные области — их правки не смешиваются.
+    var targetRegion = expectedRegion(methods.get(0)).orElse(
+      documentContext.getModuleType() == ModuleType.FormModule
+        ? Keywords.FORM_EVENT_HANDLERS_REGION.getRu() : OBJECT_TARGET_REGION);
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());

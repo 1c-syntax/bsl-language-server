@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.parser.description.HyperlinkTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -63,11 +64,13 @@ public class DescriptionFormatter {
   private static final String CALL_OPTIONS_KEY = "callOptions";
   private static final String DEPRECATED_FLAG_KEY = "deprecatedFlag";
   private static final String EVENT_HANDLER_HEADER_KEY = "eventHandlerHeader";
+  private static final String COMMAND_HANDLER_HEADER_KEY = "commandHandlerHeader";
   private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
 
   private final Resources resources;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final EventContractsIndex eventContractsIndex;
+  private final FormHandlerRoleIndex formHandlerRoleIndex;
 
   public void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
     if (!newContent.isEmpty()) {
@@ -142,10 +145,19 @@ public class DescriptionFormatter {
    * Перегрузка с контекстным методом: к платформенному описанию события
    * подмешивается пользовательское описание метода из шапки-комментария.
    * Платформенное описание идёт первым, пользовательское — следом.
+   * <p>
+   * Обработчик команды формы событием не является, поэтому и называется иначе —
+   * и назван в шапке именем команды, а не процедуры: имя процедуры и так стоит
+   * в сигнатуре выше.
    */
   public String getEventHandlerSection(@org.jspecify.annotations.Nullable MethodSymbol method, MemberDescriptor event) {
     var sj = new StringJoiner("\n");
-    sj.add("**" + getResourceString(EVENT_HANDLER_HEADER_KEY) + ":** `" + event.name() + "`");
+    var command = commandOf(method);
+    if (command == null) {
+      sj.add("**" + getResourceString(EVENT_HANDLER_HEADER_KEY) + ":** `" + event.name() + "`");
+    } else {
+      sj.add("**" + getResourceString(COMMAND_HANDLER_HEADER_KEY) + ":** `" + command + "`");
+    }
     var platformDescription = event.description();
     if (!platformDescription.isBlank()) {
       sj.add("");
@@ -162,6 +174,24 @@ public class DescriptionFormatter {
       }
     }
     return sj.toString();
+  }
+
+  /**
+   * Имя команды, обработчиком которой объявлен метод.
+   *
+   * @param method метод модуля формы; {@code null} — контекста нет.
+   * @return имя команды; {@code null}, если метод — обработчик события, а не команды.
+   */
+  private @org.jspecify.annotations.Nullable String commandOf(@org.jspecify.annotations.Nullable
+                                                              MethodSymbol method) {
+    if (method == null) {
+      return null;
+    }
+    return formHandlerRoleIndex.roleOf(method.getOwner(), method.getName())
+      .filter(handler -> handler.role() == FormHandlerRoleIndex.Role.COMMAND)
+      .map(FormHandlerRoleIndex.Handler::owner)
+      .filter(name -> !name.isBlank())
+      .orElse(null);
   }
 
   public String getParametersSection(MemberDescriptor eventContract) {

@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Location;
@@ -65,8 +66,13 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   @MockitoBean
   EventHandlerResolver eventHandlerResolver;
 
+  @MockitoBean
+  FormHandlerRoleIndex formHandlerRoleIndex;
+
   @BeforeEach
   void resetResolver() {
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
     when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
     // Классификация метода в EventMethodSymbol идёт через isEventHandler; у мок-бина делегируем
@@ -101,6 +107,31 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
       .contains("Обработчик события платформы")
       .contains("ПриЗаписи")
       .contains("Возникает при записи объекта.");
+  }
+
+  @Test
+  void hoverOfCommandHandlerNamesTheCommand() {
+    // Обработчик команды событием не является: платформа зовёт его по действию
+    // команды, а не по имени события — и в шапке правильнее видеть имя команды.
+    var contract = MemberDescriptor.event("ЗаполнитьКоманда", "Обработчик команды формы «Заполнить».", List.of());
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ЗаполнитьКоманда")))
+      .thenReturn(Optional.of(contract));
+    when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.eq("ЗаполнитьКоманда")))
+      .thenReturn(Optional.of(new FormHandlerRoleIndex.Handler(FormHandlerRoleIndex.Role.COMMAND, "Заполнить")));
+
+    var src = """
+      Процедура ЗаполнитьКоманда(Команда)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ЗаполнитьКоманда").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .contains("Обработчик команды формы")
+      .contains("`Заполнить`")
+      .doesNotContain("Обработчик события платформы");
   }
 
   @Test
