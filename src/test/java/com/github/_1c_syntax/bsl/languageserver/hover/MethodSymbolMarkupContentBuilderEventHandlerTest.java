@@ -168,6 +168,66 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
   }
 
   @Test
+  void parameterTypeIsShownByItsDisplayName() {
+    // Репорт: при русской раскладке в сигнатуре светился `Any`. qualifiedName —
+    // внутреннее имя типа, наружу идёт отображаемое.
+    var value = new ParameterDescriptor(
+      BilingualString.of("ВыбранноеЗначение", "SelectedValue"),
+      TypeSet.of(TypeRef.ANY), false, BilingualString.EMPTY, "");
+    var contract = MemberDescriptor.event("ОбработкаВыбора", "",
+      List.of(new SignatureDescriptor(List.of(value), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ОбработкаВыбора")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ОбработкаВыбора(ВыбранноеЗначение)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ОбработкаВыбора").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .contains("ВыбранноеЗначение**: Произвольный")
+      .doesNotContain(": Any");
+  }
+
+  @Test
+  void parametersAreNamedAfterTheContractNotTheCode() {
+    // Репорт: у ПередЗакрытием(Отказ, СтандартнаяОбработка) в списке параметров
+    // `СтандартнаяОбработка` показывалась дважды — второй параметр контракта
+    // (`ЗавершениеРаботы`) выводился под именем из кода.
+    var cancel = new ParameterDescriptor(BilingualString.of("Отказ", "Cancel"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false, BilingualString.EMPTY, "");
+    var shutdown = new ParameterDescriptor(BilingualString.of("ЗавершениеРаботы", "Exit"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false, BilingualString.EMPTY, "");
+    var standardProcessing = new ParameterDescriptor(
+      BilingualString.of("СтандартнаяОбработка", "StandardProcessing"),
+      TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Булево")), false, BilingualString.EMPTY, "");
+    var contract = MemberDescriptor.event("ПередЗакрытием", "",
+      List.of(new SignatureDescriptor(List.of(cancel, shutdown, standardProcessing), TypeSet.EMPTY, "")));
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.eq("ПередЗакрытием")))
+      .thenReturn(Optional.of(contract));
+
+    var src = """
+      Процедура ПередЗакрытием(Отказ, СтандартнаяОбработка)
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(src);
+    var method = documentContext.getSymbolTree().getMethodSymbol("ПередЗакрытием").orElseThrow();
+
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, method)).getValue();
+
+    assertThat(content)
+      .as("параметры перечислены так, как их объявляет платформа")
+      .contains("ЗавершениеРаботы")
+      .satisfies(text -> assertThat(text.split("СтандартнаяОбработка\\*\\*", -1))
+        .as("`СтандартнаяОбработка` — один параметр, а не два")
+        .hasSize(2));
+  }
+
+  @Test
   void hoverWithContractRendersParameterTypesFromContract() {
     // given — контракт с типизированным параметром Отказ:Булево
     var cancelParam = new ParameterDescriptor(

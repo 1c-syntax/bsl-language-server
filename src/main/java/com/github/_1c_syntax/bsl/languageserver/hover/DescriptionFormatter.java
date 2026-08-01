@@ -32,7 +32,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.parser.description.HyperlinkTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -71,6 +73,8 @@ public class DescriptionFormatter {
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final EventContractsIndex eventContractsIndex;
   private final FormHandlerRoleIndex formHandlerRoleIndex;
+  private final TypeRegistry typeRegistry;
+  private final LanguageServerConfiguration configuration;
 
   public void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
     if (!newContent.isEmpty()) {
@@ -263,8 +267,9 @@ public class DescriptionFormatter {
     @org.jspecify.annotations.Nullable MethodSymbol method
   ) {
     var name = pickName(parameter, method, index);
+    var lang = configuration.getLanguage();
     var types = parameter.types().refs().stream()
-      .map(TypeRef::qualifiedName)
+      .map(ref -> typeRegistry.displayName(ref, lang))
       .collect(Collectors.joining(" | "));
     var line = PARAMETER_TEMPLATE.formatted(name, types);
     var contractDescription = parameter.bilingualDescription().ru();
@@ -279,18 +284,25 @@ public class DescriptionFormatter {
     return line;
   }
 
+  /**
+   * Имя параметра для секции «Параметры»: платформенное из контракта. Имя из кода
+   * подставляется только когда контракт его не знает — иначе разошедшиеся имена
+   * читаются как дубль: у {@code ПередЗакрытием(Отказ, СтандартнаяОбработка)} второй
+   * параметр контракта — {@code ЗавершениеРаботы}, и под именем из кода он выглядел
+   * бы вторым {@code СтандартнаяОбработка}.
+   */
   private static String pickName(
     ParameterDescriptor parameter, @org.jspecify.annotations.Nullable MethodSymbol method, int index
   ) {
+    var ru = parameter.bilingualName().ru();
+    if (!ru.isBlank()) {
+      return ru;
+    }
     if (method != null && index < method.getParameters().size()) {
       var fromCode = method.getParameters().get(index).getName();
       if (!fromCode.isBlank()) {
         return fromCode;
       }
-    }
-    var ru = parameter.bilingualName().ru();
-    if (!ru.isBlank()) {
-      return ru;
     }
     return parameter.bilingualName().en();
   }
