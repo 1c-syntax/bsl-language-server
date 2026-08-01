@@ -37,7 +37,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.bsl.types.MultiName;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.jspecify.annotations.Nullable;
@@ -49,9 +48,7 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -69,60 +66,6 @@ import java.util.stream.Collectors;
   }
 )
 public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
-
-  /**
-   * Область, куда обработчик обязан лечь по стандарту std455. Имя двуязычно, а у
-   * событий элементов таблицы к нему дописывается имя самой таблицы — стандарт задаёт
-   * его шаблоном {@code ОбработчикиСобытийЭлементовТаблицыФормы<Имя таблицы>}.
-   *
-   * @param name   имя области из {@link Keywords}.
-   * @param suffix то, что дописывается к имени; пусто у всех областей, кроме таблиц.
-   */
-  private record TargetRegion(MultiName name, String suffix) {
-
-    TargetRegion(MultiName name) {
-      this(name, "");
-    }
-
-    /** Имя области на языке модуля — его и надо написать в коде. */
-    String forVariant(ScriptVariant variant) {
-      return name.get(variant) + suffix;
-    }
-
-    /** Это ли та самая область — независимо от языка, на котором она названа. */
-    boolean matches(String regionName) {
-      return regionName.equalsIgnoreCase(name.getRu() + suffix)
-        || regionName.equalsIgnoreCase(name.getEn() + suffix);
-    }
-  }
-
-  /** Область обработчиков событий у всех модулей, кроме формы. */
-  private static final TargetRegion OBJECT_TARGET_REGION =
-    new TargetRegion(Keywords.EVENT_HANDLERS_REGION);
-
-  /**
-   * Область событий самой формы. Она же — отступной вариант, когда объявитель
-   * обработчика неизвестен: назвать пользователю одну область всё равно надо, а из
-   * четырёх форменных эта общая.
-   */
-  private static final TargetRegion FORM_EVENTS_TARGET_REGION =
-    new TargetRegion(Keywords.FORM_EVENT_HANDLERS_REGION);
-
-  /**
-   * Области модуля формы, куда допустимо класть обработчик, когда о нём известно
-   * только то, что он обработчик: форма могла не прочитаться, а метод мог совпасть
-   * с событием по имени, не будучи объявленным в {@code Form.xml}.
-   */
-  private static final Set<String> FORM_EVENT_REGION_PREFIXES = Set.of(
-    Keywords.FORM_EVENT_HANDLERS_REGION.getRu(),
-    Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getRu(),
-    Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getRu(),
-    Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getRu(),
-    Keywords.FORM_EVENT_HANDLERS_REGION.getEn(),
-    Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION.getEn(),
-    Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START.getEn(),
-    Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION.getEn()
-  );
 
   private final FormHandlerRoleIndex formHandlerRoleIndex;
   private final LanguageServerConfiguration languageServerConfiguration;
@@ -146,7 +89,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       return;
     }
     // Имя области — на языке модуля, а не интерфейса: его пользователю писать в коде.
-    var regionName = orFallback(expectedRegion).forVariant(scriptVariantOf(documentContext));
+    var regionName = EventHandlerTargetRegion.orFallback(expectedRegion).forVariant(scriptVariantOf(documentContext));
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
       info.getMessage(method.getName(), regionName));
   }
@@ -177,40 +120,22 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
    * @return имя области; пусто, если модуль формы, а объявитель обработчика неизвестен —
    *   тогда годится любая из форменных областей.
    */
-  private @Nullable TargetRegion expectedRegion(MethodSymbol method, DocumentContext documentContext) {
+  private @Nullable EventHandlerTargetRegion expectedRegion(MethodSymbol method,
+                                                            DocumentContext documentContext) {
     if (documentContext.getModuleType() != ModuleType.FormModule) {
-      return OBJECT_TARGET_REGION;
+      return EventHandlerTargetRegion.OBJECT;
     }
     return formHandlerRoleIndex.roleOf(documentContext, method.getName())
-      .map(EventHandlerOutsideEventRegionDiagnostic::regionOf)
+      .map(EventHandlerTargetRegion::of)
       .orElse(null);
-  }
-
-  /**
-   * Область, которую называем пользователю: {@link #expectedRegion} оставляет выбор
-   * открытым, когда объявитель обработчика неизвестен, а сообщение и quick fix обязаны
-   * назвать одну и ту же — иначе диагностика зовёт в одну область, а исправление
-   * создаёт другую.
-   */
-  private static TargetRegion orFallback(@Nullable TargetRegion expectedRegion) {
-    return expectedRegion == null ? FORM_EVENTS_TARGET_REGION : expectedRegion;
-  }
-
-  private static TargetRegion regionOf(FormHandlerRoleIndex.Handler handler) {
-    return switch (handler.role()) {
-      case FORM_EVENT -> FORM_EVENTS_TARGET_REGION;
-      case HEADER_ITEM_EVENT -> new TargetRegion(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION);
-      case TABLE_ITEM_EVENT ->
-        new TargetRegion(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START, handler.owner());
-      case COMMAND -> new TargetRegion(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION);
-    };
   }
 
   /**
    * Лежит ли метод там, где положено. Если конкретная область известна — сравниваем
    * с ней (в обеих локалях), иначе принимаем любую область обработчиков.
    */
-  private static boolean isInEventRegion(MethodSymbol method, @Nullable TargetRegion expectedRegion,
+  private static boolean isInEventRegion(MethodSymbol method,
+                                         @Nullable EventHandlerTargetRegion expectedRegion,
                                          DocumentContext documentContext) {
     var regionOpt = method.getRegion();
     if (regionOpt.isEmpty()) {
@@ -218,13 +143,10 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     }
     var regionName = regionOpt.get().getName();
     if (expectedRegion == null) {
-      var lowerCased = regionName.toLowerCase(Locale.ROOT);
-      return FORM_EVENT_REGION_PREFIXES.stream()
-        .map(p -> p.toLowerCase(Locale.ROOT))
-        .anyMatch(lowerCased::startsWith);
+      return EventHandlerTargetRegion.isAnyFormRegion(regionName);
     }
     if (documentContext.getModuleType() != ModuleType.FormModule) {
-      return OBJECT_TARGET_REGION.matches(regionName);
+      return EventHandlerTargetRegion.OBJECT.matches(regionName);
     }
     return expectedRegion.matches(regionName);
   }
@@ -263,7 +185,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     // Область берётся по первому методу: fix-all группирует методы одной области,
     // а разные роли дают разные области — их правки не смешиваются.
     var variant = scriptVariantOf(documentContext);
-    var targetRegion = orFallback(expectedRegion(methods.get(0), documentContext)).forVariant(variant);
+    var targetRegion = EventHandlerTargetRegion.orFallback(expectedRegion(methods.get(0), documentContext)).forVariant(variant);
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());
