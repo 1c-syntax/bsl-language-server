@@ -521,12 +521,14 @@ public class FormTypesProvider {
    * это {@code ДокументОбъект.<Имя документа>}), а на конкретной форме известно, какой
    * именно объект туда придёт.
    */
-  private static MemberDescriptor specializeByOwner(MemberDescriptor contract, String ownerName) {
+  private MemberDescriptor specializeByOwner(MemberDescriptor contract, String ownerName) {
     if (ownerName.isEmpty()) {
       return contract;
     }
     var placeholder = PlaceholderBinder.singlePlaceholder(contract);
-    return placeholder == null ? contract : contract.specialize(Map.of(placeholder, ownerName));
+    return placeholder == null
+      ? contract
+      : contract.specialize(Map.of(placeholder, ownerName), typeRegistry::canonicalRef);
   }
 
   /**
