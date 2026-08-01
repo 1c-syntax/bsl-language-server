@@ -323,9 +323,11 @@ class ConfigurationTypesProviderHelpersTest {
                                                         MetadataCollectionSpecializer mcs) {
     var recorderIndex = new RecorderIndex();
     var formDataTypesRegistrar = new FormDataTypesRegistrar(registry);
+    var typeFactory = new FormTypeFactory(registry);
     var formTypesProvider = new FormTypesProvider(registry,
       new FormParametersResolver(new BslContextHolder(mock(PlatformContextProviderFactory.class))), recorderIndex,
-      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), formDataTypesRegistrar);
+      new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), formDataTypesRegistrar,
+      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory);
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
       new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
       new ServiceModuleEventRegistrar(registry),

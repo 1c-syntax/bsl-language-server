@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElementType;
 import com.github._1c_syntax.bsl.mdo.support.DefaultFormKind;
@@ -331,6 +332,24 @@ final class FormPlatformTypes {
    * @param name имя из метаданных.
    * @return двуязычное имя с одинаковыми написаниями.
    */
+
+  /**
+   * Свойство платформенного вида: имя и описание двуязычны, сам член помечен
+   * библиотечным — так его показывают hover и автодополнение.
+   *
+   * @param name        двуязычное имя свойства.
+   * @param type        тип значения.
+   * @param description двуязычное описание; пустое допустимо.
+   * @return дескриптор свойства.
+   */
+  static MemberDescriptor platformProperty(BilingualString name, TypeRef type,
+                                           BilingualString description) {
+    return MemberDescriptor.property(name.primary(), type)
+      .withBilingualName(name)
+      .withBilingualDescription(description)
+      .withStandardLibrary(true);
+  }
+
   static BilingualString neutral(String name) {
     return BilingualString.of(name, name);
   }
@@ -726,4 +745,5 @@ final class FormPlatformTypes {
   static String mdoSuffixEn(Form form) {
     return form.getMdoReference().getMdoRef();
   }
+
 }

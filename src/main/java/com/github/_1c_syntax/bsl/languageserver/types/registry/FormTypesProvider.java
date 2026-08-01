@@ -152,23 +152,11 @@ public class FormTypesProvider {
 
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
-
-  /** Коллекция выделенных строк таблицы формы. */
-  private static final BilingualString SELECTED_ROWS =
-    BilingualString.of("ВыделенныеСтроки", "SelectedRows");
-
-  private static final String ARRAY_RU = "Массив";
-  private static final String ARRAY_EN = "Array";
   private static final BilingualString THIS_FORM_DESCRIPTION = BilingualString.of(
     "Форма, в модуле которой выполняется код. Устаревшее имя — используйте ЭтотОбъект.",
     "The form whose module executes the code. Obsolete name — use ThisObject instead.");
 
   /** Свойства таблицы, тип которых зависит от вида отображаемых данных. */
-  private static final BilingualString CURRENT_ROW = BilingualString.of("ТекущаяСтрока", "CurrentRow");
-  private static final BilingualString CURRENT_PARENT =
-    BilingualString.of("ТекущийРодитель", "CurrentParent");
-
-  private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
 
   /** Первый параметр обработчика события элемента — сам элемент. */
   private static final BilingualString ELEMENT_PARAMETER = BilingualString.of("Элемент", "Item");
@@ -178,16 +166,13 @@ public class FormTypesProvider {
   private final RecorderIndex recorderIndex;
   private final FormHandlerRoleIndex formHandlerRoleIndex;
   private final FormDataTypesRegistrar formDataTypes;
+  private final FormItemTypesRegistrar formItemTypes;
+  private final FormTypeFactory typeFactory;
 
   /** Уже обработанные формы — защита от повторной регистрации источников. */
   private final Set<TypeRef> registeredForms = new HashSet<>();
 
   /** Тип на вид элемента формы: база + расширение вида (см. {@link #registerItemKindTypes}). */
-  private final Map<FormElementType, TypeRef> itemKindTypes = new EnumMap<>(FormElementType.class);
-
-  /** Тип на вид данных таблицы формы (см. {@link #registerTableDataKindTypes}). */
-  private final Map<TableDataKind, TypeRef> tableDataKindTypes =
-    new EnumMap<>(TableDataKind.class);
 
   /**
    * RU-qualifiedName синтетического типа формы: {@code ФормаКлиентскогоПриложения.<mdoRef>}
@@ -209,7 +194,7 @@ public class FormTypesProvider {
    * @param children объекты метаданных конфигурации.
    */
   public void register(Iterable<MD> children) {
-    registerItemKindTypes();
+    formItemTypes.registerItemKindTypes();
     var count = 0;
     for (var md : children) {
       if (md instanceof CommonForm commonForm) {
@@ -223,182 +208,13 @@ public class FormTypesProvider {
     LOGGER.debug("Form types registered: {}", count);
   }
 
-  /**
-   * Регистрирует по одному типу на вид элемента формы — «базовый рантайм-тип плюс
-   * расширение вида» ({@code ГруппаФормы.ОбычнаяГруппа} = {@code ГруппаФормы} +
-   * {@code Расширение группы формы для обычной группы}). Без расширения элемент видит
-   * лишь общую часть: {@code ЦветФона} у обычной группы объявлен именно в расширении.
-   * <p>
-   * Типов ровно столько, сколько видов элементов, — они не зависят от конфигурации,
-   * поэтому регистрируются один раз на workspace и заранее: {@link #buildItemMembers}
-   * вызывается лениво изнутри {@code getMembers}, а регистрация источников там сбивала бы
-   * epoch кэша членов прямо во время его пересчёта.
-   * <p>
-   * Отображаемое имя остаётся базовым ({@code ГруппаФормы}) — синтетическое имя нужно
-   * реестру для различения видов, а пользователю показывать надо реальный тип значения.
-   */
-  private void registerItemKindTypes() {
-    for (var elementType : FormElementType.values()) {
-      var baseName = FormPlatformTypes.itemTypeName(elementType);
-      var extensionName = FormPlatformTypes.itemExtensionTypeName(elementType);
-      if (baseName == null || extensionName == null) {
-        continue;
-      }
-      var baseRef = typeRegistry.resolve(baseName).orElse(null);
-      var extensionRef = typeRegistry.resolve(extensionName).orElse(null);
-      if (baseRef == null || extensionRef == null) {
-        // Нет синтакс-помощника — расширений в JSON-фолбэке нет; элемент останется
-        // с базовым типом, без свойств вида.
-        continue;
-      }
-      var kindRef = typeRegistry.registerConfigurationType(
-        baseName + "." + FormPlatformTypes.itemKindSuffix(elementType));
-      typeRegistry.registerExtension(kindRef, baseRef, FileType.BSL);
-      typeRegistry.registerExtension(kindRef, extensionRef, FileType.BSL);
-      typeRegistry.registerDisplayName(kindRef, BilingualString.of(
-        typeRegistry.displayName(baseRef, Language.RU),
-        typeRegistry.displayName(baseRef, Language.EN)));
-      itemKindTypes.put(elementType, kindRef);
-    }
-    registerTableDataKindTypes();
-  }
-
-  /**
-   * Регистрирует по типу на вид данных таблицы формы ({@code ТаблицаФормы.ДинамическийСписок}).
-   * Устроено как {@link #registerItemKindTypes}, но ось другая: у таблицы расширение
-   * определяется не видом элемента, а тем, что она отображает.
-   */
-  private void registerTableDataKindTypes() {
-    var baseName = FormPlatformTypes.tableTypeName();
-    var baseRef = typeRegistry.resolve(baseName).orElse(null);
-    if (baseRef == null) {
-      return;
-    }
-    for (var dataKind : TableDataKind.values()) {
-      var extensionRef = typeRegistry.resolve(dataKind.extensionName()).orElse(null);
-      if (extensionRef == null) {
-        continue;
-      }
-      var kindRef = typeRegistry.registerConfigurationType(baseName + "." + dataKind.suffix());
-      typeRegistry.registerExtension(kindRef, baseRef, FileType.BSL);
-      typeRegistry.registerExtension(kindRef, extensionRef, FileType.BSL);
-      typeRegistry.registerDisplayName(kindRef, BilingualString.of(
-        typeRegistry.displayName(baseRef, Language.RU),
-        typeRegistry.displayName(baseRef, Language.EN)));
-      tableDataKindTypes.put(dataKind, kindRef);
-      registerRowDataKindType(dataKind, kindRef);
-      registerTableDataRules(dataKind, kindRef);
-    }
-  }
-
-  /**
-   * Уточняет члены таблицы формы по виду отображаемых данных. Синтакс-помощник
-   * описывает эти правила текстом в описании расширения, а не объявлением типов:
-   * «в качестве значений для свойств {@code ТекущаяСтрока}, {@code ТекущийРодитель} …
-   * используется идентификатор типа {@code ИдентификаторКомпоновкиДанных}»,
-   * «{@code ТекущиеДанные} и метод {@code ДанныеСтроки} возвращают структуру,
-   * заполненную копией данных». Сами члены объявлены как {@code Произвольный}, поэтому
-   * без такой подстановки цепочка от них обрывается.
-   * <p>
-   * Описание — не истина в последней инстанции: тип {@code Структура} таблица формы
-   * не отдаёт нигде — там либо строка коллекции, либо {@code ДанныеФормыСтруктура}
-   * (см. {@link TableDataKind#currentDataTypeName}), — а тип
-   * идентификатора описание не называет вовсе, хотя он известен из самих данных формы.
-   */
-  private void registerTableDataRules(TableDataKind dataKind, TypeRef tableRef) {
-    var members = new ArrayList<MemberDescriptor>();
-    var rowIdRef = resolveOrNull(dataKind.rowIdTypeName());
-    if (rowIdRef != null) {
-      members.add(platformProperty(CURRENT_ROW, rowIdRef, BilingualString.EMPTY));
-      members.add(platformProperty(CURRENT_PARENT, rowIdRef, BilingualString.EMPTY));
-      var selectedRowsRef = registerIdentifierArray(rowIdRef);
-      if (selectedRowsRef != null) {
-        members.add(platformProperty(SELECTED_ROWS, selectedRowsRef, BilingualString.EMPTY));
-      }
-    }
-    var currentDataRef = resolveOrNull(dataKind.currentDataTypeName());
-    if (currentDataRef != null) {
-      members.add(platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        currentDataRef, BilingualString.EMPTY));
-      members.add(MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
-          List.of(new SignatureDescriptor(
-            List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
-              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
-            TypeSet.of(currentDataRef), BilingualString.EMPTY)))
-        .withBilingualName(ROW_DATA_METHOD));
-    }
-    if (!members.isEmpty()) {
-      typeRegistry.registerMemberOverride(tableRef, () -> members, FileType.BSL);
-    }
-  }
-
-  private @Nullable TypeRef resolveOrNull(@Nullable String typeName) {
-    return typeName == null ? null : typeRegistry.resolve(typeName).orElse(null);
-  }
-
-  /**
-   * Массив идентификаторов строк — то, что лежит в {@code ВыделенныеСтроки}. Платформа
-   * объявляет там обычный {@code Массив}, а описание расширения говорит, чем он заполнен;
-   * без специализации обход {@code Для Каждого Идентификатор Из ВыделенныеСтроки} терял
-   * тип элемента.
-   *
-   * @param elementRef тип элемента массива.
-   * @return специализация массива; {@code null}, если самого {@code Массив} в реестре нет.
-   */
-  private @Nullable TypeRef registerIdentifierArray(TypeRef elementRef) {
-    var arrayBase = typeRegistry.resolve(ARRAY_RU).orElse(null);
-    if (arrayBase == null) {
-      return null;
-    }
-    var arrayRef = formDataTypes.registerFormDataMirror(ARRAY_RU, ARRAY_EN, elementRef.qualifiedName(), "", arrayBase);
-    typeRegistry.registerDefaultElementTypes(arrayRef, List.of(elementRef));
-    typeRegistry.inheritCollectionTraits(arrayRef, arrayBase, FileType.BSL);
-    return arrayRef;
-  }
-
-  /**
-   * Тип строки данных таблицы формы, если платформа даёт для него расширение. Пока
-   * такое расширение одно — у динамического списка («когда в списке задано условное
-   * оформление»), и на управляемой форме динамический список — единственный источник
-   * строк, у которого своя специфика.
-   * <p>
-   * Тип заводится и тогда, когда расширение пустое: он нужен как якорь для
-   * {@code ТекущиеДанные} — вместо обобщённого {@code ДанныеФормыЭлементКоллекции}
-   * там оказывается строка именно этого вида данных. Колонки строки лягут на него же,
-   * когда mdclasses начнёт отдавать источник данных списка (mdclasses#671).
-   */
-  private void registerRowDataKindType(TableDataKind dataKind, TypeRef tableRef) {
-    var extensionName = FormPlatformTypes.rowDataExtensionName(dataKind);
-    if (extensionName == null) {
-      return;
-    }
-    var rowBaseRef = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU).orElse(null);
-    var extensionRef = typeRegistry.resolve(extensionName).orElse(null);
-    if (rowBaseRef == null || extensionRef == null) {
-      return;
-    }
-    var rowRef = typeRegistry.registerConfigurationType(
-      FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU + "." + dataKind.suffix());
-    typeRegistry.registerExtension(rowRef, rowBaseRef, FileType.BSL);
-    typeRegistry.registerExtension(rowRef, extensionRef, FileType.BSL);
-    typeRegistry.registerDisplayName(rowRef, BilingualString.of(
-      typeRegistry.displayName(rowBaseRef, Language.RU),
-      typeRegistry.displayName(rowBaseRef, Language.EN)));
-    typeRegistry.registerMemberOverride(tableRef,
-      () -> List.of(platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        rowRef, BilingualString.EMPTY)),
-      FileType.BSL);
-  }
-
   private boolean registerForm(Form form, @Nullable MD owner) {
     var suffixRu = FormPlatformTypes.mdoSuffixRu(form);
     if (suffixRu.isBlank()) {
       return false;
     }
     var kind = FormKind.of(form.getFormType());
-    var formRef = registerWithAlias(
+    var formRef = typeFactory.registerWithAlias(
       kind.baseTypeRu() + "." + suffixRu,
       kind.baseTypeEn() + "." + FormPlatformTypes.mdoSuffixEn(form));
     if (!registeredForms.add(formRef)) {
@@ -454,8 +270,8 @@ public class FormTypesProvider {
     // Override, а не обычный источник: `Элементы`/`Параметры`/`Команды`/`ЭтотОбъект`
     // есть и у базового типа, но с обобщёнными типами — специализированные должны
     // выигрывать дедуп в getMembers.
-    var tableTypes = prepareTableTypes(data, kind, suffixRu, attributeTypes);
-    var itemsRef = registerItemsCollection(form, kind, suffixRu, tableTypes);
+    var tableTypes = formItemTypes.prepareTableTypes(data, kind, suffixRu, attributeTypes);
+    var itemsRef = formItemTypes.registerItemsCollection(form, kind, suffixRu, tableTypes);
     var parametersRef = registerParametersStructure(form, kind, suffixRu, owner);
     var commandsRef = registerCommandsCollection(form, kind, suffixRu);
     typeRegistry.registerMemberOverride(formRef,
@@ -714,126 +530,6 @@ public class FormTypesProvider {
   }
 
   /**
-   * Типы таблиц формы, у которых {@code ТекущиеДанные} — строка отображаемой коллекции
-   * с её колонками (табличная часть, реквизит-таблица или дерево значений). Такой тип
-   * заводится на <b>конкретную таблицу</b>, а не на вид данных: колонки у каждой свои.
-   * <p>
-   * Считается на регистрации формы, а не в ленивом источнике членов: здесь
-   * регистрируются типы, а регистрация изнутри {@code getMembers} сбивала бы epoch
-   * кэша во время его же пересчёта.
-   *
-   * @param data           содержимое формы.
-   * @param kind           вид формы.
-   * @param suffixRu       суффикс имени типов этой формы.
-   * @param attributeTypes типы реквизитов формы (уже переведённые в данные формы).
-   * @return {@code имя элемента (lower) → тип таблицы}; пусто, если таких таблиц нет.
-   */
-  private Map<String, TypeRef> prepareTableTypes(FormData data, FormKind kind, String suffixRu,
-                                                 Map<String, TypeSet> attributeTypes) {
-    if (kind != FormKind.MANAGED) {
-      return Map.of();
-    }
-    var declaredTypes = attributeTypesByName(data.getAttributes());
-    var result = new HashMap<String, TypeRef>();
-    for (var element : data.getPlainElements()) {
-      if (!(element instanceof FormTable) || element.getName().isBlank()) {
-        continue;
-      }
-      var rowRef = rowOf(element, attributeTypes, declaredTypes);
-      var kindRef = tableTypeRef(element, declaredTypes);
-      if (rowRef == null || kindRef == null) {
-        continue;
-      }
-      var tableRef = typeRegistry.registerConfigurationType(
-        FormPlatformTypes.tableTypeName() + "." + suffixRu + "." + element.getName());
-      typeRegistry.registerExtension(tableRef, kindRef, FileType.BSL);
-      typeRegistry.registerDisplayName(tableRef, BilingualString.of(
-        typeRegistry.displayName(kindRef, Language.RU),
-        typeRegistry.displayName(kindRef, Language.EN)));
-      typeRegistry.registerMemberOverride(tableRef, () -> currentDataMembers(rowRef), FileType.BSL);
-      result.put(element.getName().toLowerCase(Locale.ROOT), tableRef);
-    }
-    return Map.copyOf(result);
-  }
-
-  /**
-   * Строка отображаемой таблицей коллекции: путь к данным ведёт либо прямо в
-   * реквизит-таблицу формы, либо вглубь основного реквизита — в табличную часть объекта.
-   *
-   * @return тип строки; {@code null}, если у данных таблицы колонок нет.
-   */
-  private @Nullable TypeRef rowOf(FormElement element, Map<String, TypeSet> attributeTypes,
-                                  Map<String, String> declaredTypes) {
-    var dataPath = element instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
-    if (dataPath.isBlank()) {
-      return null;
-    }
-    var separator = dataPath.indexOf('.');
-    if (separator < 0) {
-      return attributeTypes.getOrDefault(dataPath.toLowerCase(Locale.ROOT), TypeSet.EMPTY)
-        .refs().stream()
-        .map(formDataTypes::rowOfCollection)
-        .filter(Objects::nonNull)
-        .findFirst()
-        .orElse(null);
-    }
-    var rootName = dataPath.substring(0, separator).toLowerCase(Locale.ROOT);
-    var rootType = declaredTypes.getOrDefault(rootName, "");
-    var current = rootType.isBlank() ? null : typeRegistry.resolve(rootType).orElse(null);
-    for (var segment : dataPath.substring(separator + 1).split("\\.")) {
-      if (current == null) {
-        return null;
-      }
-      current = propertyTypeRef(current, segment);
-    }
-    // Путь идёт по прикладным типам, а строка данных формы живёт у зеркала табличной части.
-    var mirror = current == null ? null : formDataTypes.mirrorOfTabularSection(current);
-    return mirror == null ? null : formDataTypes.rowOfCollection(mirror);
-  }
-
-  /**
-   * {@code ТекущиеДанные} и {@code ДанныеСтроки} конкретной таблицы — строка её
-   * коллекции. Описание расширения называет это «структурой, заполненной копией
-   * данных», но проверка на платформе даёт
-   * {@code ТипЗнч(…ТекущиеДанные) = ДанныеФормыЭлементКоллекции}: «структура» там —
-   * про устройство значения, а не про тип.
-   */
-  private static List<MemberDescriptor> currentDataMembers(TypeRef rowRef) {
-    return List.of(
-      platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        rowRef, BilingualString.EMPTY),
-      MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
-          List.of(new SignatureDescriptor(
-            List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
-              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
-            TypeSet.of(rowRef), BilingualString.EMPTY)))
-        .withBilingualName(ROW_DATA_METHOD));
-  }
-
-  /**
-   * Тип коллекции элементов формы ({@code ВсеЭлементыФормы.<mdoRef>}): платформенные
-   * методы коллекции наследуются от базового типа, а generic-слот
-   * {@code <Имя элемента управления>} заменяется реальными элементами формы с их
-   * рантайм-типами.
-   */
-  private TypeRef registerItemsCollection(Form form, FormKind kind, String suffixRu,
-                                          Map<String, TypeRef> tableTypes) {
-    var itemsRef = registerWithAlias(
-      kind.itemsTypeRu() + "." + suffixRu,
-      kind.itemsTypeEn() + "." + FormPlatformTypes.mdoSuffixEn(form));
-    var itemsBaseRef = typeRegistry.resolve(kind.itemsTypeRu()).orElse(null);
-    if (itemsBaseRef != null) {
-      typeRegistry.registerExtension(itemsRef, itemsBaseRef, FileType.BSL);
-      typeRegistry.inheritCollectionTraits(itemsRef, itemsBaseRef, FileType.BSL);
-    }
-    typeRegistry.registerMemberSource(itemsRef,
-      () -> buildItemMembers(form.getData().getPlainElements(), form.getData().getAttributes(), kind, tableTypes),
-      FileType.BSL);
-    return itemsRef;
-  }
-
-  /**
    * Тип коллекции команд формы ({@code КомандыФормы.<mdoRef>}): устроен как коллекция
    * элементов, только имена берутся из блока {@code <Commands>}, а тип у всех один —
    * {@code КомандаФормы}.
@@ -846,7 +542,7 @@ public class FormTypesProvider {
     if (kind != FormKind.MANAGED || commands.isEmpty()) {
       return null;
     }
-    var commandsRef = registerWithAlias(
+    var commandsRef = typeFactory.registerWithAlias(
       FormPlatformTypes.FORM_COMMANDS_RU + "." + suffixRu,
       FormPlatformTypes.FORM_COMMANDS_EN + "." + FormPlatformTypes.mdoSuffixEn(form));
     var baseRef = typeRegistry.resolve(FormPlatformTypes.FORM_COMMANDS_RU).orElse(null);
@@ -931,15 +627,15 @@ public class FormTypesProvider {
                                                          @Nullable TypeRef commandsRef,
                                                          @Nullable TypeRef injectedRef) {
     var members = new ArrayList<MemberDescriptor>();
-    members.add(platformProperty(
+    members.add(FormPlatformTypes.platformProperty(
       BilingualString.of(kind.itemsPropertyRu(), kind.itemsPropertyEn()), itemsRef, BilingualString.EMPTY));
     if (parametersRef != null) {
-      members.add(platformProperty(
+      members.add(FormPlatformTypes.platformProperty(
         BilingualString.of(FormPlatformTypes.PARAMETERS_PROPERTY_RU, FormPlatformTypes.PARAMETERS_PROPERTY_EN),
         parametersRef, BilingualString.EMPTY));
     }
     if (commandsRef != null) {
-      members.add(platformProperty(
+      members.add(FormPlatformTypes.platformProperty(
         BilingualString.of(FormPlatformTypes.COMMANDS_PROPERTY_RU, FormPlatformTypes.COMMANDS_PROPERTY_EN),
         commandsRef, BilingualString.EMPTY));
     }
@@ -947,172 +643,16 @@ public class FormTypesProvider {
     // формы объекта — и ведёт на сам объект, чей контекст туда инжечен
     // (см. registerModuleType). У управляемой формы это сама форма.
     if (kind == FormKind.MANAGED || injectedRef != null) {
-      members.add(platformProperty(BilingualString.of(THIS_OBJECT_RU, THIS_OBJECT_EN),
+      members.add(FormPlatformTypes.platformProperty(BilingualString.of(THIS_OBJECT_RU, THIS_OBJECT_EN),
         injectedRef == null ? formRef : injectedRef, BilingualString.EMPTY));
     }
     // `ЭтаФорма` платформа отдаёт в модуле формы обоих видов: у обычной это штатное
     // имя, у управляемой — устаревший синоним `ЭтотОбъект` (см. UsingThisFormDiagnostic).
-    members.add(platformProperty(
+    members.add(FormPlatformTypes.platformProperty(
       BilingualString.of(THIS_FORM_RU, THIS_FORM_EN), formRef, THIS_FORM_DESCRIPTION));
     return List.copyOf(members);
   }
 
-  private static MemberDescriptor platformProperty(BilingualString name, TypeRef type,
-                                                   BilingualString description) {
-    return MemberDescriptor.property(name.primary(), type)
-      .withBilingualName(name)
-      .withBilingualDescription(description)
-      .withStandardLibrary(true);
-  }
-
-
-  /**
-   * Элементы формы как свойства коллекции. {@code getPlainElements()} уже плоский —
-   * в управляемой форме коллекция {@code Элементы} тоже плоская независимо от
-   * вложенности групп.
-   */
-  private List<MemberDescriptor> buildItemMembers(List<FormElement> items, List<FormAttribute> attributes,
-                                                  FormKind formKind, Map<String, TypeRef> tableTypes) {
-    if (items.isEmpty()) {
-      return List.of();
-    }
-    var attributeTypes = attributeTypesByName(attributes);
-    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(items.size());
-    for (var item : items) {
-      var name = item.getName();
-      if (name.isBlank()) {
-        continue;
-      }
-      var types = itemTypes(item, attributeTypes, formKind, tableTypes);
-      var descriptor = MemberDescriptor.property(name, types, "")
-        .withBilingualName(FormPlatformTypes.neutral(name))
-        .withBilingualDescription(FormPlatformTypes.bilingual(item.getTitle()));
-      byName.putIfAbsent(name.toLowerCase(Locale.ROOT), descriptor);
-    }
-    return List.copyOf(byName.values());
-  }
-
-  /**
-   * Тип элемента формы: если у вида есть расширение — специализация «база + расширение»
-   * из {@link #registerItemKindTypes}, иначе просто базовый рантайм-тип. Таблица —
-   * особый случай: её расширение выбирается по данным, а не по виду.
-   */
-  private TypeSet itemTypes(FormElement item, Map<String, String> attributeTypesByName, FormKind formKind,
-                            Map<String, TypeRef> tableTypes) {
-    if (formKind == FormKind.ORDINARY) {
-      // У обычной формы своя иерархия элементов — `ПолеВвода`, `ТабличноеПоле`,
-      // `Надпись`, `Флажок` — со своими расширениями. Она здесь не моделируется, а
-      // подмешать элементу обычной формы тип управляемой (`ПолеФормы`) было бы прямой
-      // ошибкой: это разные типы с разным составом. Лучше не типизировать вовсе.
-      return TypeSet.EMPTY;
-    }
-    var elementType = item.getType();
-    if (elementType == FormElementType.TABLE) {
-      // Тип на конкретную таблицу заводится, только когда у её строки есть колонки
-      // (см. prepareTableTypes); иначе хватает общего типа по виду данных.
-      var ownRef = tableTypes.get(item.getName().toLowerCase(Locale.ROOT));
-      if (ownRef != null) {
-        return TypeSet.of(ownRef);
-      }
-      var tableRef = tableTypeRef(item, attributeTypesByName);
-      if (tableRef != null) {
-        return TypeSet.of(tableRef);
-      }
-    }
-    var kindRef = itemKindTypes.get(elementType);
-    if (kindRef != null) {
-      return TypeSet.of(kindRef);
-    }
-    var baseName = FormPlatformTypes.itemTypeName(elementType);
-    return baseName == null ? TypeSet.EMPTY : TypeSet.of(resolveOrIntern(baseName));
-  }
-
-  /**
-   * Тип таблицы формы по её {@code ПутьКДанным}: корневой сегмент пути — это реквизит
-   * формы, его тип и определяет расширение ({@code ДинамическийСписок} → расширение
-   * динамического списка, {@code Объект.Товары} → расширение табличных частей).
-   *
-   * @return специализированный тип таблицы; {@code null}, если путь пуст, реквизит не
-   *   найден или вид данных не опознан — тогда останется базовая {@code ТаблицаФормы}.
-   */
-  private @Nullable TypeRef tableTypeRef(FormElement item, Map<String, String> attributeTypesByName) {
-    var dataPath = item instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
-    if (dataPath.isBlank()) {
-      return null;
-    }
-    var separator = dataPath.indexOf('.');
-    var rootName = separator < 0 ? dataPath : dataPath.substring(0, separator);
-    var rootType = attributeTypesByName.getOrDefault(rootName.toLowerCase(Locale.ROOT), "");
-
-    // Сначала пройти путь целиком: у частей компоновщика настроек значимый тип стоит в
-    // конце (`Отчет.КомпоновщикНастроек.Настройки.Выбор`), а не в корне.
-    var walked = walkedDataKind(dataPath, separator, rootType);
-    var dataKind = walked != null
-      ? walked
-      : TableDataKind.of(rootType, separator >= 0);
-    return dataKind == null ? null : tableDataKindTypes.get(dataKind);
-  }
-
-  /**
-   * Вид данных по типу <b>последнего</b> сегмента {@code ПутьКДанным}. Путь идёт по
-   * членам: корень — реквизит формы, дальше свойства их типов.
-   * <p>
-   * Опознаются только виды с известным типом данных, поэтому «не дошли» и «дошли до
-   * неинтересного типа» дают один результат — {@code null}, и вызывающий откатывается
-   * на разбор по корню пути (там табличная часть опознаётся по вложенности).
-   *
-   * @return вид данных; {@code null}, если путь односегментный, не резолвится или
-   *   тип последнего сегмента не опознан.
-   */
-  private @Nullable TableDataKind walkedDataKind(String dataPath, int separator,
-                                                                  String rootType) {
-    if (separator < 0 || rootType.isBlank()) {
-      return null;
-    }
-    var current = typeRegistry.resolve(rootType).orElse(null);
-    if (current == null) {
-      return null;
-    }
-    for (var segment : dataPath.substring(separator + 1).split("\\.")) {
-      current = propertyTypeRef(current, segment);
-      if (current == null) {
-        return null;
-      }
-    }
-    return TableDataKind.byTypeName(current.qualifiedName());
-  }
-
-  /** Тип свойства с таким именем у типа; {@code null}, если свойства нет или он без типа. */
-  private @Nullable TypeRef propertyTypeRef(TypeRef ownerRef, String propertyName) {
-    for (var member : typeRegistry.getMembers(ownerRef, FileType.BSL)) {
-      if (member.kind() == MemberKind.PROPERTY && !member.generic() && member.matches(propertyName)) {
-        return member.returnTypes().refs().stream().findFirst().orElse(null);
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Карта {@code имя реквизита (lower) → ru-имя его типа} для резолва
-   * {@code ПутьКДанным} элементов. Строится по реквизитам формы, а не по реестру:
-   * нужно исходное объявление типа из {@code Form.xml}.
-   */
-  private static Map<String, String> attributeTypesByName(List<FormAttribute> attributes) {
-    if (attributes.isEmpty()) {
-      return Map.of();
-    }
-    var byName = LinkedHashMap.<String, String>newLinkedHashMap(attributes.size());
-    for (var attribute : attributes) {
-      var name = attribute.getName();
-      if (name.isBlank()) {
-        continue;
-      }
-      var types = attribute.getValueType().getTypes();
-      byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
-        types.isEmpty() ? "" : types.get(0).fullName().getRu());
-    }
-    return byName;
-  }
 
   /**
    * Объявленный в {@code Form.xml} обработчик вместе с типами, где искать контракт
@@ -1138,12 +678,12 @@ public class FormTypesProvider {
     for (var handler : data.getEventHandlers()) {
       result.add(new HandlerSource(handler, formTypes, false));
     }
-    var attributeTypes = attributeTypesByName(data.getAttributes());
+    var attributeTypes = formItemTypes.attributeTypesByName(data.getAttributes());
     for (var element : data.getPlainElements()) {
       if (!(element instanceof FormEventHandlerOwner handlerOwner)) {
         continue;
       }
-      var elementTypes = itemTypes(element, attributeTypes, kind, Map.of()).refs().stream().toList();
+      var elementTypes = formItemTypes.itemTypes(element, attributeTypes, kind, Map.of()).refs().stream().toList();
       for (var handler : handlerOwner.getEventHandlers()) {
         result.add(new HandlerSource(handler, elementTypes, true));
       }
@@ -1501,20 +1041,6 @@ public class FormTypesProvider {
     return owner.names();
   }
 
-
-  private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (!qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
-      typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
-    }
-    typeRegistry.registerDisplayName(ref, BilingualString.of(qualifiedRu, qualifiedEn));
-    return ref;
-  }
-
-  private TypeRef resolveOrIntern(String qualifiedName) {
-    return typeRegistry.resolve(qualifiedName)
-      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, qualifiedName));
-  }
 
   private static BilingualString unknownEventDescription(String eventName) {
     return BilingualString.of(
