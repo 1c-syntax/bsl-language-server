@@ -35,7 +35,9 @@ import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.types.SpecProbes.fieldNames;
 import static com.github._1c_syntax.bsl.languageserver.types.SpecProbes.names;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 
 /**
  * Сверка с методической рекомендацией «Типизация кода», раздел «Возможности типизирующих
@@ -441,10 +443,12 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
     var types = typeOf("3.20");
     var attribute = typeOfVariable("Проба_3_20_Реквизит");
 
-    // then
+    // then: имя типа рекомендация пишет обобщённо, мы отдаём конкретную табличную часть —
+    // поэтому проверяется вхождение, а не точное совпадение.
     assertThat(names(types))
       .as("рекомендация: возвращаемое значение получает тип по ссылке")
-      .containsExactly("ТабличнаяЧасть");
+      .singleElement(as(STRING))
+      .contains("ТабличнаяЧасть");
     assertThat(names(attribute))
       .as("рекомендация: с этим типом работают как с табличной частью — обходят и читают реквизит")
       .containsExactly("Строка");
