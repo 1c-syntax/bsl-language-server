@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
-import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -81,7 +80,10 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     var moduleType = documentContext.getModuleType();
     var fileType = documentContext.getFileType();
 
-    var regionsLanguage = getRegionsLanguage(documentContext, fileType);
+    // Язык, на котором пишет проект, считает сам документ: у файла конфигурации — её
+    // ScriptVariant, у одиночного файла и у OneScript — язык интерфейса сервера.
+    var regionsLanguage = ScriptVariant.valueByName(
+      documentContext.getScriptVariantLanguage().getLanguageCode());
     Set<String> neededStandardRegions;
 
     if (fileType == FileType.BSL) {
@@ -122,18 +124,6 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
     return List.of(codeAction);
-  }
-
-  private ScriptVariant getRegionsLanguage(DocumentContext documentContext, FileType fileType) {
-
-    ScriptVariant regionsLanguage;
-    var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      regionsLanguage = ScriptVariant.valueByName(languageServerConfiguration.getLanguage().getLanguageCode());
-    } else {
-      regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
-    }
-    return regionsLanguage;
   }
 
   private static Range calculateFixRange(Range range) {

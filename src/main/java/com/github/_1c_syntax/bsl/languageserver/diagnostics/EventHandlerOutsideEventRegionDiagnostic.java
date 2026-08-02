@@ -21,9 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
@@ -35,9 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -68,12 +64,9 @@ import java.util.stream.Collectors;
 public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   private final FormHandlerRoleIndex formHandlerRoleIndex;
-  private final LanguageServerConfiguration languageServerConfiguration;
 
-  public EventHandlerOutsideEventRegionDiagnostic(FormHandlerRoleIndex formHandlerRoleIndex,
-                                                 LanguageServerConfiguration languageServerConfiguration) {
+  public EventHandlerOutsideEventRegionDiagnostic(FormHandlerRoleIndex formHandlerRoleIndex) {
     this.formHandlerRoleIndex = formHandlerRoleIndex;
-    this.languageServerConfiguration = languageServerConfiguration;
   }
 
   @Override
@@ -89,24 +82,10 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       return;
     }
     // Имя области — на языке модуля, а не интерфейса: его пользователю писать в коде.
-    var regionName = EventHandlerTargetRegion.orFallback(expectedRegion).forVariant(scriptVariantOf(documentContext));
+    var regionName = EventHandlerTargetRegion.orFallback(expectedRegion)
+      .forLanguage(documentContext.getScriptVariantLanguage());
     diagnosticStorage.addDiagnostic(method.getSubNameRange(),
       info.getMessage(method.getName(), regionName));
-  }
-
-  /**
-   * Вариант встроенного языка, в котором называем области: у файла конфигурации — её
-   * собственный ({@code ScriptVariant}), у одиночного файла (конфигурация не прочитана)
-   * и у OneScript — язык интерфейса сервера. Написание в самом модуле роли не играет:
-   * платформа понимает оба, а проект пишет на своём.
-   */
-  private ScriptVariant scriptVariantOf(DocumentContext documentContext) {
-    var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY
-      || documentContext.getFileType() == FileType.OS) {
-      return ScriptVariant.valueByName(languageServerConfiguration.getLanguage().getLanguageCode());
-    }
-    return configuration.getScriptVariant();
   }
 
   /**
@@ -184,8 +163,9 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     }
     // Область берётся по первому методу: fix-all группирует методы одной области,
     // а разные роли дают разные области — их правки не смешиваются.
-    var variant = scriptVariantOf(documentContext);
-    var targetRegion = EventHandlerTargetRegion.orFallback(expectedRegion(methods.get(0), documentContext)).forVariant(variant);
+    var language = documentContext.getScriptVariantLanguage();
+    var targetRegion = EventHandlerTargetRegion
+      .orFallback(expectedRegion(methods.get(0), documentContext)).forLanguage(language);
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());
@@ -204,8 +184,9 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       var body = String.join("\n\n", methodTexts);
       // Директивы — в варианте встроенного языка конфигурации. Компилируются оба
       // написания, но создавать мы обязаны на том языке, на котором пишет проект.
-      var insertText = leading + "#" + Keywords.REGION.get(variant) + " " + targetRegion + "\n\n"
-        + body + "\n\n#" + Keywords.ENDREGION.get(variant) + "\n";
+      var languageCode = language.getLanguageCode();
+      var insertText = leading + "#" + Keywords.REGION.get(languageCode) + " " + targetRegion + "\n\n"
+        + body + "\n\n#" + Keywords.ENDREGION.get(languageCode) + "\n";
       textEdits.add(new TextEdit(new Range(anchor, anchor), insertText));
     }
 

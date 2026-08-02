@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.types.MultiName;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
@@ -99,8 +99,8 @@ record EventHandlerTargetRegion(MultiName name, String suffix) {
   }
 
   /** Имя области на языке модуля — его и надо написать в коде. */
-  String forVariant(ScriptVariant variant) {
-    return name.get(variant) + suffix;
+  String forLanguage(Language language) {
+    return name.get(language.getLanguageCode()) + suffix;
   }
 
   /** Это ли та самая область — независимо от языка, на котором она названа. */
