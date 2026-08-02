@@ -467,4 +467,70 @@ class TypeSetTest {
     // when / then
     assertThat(ts.without(ARRAY)).isSameAs(TypeSet.EMPTY);
   }
+
+  @Test
+  void mapRefsMovesDecorationsToMappedRef() {
+    // given
+    var ts = TypeSet.of(ARRAY)
+      .withElement(ARRAY, TypeSet.of(NUMBER))
+      .withField(ARRAY, "Поле", TypeSet.of(STRING));
+    var renamed = new TypeRef(TypeKind.CONFIGURATION, "Массив");
+
+    // when
+    var mapped = ts.mapRefs(ref -> ARRAY.equals(ref) ? renamed : ref);
+
+    // then
+    assertThat(mapped.refs()).containsExactly(renamed);
+    assertThat(mapped.getElementTypes(renamed).refs()).containsExactly(NUMBER);
+    assertThat(mapped.getLocalFields(renamed)).containsOnlyKeys("Поле");
+  }
+
+  @Test
+  void mapRefsGoesIntoDecorationsWhenOuterRefUnchanged() {
+    // given: снаружи менять нечего, а внутри декораций ссылка неканоническая.
+    var innerAlias = new TypeRef(TypeKind.PLATFORM, "Структура");
+    var ts = TypeSet.of(ARRAY)
+      .withElement(ARRAY, TypeSet.of(innerAlias))
+      .withField(ARRAY, "Поле", TypeSet.of(innerAlias));
+    var canonical = new TypeRef(TypeKind.CONFIGURATION, "Структура");
+
+    // when
+    var mapped = ts.mapRefs(ref -> innerAlias.equals(ref) ? canonical : ref);
+
+    // then
+    assertThat(mapped.refs()).containsExactly(ARRAY);
+    assertThat(mapped.getElementTypes(ARRAY).refs()).containsExactly(canonical);
+    assertThat(mapped.getLocalFields(ARRAY).get("Поле").types().refs()).containsExactly(canonical);
+  }
+
+  @Test
+  void mapRefsAppliesToLazyDecorationOnRead() {
+    // given: тип элемента отложен — источник вернёт неканоническую ссылку.
+    var alias = new TypeRef(TypeKind.PLATFORM, "Структура");
+    var canonical = new TypeRef(TypeKind.CONFIGURATION, "Структура");
+    var forced = new boolean[1];
+    var lazy = new LazyTypeSet("источник", () -> {
+      forced[0] = true;
+      return TypeSet.of(alias);
+    });
+    var ts = TypeSet.of(ARRAY).withLazyElement(ARRAY, lazy);
+
+    // when
+    var mapped = ts.mapRefs(ref -> alias.equals(ref) ? canonical : ref);
+
+    // then: приведение не форсит источник...
+    assertThat(forced[0]).as("ленивая декорация не вычисляется при приведении").isFalse();
+    // ...но применяется к тому, что он вернёт при чтении.
+    assertThat(mapped.getElementTypes(ARRAY).refs()).containsExactly(canonical);
+    assertThat(forced[0]).isTrue();
+  }
+
+  @Test
+  void mapRefsWithoutChangesReturnsSelf() {
+    // given
+    var ts = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
+
+    // when / then
+    assertThat(ts.mapRefs(ref -> ref)).isSameAs(ts);
+  }
 }

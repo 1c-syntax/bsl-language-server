@@ -201,12 +201,15 @@ public record TypeSet(
   }
 
   /**
-   * Применяет {@code mapper} к каждой ссылке набора — вместе с ключами декораций.
+   * Применяет {@code mapper} к каждой ссылке набора — вместе с ключами декораций и
+   * ссылками внутри них: типами элементов коллекции и типами полей объекта.
    * <p>
    * Нужно, чтобы после структурной специализации привести полученные ссылки к
    * каноническим: иначе за одним именем оказываются две разные ссылки, и объединение
    * наборов их не схлопывает. Декорации переезжают на новую ссылку, а если в одну
-   * каноническую ссылку сходятся несколько исходных — сливаются между собой.
+   * каноническую ссылку сходятся несколько исходных — сливаются между собой. Ленивая
+   * декорация не форсится: преобразование применяется к тому, что её источник вернёт
+   * при чтении.
    *
    * @param mapper преобразование ссылки.
    * @return набор с преобразованными ссылками; исходный, если ни одна не изменилась.
@@ -219,43 +222,63 @@ public record TypeSet(
       changed = changed || !mapped.equals(ref);
       mappedRefs.add(mapped);
     }
+    var mappedElements = mapKeys(elementTypes, mapper, TypeSet::union, types -> types.mapRefs(mapper));
+    var mappedFields = mapNestedKeys(localFields, mapper, LocalField::merge,
+      field -> new LocalField(field.types().mapRefs(mapper), field.description()));
+    // Ленивая декорация равна прежней по ключу, поэтому изменилось ли её содержимое,
+    // сравнением не узнать — набор с ленивыми декорациями пересобирается всегда.
+    changed = changed
+      || !mappedElements.equals(elementTypes)
+      || !mappedFields.equals(localFields)
+      || !lazyElements.isEmpty()
+      || !lazyFields.isEmpty();
     if (!changed) {
       return this;
     }
     return new TypeSet(
       mappedRefs,
-      mapKeys(elementTypes, mapper, TypeSet::union),
-      mapNestedKeys(localFields, mapper, LocalField::merge),
-      mapKeys(lazyElements, mapper, LazyTypeSet::combine),
-      mapNestedKeys(lazyFields, mapper, LazyField::merge)
+      mappedElements,
+      mappedFields,
+      // Ленивую декорацию не форсим — оборачиваем: приведение применится к тому, что
+      // источник вернёт при чтении. Ключ у обёртки прежний, поэтому равенство и слияние
+      // ленивых ссылок работают как раньше.
+      mapKeys(lazyElements, mapper, LazyTypeSet::combine, lazy -> mapLazy(lazy, mapper)),
+      mapNestedKeys(lazyFields, mapper, LazyField::merge,
+        field -> new LazyField(mapLazy(field.types(), mapper), field.description()))
     );
+  }
+
+  private static LazyTypeSet mapLazy(LazyTypeSet lazy, UnaryOperator<TypeRef> mapper) {
+    return new LazyTypeSet(lazy.key(), () -> lazy.get().mapRefs(mapper));
   }
 
   private static <V> Map<TypeRef, V> mapKeys(
     Map<TypeRef, V> source,
     UnaryOperator<TypeRef> mapper,
-    BinaryOperator<V> merger
+    BinaryOperator<V> merger,
+    UnaryOperator<V> valueMapper
   ) {
     if (source.isEmpty()) {
       return source;
     }
     var result = new LinkedHashMap<TypeRef, V>();
-    source.forEach((ref, value) -> result.merge(mapper.apply(ref), value, merger));
+    source.forEach((ref, value) -> result.merge(mapper.apply(ref), valueMapper.apply(value), merger));
     return result;
   }
 
   private static <V> Map<TypeRef, Map<String, V>> mapNestedKeys(
     Map<TypeRef, Map<String, V>> source,
     UnaryOperator<TypeRef> mapper,
-    BinaryOperator<V> merger
+    BinaryOperator<V> merger,
+    UnaryOperator<V> valueMapper
   ) {
     if (source.isEmpty()) {
       return source;
     }
     var result = new LinkedHashMap<TypeRef, Map<String, V>>();
-    source.forEach((ref, fields) -> {
+    source.forEach((TypeRef ref, Map<String, V> fields) -> {
       var target = result.computeIfAbsent(mapper.apply(ref), key -> new LinkedHashMap<>());
-      fields.forEach((name, field) -> target.merge(name, field, merger));
+      fields.forEach((name, field) -> target.merge(name, valueMapper.apply(field), merger));
     });
     return result;
   }
