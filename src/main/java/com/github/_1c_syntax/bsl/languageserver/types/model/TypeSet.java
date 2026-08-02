@@ -66,7 +66,8 @@ public record TypeSet(
   Map<TypeRef, TypeSet> elementTypes,
   Map<TypeRef, Map<String, LocalField>> localFields,
   Map<TypeRef, LazyTypeSet> lazyElements,
-  Map<TypeRef, Map<String, LazyField>> lazyFields
+  Map<TypeRef, Map<String, LazyField>> lazyFields,
+  Map<TypeRef, TypeSet> describedTypes
 ) {
 
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
@@ -77,7 +78,9 @@ public record TypeSet(
     localFields = immutableNestedCopy(localFields);
     lazyElements = immutableCopy(lazyElements);
     lazyFields = immutableNestedCopy(lazyFields);
+    describedTypes = immutableCopy(describedTypes);
   }
+
 
   /** Неизменяемая копия плоской декорационной мапы (пустая — общий emptyMap). */
   private static <K, V> Map<K, V> immutableCopy(Map<K, V> source) {
@@ -100,7 +103,7 @@ public record TypeSet(
 
   public TypeSet(Set<TypeRef> refs) {
     this(refs, Collections.emptyMap(), Collections.emptyMap(),
-      Collections.emptyMap(), Collections.emptyMap());
+      Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
   }
 
   public static TypeSet of(TypeRef... refs) {
@@ -197,7 +200,13 @@ public record TypeSet(
       }
     }
 
-    return new TypeSet(merged, mergedElements, mergedFields, mergedLazyElements, mergedLazyFields);
+    var mergedDescribed = new LinkedHashMap<>(this.describedTypes);
+    for (var entry : other.describedTypes.entrySet()) {
+      mergedDescribed.merge(entry.getKey(), entry.getValue(), TypeSet::union);
+    }
+
+    return new TypeSet(merged, mergedElements, mergedFields, mergedLazyElements, mergedLazyFields,
+      mergedDescribed);
   }
 
   /**
@@ -227,9 +236,11 @@ public record TypeSet(
       field -> new LocalField(field.types().mapRefs(mapper), field.description()));
     // Ленивая декорация равна прежней по ключу, поэтому изменилось ли её содержимое,
     // сравнением не узнать — набор с ленивыми декорациями пересобирается всегда.
+    var mappedDescribed = mapKeys(describedTypes, mapper, TypeSet::union, types -> types.mapRefs(mapper));
     changed = changed
       || !mappedElements.equals(elementTypes)
       || !mappedFields.equals(localFields)
+      || !mappedDescribed.equals(describedTypes)
       || !lazyElements.isEmpty()
       || !lazyFields.isEmpty();
     if (!changed) {
@@ -244,7 +255,8 @@ public record TypeSet(
       // ленивых ссылок работают как раньше.
       mapKeys(lazyElements, mapper, LazyTypeSet::combine, lazy -> mapLazy(lazy, mapper)),
       mapNestedKeys(lazyFields, mapper, LazyField::merge,
-        field -> new LazyField(mapLazy(field.types(), mapper), field.description()))
+        field -> new LazyField(mapLazy(field.types(), mapper), field.description())),
+      mappedDescribed
     );
   }
 
@@ -283,16 +295,17 @@ public record TypeSet(
     return result;
   }
 
-  /** Есть ли у набора декорации (element/field, в т.ч. ленивые). */
+  /** Есть ли у набора декорации (element/field/описываемые типы, в т.ч. ленивые). */
   private boolean hasDecorations() {
     return !elementTypes.isEmpty() || !localFields.isEmpty()
-      || !lazyElements.isEmpty() || !lazyFields.isEmpty();
+      || !lazyElements.isEmpty() || !lazyFields.isEmpty() || !describedTypes.isEmpty();
   }
 
   public TypeSet add(TypeRef ref) {
     var merged = new LinkedHashSet<>(this.refs);
     merged.add(ref);
-    return new TypeSet(merged, this.elementTypes, this.localFields, this.lazyElements, this.lazyFields);
+    return new TypeSet(merged, this.elementTypes, this.localFields, this.lazyElements, this.lazyFields,
+      this.describedTypes);
   }
 
   /**
@@ -344,7 +357,8 @@ public record TypeSet(
       filterByKey(elementTypes, keep),
       filterByKey(localFields, keep),
       filterByKey(lazyElements, keep),
-      filterByKey(lazyFields, keep)
+      filterByKey(lazyFields, keep),
+      filterByKey(describedTypes, keep)
     );
   }
 
@@ -376,7 +390,56 @@ public record TypeSet(
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<>(this.elementTypes);
     merged.merge(ref, element, TypeSet::union);
-    return new TypeSet(newRefs, merged, this.localFields, this.lazyElements, this.lazyFields);
+    return new TypeSet(newRefs, merged, this.localFields, this.lazyElements, this.lazyFields,
+      this.describedTypes);
+  }
+
+  /**
+   * Прикрепить к {@code ref} типы, которые он <b>описывает</b>: так значение-описатель
+   * несёт то, о чём оно говорит, не становясь этим само.
+   * <p>
+   * Описателей два: {@code Новый ОписаниеТипов("СправочникСсылка.Товары")} и
+   * {@code ФабрикаXDTO.Тип(URI, Имя)}. Их значения читают
+   * {@code ПривестиЗначение} и {@code ФабрикаXDTO.Создать} — каждый забирает
+   * описанные типы обратно ({@link #getDescribedTypes(TypeRef)}).
+   * <p>
+   * Отдельная декорация, а не типы элементов: описатель — не коллекция, обходить его
+   * нечем, и {@code Для Каждого} по нему ничего давать не должен.
+   *
+   * @param ref       тип-описатель (добавляется в набор, если отсутствует).
+   * @param described типы, которые он описывает.
+   * @return набор с дополненным {@code describedTypes[ref]}.
+   */
+  public TypeSet withDescribed(TypeRef ref, TypeSet described) {
+    if (described.isEmpty() && !described.hasDecorations()) {
+      return this;
+    }
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    var merged = new LinkedHashMap<>(this.describedTypes);
+    merged.merge(ref, described, TypeSet::union);
+    return new TypeSet(newRefs, this.elementTypes, this.localFields, this.lazyElements, this.lazyFields,
+      merged);
+  }
+
+  /**
+   * Типы, которые описывает указанный {@code ref}.
+   *
+   * @param ref тип-описатель.
+   * @return описанные типы; {@link #EMPTY}, если {@code ref} ничего не описывает.
+   */
+  public TypeSet getDescribedTypes(TypeRef ref) {
+    return describedTypes.getOrDefault(ref, EMPTY);
+  }
+
+  /**
+   * @return типы, описанные всеми описателями набора; {@link #EMPTY}, если их нет.
+   */
+  public TypeSet getDescribedTypes() {
+    TypeSet acc = EMPTY;
+    for (var described : describedTypes.values()) {
+      acc = acc.union(described);
+    }
+    return acc;
   }
 
   /**
@@ -389,7 +452,8 @@ public record TypeSet(
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<>(this.lazyElements);
     merged.merge(ref, element, LazyTypeSet::combine);
-    return new TypeSet(newRefs, this.elementTypes, this.localFields, merged, this.lazyFields);
+    return new TypeSet(newRefs, this.elementTypes, this.localFields, merged, this.lazyFields,
+      this.describedTypes);
   }
 
   /**
@@ -424,7 +488,8 @@ public record TypeSet(
     }
     var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
     bucket.merge(name, new LocalField(types, description), LocalField::merge);
-    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields);
+    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields,
+      this.describedTypes);
   }
 
   /**
@@ -451,7 +516,8 @@ public record TypeSet(
       bucket.merge(entry.getKey(), entry.getValue(), LocalField::merge);
     }
     merged.put(ref, bucket);
-    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields);
+    return new TypeSet(newRefs, this.elementTypes, merged, this.lazyElements, this.lazyFields,
+      this.describedTypes);
   }
 
   /**
@@ -469,7 +535,8 @@ public record TypeSet(
     }
     var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
     bucket.merge(name, new LazyField(types, description), LazyField::merge);
-    return new TypeSet(newRefs, this.elementTypes, this.localFields, this.lazyElements, merged);
+    return new TypeSet(newRefs, this.elementTypes, this.localFields, this.lazyElements, merged,
+      this.describedTypes);
   }
 
   /**

@@ -125,7 +125,7 @@ public class XdtoFactoryInference {
     if (descriptor == null) {
       return TypeSet.of(objectType);
     }
-    return TypeSet.of(descriptor).withElement(descriptor, TypeSet.of(objectType));
+    return TypeSet.of(descriptor).withDescribed(descriptor, TypeSet.of(objectType));
   }
 
   /**
@@ -141,11 +141,7 @@ public class XdtoFactoryInference {
     if (arguments.isEmpty()) {
       return null;
     }
-    var descriptorTypes = inferrer.apply(arguments.get(0));
-    TypeSet result = TypeSet.EMPTY;
-    for (var ref : descriptorTypes.refs()) {
-      result = result.union(descriptorTypes.getElementTypes(ref));
-    }
-    return result.isEmpty() ? null : result;
+    var described = inferrer.apply(arguments.get(0)).getDescribedTypes();
+    return described.isEmpty() ? null : described;
   }
 }
