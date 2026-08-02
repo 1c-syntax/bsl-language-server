@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -33,20 +32,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCallNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -54,10 +45,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Резолв члена через dereference ({@code ресивер.член}): локализация AST-узла
- * dereference'а в выражении под курсором, инференс типов ресивера и подбор
- * членов по union-кандидатам владельца. Выделено из {@link TypeService},
- * чтобы фасад типов оставался в рамках одного класса.
+ * Резолв члена через dereference ({@code ресивер.член}): инференс типов ресивера
+ * и подбор членов по union-кандидатам владельца. Сам узел dereference'а находит
+ * {@link DereferenceLocator}. Выделено из {@link TypeService}, чтобы фасад типов
+ * оставался в рамках одного класса.
  */
 @Component
 @WorkspaceScope
@@ -74,7 +65,7 @@ public class DereferenceMemberMatcher {
    * ресивера не резолвятся.
    */
   public List<TypedMember> matchAt(TerminalNode terminal, DocumentContext documentContext) {
-    var dereference = findDereferenceTree(terminal);
+    var dereference = DereferenceLocator.locate(terminal);
     if (dereference == null) {
       return List.of();
     }
@@ -97,7 +88,7 @@ public class DereferenceMemberMatcher {
    *     выражение/тип ресивера не резолвятся.
    */
   public MemberMatch matchWithReceiverAt(TerminalNode terminal, DocumentContext documentContext) {
-    var dereference = findDereferenceTree(terminal);
+    var dereference = DereferenceLocator.locate(terminal);
     if (dereference == null) {
       return MemberMatch.EMPTY;
     }
@@ -120,19 +111,11 @@ public class DereferenceMemberMatcher {
    * не локализуется.
    */
   public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, TerminalNode terminal) {
-    var dereference = findDereferenceTree(terminal);
+    var dereference = DereferenceLocator.locate(terminal);
     if (dereference == null) {
       return Optional.empty();
     }
     return Optional.of(inferencer.infer(dereference.getLeft(), documentContext));
-  }
-
-  private static @Nullable BinaryOperationNode findDereferenceTree(TerminalNode terminal) {
-    var expression = ExpressionAtPosition.findExpressionTree(terminal).orElse(null);
-    if (expression == null) {
-      return null;
-    }
-    return findDereferenceForTerminal(expression, terminal);
   }
 
   /**
@@ -233,55 +216,4 @@ public class DereferenceMemberMatcher {
     return result;
   }
 
-  /**
-   * Ищет узел dereference'а, чей член — {@code terminal}, обходя <b>все</b> виды
-   * узлов дерева выражения. Пропустить любой из них нельзя: обращение к члену
-   * останется ненайденным, и потребитель либо не покажет член вовсе (hover,
-   * completion), либо — если тип ресивера доберётся запасным путём — объявит
-   * существующий член неизвестным (диагностика).
-   */
-  private static @Nullable BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
-    if (root instanceof BinaryOperationNode binary) {
-      if (binary.getOperator() == BslOperator.DEREFERENCE && rightMatchesTerminal(binary.getRight(), terminal)) {
-        return binary;
-      }
-      return firstHit(terminal, binary.getLeft(), binary.getRight());
-    }
-    if (root instanceof UnaryOperationNode unary) {
-      return findDereferenceForTerminal(unary.getOperand(), terminal);
-    }
-    if (root instanceof TernaryOperatorNode ternary) {
-      return firstHit(terminal, ternary.getCondition(), ternary.getTruePart(), ternary.getFalsePart());
-    }
-    if (root instanceof AbstractCallNode call) {
-      return firstHit(terminal, call.arguments());
-    }
-    return null;
-  }
-
-  private static @Nullable BinaryOperationNode firstHit(TerminalNode terminal, BslExpression... children) {
-    return firstHit(terminal, List.of(children));
-  }
-
-  private static @Nullable BinaryOperationNode firstHit(TerminalNode terminal, List<BslExpression> children) {
-    for (var child : children) {
-      var hit = findDereferenceForTerminal(child, terminal);
-      if (hit != null) {
-        return hit;
-      }
-    }
-    return null;
-  }
-
-  private static boolean rightMatchesTerminal(BslExpression right, TerminalNode terminal) {
-    if (right instanceof TerminalSymbolNode terminalNode
-      && terminalNode.getNodeType() == ExpressionNodeType.IDENTIFIER) {
-      var ast = terminalNode.getRepresentingAst();
-      return ast == terminal;
-    }
-    if (right instanceof MethodCallNode call) {
-      return call.getName() == terminal;
-    }
-    return false;
-  }
 }
