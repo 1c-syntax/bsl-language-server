@@ -21,6 +21,13 @@ on:
     - 'gradle/wrapper/gradle-wrapper.properties'
     - 'lombok.config'
 
+# Для pull_request группа общая для всех запусков одного PR - новый коммит отменяет предыдущие запуски.
+# Для push (замер ветки с публикацией результата) в группу попадает уникальный run_id,
+# поэтому запуски не отменяются.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   check-pr-exists:
     runs-on: ubuntu-latest
