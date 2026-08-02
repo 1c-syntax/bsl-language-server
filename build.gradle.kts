@@ -171,6 +171,8 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter")
 
+    testImplementation("digital.pragmatech.testing:spring-test-profiler:0.2.3")
+
     // test utils
     testImplementation("com.github.hazendaz.jmockit:jmockit:2.3.0")
     testImplementation("org.awaitility:awaitility:4.3.0")

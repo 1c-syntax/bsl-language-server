@@ -1,3 +1,7 @@
 org.springframework.test.context.TestExecutionListener=\
 com.github._1c_syntax.bsl.languageserver.util.RefreshContextTestExecutionListener,\
-com.github._1c_syntax.bsl.languageserver.util.WorkspaceContextTestExecutionListener
+com.github._1c_syntax.bsl.languageserver.util.WorkspaceContextTestExecutionListener,\
+digital.pragmatech.testing.SpringTestProfilerListener
+
+org.springframework.context.ApplicationContextInitializer=\
+digital.pragmatech.testing.diagnostic.ContextDiagnosticApplicationInitializer
