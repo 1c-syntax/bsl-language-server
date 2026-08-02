@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.hover.PlatformMemberHoverBuilder;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.Absolute;
@@ -432,6 +433,113 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
           .anyMatch(m -> m.matches(memberName));
       });
     });
+  }
+
+  @Test
+  void writeParametersOfDocumentFormAreTypedByThePlatformEnums() {
+    // Тип у параметра объявлен как `Структура`, а состав назван прозой в его описании.
+    // Типы значений платформа называет сама: у обычной формы те же два параметра
+    // объявлены не структурой, а отдельными аргументами `ПередЗаписью` с этими типами.
+    var writeParameters = parameterOf(DOCUMENT_FORM, MemberKind.EVENT, "ПередЗаписью", "ПараметрыЗаписи");
+
+    assertThat(writeParameters.types().refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+    assertThat(fieldTypeNames(writeParameters, "РежимЗаписи"))
+      .containsExactly("РежимЗаписиДокумента");
+    assertThat(fieldTypeNames(writeParameters, "РежимПроведения"))
+      .containsExactly("РежимПроведенияДокумента");
+    assertThat(fieldTypeNames(writeParameters, "WriteMode"))
+      .as("оба написания ключа резолвятся: ключ структуры — строка на языке проекта")
+      .containsExactly("РежимЗаписиДокумента");
+  }
+
+  @Test
+  void writeParametersWithoutDeclaredTypeBecomeStructure() {
+    // У форм задачи и бизнес-процесса блок «Тип» у параметра отсутствует вовсе — тот же
+    // дефект синтакс-помощника, что у бестиповых свойств элементов, только на параметре.
+    // Состав при этом назван: «система устанавливает его значение в Истина».
+    var taskParameters = parameterOf("Расширение формы клиентского приложения для задачи",
+      MemberKind.EVENT, "ПередЗаписью", "ПараметрыЗаписи");
+    assertThat(taskParameters.types().refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+    assertThat(fieldTypeNames(taskParameters, "ВыполнитьЗадачу")).containsExactly("Булево");
+
+    var processParameters = parameterOf("Расширение формы клиентского приложения для бизнес-процесса",
+      MemberKind.EVENT, "ПередЗаписью", "ПараметрыЗаписи");
+    assertThat(fieldTypeNames(processParameters, "Старт")).containsExactly("Булево");
+  }
+
+  @Test
+  void compositionIsAttachedToTheParameterRatherThanToTheEvent() {
+    // Платформа кладёт одну и ту же структуру во все события записи и принимает её же
+    // методом `Записать` — состав закреплён за параметром, а не за отдельным событием.
+    for (var memberName : List.of("ПередЗаписьюНаСервере", "ПриЗаписиНаСервере",
+      "ПослеЗаписиНаСервере", "ПослеЗаписи")) {
+      assertThat(parameterOf(DOCUMENT_FORM, MemberKind.EVENT, memberName, "ПараметрыЗаписи")
+        .types().getAllFieldNames())
+        .as("состав у %s", memberName)
+        .contains("РежимЗаписи", "РежимПроведения");
+    }
+    assertThat(parameterOf(DOCUMENT_FORM, MemberKind.METHOD, "Записать", "ПараметрыЗаписи")
+      .types().getAllFieldNames())
+      .contains("РежимЗаписи", "РежимПроведения");
+  }
+
+  @Test
+  void choiceDataParametersOfInputFieldCarryTheirDocumentedKeys() {
+    var parameters = parameterOf("Расширение поля формы для поля ввода",
+      MemberKind.EVENT, "АвтоПодбор", "ПараметрыПолученияДанных");
+
+    assertThat(fieldTypeNames(parameters, "СтрокаПоиска"))
+      .as("быстрый выбор приходит Неопределено")
+      .containsExactly("Строка", "Неопределено");
+    assertThat(fieldTypeNames(parameters, "СпособПоискаСтроки"))
+      .containsExactly("СпособПоискаСтрокиПриВводеПоСтроке");
+    assertThat(parameters.types().getAllFieldNames())
+      .contains("Отбор", "ВыборГруппИЭлементов", "ПолнотекстовыйПоиск", "РежимПолученияДанныхВыбора");
+  }
+
+  @Test
+  void everyPredefinedStructureParameterIsStillDeclaredThatWay() {
+    // Словарь состава сверяется с платформой целиком: тип-владелец должен резолвиться,
+    // параметр с таким именем — существовать, а типы значений ключей — быть известными
+    // типами. Иначе запись либо промахнулась именем, либо описывает уже несуществующий API.
+    for (var parameter : FormPlatformTypes.PREDEFINED_STRUCTURE_PARAMETERS) {
+      var ownerRef = typeRegistry.resolve(parameter.ownerTypeName()).orElseThrow(
+        () -> new AssertionError("не резолвится тип-владелец " + parameter.ownerTypeName()));
+      assertThat(typeRegistry.getMembers(ownerRef, FileType.BSL))
+        .as("параметр %s у членов %s", parameter.parameterName(), parameter.ownerTypeName())
+        .anyMatch(member -> member.signatures().stream()
+          .flatMap(signature -> signature.parameters().stream())
+          .anyMatch(declared -> declared.matches(parameter.parameterName())));
+      for (var field : parameter.fields()) {
+        for (var typeName : field.typeNames()) {
+          assertThat(typeRegistry.resolve(typeName))
+            .as("тип значения %s (%s.%s)", typeName, parameter.parameterName(), field.name().ru())
+            .isPresent();
+        }
+      }
+    }
+  }
+
+  /** Параметр члена платформенного типа по имени; падает, если такого нет. */
+  private ParameterDescriptor parameterOf(String typeName, MemberKind kind, String memberName,
+                                          String parameterName) {
+    var found = member(typeName, kind, memberName);
+    assertThat(found).as("член %s.%s", typeName, memberName).isNotNull();
+    return found.signatures().stream()
+      .flatMap(signature -> signature.parameters().stream())
+      .filter(declared -> declared.matches(parameterName))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError(
+        "нет параметра " + parameterName + " у " + typeName + "." + memberName));
+  }
+
+  /** Имена типов значения ключа структуры, прикреплённой к параметру. */
+  private static List<String> fieldTypeNames(ParameterDescriptor parameter, String fieldName) {
+    return parameter.types().getFieldTypes(fieldName).refs().stream()
+      .map(TypeRef::qualifiedName)
+      .toList();
   }
 
   /** Тип элемента формы по его имени в коллекции элементов. */

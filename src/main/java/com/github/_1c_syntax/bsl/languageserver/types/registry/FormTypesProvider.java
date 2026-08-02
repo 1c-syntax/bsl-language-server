@@ -162,6 +162,7 @@ public class FormTypesProvider {
   private final FormItemTypesRegistrar formItemTypes;
   private final FormTypeFactory typeFactory;
   private final FormParametersRegistrar formParameters;
+  private final StructureParameterFieldsRegistrar structureParameterFields;
 
   /** Уже обработанные формы — защита от повторной регистрации источников. */
   private final Set<TypeRef> registeredForms = new HashSet<>();
@@ -189,6 +190,9 @@ public class FormTypesProvider {
    */
   public void register(Iterable<MD> children) {
     formItemTypes.registerItemKindTypes();
+    // Раньше самих форм: правка ложится на типы-расширения, а формы разбирают их
+    // контракты событий уже готовыми.
+    structureParameterFields.register();
     var count = 0;
     for (var md : children) {
       count += registerFormsOf(md);

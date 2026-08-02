@@ -102,6 +102,23 @@ final class FormPlatformTypes {
   private static final String FORM_ITEM_ADDITION = "ДополнениеЭлементаФормы";
 
   private static final String BOOLEAN_RU = "Булево";
+  private static final String STRING_RU = "Строка";
+  private static final String UNDEFINED_RU = "Неопределено";
+
+  /**
+   * Тип-«пакет» платформы: им объявлены параметры, в которые платформа складывает
+   * набор именованных значений (см. {@link #PREDEFINED_STRUCTURE_PARAMETERS}).
+   */
+  static final String STRUCTURE_RU = "Структура";
+
+  /**
+   * Расширение поля формы для поля ввода — самый богатый на специфику вид элемента:
+   * 77 свойств плюс события ввода по строке.
+   */
+  private static final String INPUT_FIELD_EXTENSION = "Расширение поля формы для поля ввода";
+
+  /** Параметр событий записи формы и её же метода {@code Записать}. */
+  private static final String WRITE_PARAMETERS_RU = "ПараметрыЗаписи";
 
   /**
    * Поведение элемента формы при недоступности основного сервера: свойство и его тип
@@ -362,7 +379,7 @@ final class FormPlatformTypes {
     FORM_TABLE, Map.of(
       SERVER_UNAVAILABLE_BEHAVIOR, SERVER_UNAVAILABLE_BEHAVIOR,
       "АвтоОтметкаНезаполненного", BOOLEAN_RU),
-    "Расширение поля формы для поля ввода", Map.of(
+    INPUT_FIELD_EXTENSION, Map.of(
       "ПроверкаПравописанияПриВводеТекста", "ПроверкаПравописанияПриВводеТекста",
       "СпециальныйРежимВводаТекста", "СпециальныйРежимВводаТекста",
       "ТекстКнопкиВводаЭкраннойКлавиатуры", "ТекстКнопкиВводаЭкраннойКлавиатуры"),
@@ -372,6 +389,93 @@ final class FormPlatformTypes {
       "НомерТекущегоКадра", NUMBER_RU),
     TABLE_EXTENSION_PREFIX + "динамического списка", Map.of(
       "ВосстанавливатьТекущуюСтроку", BOOLEAN_RU));
+
+  /**
+   * Ключ структуры, которую платформа сама кладёт в параметр.
+   * <p>
+   * Имя двуязычно: ключ структуры — это <b>строка</b>, а не идентификатор, и платформа
+   * документирует оба написания ({@code СтрокаПоиска (SearchString)}). Какое из них
+   * окажется в структуре на конкретном проекте, синтакс-помощник не говорит, а
+   * сопоставление идёт по самой строке — поэтому в набор полей заводятся оба.
+   *
+   * @param name      двуязычное имя ключа.
+   * @param typeNames ru-имена типов значения; несколько — если платформа допускает
+   *                  в ключе union ({@code Строка} либо {@code Неопределено}).
+   */
+  record StructureField(BilingualString name, List<String> typeNames) {
+
+    static StructureField of(String ru, String en, String... typeNames) {
+      return new StructureField(BilingualString.of(ru, en), List.of(typeNames));
+    }
+  }
+
+  /**
+   * Известный состав структуры, которую платформа передаёт в параметр члена
+   * типа-владельца.
+   *
+   * @param ownerTypeName ru-имя типа, объявляющего член.
+   * @param parameterName ru-имя параметра. Ключ — именно параметр, а не член: состав
+   *                      одинаков у всех членов владельца, где параметр так назван
+   *                      (у формы документа это пять событий записи плюс метод
+   *                      {@code Записать}, кладущий туда ровно ту же структуру).
+   * @param fields        ключи в порядке их перечисления синтакс-помощником.
+   */
+  record StructureParameter(String ownerTypeName, String parameterName, List<StructureField> fields) {
+  }
+
+  /**
+   * Состав структур, которые платформа передаёт в параметры своих обработчиков.
+   * <p>
+   * Тип у такого параметра объявлен как {@code Структура} — то есть не сказано ничего:
+   * без состава обрывается и подсказка ({@code ПараметрыЗаписи.} не предлагает ничего),
+   * и вывод типа ({@code РежимЗаписи} остаётся невыведенным), а {@code UnknownMember}
+   * считает предопределённый ключ опечаткой. Состав платформа при этом называет — прозой,
+   * в описании самого параметра; отсюда он и переписан.
+   * <p>
+   * <b>Состав не закрывает структуру.</b> Платформа прямо оговаривает «состав других
+   * параметров произвольный»: прикладной код кладёт туда свои ключи и читает их обратно.
+   * Поэтому поля навешиваются на обычную {@code Структура}
+   * ({@link com.github._1c_syntax.bsl.languageserver.types.model.TypeSet#withFields}),
+   * а не выносятся в отдельный тип, — тогда предопределённые ключи и ключи, накопленные
+   * из {@code Вставить(…)}, живут в одном наборе.
+   * <p>
+   * Что сюда <b>не</b> попало и почему:
+   * <ul>
+   *   <li>состав, зависящий от источника события: {@code ДополнительныеПараметры} у
+   *       событий поля табличного документа несут {@code Дата} только когда событие
+   *       породила диаграмма Ганта, и разный набор у диаграммы — «предопределённым»
+   *       такой состав назвать нельзя;</li>
+   *   <li>{@code ОбработкаПолученияДанныхВыбора} и {@code ПолучитьДанныеВыбора} модулей
+   *       менеджера: состав у них тот же, что у поля ввода, но объявлены они на
+   *       generic-типах ({@code СправочникМенеджер.<Имя справочника>}), и до
+   *       специализаций правка члена доходит другим путём — это отдельная работа.</li>
+   * </ul>
+   * Каждая запись сверяется с платформой HBK-тестом: и владелец, и параметр, и типы
+   * значений должны существовать.
+   */
+  static final List<StructureParameter> PREDEFINED_STRUCTURE_PARAMETERS = List.of(
+    // Оба ключа добавляются при командах «Провести», «Провести и закрыть», «Отмена
+    // проведения». Типы названы самой платформой: у обычной формы те же два параметра
+    // объявлены не структурой, а отдельными аргументами `ПередЗаписью` с этими типами.
+    new StructureParameter(managed("документа"), WRITE_PARAMETERS_RU, List.of(
+      StructureField.of("РежимЗаписи", "WriteMode", "РежимЗаписиДокумента"),
+      StructureField.of("РежимПроведения", "PostingMode", "РежимПроведенияДокумента"))),
+    // «При отработке команд "Выполнить" и "Выполнить и закрыть" система устанавливает
+    // его значение в Истина» — отсюда и Булево. У самого параметра тип не объявлен вовсе.
+    new StructureParameter(managed("задачи"), WRITE_PARAMETERS_RU, List.of(
+      StructureField.of("ВыполнитьЗадачу", "ExecuteTask", BOOLEAN_RU))),
+    new StructureParameter(managed("бизнес-процесса"), WRITE_PARAMETERS_RU, List.of(
+      StructureField.of("Старт", "Start", BOOLEAN_RU))),
+    // `АвтоПодбор` и `ОкончаниеВводаТекста`: то, что уйдёт в `ПолучитьДанныеВыбора`.
+    // Здесь платформа перечисляет ключи вместе с типами и обязательностью.
+    new StructureParameter(INPUT_FIELD_EXTENSION, "ПараметрыПолученияДанных", List.of(
+      StructureField.of("СтрокаПоиска", "SearchString", STRING_RU, UNDEFINED_RU),
+      StructureField.of("Отбор", "Filter", STRUCTURE_RU),
+      StructureField.of("ВыборГруппИЭлементов", "ChoiceFoldersAndItems", "ИспользованиеГруппИЭлементов"),
+      StructureField.of("СпособПоискаСтроки", "StringSearchMode", "СпособПоискаСтрокиПриВводеПоСтроке"),
+      StructureField.of("ПолнотекстовыйПоиск", "FullTextSearch", "ПолнотекстовыйПоискПриВводеПоСтроке"),
+      StructureField.of("РежимПолученияДанныхВыбора", "ChoiceDataGettingMode",
+        "РежимПолученияДанныхВыбораПриВводеПоСтроке"))));
 
   private FormPlatformTypes() {
   }
@@ -479,7 +583,7 @@ final class FormPlatformTypes {
     Map.entry(FormElementType.BUTTON_GROUP, "Расширение группы формы для группы кнопок"),
     Map.entry(FormElementType.COLUMN_GROUP, "Расширение группы формы для группы колонок"),
     // Поля.
-    Map.entry(FormElementType.INPUT_FIELD, "Расширение поля формы для поля ввода"),
+    Map.entry(FormElementType.INPUT_FIELD, INPUT_FIELD_EXTENSION),
     Map.entry(FormElementType.LABEL_FIELD, "Расширение поля формы для поля надписи"),
     Map.entry(FormElementType.CHECK_BOX_FIELD, "Расширение поля формы для поля флажка"),
     Map.entry(FormElementType.RADIO_BUTTON_FIELD, "Расширение поля формы для поля переключателя"),
