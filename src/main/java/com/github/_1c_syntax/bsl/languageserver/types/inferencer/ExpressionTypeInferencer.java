@@ -1149,9 +1149,6 @@ public class ExpressionTypeInferencer {
   ) {
     var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
     var entry = graph.getEntryPoint();
-    if (entry == null) {
-      return false;
-    }
     if (assigns(entry, positions)) {
       return true;
     }

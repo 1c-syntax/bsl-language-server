@@ -92,6 +92,32 @@ class MetadataSeeRefInferenceTest extends AbstractServerContextAwareTest {
     assertThat(names(types)).containsExactly("Строка");
   }
 
+  @Test
+  void seeRefToObjectAttribute() {
+    // given: «См. Справочник.Справочник1.Реквизит2» — реквизит самого объекта.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MetadataSeeRef.bsl");
+
+    // when
+    var types = at(documentContext, "РеквизитСправочника = РеквизитОбъекта", "РеквизитСправочника = ".length());
+
+    // then
+    assertThat(names(types)).containsExactly("Число");
+  }
+
+  @Test
+  void seeRefWithExtraSegmentsResolvesToNothing() {
+    // given: путь длиннее поддерживаемого — «…ТабличнаяЧасть1.Реквизит1.Лишнее».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MetadataSeeRef.bsl");
+
+    // when
+    var types = at(documentContext, "ЗначениеЛишнегоПути = ЛишнийПуть", "ЗначениеЛишнегоПути = ".length());
+
+    // then: лишний хвост не отбрасывается — ссылка не разрешается вовсе.
+    assertThat(names(types)).isEmpty();
+  }
+
   private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);

@@ -79,6 +79,21 @@ public class SymbolTypeIndex {
   /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
   private static final int MIN_METADATA_SEGMENTS = 3;
 
+  /** Наибольшая ссылка на метаданные: к пути табличной части добавлено имя её реквизита. */
+  private static final int MAX_METADATA_SEGMENTS = 4;
+
+  /** Номер части ссылки на метаданные: вид объекта. */
+  private static final int KIND_PART = 0;
+
+  /** Номер части ссылки на метаданные: имя объекта. */
+  private static final int NAME_PART = 1;
+
+  /** Номер части ссылки на метаданные: имя подчинённого — табличной части либо реквизита. */
+  private static final int CHILD_PART = 2;
+
+  /** Номер части ссылки на метаданные: имя реквизита табличной части. */
+  private static final int ATTRIBUTE_PART = 3;
+
   private static final String OBJECT = "Объект.";
   private static final String TABULAR_SECTION = "ТабличнаяЧасть.";
   private static final String TABULAR_SECTION_ROW = "ТабличнаяЧастьСтрока.";
@@ -393,13 +408,15 @@ public class SymbolTypeIndex {
    * @return тип по ссылке; {@link TypeSet#EMPTY}, если такого пути в метаданных нет.
    */
   private TypeSet resolveMetadataPath(String link, FileType fileType) {
-    var parts = link.split("\\.");
-    if (parts.length < MIN_METADATA_SEGMENTS) {
+    // Пустые части сохраняются (-1): «Справочник.Товары.ЕдиницыИзмерения.» — не ссылка
+    // на саму табличную часть, а ссылка на её реквизит с пустым именем.
+    var parts = link.split("\\.", -1);
+    if (parts.length < MIN_METADATA_SEGMENTS || parts.length > MAX_METADATA_SEGMENTS) {
       return TypeSet.EMPTY;
     }
-    var kind = parts[0];
-    var mdName = parts[1];
-    var childName = parts[2];
+    var kind = parts[KIND_PART];
+    var mdName = parts[NAME_PART];
+    var childName = parts[CHILD_PART];
 
     var section = typeRegistry.resolve(kind + TABULAR_SECTION + mdName + "." + childName, fileType);
     if (section.isPresent()) {
@@ -407,7 +424,8 @@ public class SymbolTypeIndex {
         return TypeSet.of(section.get());
       }
       var row = typeRegistry.resolve(kind + TABULAR_SECTION_ROW + mdName + "." + childName, fileType);
-      return row.map(rowRef -> memberTypes(rowRef, parts[3], fileType)).orElse(TypeSet.EMPTY);
+      return row.map(rowRef -> memberTypes(rowRef, parts[ATTRIBUTE_PART], fileType))
+        .orElse(TypeSet.EMPTY);
     }
     if (parts.length > MIN_METADATA_SEGMENTS) {
       return TypeSet.EMPTY;
