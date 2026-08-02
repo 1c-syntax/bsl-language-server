@@ -111,24 +111,7 @@ public class CommentTypeResolver implements VariableTypeSource {
         return fromTrailing;
       }
     }
-    if (!ownComment(description)) {
-      return TypeSet.EMPTY;
-    }
     return typesOfComment(description.getTypes(), description.getLinks(), owner, fileType);
-  }
-
-  /**
-   * Принадлежит ли описание самой переменной, а не соседней строке кода.
-   * <p>
-   * Комментарий, дописанный в конце предыдущего объявления, парсер отдаёт и как описание
-   * следующего — по строкам он ведь стоит выше. Отличить можно по началу: собственное
-   * описание начинается со своей строки, а чужое висячее — после кода.
-   *
-   * @param description описание переменной.
-   * @return {@code true}, если описание — комментарий над объявлением.
-   */
-  private static boolean ownComment(VariableDescription description) {
-    return description.getRange().startCharacter() == 0;
   }
 
   /**
