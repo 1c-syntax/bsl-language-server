@@ -529,10 +529,42 @@ public class SymbolTypeIndex {
       // (`Структура: * Поле - ...`) — на сам тип.
       if (td.variant() != TypeDescription.Variant.COLLECTION) {
         resolved = applyFields(resolved, td, context);
+        // У коллекционной записи автор перечислил элементы сам — даже если они не
+        // разрешились, подставлять вместо них умолчание реестра нельзя.
+        resolved = attachDefaultElementTypes(resolved);
       }
       acc = acc.union(resolved);
     }
     return acc;
+  }
+
+  /**
+   * Прикрепить к типам набора элементы-по-умолчанию из реестра — те, что известны
+   * самому типу ({@code КлючИЗначение} у соответствия, строка у табличной части).
+   * <p>
+   * Делается на выходе разбора объявления, а не у каждого потребителя: объявленный
+   * тип уходит и в переменную, и в возврат метода, и в параметр, и обход коллекции
+   * должен видеть тип элемента везде одинаково. Уточнение, записанное в самом
+   * объявлении ({@code Массив из Строка}), не перетирается — оно точнее.
+   *
+   * @param types набор объявленных типов.
+   * @return тот же набор с элементами-по-умолчанию там, где своих не объявлено.
+   */
+  private TypeSet attachDefaultElementTypes(TypeSet types) {
+    var result = types;
+    for (var ref : types.refs()) {
+      // Проверяется наличие объявленной записи, а не её значение: у ленивой ссылки
+      // значение брать рано — она разрешается в момент чтения, а не индексации.
+      if (!types.elementTypes().getOrDefault(ref, TypeSet.EMPTY).isEmpty()
+        || types.lazyElements().containsKey(ref)) {
+        continue;
+      }
+      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      if (!defaults.isEmpty()) {
+        result = result.withElement(ref, defaults);
+      }
+    }
+    return result;
   }
 
   /**
