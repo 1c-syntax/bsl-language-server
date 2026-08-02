@@ -93,6 +93,30 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
   }
 
   @Test
+  void testPropertyUnderUnaryNotHighlighted() {
+    // given — реальный кейс: обращение к свойству под унарным отрицанием.
+    // Воспроизводит юзер-репорт «под НЕ член не красится и объявляется неизвестным».
+    String bsl = """
+      Процедура Тест()
+          ТЗ = Новый ТаблицаЗначений;
+          Если НЕ ТЗ.Колонки.Количество() = 0 Тогда
+              Возврат;
+          КонецЕсли;
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — Колонки подсвечен: корень дерева выражения здесь унарный узел,
+    // и поиск dereference обязан спуститься под него.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 15, 7, SemanticTokenTypes.Property,
+        Set.of(SemanticTokenModifiers.DefaultLibrary), "Колонки")
+    ));
+  }
+
+  @Test
   void testStructureDynamicFieldHighlighted() {
     // given — кейс из issue: поле Структуры, накопленное из конструктора.
     String bsl = """

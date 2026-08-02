@@ -30,6 +30,8 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -101,15 +103,36 @@ class UnaryExpressionPatternsTest extends AbstractServerContextAwareTest {
     assertThat(qnames(t)).contains("Строка");
   }
 
+  @Test
+  void memberResolvesUnderNot() {
+    var member = memberAt("У1 = НЕ Массив.Найти(1)", "У1 = НЕ Массив.".length());
+    assertThat(member).isPresent();
+    assertThat(member.orElseThrow().descriptor().name()).isEqualTo("Найти");
+  }
+
+  @Test
+  void memberResolvesUnderUnaryMinus() {
+    var member = memberAt("У2 = -Массив.Количество()", "У2 = -Массив.".length());
+    assertThat(member).isPresent();
+    assertThat(member.orElseThrow().descriptor().name()).isEqualTo("Количество");
+  }
+
+  private Optional<TypeService.TypedMember> memberAt(String marker, int offsetInMarker) {
+    return typeService.memberAt(doc(), positionOf(marker, offsetInMarker));
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
-    var dc = doc();
-    var content = dc.getContent();
+    return typeService.expressionTypesAt(doc(), positionOf(marker, offsetInMarker));
+  }
+
+  private Position positionOf(String marker, int offsetInMarker) {
+    var content = doc().getContent();
     int markerStart = content.indexOf(marker);
     int targetOffset = markerStart + offsetInMarker;
     int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
-    return typeService.expressionTypesAt(dc, new Position(line, charInLine + 1));
+    return new Position(line, charInLine + 1);
   }
 
   private DocumentContext doc() {

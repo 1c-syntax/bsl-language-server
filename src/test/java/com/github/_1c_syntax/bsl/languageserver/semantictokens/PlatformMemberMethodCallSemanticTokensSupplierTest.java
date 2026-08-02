@@ -71,6 +71,30 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
   // на общий путь, чтобы не дублировать тест).
 
   @Test
+  void testPlatformMethodUnderUnaryNot() {
+    // given — реальный кейс: вызов метода платформенного типа под отрицанием.
+    // Воспроизводит юзер-репорт «под НЕ метод не красится».
+    String bsl = """
+      Процедура Тест()
+          М = Новый Массив;
+          Если НЕ М.Количество() = 0 Тогда
+              Возврат;
+          КонецЕсли;
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — Количество подсвечен: корень дерева выражения здесь унарный узел,
+    // и поиск dereference обязан спуститься под него.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 14, 10, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.DefaultLibrary), "Количество")
+    ));
+  }
+
+  @Test
   void testPlatformMethodAfterAwait() {
     // given — реальный кейс: вызов метода платформенного типа после Ждать.
     // Воспроизводит юзер-репорт «не красится метод после Ждать».
