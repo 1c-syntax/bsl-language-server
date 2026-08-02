@@ -363,27 +363,43 @@ public class ExpressionTypeInferencer {
     if (tableTypes != null) {
       return tableTypes;
     }
-    if (call != null) {
-      var adjusted = openDataObjectInference.adjustedValueTypes(leftTypes, memberName);
-      if (adjusted != null) {
-        return adjusted;
-      }
-      var formTypes = formExpressionInference.refinedCallTypes(
-        ctx.documentContext, leftTypes, memberName, call);
-      if (formTypes != null) {
-        return formTypes;
-      }
-      var xdtoTypes = xdtoFactoryInference.refinedCallTypes(leftTypes, memberName, call,
-        node -> inferInternal(node, ctx), ctx.documentContext.getFileType());
-      if (xdtoTypes != null) {
-        return xdtoTypes;
-      }
+    if (call == null) {
+      return null;
     }
-    if (call == null || !ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
+    var refinedCall = refinedCallTypes(leftTypes, memberName, call, ctx);
+    if (refinedCall != null) {
+      return refinedCall;
+    }
+    if (!ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
       return null;
     }
     var element = elementGetterTypes(leftTypes);
     return element.isEmpty() ? null : element;
+  }
+
+  /**
+   * Уточнения, применимые только к вызову: значение описания типов, формы и фабрика XDTO.
+   *
+   * @param leftTypes  типы получателя.
+   * @param memberName имя вызванного метода.
+   * @param call       узел вызова.
+   * @param ctx        контекст инференса.
+   * @return уточнённый тип; {@code null}, если ни одно правило не сработало.
+   */
+  @Nullable
+  private TypeSet refinedCallTypes(TypeSet leftTypes, String memberName,
+                                   MethodCallNode call, InferenceContext ctx) {
+    var adjusted = openDataObjectInference.adjustedValueTypes(leftTypes, memberName);
+    if (adjusted != null) {
+      return adjusted;
+    }
+    var formTypes = formExpressionInference.refinedCallTypes(
+      ctx.documentContext, leftTypes, memberName, call);
+    if (formTypes != null) {
+      return formTypes;
+    }
+    return xdtoFactoryInference.refinedCallTypes(leftTypes, memberName, call,
+      node -> inferInternal(node, ctx), ctx.documentContext.getFileType());
   }
 
   /**

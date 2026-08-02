@@ -6350,6 +6350,67 @@
   },
   {
     "kind": "TYPE",
+    "name": "СвойствоXDTO",
+    "nameRu": "СвойствоXDTO",
+    "nameEn": "XDTOProperty",
+    "description": "Свойство типа XDTO.",
+    "members": [
+      {"name": "Имя", "nameRu": "Имя", "nameEn": "Name", "kind": "PROPERTY", "returnType": "Строка", "description": "Имя свойства."},
+      {"name": "URIПространстваИмен", "nameRu": "URIПространстваИмен", "nameEn": "NamespaceURI", "kind": "PROPERTY", "returnType": "Строка", "description": "Пространство имён свойства."},
+      {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "kind": "PROPERTY", "returnTypes": ["ТипЗначенияXDTO", "ТипОбъектаXDTO"], "description": "Тип значения свойства."},
+      {"name": "ВерхняяГраница", "nameRu": "ВерхняяГраница", "nameEn": "UpperBound", "kind": "PROPERTY", "returnType": "Число", "description": "Верхняя граница количества значений."},
+      {"name": "НижняяГраница", "nameRu": "НижняяГраница", "nameEn": "LowerBound", "kind": "PROPERTY", "returnType": "Число", "description": "Нижняя граница количества значений."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПоследовательностьXDTO",
+    "nameRu": "ПоследовательностьXDTO",
+    "nameEn": "XDTOSequence",
+    "description": "Последовательность значений объекта XDTO.",
+    "members": [
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество элементов последовательности."},
+      {"name": "Получить", "nameRu": "Получить", "nameEn": "Get", "kind": "METHOD", "returnType": "Произвольный", "description": "Значение элемента последовательности."},
+      {"name": "ПолучитьСвойство", "nameRu": "ПолучитьСвойство", "nameEn": "GetProperty", "kind": "METHOD", "returnType": "СвойствоXDTO", "description": "Свойство элемента последовательности."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КоллекцияСвойствXDTO",
+    "nameRu": "КоллекцияСвойствXDTO",
+    "nameEn": "XDTOPropertyCollection",
+    "description": "Коллекция свойств типа XDTO.",
+    "elementTypes": ["СвойствоXDTO"],
+    "members": [
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество свойств."},
+      {"name": "Получить", "nameRu": "Получить", "nameEn": "Get", "kind": "METHOD", "returnType": "СвойствоXDTO", "description": "Свойство по индексу или имени."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПакетXDTO",
+    "nameRu": "ПакетXDTO",
+    "nameEn": "XDTOPackage",
+    "description": "Пакет XDTO, известный фабрике.",
+    "members": [
+      {"name": "URIПространстваИмен", "nameRu": "URIПространстваИмен", "nameEn": "NamespaceURI", "kind": "PROPERTY", "returnType": "Строка", "description": "Пространство имён пакета."},
+      {"name": "Свойства", "nameRu": "Свойства", "nameEn": "Properties", "kind": "PROPERTY", "returnType": "КоллекцияСвойствXDTO", "description": "Свойства пакета."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КоллекцияПакетовXDTO",
+    "nameRu": "КоллекцияПакетовXDTO",
+    "nameEn": "XDTOPackageCollection",
+    "description": "Коллекция пакетов XDTO фабрики.",
+    "elementTypes": ["ПакетXDTO"],
+    "members": [
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество пакетов."},
+      {"name": "Получить", "nameRu": "Получить", "nameEn": "Get", "kind": "METHOD", "returnType": "ПакетXDTO", "description": "Пакет по индексу или пространству имён."}
+    ]
+  },
+  {
+    "kind": "TYPE",
     "name": "ТипЗначенияXDTO",
     "nameRu": "ТипЗначенияXDTO",
     "nameEn": "XDTOValueType",

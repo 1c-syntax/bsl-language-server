@@ -67,6 +67,9 @@ public class XdtoFactoryInference {
 
   private static final Set<String> CREATE_METHODS = Set.of("создать", "create");
 
+  /** Аргументы адресации типа: пространство имён и имя. */
+  private static final int ADDRESSING_ARGUMENTS = 2;
+
   private final TypeRegistry typeRegistry;
   private final XdtoTypesProvider xdtoTypesProvider;
 
@@ -95,7 +98,7 @@ public class XdtoFactoryInference {
     return null;
   }
 
-  private boolean isFactory(TypeSet receiver) {
+  private static boolean isFactory(TypeSet receiver) {
     return receiver.refs().stream()
       .anyMatch(ref -> FACTORY_TYPE.equals(ref.qualifiedName().toLowerCase(Locale.ROOT)));
   }
@@ -109,7 +112,7 @@ public class XdtoFactoryInference {
    */
   private @Nullable TypeSet objectTypeDescriptor(MethodCallNode call, FileType fileType) {
     var arguments = call.arguments();
-    if (arguments.size() < 2) {
+    if (arguments.size() < ADDRESSING_ARGUMENTS) {
       return null;
     }
     var namespaceUri = OpenDataObjectInference.stringLiteralOf(arguments.get(0));
@@ -135,8 +138,8 @@ public class XdtoFactoryInference {
    * @param inferrer вывод типов выражения-аргумента.
    * @return тип создаваемого объекта; {@code null}, если дескриптор не помечен.
    */
-  private @Nullable TypeSet createdObjectType(MethodCallNode call,
-                                              Function<BslExpression, TypeSet> inferrer) {
+  private static @Nullable TypeSet createdObjectType(MethodCallNode call,
+                                                     Function<BslExpression, TypeSet> inferrer) {
     var arguments = call.arguments();
     if (arguments.isEmpty()) {
       return null;

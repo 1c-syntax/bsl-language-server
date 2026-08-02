@@ -69,9 +69,9 @@ class XdtoPackageCompletionTest extends AbstractServerContextAwareTest {
     var labels = labels(documentContext, 3, 7);
 
     // then: видны свойства схемы и платформенная часть объекта XDTO.
-    assertThat(labels).contains("Страна", "Индекс", "Актуальный", "Состав");
     assertThat(labels)
-      .as("объект XDTO приносит свои методы")
+      .as("свойства из схемы пакета и методы объекта XDTO")
+      .contains("Страна", "Индекс", "Актуальный", "Состав")
       .contains("Установить", "Получить", "Проверить");
   }
 

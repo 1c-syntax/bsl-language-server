@@ -33,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,39 +76,45 @@ public class XdtoTypesProvider {
   /** Префикс имён XML-схемы: {@code xs:string}, {@code xs:dateTime} и т.п. */
   private static final String XSD_PREFIX = "xs:";
 
+  private static final String STRING = "Строка";
+  private static final String NUMBER = "Число";
+  private static final String BOOLEAN = "Булево";
+  private static final String DATE = "Дата";
+  private static final String BINARY_DATA = "ДвоичныеДанные";
+
   /** Отображение имён XML-схемы в примитивы 1С. */
   private static final Map<String, String> XSD_TO_BSL = Map.ofEntries(
-    Map.entry("string", "Строка"),
-    Map.entry("normalizedString", "Строка"),
-    Map.entry("token", "Строка"),
-    Map.entry("anyURI", "Строка"),
-    Map.entry("QName", "Строка"),
-    Map.entry("NCName", "Строка"),
-    Map.entry("ID", "Строка"),
-    Map.entry("IDREF", "Строка"),
-    Map.entry("language", "Строка"),
-    Map.entry("boolean", "Булево"),
-    Map.entry("decimal", "Число"),
-    Map.entry("integer", "Число"),
-    Map.entry("int", "Число"),
-    Map.entry("long", "Число"),
-    Map.entry("short", "Число"),
-    Map.entry("byte", "Число"),
-    Map.entry("float", "Число"),
-    Map.entry("double", "Число"),
-    Map.entry("nonNegativeInteger", "Число"),
-    Map.entry("positiveInteger", "Число"),
-    Map.entry("nonPositiveInteger", "Число"),
-    Map.entry("negativeInteger", "Число"),
-    Map.entry("unsignedInt", "Число"),
-    Map.entry("unsignedLong", "Число"),
-    Map.entry("unsignedShort", "Число"),
-    Map.entry("unsignedByte", "Число"),
-    Map.entry("date", "Дата"),
-    Map.entry("dateTime", "Дата"),
-    Map.entry("time", "Дата"),
-    Map.entry("base64Binary", "ДвоичныеДанные"),
-    Map.entry("hexBinary", "ДвоичныеДанные")
+    Map.entry("string", STRING),
+    Map.entry("normalizedString", STRING),
+    Map.entry("token", STRING),
+    Map.entry("anyURI", STRING),
+    Map.entry("QName", STRING),
+    Map.entry("NCName", STRING),
+    Map.entry("ID", STRING),
+    Map.entry("IDREF", STRING),
+    Map.entry("language", STRING),
+    Map.entry("boolean", BOOLEAN),
+    Map.entry("decimal", NUMBER),
+    Map.entry("integer", NUMBER),
+    Map.entry("int", NUMBER),
+    Map.entry("long", NUMBER),
+    Map.entry("short", NUMBER),
+    Map.entry("byte", NUMBER),
+    Map.entry("float", NUMBER),
+    Map.entry("double", NUMBER),
+    Map.entry("nonNegativeInteger", NUMBER),
+    Map.entry("positiveInteger", NUMBER),
+    Map.entry("nonPositiveInteger", NUMBER),
+    Map.entry("negativeInteger", NUMBER),
+    Map.entry("unsignedInt", NUMBER),
+    Map.entry("unsignedLong", NUMBER),
+    Map.entry("unsignedShort", NUMBER),
+    Map.entry("unsignedByte", NUMBER),
+    Map.entry("date", DATE),
+    Map.entry("dateTime", DATE),
+    Map.entry("time", DATE),
+    Map.entry("base64Binary", BINARY_DATA),
+    Map.entry("hexBinary", BINARY_DATA)
   );
 
   private final TypeRegistry typeRegistry;
@@ -160,22 +168,57 @@ public class XdtoTypesProvider {
   private void registerPackage(XDTOPackage xdtoPackage) {
     var data = xdtoPackage.getData();
     var packageName = xdtoPackage.getName();
-    if (data == null || packageName.isBlank() || data.objectTypes().isEmpty()) {
+    if (packageName.isBlank() || data.objectTypes().isEmpty()) {
       return;
     }
+    rememberNamespace(xdtoPackage, data, packageName);
+    var refsByName = registerObjectTypes(data, packageName);
+    fillObjectTypes(data, refsByName, valueTypePrimitives(data));
+  }
+
+  /**
+   * Запомнить, каким пакетом адресуется пространство имён: в коде тип XDTO ищут по URI,
+   * а в ссылке документирующего комментария — по имени пакета.
+   *
+   * @param xdtoPackage объект метаданных пакета.
+   * @param data        схема пакета.
+   * @param packageName имя пакета.
+   */
+  private void rememberNamespace(XDTOPackage xdtoPackage, XdtoPackageData data, String packageName) {
     var namespaceUri = data.targetNamespace().isBlank() ? xdtoPackage.getNamespace() : data.targetNamespace();
     if (!namespaceUri.isBlank()) {
       packageByNamespace.put(namespaceUri, packageName);
     }
-    var valueTypes = valueTypePrimitives(data);
+  }
+
+  /**
+   * Завести типы всех объектных типов пакета — до наполнения членами: базовый тип может
+   * быть объявлен в схеме ниже наследника.
+   *
+   * @param data        схема пакета.
+   * @param packageName имя пакета.
+   * @return типы пакета по именам из схемы.
+   */
+  private Map<String, TypeRef> registerObjectTypes(XdtoPackageData data, String packageName) {
     var refsByName = new HashMap<String, TypeRef>();
     for (var objectType : data.objectTypes()) {
       var name = objectType.name();
-      if (name.isBlank()) {
-        continue;
+      if (!name.isBlank()) {
+        refsByName.put(name, registerObjectType(packageName, name));
       }
-      refsByName.put(name, registerObjectType(packageName, name));
     }
+    return refsByName;
+  }
+
+  /**
+   * Наполнить заведённые типы: наследование внутри пакета и ленивый источник членов.
+   *
+   * @param data       схема пакета.
+   * @param refsByName типы пакета по именам.
+   * @param valueTypes примитивы простых типов пакета по именам.
+   */
+  private void fillObjectTypes(XdtoPackageData data, Map<String, TypeRef> refsByName,
+                               Map<String, String> valueTypes) {
     for (var objectType : data.objectTypes()) {
       var ref = refsByName.get(objectType.name());
       if (ref == null) {
@@ -217,7 +260,7 @@ public class XdtoTypesProvider {
    * @param refsByName типы пакета по именам.
    */
   private void inheritBase(TypeRef ref, String base, Map<String, TypeRef> refsByName) {
-    if (base == null || base.isBlank()) {
+    if (base.isBlank()) {
       return;
     }
     var baseRef = refsByName.get(localName(base));
@@ -258,7 +301,7 @@ public class XdtoTypesProvider {
    * @return тип свойства.
    */
   private TypeRef propertyType(String type, Map<String, TypeRef> refsByName, Map<String, String> valueTypes) {
-    if (type == null || type.isBlank()) {
+    if (type.isBlank()) {
       return TypeRef.ANY;
     }
     if (type.startsWith(XSD_PREFIX)) {
@@ -284,7 +327,7 @@ public class XdtoTypesProvider {
     for (var valueType : data.valueTypes()) {
       var name = valueType.name();
       var base = valueType.base();
-      if (name.isBlank() || base == null || !base.startsWith(XSD_PREFIX)) {
+      if (name.isBlank() || !base.startsWith(XSD_PREFIX)) {
         continue;
       }
       var primitive = XSD_TO_BSL.get(base.substring(XSD_PREFIX.length()));
@@ -296,10 +339,10 @@ public class XdtoTypesProvider {
   }
 
   /**
-   * @param primitive имя примитива 1С либо {@code null}.
+   * @param primitive имя примитива 1С; {@code null}, если имени нет.
    * @return тип примитива; {@link TypeRef#ANY}, если имя не задано или не резолвится.
    */
-  private TypeRef primitive(String primitive) {
+  private TypeRef primitive(@Nullable String primitive) {
     if (primitive == null) {
       return TypeRef.ANY;
     }
