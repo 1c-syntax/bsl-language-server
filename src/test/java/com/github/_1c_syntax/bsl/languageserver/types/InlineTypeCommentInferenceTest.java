@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -50,7 +51,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "X = Значение", "X = ".length());
     assertThat(types.refs())
       .as("inline `// Число -` produces Число")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Число");
   }
 
@@ -62,7 +63,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "Y = Имя", "Y = ".length());
     assertThat(types.refs())
       .as("inline `// Строка` (no dash) also produces Строка")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
   }
 
@@ -77,7 +78,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
 
     // then: тип из описания функции приходит вместе с её полями.
     assertThat(types.refs())
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Структура");
     var structureRef = types.refs().iterator().next();
     assertThat(types.getLocalFields(structureRef).keySet())
@@ -97,7 +98,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(types.refs())
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Структура");
   }
 
@@ -109,7 +110,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "Z = Перечисление", "Z = ".length());
     assertThat(types.refs())
       .as("inline `// Число, Строка -` produces union")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactlyInAnyOrder("Число", "Строка");
   }
 
