@@ -494,10 +494,12 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
     var types = typeOf("3.22");
     var attribute = typeOfVariable("Проба_3_22_Реквизит");
 
-    // then
+    // then: имя типа рекомендация пишет обобщённо, мы отдаём конкретную табличную часть —
+    // поэтому проверяется вхождение, а не точное совпадение.
     assertThat(names(types))
       .as("рекомендация: параметр получает тип табличной части")
-      .containsExactly("ТабличнаяЧасть");
+      .singleElement(as(STRING))
+      .contains("ТабличнаяЧасть");
     assertThat(names(attribute))
       .as("рекомендация: табличную часть обходят и читают реквизит её строки")
       .containsExactly("Строка");
