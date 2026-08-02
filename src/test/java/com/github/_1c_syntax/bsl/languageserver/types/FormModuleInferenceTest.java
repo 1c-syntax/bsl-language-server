@@ -430,8 +430,9 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
     assertThat(packet.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
     assertThat(packet.getAllFieldNames())
       .contains("РежимЗаписи", "РежимПроведения")
-      .as("ключ структуры — строка, а не идентификатор: платформа пишет её на языке проекта")
-      .contains("WriteMode", "PostingMode");
+      .as("ключ структуры — строка, а не идентификатор: у русской конфигурации платформа "
+        + "кладёт русское написание, и английского в структуре не окажется")
+      .doesNotContain("WriteMode", "PostingMode");
   }
 
   @Test
@@ -448,7 +449,9 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
     assertThat(unknownMemberAtRhs(documentContext, "Режим"))
       .as("предопределённый ключ — не опечатка")
       .isEmpty();
-    assertThat(unknownMemberAtRhs(documentContext, "ПоАнглийски")).isEmpty();
+    assertThat(unknownMemberAtRhs(documentContext, "ПоАнглийски"))
+      .as("конфигурация русская — английского написания ключа платформа туда не кладёт")
+      .isPresent();
     assertThat(unknownMemberAtRhs(documentContext, "Опечатка"))
       .as("состав не закрывает структуру, но и известные ключи не выдумывает")
       .isPresent();

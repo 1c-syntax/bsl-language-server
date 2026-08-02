@@ -448,9 +448,9 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
       .containsExactly("РежимЗаписиДокумента");
     assertThat(fieldTypeNames(writeParameters, "РежимПроведения"))
       .containsExactly("РежимПроведенияДокумента");
-    assertThat(fieldTypeNames(writeParameters, "WriteMode"))
-      .as("оба написания ключа резолвятся: ключ структуры — строка на языке проекта")
-      .containsExactly("РежимЗаписиДокумента");
+    assertThat(writeParameters.types().getAllFieldNames())
+      .as("написание одно и по языку проекта: конфигурация фикстуры русская")
+      .doesNotContain("WriteMode", "PostingMode");
   }
 
   @Test

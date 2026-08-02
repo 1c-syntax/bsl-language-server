@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
@@ -58,32 +59,32 @@ import java.util.Map;
 @RequiredArgsConstructor
 class StructureParameterFieldsRegistrar {
 
-  /** Ru-написание + en: каждый ключ занимает в наборе полей до двух мест. */
-  private static final int NAME_SPELLINGS_PER_FIELD = 2;
-
   private final TypeRegistry typeRegistry;
 
   /**
    * Регистрирует состав по всем записям словаря. Запись, которой в реестре не нашлось
    * соответствия (нет синтакс-помощника — расширений в JSON-фолбэке почти нет), молча
    * пропускается: словарь сверяется с платформой HBK-тестом, а не падением на пользователе.
+   *
+   * @param projectLanguage язык исходников проекта — на нём платформа и пишет ключи.
    */
-  void register() {
+  void register(Language projectLanguage) {
     var structureRef = typeRegistry.resolve(FormPlatformTypes.STRUCTURE_RU).orElse(null);
     if (structureRef == null) {
       return;
     }
     for (var parameter : FormPlatformTypes.PREDEFINED_STRUCTURE_PARAMETERS) {
-      registerParameter(parameter, structureRef);
+      registerParameter(parameter, structureRef, projectLanguage);
     }
   }
 
-  private void registerParameter(FormPlatformTypes.StructureParameter parameter, TypeRef structureRef) {
+  private void registerParameter(FormPlatformTypes.StructureParameter parameter, TypeRef structureRef,
+                                 Language projectLanguage) {
     var ownerRef = typeRegistry.resolve(parameter.ownerTypeName()).orElse(null);
     if (ownerRef == null) {
       return;
     }
-    var fields = fieldsOf(parameter);
+    var fields = fieldsOf(parameter, projectLanguage);
     var rebuilt = new ArrayList<MemberDescriptor>();
     // Члены владельца читаются здесь же, на регистрации, а в источник уходит готовый
     // список: источник живёт на том же типе, чьи члены читает, и ленивое чтение
@@ -100,16 +101,19 @@ class StructureParameterFieldsRegistrar {
   }
 
   /**
-   * Поля структуры по описанию из словаря: оба написания имени — отдельными ключами.
-   * Ключ структуры это строка, а не идентификатор, и сопоставляется по себе самой,
-   * поэтому написание, которого нет в наборе, просто не резолвится.
+   * Поля структуры по описанию из словаря — по одному написанию на ключ, на языке проекта.
+   * <p>
+   * Ключ структуры это <b>строка</b>, а не идентификатор: платформа кладёт её на языке
+   * проекта, и в русской конфигурации английского написания в структуре не окажется.
+   * Поэтому оба написания сразу заводить нельзя — это молча приняло бы за верное то,
+   * что на выполнении не сработает.
    * <p>
    * Тип значения, которого в реестре не оказалось, поле не отменяет: имя ключа само по
    * себе снимает ложное срабатывание {@code UnknownMember} и попадает в автодополнение.
    */
-  private Map<String, LocalField> fieldsOf(FormPlatformTypes.StructureParameter parameter) {
-    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(
-      parameter.fields().size() * NAME_SPELLINGS_PER_FIELD);
+  private Map<String, LocalField> fieldsOf(FormPlatformTypes.StructureParameter parameter,
+                                           Language projectLanguage) {
+    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(parameter.fields().size());
     for (var field : parameter.fields()) {
       var types = TypeSet.EMPTY;
       for (var typeName : field.typeNames()) {
@@ -118,9 +122,7 @@ class StructureParameterFieldsRegistrar {
           types = types.add(typeRef);
         }
       }
-      var value = LocalField.of(types);
-      fields.put(field.name().ru(), value);
-      fields.putIfAbsent(field.name().en(), value);
+      fields.put(field.name().forLanguage(projectLanguage), LocalField.of(types));
     }
     return fields;
   }

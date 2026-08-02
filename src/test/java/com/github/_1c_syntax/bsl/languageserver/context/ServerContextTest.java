@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -42,6 +43,26 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
+
+  @Test
+  void scriptVariantLanguageFollowsTheConfiguration() {
+    initServerContext(PATH_TO_METADATA);
+
+    assertThat(context.getConfiguration().getScriptVariant()).isEqualTo(ScriptVariant.RUSSIAN);
+    assertThat(context.getScriptVariantLanguage())
+      .as("язык исходников проекта — из ScriptVariant конфигурации, а не из настроек LS")
+      .isEqualTo(Language.RU);
+  }
+
+  @Test
+  void withoutConfigurationScriptVariantLanguageFallsBackToTheServerLanguage() {
+    // Проект без mdclasses-конфы: ScriptVariant взять неоткуда, остаётся язык сервера.
+    initServerContext();
+    var serverLanguage = context.getLanguageServerConfiguration().getLanguage();
+
+    assertThat(context.getConfiguration().getConfigurationSource()).isEqualTo(ConfigurationSource.EMPTY);
+    assertThat(context.getScriptVariantLanguage()).isEqualTo(serverLanguage);
+  }
 
   @Test
   void testConfigurationMetadata() {

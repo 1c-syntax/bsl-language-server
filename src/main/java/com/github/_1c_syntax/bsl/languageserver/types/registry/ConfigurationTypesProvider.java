@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
@@ -251,12 +252,12 @@ public class ConfigurationTypesProvider {
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
     platformTypesWarmup.join();
-    register(children);
+    register(children, serverContext.getScriptVariantLanguage());
     serviceModuleEventRegistrar.register(children);
     return serverContext;
   }
 
-  private void register(Iterable<MD> children) {
+  private void register(Iterable<MD> children, Language projectLanguage) {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
     var commonAttributes = collectCommonAttributes(children);
@@ -288,7 +289,7 @@ public class ConfigurationTypesProvider {
 
     // Тип на каждую форму: реквизиты, элементы, расширение по основному реквизиту
     // и обработчики событий из Form.xml.
-    formTypesProvider.register(children);
+    formTypesProvider.register(children, projectLanguage);
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
   }

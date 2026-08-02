@@ -186,13 +186,16 @@ public class FormTypesProvider {
    * Регистрирует типы всех форм конфигурации: общих ({@link CommonForm}) и
    * подчинённых объектам ({@link FormOwner#getForms()}).
    *
-   * @param children объекты метаданных конфигурации.
+   * @param children        объекты метаданных конфигурации.
+   * @param projectLanguage язык исходников проекта — на нём платформа заполняет то,
+   *                        что зависит от варианта встроенного языка
+   *                        (см. {@link com.github._1c_syntax.bsl.languageserver.context.ServerContext#getScriptVariantLanguage()}).
    */
-  public void register(Iterable<MD> children) {
+  public void register(Iterable<MD> children, Language projectLanguage) {
     formItemTypes.registerItemKindTypes();
     // Раньше самих форм: правка ложится на типы-расширения, а формы разбирают их
     // контракты событий уже готовыми.
-    structureParameterFields.register();
+    structureParameterFields.register(projectLanguage);
     var count = 0;
     for (var md : children) {
       count += registerFormsOf(md);
