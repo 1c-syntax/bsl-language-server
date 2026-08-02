@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
@@ -30,7 +31,9 @@ import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -450,6 +453,35 @@ public class ServerContext {
 
   public Solution getConfiguration() {
     return configurationMetadata.getOrCompute();
+  }
+
+  /**
+   * Язык исходников проекта: для конфигурации с заданным {@code ScriptVariant} — именно он
+   * (русский/английский); для проекта без mdclasses-конфы и при нераспознанном варианте —
+   * {@link LanguageServerConfiguration#getLanguage()}.
+   * <p>
+   * Этот язык — преобладающий в коде: на нём пишет пользователь и на нём же платформа
+   * заполняет то, что зависит от варианта языка. Не путать с языком интерфейса LS.
+   * <p>
+   * Расчёт живёт здесь, а не у документа, потому что зависит только от конфигурации
+   * рабочей области — его спрашивают и там, где документа нет (регистрация типов).
+   * У документа остаётся единственная своя поправка — OS-файл
+   * (см. {@link DocumentContext#getScriptVariantLanguage()}).
+   *
+   * @return язык исходников проекта.
+   */
+  public Language getScriptVariantLanguage() {
+    var mdConfiguration = getConfiguration();
+    if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY) {
+      return getLanguageServerConfiguration().getLanguage();
+    }
+    var scriptVariant = mdConfiguration.getScriptVariant();
+    if (scriptVariant == ScriptVariant.UNKNOWN) {
+      // Не удалось определить язык встроенного языка конфигурации — мягкий фолбэк на
+      // UI-язык LS (бросать нельзя: метод дёргается в hot-path completion/hover).
+      return getLanguageServerConfiguration().getLanguage();
+    }
+    return "en".equalsIgnoreCase(scriptVariant.shortName()) ? Language.EN : Language.RU;
   }
 
   /**

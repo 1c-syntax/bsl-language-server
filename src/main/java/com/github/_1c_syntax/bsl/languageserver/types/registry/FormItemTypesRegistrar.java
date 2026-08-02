@@ -170,12 +170,22 @@ class FormItemTypesRegistrar {
   /**
    * Имя типа, которым надо доопределить свойство; {@code null} — свойства в словаре нет
    * либо платформа тип у него всё-таки объявила (тогда её объявление и остаётся).
+   * <p>
+   * Имя сопоставляется двуязычным {@link MemberDescriptor#matches}, а не поиском по карте:
+   * у члена написаний два, и совпасть должно любое из них — как у остальных словарей
+   * {@link FormPlatformTypes}. Перебором, а не вторым ключом в словаре: записей на
+   * владельца единицы, а знать оба написания словарю тогда не нужно.
    */
-  private static @Nullable String memberTypeName(Map<String, String> typeByMember, MemberDescriptor member) {
+  static @Nullable String memberTypeName(Map<String, String> typeByMember, MemberDescriptor member) {
     if (member.kind() != MemberKind.PROPERTY || !member.returnTypes().isEmpty()) {
       return null;
     }
-    return typeByMember.get(member.name());
+    for (var entry : typeByMember.entrySet()) {
+      if (member.matches(entry.getKey())) {
+        return entry.getValue();
+      }
+    }
+    return null;
   }
 
   /**

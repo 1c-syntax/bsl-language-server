@@ -42,9 +42,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
-import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -250,21 +248,12 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * настройкам интерфейса).
    */
   public Language getScriptVariantLanguage() {
-    var mdConfiguration = getServerContext().getConfiguration();
-    if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
+    if (fileType == FileType.OS) {
+      // Единственная поправка документа к языку проекта: OneScript-файл к конфигурации
+      // не относится, и её ScriptVariant про него ничего не говорит.
       return getServerContext().getLanguageServerConfiguration().getLanguage();
     }
-    var scriptVariant = mdConfiguration.getScriptVariant();
-    if (scriptVariant == ScriptVariant.UNKNOWN) {
-      // Не удалось определить язык встроенного языка конфигурации —
-      // мягкий фолбэк на UI-язык LS (бросать нельзя: метод дёргается в
-      // hot-path completion/hover).
-      return getServerContext().getLanguageServerConfiguration().getLanguage();
-    }
-    var shortName = scriptVariant.shortName();
-    return "en".equalsIgnoreCase(shortName)
-      ? Language.EN
-      : Language.RU;
+    return getServerContext().getScriptVariantLanguage();
   }
 
   public MetricStorage getMetrics() {

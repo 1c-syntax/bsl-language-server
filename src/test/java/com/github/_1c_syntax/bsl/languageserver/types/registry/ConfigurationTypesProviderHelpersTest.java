@@ -331,7 +331,8 @@ class ConfigurationTypesProviderHelpersTest {
       formDataTypesRegistrar,
       new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
       new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
-        recorderIndex));
+        recorderIndex),
+      new StructureParameterFieldsRegistrar(registry));
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
       new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
       new ServiceModuleEventRegistrar(registry),

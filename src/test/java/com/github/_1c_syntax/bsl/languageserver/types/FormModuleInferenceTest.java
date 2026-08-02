@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -413,6 +414,87 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
       .doesNotContain("ГруппаФормы.ОбычнаяГруппа");
   }
 
+  @Test
+  void writeParametersCarryTheKeysPlatformPutsThere() {
+    // Тип у параметра объявлен как `Структура` — то есть не сказано ничего, — а состав
+    // платформа называет в описании параметра: у формы документа это `РежимЗаписи` и
+    // `РежимПроведения`, добавляемые командами «Провести» и «Отмена проведения».
+    var documentContext = formModuleWith("""
+      &НаКлиенте
+      Процедура ПередЗаписью(Отказ, ПараметрыЗаписи)
+        Пакет = ПараметрыЗаписи;
+      КонецПроцедуры
+      """);
+
+    var packet = typeSetAtRhs(documentContext, "Пакет");
+    assertThat(packet.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    assertThat(packet.getAllFieldNames())
+      .contains("РежимЗаписи", "РежимПроведения")
+      .as("ключ структуры — строка, а не идентификатор: у русской конфигурации платформа "
+        + "кладёт русское написание, и английского в структуре не окажется")
+      .doesNotContain("WriteMode", "PostingMode");
+  }
+
+  @Test
+  void predefinedKeyResolvesWhileAnInventedOneStaysUnknown() {
+    var documentContext = formModuleWith("""
+      &НаКлиенте
+      Процедура ПередЗаписью(Отказ, ПараметрыЗаписи)
+        Режим = ПараметрыЗаписи.РежимЗаписи;
+        ПоАнглийски = ПараметрыЗаписи.WriteMode;
+        Опечатка = ПараметрыЗаписи.РежимЗаписей;
+      КонецПроцедуры
+      """);
+
+    assertThat(unknownMemberAtRhs(documentContext, "Режим"))
+      .as("предопределённый ключ — не опечатка")
+      .isEmpty();
+    assertThat(unknownMemberAtRhs(documentContext, "ПоАнглийски"))
+      .as("конфигурация русская — английского написания ключа платформа туда не кладёт")
+      .isPresent();
+    assertThat(unknownMemberAtRhs(documentContext, "Опечатка"))
+      .as("состав не закрывает структуру, но и известные ключи не выдумывает")
+      .isPresent();
+  }
+
+  @Test
+  void everyWriteEventGetsTheSameComposition() {
+    // Состав закреплён за параметром, а не за событием: платформа кладёт в них одну и
+    // ту же структуру, и её же принимает метод `Записать`.
+    var documentContext = formModuleWith("""
+      &НаКлиенте
+      Процедура ПослеЗаписи(ПараметрыЗаписи)
+        ПослеЗаписиПакет = ПараметрыЗаписи;
+      КонецПроцедуры
+
+      &НаСервере
+      Процедура ПриЗаписиНаСервере(Отказ, ТекущийОбъект, ПараметрыЗаписи)
+        НаСервереПакет = ПараметрыЗаписи;
+      КонецПроцедуры
+      """);
+
+    assertThat(typeSetAtRhs(documentContext, "ПослеЗаписиПакет").getAllFieldNames())
+      .contains("РежимЗаписи", "РежимПроведения");
+    assertThat(typeSetAtRhs(documentContext, "НаСервереПакет").getAllFieldNames())
+      .contains("РежимЗаписи", "РежимПроведения");
+  }
+
+  @Test
+  void keysInsertedByApplicationCodeLiveAlongsideThePredefinedOnes() {
+    // Платформа прямо оговаривает «состав других параметров произвольный», поэтому
+    // состав навешивается на обычную Структуру: свои ключи копятся в том же наборе.
+    var documentContext = formModuleWith("""
+      &НаКлиенте
+      Процедура ПередЗаписью(Отказ, ПараметрыЗаписи)
+        ПараметрыЗаписи.Вставить("СвойКлюч", ЭтотОбъект);
+        Пакет = ПараметрыЗаписи;
+      КонецПроцедуры
+      """);
+
+    assertThat(typeSetAtRhs(documentContext, "Пакет").getAllFieldNames())
+      .contains("РежимЗаписи", "СвойКлюч");
+  }
+
   /** Типы правой части присваивания с кареткой в её конце — на последнем символе выражения. */
   private List<String> typesAtEndOfRhs(DocumentContext documentContext, String assignedVar) {
     var content = documentContext.getContent();
@@ -444,6 +526,20 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
 
   /** То же, но целиком: с типами элементов и полями «открытого» объекта. */
   private TypeSet typeSetAtRhs(DocumentContext documentContext, String assignedVar) {
+    return typeService.expressionTypesAt(documentContext, caretAtRhs(documentContext, assignedVar));
+  }
+
+  /**
+   * Типы ресивера, у которого не нашлось члена под кареткой, — ровно то, на чём
+   * срабатывает {@code UnknownMember}. Пусто — член резолвится либо тип ресивера
+   * не выведен.
+   */
+  private Optional<TypeSet> unknownMemberAtRhs(DocumentContext documentContext, String assignedVar) {
+    return typeService.unknownMemberReceiverAt(documentContext, caretAtRhs(documentContext, assignedVar));
+  }
+
+  /** Каретка на последнем сегменте правой части присваивания {@code <var> = …;}. */
+  private static Position caretAtRhs(DocumentContext documentContext, String assignedVar) {
     var content = documentContext.getContent();
     var marker = assignedVar + " = ";
     var markerIdx = content.indexOf(marker);
@@ -454,7 +550,7 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
     var caret = lastDot < 0 ? rhsStart : lastDot + 1;
     var lineStart = content.lastIndexOf('\n', caret) + 1;
     var line = content.substring(0, caret).split("\n").length - 1;
-    return typeService.expressionTypesAt(documentContext, new Position(line, caret - lineStart));
+    return new Position(line, caret - lineStart);
   }
 
   /**
