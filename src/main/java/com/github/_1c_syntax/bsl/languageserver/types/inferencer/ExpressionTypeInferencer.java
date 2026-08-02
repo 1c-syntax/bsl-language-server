@@ -839,7 +839,19 @@ public class ExpressionTypeInferencer {
    * @return данные для {@link VariableFlowAnalyzer}.
    */
   private VariableFlowAnalyzer.FlowInputs flowInputs(VariableSymbol variable, InferenceContext ctx) {
-    var owner = variable.getOwner();
+    // Объявленное о переменной расчёт спрашивает многократно — на входе в тело, в точках
+    // слияния и при возврате к объединению по области видимости. У переменной модуля за
+    // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
+    Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
+    Function<VariableSymbol, TypeSet> declaredOf = (VariableSymbol target) -> {
+      var cached = declaredByVariable.get(target);
+      if (cached != null) {
+        return cached;
+      }
+      var computed = declaredTypes(target);
+      declaredByVariable.put(target, computed);
+      return computed;
+    };
     // Операторы-мутаторы разбираются лениво и по одному разу на переменную: за ними стоит
     // обход индекса вызовов, а при готовом окружении в кэше они не нужны вовсе.
     Map<VariableSymbol, Lazy<Map<Position, BSLParser.CallStatementContext>>> callsByVariable = new HashMap<>();
@@ -854,19 +866,7 @@ public class ExpressionTypeInferencer {
       kindsByVariable
         .computeIfAbsent(target, key -> new Lazy<>(() -> formExpressionInference.kindAssignmentsOf(key)))
         .getOrCompute();
-    // Объявленное о переменной расчёт спрашивает многократно — на входе в тело, в точках
-    // слияния и при возврате к объединению по области видимости. У переменной модуля за
-    // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
-    Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
-    Function<VariableSymbol, TypeSet> declaredOf = target -> {
-      var cached = declaredByVariable.get(target);
-      if (cached != null) {
-        return cached;
-      }
-      var computed = declaredTypes(target);
-      declaredByVariable.put(target, computed);
-      return computed;
-    };
+    var owner = variable.getOwner();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
