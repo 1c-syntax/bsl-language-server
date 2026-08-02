@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Регистрирует тип на каждый объектный тип XDTO-пакета конфигурации.
@@ -110,6 +112,13 @@ public class XdtoTypesProvider {
   private final TypeRegistry typeRegistry;
 
   /**
+   * Имя пакета по его пространству имён. В документирующих комментариях пакет называют
+   * именем, а в коде — URI пространства имён ({@code ФабрикаXDTO.Тип(URI, "Адрес")}),
+   * поэтому нужна связка одного с другим.
+   */
+  private final Map<String, String> packageByNamespace = new ConcurrentHashMap<>();
+
+  /**
    * Зарегистрировать типы объектов всех XDTO-пакетов конфигурации.
    *
    * @param children объекты метаданных конфигурации.
@@ -126,6 +135,25 @@ public class XdtoTypesProvider {
   }
 
   /**
+   * Тип объекта пакета по пространству имён и имени типа — так, как его адресует код
+   * через {@code ФабрикаXDTO.Тип(URI, Имя)}.
+   *
+   * @param namespaceUri пространство имён пакета.
+   * @param typeName     имя объектного типа.
+   * @return тип объекта; {@link Optional#empty()}, если такого пакета или типа нет.
+   */
+  public Optional<TypeRef> resolveObjectType(String namespaceUri, String typeName) {
+    if (namespaceUri.isBlank() || typeName.isBlank()) {
+      return Optional.empty();
+    }
+    var packageName = packageByNamespace.get(namespaceUri);
+    if (packageName == null) {
+      return Optional.empty();
+    }
+    return typeRegistry.resolve(PACKAGE_PREFIX_RU + packageName + "." + typeName);
+  }
+
+  /**
    * Типы одного пакета: сперва заводятся все объектные типы, потом — наследование
    * между ними. Порядок важен: базовый тип может быть объявлен в схеме ниже наследника.
    */
@@ -134,6 +162,10 @@ public class XdtoTypesProvider {
     var packageName = xdtoPackage.getName();
     if (data == null || packageName.isBlank() || data.objectTypes().isEmpty()) {
       return;
+    }
+    var namespaceUri = data.targetNamespace().isBlank() ? xdtoPackage.getNamespace() : data.targetNamespace();
+    if (!namespaceUri.isBlank()) {
+      packageByNamespace.put(namespaceUri, packageName);
     }
     var valueTypes = valueTypePrimitives(data);
     var refsByName = new HashMap<String, TypeRef>();

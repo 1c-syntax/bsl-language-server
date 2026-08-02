@@ -119,6 +119,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final FormExpressionInference formExpressionInference;
+  private final XdtoFactoryInference xdtoFactoryInference;
   private final CommentTypeResolver commentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final ControlFlowGraphIndex controlFlowGraphIndex;
@@ -371,6 +372,11 @@ public class ExpressionTypeInferencer {
         ctx.documentContext, leftTypes, memberName, call);
       if (formTypes != null) {
         return formTypes;
+      }
+      var xdtoTypes = xdtoFactoryInference.refinedCallTypes(leftTypes, memberName, call,
+        node -> inferInternal(node, ctx), ctx.documentContext.getFileType());
+      if (xdtoTypes != null) {
+        return xdtoTypes;
       }
     }
     if (call == null || !ELEMENT_GETTER.equalsIgnoreCase(memberName)) {

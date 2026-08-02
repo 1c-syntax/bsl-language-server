@@ -109,6 +109,55 @@ class XdtoPackageTypesTest extends AbstractServerContextAwareTest {
       .containsExactly("Строка");
   }
 
+  @Test
+  void factoryCreatesObjectOfTypeAddressedByNamespace() {
+    // given: тип адресуется пространством имён и именем, как в коде без комментариев.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура СозданиеЧерезФабрику() Экспорт
+
+      	ТипАдреса = ФабрикаXDTO.Тип("http://www.example.org/test-package", "Адрес");
+      	Адрес = ФабрикаXDTO.Создать(ТипАдреса);
+      	СтранаАдреса = Адрес.Страна;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var address = at(documentContext, "Адрес = ФабрикаXDTO.Создать(ТипАдреса)", "Адрес = ".length());
+    var country = at(documentContext, "СтранаАдреса = Адрес.Страна", "СтранаАдреса = Адрес.".length());
+
+    // then
+    assertThat(names(address)).containsExactly("XDTOПакет.ПакетТест.Адрес");
+    assertThat(names(country))
+      .as("у созданного объекта доступны свойства его типа")
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void inlineSeeRefTypesObjectWhenNamespaceIsComputed() {
+    // given: пространство имён вычисляется, поэтому тип задан строчной ссылкой.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура СозданиеСВычисляемымПространством(ПространствоИмен) Экспорт
+
+      	ТипАдреса = ФабрикаXDTO.Тип(ПространствоИмен, "Адрес");
+      	Адрес = ФабрикаXDTO.Создать(ТипАдреса); // См. XDTOПакет.ПакетТест.Адрес
+      	ТипПеременной = Адрес;
+      	СтранаАдреса = Адрес.Страна;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var address = at(documentContext, "ТипПеременной = Адрес", "ТипПеременной = ".length());
+    var country = at(documentContext, "СтранаАдреса = Адрес.Страна", "СтранаАдреса = Адрес.".length());
+
+    // then: расчётный тип рекомендация не заменяет, а дополняет — поэтому проверяется вхождение.
+    assertThat(names(address)).contains("XDTOПакет.ПакетТест.Адрес");
+    assertThat(names(country))
+      .as("строчная ссылка даёт тип, и через него доступны свойства")
+      .containsExactly("Строка");
+  }
+
   private DocumentContext documentWithReference() {
     return TestUtils.getDocumentContext("""
       // Параметры:
