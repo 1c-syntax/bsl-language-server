@@ -132,6 +132,39 @@ class MetadataSeeRefInferenceTest extends AbstractServerContextAwareTest {
     assertThat(names(types)).isEmpty();
   }
 
+  @Test
+  void seeRefToTabularSectionRow() {
+    // given: «СтрокаТабличнойЧасти: См. Справочник.Справочник1.ТабличнаяЧасть1» — голова
+    // описания говорит, что это строка, а ссылка указывает на саму табличную часть.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MetadataSeeRef.bsl");
+
+    // when
+    var row = at(documentContext, "СтрокаИзСсылки = СтрокаЧасти", "СтрокаИзСсылки = ".length());
+    var column = at(documentContext,
+      "КолонкаИзСсылки = СтрокаЧасти.Реквизит1", "КолонкаИзСсылки = СтрокаЧасти.".length());
+
+    // then: параметр получает строку именно этой табличной части, с её колонками.
+    assertThat(names(row)).containsExactly("СправочникТабличнаяЧастьСтрока.Справочник1.ТабличнаяЧасть1");
+    assertThat(names(column)).containsExactly("Строка");
+  }
+
+  @Test
+  void tabularSectionRowFromReferenceOffersItsColumns() {
+    // given: параметр — строка табличной части по уточнённой ссылке.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MetadataSeeRef.bsl");
+
+    // when: тип строки известен, значит известны и её колонки.
+    var types = at(documentContext, "СтрокаИзСсылки = СтрокаЧасти", "СтрокаИзСсылки = ".length());
+    var rowRef = types.refs().iterator().next();
+
+    // then
+    assertThat(typeService.getMembers(rowRef, documentContext.getFileType()))
+      .extracting(member -> member.name())
+      .contains("Реквизит1", "Реквизит2");
+  }
+
   private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);

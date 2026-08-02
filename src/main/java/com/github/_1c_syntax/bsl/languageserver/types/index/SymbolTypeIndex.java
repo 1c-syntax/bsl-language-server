@@ -553,7 +553,7 @@ public class SymbolTypeIndex {
     return switch (td.variant()) {
       case HYPERLINK ->
         resolveSeeReference(td.name(), context.owner(), context.fileType(), context.visited());
-      case SIMPLE -> resolveSimple(td.name());
+      case SIMPLE -> resolveSimple(td, context);
       case COLLECTION -> resolveCollection((CollectionTypeDescription) td, context);
     };
   }
@@ -709,6 +709,46 @@ public class SymbolTypeIndex {
    * имя сперва спрашивается у реестра как набор; всё прочее — один тип, а незнакомое
    * имя остаётся пользовательским типом, как и было.
    */
+  /**
+   * Простой тип, возможно уточнённый ссылкой: {@code СтрокаТабличнойЧасти: См. Справочник.Товары.ЕдиницыИзмерения}.
+   * <p>
+   * Голова такой записи говорит, чем значение является, а ссылка указывает на коллекцию,
+   * элементом которой оно служит: строку табличной части, элемент коллекции формы. Поэтому
+   * у коллекции берётся её элемент — вместе с колонками, которые у него уже есть. Ссылка на
+   * тип, коллекцией не являющийся, отдаётся как есть.
+   *
+   * @param td      описание типа.
+   * @param context контекст разрешения.
+   * @return тип; {@link TypeSet#EMPTY}, если не разрешился ни ссылкой, ни именем.
+   */
+  private TypeSet resolveSimple(TypeDescription td, ResolutionContext context) {
+    var hyperlink = td.hyperlink();
+    if (hyperlink == null) {
+      return resolveSimple(td.name());
+    }
+    var linked = resolveSeeReference(hyperlink.link(), context.owner(), context.fileType(), context.visited());
+    if (linked.isEmpty()) {
+      return resolveSimple(td.name());
+    }
+    var element = elementOf(linked);
+    return element.isEmpty() ? linked : element;
+  }
+
+  /**
+   * Элемент коллекции: уточнённый по месту, а если его нет — тип элемента из реестра.
+   *
+   * @param types типы коллекции.
+   * @return типы элемента; {@link TypeSet#EMPTY}, если коллекции среди них нет.
+   */
+  private TypeSet elementOf(TypeSet types) {
+    var result = TypeSet.EMPTY;
+    for (var ref : types.refs()) {
+      var attached = types.getElementTypes(ref);
+      result = result.union(attached.isEmpty() ? typeRegistry.getDefaultElementTypes(ref) : attached);
+    }
+    return result;
+  }
+
   private TypeSet resolveSimple(String name) {
     if (name.isBlank()) {
       return TypeSet.EMPTY;

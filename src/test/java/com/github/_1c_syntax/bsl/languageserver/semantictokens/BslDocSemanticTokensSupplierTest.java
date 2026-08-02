@@ -249,6 +249,29 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testTypeRefinedByHyperlinkHighlightsBothParts() {
+    // given - тип, уточнённый ссылкой: подсвечиваются и голова описания, и сама ссылка,
+    // ровно как подсвечивается отдельно стоящая ссылка.
+    String bsl = """
+      // Параметры:
+      //  Объект - СтрокаТабличнойЧасти: См. Справочник.Справочник1.ТабличнаяЧасть1
+      Процедура Тест(Объект)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 13, 20, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "СтрокаТабличнойЧасти"),
+      new ExpectedToken(1, 39, 38, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Справочник.Справочник1.ТабличнаяЧасть1")
+    ));
+  }
+
+  @Test
   void testTrailingVariableDescriptionTypeHighlighting() {
     // given - висячий (trailing) комментарий переменной с типом в начале (нотация «тип в начале»).
     // Описание начинается не со столбца 0, поэтому проверяем сквозную работу:

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -45,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Сапплаер семантических токенов для BSL документации (описаний методов и переменных).
@@ -305,11 +307,27 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     var fileType = documentContext.getFileType();
     DescriptionTypes.typesOf(description)
       .filter(type -> !validateTypeResolution || isResolvable(type, fileType))
-      .map(type -> type.element().range())
+      .flatMap(BslDocSemanticTokensSupplier::typeRanges)
       .distinct()
       .forEach(range -> helper.addEntry(semanticElements,
         range.startLine(), range.startCharacter(), range.length(),
         SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation));
+  }
+
+  /**
+   * Области типа: его имя и — у типа, уточнённого ссылкой, — сама ссылка. Отдельно
+   * стоящая ссылка подсвечивается как тип, поэтому и уточняющая должна.
+   *
+   * @param type описание типа.
+   * @return области для подсветки.
+   */
+  private static Stream<SimpleRange> typeRanges(TypeDescription type) {
+    var element = Stream.of(type.element().range());
+    var hyperlink = type.hyperlink();
+    if (hyperlink == null || type.variant() != TypeDescription.Variant.SIMPLE) {
+      return element;
+    }
+    return Stream.concat(element, Stream.of(hyperlink.range()));
   }
 
   /**

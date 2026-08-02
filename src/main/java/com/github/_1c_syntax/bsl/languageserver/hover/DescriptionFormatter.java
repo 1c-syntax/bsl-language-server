@@ -358,6 +358,11 @@ public class DescriptionFormatter {
       } else {
         typeName = "`%s`".formatted(type.name());
       }
+      var hyperlink = type.hyperlink();
+      if (hyperlink != null && !(type instanceof HyperlinkTypeDescription)) {
+        // Тип, уточнённый ссылкой: автор написал обе половины — показываем обе.
+        typeName = "%s: [%s](%s)".formatted(typeName, hyperlink.link(), hyperlink.link());
+      }
 
       types.merge(typeDescription, typeName, "%s | %s"::formatted);
     });
