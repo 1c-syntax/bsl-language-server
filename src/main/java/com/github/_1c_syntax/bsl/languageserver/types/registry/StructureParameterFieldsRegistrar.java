@@ -58,6 +58,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 class StructureParameterFieldsRegistrar {
 
+  /** Ru-написание + en: каждый ключ занимает в наборе полей до двух мест. */
+  private static final int NAME_SPELLINGS_PER_FIELD = 2;
+
   private final TypeRegistry typeRegistry;
 
   /**
@@ -105,7 +108,8 @@ class StructureParameterFieldsRegistrar {
    * себе снимает ложное срабатывание {@code UnknownMember} и попадает в автодополнение.
    */
   private Map<String, LocalField> fieldsOf(FormPlatformTypes.StructureParameter parameter) {
-    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(parameter.fields().size() * 2);
+    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(
+      parameter.fields().size() * NAME_SPELLINGS_PER_FIELD);
     for (var field : parameter.fields()) {
       var types = TypeSet.EMPTY;
       for (var typeName : field.typeNames()) {
