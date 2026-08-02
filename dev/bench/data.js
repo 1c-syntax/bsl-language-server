@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785678319055,
+  "lastUpdate": 1785679525787,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41757,6 +41757,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.121609545101138",
             "extra": "mean: 95.27817797660828 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a7796c7d42db7591d5d230f597ae7df84437730",
+          "message": "Merge pull request #4366 from 1c-syntax/feat/form-handler-structure-parameters\n\nfeat(types): структуры-параметры обработчиков формы знают предопределённый платформой состав",
+          "timestamp": "2026-08-02T10:19:37+02:00",
+          "tree_id": "f86d888aed070c75b970e63b07d7128a2a2776d5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6a7796c7d42db7591d5d230f597ae7df84437730"
+        },
+        "date": 1785679514335,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.62347610791524,
+            "unit": "sec",
+            "range": "stddev: 1.5541428733139357",
+            "extra": "mean: 94.62347610791524 sec\nrounds: 3"
           }
         ]
       }
