@@ -96,6 +96,7 @@ import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -133,6 +134,21 @@ import static org.mockito.Mockito.when;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class BSLTextDocumentServiceTest {
 
+  /**
+   * Workspace тестов — каталог с единственной .bsl-фикстурой, а не весь
+   * {@code src/test/resources}.
+   * <p>
+   * Per-method cleanup сносит workspace после каждого тест-метода, поэтому {@code @BeforeEach}
+   * регистрирует его заново — а регистрация индексирует OneScript-библиотеки workspace'а
+   * (чтение + полный разбор каждого .os). На всём {@code src/test/resources} это ~90 файлов
+   * на каждый из 70+ методов: класс становился самым долгим в сборке (на windows-раннере
+   * ~5.5 мин, треть времени всех тестов). Узкий каталог оставляет индексацию пустой.
+   * <p>
+   * Тестам, которым нужны настоящие .os-библиотеки, см. {@link OScriptRouting} — они
+   * регистрируют только каталоги нужных библиотек.
+   */
+  private static final String WORKSPACE_PATH = "./src/test/resources/lsp/text-document-service";
+
   @Autowired
   private BSLTextDocumentService textDocumentService;
   @Autowired
@@ -155,9 +171,13 @@ class BSLTextDocumentServiceTest {
   @BeforeEach
   void setUp() {
     // Register workspace for test resources
-    var testResourcesPath = new File("./src/test/resources").getAbsoluteFile();
-    var workspaceFolder = new WorkspaceFolder(testResourcesPath.toURI().toString(), "test-workspace");
+    var workspacePath = new File(WORKSPACE_PATH).getAbsoluteFile();
+    var workspaceFolder = new WorkspaceFolder(workspacePath.toURI().toString(), "test-workspace");
     serverContextProvider.addWorkspace(workspaceFolder);
+  }
+
+  private static URI expectedWorkspaceUri() {
+    return Absolute.uri(new File(WORKSPACE_PATH).getAbsoluteFile().toURI());
   }
 
   /**
@@ -189,7 +209,7 @@ class BSLTextDocumentServiceTest {
     try {
       textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
 
-      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      var expectedWorkspaceUri = expectedWorkspaceUri();
       assertThat(capturedWorkspaceUri.get())
         .as("Workspace context must be set when DocumentContextContentChangedEvent fires during didOpen "
           + "(otherwise workspace-scoped beans like AnnotationRepository cannot be resolved)")
@@ -358,7 +378,7 @@ class BSLTextDocumentServiceTest {
       var params = new DidCloseTextDocumentParams(getTextDocumentIdentifier());
       textDocumentService.didClose(params);
 
-      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      var expectedWorkspaceUri = expectedWorkspaceUri();
       assertThat(capturedWorkspaceUri.get())
         .as("Workspace context must be set when ServerContextDocumentClosedEvent fires during didClose "
           + "(otherwise workspace-scoped per-URI indexes cannot be resolved and miss the event)")
@@ -549,7 +569,7 @@ class BSLTextDocumentServiceTest {
     params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didSave(params);
 
-    var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+    var expectedWorkspaceUri = expectedWorkspaceUri();
     await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
       assertThat(capturedWorkspaceUri.get())
         .as("Workspace context must be set when DiagnosticProvider.computeAndPublishDiagnostics is called during "
@@ -772,65 +792,6 @@ class BSLTextDocumentServiceTest {
     assertThat(result.getLeft()).isEmpty();
   }
 
-  @Test
-  void prepareTypeHierarchyRoutesForOsClass() throws Exception {
-    // Открываем всю цепочку, чтобы super/subtypes резолвились в непустой результат.
-    openOsDocument("./src/test/resources/type-hierarchy/Животное.os");
-    openOsDocument("./src/test/resources/type-hierarchy/Кошка.os");
-    openOsDocument("./src/test/resources/type-hierarchy/Собака.os");
-    var item = openOsDocument("./src/test/resources/type-hierarchy/Млекопитающее.os");
-    var docId = new TextDocumentIdentifier(item.getUri());
-
-    var prepared = textDocumentService
-      .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
-
-    assertThat(prepared).isNotNull().isNotEmpty();
-
-    var hierarchyItem = prepared.get(0);
-    var supertypes = textDocumentService
-      .typeHierarchySupertypes(new TypeHierarchySupertypesParams(hierarchyItem)).get();
-    var subtypes = textDocumentService
-      .typeHierarchySubtypes(new TypeHierarchySubtypesParams(hierarchyItem)).get();
-
-    assertThat(supertypes).isNotNull().isNotEmpty();
-    assertThat(subtypes).isNotNull().isNotEmpty();
-  }
-
-  @Test
-  void prepareTypeHierarchyReturnsNullForNonHierarchyOsFile() throws Exception {
-    // Плоский .os-класс без наследования/реализаций — иерархии нет, ожидаем null.
-    var item = openOsDocument("./src/test/resources/standalone-class.os");
-    var docId = new TextDocumentIdentifier(item.getUri());
-
-    var prepared = textDocumentService
-      .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
-
-    assertThat(prepared).isNull();
-  }
-
-  @Test
-  void implementationRoutesForOsInterface() throws Exception {
-    var item = openOsDocument("./src/test/resources/oscript-libraries/interface-lib/src/МойИнтерфейс.os");
-    var docId = new TextDocumentIdentifier(item.getUri());
-
-    var result = textDocumentService
-      .implementation(new ImplementationParams(docId, new Position(0, 0))).get();
-
-    assertThat(result).isNotNull();
-    assertThat(result.isLeft()).isTrue();
-    // Реализации (Реализация1/Реализация2) проиндексированы как library-классы interface-lib.
-    assertThat(result.getLeft()).isNotEmpty();
-  }
-
-  private TextDocumentItem openOsDocument(String path) throws IOException {
-    File file = new File(path);
-    String uri = Absolute.uri(file).toString();
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    var item = new TextDocumentItem(uri, "bsl", 1, content);
-    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
-    return item;
-  }
-
   /**
    * Регрессионный тест: {@code withFreshDocumentContextInternal} должен устанавливать
    * workspace context на рабочем потоке {@code text-document-service-X},
@@ -904,7 +865,7 @@ class BSLTextDocumentServiceTest {
       textDocumentService.resolveCompletionItem(item).get();
 
       // then — workspace-контекст установлен на воркере перед обращением к scoped-бинам
-      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      var expectedWorkspaceUri = expectedWorkspaceUri();
       assertThat(capturedUri.get())
         .as("WorkspaceContextHolder must be set before resolveCompletionItem touches workspace-scoped beans")
         .isNotNull()
@@ -932,7 +893,7 @@ class BSLTextDocumentServiceTest {
   @Test
   void resolveCompletionItem_returnsItemAsIsForUnknownDocument() throws Exception {
     // given — data ссылается на документ, которого нет в индексе
-    var unknownUri = Absolute.uri(new File("./src/test/resources/__no_such_document__.bsl"));
+    var unknownUri = Absolute.uri(new File(WORKSPACE_PATH + "/__no_such_document__.bsl"));
     var item = new CompletionItem("Сообщить");
     item.setData(CompletionData.forFunction(unknownUri, "Сообщить", FileType.BSL, Language.RU));
 
@@ -1246,7 +1207,7 @@ class BSLTextDocumentServiceTest {
   }
 
   private File getTestFile() {
-    return new File("./src/test/resources/BSLTextDocumentServiceTest.bsl");
+    return new File(WORKSPACE_PATH + "/BSLTextDocumentServiceTest.bsl");
   }
 
   private TextDocumentItem getTextDocumentItem() throws IOException {
@@ -1389,5 +1350,89 @@ class BSLTextDocumentServiceTest {
     assertThat(BSLTextDocumentService.getOffset(content, 2, 0)).isEqualTo(5);
     // Line 3: starts at 7 (after "A\nB\r\nC\r")
     assertThat(BSLTextDocumentService.getOffset(content, 3, 0)).isEqualTo(7);
+  }
+
+  /**
+   * Маршрутизация LSP-запросов на .os-документы: иерархия типов и переход к реализациям.
+   * <p>
+   * Единственная группа тестов класса, которой нужны реальные OneScript-библиотеки в индексе.
+   * Workspace'ы регистрируются точечно — только каталоги нужных библиотек, а не весь
+   * {@code src/test/resources} (см. {@link BSLTextDocumentServiceTest#WORKSPACE_PATH}).
+   */
+  @Nested
+  class OScriptRouting {
+
+    private static final String TYPE_HIERARCHY_PATH = "./src/test/resources/type-hierarchy";
+    private static final String INTERFACE_LIB_PATH = "./src/test/resources/oscript-libraries/interface-lib";
+
+    @BeforeEach
+    void setUpLibraryWorkspaces() {
+      addWorkspace(TYPE_HIERARCHY_PATH, "type-hierarchy");
+      addWorkspace(INTERFACE_LIB_PATH, "interface-lib");
+    }
+
+    private void addWorkspace(String path, String name) {
+      var dir = new File(path).getAbsoluteFile();
+      serverContextProvider.addWorkspace(new WorkspaceFolder(dir.toURI().toString(), name));
+    }
+
+    @Test
+    void prepareTypeHierarchyRoutesForOsClass() throws Exception {
+      // Открываем всю цепочку, чтобы super/subtypes резолвились в непустой результат.
+      openOsDocument("./src/test/resources/type-hierarchy/Животное.os");
+      openOsDocument("./src/test/resources/type-hierarchy/Кошка.os");
+      openOsDocument("./src/test/resources/type-hierarchy/Собака.os");
+      var item = openOsDocument("./src/test/resources/type-hierarchy/Млекопитающее.os");
+      var docId = new TextDocumentIdentifier(item.getUri());
+
+      var prepared = textDocumentService
+        .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
+
+      assertThat(prepared).isNotNull().isNotEmpty();
+
+      var hierarchyItem = prepared.get(0);
+      var supertypes = textDocumentService
+        .typeHierarchySupertypes(new TypeHierarchySupertypesParams(hierarchyItem)).get();
+      var subtypes = textDocumentService
+        .typeHierarchySubtypes(new TypeHierarchySubtypesParams(hierarchyItem)).get();
+
+      assertThat(supertypes).isNotNull().isNotEmpty();
+      assertThat(subtypes).isNotNull().isNotEmpty();
+    }
+
+    @Test
+    void prepareTypeHierarchyReturnsNullForNonHierarchyOsFile() throws Exception {
+      // Плоский .os-класс без наследования/реализаций — иерархии нет, ожидаем null.
+      var item = openOsDocument("./src/test/resources/standalone-class.os");
+      var docId = new TextDocumentIdentifier(item.getUri());
+
+      var prepared = textDocumentService
+        .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
+
+      assertThat(prepared).isNull();
+    }
+
+    @Test
+    void implementationRoutesForOsInterface() throws Exception {
+      var item = openOsDocument("./src/test/resources/oscript-libraries/interface-lib/src/МойИнтерфейс.os");
+      var docId = new TextDocumentIdentifier(item.getUri());
+
+      var result = textDocumentService
+        .implementation(new ImplementationParams(docId, new Position(0, 0))).get();
+
+      assertThat(result).isNotNull();
+      assertThat(result.isLeft()).isTrue();
+      // Реализации (Реализация1/Реализация2) проиндексированы как library-классы interface-lib.
+      assertThat(result.getLeft()).isNotEmpty();
+    }
+
+    private TextDocumentItem openOsDocument(String path) throws IOException {
+      File file = new File(path);
+      String uri = Absolute.uri(file).toString();
+      String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+      var item = new TextDocumentItem(uri, "bsl", 1, content);
+      textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+      return item;
+    }
   }
 }
