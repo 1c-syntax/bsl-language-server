@@ -25,10 +25,12 @@ import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.net.URI;
+import java.nio.file.Path;
 
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -102,12 +104,13 @@ class ServerContextProviderTest {
   }
 
   @Test
-  void testGetAllContexts() {
-    // given
-    var workspaceUri1 = Absolute.path(PATH_TO_METADATA).toUri().toString();
+  void testGetAllContexts(@TempDir Path firstRoot, @TempDir Path secondRoot) {
+    // given — проверяется учёт workspace'ов в провайдере, содержимое папок роли не играет:
+    // на фикстуре метаданных каждая регистрация тянет разбор конфигурации.
+    var workspaceUri1 = Absolute.uri(firstRoot.toUri()).toString();
     var workspaceFolder1 = new WorkspaceFolder(workspaceUri1, "workspace-1");
 
-    var workspaceUri2 = Absolute.path(PATH_TO_METADATA).getParent().toUri().toString();
+    var workspaceUri2 = Absolute.uri(secondRoot.toUri()).toString();
     var workspaceFolder2 = new WorkspaceFolder(workspaceUri2, "workspace-2");
 
     // when
@@ -234,15 +237,16 @@ class ServerContextProviderTest {
   }
 
   @Test
-  void testFirstRuntimeWorkspaceStaysPrimaryWhenSecondAdded() {
-    // given — дефолт, затем в рантайме добавили папку X (primary → X)
+  void testFirstRuntimeWorkspaceStaysPrimaryWhenSecondAdded(@TempDir Path rootX, @TempDir Path rootY) {
+    // given — дефолт, затем в рантайме добавили папку X (primary → X).
+    // Папки берём пустые: тест про выбор primary, а не про их содержимое.
     serverContextProvider.registerDefaultWorkspace();
-    var folderX = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "X");
+    var folderX = new WorkspaceFolder(Absolute.uri(rootX.toUri()).toString(), "X");
     var contextX = serverContextProvider.addWorkspace(folderX);
     assertThat(serverContextProvider.getPrimaryContext()).isSameAs(contextX);
 
     // when — добавили вторую папку Y
-    var folderY = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).getParent().toUri().toString(), "Y");
+    var folderY = new WorkspaceFolder(Absolute.uri(rootY.toUri()).toString(), "Y");
     serverContextProvider.addWorkspace(folderY);
 
     // then — primary остаётся на первой реальной папке, не «прыгает» на вторую

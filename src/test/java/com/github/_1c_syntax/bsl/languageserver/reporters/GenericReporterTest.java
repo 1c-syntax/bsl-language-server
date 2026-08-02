@@ -69,7 +69,11 @@ class GenericReporterTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void setUp() {
-    initServerContext(SOURCE_DIR, false);
+    // Workspace нужен только для резолва workspace-scoped бинов: отчёт строится из
+    // AnalysisInfo, а не из содержимого контекста. Пустой каталог вместо корня проекта —
+    // регистрация корня индексировала бы OneScript-библиотеки всего репозитория
+    // (чтение и разбор каждого .os) на каждый тест-метод.
+    initServerContext();
     diagnosticInfos = diagnosticInfosBean.getByCode();
     FileUtils.deleteQuietly(file);
   }
