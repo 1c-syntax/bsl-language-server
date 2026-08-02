@@ -266,16 +266,15 @@ public record MemberDescriptor(
    * специализация платформенного шаблона даёт платформенную ссылку и на
    * конфигурационный тип. Канонизация приводит её к той, что зарегистрирована в
    * реестре под этим именем: иначе за одним именем оказываются две разные ссылки,
-   * и объединение наборов их не схлопывает.
+   * и объединение наборов их не схлопывает. Приведение выполняется и при пустых
+   * {@code bindings} — так подмешанные расширением члены тоже получают канонические
+   * ссылки.
    *
    * @param bindings      placeholder → имя заменителя.
    * @param canonicalizer приведение ссылки к канонической.
    * @return специализированная копия дескриптора; {@code this}, если ничего не изменилось.
    */
   public MemberDescriptor specialize(Map<String, String> bindings, UnaryOperator<TypeRef> canonicalizer) {
-    if (bindings == null || bindings.isEmpty()) {
-      return this;
-    }
     var newReturnTypes = TypeRef.specialize(returnTypes, bindings).mapRefs(canonicalizer);
     var newSignatures = signatures;
     boolean signaturesChanged = false;

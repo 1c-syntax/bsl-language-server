@@ -128,6 +128,28 @@ class TypeRegistrySpecializationTest {
   }
 
   @Test
+  void extensionMemberTypesAreCanonicalRefsFromRegistry() {
+    // given: тип-источник объявляет член с платформенной ссылкой, а тип с тем же именем
+    // зарегистрирован как конфигурационный.
+    var canonical = typeRegistry.registerConfigurationType("СправочникОбъект.Подмешанный");
+    var source = typeRegistry.registerConfigurationType("ИсточникРасширения");
+    var target = typeRegistry.registerConfigurationType("ЦельРасширения");
+    typeRegistry.registerMemberSource(source,
+      () -> List.of(MemberDescriptor.property("Объект",
+        new TypeRef(TypeKind.PLATFORM, "СправочникОбъект.Подмешанный"), "")),
+      FileType.BSL);
+
+    // when: члены источника подмешиваются в цель.
+    typeRegistry.registerExtension(target, source, FileType.BSL);
+    var member = typeRegistry.getMembers(target, FileType.BSL).stream()
+      .filter(candidate -> "Объект".equals(candidate.name()))
+      .findFirst().orElseThrow();
+
+    // then: подмешанный член несёт каноническую ссылку, а не платформенную.
+    assertThat(member.returnType()).isEqualTo(canonical);
+  }
+
+  @Test
   void specializedTypeDisplayNameIsBilingualFromGenericDisplay() {
     // Двуязычное display-имя специализации: ru — из qualifiedName, en —
     // структурная подстановка MD-имени в en-написание display-имени generic'а
