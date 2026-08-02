@@ -96,7 +96,7 @@ dependencies {
     api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.38.0")
+    api("io.github.1c-syntax:bsl-parser:0.39.0")
     api("io.github.1c-syntax:utils:0.10.1")
     api("io.github.1c-syntax:mdclasses:0.19.0.82-SNAPSHOT")
     api("io.github.1c-syntax:bsl-common-library:0.12.4")
