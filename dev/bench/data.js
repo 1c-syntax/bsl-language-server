@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785668822651,
+  "lastUpdate": 1785678319055,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41726,6 +41726,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.2574782185216455",
             "extra": "mean: 97.21790138880412 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2a52dc0ca4c70b69b4ac94239f44ac5f835d4180",
+          "message": "Merge pull request #4363 from 1c-syntax/copilot/fix-forkjoinpool-worker-names\n\nfix(infrastructure): ForkJoinPool worker threads all named with index 0",
+          "timestamp": "2026-08-02T09:59:35+02:00",
+          "tree_id": "99b4017f2264e26957325addd2995f0d4cdaa1c2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2a52dc0ca4c70b69b4ac94239f44ac5f835d4180"
+        },
+        "date": 1785678306961,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.27817797660828,
+            "unit": "sec",
+            "range": "stddev: 1.121609545101138",
+            "extra": "mean: 95.27817797660828 sec\nrounds: 3"
           }
         ]
       }
