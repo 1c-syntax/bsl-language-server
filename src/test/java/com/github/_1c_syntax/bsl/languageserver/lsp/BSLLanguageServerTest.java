@@ -270,7 +270,7 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  void initializedRegistersFileWatchersWhenDynamicRegistrationSupported() {
+  void initializedRegistersFileWatchersWhenDynamicRegistrationSupported(@TempDir Path workspaceRoot) {
     // given
     var client = mock(LanguageClient.class);
     when(client.registerCapability(any()))
@@ -278,7 +278,10 @@ class BSLLanguageServerTest {
     languageClientHolder.connect(client);
 
     var initParams = new InitializeParams();
-    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    // Регистрация наблюдателей не зависит от содержимого workspace, а initialized() тянет
+    // populateContext: на фикстуре метаданных это самые долгие тесты класса. Пустой временный
+    // каталог даёт ту же проверку мгновенно (populate «наполняет» пустоту).
+    var workspaceFolder = new WorkspaceFolder(Absolute.uri(workspaceRoot.toUri()).toString(), "test");
     initParams.setWorkspaceFolders(List.of(workspaceFolder));
 
     var capabilities = new ClientCapabilities();
@@ -363,7 +366,7 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  void initializedFallsBackToGlobalGlobWithoutRelativePatternSupport() {
+  void initializedFallsBackToGlobalGlobWithoutRelativePatternSupport(@TempDir Path workspaceRoot) {
     // given
     var client = mock(LanguageClient.class);
     when(client.registerCapability(any()))
@@ -371,7 +374,10 @@ class BSLLanguageServerTest {
     languageClientHolder.connect(client);
 
     var initParams = new InitializeParams();
-    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    // Регистрация наблюдателей не зависит от содержимого workspace, а initialized() тянет
+    // populateContext: на фикстуре метаданных это самые долгие тесты класса. Пустой временный
+    // каталог даёт ту же проверку мгновенно (populate «наполняет» пустоту).
+    var workspaceFolder = new WorkspaceFolder(Absolute.uri(workspaceRoot.toUri()).toString(), "test");
     initParams.setWorkspaceFolders(List.of(workspaceFolder));
 
     var capabilities = new ClientCapabilities();
@@ -400,13 +406,16 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  void initializedDoesNotRegisterFileWatchersWithoutDynamicRegistration() {
+  void initializedDoesNotRegisterFileWatchersWithoutDynamicRegistration(@TempDir Path workspaceRoot) {
     // given
     var client = mock(LanguageClient.class);
     languageClientHolder.connect(client);
 
     var initParams = new InitializeParams();
-    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    // Регистрация наблюдателей не зависит от содержимого workspace, а initialized() тянет
+    // populateContext: на фикстуре метаданных это самые долгие тесты класса. Пустой временный
+    // каталог даёт ту же проверку мгновенно (populate «наполняет» пустоту).
+    var workspaceFolder = new WorkspaceFolder(Absolute.uri(workspaceRoot.toUri()).toString(), "test");
     initParams.setWorkspaceFolders(List.of(workspaceFolder));
     // no workspace.didChangeWatchedFiles.dynamicRegistration declared
 
