@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785651607291,
+  "lastUpdate": 1785660309386,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41633,6 +41633,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1737720614447558",
             "extra": "mean: 97.22034621238708 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "92df8c078dfc01fa4985fbed649d1b522583fe1f",
+          "message": "Merge pull request #4361 from 1c-syntax/fix/trailing-comment-leak\n\nfix(context): висячий комментарий не описывает следующий символ",
+          "timestamp": "2026-08-02T08:11:44+02:00",
+          "tree_id": "d5c83842be41ffc6ecc7b1c1b972178baf099983",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/92df8c078dfc01fa4985fbed649d1b522583fe1f"
+        },
+        "date": 1785660297772,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.1731185913086,
+            "unit": "sec",
+            "range": "stddev: 1.0210813288489875",
+            "extra": "mean: 95.1731185913086 sec\nrounds: 3"
           }
         ]
       }
