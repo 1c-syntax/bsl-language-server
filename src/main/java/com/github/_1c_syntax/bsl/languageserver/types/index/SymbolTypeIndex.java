@@ -79,9 +79,6 @@ public class SymbolTypeIndex {
   /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
   private static final int MIN_METADATA_SEGMENTS = 3;
 
-  /** Наибольшая ссылка на метаданные: к пути табличной части добавлено имя её реквизита. */
-  private static final int MAX_METADATA_SEGMENTS = 4;
-
   /** Номер части ссылки на метаданные: вид объекта. */
   private static final int KIND_PART = 0;
 
@@ -401,7 +398,8 @@ public class SymbolTypeIndex {
    * {@code Справочник.Товары.Артикул} — реквизит самого объекта.
    * <p>
    * Имена таких типов реестр складывает из того же вида объекта метаданных, что стоит
-   * в начале ссылки, поэтому путь собирается прямо из её частей.
+   * в начале ссылки, поэтому путь собирается прямо из её частей. Части, оставшиеся
+   * после объекта метаданных, читаются как цепочка членов ({@link #walkMembers}).
    *
    * @param link     ссылка целиком.
    * @param fileType язык, на котором резолвятся имена.
@@ -411,7 +409,7 @@ public class SymbolTypeIndex {
     // Пустые части сохраняются (-1): «Справочник.Товары.ЕдиницыИзмерения.» — не ссылка
     // на саму табличную часть, а ссылка на её реквизит с пустым именем.
     var parts = link.split("\\.", -1);
-    if (parts.length < MIN_METADATA_SEGMENTS || parts.length > MAX_METADATA_SEGMENTS) {
+    if (parts.length < MIN_METADATA_SEGMENTS) {
       return TypeSet.EMPTY;
     }
     var kind = parts[KIND_PART];
@@ -423,16 +421,39 @@ public class SymbolTypeIndex {
       if (parts.length == MIN_METADATA_SEGMENTS) {
         return TypeSet.of(section.get());
       }
-      var row = typeRegistry.resolve(kind + TABULAR_SECTION_ROW + mdName + "." + childName, fileType);
-      return row.map(rowRef -> memberTypes(rowRef, parts[ATTRIBUTE_PART], fileType))
+      // Реквизиты есть у строки табличной части, а не у неё самой.
+      return typeRegistry.resolve(kind + TABULAR_SECTION_ROW + mdName + "." + childName, fileType)
+        .map(rowRef -> walkMembers(rowRef, parts, ATTRIBUTE_PART, fileType))
         .orElse(TypeSet.EMPTY);
     }
-    if (parts.length > MIN_METADATA_SEGMENTS) {
-      return TypeSet.EMPTY;
-    }
     return typeRegistry.resolve(kind + OBJECT + mdName, fileType)
-      .map(objectRef -> memberTypes(objectRef, childName, fileType))
+      .map(objectRef -> walkMembers(objectRef, parts, CHILD_PART, fileType))
       .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Проход по цепочке членов: каждая следующая часть ссылки берётся как член типа,
+   * полученного на предыдущей.
+   * <p>
+   * Цепочка обрывается, если члена с таким именем нет либо предыдущая часть дала
+   * больше одного типа — продолжать неоднозначный путь не от чего.
+   *
+   * @param ref      тип, от которого идёт проход.
+   * @param parts    части ссылки.
+   * @param from     номер части, с которой начинается проход.
+   * @param fileType язык, на котором ищутся члены.
+   * @return типы последней части; {@link TypeSet#EMPTY}, если цепочка оборвалась.
+   */
+  private TypeSet walkMembers(TypeRef ref, String[] parts, int from, FileType fileType) {
+    var current = memberTypes(ref, parts[from], fileType);
+    for (var i = from + 1; i < parts.length && !current.isEmpty(); i++) {
+      var refs = current.refs();
+      if (refs.size() != 1) {
+        return TypeSet.EMPTY;
+      }
+      current = memberTypes(refs.iterator().next(), parts[i], fileType);
+    }
+    return current;
   }
 
   /**

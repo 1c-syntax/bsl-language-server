@@ -106,15 +106,29 @@ class MetadataSeeRefInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void seeRefWithExtraSegmentsResolvesToNothing() {
-    // given: путь длиннее поддерживаемого — «…ТабличнаяЧасть1.Реквизит1.Лишнее».
+  void seeRefWithUnknownTailResolvesToNothing() {
+    // given: у реквизита табличной части нет члена «Лишнее».
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/MetadataSeeRef.bsl");
 
     // when
     var types = at(documentContext, "ЗначениеЛишнегоПути = ЛишнийПуть", "ЗначениеЛишнегоПути = ".length());
 
-    // then: лишний хвост не отбрасывается — ссылка не разрешается вовсе.
+    // then: хвост не отбрасывается — ссылка не разрешается вовсе.
+    assertThat(names(types)).isEmpty();
+  }
+
+  @Test
+  void seeRefThroughCompositeAttributeResolvesToNothing() {
+    // given: составной реквизит даёт несколько типов, продолжать путь не от чего.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MetadataSeeRef.bsl");
+
+    // when
+    var types = at(documentContext,
+      "ЗначениеНеоднозначногоПути = НеоднозначныйПуть", "ЗначениеНеоднозначногоПути = ".length());
+
+    // then
     assertThat(names(types)).isEmpty();
   }
 
