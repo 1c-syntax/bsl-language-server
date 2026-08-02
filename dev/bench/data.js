@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785691471852,
+  "lastUpdate": 1785693910571,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41943,6 +41943,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4671956884237314",
             "extra": "mean: 95.23774568239848 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f1e81484ccd8759ef54b5983de007e1ff5127ca",
+          "message": "Merge pull request #4380 from 1c-syntax/claude/bsl-test-windows-perf-0otgqn\n\ntest: тесты перестали переиндексировать чужие workspace'ы на каждом методе",
+          "timestamp": "2026-08-02T19:04:50+02:00",
+          "tree_id": "386a9887c836a227ef26af7837f6601e02b315b2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7f1e81484ccd8759ef54b5983de007e1ff5127ca"
+        },
+        "date": 1785693899150,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.39948439598083,
+            "unit": "sec",
+            "range": "stddev: 0.8217038236369044",
+            "extra": "mean: 94.39948439598083 sec\nrounds: 3"
           }
         ]
       }
