@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -50,7 +51,7 @@ class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "А = ИдентификаторВыгрузки", "А = ".length());
     assertThat(types.refs())
       .as("Перем ... // Строка - resolved to Строка at usage site")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
   }
 
@@ -61,7 +62,7 @@ class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
 
     var types = inferAtMarker(documentContext, "Б = КэшированныеЗначения", "Б = ".length());
     assertThat(types.refs())
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactlyInAnyOrder("Число", "Строка");
   }
 
@@ -72,7 +73,7 @@ class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
 
     var types = inferAtMarker(documentContext, "В = ПараметрыВызова", "В = ".length());
     assertThat(types.refs())
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Булево");
   }
 
@@ -84,8 +85,69 @@ class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "Г = ТекущаяСсылка", "Г = ".length());
     assertThat(types.refs())
       .as("local Перем ... // Число - resolved")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Число");
+  }
+
+  @Test
+  void moduleVarWithoutCommentIsUndefined() {
+    // given: объявление без типизирующего комментария и без присваиваний.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "Д = БезКомментария", "Д = ".length());
+
+    // then: «Перем» без иных сведений о типе даёт значение «Неопределено».
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
+  }
+
+  @Test
+  void localPeremWithoutCommentIsUndefined() {
+    // given / when
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+    var types = inferAtMarker(documentContext, "Ж = БезТипа", "Ж = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
+  }
+
+  @Test
+  void moduleVarWithTypeCommentAboveDeclaration() {
+    // given: тип объявлен комментарием над записью «Перем», а не висячим.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "З = СКомментариемСверху", "З = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Дата");
+  }
+
+  @Test
+  void moduleVarWithSeeRefCommentTakesConstructorType() {
+    // given: «Перем Х; // см. НовыйОбъектДанных» — ссылка на функцию того же модуля.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "Е = СсылкаНаКонструктор", "Е = ".length());
+
+    // then: приходит тип из описания функции вместе с её полями.
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+    var structureRef = types.refs().iterator().next();
+    assertThat(types.getLocalFields(structureRef).keySet())
+      .containsExactlyInAnyOrder("Ссылка", "Количество");
   }
 
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {

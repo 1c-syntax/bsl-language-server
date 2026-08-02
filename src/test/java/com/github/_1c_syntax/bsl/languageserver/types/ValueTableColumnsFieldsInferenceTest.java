@@ -81,6 +81,82 @@ class ValueTableColumnsFieldsInferenceTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void columnsFromDescriptionBecomeRowFields() {
+    // given: колонки таблицы объявлены в описании возвращаемого значения функции,
+    // а не собраны рядом через «Колонки.Добавить».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    // when
+    var idTypes = inferAtMarker(documentContext,
+      "C = СтрокаПоОписанию.Идентификатор", "C = СтрокаПоОписанию.".length() + 1);
+    var sumTypes = inferAtMarker(documentContext,
+      "D = СтрокаПоОписанию.Сумма", "D = СтрокаПоОписанию.".length() + 1);
+
+    // then: строка из «Добавить()» знает колонки так же, как при сборке их по коду.
+    assertThat(idTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+    assertThat(sumTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Число");
+  }
+
+  @Test
+  void columnsFromDescriptionBecomeRowFieldsViaForEach() {
+    // given: та же таблица из описания, обход «Для Каждого».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    // when
+    var idTypes = inferAtMarker(documentContext,
+      "E = ОбходПоОписанию.Идентификатор", "E = ОбходПоОписанию.".length() + 1);
+
+    // then
+    assertThat(idTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void treeColumnsFromDescriptionBecomeRowFields() {
+    // given: колонки дерева объявлены в описании возвращаемого значения функции.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext,
+      "F = СтрокаДерева.Наименование", "F = СтрокаДерева.".length() + 1);
+
+    // then
+    assertThat(types.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void mapFieldsFromDescriptionBecomeElementFields() {
+    // given: у соответствия описаны «Ключ» и «Значение» — это свойства элемента
+    // «КлючИЗначение», а не самого соответствия: обращения к нему через точку в 1С нет.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    // when
+    var keyTypes = inferAtMarker(documentContext,
+      "G = ЭлементСоответствия.Ключ", "G = ЭлементСоответствия.".length() + 1);
+    var valueTypes = inferAtMarker(documentContext,
+      "H = ЭлементСоответствия.Значение", "H = ЭлементСоответствия.".length() + 1);
+
+    // then
+    assertThat(keyTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Строка");
+    assertThat(valueTypes.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Число");
+  }
+
+  @Test
   void columnTypeExtractedFromTypeDescriptionConstructor() {
     // Колонки.Добавить("Имя", Новый ОписаниеТипов("Число")) — колонка должна иметь тип Число.
     var content = """

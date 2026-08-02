@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.UnaryOperator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -259,8 +261,8 @@ class MemberDescriptorFactoryTest {
     var m = MemberDescriptor.method("X");
 
     // when
-    var noOp = m.specialize(java.util.Map.of());
-    var nullOp = m.specialize(null);
+    var noOp = m.specialize(Map.of(), UnaryOperator.identity());
+    var nullOp = m.specialize(null, UnaryOperator.identity());
 
     // then
     assertThat(noOp).isSameAs(m);

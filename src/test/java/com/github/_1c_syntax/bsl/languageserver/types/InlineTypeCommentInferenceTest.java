@@ -22,12 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -49,7 +51,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "X = Значение", "X = ".length());
     assertThat(types.refs())
       .as("inline `// Число -` produces Число")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Число");
   }
 
@@ -61,8 +63,43 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "Y = Имя", "Y = ".length());
     assertThat(types.refs())
       .as("inline `// Строка` (no dash) also produces Строка")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
+  }
+
+  @Test
+  void seeRefToLocalConstructor() {
+    // given: «Х = Ф(); // см. НовыйОбъектДанных» — ссылка на функцию того же модуля.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "П = ПоЛокальнойСсылке", "П = ".length());
+
+    // then: тип из описания функции приходит вместе с её полями.
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+    var structureRef = types.refs().iterator().next();
+    assertThat(types.getLocalFields(structureRef).keySet())
+      .containsExactlyInAnyOrder("Ссылка", "Количество");
+  }
+
+  @Test
+  void seeRefToAnotherModuleFunction() {
+    // given: «Х = Ф(); // см. ОбщегоНазначения.НовыеСвойстваПодписи».
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "М = ПоМежмодульнойСсылке", "М = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
   }
 
   @Test
@@ -73,7 +110,7 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     var types = inferAtMarker(documentContext, "Z = Перечисление", "Z = ".length());
     assertThat(types.refs())
       .as("inline `// Число, Строка -` produces union")
-      .extracting(ref -> ref.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactlyInAnyOrder("Число", "Строка");
   }
 

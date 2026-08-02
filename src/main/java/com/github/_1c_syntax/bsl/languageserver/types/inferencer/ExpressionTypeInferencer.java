@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
@@ -33,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
@@ -42,6 +47,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -63,8 +69,11 @@ import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -110,8 +119,9 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final FormExpressionInference formExpressionInference;
-  private final VariableCommentTypeResolver variableCommentTypeResolver;
+  private final CommentTypeResolver commentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
+  private final ControlFlowGraphIndex controlFlowGraphIndex;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
@@ -629,14 +639,22 @@ public class ExpressionTypeInferencer {
    * Если {@code ret} совпадает с одним из element-ref'ов коллекции на левом
    * типе — построить TypeSet с этим ref'ом и его {@code localFields} из
    * {@code elementSet} (то есть «передать» накопленные колонки/поля строки).
+   * Если же {@code ret} — коллекция, элемент которой и есть такая строка
+   * ({@code Дерево.Строки}), уточнение переезжает внутрь этой коллекции.
    * Иначе — обычный {@link TypeSet#of(TypeRef)}.
    */
-  @Nullable
-  private static TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
-    if (!elementSet.refs().contains(ret)) {
-      return TypeSet.of(ret);
+  private TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
+    if (elementSet.refs().contains(ret)) {
+      return TypeSet.of(ret).withFields(ret, elementSet.getLocalFields(ret));
     }
-    return TypeSet.of(ret).withFields(ret, elementSet.getLocalFields(ret));
+    var carried = TypeSet.EMPTY;
+    for (var elementRef : typeRegistry.getDefaultElementTypes(ret).refs()) {
+      if (elementSet.refs().contains(elementRef)) {
+        carried = carried.union(
+          TypeSet.of(elementRef).withFields(elementRef, elementSet.getLocalFields(elementRef)));
+      }
+    }
+    return carried.isEmpty() ? TypeSet.of(ret) : TypeSet.of(ret).withElement(ret, carried);
   }
 
   /**
@@ -837,7 +855,19 @@ public class ExpressionTypeInferencer {
    * @return данные для {@link VariableFlowAnalyzer}.
    */
   private VariableFlowAnalyzer.FlowInputs flowInputs(VariableSymbol variable, InferenceContext ctx) {
-    var owner = variable.getOwner();
+    // Объявленное о переменной расчёт спрашивает многократно — на входе в тело, в точках
+    // слияния и при возврате к объединению по области видимости. У переменной модуля за
+    // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
+    Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
+    Function<VariableSymbol, TypeSet> declaredOf = (VariableSymbol target) -> {
+      var cached = declaredByVariable.get(target);
+      if (cached != null) {
+        return cached;
+      }
+      var computed = declaredTypes(target);
+      declaredByVariable.put(target, computed);
+      return computed;
+    };
     // Операторы-мутаторы разбираются лениво и по одному разу на переменную: за ними стоит
     // обход индекса вызовов, а при готовом окружении в кэше они не нужны вовсе.
     Map<VariableSymbol, Lazy<Map<Position, BSLParser.CallStatementContext>>> callsByVariable = new HashMap<>();
@@ -852,6 +882,7 @@ public class ExpressionTypeInferencer {
       kindsByVariable
         .computeIfAbsent(target, key -> new Lazy<>(() -> formExpressionInference.kindAssignmentsOf(key)))
         .getOrCompute();
+    var owner = variable.getOwner();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
@@ -860,7 +891,7 @@ public class ExpressionTypeInferencer {
       ctx.visited.size() <= 1,
       body -> variablesOfBody(owner, body),
       target -> target.getKind() == VariableKind.MODULE,
-      this::declaredTypes,
+      declaredOf,
       this::definitionPositions,
       target -> mutationPositions(callsOf.apply(target), kindsOf.apply(target)),
       (target, statement, position) ->
@@ -1025,7 +1056,137 @@ public class ExpressionTypeInferencer {
     for (var source : variableTypeSources) {
       entry = entry.union(source.typesOf(variable));
     }
+    if (entry.isEmpty() && declaredByVar(variable) && !assignedBeforeAnyUse(variable)) {
+      // Переменная, объявленная записью «Перем», до первого присваивания содержит
+      // «Неопределено» — это её значение, а не отсутствие сведений о типе. Дальше по телу
+      // присваивания его перекрывают, а в точке слияния путей он остаётся, если хотя бы
+      // один путь до присваивания не дошёл.
+      return TypeSet.of(UNDEFINED);
+    }
     return entry;
+  }
+
+  /**
+   * Объявлена ли переменная записью {@code Перем} — в отличие от переменной, созданной
+   * первым присваиванием, и от параметра метода.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если переменная объявлена записью {@code Перем}.
+   */
+  private static boolean declaredByVar(VariableSymbol variable) {
+    var kind = variable.getKind();
+    return kind == VariableKind.LOCAL || kind == VariableKind.MODULE || kind == VariableKind.GLOBAL;
+  }
+
+  /**
+   * Есть ли у переменной модуля присваивание, которое заведомо выполняется раньше любого
+   * обращения к ней.
+   * <p>
+   * Таким может быть тело, которое отрабатывает до всех прочих: тело модуля — раньше всех
+   * его процедур, конструктор — при создании объекта, до того как к его полям кто-то
+   * обратится. Но самого присваивания мало: оно должно случиться на любом пути через это
+   * тело. Присваивание в одной ветке условия может не выполниться, а в обеих — выполнится
+   * непременно, поэтому вопрос решается по графу потока управления, а не по вложенности
+   * оператора в тексте.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если такое присваивание есть.
+   */
+  private boolean assignedBeforeAnyUse(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.MODULE) {
+      return false;
+    }
+    var owner = variable.getOwner();
+    var symbolTree = owner.getSymbolTree();
+    // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
+    Map<BSLParser.CodeBlockContext, List<Position>> positionsByBody = new IdentityHashMap<>();
+    for (var position : definitionPositions(variable)) {
+      var enclosingMethod = enclosingMethod(symbolTree, position);
+      var runsBeforeAnyUse = enclosingMethod.isEmpty()
+        || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName());
+      var body = runsBeforeAnyUse ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
+      if (body != null) {
+        positionsByBody.computeIfAbsent(body, key -> new ArrayList<>()).add(position);
+      }
+    }
+    return positionsByBody.entrySet().stream()
+      .anyMatch(entry -> assignedOnEveryPath(owner, entry.getKey(), entry.getValue()));
+  }
+
+  /**
+   * Метод, в теле которого стоит позиция.
+   *
+   * @param symbolTree дерево символов документа.
+   * @param position   позиция в документе.
+   * @return метод; пусто, если позиция вне методов — то есть в теле модуля.
+   */
+  private static Optional<MethodSymbol> enclosingMethod(SymbolTree symbolTree, Position position) {
+    var symbol = symbolTree.getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+  }
+
+  /**
+   * Присваивается ли переменная на любом пути через тело.
+   * <p>
+   * Считается обходом графа потока управления от выхода назад: вершины с присваиванием
+   * обход не проходит. Если так до входа добраться не удалось, значит всякий путь от входа
+   * к выходу присваивание задевает.
+   *
+   * @param owner     документ с телом.
+   * @param body      тело.
+   * @param positions позиции присваиваний в этом теле.
+   * @return {@code true}, если пути в обход присваиваний нет.
+   */
+  private boolean assignedOnEveryPath(
+    DocumentContext owner,
+    BSLParser.CodeBlockContext body,
+    List<Position> positions
+  ) {
+    var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
+    var entry = graph.getEntryPoint();
+    if (entry == null) {
+      return false;
+    }
+    if (assigns(entry, positions)) {
+      return true;
+    }
+    Set<CfgVertex> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    Deque<CfgVertex> queue = new ArrayDeque<>();
+    queue.add(graph.getExitPoint());
+    visited.add(graph.getExitPoint());
+    while (!queue.isEmpty()) {
+      var vertex = queue.poll();
+      for (var edge : graph.incomingEdgesOf(vertex)) {
+        var previous = graph.getEdgeSource(edge);
+        if (assigns(previous, positions) || !visited.add(previous)) {
+          continue;
+        }
+        if (previous == entry) {
+          return false;
+        }
+        queue.add(previous);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Присваивается ли переменная в этой вершине графа.
+   *
+   * @param vertex    вершина.
+   * @param positions позиции присваиваний.
+   * @return {@code true}, если хотя бы одно присваивание попадает в операторы вершины.
+   */
+  private static boolean assigns(@Nullable CfgVertex vertex, List<Position> positions) {
+    if (!(vertex instanceof BasicBlockVertex block)) {
+      return false;
+    }
+    return block.statements().stream()
+      .anyMatch(statement -> positions.stream()
+        .anyMatch(position -> Ranges.containsPosition(Ranges.create(statement), position)));
   }
 
   /**
@@ -1095,7 +1256,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(variableCommentTypeResolver.ofAssignment(owner, assignment));
+      return types.union(commentTypeResolver.ofAssignment(owner, assignment));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1147,7 +1308,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(variableCommentTypeResolver.ofAssignment(owner, assignment.get()));
+      result = result.union(commentTypeResolver.ofAssignment(owner, assignment.get()));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:

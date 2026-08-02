@@ -66,6 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Реестр известных типов.
@@ -898,7 +899,7 @@ public class TypeRegistry {
    *   <li>берёт members generic-типа через {@link #getMembers(TypeRef, FileType)};</li>
    *   <li>отфильтровывает {@link MemberDescriptor#generic()} (слотовые
    *       члены вида {@code <Имя реквизита>});</li>
-   *   <li>применяет {@link MemberDescriptor#specialize(Map)} к каждому
+   *   <li>применяет {@link MemberDescriptor#specialize(Map, UnaryOperator)} к каждому
    *       члену — подставляет {@code bindings} в возвращаемые типы и
    *       сигнатуры.</li>
    * </ol>
@@ -993,7 +994,7 @@ public class TypeRegistry {
         if (member.generic()) {
           continue;
         }
-        var specialized = member.specialize(bindings);
+        var specialized = member.specialize(bindings, this::canonicalRef);
         result.add(specialized);
         memberMetadataIndex.index(target, specialized);
       }
@@ -1102,7 +1103,7 @@ public class TypeRegistry {
     var result = new ArrayList<MemberDescriptor>();
     for (var template : raw) {
       if (template.generic()) {
-        expandTemplate(template, memberExpansions, typeBindings, result);
+        expandTemplate(template, memberExpansions, typeBindings, result, this::canonicalRef);
       }
     }
     return result;
@@ -1111,7 +1112,8 @@ public class TypeRegistry {
   private static void expandTemplate(MemberDescriptor template,
                                      Map<String, List<String>> memberExpansions,
                                      Map<String, String> typeBindings,
-                                     List<MemberDescriptor> sink) {
+                                     List<MemberDescriptor> sink,
+                                     UnaryOperator<TypeRef> canonicalizer) {
     var ruName = template.bilingualName().primary();
     var ruPlaceholders = ContextNames.placeholders(ruName);
     var ruMatch = ruPlaceholders.stream()
@@ -1128,7 +1130,7 @@ public class TypeRegistry {
     var ruIndex = ruPlaceholders.indexOf(ruMatch);
     var enMatch = ruIndex >= 0 && ruIndex < enPlaceholders.size() ? enPlaceholders.get(ruIndex) : null;
     for (var value : memberExpansions.get(ruMatch.name())) {
-      sink.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings));
+      sink.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings, canonicalizer));
     }
   }
 
@@ -1142,7 +1144,8 @@ public class TypeRegistry {
                                                            Placeholder ruPlaceholder,
                                                            @Nullable Placeholder enPlaceholder,
                                                            String value,
-                                                           Map<String, String> typeBindings) {
+                                                           Map<String, String> typeBindings,
+                                                           UnaryOperator<TypeRef> canonicalizer) {
     var ruName = template.bilingualName().primary();
     var newRu = ruName.substring(0, ruPlaceholder.start()) + value + ruName.substring(ruPlaceholder.end());
     var enName = template.bilingualName().en();
@@ -1155,7 +1158,7 @@ public class TypeRegistry {
     var combined = new HashMap<>(typeBindings);
     combined.put(ruPlaceholder.name(), value);
     return template
-      .specialize(combined)
+      .specialize(combined, canonicalizer)
       .withBilingualName(BilingualString.of(newRu, newEn))
       .withGeneric(false);
   }
@@ -1725,6 +1728,22 @@ public class TypeRegistry {
 
   private void addAlias(String name, TypeRef ref) {
     aliasIndex.put(name.toLowerCase(Locale.ROOT), ref);
+  }
+
+  /**
+   * Каноническая ссылка на тип с этим именем — та, что зарегистрирована в реестре.
+   * <p>
+   * Структурная специализация шаблона ({@code СправочникСсылка.<Имя>} →
+   * {@code СправочникСсылка.Справочник1}) сохраняет вид шаблона, а шаблоны приходят из
+   * синтакс-помощника платформенными. Без приведения за одним именем оказываются две
+   * ссылки разного вида, и объединение наборов их не схлопывает.
+   *
+   * @param ref ссылка после структурной специализации.
+   * @return зарегистрированная ссылка с этим именем; исходная, если такого имени в
+   *     реестре нет.
+   */
+  TypeRef canonicalRef(TypeRef ref) {
+    return resolve(ref.qualifiedName()).orElse(ref);
   }
 
   private static Type hydrate(TypeRef ref) {

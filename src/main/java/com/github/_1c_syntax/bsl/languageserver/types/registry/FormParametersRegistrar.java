@@ -101,7 +101,7 @@ class FormParametersRegistrar {
    * внешних источников данных — там их два, и однозначной подстановки нет,
    * поэтому такие типы остаются обобщёнными.
    */
-  private static List<MemberDescriptor> specializeByOwner(List<MemberDescriptor> parameters, String ownerName) {
+  private List<MemberDescriptor> specializeByOwner(List<MemberDescriptor> parameters, String ownerName) {
     if (ownerName.isEmpty()) {
       return parameters;
     }
@@ -110,7 +110,7 @@ class FormParametersRegistrar {
       var placeholder = PlaceholderBinder.singlePlaceholder(parameter);
       result.add(placeholder == null
         ? parameter
-        : parameter.specialize(Map.of(placeholder, ownerName)));
+        : parameter.specialize(Map.of(placeholder, ownerName), typeRegistry::canonicalRef));
     }
     return List.copyOf(result);
   }

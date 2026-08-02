@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.OpenDataObjectInference;
 import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -71,6 +72,9 @@ public class SymbolTypeIndex {
 
   /** Минимальное число сегментов квалифицированной ссылки ({@code Модуль.Метод}). */
   private static final int MIN_QUALIFIED_SEGMENTS = 2;
+
+  /** Коллекция строк — у дерева значений строки лежат в ней, а не в самом дереве. */
+  private static final String ROWS = "Строки";
 
   private final TypeRegistry typeRegistry;
 
@@ -320,7 +324,7 @@ public class SymbolTypeIndex {
    * Единая точка разворачивания {@code См.}-ссылок: используется и индексацией
    * возвращаемых значений, и выводом типов параметров
    * ({@code ExpressionTypeInferencer}), и резолвером висячих комментариев
-   * переменных ({@code MemberTypeFromCommentResolver}).
+   * переменных ({@code CommentTypeResolver}).
    *
    * @param link     имя/ссылка из {@code См.}-ссылки (без текста описания).
    * @param owner    документ-владелец — для поиска локальной функции.
@@ -491,23 +495,59 @@ public class SymbolTypeIndex {
       return base;
     }
     var headRef = base.refs().iterator().next();
-    var result = base;
+    // У коллекции описанные звёздочками имена — это свойства её элемента, а не её самой:
+    // обращений вида «Таблица.Цена» или «Соответствие.Ключ» в 1С нет. Собственные
+    // свойства бывают только у структуроподобных типов — им поля и остаются.
+    var elementRef = collectionElement(headRef, context.fileType());
+    var fieldsRef = elementRef == null ? headRef : elementRef;
+    var result = elementRef == null ? base : TypeSet.of(elementRef);
     for (var field : fields) {
       var eager = TypeSet.EMPTY;
       for (var fieldType : field.types()) {
         var localFunction = localFunctionSeeRef(fieldType, context);
         if (localFunction != null) {
-          result = result.withLazyField(headRef, field.name(),
+          result = result.withLazyField(fieldsRef, field.name(),
             lazyReturnTypes(localFunction), fieldDescription(field));
         } else {
           eager = eager.union(resolveTypes(List.of(fieldType), context));
         }
       }
       if (!eager.isEmpty()) {
-        result = result.withField(headRef, field.name(), eager, fieldDescription(field));
+        result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
       }
     }
-    return result;
+    return elementRef == null ? result : base.withElement(headRef, result);
+  }
+
+  /**
+   * Элемент коллекции — строка таблицы или дерева, элемент табличной части или
+   * коллекции формы, пара «ключ и значение» соответствия.
+   *
+   * @param ref      тип, к которому относится описание полей.
+   * @param fileType язык, на котором ищется член-коллекция строк.
+   * @return тип элемента; {@code null} у типов, где описанные поля принадлежат самому
+   *     типу, и у тех, элемент которых реестру неизвестен.
+   */
+  private @Nullable TypeRef collectionElement(TypeRef ref, FileType fileType) {
+    if (!OpenDataObjectInference.isElementBearingCollection(ref.qualifiedName())) {
+      return null;
+    }
+    var direct = firstRef(typeRegistry.getDefaultElementTypes(ref));
+    if (direct != null) {
+      return direct;
+    }
+    // Дерево значений само не обходится: его строки лежат в отдельной коллекции «Строки»,
+    // и колонки описания принадлежат строке именно этой коллекции.
+    return typeRegistry.findMember(ref, MemberKind.PROPERTY, ROWS, fileType)
+      .map(MemberDescriptor::returnTypes)
+      .map(SymbolTypeIndex::firstRef)
+      .map(typeRegistry::getDefaultElementTypes)
+      .map(SymbolTypeIndex::firstRef)
+      .orElse(null);
+  }
+
+  private static @Nullable TypeRef firstRef(TypeSet types) {
+    return types.refs().stream().findFirst().orElse(null);
   }
 
   /**

@@ -14,8 +14,8 @@ hover, completion, signature help и ряд диагностик. См. корн
   `memberAt(...)`, `receiverTypesAt(...)`, `resolve(name, FileType)`, `getConstructors(...)`,
   `definingSymbol/definingUri(...)`, `displayName(...)`. Запись `TypedMember` — найденный член.
 - Вспомогательные верхнего уровня: **`DereferenceMemberMatcher`** (резолв `получатель.член`,
-  объединяет члены по всем возможным типам получателя), **`MemberTypeFromCommentResolver`**
-  (тип из trailing-комментария `// Тип: …`, общий для BSL и OS),
+  объединяет члены по всем возможным типам получателя), **`CommentTypeResolver`**
+  (тип из висячего комментария — и у члена, и у переменной, общий для BSL и OS),
   **`PlatformMemberVersions`** (доступность/deprecation члена для целевого режима совместимости).
 
 ## Подпакеты
@@ -90,7 +90,7 @@ hover, completion, signature help и ряд диагностик. См. корн
   диспетчером по узлам выражения: `OpenDataObjectInference` (поля структур и соответствий, колонки
   ТЗ, содержимое `ОписаниеТипов` — из конструктора и из операторов-мутаторов; там же
   `ПривестиЗначение`), `DeclaredParameterTypeResolver` (объявленный тип параметра: комментарий
-  метода, контракт события, ссылка `// См.`), `VariableCommentTypeResolver` (типизирующий
+  метода, контракт события, ссылка `// См.`), `CommentTypeResolver` (типизирующий
   комментарий объявления и строки присваивания), `OScriptFrameworkTypeResolver` («ОСень» и
   наследование `&Расширяет`), `ScopeMemberTypeResolver` (модуль как тип, член модуля, глобальная
   область). Первые три отвечают на один вопрос — что о переменной объявлено помимо кода её тела —

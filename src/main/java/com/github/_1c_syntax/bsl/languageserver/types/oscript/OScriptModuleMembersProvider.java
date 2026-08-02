@@ -34,7 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.MemberTypeFromCommentResolver;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
@@ -95,7 +95,7 @@ public class OScriptModuleMembersProvider {
   private final OScriptExtends oScriptExtends;
   private final TypeRelations typeRelations;
   private final OScriptIterable oScriptIterable;
-  private final MemberTypeFromCommentResolver memberTypeFromCommentResolver;
+  private final CommentTypeResolver commentTypeResolver;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -334,10 +334,10 @@ public class OScriptModuleMembersProvider {
    * Типы экспортной переменной-свойства из типизирующего висячего комментария
    * её декларации ({@code Перем Контейнер Экспорт; // Массив из Число},
    * {@code Перем Сложно Экспорт; // см. НовыйСложно}). Делегирует общему для обоих
-   * языков {@link MemberTypeFromCommentResolver}.
+   * языков {@link CommentTypeResolver}.
    */
   private TypeSet propertyTypesFromComment(VariableSymbol variable) {
-    return memberTypeFromCommentResolver.resolve(variable, FileType.OS);
+    return commentTypeResolver.resolve(variable, FileType.OS);
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {

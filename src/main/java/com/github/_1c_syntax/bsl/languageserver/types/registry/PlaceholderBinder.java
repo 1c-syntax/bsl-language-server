@@ -74,7 +74,7 @@ final class PlaceholderBinder {
       if (!substitutionExists(typeRegistry, member, bindings)) {
         continue;
       }
-      var specialized = member.specialize(bindings);
+      var specialized = member.specialize(bindings, typeRegistry::canonicalRef);
       bound = bound == null ? specialized : merge(bound, specialized);
     }
     return bound;

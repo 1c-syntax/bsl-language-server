@@ -1259,7 +1259,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Тело метода или код модуля, накрывающие позицию. Перебираются только объявления
    * верхнего уровня — в операторы разбор не спускается.
    */
-  private static BSLParser.@Nullable CodeBlockContext bodyAt(DocumentContext documentContext, Position position) {
+  static BSLParser.@Nullable CodeBlockContext bodyAt(DocumentContext documentContext, Position position) {
     var ast = documentContext.getAst();
     var subs = ast.subs();
     if (subs != null) {
