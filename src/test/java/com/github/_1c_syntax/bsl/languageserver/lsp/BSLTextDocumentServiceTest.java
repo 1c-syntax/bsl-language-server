@@ -1406,6 +1406,12 @@ class BSLTextDocumentServiceTest {
       var item = openOsDocument("./src/test/resources/standalone-class.os");
       var docId = new TextDocumentIdentifier(item.getUri());
 
+      // null сервис отдаёт и на неизвестный документ, поэтому сначала убеждаемся, что
+      // документ проиндексирован: иначе тест зелёный, но ветку «иерархии нет» не проверяет.
+      assertThat(serverContextProvider.getDocumentUnsafe(item.getUri()))
+        .as("документ должен быть известен серверу")
+        .isPresent();
+
       var prepared = textDocumentService
         .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
 
