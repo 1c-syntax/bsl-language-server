@@ -30,6 +30,8 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -104,15 +106,50 @@ class DereferenceVariationsTest extends AbstractServerContextAwareTest {
     assertThat(t).isNotNull();
   }
 
+  @Test
+  void memberResolvesInsideCallArgument() {
+    var member = memberAt("НовМ.Добавить(ТЗ.Колонки)", "НовМ.Добавить(ТЗ.".length());
+    assertThat(member).isPresent();
+    assertThat(member.orElseThrow().descriptor().name()).isEqualTo("Колонки");
+  }
+
+  @Test
+  void memberResolvesInBothTernaryBranches() {
+    var trueBranch = memberAt("?(Истина, ТЗ.Колонки, ТЗ.Количество())", "?(Истина, ТЗ.".length());
+    assertThat(trueBranch).isPresent();
+    assertThat(trueBranch.orElseThrow().descriptor().name()).isEqualTo("Колонки");
+
+    // Ложная ветка — вызов метода: правая часть dereference'а тут MethodCallNode,
+    // а не идентификатор.
+    var falseBranch = memberAt("?(Истина, ТЗ.Колонки, ТЗ.Количество())",
+      "?(Истина, ТЗ.Колонки, ТЗ.".length());
+    assertThat(falseBranch).isPresent();
+    assertThat(falseBranch.orElseThrow().descriptor().name()).isEqualTo("Количество");
+  }
+
+  @Test
+  void memberResolvesInsideConstructorArgument() {
+    var member = memberAt("Новый Массив(ТЗ.Колонки)", "Новый Массив(ТЗ.".length());
+    assertThat(member).isPresent();
+    assertThat(member.orElseThrow().descriptor().name()).isEqualTo("Колонки");
+  }
+
+  private Optional<TypeService.TypedMember> memberAt(String marker, int offsetInMarker) {
+    return typeService.memberAt(doc(), positionOf(marker, offsetInMarker));
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
-    var dc = doc();
-    var content = dc.getContent();
+    return typeService.expressionTypesAt(doc(), positionOf(marker, offsetInMarker));
+  }
+
+  private Position positionOf(String marker, int offsetInMarker) {
+    var content = doc().getContent();
     int markerStart = content.indexOf(marker);
     int targetOffset = markerStart + offsetInMarker;
     int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
-    return typeService.expressionTypesAt(dc, new Position(line, charInLine + 1));
+    return new Position(line, charInLine + 1);
   }
 
   private DocumentContext doc() {
