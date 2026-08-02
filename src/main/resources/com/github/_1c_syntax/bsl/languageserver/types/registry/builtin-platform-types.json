@@ -6393,7 +6393,7 @@
         "nameRu": "Создать",
         "nameEn": "Create",
         "kind": "METHOD",
-        "returnType": "ОбъектXDTO",
+        "returnType": "ЗначениеXDTO",
         "description": "Создаёт значение указанного типа."
       },
       {
@@ -6401,7 +6401,11 @@
         "nameRu": "Тип",
         "nameEn": "Type",
         "kind": "METHOD",
-        "returnType": "ТипОбъектаXDTO",
+        "returnTypes": [
+          "ТипЗначенияXDTO",
+          "ТипОбъектаXDTO",
+          "Неопределено"
+        ],
         "description": "Тип пакета по пространству имён и имени."
       },
       {
