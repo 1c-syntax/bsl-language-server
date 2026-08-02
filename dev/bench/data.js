@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785679525787,
+  "lastUpdate": 1785682007225,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41788,6 +41788,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5541428733139357",
             "extra": "mean: 94.62347610791524 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "44ffc48e2f1432497e493c61b06790c4c0b0aef2",
+          "message": "Merge pull request #4373 from 1c-syntax/claude/java-ci-pr-cancellation-15qims\n\nci: отмена устаревших запусков воркфлоу для pull request",
+          "timestamp": "2026-08-02T10:43:00+02:00",
+          "tree_id": "c8950db1de245557703305ce7fcf84775096982e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/44ffc48e2f1432497e493c61b06790c4c0b0aef2"
+        },
+        "date": 1785681993848,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.1744167804718,
+            "unit": "sec",
+            "range": "stddev: 0.8622151769697413",
+            "extra": "mean: 94.1744167804718 sec\nrounds: 3"
           }
         ]
       }
