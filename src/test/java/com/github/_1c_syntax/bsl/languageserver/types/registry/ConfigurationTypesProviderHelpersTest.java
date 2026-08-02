@@ -336,7 +336,8 @@ class ConfigurationTypesProviderHelpersTest {
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
       new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
       new ServiceModuleEventRegistrar(registry),
-      formTypesProvider, formDataTypesRegistrar, new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
+      formTypesProvider, new XdtoTypesProvider(registry), formDataTypesRegistrar,
+      new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
       new SimpleAsyncTaskExecutor());
   }
 

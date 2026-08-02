@@ -77,7 +77,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ServerContext {
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
     .skipDataCompositionSchema(true)
-    .skipXdtoPackage(true)
     .build();
 
   private final ObjectProvider<DocumentContext> documentContextProvider;

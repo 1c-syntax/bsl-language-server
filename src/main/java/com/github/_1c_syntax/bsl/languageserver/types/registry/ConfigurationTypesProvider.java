@@ -185,6 +185,7 @@ public class ConfigurationTypesProvider {
   private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
   private final FormTypesProvider formTypesProvider;
+  private final XdtoTypesProvider xdtoTypesProvider;
   private final FormDataTypesRegistrar formDataTypesRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
   private final RecorderIndex recorderIndex;
@@ -290,6 +291,10 @@ public class ConfigurationTypesProvider {
     // Тип на каждую форму: реквизиты, элементы, расширение по основному реквизиту
     // и обработчики событий из Form.xml.
     formTypesProvider.register(children, projectLanguage);
+
+    // Тип на каждый объектный тип XDTO-пакета: имя как в ссылке
+    // «См. XDTOПакет.<Пакет>.<Тип>», члены — свойства из схемы пакета.
+    xdtoTypesProvider.register(children);
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
   }
