@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * per-workspace — каждый воркспейс получает свой набор пулов. Worker threads
  * устанавливают workspace URI в ThreadLocal при старте ({@code onStart()}),
  * что гарантирует корректную работу workspace-scoped proxy в fork-задачах.
+ * Там же воркер получает своё имя — до регистрации в пуле его индекс ещё не известен.
  * <p>
  * Исключение: {@code computeConfigurationExecutor} — singleton, т.к. вызывает
  * внешнюю библиотеку MDClasses, не использующую ThreadLocal из BSL LS.
@@ -202,7 +203,19 @@ public class ExecutorConfiguration {
     }
   }
 
-  private record NamedForkJoinWorkerThreadFactory(String prefix) implements ForkJoinPool.ForkJoinWorkerThreadFactory {
+  /**
+   * Фабрика воркеров ForkJoinPool, дающая каждому потоку имя вида {@code prefix + индекс воркера}.
+   * <p>
+   * Имя задаётся в {@code onStart()}, а не в {@code newThread()}: индекс присваивается воркеру при
+   * регистрации в пуле, которая происходит уже после конструктора потока, поэтому в {@code newThread()}
+   * метод {@code getPoolIndex()} вернул бы {@code 0} для всех воркеров сразу.
+   * <p>
+   * Воркер создаётся наследником {@link ForkJoinWorkerThread}, а не через
+   * {@code ForkJoinPool.defaultForkJoinWorkerThreadFactory}: та принудительно ставит потоку системный
+   * загрузчик классов, который в fat-jar не видит классы приложения. Здесь же context class loader
+   * наследуется от потока, спровоцировавшего создание воркера.
+   */
+  record NamedForkJoinWorkerThreadFactory(String prefix) implements ForkJoinPool.ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
       return new ForkJoinWorkerThread(pool) {
@@ -215,7 +228,14 @@ public class ExecutorConfiguration {
     }
   }
 
-  private record WorkspaceAwareFJWTFactory(
+  /**
+   * Фабрика воркеров per-workspace ForkJoinPool: при старте воркер запоминает свой workspace в
+   * {@link WorkspaceContextHolder} и получает имя вида
+   * {@code prefix + имя workspace + "-" + индекс воркера}.
+   * <p>
+   * О том, почему имя задаётся именно в {@code onStart()}, см. {@link NamedForkJoinWorkerThreadFactory}.
+   */
+  record WorkspaceAwareFJWTFactory(
     URI workspaceUri,
     String workspaceName,
     String prefix
