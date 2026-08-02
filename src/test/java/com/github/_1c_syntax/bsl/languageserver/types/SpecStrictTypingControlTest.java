@@ -38,7 +38,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Сверка с методической рекомендацией «Типизация кода»: пункты про контроль типов —
  * «строгая типизация» и запреты из лучших практик.
  * <p>
- * Один тест — один пункт рекомендации, номер пункта указан в {@code @DisplayName}.
+ * Один тест — один пункт рекомендации, номер пункта указан в имени теста, а само требование —
+ * в javadoc теста: подраздел рекомендации и её формулировка. Нумерация пунктов — наша, в тексте
+ * рекомендации её нет.
+ * <p>
  * Каждый тест подаёт код, нарушающий свой пункт, и требует диагностику с ожидаемым ключом.
  * Диагностик с такими ключами ещё нет, поэтому тесты красные, а их появление тесты чинит.
  * Сами ключи — предмет договорённости при реализации.
@@ -107,6 +110,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
     initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
   }
 
+  /**
+   * «Что такое "Строгая типизация"», ключевые возможности: «Контроль наличия типов в месте
+   * создания объекта, переменной».
+   */
   @Test
   @DisplayName("2.18 Контроль наличия типа в месте создания объекта или переменной")
   void controlOfMissingTypeAtCreation() {
@@ -123,6 +130,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(MISSING_TYPE);
   }
 
+  /**
+   * «Что такое "Строгая типизация"», ключевые возможности: «Контроль наличия типов в месте
+   * использования (обращение к свойствам или методам объекта)».
+   */
   @Test
   @DisplayName("2.19 Контроль наличия типа в месте использования")
   void controlOfMissingTypeAtUsage() {
@@ -140,6 +151,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(UNTYPED_MEMBER_ACCESS);
   }
 
+  /**
+   * «Что такое "Строгая типизация"», ключевые возможности: «Контроль типов возвращаемых значений
+   * для функций, свойств объектов, переменных».
+   */
   @Test
   @DisplayName("2.20 Контроль типов возвращаемых значений")
   void controlOfReturnTypes() {
@@ -161,6 +176,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(MISSING_RETURN_TYPE);
   }
 
+  /**
+   * «Что такое "Строгая типизация"», ключевые возможности: «Запрет смены типов для переменных,
+   * и свойств объектов».
+   */
   @Test
   @DisplayName("2.21 Запрет смены типа переменной и свойства объекта")
   void controlOfTypeChange() {
@@ -178,6 +197,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(TYPE_CHANGE);
   }
 
+  /**
+   * «Что такое "Строгая типизация"», ключевые возможности: «Пересечение типов при передаче
+   * объектов в параметры вызываемого метода».
+   */
   @Test
   @DisplayName("2.22 Пересечение типов при передаче объекта в параметр метода")
   void controlOfArgumentTypeIntersection() {
@@ -200,6 +223,11 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(INCOMPATIBLE_ARGUMENT_TYPE);
   }
 
+  /**
+   * «Что такое "Строгая типизация"», ключевые возможности: «Контроль декларируемых типов и типов
+   * из системы "анализа потока данных" (Data-flow analysis, DFA) для "пользовательских" объектов
+   * данных, т.е. специфичных структур и таблиц значений, создаваемых пользователем в коде».
+   */
   @Test
   @DisplayName("2.23 Контроль декларированных типов против типов из анализа потока данных")
   void controlOfDeclaredVersusComputedFieldTypes() {
@@ -219,6 +247,16 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(DECLARED_TYPE_MISMATCH);
   }
 
+  /**
+   * «Включение строгой типизации»: «Для включения строгой типизации, необходимо в заголовке модуля
+   * указать аннотацию до первого семантического объекта (области, процедуры, переменной)»;
+   * «Контроль типизации будет выполняться для всего модуля, включая не экспортные методы».
+   * <pre>
+   * //@strict-types
+   *
+   * #Область ПрограммныйИнтерфейс
+   * </pre>
+   */
   @Test
   @DisplayName("2.24 Аннотация «//@strict-types» включает строгую типизацию модуля")
   void strictTypesAnnotationEnablesControl() {
@@ -238,6 +276,15 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(MISSING_TYPE);
   }
 
+  /**
+   * «Сокращение типа локальной переменной или параметра»: «внутри метода тип параметра будет
+   * расчетный, но при вызове локальной метода система строгой типизации будет отображать ошибку
+   * несоответствия типов».
+   * <pre>
+   * // Здесь ошибка на несоотвествие типов
+   * Ответ = МакетПечати(Документы.РасходТовара.СоздатьДокумент());
+   * </pre>
+   */
   @Test
   @DisplayName("2.30 Несоответствие типа аргумента объявленному типу параметра")
   void controlOfArgumentTypeMismatch() {
@@ -260,6 +307,12 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(INCOMPATIBLE_ARGUMENT_TYPE);
   }
 
+  /**
+   * «Сокращение типа локальной переменной или параметра»: «переменная {@code Док} будет уже иметь
+   * два расчетных типа. Например, если у документа {@code РасходТовара} нет реквизита
+   * {@code Автор} и нет функции в модуле объекта {@code ВернутьМакет}, то в теле метода никаких
+   * ошибок».
+   */
   @Test
   @DisplayName("2.31 При двух расчётных типах параметра ошибок внутри тела нет")
   void noErrorsInsideBodyWithTwoComputedParameterTypes() {
@@ -281,6 +334,12 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .doesNotContainAnyElementsOf(TYPE_CONTROL_KEYS);
   }
 
+  /**
+   * «Инициализация локальных переменных»: «Запрещается инициализировать переменные внутри циклов
+   * или условий и последующим использованием их вне циклов/условий — т.к. 1С:Предприятие создает
+   * все локальные переменные сразу при входе в процедуру — то статическому анализатору невозможно
+   * отследить, где была создана переменная и с каким типом».
+   */
   @Test
   @DisplayName("4.3 Инициализация внутри цикла с использованием вне его")
   void controlOfInitializationInsideLoop() {
@@ -300,6 +359,9 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(INITIALIZATION_IN_LOOP);
   }
 
+  /**
+   * «Инициализация ключей структуры»: «Смена типа значения ключа структуры — не допускается».
+   */
   @Test
   @DisplayName("4.12 Смена типа значения ключа структуры не допускается")
   void controlOfStructureKeyTypeChange() {
@@ -317,6 +379,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(TYPE_CHANGE);
   }
 
+  /**
+   * «Описание массивов»: «Не рекомендуется использовать в качестве значений объекты разных типов:
+   * строки с числами, простые типы со ссылочными, объекты БД и структуры и т.д.».
+   */
   @Test
   @DisplayName("4.18 Значения массива разных типов — повод для рефакторинга")
   void controlOfMixedArrayValues() {
@@ -336,6 +402,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(DISSIMILAR_COLLECTION_VALUES);
   }
 
+  /**
+   * «Экспортные процедуры и функции»: «Все параметры методов и возвращаемые значения функций
+   * должны содержать описания типов».
+   */
   @Test
   @DisplayName("4.51 Все параметры и возвращаемые значения экспортных методов имеют типы")
   void controlOfExportedMethodTypes() {
@@ -352,6 +422,11 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(MISSING_TYPE_DESCRIPTION);
   }
 
+  /**
+   * «Разрыв прямого контекста выполнения кода»: «В случае разрыва прямого вызова методов в рамках
+   * одного модуля (когда из одного метода напрямую вызывается другой метод) — следует описывать
+   * типы входящих параметров для не экспортных методов».
+   */
   @Test
   @DisplayName("4.52 Не экспортный метод без прямого вызова требует описания типов")
   void controlOfDetachedMethodTypes() {
@@ -368,6 +443,18 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(MISSING_TYPE_DESCRIPTION);
   }
 
+  /**
+   * «Использование строковых литералов в качестве имен»: «Не следует обращаться к элементу
+   * именованной коллекции, например {@code ВсеЭлементыФормы} и другие, через строковый индекс
+   * с именем элемента. Вместо этого следует обращаться напрямую к элементу так как в этом случае
+   * статический анализатор может контролировать наличие элемента, его тип».
+   * <pre>
+   * // НЕПРАВИЛЬНО
+   * Элементы["Наименование"].Видимость = Ложь;
+   * // ПРАВИЛЬНО
+   * Элементы.Наименование.Видимость = Ложь;
+   * </pre>
+   */
   @Test
   @DisplayName("4.55 Обращение к элементу коллекции по имени члена, а не строковым индексом")
   void controlOfStringIndexAccess() {
@@ -385,6 +472,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(STRING_INDEX_ACCESS);
   }
 
+  /**
+   * «Использование параметров формы»: «Запрещается использовать параметр с типом "Произвольный"
+   * для передачи структуры параметров для инициализации формы».
+   */
   @Test
   @DisplayName("4.61 Параметр формы с типом «Произвольный» для передачи структуры запрещён")
   void controlOfArbitraryFormParameter() {
@@ -403,6 +494,10 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(ARBITRARY_FORM_PARAMETER);
   }
 
+  /**
+   * «Использование параметров формы»: «В редакторе формы на вкладке "Параметры" следует описывать
+   * все параметры, на которые опирается форма при открытии, включая необязательные».
+   */
   @Test
   @DisplayName("4.62 Все параметры формы описаны на вкладке «Параметры»")
   void controlOfUndeclaredFormParameters() {
@@ -420,6 +515,12 @@ class SpecStrictTypingControlTest extends AbstractServerContextAwareTest {
       .contains(UNDECLARED_FORM_PARAMETER);
   }
 
+  /**
+   * «Ограничения составных типов»: «В общем случае неправильно делать составные типы, которые мало
+   * похожи между собой. Например: Строка и СправочникОбъект; Число и Массив; Коллекции (массив,
+   * ТЗ, Соответствие, ТЧ, Структура) и простые типы (строка, число, ссылка); ДеревоЗначений
+   * и ТаблицаЗначений… Наличие таких смешанных типов — однозначный повод для рефакторинга кода».
+   */
   @Test
   @DisplayName("4.68 Составной тип из непохожих типов — повод для рефакторинга")
   void controlOfDissimilarCompositeTypes() {
