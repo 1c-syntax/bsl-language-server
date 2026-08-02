@@ -170,6 +170,58 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void valueTableAttributeMethodsCarryItsRowToo() {
+    // Репорт: `Таблица.НайтиПоИдентификатору(Ид)` отдавал нетипизированный элемент
+    // коллекции. Явные типы элементов закрывают только обход, а обращение по методу
+    // идёт через его объявление — платформа называет там обобщённую строку. У зеркала
+    // табличной части замена была, у реквизита-таблицы значений — нет.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        ПоИдентификатору = ТаблицаПодбора.НайтиПоИдентификатору(1);
+        Добавленная = ТаблицаПодбора.Добавить();
+        КолонкаНайденной = ТаблицаПодбора.НайтиПоИдентификатору(1).Номенклатура;
+        КолонкаДобавленной = ТаблицаПодбора.Добавить().Количество;
+      КонецПроцедуры
+      """);
+
+    var row = "ДанныеФормыЭлементКоллекции.Документ.Документ1.Форма.ФормаДокумента.ТаблицаПодбора";
+    // Не containsExactly: в синтакс-помощнике возврат объявлен как «строка либо
+    // Неопределено», в JSON-фолбэке — одной строкой. Важна сама строка: обобщённой
+    // в наборе быть не должно.
+    assertThat(typesAtRhs(documentContext, "ПоИдентификатору"))
+      .contains(row)
+      .doesNotContain("ДанныеФормыЭлементКоллекции");
+    assertThat(typesAtRhs(documentContext, "Добавленная")).containsExactly(row);
+    assertThat(typesAtRhs(documentContext, "КолонкаНайденной"))
+      .as("колонки реквизита-таблицы объявлены в самой форме")
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(typesAtRhs(documentContext, "КолонкаДобавленной")).containsExactly("Число");
+  }
+
+  @Test
+  void unloadedValueTableAttributeCarriesItsColumns() {
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        Выгруженная = ТаблицаПодбора.Выгрузить();
+        Найденные = ТаблицаПодбора.НайтиСтроки(Новый Структура);
+      КонецПроцедуры
+      """);
+
+    var unloaded = typeSetAtRhs(documentContext, "Выгруженная");
+    assertThat(unloaded.refs()).extracting(TypeRef::qualifiedName).containsExactly("ТаблицаЗначений");
+    assertThat(unloaded.getElementTypes().getLocalFields(
+      unloaded.getElementTypes().refs().iterator().next()))
+      .as("колонки выгруженной таблицы — колонки реквизита")
+      .containsKeys("Номенклатура", "Количество");
+
+    assertThat(typeSetAtRhs(documentContext, "Найденные").getElementTypes().refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ДанныеФормыЭлементКоллекции.Документ.Документ1.Форма.ФормаДокумента.ТаблицаПодбора");
+  }
+
+  @Test
   void unloadedValueTableCarriesColumns() {
     var documentContext = formModuleWith("""
       &НаСервере
