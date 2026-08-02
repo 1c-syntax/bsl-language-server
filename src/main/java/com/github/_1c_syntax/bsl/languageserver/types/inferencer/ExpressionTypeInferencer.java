@@ -1063,7 +1063,9 @@ public class ExpressionTypeInferencer {
       // один путь до присваивания не дошёл.
       return TypeSet.of(UNDEFINED);
     }
-    return entry;
+    // Объявленному типу-коллекции нужен тип её элемента: «Для Каждого» по параметру,
+    // чей тип объявлен комментарием, иначе не знает, что за строку он перебирает.
+    return attachDefaultElementTypes(entry);
   }
 
   /**

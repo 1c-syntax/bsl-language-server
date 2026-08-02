@@ -76,6 +76,13 @@ public class SymbolTypeIndex {
   /** Коллекция строк — у дерева значений строки лежат в ней, а не в самом дереве. */
   private static final String ROWS = "Строки";
 
+  /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
+  private static final int MIN_METADATA_SEGMENTS = 3;
+
+  private static final String OBJECT = "Объект.";
+  private static final String TABULAR_SECTION = "ТабличнаяЧасть.";
+  private static final String TABULAR_SECTION_ROW = "ТабличнаяЧастьСтрока.";
+
   private final TypeRegistry typeRegistry;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
@@ -358,6 +365,10 @@ public class SymbolTypeIndex {
       if (!hyperlinkTypes.isEmpty()) {
         return hyperlinkTypes;
       }
+      var metadataTypes = resolveMetadataPath(link, fileType);
+      if (!metadataTypes.isEmpty()) {
+        return metadataTypes;
+      }
       // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член) — пробуем
       // трактовать как полное имя типа (например, квалифицированный платформенный
       // тип) через TypeRegistry ниже.
@@ -367,6 +378,57 @@ public class SymbolTypeIndex {
       return resolveLocalFunctionTypes(localFunction, owner, fileType, visited);
     }
     return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Тип по ссылке в нотации конфигуратора: {@code Справочник.Товары.ЕдиницыИзмерения} —
+   * табличная часть, {@code Справочник.Товары.ЕдиницыИзмерения.Единица} — её реквизит,
+   * {@code Справочник.Товары.Артикул} — реквизит самого объекта.
+   * <p>
+   * Имена таких типов реестр складывает из того же вида объекта метаданных, что стоит
+   * в начале ссылки, поэтому путь собирается прямо из её частей.
+   *
+   * @param link     ссылка целиком.
+   * @param fileType язык, на котором резолвятся имена.
+   * @return тип по ссылке; {@link TypeSet#EMPTY}, если такого пути в метаданных нет.
+   */
+  private TypeSet resolveMetadataPath(String link, FileType fileType) {
+    var parts = link.split("\\.");
+    if (parts.length < MIN_METADATA_SEGMENTS) {
+      return TypeSet.EMPTY;
+    }
+    var kind = parts[0];
+    var mdName = parts[1];
+    var childName = parts[2];
+
+    var section = typeRegistry.resolve(kind + TABULAR_SECTION + mdName + "." + childName, fileType);
+    if (section.isPresent()) {
+      if (parts.length == MIN_METADATA_SEGMENTS) {
+        return TypeSet.of(section.get());
+      }
+      var row = typeRegistry.resolve(kind + TABULAR_SECTION_ROW + mdName + "." + childName, fileType);
+      return row.map(rowRef -> memberTypes(rowRef, parts[3], fileType)).orElse(TypeSet.EMPTY);
+    }
+    if (parts.length > MIN_METADATA_SEGMENTS) {
+      return TypeSet.EMPTY;
+    }
+    return typeRegistry.resolve(kind + OBJECT + mdName, fileType)
+      .map(objectRef -> memberTypes(objectRef, childName, fileType))
+      .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Типы члена по имени.
+   *
+   * @param ref      тип-владелец.
+   * @param name     имя члена.
+   * @param fileType язык, на котором ищется член.
+   * @return типы члена; {@link TypeSet#EMPTY}, если члена с таким именем нет.
+   */
+  private TypeSet memberTypes(TypeRef ref, String name, FileType fileType) {
+    return typeRegistry.findMember(ref, MemberKind.PROPERTY, name, fileType)
+      .map(MemberDescriptor::returnTypes)
+      .orElse(TypeSet.EMPTY);
   }
 
   /**
