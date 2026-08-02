@@ -6393,8 +6393,36 @@
         "nameRu": "Создать",
         "nameEn": "Create",
         "kind": "METHOD",
-        "returnType": "ЗначениеXDTO",
-        "description": "Создаёт значение указанного типа."
+        "returnTypes": [
+          "ЗначениеXDTO",
+          "ОбъектXDTO"
+        ],
+        "description": "Создаёт значение или объект указанного типа.",
+        "signatures": [
+          {
+            "description": "Создание значения из значения",
+            "returnType": "ЗначениеXDTO",
+            "parameters": [
+              {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "types": ["ТипЗначенияXDTO"]},
+              {"name": "Значение", "nameRu": "Значение", "nameEn": "Value", "types": ["Произвольный"]}
+            ]
+          },
+          {
+            "description": "Создание значения по лексическому представлению",
+            "returnType": "ЗначениеXDTO",
+            "parameters": [
+              {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "types": ["ТипЗначенияXDTO"]},
+              {"name": "Строка", "nameRu": "Строка", "nameEn": "String", "types": ["Строка"]}
+            ]
+          },
+          {
+            "description": "Создание объекта",
+            "returnType": "ОбъектXDTO",
+            "parameters": [
+              {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "types": ["ТипОбъектаXDTO"]}
+            ]
+          }
+        ]
       },
       {
         "name": "Тип",
@@ -6406,7 +6434,28 @@
           "ТипОбъектаXDTO",
           "Неопределено"
         ],
-        "description": "Тип пакета по пространству имён и имени."
+        "description": "Тип пакета по пространству имён и имени.",
+        "signatures": [
+          {
+            "description": "По имени и URI пространства имен",
+            "parameters": [
+              {"name": "URIПространстваИмен", "nameRu": "URIПространстваИмен", "nameEn": "NamespaceURI", "types": ["Строка"]},
+              {"name": "Имя", "nameRu": "Имя", "nameEn": "Name", "types": ["Строка"]}
+            ]
+          },
+          {
+            "description": "По расширенному имени XML",
+            "parameters": [
+              {"name": "ИмяXML", "nameRu": "ИмяXML", "nameEn": "XMLName", "types": ["РасширенноеИмяXML"]}
+            ]
+          },
+          {
+            "description": "По типу данных XML",
+            "parameters": [
+              {"name": "ТипДанных", "nameRu": "ТипДанных", "nameEn": "DataType", "types": ["ТипДанныхXML"]}
+            ]
+          }
+        ]
       },
       {
         "name": "ПрочитатьXML",
