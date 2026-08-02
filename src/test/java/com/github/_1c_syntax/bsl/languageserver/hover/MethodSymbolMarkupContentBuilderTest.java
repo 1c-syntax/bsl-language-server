@@ -181,6 +181,31 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void testTypeRefinedByHyperlinkShowsBothParts() {
+    // given: тип параметра уточнён ссылкой — автор написал обе половины записи.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Структура:
+      //   * Ссылка - Строка
+      Функция НовыйОбъектДанных() Экспорт
+      	Возврат Новый Структура;
+      КонецФункции
+
+      // Параметры:
+      //  Данные - Структура: См. НовыйОбъектДанных
+      Процедура СоСсылкойНаМетод(Данные) Экспорт
+      КонецПроцедуры
+      """);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("СоСсылкойНаМетод").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: в подсказке видны и голова описания, и ссылка — как в исходной записи.
+    assertThat(content).contains("`Структура`: [НовыйОбъектДанных](НовыйОбъектДанных)");
+  }
+
+  @Test
   void testNonDeprecatedMethodHasNoDeprecationBlock() {
     // given
     var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
