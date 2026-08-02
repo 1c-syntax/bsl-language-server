@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
@@ -65,8 +69,11 @@ import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -114,6 +121,7 @@ public class ExpressionTypeInferencer {
   private final FormExpressionInference formExpressionInference;
   private final CommentTypeResolver commentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
+  private final ControlFlowGraphIndex controlFlowGraphIndex;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
@@ -1064,13 +1072,14 @@ public class ExpressionTypeInferencer {
 
   /**
    * Есть ли у переменной модуля присваивание, которое заведомо выполняется раньше любого
-   * обращения к ней: безусловное присваивание в теле модуля или в конструкторе объекта.
+   * обращения к ней.
    * <p>
-   * Тело модуля отрабатывает раньше всех его процедур, а конструктор — при создании
-   * объекта, до того как к его полям кто-то обратится. Значит состояние «до первого
-   * присваивания» наблюдать неоткуда, и «Неопределено» от объявления в тип не входит.
-   * Присваивание внутри условия, цикла или попытки может не выполниться, поэтому таким
-   * доказательством не является.
+   * Таким может быть тело, которое отрабатывает до всех прочих: тело модуля — раньше всех
+   * его процедур, конструктор — при создании объекта, до того как к его полям кто-то
+   * обратится. Но самого присваивания мало: оно должно случиться на любом пути через это
+   * тело. Присваивание в одной ветке условия может не выполниться, а в обеих — выполнится
+   * непременно, поэтому вопрос решается по графу потока управления, а не по вложенности
+   * оператора в тексте.
    *
    * @param variable переменная.
    * @return {@code true}, если такое присваивание есть.
@@ -1081,40 +1090,19 @@ public class ExpressionTypeInferencer {
     }
     var owner = variable.getOwner();
     var symbolTree = owner.getSymbolTree();
+    // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
+    Map<BSLParser.CodeBlockContext, List<Position>> positionsByBody = new IdentityHashMap<>();
     for (var position : definitionPositions(variable)) {
       var enclosingMethod = enclosingMethod(symbolTree, position);
       var runsBeforeAnyUse = enclosingMethod.isEmpty()
         || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName());
-      if (runsBeforeAnyUse && unconditional(owner, position)) {
-        return true;
+      var body = runsBeforeAnyUse ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
+      if (body != null) {
+        positionsByBody.computeIfAbsent(body, key -> new ArrayList<>()).add(position);
       }
     }
-    return false;
-  }
-
-  /**
-   * Выполняется ли оператор в этой позиции безусловно — то есть не вложен ни в условие,
-   * ни в цикл, ни в попытку.
-   *
-   * @param owner    документ с оператором.
-   * @param position позиция в документе.
-   * @return {@code true}, если вложенных ветвлений над оператором нет.
-   */
-  private static boolean unconditional(DocumentContext owner, Position position) {
-    var node = Trees.findTerminalNodeContainsPosition(owner.getAst(), position).orElse(null);
-    if (node == null) {
-      return false;
-    }
-    for (var parent = node.getParent(); parent != null; parent = parent.getParent()) {
-      if (parent instanceof BSLParser.IfStatementContext
-        || parent instanceof BSLParser.WhileStatementContext
-        || parent instanceof BSLParser.ForStatementContext
-        || parent instanceof BSLParser.ForEachStatementContext
-        || parent instanceof BSLParser.TryStatementContext) {
-        return false;
-      }
-    }
-    return true;
+    return positionsByBody.entrySet().stream()
+      .anyMatch(entry -> assignedOnEveryPath(owner, entry.getKey(), entry.getValue()));
   }
 
   /**
@@ -1130,6 +1118,67 @@ public class ExpressionTypeInferencer {
       return Optional.of(method);
     }
     return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+  }
+
+  /**
+   * Присваивается ли переменная на любом пути через тело.
+   * <p>
+   * Считается обходом графа потока управления от выхода назад: вершины с присваиванием
+   * обход не проходит. Если так до входа добраться не удалось, значит всякий путь от входа
+   * к выходу присваивание задевает.
+   *
+   * @param owner     документ с телом.
+   * @param body      тело.
+   * @param positions позиции присваиваний в этом теле.
+   * @return {@code true}, если пути в обход присваиваний нет.
+   */
+  private boolean assignedOnEveryPath(
+    DocumentContext owner,
+    BSLParser.CodeBlockContext body,
+    List<Position> positions
+  ) {
+    var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
+    var entry = graph.getEntryPoint();
+    if (entry == null) {
+      return false;
+    }
+    if (assigns(entry, positions)) {
+      return true;
+    }
+    Set<CfgVertex> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    Deque<CfgVertex> queue = new ArrayDeque<>();
+    queue.add(graph.getExitPoint());
+    visited.add(graph.getExitPoint());
+    while (!queue.isEmpty()) {
+      var vertex = queue.poll();
+      for (var edge : graph.incomingEdgesOf(vertex)) {
+        var previous = graph.getEdgeSource(edge);
+        if (assigns(previous, positions) || !visited.add(previous)) {
+          continue;
+        }
+        if (previous == entry) {
+          return false;
+        }
+        queue.add(previous);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Присваивается ли переменная в этой вершине графа.
+   *
+   * @param vertex    вершина.
+   * @param positions позиции присваиваний.
+   * @return {@code true}, если хотя бы одно присваивание попадает в операторы вершины.
+   */
+  private static boolean assigns(@Nullable CfgVertex vertex, List<Position> positions) {
+    if (!(vertex instanceof BasicBlockVertex block)) {
+      return false;
+    }
+    return block.statements().stream()
+      .anyMatch(statement -> positions.stream()
+        .anyMatch(position -> Ranges.containsPosition(Ranges.create(statement), position)));
   }
 
   /**

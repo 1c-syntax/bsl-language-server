@@ -135,6 +135,17 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
     assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Массив");
   }
 
+  @Test
+  void initializationInBothBranchesLeavesNoUndefined() {
+    // given: присваивание есть в обеих ветках условия в теле модуля — какой бы путь ни
+    // выбрало выполнение, значение будет присвоено.
+    // when
+    var types = at("ИзОбеихВеток = ИнициализированнаяВОбеихВетках", "ИзОбеихВеток = ".length());
+
+    // then: состояние от объявления наблюдать неоткуда.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Массив", "Соответствие");
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
     var documentContext = doc();
     return typeService.expressionTypesAt(documentContext, positionOf(documentContext, marker, offsetInMarker + 1));
