@@ -1,9 +1,16 @@
 name: QA
 
-on: 
+on:
   workflow_run:
     workflows: [Pre-QA]
     types: [completed]
+
+# Номер PR здесь недоступен (workflow_run), поэтому PR идентифицируется парой "репозиторий-источник + ветка".
+# Новый коммит в PR отменяет предыдущий анализ. Для push (анализ ветки, например develop)
+# в группу попадает уникальный run_id, поэтому запуски не отменяются.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.event == 'pull_request' && format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
 

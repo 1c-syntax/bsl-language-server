@@ -9,6 +9,13 @@ on:
   schedule:
     - cron: '0 0 * * 5'
 
+# Для pull_request группа общая для всех запусков одного PR - новый коммит отменяет предыдущие запуски.
+# Для push (анализ ветки, например develop) и schedule в группу попадает уникальный run_id,
+# поэтому запуски не отменяются.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   gatekeeper:
     runs-on: ubuntu-latest

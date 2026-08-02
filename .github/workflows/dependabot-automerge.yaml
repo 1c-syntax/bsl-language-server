@@ -3,6 +3,12 @@ on:
   pull_request_target:
     types: [opened, synchronize]
 
+# Воркфлоу срабатывает только на события PR, поэтому группа всегда общая для одного PR:
+# новый коммит отменяет предыдущий запуск, актуальный запуск делает ту же работу заново.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
