@@ -29,7 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -74,31 +73,11 @@ public record TypeSet(
 
   public TypeSet {
     refs = compactRefs(refs);
-    elementTypes = immutableCopy(elementTypes);
-    localFields = immutableNestedCopy(localFields);
-    lazyElements = immutableCopy(lazyElements);
-    lazyFields = immutableNestedCopy(lazyFields);
-    describedTypes = immutableCopy(describedTypes);
-  }
-
-
-  /** Неизменяемая копия плоской декорационной мапы (пустая — общий emptyMap). */
-  private static <K, V> Map<K, V> immutableCopy(Map<K, V> source) {
-    return source == null || source.isEmpty()
-      ? Collections.emptyMap()
-      : Collections.unmodifiableMap(new LinkedHashMap<>(source));
-  }
-
-  /** Неизменяемая глубокая копия вложенной декорационной мапы (ключ → имя → значение). */
-  private static <K, N, V> Map<K, Map<N, V>> immutableNestedCopy(Map<K, Map<N, V>> source) {
-    if (source == null || source.isEmpty()) {
-      return Collections.emptyMap();
-    }
-    var copy = new LinkedHashMap<K, Map<N, V>>();
-    for (var entry : source.entrySet()) {
-      copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
-    }
-    return Collections.unmodifiableMap(copy);
+    elementTypes = TypeDecorations.immutableCopy(elementTypes);
+    localFields = TypeDecorations.immutableNestedCopy(localFields);
+    lazyElements = TypeDecorations.immutableCopy(lazyElements);
+    lazyFields = TypeDecorations.immutableNestedCopy(lazyFields);
+    describedTypes = TypeDecorations.immutableCopy(describedTypes);
   }
 
   public TypeSet(Set<TypeRef> refs) {
@@ -170,39 +149,12 @@ public record TypeSet(
 
     return new TypeSet(
       merged,
-      mergedFlat(this.elementTypes, other.elementTypes, TypeSet::union),
-      mergedNested(this.localFields, other.localFields, LocalField::merge),
-      mergedFlat(this.lazyElements, other.lazyElements, LazyTypeSet::combine),
-      mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
-      mergedFlat(this.describedTypes, other.describedTypes, TypeSet::union)
+      TypeDecorations.mergedFlat(this.elementTypes, other.elementTypes, TypeSet::union),
+      TypeDecorations.mergedNested(this.localFields, other.localFields, LocalField::merge),
+      TypeDecorations.mergedFlat(this.lazyElements, other.lazyElements, LazyTypeSet::combine),
+      TypeDecorations.mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
+      TypeDecorations.mergedFlat(this.describedTypes, other.describedTypes, TypeSet::union)
     );
-  }
-
-  /** Слияние плоской декорационной мапы: пересекающиеся ключи сливаются {@code merger}. */
-  private static <V> Map<TypeRef, V> mergedFlat(Map<TypeRef, V> first, Map<TypeRef, V> second,
-                                                BinaryOperator<V> merger) {
-    if (second.isEmpty()) {
-      return first;
-    }
-    var result = new LinkedHashMap<>(first);
-    second.forEach((ref, value) -> result.merge(ref, value, merger));
-    return result;
-  }
-
-  /** Слияние вложенной декорационной мапы: сливаются и типы-ключи, и записи внутри них. */
-  private static <V> Map<TypeRef, Map<String, V>> mergedNested(Map<TypeRef, Map<String, V>> first,
-                                                               Map<TypeRef, Map<String, V>> second,
-                                                               BinaryOperator<V> merger) {
-    if (second.isEmpty()) {
-      return first;
-    }
-    var result = new LinkedHashMap<TypeRef, Map<String, V>>();
-    first.forEach((ref, entries) -> result.put(ref, new LinkedHashMap<>(entries)));
-    second.forEach((ref, entries) -> {
-      var target = result.computeIfAbsent(ref, key -> new LinkedHashMap<>());
-      entries.forEach((name, value) -> target.merge(name, value, merger));
-    });
-    return result;
   }
 
   /**
@@ -227,12 +179,14 @@ public record TypeSet(
       changed = changed || !mapped.equals(ref);
       mappedRefs.add(mapped);
     }
-    var mappedElements = mapKeys(elementTypes, mapper, TypeSet::union, types -> types.mapRefs(mapper));
-    var mappedFields = mapNestedKeys(localFields, mapper, LocalField::merge,
+    var mappedElements = TypeDecorations.mapKeys(elementTypes, mapper, TypeSet::union,
+      types -> types.mapRefs(mapper));
+    var mappedFields = TypeDecorations.mapNestedKeys(localFields, mapper, LocalField::merge,
       field -> new LocalField(field.types().mapRefs(mapper), field.description()));
     // Ленивая декорация равна прежней по ключу, поэтому изменилось ли её содержимое,
     // сравнением не узнать — набор с ленивыми декорациями пересобирается всегда.
-    var mappedDescribed = mapKeys(describedTypes, mapper, TypeSet::union, types -> types.mapRefs(mapper));
+    var mappedDescribed = TypeDecorations.mapKeys(describedTypes, mapper, TypeSet::union,
+      types -> types.mapRefs(mapper));
     var decorationsChanged = !mappedElements.equals(elementTypes)
       || !mappedFields.equals(localFields)
       || !mappedDescribed.equals(describedTypes);
@@ -248,8 +202,8 @@ public record TypeSet(
       // Ленивую декорацию не форсим — оборачиваем: приведение применится к тому, что
       // источник вернёт при чтении. Ключ у обёртки прежний, поэтому равенство и слияние
       // ленивых ссылок работают как раньше.
-      mapKeys(lazyElements, mapper, LazyTypeSet::combine, lazy -> mapLazy(lazy, mapper)),
-      mapNestedKeys(lazyFields, mapper, LazyField::merge,
+      TypeDecorations.mapKeys(lazyElements, mapper, LazyTypeSet::combine, lazy -> mapLazy(lazy, mapper)),
+      TypeDecorations.mapNestedKeys(lazyFields, mapper, LazyField::merge,
         field -> new LazyField(mapLazy(field.types(), mapper), field.description())),
       mappedDescribed
     );
@@ -257,37 +211,6 @@ public record TypeSet(
 
   private static LazyTypeSet mapLazy(LazyTypeSet lazy, UnaryOperator<TypeRef> mapper) {
     return new LazyTypeSet(lazy.key(), () -> lazy.get().mapRefs(mapper));
-  }
-
-  private static <V> Map<TypeRef, V> mapKeys(
-    Map<TypeRef, V> source,
-    UnaryOperator<TypeRef> mapper,
-    BinaryOperator<V> merger,
-    UnaryOperator<V> valueMapper
-  ) {
-    if (source.isEmpty()) {
-      return source;
-    }
-    var result = new LinkedHashMap<TypeRef, V>();
-    source.forEach((ref, value) -> result.merge(mapper.apply(ref), valueMapper.apply(value), merger));
-    return result;
-  }
-
-  private static <V> Map<TypeRef, Map<String, V>> mapNestedKeys(
-    Map<TypeRef, Map<String, V>> source,
-    UnaryOperator<TypeRef> mapper,
-    BinaryOperator<V> merger,
-    UnaryOperator<V> valueMapper
-  ) {
-    if (source.isEmpty()) {
-      return source;
-    }
-    var result = new LinkedHashMap<TypeRef, Map<String, V>>();
-    source.forEach((TypeRef ref, Map<String, V> fields) -> {
-      var target = result.computeIfAbsent(mapper.apply(ref), key -> new LinkedHashMap<>());
-      fields.forEach((name, field) -> target.merge(name, valueMapper.apply(field), merger));
-    });
-    return result;
   }
 
   /** Есть ли у набора декорации (element/field/описываемые типы, в т.ч. ленивые). */
@@ -349,26 +272,12 @@ public record TypeSet(
     }
     return new TypeSet(
       keptRefs,
-      filterByKey(elementTypes, keep),
-      filterByKey(localFields, keep),
-      filterByKey(lazyElements, keep),
-      filterByKey(lazyFields, keep),
-      filterByKey(describedTypes, keep)
+      TypeDecorations.filterByKey(elementTypes, keep),
+      TypeDecorations.filterByKey(localFields, keep),
+      TypeDecorations.filterByKey(lazyElements, keep),
+      TypeDecorations.filterByKey(lazyFields, keep),
+      TypeDecorations.filterByKey(describedTypes, keep)
     );
-  }
-
-  /** Декорационная мапа без записей по отсеянным типам. */
-  private static <V> Map<TypeRef, V> filterByKey(Map<TypeRef, V> source, Predicate<TypeRef> keep) {
-    if (source.isEmpty()) {
-      return source;
-    }
-    var copy = new LinkedHashMap<TypeRef, V>();
-    for (var entry : source.entrySet()) {
-      if (keep.test(entry.getKey())) {
-        copy.put(entry.getKey(), entry.getValue());
-      }
-    }
-    return copy;
   }
 
   /**
