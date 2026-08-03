@@ -26,12 +26,14 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
@@ -344,7 +346,7 @@ public class ConfigurationModuleMembersProvider {
     var params = method.getParameters().stream()
       .map(p -> new ParameterDescriptor(
         p.getName(),
-        TypeSet.EMPTY,
+        declaredParameterTypes(p),
         p.isOptional(),
         ""
       ))
@@ -359,6 +361,43 @@ public class ConfigurationModuleMembersProvider {
     return MemberDescriptor
       .method(method.getName(), description, List.of(signature))
       .withSourceSymbol(method);
+  }
+
+  /**
+   * Типы параметра, объявленные в описании метода: имена разрешаются так же, как имя
+   * типа возвращаемого значения ({@link #resolveReturnType}).
+   * <p>
+   * Без них ссылка {@code См. Модуль.Метод.Параметр} упирается в пустую сигнатуру: тип
+   * возврата у члена есть, а типы параметров — нет. {@code Произвольный} в объявленные
+   * не попадает: он ничего не сообщает о значении, а в подсказках вытеснил бы собой
+   * привычный вид сигнатуры.
+   *
+   * @param parameter параметр метода.
+   * @return объявленные типы параметра; {@link TypeSet#EMPTY}, если их не объявлено.
+   */
+  private TypeSet declaredParameterTypes(ParameterDefinition parameter) {
+    return parameter.getDescription()
+      .map(description -> description.types().stream()
+        .map(this::resolveTypeName)
+        .filter(ref -> ref.kind() != TypeKind.UNKNOWN && ref.kind() != TypeKind.ANY)
+        .reduce(TypeSet.EMPTY, (acc, ref) -> acc.union(TypeSet.of(ref)), TypeSet::union))
+      .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Разрешает имя типа из описания: у коллекционной записи ({@code Массив из Строка})
+   * берётся её головное имя.
+   *
+   * @param type описание типа.
+   * @return тип по имени; {@link TypeRef#UNKNOWN}, если имя пустое или не резолвится.
+   */
+  private TypeRef resolveTypeName(TypeDescription type) {
+    var raw = type.name();
+    if (raw == null || raw.isBlank()) {
+      return TypeRef.UNKNOWN;
+    }
+    var head = raw.trim().split("[\\s<\\[]", 2)[0];
+    return typeRegistry.resolve(head).orElse(TypeRef.UNKNOWN);
   }
 
   /**
