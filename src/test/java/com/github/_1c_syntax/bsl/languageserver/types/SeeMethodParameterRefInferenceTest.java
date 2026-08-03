@@ -99,6 +99,26 @@ class SeeMethodParameterRefInferenceTest extends AbstractServerContextAwareTest 
     assertThat(names(element)).containsExactly("Строка");
   }
 
+  @Test
+  void parameterTypesInheritedFromMethodOfAnotherModule() {
+    // given: у метода нет описания параметров — только ссылка на метод-интерфейс
+    // другого модуля, где параметр с тем же именем объявлен как «Строка».
+    var documentContext = TestUtils.getDocumentContext("""
+      // См. ОбщегоНазначения.ОбщийМодуль
+      Процедура ОбработкаИмени(ИмяМодуля) Экспорт
+
+      	ТипИмени = ИмяМодуля;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var types = at(documentContext, "ТипИмени = ИмяМодуля", "ТипИмени = ".length());
+
+    // then
+    assertThat(names(types)).containsExactly("Строка");
+  }
+
   private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);

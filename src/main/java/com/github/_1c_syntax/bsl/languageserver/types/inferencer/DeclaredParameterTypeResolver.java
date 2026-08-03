@@ -128,7 +128,7 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
 
   /**
    * Тип одноимённого параметра метода, на который ссылается документирующий комментарий
-   * ({@code // См. Метод}). Работает в пределах одного модуля.
+   * ({@code // См. Метод} либо {@code // См. Модуль.Метод}).
    *
    * @param method    метод со ссылкой.
    * @param paramName имя параметра.
@@ -146,17 +146,52 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
     }
     var owner = method.getOwner();
     for (var link : links) {
-      var target = localMethod(owner, link.link());
+      var target = referencedMethod(owner, link.link());
       if (target == null) {
         continue;
       }
-      for (var targetParam : target.getParameters()) {
-        if (targetParam.getName().equalsIgnoreCase(paramName)) {
-          var types = symbolTypeIndex.getDeclaredParameterTypes(targetParam, owner);
-          if (!types.isEmpty()) {
-            return types;
-          }
-        }
+      var types = parameterTypes(target, paramName);
+      if (!types.isEmpty()) {
+        return types;
+      }
+    }
+    return TypeSet.EMPTY;
+  }
+
+  /**
+   * Метод-цель ссылки: своего модуля по короткому имени либо чужого — по
+   * квалифицированному.
+   *
+   * @param owner документ со ссылкой.
+   * @param link  текст ссылки.
+   * @return метод-цель либо {@code null}, если ссылка никуда не ведёт.
+   */
+  @Nullable
+  private MethodSymbol referencedMethod(DocumentContext owner, @Nullable String link) {
+    if (link == null) {
+      return null;
+    }
+    if (!link.contains(".")) {
+      return localMethod(owner, link);
+    }
+    return symbolTypeIndex.resolveReferenceSymbol(link, owner.getFileType())
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .orElse(null);
+  }
+
+  /**
+   * Типы одноимённого параметра метода-цели.
+   *
+   * @param target    метод-цель.
+   * @param paramName имя параметра.
+   * @return объявленные типы параметра; пустой набор, если такого параметра нет либо
+   *     тип у него не объявлен.
+   */
+  private TypeSet parameterTypes(MethodSymbol target, String paramName) {
+    for (var targetParam : target.getParameters()) {
+      if (targetParam.getName().equalsIgnoreCase(paramName)) {
+        return symbolTypeIndex.getDeclaredParameterTypes(targetParam, target.getOwner());
       }
     }
     return TypeSet.EMPTY;
