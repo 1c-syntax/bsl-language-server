@@ -724,10 +724,13 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   void fieldsSeeInFunctionTextDoesNotType() {
     // given / when
     var types = typeOf("4.34");
+    var columnOnRow = typeOfVariable("Проба_4_34_Колонка");
 
-    // then: совпадает с рекомендацией — тип есть, полей от текста описания нет.
+    // then: совпадает с рекомендацией — тип есть, а колонок от текста описания нет
+    // ни у таблицы, ни у её строки.
     assertThat(names(types)).containsExactly("ТаблицаЗначений");
     assertThat(fieldNames(types)).isEmpty();
+    assertThat(names(columnOnRow)).isEmpty();
   }
 
   /**
@@ -823,10 +826,17 @@ class SpecSection4DataObjectsTest extends AbstractServerContextAwareTest {
   void seeRefWithoutBaseTypeAndDescription() {
     // given / when
     var types = typeOf("4.39");
+    var columnOnRow = typeOfVariable("Проба_4_39_Колонка");
+    var columnOnTable = typeOfVariable("Проба_4_39_ЧленТаблицы");
 
-    // then: совпадает с рекомендацией.
+    // then: параметр получает тип таблицы из конструктора, объявленные колонки видны у строки.
     assertThat(names(types)).containsExactly("ТаблицаЗначений");
-    assertThat(fieldNames(types)).containsExactlyInAnyOrder("Номенклатура", "Количество");
+    assertThat(names(columnOnRow))
+      .as("рекомендация: код работает с колонками строки таблицы, полученной по ссылке")
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(names(columnOnTable))
+      .as("у самой таблицы значений свойства с именем колонки нет")
+      .isEmpty();
   }
 
   /**
