@@ -4,6 +4,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
 import com.github._1c_syntax.bsl.parser.BSLParser.AccessPropertyContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * Обращение к свойствам через {@code ТекущаяСтрока} динамического списка.
+ * {@code .ТекущаяСтрока.Реквизит} дёргает базу. Правильно: {@code .ТекущиеДанные.Реквизит}.
+ * <p>
+ * Детект dereference: в грамматике bsl-parser каждый accessProperty обёрнут в
+ * modifier внутри complexIdentifier. Когда .ТекущаяСтрока используется как ресивер
+ * для дальнейшего доступа, внешний complexIdentifier содержит дополнительного
+ * ребёнка (ещё один access/method/call) — отсюда проверка {@code childCount >= 3}.
+ */
 @DiagnosticMetadata(type=DiagnosticType.CODE_SMELL, severity=DiagnosticSeverity.MAJOR,
   scope=DiagnosticScope.BSL, minutesToFix=2,
   tags={DiagnosticTag.PERFORMANCE, DiagnosticTag.BADPRACTICE})
@@ -15,7 +24,7 @@ public class CurrentRowAccessDiagnostic extends AbstractVisitorDiagnostic {
     if (!"ТекущаяСтрока".equalsIgnoreCase(id.getText())
       && !"CurrentRow".equalsIgnoreCase(id.getText())) return ctx;
 
-    var ci = ctx.getParent().getParent();
+    var ci = ctx.getParent().getParent(); // modifier → complexIdentifier
     if (ci != null && ci.getChildCount() >= 3) {
       diagnosticStorage.addDiagnostic(id, info.getMessage("ТекущиеДанные", "CurrentData"));
     }
