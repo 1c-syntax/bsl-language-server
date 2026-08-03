@@ -747,7 +747,11 @@ public class ExpressionTypeInferencer {
     ctx.consulted.add(method);
     try {
       var declared = symbolTypeIndex.getDeclaredReturnTypes(method);
-      var computed = methodReturnTypeIndex.get(method);
+      // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
+      // документа, считаем на месте — дерево разбора здесь доступно.
+      var computed = method.getOwner().getUri().equals(ctx.documentContext.getUri())
+        ? methodReturnTypeIndex.getOrCompute(method, () -> returnTypesOfBody(method, ctx))
+        : methodReturnTypeIndex.get(method);
       return declared.union(withoutDeclaredRefs(computed, declared));
     } finally {
       ctx.visited.remove(method);
@@ -767,7 +771,26 @@ public class ExpressionTypeInferencer {
    * @return рассчитанные типы и методы, участвовавшие в расчёте.
    */
   public MethodReturnTypeIndex.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
-    var ctx = new InferenceContext(method.getOwner());
+    return returnTypesOfBody(method, new InferenceContext(method.getOwner()));
+  }
+
+  /**
+   * Типы, возвращаемые методом по телу, в рамках уже идущего расчёта.
+   * <p>
+   * Контекст передаётся тот же самый: у него общая защита от циклов и общая глубина, без
+   * которой цепочка вызовов внутри модуля уходила бы в рекурсию до переполнения стека.
+   *
+   * @param method метод, чьё тело разбирается.
+   * @param ctx    контекст расчёта.
+   * @return рассчитанные типы и методы, участвовавшие в расчёте.
+   */
+  private MethodReturnTypeIndex.ComputedReturnTypes returnTypesOfBody(
+    MethodSymbol method,
+    InferenceContext ctx
+  ) {
+    if (ctx.depth >= MAX_DEPTH) {
+      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of());
+    }
     try {
       var types = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx));
       return new MethodReturnTypeIndex.ComputedReturnTypes(types, Set.copyOf(ctx.consulted));

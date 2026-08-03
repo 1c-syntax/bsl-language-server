@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 /**
  * Типы возвращаемого значения методов, рассчитанные по их телам.
@@ -97,6 +99,31 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   }
 
   /**
+   * Типы, которые метод возвращает по своему телу, с расчётом на месте, если он ещё не
+   * делался.
+   * <p>
+   * Для неэкспортных методов заранее ничего не считается: они видны только внутри своего
+   * документа, а там дерево разбора под рукой, и расчёт по запросу дешевле, чем расчёт
+   * всех функций конфигурации при её разборе.
+   *
+   * @param method метод.
+   * @return рассчитанные типы; {@link TypeSet#EMPTY}, если тело недоступно либо не дало
+   *     типов.
+   */
+  public TypeSet getOrCompute(MethodSymbol method, Supplier<ComputedReturnTypes> computation) {
+    var known = typesByMethod.get(method);
+    if (known != null) {
+      return known;
+    }
+    if (!method.isFunction() || !isReadable(method)) {
+      return TypeSet.EMPTY;
+    }
+    store(method, computation.get());
+    rememberMethodOfUri(method);
+    return typesByMethod.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
    * Пересчитывает методы документа, содержимое которого изменилось, и разносит изменение
    * по зависимым.
    * <p>
@@ -121,13 +148,12 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   }
 
   /**
-   * Доразрешает ссылки, не разрешившиеся при наполнении рабочей области.
+   * Доразрешает то, что не разрешилось при наполнении рабочей области.
    * <p>
    * Документы разбираются параллельно и в произвольном порядке, поэтому вызов в модуль,
    * ещё не зарегистрированный на тот момент, никуда не вёл, а значение вызывающего метода
-   * оставалось неполным. Теперь зарегистрированы все, и каждый документ пересчитывается
-   * заново — с догрузкой, если его вторичные данные уже освобождены, и с возвратом в
-   * прежнее состояние после расчёта.
+   * оставалось неполным. Пересчитываются не все подряд, а только те, чьи значения
+   * зависели от изменившихся: остальным доразрешать нечего.
    *
    * @param event событие наполнения рабочей области.
    */
@@ -136,9 +162,6 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
     var serverContext = event.getSource();
     maintenance = true;
     try {
-      for (var documentContext : List.copyOf(serverContext.getDocuments().values())) {
-        recomputeLoading(serverContext, documentContext);
-      }
       drainPending(serverContext);
     } finally {
       maintenance = false;
@@ -199,7 +222,9 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
     }
     var methods = new ArrayList<MethodSymbol>();
     for (var method : documentContext.getSymbolTree().getMethods()) {
-      if (!method.isFunction()) {
+      // Заранее считаются только экспортные функции: остальные видны лишь внутри своего
+      // документа и считаются по запросу (см. getOrCompute).
+      if (!method.isFunction() || !method.isExport()) {
         continue;
       }
       methods.add(method);
@@ -208,9 +233,20 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       }
     }
     if (!methods.isEmpty()) {
-      methodsByUri.put(documentContext.getUri(), methods);
+      methodsByUri.computeIfAbsent(documentContext.getUri(), k -> new CopyOnWriteArrayList<>())
+        .addAll(methods);
     }
     return changed;
+  }
+
+  /**
+   * Запоминает метод в списке методов его документа, чтобы запись ушла вместе с ним.
+   *
+   * @param method метод.
+   */
+  private void rememberMethodOfUri(MethodSymbol method) {
+    methodsByUri.computeIfAbsent(method.getOwner().getUri(), k -> new CopyOnWriteArrayList<>())
+      .add(method);
   }
 
   /**
@@ -220,7 +256,17 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    * @return {@code true}, если набор типов изменился.
    */
   private boolean recompute(MethodSymbol method) {
-    var computed = inferencerProvider.getObject().computeReturnTypes(method);
+    return store(method, inferencerProvider.getObject().computeReturnTypes(method));
+  }
+
+  /**
+   * Запоминает результат расчёта и обновляет связи метода.
+   *
+   * @param method   метод.
+   * @param computed результат расчёта.
+   * @return {@code true}, если набор типов изменился.
+   */
+  private boolean store(MethodSymbol method, ComputedReturnTypes computed) {
     unlinkDependencies(method);
     for (var dependency : computed.consulted()) {
       if (dependency.equals(method)) {
@@ -251,7 +297,12 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       queue.clear();
       var changed = new ArrayList<MethodSymbol>();
       for (var method : wave) {
-        if (isReadable(method) && recompute(method)) {
+        if (!isReadable(method)) {
+          // Документ выгружен. Догружать его ради одной правки дорого, поэтому метод
+          // откладывается: его подтянет проход после наполнения рабочей области либо
+          // следующий разбор его документа.
+          pending.add(method);
+        } else if (recompute(method)) {
           changed.add(method);
         }
       }
@@ -266,10 +317,13 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    */
   private void drainPending(ServerContext serverContext) {
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
-      var wave = dependentsOf(List.copyOf(pending));
+      var uris = pending.stream().map(method -> method.getOwner().getUri()).distinct().toList();
       pending.clear();
-      for (var method : wave) {
-        recomputeLoading(serverContext, method.getOwner());
+      for (var uri : uris) {
+        var documentContext = serverContext.getDocuments().get(uri);
+        if (documentContext != null) {
+          recomputeLoading(serverContext, documentContext);
+        }
       }
     }
   }
@@ -290,8 +344,10 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       pending.addAll(recomputeDocument(documentContext));
       return;
     }
+    // Освобождать документ обратно нельзя: его прямо сейчас может разбирать другой поток,
+    // и вырванные из-под него вторичные данные роняют расчёт. Освобождением занимается
+    // тот, кто документ открывал.
     serverContext.rebuildDocument(documentContext);
-    serverContext.tryClearDocument(documentContext);
   }
 
   /**
