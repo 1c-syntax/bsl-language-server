@@ -29,7 +29,7 @@ jobs:
           java-version: 21
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v6.2.0
 
       - name: Submit Gradle dependencies
-        uses: gradle/actions/dependency-submission@v6
+        uses: gradle/actions/dependency-submission@v6.2.0
