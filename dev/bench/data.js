@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785693910571,
+  "lastUpdate": 1785736664877,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -41974,6 +41974,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8217038236369044",
             "extra": "mean: 94.39948439598083 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "34499012f444cd87a8b495243de98f5d721f9c5d",
+          "message": "Merge pull request #4381 from 1c-syntax/feat/types-xdto-packages\n\nfeat(types): типы объектов XDTO-пакетов и фабрика XDTO",
+          "timestamp": "2026-08-03T07:37:29+02:00",
+          "tree_id": "fa3a222354d9057bf006236ecbab37984f340fab",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/34499012f444cd87a8b495243de98f5d721f9c5d"
+        },
+        "date": 1785736652132,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.69181394577026,
+            "unit": "sec",
+            "range": "stddev: 1.8658527127614393",
+            "extra": "mean: 96.69181394577026 sec\nrounds: 3"
           }
         ]
       }
