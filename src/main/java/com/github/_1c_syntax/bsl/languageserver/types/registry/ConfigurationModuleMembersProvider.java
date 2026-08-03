@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +95,7 @@ public class ConfigurationModuleMembersProvider {
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
   private final CommentTypeResolver commentTypeResolver;
+  private final DescribedTypeResolver describedTypeResolver;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -344,7 +344,7 @@ public class ConfigurationModuleMembersProvider {
     var params = method.getParameters().stream()
       .map(p -> new ParameterDescriptor(
         p.getName(),
-        TypeSet.EMPTY,
+        describedTypeResolver.parameterTypes(p),
         p.isOptional(),
         ""
       ))
@@ -353,32 +353,11 @@ public class ConfigurationModuleMembersProvider {
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
     var returnType = method.getDescription()
-      .map(d -> resolveReturnType(d.getReturnedValue()))
+      .map(d -> describedTypeResolver.returnType(d.getReturnedValue()))
       .orElse(TypeRef.UNKNOWN);
     var signature = new SignatureDescriptor(params, returnType, description);
     return MemberDescriptor
       .method(method.getName(), description, List.of(signature))
       .withSourceSymbol(method);
-  }
-
-  /**
-   * Парсит первый элемент {@code returnedValue} JavaDoc-описания BSL-метода
-   * (например, "Массив из Произвольный" → "Массив") и резолвит через
-   * {@link TypeRegistry}.
-   */
-  private TypeRef resolveReturnType(
-    List<TypeDescription> returnedValue
-  ) {
-    if (returnedValue == null || returnedValue.isEmpty()) {
-      return TypeRef.UNKNOWN;
-    }
-    var raw = returnedValue.get(0).name();
-    if (raw == null || raw.isBlank()) {
-      return TypeRef.UNKNOWN;
-    }
-    // отбрасываем пояснения после первого пробела/угловой скобки/квадратной скобки
-    // ("Массив из Произвольный", "Массив<Произвольный>" → "Массив")
-    var head = raw.trim().split("[\\s<\\[]", 2)[0];
-    return typeRegistry.resolve(head).orElse(TypeRef.UNKNOWN);
   }
 }
