@@ -38,12 +38,12 @@ class DeprecatedHttpConnectionMethodDiagnosticTest
 
   @Test
   void testOnArrayDoesNotFire() {
-    // Проверяем что на Массиве не срабатывает (owner не HTTPСоединение)
     initServerContext(TestUtils.PATH_TO_METADATA);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // Массив.Получить и Массив.Удалить совпадают по имени,
-    // но владелец — Массив, не HTTPСоединение → не срабатывает
+    // Массив.Получить/Удалить совпадают по имени с deprecated методами,
+    // но TypeService резолвит владельца как Массив (не HTTPСоединение)
+    // → диагностика не срабатывает
     assertThat(diagnostics).isEmpty();
   }
 }

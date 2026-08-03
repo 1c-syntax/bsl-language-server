@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
@@ -45,6 +46,22 @@ import java.util.regex.Pattern;
     DiagnosticTag.PERFORMANCE
   }
 )
+/**
+ * Диагностика устаревших методов объекта {@code HTTPСоединение} /
+ * {@code HTTPConnection}.
+ * <p>
+ * В платформе 8.3.21 синхронные методы HTTP-соединения объявлены
+ * устаревшими в клиентском контексте. Вместо них следует использовать
+ * асинхронные аналоги с суффиксом {@code Асинх} / {@code Async}.
+ * <p>
+ * Для исключения ложных срабатываний тип-владелец метода резолвится
+ * через {@link TypeService#memberAt}: диагностика срабатывает только
+ * если метод вызван на объекте типа {@code HTTPСоединение}.
+ *
+ * @see <a href=\"https://dl04.1c.ru/content/Platform/8_3_21_1140/1cv8upd_8_3_21_1140.htm\">
+ *   Изменения платформы 8.3.21</a>
+ */
+@RequiredArgsConstructor
 public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
@@ -62,10 +79,6 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
   );
 
   private final TypeService typeService;
-
-  public DeprecatedHttpConnectionMethodDiagnostic(TypeService typeService) {
-    this.typeService = typeService;
-  }
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
