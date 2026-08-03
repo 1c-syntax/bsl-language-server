@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -32,20 +33,22 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 
 /**
- * Метод, помеченный аннотацией {@code &ИзменениеИКонтроль}, содержит
- * одновременно директивы {@code #Удаление} / {@code #КонецУдаления}
- * и {@code #Вставка} / {@code #КонецВставки}.
+ * Метод с аннотацией {@code &ИзменениеИКонтроль}, в котором директивы
+ * {@code #Удаление} и {@code #Вставка} полностью заменяют тело метода.
  * <p>
- * Такая комбинация означает полную замену тела метода, что скрывает
- * реальные изменения от ревьюера. Аннотация {@code &ИзменениеИКонтроль}
- * предназначена для точечных правок — удаления и вставки отдельных
- * блоков кода с сохранением читаемого diff'а.
+ * Полная замена — когда оригинального кода не остаётся ни до, ни между,
+ * ни после блоков удаления/вставки. Для такого сценария следует
+ * использовать аннотацию {@code &Вместо}.
  * <p>
- * Для полной замены метода следует использовать аннотацию {@code &Вместо}.
+ * Проверяет наличие обеих пар маркеров
+ * ({@code #Удаление}+{@code #КонецУдаления},
+ * {@code #Вставка}+{@code #КонецВставки}), их положение у границ метода
+ * и отсутствие кода между блоками удаления и вставки.
  *
  * @see <a href="https://its.1c.ru/db/v8std/content/455/hdoc">Стандарт 455</a>
  */
@@ -61,7 +64,6 @@ import java.util.List;
 )
 public class SuspiciousChangeAndValidateDiagnostic extends AbstractDiagnostic {
 
-  /** Максимальное расстояние в строках от границы метода до директивы для срабатывания. */
   private static final int PROXIMITY_LINES = 3;
 
   @Override
@@ -80,71 +82,89 @@ public class SuspiciousChangeAndValidateDiagnostic extends AbstractDiagnostic {
   }
 
   /**
-   * Полная замена: метод с {@code &ИзменениеИКонтроль}, у которого
-   * {@code #Удаление} в начале тела и {@code #КонецВставки} в конце —
-   * оригинального кода снаружи блоков удаления/вставки не осталось.
+   * Полная замена: обе пары маркеров присутствуют,
+   * {@code #Удаление} у начала метода, {@code #КонецВставки} у конца,
+   * и между {@code #КонецУдаления} и {@code #Вставка} нет кода.
    */
-  private static boolean isFullReplacement(
-    com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol method,
-    List<Token> tokens
-  ) {
+  private static boolean isFullReplacement(MethodSymbol method, List<Token> tokens) {
     var range = method.getRange();
     int methodStart = range.getStart().getLine();
     int methodEnd = range.getEnd().getLine();
 
     var methodTokens = tokensInRange(tokens, range);
 
-    boolean hasDelete = containsAny(methodTokens, BSLLexer.PREPROC_DELETE, BSLLexer.PREPROC_ENDDELETE);
-    boolean hasInsert = containsAny(methodTokens, BSLLexer.PREPROC_INSERT, BSLLexer.PREPROC_ENDINSERT);
-    if (!hasDelete || !hasInsert) {
+    // Требуем обе пары маркеров
+    if (!hasPair(methodTokens, BSLLexer.PREPROC_DELETE, BSLLexer.PREPROC_ENDDELETE)
+      || !hasPair(methodTokens, BSLLexer.PREPROC_INSERT, BSLLexer.PREPROC_ENDINSERT)) {
       return false;
     }
 
-    int firstDeleteLine = firstTokenLine(methodTokens, BSLLexer.PREPROC_DELETE);
-    int lastEndInsertLine = lastTokenLine(methodTokens, BSLLexer.PREPROC_ENDINSERT);
+    int firstDelete = firstLineOf(methodTokens, BSLLexer.PREPROC_DELETE);
+    int lastEndInsert = lastLineOf(methodTokens, BSLLexer.PREPROC_ENDINSERT);
 
-    return firstDeleteLine >= 0
-      && lastEndInsertLine >= 0
-      && (firstDeleteLine - methodStart) <= PROXIMITY_LINES
-      && (methodEnd - lastEndInsertLine) <= PROXIMITY_LINES;
+    // Блоки должны быть у границ метода
+    if (firstDelete < 0 || lastEndInsert < 0) {
+      return false;
+    }
+    if ((firstDelete - methodStart) > PROXIMITY_LINES) {
+      return false;
+    }
+    if ((methodEnd - lastEndInsert) > PROXIMITY_LINES) {
+      return false;
+    }
+
+    // Между концом удаления и началом вставки не должно быть кода
+    int endDelete = lastLineOf(methodTokens, BSLLexer.PREPROC_ENDDELETE);
+    int startInsert = firstLineOf(methodTokens, BSLLexer.PREPROC_INSERT);
+    if (endDelete < 0 || startInsert < 0) {
+      return false;
+    }
+
+    return !hasCodeBetween(tokens, endDelete, startInsert);
   }
 
-  private static List<Token> tokensInRange(List<Token> tokens, org.eclipse.lsp4j.Range range) {
-    return tokens.stream()
-      .filter(token -> {
-        var pos = new Position(token.getLine() - 1, 0);
-        return Ranges.containsPosition(range, pos);
-      })
-      .toList();
+  private static boolean hasPair(List<Token> tokens, int startType, int endType) {
+    return containsToken(tokens, startType) && containsToken(tokens, endType);
   }
 
-  private static boolean containsAny(List<Token> tokens, int... tokenTypes) {
+  private static boolean containsToken(List<Token> tokens, int type) {
+    return tokens.stream().anyMatch(t -> t.getType() == type);
+  }
+
+  /**
+   * Есть ли код (default-channel токены) между строками {@code fromLine}
+   * и {@code toLine} включительно. Игнорируем сами маркеры.
+   */
+  private static boolean hasCodeBetween(List<Token> tokens, int fromLine, int toLine) {
     return tokens.stream()
-      .mapToInt(Token::getType)
-      .anyMatch(type -> {
-        for (int tt : tokenTypes) {
-          if (type == tt) {
-            return true;
-          }
-        }
-        return false;
+      .filter(t -> t.getChannel() == Token.DEFAULT_CHANNEL)
+      .anyMatch(t -> {
+        int line = t.getLine() - 1;
+        return line >= fromLine && line <= toLine
+          && t.getType() != BSLLexer.PREPROC_ENDDELETE
+          && t.getType() != BSLLexer.PREPROC_INSERT;
       });
   }
 
-  private static int firstTokenLine(List<Token> tokens, int tokenType) {
+  private static List<Token> tokensInRange(List<Token> tokens, Range range) {
     return tokens.stream()
-      .filter(t -> t.getType() == tokenType)
-      .mapToInt(t -> t.getLine() - 1)
-      .min()
-      .orElse(-1);
+      .filter(token -> Ranges.containsPosition(range,
+        new Position(token.getLine() - 1, 0)))
+      .toList();
   }
 
-  private static int lastTokenLine(List<Token> tokens, int tokenType) {
+  private static int firstLineOf(List<Token> tokens, int type) {
     return tokens.stream()
-      .filter(t -> t.getType() == tokenType)
+      .filter(t -> t.getType() == type)
       .mapToInt(t -> t.getLine() - 1)
-      .max()
-      .orElse(-1);
+      .min().orElse(-1);
+  }
+
+  private static int lastLineOf(List<Token> tokens, int type) {
+    return tokens.stream()
+      .filter(t -> t.getType() == type)
+      .mapToInt(t -> t.getLine() - 1)
+      .max().orElse(-1);
   }
 
 }

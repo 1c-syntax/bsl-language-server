@@ -36,12 +36,12 @@ class SuspiciousChangeAndValidateDiagnosticTest
   }
 
   @Test
-  void test() {
+  void detectsFullReplacementWithDeleteAndInsert() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // СИзменением: #Удаление в начале + #КонецВставки в конце → срабатывает
     // БезИзменения: нет &ИзменениеИКонтроль → не срабатывает
-    // ФункцияСИзменением: #Удаление не в начале (есть ориг. код) → не срабатывает
+    // ФункцияСИзменением: оригинальный код до #Удаления → не срабатывает
     // ПустаяПроцедура: нет директив → не срабатывает
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
