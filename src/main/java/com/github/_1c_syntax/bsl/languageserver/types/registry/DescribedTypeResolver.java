@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,8 @@ import java.util.regex.Pattern;
  * <p>
  * Имя типа берётся до первого разделителя, а всё, что за ним, считается пояснением:
  * {@code Массив из Строка}, {@code Массив<Строка>} и {@code Массив[Строка]} — это
- * {@code Массив}.
+ * {@code Массив}. У коллекционных записей вместе с самой коллекцией разбираются и
+ * типы её элементов.
  */
 @Component
 @RequiredArgsConstructor
@@ -82,14 +84,35 @@ public class DescribedTypeResolver {
   }
 
   /**
-   * Разрешает одно объявление типа.
+   * Разрешает одно объявление типа: у коллекционной записи ({@code Массив из Строка})
+   * вместе с самой коллекцией разбираются и типы её элементов.
    *
    * @param type объявление типа из описания.
    * @return типы объявления; {@link TypeSet#EMPTY}, если имя не резолвится.
    */
   private TypeSet declaredType(TypeDescription type) {
+    if (type instanceof CollectionTypeDescription collection) {
+      return declaredCollection(collection);
+    }
     var ref = headName(type.name());
     return ref.kind() == TypeKind.UNKNOWN ? TypeSet.EMPTY : TypeSet.of(ref);
+  }
+
+  /**
+   * Разрешает коллекционное объявление: головной тип и типы его элементов.
+   *
+   * @param collection коллекционное объявление типа.
+   * @return коллекция с элементами; {@link TypeSet#EMPTY}, если сама коллекция не резолвится.
+   */
+  private TypeSet declaredCollection(CollectionTypeDescription collection) {
+    var headRef = typeRegistry.resolve(collection.collectionName()).orElse(null);
+    if (headRef == null) {
+      return TypeSet.EMPTY;
+    }
+    var elements = collection.valueTypes().stream()
+      .map(this::declaredType)
+      .reduce(TypeSet.EMPTY, TypeSet::union);
+    return elements.isEmpty() ? TypeSet.of(headRef) : TypeSet.of(headRef).withElement(headRef, elements);
   }
 
   /**

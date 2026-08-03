@@ -73,6 +73,32 @@ class SeeMethodParameterRefInferenceTest extends AbstractServerContextAwareTest 
     assertThat(names(types)).containsExactly("Строка");
   }
 
+  @Test
+  void seeRefToCollectionParameterKeepsElementType() {
+    // given: у метода-цели параметр объявлен как «Массив из Строка».
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Строки - См. СправочникОбъект.СправочникСМенеджером.МетодМодуляОбъекта.Строки
+      Процедура ОбработкаСтрок(Строки) Экспорт
+
+      	ТипПараметра = Строки;
+
+      	Для Каждого Элемент Из Строки Цикл
+      		ТипЭлемента = Элемент;
+      	КонецЦикла;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var parameter = at(documentContext, "ТипПараметра = Строки", "ТипПараметра = ".length());
+    var element = at(documentContext, "ТипЭлемента = Элемент", "ТипЭлемента = ".length());
+
+    // then: вместе с типом параметра приезжает и объявленный тип его элементов.
+    assertThat(names(parameter)).containsExactly("Массив");
+    assertThat(names(element)).containsExactly("Строка");
+  }
+
   private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);
