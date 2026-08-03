@@ -592,13 +592,14 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void seeRefToXdtoObject() {
     // given / when
     var types = typeOf("3.26");
-    var street = typeOfVariable("Проба_3_26_Улица");
+    var property = typeOfVariable("Проба_3_26_Свойство");
 
-    // then: имени типа рекомендация не называет, поведение — да («Адрес.Улица»).
+    // then: имени типа рекомендация не называет, поведение — да («Адрес.Улица»); в фикстуре
+    // это свойство пакета тестовой конфигурации.
     assertThat(names(types))
       .as("рекомендация: параметр получает тип объекта XDTO-пакета")
       .isNotEmpty();
-    assertThat(names(street))
+    assertThat(names(property))
       .as("рекомендация: у объекта XDTO доступны его свойства")
       .containsExactly("Строка");
   }
@@ -617,13 +618,13 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void xdtoFactoryCreateGivesObjectType() {
     // given / when
     var types = typeOf("3.27");
-    var street = typeOfVariable("Проба_3_27_Улица");
+    var property = typeOfVariable("Проба_3_27_Свойство");
 
     // then: пример рекомендации заканчивается «Адрес.Улица = "...";».
     assertThat(names(types))
       .as("рекомендация: созданный фабрикой объект получает тип из указанного пакета")
       .isNotEmpty();
-    assertThat(names(street))
+    assertThat(names(property))
       .as("рекомендация: у созданного объекта доступны свойства его типа")
       .containsExactly("Строка");
   }
@@ -644,13 +645,13 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   void inlineSeeRefToXdtoType() {
     // given / when
     var types = typeOf("3.28");
-    var street = typeOfVariable("Проба_3_28_Улица");
+    var property = typeOfVariable("Проба_3_28_Свойство");
 
     // then: пример рекомендации заканчивается «Адрес.Улица = "...";».
     assertThat(names(types))
       .as("рекомендация: строчная ссылка задаёт тип, когда пакет вычисляется в коде")
       .isNotEmpty();
-    assertThat(names(street))
+    assertThat(names(property))
       .as("рекомендация: у объекта с типом из строчной ссылки доступны его свойства")
       .containsExactly("Строка");
   }
