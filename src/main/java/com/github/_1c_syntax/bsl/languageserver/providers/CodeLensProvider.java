@@ -42,24 +42,29 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Провайдер, обрабатывающий запросы {@code textDocument/codeLens} и {@code codeLens/resolve}.
+ * Провайдер, обрабатывающий запросы {@code textDocument/codeLens}, {@code codeLens/resolve},
+ * а так же отвечающий за отправку запроса {@code workspace/codeLens/refresh}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">CodeLens Request specification</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">CodeLens Resolve Request specification</a>.
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">CodeLens Refresh Request specification</a>.
  */
 @Component
 @RequiredArgsConstructor
 public class CodeLensProvider {
-
-  private final ObjectProvider<CodeLensSupplier> enabledCodeLensSuppliersProvider;
-  private final Map<String, CodeLensSupplier> codeLensSuppliersById;
+  private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById;
+  private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final JsonMapper jsonMapper;
 
   /**
    * Получение списка {@link CodeLens} в документе.
@@ -144,36 +149,54 @@ public class CodeLensProvider {
   /**
    * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    * <p>
-   * Если клиент поддерживает метод {@code workspace/codeLens/refresh},
-   * запрашивает у клиента обновление данных линз.
+   * В случае поддержки запроса подключенным клиентом инициирует запрос {@code workspace/codeLens/refresh}.
    *
    * @param event Событие
    */
   @EventListener
-  @SneakyThrows
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    if (!clientHolder.isConnected()) {
-      return;
+    refreshCodeLenses();
+  }
+
+  /**
+   * Извлечь данные линзы из линзы.
+   * <p>
+   * Возвращает объект данных типа, с которым был зарегистрирован
+   * сапплаер линзы (параметр-тип класса сапплаера).
+   *
+   * @param codeLens Линза, из которой необходимо извлечь данные.
+   * @return Извлеченные данные линзы либо {@code null}, если линза пришла без поля
+   *         {@link CodeLens#getData()} — резолвить такую линзу нечем.
+   */
+  @SneakyThrows
+  public @Nullable CodeLensData extractData(CodeLens codeLens) {
+    var rawCodeLensData = codeLens.getData();
+
+    if (rawCodeLensData == null) {
+      return null;
     }
 
-    var clientSupportsCodeLensRefresh = clientCapabilitiesHolder.getCapabilities()
+    if (rawCodeLensData instanceof CodeLensData data) {
+      return data;
+    }
+
+    return jsonMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
+  }
+
+  /**
+   * Отправить запрос на обновление линз кода.
+   */
+  public void refreshCodeLenses() {
+    boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)
       .map(WorkspaceClientCapabilities::getCodeLens)
       .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
       .orElse(false);
 
-    if (clientSupportsCodeLensRefresh) {
-      refreshCodeLenses();
+    if (!clientSupportsRefreshCodeLenses) {
+      return;
     }
-  }
 
-  /**
-   * Отправить запрос клиенту на обновление линз ({@code workspace/codeLens/refresh}).
-   */
-  private void refreshCodeLenses() {
-    clientHolder.execIfConnected((LanguageClient client) -> {
-      client.refreshCodeLenses();
-      return null;
-    });
+    clientHolder.execIfConnected(LanguageClient::refreshCodeLenses);
   }
 }
