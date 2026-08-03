@@ -45,14 +45,14 @@ final class TypeDecorations {
 
   /** Неизменяемая копия плоской карты (пустая — общий emptyMap). */
   static <K, V> Map<K, V> immutableCopy(Map<K, V> source) {
-    return source == null || source.isEmpty()
+    return source.isEmpty()
       ? Collections.emptyMap()
       : Collections.unmodifiableMap(new LinkedHashMap<>(source));
   }
 
   /** Неизменяемая глубокая копия вложенной карты (ключ → имя → значение). */
   static <K, N, V> Map<K, Map<N, V>> immutableNestedCopy(Map<K, Map<N, V>> source) {
-    if (source == null || source.isEmpty()) {
+    if (source.isEmpty()) {
       return Collections.emptyMap();
     }
     var copy = new LinkedHashMap<K, Map<N, V>>();
