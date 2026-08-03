@@ -77,6 +77,9 @@ public class SymbolTypeIndex {
   /** Коллекция строк — у дерева значений строки лежат в ней, а не в самом дереве. */
   private static final String ROWS = "Строки";
 
+  /** Текущая строка таблицы формы: обходом её не взять, только этим свойством. */
+  private static final String CURRENT_DATA = "ТекущиеДанные";
+
   /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
   private static final int MIN_METADATA_SEGMENTS = 3;
 
@@ -820,23 +823,48 @@ public class SymbolTypeIndex {
     if (linked.isEmpty()) {
       return resolveSimple(td.name());
     }
-    var element = elementOf(linked);
+    var element = elementOf(linked, context.fileType());
     return element.isEmpty() ? linked : element;
   }
 
   /**
-   * Элемент коллекции: уточнённый по месту, а если его нет — тип элемента из реестра.
+   * Элемент коллекции: уточнённый по месту, если его нет — тип элемента из реестра,
+   * а у таблицы формы — тип её текущих данных.
+   * <p>
+   * Таблица формы элементами не обходится: строку из неё берут через
+   * {@code ТекущиеДанные}, и тип этой строки платформа объявляет сама. Поэтому для
+   * записи «строка: {@code См.} таблица формы» строка берётся оттуда же, откуда её
+   * берёт код.
    *
-   * @param types типы коллекции.
+   * @param types    типы коллекции.
+   * @param fileType язык, на котором ищется член.
    * @return типы элемента; {@link TypeSet#EMPTY}, если коллекции среди них нет.
    */
-  private TypeSet elementOf(TypeSet types) {
+  private TypeSet elementOf(TypeSet types, FileType fileType) {
     var result = TypeSet.EMPTY;
     for (var ref : types.refs()) {
       var attached = types.getElementTypes(ref);
-      result = result.union(attached.isEmpty() ? typeRegistry.getDefaultElementTypes(ref) : attached);
+      if (!attached.isEmpty()) {
+        result = result.union(attached);
+        continue;
+      }
+      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      result = result.union(defaults.isEmpty() ? currentDataOf(ref, fileType) : defaults);
     }
     return result;
+  }
+
+  /**
+   * Тип текущих данных — строка таблицы формы, как её объявляет сама таблица.
+   *
+   * @param ref      тип-таблица.
+   * @param fileType язык, на котором ищется член.
+   * @return типы текущих данных; {@link TypeSet#EMPTY}, если такого члена нет.
+   */
+  private TypeSet currentDataOf(TypeRef ref, FileType fileType) {
+    return typeRegistry.findMember(ref, MemberKind.PROPERTY, CURRENT_DATA, fileType)
+      .map(MemberDescriptor::returnTypes)
+      .orElse(TypeSet.EMPTY);
   }
 
   private TypeSet resolveSimple(String name) {

@@ -126,6 +126,26 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
     assertThat(names(item)).containsExactly("ПолеФормы");
   }
 
+  @Test
+  void refinedRowRecordGivesRowOfFormTable() {
+    // given: голова записи говорит, что это строка, а ссылка указывает на таблицу формы.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  СтрокаТаблицы - ДанныеФормыЭлементКоллекции: См. Справочник.Справочник1.Форма.ФормаСписка.Элементы.Список
+      Процедура ОбработкаСтроки(СтрокаТаблицы) Экспорт
+
+      	ТипСтроки = СтрокаТаблицы;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var row = at(documentContext, "ТипСтроки = СтрокаТаблицы", "ТипСтроки = ".length());
+
+    // then: строка таблицы, а не сама таблица — такую же строку даёт «Список.ТекущиеДанные».
+    assertThat(names(row)).containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок");
+  }
+
   private DocumentContext documentWithFormReference() {
     return TestUtils.getDocumentContext("""
       // Параметры:
