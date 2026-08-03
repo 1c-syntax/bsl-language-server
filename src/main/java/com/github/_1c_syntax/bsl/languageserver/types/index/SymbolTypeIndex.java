@@ -850,9 +850,12 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * @param ref      тип-владелец.
+   * Типы свойства {@code ТекущиеДанные} у указанного типа — строки, которую отдаёт
+   * таблица формы.
+   *
+   * @param ref      тип-владелец свойства.
    * @param fileType язык, на котором ищется член.
-   * @return типы свойства {@code ТекущиеДанные}; {@link TypeSet#EMPTY}, если его нет.
+   * @return типы свойства; {@link TypeSet#EMPTY}, если такого свойства у типа нет.
    */
   private TypeSet currentDataOf(TypeRef ref, FileType fileType) {
     return typeRegistry.findMember(ref, MemberKind.PROPERTY, CURRENT_DATA, fileType)
