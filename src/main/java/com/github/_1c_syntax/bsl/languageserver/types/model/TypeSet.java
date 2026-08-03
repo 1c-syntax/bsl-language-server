@@ -168,45 +168,41 @@ public record TypeSet(
     var merged = new LinkedHashSet<>(this.refs);
     merged.addAll(other.refs);
 
-    var mergedElements = new LinkedHashMap<>(this.elementTypes);
-    for (var entry : other.elementTypes.entrySet()) {
-      mergedElements.merge(entry.getKey(), entry.getValue(), TypeSet::union);
-    }
+    return new TypeSet(
+      merged,
+      mergedFlat(this.elementTypes, other.elementTypes, TypeSet::union),
+      mergedNested(this.localFields, other.localFields, LocalField::merge),
+      mergedFlat(this.lazyElements, other.lazyElements, LazyTypeSet::combine),
+      mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
+      mergedFlat(this.describedTypes, other.describedTypes, TypeSet::union)
+    );
+  }
 
-    var mergedFields = new LinkedHashMap<TypeRef, Map<String, LocalField>>();
-    for (var entry : this.localFields.entrySet()) {
-      mergedFields.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+  /** Слияние плоской декорационной мапы: пересекающиеся ключи сливаются {@code merger}. */
+  private static <V> Map<TypeRef, V> mergedFlat(Map<TypeRef, V> first, Map<TypeRef, V> second,
+                                                BinaryOperator<V> merger) {
+    if (second.isEmpty()) {
+      return first;
     }
-    for (var entry : other.localFields.entrySet()) {
-      var existing = mergedFields.computeIfAbsent(entry.getKey(), k -> new LinkedHashMap<>());
-      for (var fieldEntry : entry.getValue().entrySet()) {
-        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), LocalField::merge);
-      }
-    }
+    var result = new LinkedHashMap<>(first);
+    second.forEach((ref, value) -> result.merge(ref, value, merger));
+    return result;
+  }
 
-    var mergedLazyElements = new LinkedHashMap<>(this.lazyElements);
-    for (var entry : other.lazyElements.entrySet()) {
-      mergedLazyElements.merge(entry.getKey(), entry.getValue(), LazyTypeSet::combine);
+  /** Слияние вложенной декорационной мапы: сливаются и типы-ключи, и записи внутри них. */
+  private static <V> Map<TypeRef, Map<String, V>> mergedNested(Map<TypeRef, Map<String, V>> first,
+                                                               Map<TypeRef, Map<String, V>> second,
+                                                               BinaryOperator<V> merger) {
+    if (second.isEmpty()) {
+      return first;
     }
-
-    var mergedLazyFields = new LinkedHashMap<TypeRef, Map<String, LazyField>>();
-    for (var entry : this.lazyFields.entrySet()) {
-      mergedLazyFields.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
-    }
-    for (var entry : other.lazyFields.entrySet()) {
-      var existing = mergedLazyFields.computeIfAbsent(entry.getKey(), k -> new LinkedHashMap<>());
-      for (var fieldEntry : entry.getValue().entrySet()) {
-        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), LazyField::merge);
-      }
-    }
-
-    var mergedDescribed = new LinkedHashMap<>(this.describedTypes);
-    for (var entry : other.describedTypes.entrySet()) {
-      mergedDescribed.merge(entry.getKey(), entry.getValue(), TypeSet::union);
-    }
-
-    return new TypeSet(merged, mergedElements, mergedFields, mergedLazyElements, mergedLazyFields,
-      mergedDescribed);
+    var result = new LinkedHashMap<TypeRef, Map<String, V>>();
+    first.forEach((ref, entries) -> result.put(ref, new LinkedHashMap<>(entries)));
+    second.forEach((ref, entries) -> {
+      var target = result.computeIfAbsent(ref, key -> new LinkedHashMap<>());
+      entries.forEach((name, value) -> target.merge(name, value, merger));
+    });
+    return result;
   }
 
   /**
@@ -237,12 +233,11 @@ public record TypeSet(
     // Ленивая декорация равна прежней по ключу, поэтому изменилось ли её содержимое,
     // сравнением не узнать — набор с ленивыми декорациями пересобирается всегда.
     var mappedDescribed = mapKeys(describedTypes, mapper, TypeSet::union, types -> types.mapRefs(mapper));
-    changed = changed
-      || !mappedElements.equals(elementTypes)
+    var decorationsChanged = !mappedElements.equals(elementTypes)
       || !mappedFields.equals(localFields)
-      || !mappedDescribed.equals(describedTypes)
-      || !lazyElements.isEmpty()
-      || !lazyFields.isEmpty();
+      || !mappedDescribed.equals(describedTypes);
+    var hasLazyDecorations = !lazyElements.isEmpty() || !lazyFields.isEmpty();
+    changed = changed || decorationsChanged || hasLazyDecorations;
     if (!changed) {
       return this;
     }
@@ -434,7 +429,7 @@ public record TypeSet(
   /**
    * @return типы, описанные всеми описателями набора; {@link #EMPTY}, если их нет.
    */
-  public TypeSet getDescribedTypes() {
+  public TypeSet allDescribedTypes() {
     TypeSet acc = EMPTY;
     for (var described : describedTypes.values()) {
       acc = acc.union(described);

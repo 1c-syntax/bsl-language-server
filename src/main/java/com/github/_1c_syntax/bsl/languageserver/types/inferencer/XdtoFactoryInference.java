@@ -144,7 +144,7 @@ public class XdtoFactoryInference {
     if (arguments.isEmpty()) {
       return null;
     }
-    var described = inferrer.apply(arguments.get(0)).getDescribedTypes();
+    var described = inferrer.apply(arguments.get(0)).allDescribedTypes();
     return described.isEmpty() ? null : described;
   }
 }
