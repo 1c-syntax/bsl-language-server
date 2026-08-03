@@ -6083,5 +6083,492 @@
         ]
       }
     ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ОбъектXDTO",
+    "nameRu": "ОбъектXDTO",
+    "nameEn": "XDTODataObject",
+    "description": "Объект XDTO — значение объектного типа пакета XDTO.",
+    "members": [
+      {
+        "name": "Владелец",
+        "nameRu": "Владелец",
+        "nameEn": "Owner",
+        "kind": "METHOD",
+        "returnType": "ОбъектXDTO",
+        "description": "Объект, которому принадлежит текущий объект."
+      },
+      {
+        "name": "ВладеющееСвойство",
+        "nameRu": "ВладеющееСвойство",
+        "nameEn": "OwningProperty",
+        "kind": "METHOD",
+        "returnType": "СвойствоXDTO",
+        "description": "Свойство владельца, в котором содержится текущий объект."
+      },
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "description": "Добавляет значение в свойство-список."
+      },
+      {
+        "name": "Получить",
+        "nameRu": "Получить",
+        "nameEn": "Get",
+        "kind": "METHOD",
+        "returnType": "Произвольный",
+        "description": "Значение свойства."
+      },
+      {
+        "name": "ПолучитьXDTO",
+        "nameRu": "ПолучитьXDTO",
+        "nameEn": "GetXDTO",
+        "kind": "METHOD",
+        "returnType": "ОбъектXDTO",
+        "description": "Значение свойства как объект или значение XDTO."
+      },
+      {
+        "name": "ПолучитьСписок",
+        "nameRu": "ПолучитьСписок",
+        "nameEn": "GetList",
+        "kind": "METHOD",
+        "returnType": "СписокXDTO",
+        "description": "Значение свойства как список."
+      },
+      {
+        "name": "Последовательность",
+        "nameRu": "Последовательность",
+        "nameEn": "Sequence",
+        "kind": "METHOD",
+        "returnType": "ПоследовательностьXDTO",
+        "description": "Последовательность значений объекта."
+      },
+      {
+        "name": "Проверить",
+        "nameRu": "Проверить",
+        "nameEn": "Validate",
+        "kind": "METHOD",
+        "description": "Проверяет объект на соответствие его типу."
+      },
+      {
+        "name": "Сбросить",
+        "nameRu": "Сбросить",
+        "nameEn": "Unset",
+        "kind": "METHOD",
+        "description": "Сбрасывает значение свойства."
+      },
+      {
+        "name": "Свойства",
+        "nameRu": "Свойства",
+        "nameEn": "Properties",
+        "kind": "METHOD",
+        "returnType": "КоллекцияСвойствXDTO",
+        "description": "Коллекция свойств типа объекта."
+      },
+      {
+        "name": "Тип",
+        "nameRu": "Тип",
+        "nameEn": "Type",
+        "kind": "METHOD",
+        "returnType": "ТипОбъектаXDTO",
+        "description": "Тип объекта."
+      },
+      {
+        "name": "Установить",
+        "nameRu": "Установить",
+        "nameEn": "Set",
+        "kind": "METHOD",
+        "description": "Устанавливает значение свойства."
+      },
+      {
+        "name": "Установлено",
+        "nameRu": "Установлено",
+        "nameEn": "IsSet",
+        "kind": "METHOD",
+        "returnType": "Булево",
+        "description": "Установлено ли значение свойства."
+      },
+      {
+        "name": "Фабрика",
+        "nameRu": "Фабрика",
+        "nameEn": "Factory",
+        "kind": "METHOD",
+        "returnType": "ФабрикаXDTO",
+        "description": "Фабрика, которой создан объект."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ЗначениеXDTO",
+    "nameRu": "ЗначениеXDTO",
+    "nameEn": "XDTODataValue",
+    "description": "Значение простого типа XDTO.",
+    "members": [
+      {
+        "name": "Владелец",
+        "nameRu": "Владелец",
+        "nameEn": "Owner",
+        "kind": "PROPERTY",
+        "returnType": "ОбъектXDTO",
+        "description": "Объект, которому принадлежит значение."
+      },
+      {
+        "name": "Тип",
+        "nameRu": "Тип",
+        "nameEn": "Type",
+        "kind": "METHOD",
+        "returnType": "ТипЗначенияXDTO",
+        "description": "Тип значения."
+      },
+      {
+        "name": "Фабрика",
+        "nameRu": "Фабрика",
+        "nameEn": "Factory",
+        "kind": "METHOD",
+        "returnType": "ФабрикаXDTO",
+        "description": "Фабрика, которой создано значение."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "СписокXDTO",
+    "nameRu": "СписокXDTO",
+    "nameEn": "XDTOList",
+    "description": "Список значений свойства XDTO.",
+    "elementTypes": [
+      "ОбъектXDTO"
+    ],
+    "members": [
+      {
+        "name": "Владелец",
+        "nameRu": "Владелец",
+        "nameEn": "Owner",
+        "kind": "PROPERTY",
+        "returnType": "ОбъектXDTO",
+        "description": "Объект, которому принадлежит список."
+      },
+      {
+        "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
+        "kind": "METHOD",
+        "description": "Добавляет значение в список."
+      },
+      {
+        "name": "Количество",
+        "nameRu": "Количество",
+        "nameEn": "Count",
+        "kind": "METHOD",
+        "returnType": "Число",
+        "description": "Количество значений списка."
+      },
+      {
+        "name": "Получить",
+        "nameRu": "Получить",
+        "nameEn": "Get",
+        "kind": "METHOD",
+        "returnType": "ОбъектXDTO",
+        "description": "Значение списка по индексу."
+      },
+      {
+        "name": "Очистить",
+        "nameRu": "Очистить",
+        "nameEn": "Clear",
+        "kind": "METHOD",
+        "description": "Очищает список."
+      },
+      {
+        "name": "Удалить",
+        "nameRu": "Удалить",
+        "nameEn": "Delete",
+        "kind": "METHOD",
+        "description": "Удаляет значение списка."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ТипОбъектаXDTO",
+    "nameRu": "ТипОбъектаXDTO",
+    "nameEn": "XDTOObjectType",
+    "description": "Объектный тип пакета XDTO.",
+    "members": [
+      {
+        "name": "URIПространстваИмен",
+        "nameRu": "URIПространстваИмен",
+        "nameEn": "NamespaceURI",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "description": "Пространство имён типа."
+      },
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "description": "Имя типа."
+      },
+      {
+        "name": "БазовыйТип",
+        "nameRu": "БазовыйТип",
+        "nameEn": "BaseType",
+        "kind": "PROPERTY",
+        "returnType": "ТипОбъектаXDTO",
+        "description": "Базовый тип."
+      },
+      {
+        "name": "Свойства",
+        "nameRu": "Свойства",
+        "nameEn": "Properties",
+        "kind": "PROPERTY",
+        "returnType": "КоллекцияСвойствXDTO",
+        "description": "Свойства типа."
+      },
+      {
+        "name": "Проверить",
+        "nameRu": "Проверить",
+        "nameEn": "Validate",
+        "kind": "METHOD",
+        "returnType": "Булево",
+        "description": "Проверяет значение на соответствие типу."
+      },
+      {
+        "name": "ЭтоПотомок",
+        "nameRu": "ЭтоПотомок",
+        "nameEn": "IsDescendant",
+        "kind": "METHOD",
+        "returnType": "Булево",
+        "description": "Является ли тип потомком указанного."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "СвойствоXDTO",
+    "nameRu": "СвойствоXDTO",
+    "nameEn": "XDTOProperty",
+    "description": "Свойство типа XDTO.",
+    "members": [
+      {"name": "Имя", "nameRu": "Имя", "nameEn": "Name", "kind": "PROPERTY", "returnType": "Строка", "description": "Имя свойства."},
+      {"name": "ЛокальноеИмя", "nameRu": "ЛокальноеИмя", "nameEn": "LocalName", "kind": "PROPERTY", "returnType": "Строка", "description": "Локальное имя свойства."},
+      {"name": "URIПространстваИмен", "nameRu": "URIПространстваИмен", "nameEn": "NamespaceURI", "kind": "PROPERTY", "returnType": "Строка", "description": "Пространство имён свойства."},
+      {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "kind": "PROPERTY", "returnTypes": ["ТипЗначенияXDTO", "ТипОбъектаXDTO"], "description": "Тип значения свойства."},
+      {"name": "ТипВладелец", "nameRu": "ТипВладелец", "nameEn": "OwnerType", "kind": "PROPERTY", "returnTypes": ["ТипОбъектаXDTO", "ОбъектXDTO"], "description": "Тип, которому принадлежит свойство."},
+      {"name": "ОбъектВладелец", "nameRu": "ОбъектВладелец", "nameEn": "OwnerObject", "kind": "PROPERTY", "returnType": "ОбъектXDTO", "description": "Объект, которому принадлежит свойство."},
+      {"name": "ЗначениеПоУмолчанию", "nameRu": "ЗначениеПоУмолчанию", "nameEn": "DefaultValue", "kind": "PROPERTY", "returnType": "ЗначениеXDTO", "description": "Значение свойства по умолчанию."},
+      {"name": "ВозможноПустое", "nameRu": "ВозможноПустое", "nameEn": "Nillable", "kind": "PROPERTY", "returnType": "Булево", "description": "Допускает ли свойство пустое значение."},
+      {"name": "Квалифицированное", "nameRu": "Квалифицированное", "nameEn": "Qualified", "kind": "PROPERTY", "returnType": "Булево", "description": "Квалифицировано ли имя свойства пространством имён."},
+      {"name": "Фиксированное", "nameRu": "Фиксированное", "nameEn": "Fixed", "kind": "PROPERTY", "returnType": "Булево", "description": "Фиксировано ли значение свойства."},
+      {"name": "Форма", "nameRu": "Форма", "nameEn": "Form", "kind": "PROPERTY", "returnType": "ФормаXML", "description": "Форма представления свойства в XML."},
+      {"name": "ВерхняяГраница", "nameRu": "ВерхняяГраница", "nameEn": "UpperBound", "kind": "PROPERTY", "returnType": "Число", "description": "Верхняя граница количества значений."},
+      {"name": "НижняяГраница", "nameRu": "НижняяГраница", "nameEn": "LowerBound", "kind": "PROPERTY", "returnType": "Число", "description": "Нижняя граница количества значений."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПоследовательностьXDTO",
+    "nameRu": "ПоследовательностьXDTO",
+    "nameEn": "XDTOSequence",
+    "description": "Последовательность значений объекта XDTO.",
+    "members": [
+      {"name": "Владелец", "nameRu": "Владелец", "nameEn": "Owner", "kind": "PROPERTY", "returnType": "ОбъектXDTO", "description": "Объект, которому принадлежит последовательность."},
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество элементов последовательности."},
+      {"name": "ПолучитьЗначение", "nameRu": "ПолучитьЗначение", "nameEn": "GetValue", "kind": "METHOD", "returnTypes": ["ЗначениеXDTO", "ОбъектXDTO", "Неопределено"], "description": "Значение элемента последовательности."},
+      {"name": "ПолучитьЗначениеXDTO", "nameRu": "ПолучитьЗначениеXDTO", "nameEn": "GetXDTOValue", "kind": "METHOD", "returnTypes": ["ЗначениеXDTO", "ОбъектXDTO", "Неопределено"], "description": "Значение элемента последовательности как значение XDTO."},
+      {"name": "ПолучитьСвойство", "nameRu": "ПолучитьСвойство", "nameEn": "GetProperty", "kind": "METHOD", "returnTypes": ["СвойствоXDTO", "Неопределено"], "description": "Свойство элемента последовательности."},
+      {"name": "ПолучитьТекст", "nameRu": "ПолучитьТекст", "nameEn": "GetText", "kind": "METHOD", "returnType": "Строка", "description": "Текст элемента последовательности."},
+      {"name": "УстановитьЗначение", "nameRu": "УстановитьЗначение", "nameEn": "SetValue", "kind": "METHOD", "description": "Устанавливает значение элемента последовательности."},
+      {"name": "Вставить", "nameRu": "Вставить", "nameEn": "Insert", "kind": "METHOD", "description": "Вставляет элемент в последовательность."},
+      {"name": "Добавить", "nameRu": "Добавить", "nameEn": "Add", "kind": "METHOD", "description": "Добавляет элемент в последовательность."},
+      {"name": "Удалить", "nameRu": "Удалить", "nameEn": "Delete", "kind": "METHOD", "description": "Удаляет элемент последовательности."},
+      {"name": "Очистить", "nameRu": "Очистить", "nameEn": "Clear", "kind": "METHOD", "description": "Очищает последовательность."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КоллекцияСвойствXDTO",
+    "nameRu": "КоллекцияСвойствXDTO",
+    "nameEn": "XDTOPropertyCollection",
+    "description": "Коллекция свойств типа XDTO.",
+    "elementTypes": ["СвойствоXDTO"],
+    "members": [
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество свойств."},
+      {"name": "Получить", "nameRu": "Получить", "nameEn": "Get", "kind": "METHOD", "returnTypes": ["СвойствоXDTO", "Неопределено"], "description": "Свойство по индексу или имени."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПакетXDTO",
+    "nameRu": "ПакетXDTO",
+    "nameEn": "XDTOPackage",
+    "description": "Пакет XDTO, известный фабрике.",
+    "members": [
+      {"name": "URIПространстваИмен", "nameRu": "URIПространстваИмен", "nameEn": "NamespaceURI", "kind": "PROPERTY", "returnType": "Строка", "description": "Пространство имён пакета."},
+      {"name": "КорневыеСвойства", "nameRu": "КорневыеСвойства", "nameEn": "RootProperties", "kind": "PROPERTY", "returnType": "КоллекцияСвойствXDTO", "description": "Корневые свойства пакета."},
+      {"name": "Зависимости", "nameRu": "Зависимости", "nameEn": "Dependencies", "kind": "PROPERTY", "returnType": "КоллекцияПакетовXDTO", "description": "Пакеты, от которых зависит этот пакет."},
+      {"name": "КвалифицированнаяФормаЭлемента", "nameRu": "КвалифицированнаяФормаЭлемента", "nameEn": "ElementFormQualified", "kind": "PROPERTY", "returnType": "Булево", "description": "Квалифицированы ли имена элементов пакета."},
+      {"name": "КвалифицированнаяФормаАтрибута", "nameRu": "КвалифицированнаяФормаАтрибута", "nameEn": "AttributeFormQualified", "kind": "PROPERTY", "returnType": "Булево", "description": "Квалифицированы ли имена атрибутов пакета."},
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество типов пакета."},
+      {"name": "Получить", "nameRu": "Получить", "nameEn": "Get", "kind": "METHOD", "returnTypes": ["ТипЗначенияXDTO", "ТипОбъектаXDTO"], "description": "Тип пакета по индексу или имени."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "КоллекцияПакетовXDTO",
+    "nameRu": "КоллекцияПакетовXDTO",
+    "nameEn": "XDTOPackageCollection",
+    "description": "Коллекция пакетов XDTO фабрики.",
+    "elementTypes": ["ПакетXDTO"],
+    "members": [
+      {"name": "Количество", "nameRu": "Количество", "nameEn": "Count", "kind": "METHOD", "returnType": "Число", "description": "Количество пакетов."},
+      {"name": "Получить", "nameRu": "Получить", "nameEn": "Get", "kind": "METHOD", "returnType": "ПакетXDTO", "description": "Пакет по индексу или пространству имён."}
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ТипЗначенияXDTO",
+    "nameRu": "ТипЗначенияXDTO",
+    "nameEn": "XDTOValueType",
+    "description": "Простой тип пакета XDTO.",
+    "members": [
+      {
+        "name": "URIПространстваИмен",
+        "nameRu": "URIПространстваИмен",
+        "nameEn": "NamespaceURI",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "description": "Пространство имён типа."
+      },
+      {
+        "name": "Имя",
+        "nameRu": "Имя",
+        "nameEn": "Name",
+        "kind": "PROPERTY",
+        "returnType": "Строка",
+        "description": "Имя типа."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ФабрикаXDTO",
+    "nameRu": "ФабрикаXDTO",
+    "nameEn": "XDTOFactory",
+    "description": "Фабрика XDTO: создаёт значения и объекты по типам пакетов.",
+    "members": [
+      {
+        "name": "Пакеты",
+        "nameRu": "Пакеты",
+        "nameEn": "Packages",
+        "kind": "PROPERTY",
+        "returnType": "КоллекцияПакетовXDTO",
+        "description": "Пакеты фабрики."
+      },
+      {
+        "name": "Создать",
+        "nameRu": "Создать",
+        "nameEn": "Create",
+        "kind": "METHOD",
+        "returnTypes": [
+          "ЗначениеXDTO",
+          "ОбъектXDTO"
+        ],
+        "description": "Создаёт значение или объект указанного типа.",
+        "signatures": [
+          {
+            "description": "Создание значения из значения",
+            "returnType": "ЗначениеXDTO",
+            "parameters": [
+              {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "types": ["ТипЗначенияXDTO"]},
+              {"name": "Значение", "nameRu": "Значение", "nameEn": "Value", "types": ["Произвольный"]}
+            ]
+          },
+          {
+            "description": "Создание значения по лексическому представлению",
+            "returnType": "ЗначениеXDTO",
+            "parameters": [
+              {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "types": ["ТипЗначенияXDTO"]},
+              {"name": "Строка", "nameRu": "Строка", "nameEn": "String", "types": ["Строка"]}
+            ]
+          },
+          {
+            "description": "Создание объекта",
+            "returnType": "ОбъектXDTO",
+            "parameters": [
+              {"name": "Тип", "nameRu": "Тип", "nameEn": "Type", "types": ["ТипОбъектаXDTO"]}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Тип",
+        "nameRu": "Тип",
+        "nameEn": "Type",
+        "kind": "METHOD",
+        "returnTypes": [
+          "ТипЗначенияXDTO",
+          "ТипОбъектаXDTO",
+          "Неопределено"
+        ],
+        "description": "Тип пакета по пространству имён и имени.",
+        "signatures": [
+          {
+            "description": "По имени и URI пространства имен",
+            "parameters": [
+              {"name": "URIПространстваИмен", "nameRu": "URIПространстваИмен", "nameEn": "NamespaceURI", "types": ["Строка"]},
+              {"name": "Имя", "nameRu": "Имя", "nameEn": "Name", "types": ["Строка"]}
+            ]
+          },
+          {
+            "description": "По расширенному имени XML",
+            "parameters": [
+              {"name": "ИмяXML", "nameRu": "ИмяXML", "nameEn": "XMLName", "types": ["РасширенноеИмяXML"]}
+            ]
+          },
+          {
+            "description": "По типу данных XML",
+            "parameters": [
+              {"name": "ТипДанных", "nameRu": "ТипДанных", "nameEn": "DataType", "types": ["ТипДанныхXML"]}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПрочитатьXML",
+        "nameRu": "ПрочитатьXML",
+        "nameEn": "ReadXML",
+        "kind": "METHOD",
+        "returnType": "ОбъектXDTO",
+        "description": "Читает объект из XML."
+      },
+      {
+        "name": "ЗаписатьXML",
+        "nameRu": "ЗаписатьXML",
+        "nameEn": "WriteXML",
+        "kind": "METHOD",
+        "description": "Записывает объект в XML."
+      },
+      {
+        "name": "ПрочитатьJSON",
+        "nameRu": "ПрочитатьJSON",
+        "nameEn": "ReadJSON",
+        "kind": "METHOD",
+        "returnType": "ОбъектXDTO",
+        "description": "Читает объект из JSON."
+      },
+      {
+        "name": "ЗаписатьJSON",
+        "nameRu": "ЗаписатьJSON",
+        "nameEn": "WriteJSON",
+        "kind": "METHOD",
+        "description": "Записывает объект в JSON."
+      }
+    ]
   }
 ]

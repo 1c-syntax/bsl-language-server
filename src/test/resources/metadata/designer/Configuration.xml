@@ -215,6 +215,7 @@
 			<ScheduledJob>РегламентноеЗаданиеПриватныйМетод</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеПредопределенноеНесколькоПараметров</ScheduledJob>
 			<ExternalDataSource>ВнешнийИсточникДанных1</ExternalDataSource>
+			<XDTOPackage>ПакетТест</XDTOPackage>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

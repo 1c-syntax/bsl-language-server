@@ -272,7 +272,7 @@ public class OpenDataObjectInference {
     if (refs.isEmpty()) {
       return base;
     }
-    return base.withElement(base.refs().iterator().next(), TypeSet.of(refs));
+    return base.withDescribed(base.refs().iterator().next(), TypeSet.of(refs));
   }
 
   /**
@@ -297,7 +297,7 @@ public class OpenDataObjectInference {
     }
     for (var ref : receiver.refs()) {
       if (isTypeDescriptionType(ref.qualifiedName())) {
-        var described = receiver.getElementTypes(ref);
+        var described = receiver.getDescribedTypes(ref);
         if (!described.isEmpty()) {
           return described;
         }
@@ -502,9 +502,9 @@ public class OpenDataObjectInference {
     var inferred = types.of(expressionTree);
     for (var ref : inferred.refs()) {
       if (isTypeDescriptionType(ref.qualifiedName())) {
-        var elementTypes = inferred.getElementTypes(ref);
-        if (!elementTypes.isEmpty()) {
-          return elementTypes;
+        var described = inferred.getDescribedTypes(ref);
+        if (!described.isEmpty()) {
+          return described;
         }
       }
     }

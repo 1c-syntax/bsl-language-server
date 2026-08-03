@@ -43,7 +43,7 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
   private TypeService typeService;
 
   @Test
-  void singleTypeStringPopulatesElementTypes() {
+  void singleTypeStringPopulatesDescribedTypes() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/TypeDescriptionConstructor.bsl");
@@ -57,13 +57,13 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
       .extracting(ref -> ref.qualifiedName())
       .contains("ОписаниеТипов");
     var ref = types.refs().iterator().next();
-    assertThat(types.getElementTypes(ref).refs())
+    assertThat(types.getDescribedTypes(ref).refs())
       .extracting(r -> r.qualifiedName())
       .contains("Число");
   }
 
   @Test
-  void multipleTypesPopulateElementTypes() {
+  void multipleTypesPopulateDescribedTypes() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/TypeDescriptionConstructor.bsl");
@@ -75,7 +75,7 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
 
     // then
     var ref = types.refs().iterator().next();
-    assertThat(types.getElementTypes(ref).refs())
+    assertThat(types.getDescribedTypes(ref).refs())
       .extracting(r -> r.qualifiedName())
       .containsExactlyInAnyOrder("Строка", "Число");
   }
@@ -98,7 +98,7 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
   }
 
   @Test
-  void unknownTypeNameInLiteralProducesNoElementType() {
+  void unknownTypeNameInLiteralProducesNoDescribedType() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/TypeDescriptionConstructor.bsl");
@@ -108,12 +108,12 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
       "ОписаниеНеизвестногоТипа = Новый ОписаниеТипов(\"НеизвестныйТипX\")",
       "ОписаниеНеизвестногоТипа = ".length());
 
-    // then — у element-types нет «НеизвестныйТипX» (имя не зарезолвилось)
+    // then — среди описываемых типов нет «НеизвестныйТипX» (имя не зарезолвилось)
     assertThat(types.refs())
       .extracting(ref -> ref.qualifiedName())
       .contains("ОписаниеТипов");
     var ref = types.refs().iterator().next();
-    assertThat(types.getElementTypes(ref).refs())
+    assertThat(types.getDescribedTypes(ref).refs())
       .extracting(r -> r.qualifiedName())
       .doesNotContain("НеизвестныйТипX");
   }
@@ -148,7 +148,7 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
 
     // then — пустые элементы между запятыми отброшены, валидные собраны.
     var ref = types.refs().iterator().next();
-    assertThat(types.getElementTypes(ref).refs())
+    assertThat(types.getDescribedTypes(ref).refs())
       .extracting(r -> r.qualifiedName())
       .containsExactlyInAnyOrder("Число", "Строка");
   }
@@ -166,7 +166,7 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
     // then
     assertThat(types.refs()).isNotEmpty();
     var ref = types.refs().iterator().next();
-    assertThat(types.getElementTypes(ref).refs())
+    assertThat(types.getDescribedTypes(ref).refs())
       .extracting(r -> r.qualifiedName())
       .contains("Число");
   }
