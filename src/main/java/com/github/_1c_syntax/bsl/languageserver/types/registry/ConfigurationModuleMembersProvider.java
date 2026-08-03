@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -87,6 +88,12 @@ public class ConfigurationModuleMembersProvider {
    * значением.
    */
   private static final String COMMON_MODULE_PLATFORM_TYPE_NAME = "ОбщийМодуль";
+
+  /** Начало пояснения после имени типа: «Массив из …», «Массив&lt;…&gt;», «Массив[…]». */
+  private static final Pattern TYPE_NAME_TAIL = Pattern.compile("[\\s<\\[]");
+
+  /** Делим имя надвое: само имя и всё, что за ним. */
+  private static final int TYPE_NAME_AND_TAIL = 2;
 
   private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_EN = Map.of(
     ModuleType.ManagerModule, "Manager",
@@ -390,11 +397,21 @@ public class ConfigurationModuleMembersProvider {
    * @return тип по имени; {@link TypeRef#UNKNOWN}, если имя пустое или не резолвится.
    */
   private TypeRef resolveTypeName(TypeDescription type) {
-    var raw = type.name();
-    if (raw == null || raw.isBlank()) {
+    return resolveHeadName(type.name());
+  }
+
+  /**
+   * Разрешает имя типа, отбрасывая пояснения после него: «Массив из Произвольный»,
+   * «Массив&lt;Произвольный&gt;» и «Массив[Произвольный]» — это {@code Массив}.
+   *
+   * @param raw имя типа из описания.
+   * @return тип по имени; {@link TypeRef#UNKNOWN}, если имя пустое или не резолвится.
+   */
+  private TypeRef resolveHeadName(String raw) {
+    if (raw.isBlank()) {
       return TypeRef.UNKNOWN;
     }
-    var head = raw.trim().split("[\\s<\\[]", 2)[0];
+    var head = TYPE_NAME_TAIL.split(raw.trim(), TYPE_NAME_AND_TAIL)[0];
     return typeRegistry.resolve(head).orElse(TypeRef.UNKNOWN);
   }
 
@@ -409,13 +426,6 @@ public class ConfigurationModuleMembersProvider {
     if (returnedValue == null || returnedValue.isEmpty()) {
       return TypeRef.UNKNOWN;
     }
-    var raw = returnedValue.get(0).name();
-    if (raw == null || raw.isBlank()) {
-      return TypeRef.UNKNOWN;
-    }
-    // отбрасываем пояснения после первого пробела/угловой скобки/квадратной скобки
-    // ("Массив из Произвольный", "Массив<Произвольный>" → "Массив")
-    var head = raw.trim().split("[\\s<\\[]", 2)[0];
-    return typeRegistry.resolve(head).orElse(TypeRef.UNKNOWN);
+    return resolveHeadName(returnedValue.get(0).name());
   }
 }
