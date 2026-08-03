@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785736664877,
+  "lastUpdate": 1785745064188,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42005,6 +42005,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8658527127614393",
             "extra": "mean: 96.69181394577026 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d5c24f9e173efe01bc8647b9ade0cb967928b732",
+          "message": "Merge pull request #4383 from 1c-syntax/feat/types-see-ref-form-attribute\n\nfeat(types): ссылка «См.» на реквизит и элемент формы",
+          "timestamp": "2026-08-03T09:49:08+02:00",
+          "tree_id": "d61eed0e89763809b466b293538ab8fad081df68",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d5c24f9e173efe01bc8647b9ade0cb967928b732"
+        },
+        "date": 1785745051906,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.2831842104594,
+            "unit": "sec",
+            "range": "stddev: 1.4190286958655733",
+            "extra": "mean: 96.2831842104594 sec\nrounds: 3"
           }
         ]
       }
