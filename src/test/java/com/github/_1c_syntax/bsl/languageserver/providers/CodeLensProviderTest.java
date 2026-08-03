@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensCapabilities;
+import org.eclipse.lsp4j.CodeLensResolveSupportCapabilities;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
@@ -68,6 +70,7 @@ class CodeLensProviderTest {
     // given
     var filePath = "./src/test/resources/providers/codeLens.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    prepareCodeLensResolveSupport();
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
@@ -128,6 +131,7 @@ class CodeLensProviderTest {
     // given
     var filePath = "./src/test/resources/providers/codeLens.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    prepareCodeLensResolveSupport();
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
@@ -146,6 +150,24 @@ class CodeLensProviderTest {
   }
 
   @Test
+  void testGetCodeLensResolvesCommandsEagerly_ifClientDoesNotSupportCodeLensResolve() {
+
+    // given
+    var filePath = "./src/test/resources/providers/codeLens.bsl";
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+
+    // when
+    List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
+
+    // then
+    assertThat(codeLenses)
+      .hasSizeGreaterThan(0)
+      .allMatch(codeLens -> codeLens.getCommand() != null)
+      .allMatch(codeLens -> codeLens.getData() == null);
+
+  }
+
+  @Test
   void testExtractDataReturnsNullWhenLensHasNoData() {
     // given: клиент (например LSP4IJ) прислал на codeLens/resolve линзу без поля data
     var codeLens = new CodeLens();
@@ -155,6 +177,19 @@ class CodeLensProviderTest {
 
     // then
     assertThat(data).isNull();
+  }
+
+  private void prepareCodeLensResolveSupport() {
+    var codeLensCapabilities = new CodeLensCapabilities();
+    codeLensCapabilities.setResolveSupport(new CodeLensResolveSupportCapabilities(List.of("command")));
+    var textDocumentClientCapabilities = new TextDocumentClientCapabilities();
+    textDocumentClientCapabilities.setCodeLens(codeLensCapabilities);
+    var clientCapabilities = new ClientCapabilities(
+      new WorkspaceClientCapabilities(),
+      textDocumentClientCapabilities,
+      mock(Object.class)
+    );
+    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
   }
 
   private void prepareCodeLensRefreshSupport(boolean refreshSupport) {

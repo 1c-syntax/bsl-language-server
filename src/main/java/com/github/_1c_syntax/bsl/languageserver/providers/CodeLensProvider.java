@@ -31,50 +31,60 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensCapabilities;
+import org.eclipse.lsp4j.CodeLensResolveSupportCapabilities;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Провайдер, обрабатывающий запросы {@code textDocument/codeLens}, {@code codeLens/resolve},
- * а так же отвечающий за отправку запроса {@code workspace/codeLens/refresh}.
- *
- * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">CodeLens Request specification</a>.
- * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">CodeLens Resolve Request specification</a>.
- * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">CodeLens Refresh Request specification</a>.
+ * Провайдер, обрабатывающий запросы {@code textDocument/codeLens} и {@code codeLens/resolve}.
  */
 @Component
 @RequiredArgsConstructor
 public class CodeLensProvider {
-  private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById;
-  private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
+
+  private final ObjectProvider<CodeLensSupplier> enabledCodeLensSuppliersProvider;
+  private final Map<String, CodeLensSupplier> codeLensSuppliersById;
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-  private final JsonMapper jsonMapper;
 
   /**
    * Получение списка {@link CodeLens} в документе.
+   * <p>
+   * Если клиент заявил поддержку резолва команд линз
+   * ({@code textDocument.codeLens.resolveSupport} со свойством {@code command}, LSP 3.18),
+   * линзы возвращаются неразрешёнными — команда заполняется позже запросом
+   * {@code codeLens/resolve}. Иначе линзы разрешаются сразу, на месте:
+   * полагаться на резолв для такого клиента нельзя.
    *
    * @param documentContext Контекст документа.
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return enabledCodeLensSuppliersProvider.getObject().stream()
+    var codeLenses = enabledCodeLensSuppliersProvider.getObject().stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+
+    if (!clientResolvesCommands()) {
+      codeLenses.forEach(codeLens -> resolveEagerly(documentContext, codeLens));
+    }
+
+    return codeLenses;
   }
 
   /**
@@ -101,56 +111,69 @@ public class CodeLensProvider {
   }
 
   /**
+   * Заявил ли подключённый клиент поддержку резолва команд линз — перечислил ли он
+   * свойство {@code command} в {@code textDocument.codeLens.resolveSupport.properties}.
+   *
+   * @return {@code true}, если команду линзы можно отложить на {@code codeLens/resolve};
+   *         {@code false}, если клиент не заявил {@code resolveSupport} (в том числе
+   *         не поддерживает LSP 3.18) — тогда команду нужно отдать сразу.
+   */
+  private boolean clientResolvesCommands() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getCodeLens)
+      .map(CodeLensCapabilities::getResolveSupport)
+      .map(CodeLensResolveSupportCapabilities::getProperties)
+      .map(properties -> properties.contains("command"))
+      .orElse(false);
+  }
+
+  /**
+   * Разрешить линзу на месте — для клиентов без поддержки {@code codeLens/resolve}.
+   * Данные линзы очищаются, как и при обычном резолве: резолвить такую линзу клиент не станет.
+   *
+   * @param documentContext Контекст документа.
+   * @param codeLens        Неразрешённая линза с данными.
+   */
+  private void resolveEagerly(DocumentContext documentContext, CodeLens codeLens) {
+    if (codeLens.getData() instanceof CodeLensData data) {
+      resolveCodeLens(documentContext, codeLens, data);
+    }
+  }
+
+  /**
    * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    * <p>
-   * В случае поддержки запроса подключенным клиентом инициирует запрос {@code workspace/codeLens/refresh}.
+   * Если клиент поддерживает метод {@code workspace/codeLens/refresh},
+   * запрашивает у клиента обновление данных линз.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    refreshCodeLenses();
-  }
-
-  /**
-   * Извлечь данные линзы из линзы.
-   * <p>
-   * Возвращает объект данных типа, с которым был зарегистрирован
-   * сапплаер линзы (параметр-тип класса сапплаера).
-   *
-   * @param codeLens Линза, из которой необходимо извлечь данные.
-   * @return Извлеченные данные линзы либо {@code null}, если линза пришла без поля
-   *         {@link CodeLens#getData()} — резолвить такую линзу нечем.
-   */
   @SneakyThrows
-  public @Nullable CodeLensData extractData(CodeLens codeLens) {
-    var rawCodeLensData = codeLens.getData();
-
-    if (rawCodeLensData == null) {
-      return null;
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    if (!clientHolder.isConnected()) {
+      return;
     }
 
-    if (rawCodeLensData instanceof CodeLensData data) {
-      return data;
-    }
-
-    return jsonMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
-  }
-
-  /**
-   * Отправить запрос на обновление линз кода.
-   */
-  public void refreshCodeLenses() {
-    boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
+    var clientSupportsCodeLensRefresh = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWorkspace)
       .map(WorkspaceClientCapabilities::getCodeLens)
       .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
       .orElse(false);
 
-    if (!clientSupportsRefreshCodeLenses) {
-      return;
+    if (clientSupportsCodeLensRefresh) {
+      refreshCodeLenses();
     }
+  }
 
-    clientHolder.execIfConnected(LanguageClient::refreshCodeLenses);
+  /**
+   * Отправить запрос клиенту на обновление линз ({@code workspace/codeLens/refresh}).
+   */
+  private void refreshCodeLenses() {
+    clientHolder.execIfConnected((LanguageClient client) -> {
+      client.refreshCodeLenses();
+      return null;
+    });
   }
 }
