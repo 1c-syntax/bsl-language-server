@@ -77,7 +77,7 @@ public class SymbolTypeIndex {
   /** Коллекция строк — у дерева значений строки лежат в ней, а не в самом дереве. */
   private static final String ROWS = "Строки";
 
-  /** Текущая строка таблицы формы: обходом её не взять, только этим свойством. */
+  /** Свойство таблицы формы с типом её строки. */
   private static final String CURRENT_DATA = "ТекущиеДанные";
 
   /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
@@ -828,17 +828,12 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Элемент коллекции: уточнённый по месту, если его нет — тип элемента из реестра,
-   * а у таблицы формы — тип её текущих данных.
-   * <p>
-   * Таблица формы элементами не обходится: строку из неё берут через
-   * {@code ТекущиеДанные}, и тип этой строки платформа объявляет сама. Поэтому для
-   * записи «строка: {@code См.} таблица формы» строка берётся оттуда же, откуда её
-   * берёт код.
+   * Элемент коллекции: уточнённый по месту, иначе элемент из реестра, иначе тип
+   * свойства {@code ТекущиеДанные}.
    *
    * @param types    типы коллекции.
    * @param fileType язык, на котором ищется член.
-   * @return типы элемента; {@link TypeSet#EMPTY}, если коллекции среди них нет.
+   * @return типы элемента; {@link TypeSet#EMPTY}, если ни одного из источников нет.
    */
   private TypeSet elementOf(TypeSet types, FileType fileType) {
     var result = TypeSet.EMPTY;
@@ -855,11 +850,9 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Тип текущих данных — строка таблицы формы, как её объявляет сама таблица.
-   *
-   * @param ref      тип-таблица.
+   * @param ref      тип-владелец.
    * @param fileType язык, на котором ищется член.
-   * @return типы текущих данных; {@link TypeSet#EMPTY}, если такого члена нет.
+   * @return типы свойства {@code ТекущиеДанные}; {@link TypeSet#EMPTY}, если его нет.
    */
   private TypeSet currentDataOf(TypeRef ref, FileType fileType) {
     return typeRegistry.findMember(ref, MemberKind.PROPERTY, CURRENT_DATA, fileType)
