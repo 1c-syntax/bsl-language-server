@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785745064188,
+  "lastUpdate": 1785754926368,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42036,6 +42036,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4190286958655733",
             "extra": "mean: 96.2831842104594 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9268d015009fc2b51385c625ae71db74805b56d",
+          "message": "Merge pull request #4388 from 1c-syntax/feat/types-signature-inheritance\n\nfeat(types): наследование типов параметров между модулями",
+          "timestamp": "2026-08-03T12:43:39+02:00",
+          "tree_id": "1306448e3174e1f367cf830a003e794c67a0c6bf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c9268d015009fc2b51385c625ae71db74805b56d"
+        },
+        "date": 1785754914432,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.34688989321391,
+            "unit": "sec",
+            "range": "stddev: 1.472206527549881",
+            "extra": "mean: 96.34688989321391 sec\nrounds: 3"
           }
         ]
       }
