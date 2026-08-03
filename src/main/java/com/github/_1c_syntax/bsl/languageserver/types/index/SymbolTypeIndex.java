@@ -379,30 +379,44 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     if (link.contains(".")) {
-      var hyperlinkTypes = resolveHyperlink(link, fileType);
-      if (!hyperlinkTypes.isEmpty()) {
-        return hyperlinkTypes;
+      var qualifiedTypes = resolveQualifiedLink(link, owner, fileType);
+      if (!qualifiedTypes.isEmpty()) {
+        return qualifiedTypes;
       }
-      var metadataTypes = resolveMetadataPath(link, fileType);
-      if (!metadataTypes.isEmpty()) {
-        return metadataTypes;
-      }
-      // Форму называют полным именем («Справочник.Товары.Форма.ФормаЭлемента»), а её
-      // синтетический тип зарегистрирован с приставкой базового типа формы — сопоставляет
-      // одно с другим тот же резолвер, что типизирует «ПолучитьФорму(<полное имя>)».
-      var formType = formByNameResolver.resolve(owner, link);
-      if (formType.isPresent()) {
-        return TypeSet.of(formType.get());
-      }
-      // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член) — пробуем
-      // трактовать как полное имя типа (например, квалифицированный платформенный
-      // тип) через TypeRegistry ниже.
+      // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член), путь метаданных
+      // или имя формы — пробуем трактовать как полное имя типа (например,
+      // квалифицированный платформенный тип) через TypeRegistry ниже.
     }
     var localFunction = findLocalFunction(owner, link);
     if (localFunction != null) {
       return resolveLocalFunctionTypes(localFunction, owner, fileType, visited);
     }
     return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Тип по ссылке с точкой: сначала как цепочка членов ({@code Модуль.Метод},
+   * {@code Тип.Член}), затем как путь в нотации конфигуратора, затем как имя формы
+   * с путём внутрь неё.
+   * <p>
+   * Виды перебираются по очереди: какой из них перед нами, из самой строки не видно —
+   * все три записываются одинаково, через точку.
+   *
+   * @param link     ссылка целиком.
+   * @param owner    документ-владелец — нужен резолверу форм.
+   * @param fileType язык, на котором резолвятся имена.
+   * @return тип по ссылке; {@link TypeSet#EMPTY}, если ни один вид не подошёл.
+   */
+  private TypeSet resolveQualifiedLink(String link, DocumentContext owner, FileType fileType) {
+    var hyperlinkTypes = resolveHyperlink(link, fileType);
+    if (!hyperlinkTypes.isEmpty()) {
+      return hyperlinkTypes;
+    }
+    var metadataTypes = resolveMetadataPath(link, fileType);
+    if (!metadataTypes.isEmpty()) {
+      return metadataTypes;
+    }
+    return formByNameResolver.resolve(owner, link).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**
