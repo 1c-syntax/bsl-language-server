@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -96,6 +97,7 @@ public class SymbolTypeIndex {
   private static final String TABULAR_SECTION_ROW = "ТабличнаяЧастьСтрока.";
 
   private final TypeRegistry typeRegistry;
+  private final FormByNameResolver formByNameResolver;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
@@ -380,6 +382,13 @@ public class SymbolTypeIndex {
       var metadataTypes = resolveMetadataPath(link, fileType);
       if (!metadataTypes.isEmpty()) {
         return metadataTypes;
+      }
+      // Форму называют полным именем («Справочник.Товары.Форма.ФормаЭлемента»), а её
+      // синтетический тип зарегистрирован с приставкой базового типа формы — сопоставляет
+      // одно с другим тот же резолвер, что типизирует «ПолучитьФорму(<полное имя>)».
+      var formType = formByNameResolver.resolve(owner, link);
+      if (formType.isPresent()) {
+        return TypeSet.of(formType.get());
       }
       // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член) — пробуем
       // трактовать как полное имя типа (например, квалифицированный платформенный
