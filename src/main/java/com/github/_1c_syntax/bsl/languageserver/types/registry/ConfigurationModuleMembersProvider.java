@@ -26,19 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -89,12 +85,6 @@ public class ConfigurationModuleMembersProvider {
    */
   private static final String COMMON_MODULE_PLATFORM_TYPE_NAME = "ОбщийМодуль";
 
-  /** Начало пояснения после имени типа: «Массив из …», «Массив&lt;…&gt;», «Массив[…]». */
-  private static final Pattern TYPE_NAME_TAIL = Pattern.compile("[\\s<\\[]");
-
-  /** Делим имя надвое: само имя и всё, что за ним. */
-  private static final int TYPE_NAME_AND_TAIL = 2;
-
   private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_EN = Map.of(
     ModuleType.ManagerModule, "Manager",
     ModuleType.ObjectModule, "Object",
@@ -105,6 +95,7 @@ public class ConfigurationModuleMembersProvider {
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
   private final CommentTypeResolver commentTypeResolver;
+  private final DescribedTypeResolver describedTypeResolver;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -353,7 +344,7 @@ public class ConfigurationModuleMembersProvider {
     var params = method.getParameters().stream()
       .map(p -> new ParameterDescriptor(
         p.getName(),
-        declaredParameterTypes(p),
+        describedTypeResolver.parameterTypes(p),
         p.isOptional(),
         ""
       ))
@@ -362,70 +353,11 @@ public class ConfigurationModuleMembersProvider {
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
     var returnType = method.getDescription()
-      .map(d -> resolveReturnType(d.getReturnedValue()))
+      .map(d -> describedTypeResolver.returnType(d.getReturnedValue()))
       .orElse(TypeRef.UNKNOWN);
     var signature = new SignatureDescriptor(params, returnType, description);
     return MemberDescriptor
       .method(method.getName(), description, List.of(signature))
       .withSourceSymbol(method);
-  }
-
-  /**
-   * Типы параметра, объявленные в описании метода: имена разрешаются так же, как имя
-   * типа возвращаемого значения ({@link #resolveReturnType}).
-   * <p>
-   * Без них ссылка {@code См. Модуль.Метод.Параметр} упирается в пустую сигнатуру: тип
-   * возврата у члена есть, а типы параметров — нет.
-   *
-   * @param parameter параметр метода.
-   * @return объявленные типы параметра; {@link TypeSet#EMPTY}, если их не объявлено.
-   */
-  private TypeSet declaredParameterTypes(ParameterDefinition parameter) {
-    return parameter.getDescription()
-      .map(description -> description.types().stream()
-        .map(this::resolveTypeName)
-        .filter(ref -> ref.kind() != TypeKind.UNKNOWN)
-        .reduce(TypeSet.EMPTY, (acc, ref) -> acc.union(TypeSet.of(ref)), TypeSet::union))
-      .orElse(TypeSet.EMPTY);
-  }
-
-  /**
-   * Разрешает имя типа из описания: у коллекционной записи ({@code Массив из Строка})
-   * берётся её головное имя.
-   *
-   * @param type описание типа.
-   * @return тип по имени; {@link TypeRef#UNKNOWN}, если имя пустое или не резолвится.
-   */
-  private TypeRef resolveTypeName(TypeDescription type) {
-    return resolveHeadName(type.name());
-  }
-
-  /**
-   * Разрешает имя типа, отбрасывая пояснения после него: «Массив из Произвольный»,
-   * «Массив&lt;Произвольный&gt;» и «Массив[Произвольный]» — это {@code Массив}.
-   *
-   * @param raw имя типа из описания.
-   * @return тип по имени; {@link TypeRef#UNKNOWN}, если имя пустое или не резолвится.
-   */
-  private TypeRef resolveHeadName(String raw) {
-    if (raw.isBlank()) {
-      return TypeRef.UNKNOWN;
-    }
-    var head = TYPE_NAME_TAIL.split(raw.trim(), TYPE_NAME_AND_TAIL)[0];
-    return typeRegistry.resolve(head).orElse(TypeRef.UNKNOWN);
-  }
-
-  /**
-   * Парсит первый элемент {@code returnedValue} JavaDoc-описания BSL-метода
-   * (например, "Массив из Произвольный" → "Массив") и резолвит через
-   * {@link TypeRegistry}.
-   */
-  private TypeRef resolveReturnType(
-    List<TypeDescription> returnedValue
-  ) {
-    if (returnedValue == null || returnedValue.isEmpty()) {
-      return TypeRef.UNKNOWN;
-    }
-    return resolveHeadName(returnedValue.get(0).name());
   }
 }
