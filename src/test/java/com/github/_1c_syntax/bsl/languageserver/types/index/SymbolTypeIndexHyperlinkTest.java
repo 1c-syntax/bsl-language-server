@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,7 +69,7 @@ class SymbolTypeIndexHyperlinkTest {
 
   @BeforeEach
   void setUp() {
-    index = new SymbolTypeIndex(typeRegistry);
+    index = new SymbolTypeIndex(typeRegistry, mock(FormByNameResolver.class));
   }
 
   @Test

@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -76,6 +77,9 @@ public class SymbolTypeIndex {
   /** Коллекция строк — у дерева значений строки лежат в ней, а не в самом дереве. */
   private static final String ROWS = "Строки";
 
+  /** Свойство таблицы формы с типом её строки. */
+  private static final String CURRENT_DATA = "ТекущиеДанные";
+
   /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
   private static final int MIN_METADATA_SEGMENTS = 3;
 
@@ -96,6 +100,7 @@ public class SymbolTypeIndex {
   private static final String TABULAR_SECTION_ROW = "ТабличнаяЧастьСтрока.";
 
   private final TypeRegistry typeRegistry;
+  private final FormByNameResolver formByNameResolver;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
@@ -330,6 +335,10 @@ public class SymbolTypeIndex {
    * <ul>
    *   <li>квалифицированная ссылка {@code Модуль.Метод} / {@code Тип.Член} —
    *       через {@link #resolveHyperlink(String, FileType)};</li>
+   *   <li>путь в нотации конфигуратора ({@code Справочник.Товары.ЕдиницыИзмерения}
+   *       и его продолжение по членам) — через {@link #resolveMetadataPath};</li>
+   *   <li>полное имя формы ({@code Справочник.Товары.Форма.ФормаЭлемента}) — через
+   *       {@link FormByNameResolver};</li>
    *   <li>неквалифицированная ссылка на функцию того же модуля — её возвращаемый
    *       тип: сначала из уже проиндексированных типов
    *       ({@link #getDeclaredReturnTypes(MethodSymbol)}, поэтому разворачиваются
@@ -373,23 +382,75 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     if (link.contains(".")) {
-      var hyperlinkTypes = resolveHyperlink(link, fileType);
-      if (!hyperlinkTypes.isEmpty()) {
-        return hyperlinkTypes;
+      var qualifiedTypes = resolveQualifiedLink(link, owner, fileType);
+      if (!qualifiedTypes.isEmpty()) {
+        return qualifiedTypes;
       }
-      var metadataTypes = resolveMetadataPath(link, fileType);
-      if (!metadataTypes.isEmpty()) {
-        return metadataTypes;
-      }
-      // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член) — пробуем
-      // трактовать как полное имя типа (например, квалифицированный платформенный
-      // тип) через TypeRegistry ниже.
+      // Не разрешилось как ссылка на член (Модуль.Метод / Тип.Член), путь метаданных
+      // или имя формы — пробуем трактовать как полное имя типа (например,
+      // квалифицированный платформенный тип) через TypeRegistry ниже.
     }
     var localFunction = findLocalFunction(owner, link);
     if (localFunction != null) {
       return resolveLocalFunctionTypes(localFunction, owner, fileType, visited);
     }
     return typeRegistry.resolve(link, fileType).map(TypeSet::of).orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Тип по ссылке с точкой: сначала как цепочка членов ({@code Модуль.Метод},
+   * {@code Тип.Член}), затем как путь в нотации конфигуратора, затем как имя формы
+   * с путём внутрь неё.
+   * <p>
+   * Виды перебираются по очереди: какой из них перед нами, из самой строки не видно —
+   * все три записываются одинаково, через точку.
+   *
+   * @param link     ссылка целиком.
+   * @param owner    документ-владелец — нужен резолверу форм.
+   * @param fileType язык, на котором резолвятся имена.
+   * @return тип по ссылке; {@link TypeSet#EMPTY}, если ни один вид не подошёл.
+   */
+  private TypeSet resolveQualifiedLink(String link, DocumentContext owner, FileType fileType) {
+    var hyperlinkTypes = resolveHyperlink(link, fileType);
+    if (!hyperlinkTypes.isEmpty()) {
+      return hyperlinkTypes;
+    }
+    var metadataTypes = resolveMetadataPath(link, fileType);
+    if (!metadataTypes.isEmpty()) {
+      return metadataTypes;
+    }
+    return resolveFormPath(link, owner, fileType);
+  }
+
+  /**
+   * Тип по ссылке на форму: {@code Справочник.Товары.Форма.ФормаЭлемента} — сама форма,
+   * {@code …ФормаЭлемента.Объект} — её реквизит, {@code …ФормаСписка.Элементы.Список} —
+   * её элемент.
+   * <p>
+   * Форму называют полным именем, а её синтетический тип зарегистрирован с приставкой
+   * базового типа формы — сопоставляет одно с другим тот же резолвер, что типизирует
+   * {@code ПолучитьФорму(<полное имя>)}. Где кончается имя формы и начинается путь внутри
+   * неё, из самой строки не видно, поэтому имя примеряется от самого длинного к короткому,
+   * а остаток читается как цепочка членов ({@link #walkMembers}).
+   *
+   * @param link     ссылка целиком.
+   * @param owner    документ-владелец — резолвер основных форм смотрит на его метаданные.
+   * @param fileType язык, на котором резолвятся имена членов.
+   * @return тип по ссылке; {@link TypeSet#EMPTY}, если формы с таким именем нет.
+   */
+  private TypeSet resolveFormPath(String link, DocumentContext owner, FileType fileType) {
+    var parts = link.split("\\.", -1);
+    for (var nameLength = parts.length; nameLength >= 1; nameLength--) {
+      var formName = String.join(".", List.of(parts).subList(0, nameLength));
+      var formType = formByNameResolver.resolve(owner, formName).orElse(null);
+      if (formType == null) {
+        continue;
+      }
+      return nameLength == parts.length
+        ? TypeSet.of(formType)
+        : walkMembers(formType, parts, nameLength, fileType);
+    }
+    return TypeSet.EMPTY;
   }
 
   /**
@@ -762,23 +823,48 @@ public class SymbolTypeIndex {
     if (linked.isEmpty()) {
       return resolveSimple(td.name());
     }
-    var element = elementOf(linked);
+    var element = elementOf(linked, context.fileType());
     return element.isEmpty() ? linked : element;
   }
 
   /**
-   * Элемент коллекции: уточнённый по месту, а если его нет — тип элемента из реестра.
+   * Элемент коллекции: уточнённый по месту, иначе элемент из реестра, иначе тип
+   * свойства {@code ТекущиеДанные}.
+   * <p>
+   * Третий источник нужен таблицам формы: элементов у них не заведено, а тип строки
+   * объявлен свойством {@code ТекущиеДанные} — на него и опирается запись
+   * «строка: {@code См.} таблица формы».
    *
-   * @param types типы коллекции.
-   * @return типы элемента; {@link TypeSet#EMPTY}, если коллекции среди них нет.
+   * @param types    типы коллекции.
+   * @param fileType язык, на котором ищется член.
+   * @return типы элемента; {@link TypeSet#EMPTY}, если ни одного из источников нет.
    */
-  private TypeSet elementOf(TypeSet types) {
+  private TypeSet elementOf(TypeSet types, FileType fileType) {
     var result = TypeSet.EMPTY;
     for (var ref : types.refs()) {
       var attached = types.getElementTypes(ref);
-      result = result.union(attached.isEmpty() ? typeRegistry.getDefaultElementTypes(ref) : attached);
+      if (!attached.isEmpty()) {
+        result = result.union(attached);
+        continue;
+      }
+      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      result = result.union(defaults.isEmpty() ? currentDataOf(ref, fileType) : defaults);
     }
     return result;
+  }
+
+  /**
+   * Типы свойства {@code ТекущиеДанные} у указанного типа — строки, которую отдаёт
+   * таблица формы.
+   *
+   * @param ref      тип-владелец свойства.
+   * @param fileType язык, на котором ищется член.
+   * @return типы свойства; {@link TypeSet#EMPTY}, если такого свойства у типа нет.
+   */
+  private TypeSet currentDataOf(TypeRef ref, FileType fileType) {
+    return typeRegistry.findMember(ref, MemberKind.PROPERTY, CURRENT_DATA, fileType)
+      .map(MemberDescriptor::returnTypes)
+      .orElse(TypeSet.EMPTY);
   }
 
   private TypeSet resolveSimple(String name) {
