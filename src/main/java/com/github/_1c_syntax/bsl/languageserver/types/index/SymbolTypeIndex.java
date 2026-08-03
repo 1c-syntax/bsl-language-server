@@ -416,7 +416,38 @@ public class SymbolTypeIndex {
     if (!metadataTypes.isEmpty()) {
       return metadataTypes;
     }
-    return formByNameResolver.resolve(owner, link).map(TypeSet::of).orElse(TypeSet.EMPTY);
+    return resolveFormPath(link, owner, fileType);
+  }
+
+  /**
+   * Тип по ссылке на форму: {@code Справочник.Товары.Форма.ФормаЭлемента} — сама форма,
+   * {@code …ФормаЭлемента.Объект} — её реквизит, {@code …ФормаСписка.Элементы.Список} —
+   * её элемент.
+   * <p>
+   * Форму называют полным именем, а её синтетический тип зарегистрирован с приставкой
+   * базового типа формы — сопоставляет одно с другим тот же резолвер, что типизирует
+   * {@code ПолучитьФорму(<полное имя>)}. Где кончается имя формы и начинается путь внутри
+   * неё, из самой строки не видно, поэтому имя примеряется от самого длинного к короткому,
+   * а остаток читается как цепочка членов ({@link #walkMembers}).
+   *
+   * @param link     ссылка целиком.
+   * @param owner    документ-владелец — резолвер основных форм смотрит на его метаданные.
+   * @param fileType язык, на котором резолвятся имена членов.
+   * @return тип по ссылке; {@link TypeSet#EMPTY}, если формы с таким именем нет.
+   */
+  private TypeSet resolveFormPath(String link, DocumentContext owner, FileType fileType) {
+    var parts = link.split("\\.", -1);
+    for (var nameLength = parts.length; nameLength >= 1; nameLength--) {
+      var formName = String.join(".", List.of(parts).subList(0, nameLength));
+      var formType = formByNameResolver.resolve(owner, formName).orElse(null);
+      if (formType == null) {
+        continue;
+      }
+      return nameLength == parts.length
+        ? TypeSet.of(formType)
+        : walkMembers(formType, parts, nameLength, fileType);
+    }
+    return TypeSet.EMPTY;
   }
 
   /**

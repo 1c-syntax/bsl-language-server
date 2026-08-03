@@ -82,6 +82,50 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
     assertThat(names(item)).containsExactly("ПолеФормы");
   }
 
+  @Test
+  void seeRefToFormAttributeGivesItsType() {
+    // given: ссылка на основной реквизит формы — полное имя формы плюс имя реквизита.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Объект - См. Справочник.Справочник1.Форма.ФормаЭлемента.Объект
+      Процедура ОбработкаОбъекта(Объект) Экспорт
+
+      	ТипРеквизита = Объект;
+      	ЗначениеРеквизита = Объект.Реквизит1;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var attribute = at(documentContext, "ТипРеквизита = Объект", "ТипРеквизита = ".length());
+    var value = at(documentContext, "ЗначениеРеквизита = Объект.Реквизит1",
+      "ЗначениеРеквизита = Объект.".length());
+
+    // then: тот же тип, что и у «Форма.Объект», с реквизитами объекта.
+    assertThat(names(attribute)).containsExactly("ДанныеФормыСтруктура.СправочникОбъект.Справочник1");
+    assertThat(names(value)).containsExactly("Строка");
+  }
+
+  @Test
+  void seeRefToFormItemGivesItsType() {
+    // given: ссылка на элемент формы — полное имя формы, «Элементы» и имя элемента.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Элемент - См. Справочник.Справочник1.Форма.ФормаЭлемента.Элементы.Наименование
+      Процедура ОбработкаЭлемента(Элемент) Экспорт
+
+      	ТипЭлемента = Элемент;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var item = at(documentContext, "ТипЭлемента = Элемент", "ТипЭлемента = ".length());
+
+    // then
+    assertThat(names(item)).containsExactly("ПолеФормы");
+  }
+
   private DocumentContext documentWithFormReference() {
     return TestUtils.getDocumentContext("""
       // Параметры:
