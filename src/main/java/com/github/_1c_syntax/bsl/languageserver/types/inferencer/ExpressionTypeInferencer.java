@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -69,6 +70,7 @@ import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -124,6 +126,8 @@ public class ExpressionTypeInferencer {
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final ControlFlowGraphIndex controlFlowGraphIndex;
   private final GuardConditionNarrowing guardConditionNarrowing;
+  private final ReturnTypeFromBodyInference returnTypeFromBodyInference;
+  private final MethodReturnTypeIndex methodReturnTypeIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final ScopeMemberTypeResolver scopeMemberTypeResolver;
@@ -183,8 +187,10 @@ public class ExpressionTypeInferencer {
         case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
         case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
       };
-      if (cacheKey != null) {
-        inferredExpressionTypeIndex.put(uri, cacheKey, result);
+      // Результат, полученный с обрывом цикла, зависит от точки входа в него и
+      // потому не годится в кэш: вход с другой стороны цикла даст другой набор.
+      if (cacheKey != null && !ctx.cycleCut) {
+        inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies);
       }
       return result;
     } finally {
@@ -469,7 +475,7 @@ public class ExpressionTypeInferencer {
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast);
     if (localMethod.isPresent()) {
-      return symbolTypeIndex.getDeclaredReturnTypes(localMethod.get());
+      return methodReturnType(localMethod.get(), ctx);
     }
     // 2. Открытие формы по имени: тип конкретной формы точнее, чем обобщённый
     //    возвращаемый тип платформенной функции, поэтому проверяется до шага 3.
@@ -635,13 +641,13 @@ public class ExpressionTypeInferencer {
         // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
         // несёт лишь головной ref, поэтому без этого поля структуры терялись.
         if (expectedKind == MemberKind.METHOD) {
-          var declaredReturn = member.getSourceSymbol()
+          var symbolReturn = member.getSourceSymbol()
             .filter(MethodSymbol.class::isInstance)
             .map(MethodSymbol.class::cast)
-            .map(symbolTypeIndex::getDeclaredReturnTypes)
-            .filter(declared -> !declared.isEmpty());
-          if (declaredReturn.isPresent()) {
-            result = result.union(declaredReturn.get());
+            .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
+            .filter(returned -> !returned.isEmpty());
+          if (symbolReturn.isPresent()) {
+            result = result.union(symbolReturn.get());
             continue;
           }
         }
@@ -734,13 +740,60 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
     if (!ctx.visited.add(method)) {
+      ctx.cycleCut = true;
       return TypeSet.EMPTY;
     }
+    ctx.dependencies.add(method.getOwner().getUri());
+    ctx.consulted.add(method);
     try {
-      return symbolTypeIndex.getDeclaredReturnTypes(method);
+      var declared = symbolTypeIndex.getDeclaredReturnTypes(method);
+      var computed = methodReturnTypeIndex.get(method);
+      return declared.union(withoutDeclaredRefs(computed, declared));
     } finally {
       ctx.visited.remove(method);
     }
+  }
+
+  /**
+   * Типы, которые метод возвращает по своему телу, и методы, значения которых для этого
+   * понадобились.
+   * <p>
+   * Разбирается тело метода в его же документе, поэтому вызывать это можно только тогда,
+   * когда дерево разбора владельца доступно — то есть при построении его контекста.
+   * Значения вызванных методов читаются из {@link MethodReturnTypeIndex} как есть: до
+   * неподвижной точки их доводит пересчёт по зависимым, а не рекурсия по стеку.
+   *
+   * @param method метод, чьё тело разбирается.
+   * @return рассчитанные типы и методы, участвовавшие в расчёте.
+   */
+  public MethodReturnTypeIndex.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
+    var ctx = new InferenceContext(method.getOwner());
+    try {
+      var types = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx));
+      return new MethodReturnTypeIndex.ComputedReturnTypes(types, Set.copyOf(ctx.consulted));
+    } catch (StackOverflowError | RuntimeException e) {
+      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of());
+    }
+  }
+
+  /**
+   * Убирает из расчётного набора типы, уже названные в описании метода.
+   * <p>
+   * По общему типу верим описанию: там у коллекции объявлен тип элементов
+   * ({@code Массив из Число}), а у того же типа, собранного по телу, элемент —
+   * платформенный умолчательный. Без этого объявленный состав элементов размывался бы
+   * умолчательным при объединении.
+   *
+   * @param computed расчётные типы по телу метода.
+   * @param declared типы, объявленные в описании метода.
+   * @return расчётные типы без тех, что уже объявлены.
+   */
+  private static TypeSet withoutDeclaredRefs(TypeSet computed, TypeSet declared) {
+    var result = computed;
+    for (var ref : declared.refs()) {
+      result = result.without(ref);
+    }
+    return result;
   }
 
   /**
@@ -1363,14 +1416,14 @@ public class ExpressionTypeInferencer {
    */
   static final class InferenceContext {
     final DocumentContext documentContext;
-    final Set<SourceDefinedSymbol> visited = new HashSet<>();
+    final Set<SourceDefinedSymbol> visited;
     /**
      * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
      * завершён. Self-reference (например, {@code Строка = Строка + "..."}) резолвится
      * в это частичное значение вместо {@link TypeSet#EMPTY}, что даёт one-pass
      * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
      */
-    final Map<SourceDefinedSymbol, TypeSet> inProgress = new HashMap<>();
+    final Map<SourceDefinedSymbol, TypeSet> inProgress;
     /**
      * Расчёты по потоку, идущие прямо сейчас в рамках этого вывода. Вывод типа
      * присваивания просит типы переменных из правой части, и если они из того же тела,
@@ -1378,10 +1431,22 @@ public class ExpressionTypeInferencer {
      * а не запускает расчёт тела заново.
      */
     final VariableFlowAnalyzer.FlowSession flowSession = new VariableFlowAnalyzer.FlowSession();
+    /**
+     * Документы, чьё содержимое участвовало в расчёте: их правка делает
+     * закэшированный результат недействительным.
+     */
+    final Set<URI> dependencies;
+    /** Методы, типы возврата которых понадобились расчёту. */
+    final Set<MethodSymbol> consulted = new HashSet<>();
+    /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
+    boolean cycleCut;
     int depth;
 
     InferenceContext(DocumentContext documentContext) {
       this.documentContext = documentContext;
+      this.visited = new HashSet<>();
+      this.inProgress = new HashMap<>();
+      this.dependencies = new HashSet<>();
     }
   }
 }

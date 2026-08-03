@@ -35,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class InferredExpressionTypeIndexTest extends AbstractServerContextAwareTest {
@@ -61,7 +63,7 @@ class InferredExpressionTypeIndexTest extends AbstractServerContextAwareTest {
 
     assertThat(index.get(uri, node)).as("до записи кэш пуст").isNull();
 
-    index.put(uri, node, types);
+    index.put(uri, node, types, Set.of());
     assertThat(index.get(uri, node)).as("после записи тип возвращается").isEqualTo(types);
 
     // изменение содержимого сбрасывает кэш по URI.
@@ -69,17 +71,17 @@ class InferredExpressionTypeIndexTest extends AbstractServerContextAwareTest {
     assertThat(index.get(uri, node)).as("сброс на изменение содержимого").isNull();
 
     // освобождение вторичных данных сбрасывает кэш по URI.
-    index.put(uri, node, types);
+    index.put(uri, node, types, Set.of());
     eventPublisher.publishEvent(new ServerContextDocumentClearedEvent(serverContext, documentContext));
     assertThat(index.get(uri, node)).as("сброс на освобождение вторичных данных").isNull();
 
     // закрытие документа сбрасывает кэш по URI.
-    index.put(uri, node, types);
+    index.put(uri, node, types, Set.of());
     eventPublisher.publishEvent(new ServerContextDocumentClosedEvent(serverContext, documentContext));
     assertThat(index.get(uri, node)).as("сброс на закрытие документа").isNull();
 
     // удаление файла сбрасывает кэш по URI.
-    index.put(uri, node, types);
+    index.put(uri, node, types, Set.of());
     eventPublisher.publishEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
     assertThat(index.get(uri, node)).as("сброс на удаление файла").isNull();
   }
@@ -90,8 +92,8 @@ class InferredExpressionTypeIndexTest extends AbstractServerContextAwareTest {
     var doc1 = TestUtils.getDocumentContext("Процедура Тест1() КонецПроцедуры");
     var doc2 = TestUtils.getDocumentContext("Процедура Тест2() КонецПроцедуры");
     var types = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
-    index.put(doc1.getUri(), doc1.getAst(), types);
-    index.put(doc2.getUri(), doc2.getAst(), types);
+    index.put(doc1.getUri(), doc1.getAst(), types, Set.of());
+    index.put(doc2.getUri(), doc2.getAst(), types, Set.of());
     assertThat(index.get(doc1.getUri(), doc1.getAst())).isNotNull();
     assertThat(index.get(doc2.getUri(), doc2.getAst())).isNotNull();
 
@@ -102,5 +104,40 @@ class InferredExpressionTypeIndexTest extends AbstractServerContextAwareTest {
     // должны быть пересчитаны с заполненным реестром.
     assertThat(index.get(doc1.getUri(), doc1.getAst())).as("полный сброс, doc1").isNull();
     assertThat(index.get(doc2.getUri(), doc2.getAst())).as("полный сброс, doc2").isNull();
+  }
+
+  @Test
+  void invalidatesDependentsOfChangedDocument() {
+    // given — типы в doc1 построены на doc2, а типы в doc3 — на doc1.
+    var doc1 = TestUtils.getDocumentContext("Процедура Тест1() КонецПроцедуры");
+    var doc2 = TestUtils.getDocumentContext("Процедура Тест2() КонецПроцедуры");
+    var doc3 = TestUtils.getDocumentContext("Процедура Тест3() КонецПроцедуры");
+    var types = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
+    index.put(doc1.getUri(), doc1.getAst(), types, Set.of(doc2.getUri()));
+    index.put(doc3.getUri(), doc3.getAst(), types, Set.of(doc1.getUri()));
+
+    // when — изменился документ, на котором построена цепочка.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(doc2));
+
+    // then — сброшены и прямой потребитель, и потребитель потребителя.
+    assertThat(index.get(doc1.getUri(), doc1.getAst())).as("прямой потребитель").isNull();
+    assertThat(index.get(doc3.getUri(), doc3.getAst())).as("потребитель по цепочке").isNull();
+  }
+
+  @Test
+  void survivesCircularDependencies() {
+    // given — документы ссылаются друг на друга.
+    var doc1 = TestUtils.getDocumentContext("Процедура Тест1() КонецПроцедуры");
+    var doc2 = TestUtils.getDocumentContext("Процедура Тест2() КонецПроцедуры");
+    var types = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
+    index.put(doc1.getUri(), doc1.getAst(), types, Set.of(doc2.getUri()));
+    index.put(doc2.getUri(), doc2.getAst(), types, Set.of(doc1.getUri()));
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(doc1));
+
+    // then — обход круговой зависимости завершается и сбрасывает обе записи.
+    assertThat(index.get(doc1.getUri(), doc1.getAst())).isNull();
+    assertThat(index.get(doc2.getUri(), doc2.getAst())).isNull();
   }
 }
