@@ -155,6 +155,26 @@ class CodeLensProviderTest {
     // given
     var filePath = "./src/test/resources/providers/codeLens.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    prepareCodeLensWithoutResolveSupport();
+
+    // when
+    List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
+
+    // then
+    assertThat(codeLenses)
+      .hasSizeGreaterThan(0)
+      .allMatch(codeLens -> codeLens.getCommand() != null)
+      .allMatch(codeLens -> codeLens.getData() == null);
+
+  }
+
+  @Test
+  void testGetCodeLensResolvesCommandsEagerly_ifClientResolveSupportDoesNotContainCommand() {
+
+    // given
+    var filePath = "./src/test/resources/providers/codeLens.bsl";
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    prepareCodeLensResolveSupport("range");
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
@@ -180,8 +200,12 @@ class CodeLensProviderTest {
   }
 
   private void prepareCodeLensResolveSupport() {
+    prepareCodeLensResolveSupport("command");
+  }
+
+  private void prepareCodeLensResolveSupport(String property) {
     var codeLensCapabilities = new CodeLensCapabilities();
-    codeLensCapabilities.setResolveSupport(new CodeLensResolveSupportCapabilities(List.of("command")));
+    codeLensCapabilities.setResolveSupport(new CodeLensResolveSupportCapabilities(List.of(property)));
     var textDocumentClientCapabilities = new TextDocumentClientCapabilities();
     textDocumentClientCapabilities.setCodeLens(codeLensCapabilities);
     var clientCapabilities = new ClientCapabilities(
@@ -190,6 +214,19 @@ class CodeLensProviderTest {
       mock(Object.class)
     );
     clientCapabilitiesHolder.setCapabilities(clientCapabilities);
+    codeLensProvider.handleInitializeEvent();
+  }
+
+  private void prepareCodeLensWithoutResolveSupport() {
+    var textDocumentClientCapabilities = new TextDocumentClientCapabilities();
+    textDocumentClientCapabilities.setCodeLens(new CodeLensCapabilities());
+    var clientCapabilities = new ClientCapabilities(
+      new WorkspaceClientCapabilities(),
+      textDocumentClientCapabilities,
+      mock(Object.class)
+    );
+    clientCapabilitiesHolder.setCapabilities(clientCapabilities);
+    codeLensProvider.handleInitializeEvent();
   }
 
   private void prepareCodeLensRefreshSupport(boolean refreshSupport) {
@@ -201,6 +238,7 @@ class CodeLensProviderTest {
       mock(Object.class)
     );
     clientCapabilitiesHolder.setCapabilities(clientCapabilities);
+    codeLensProvider.handleInitializeEvent();
   }
 
 }
