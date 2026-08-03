@@ -778,8 +778,9 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // документа); вид берётся из символа-источника метода
     assertThat(item.getKind()).isEqualTo(CompletionItemKind.Function);
     assertThat(item.getDetail())
-      .as("сигнатура и тип возврата метода общего модуля — как у платформенного")
-      .isEqualTo("(Значение): Массив");
+      .as("сигнатура и тип возврата метода общего модуля — как у платформенного,"
+        + " с объявленным типом параметра")
+      .isEqualTo("(Значение: Произвольный): Массив");
     assertThat(documentationText(item))
       .as("документация метода общего модуля берётся из doc-comment")
       .contains("Создает массив");

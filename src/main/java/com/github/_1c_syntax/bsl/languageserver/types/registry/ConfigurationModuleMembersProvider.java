@@ -368,9 +368,7 @@ public class ConfigurationModuleMembersProvider {
    * типа возвращаемого значения ({@link #resolveReturnType}).
    * <p>
    * Без них ссылка {@code См. Модуль.Метод.Параметр} упирается в пустую сигнатуру: тип
-   * возврата у члена есть, а типы параметров — нет. {@code Произвольный} в объявленные
-   * не попадает: он ничего не сообщает о значении, а в подсказках вытеснил бы собой
-   * привычный вид сигнатуры.
+   * возврата у члена есть, а типы параметров — нет.
    *
    * @param parameter параметр метода.
    * @return объявленные типы параметра; {@link TypeSet#EMPTY}, если их не объявлено.
@@ -379,7 +377,7 @@ public class ConfigurationModuleMembersProvider {
     return parameter.getDescription()
       .map(description -> description.types().stream()
         .map(this::resolveTypeName)
-        .filter(ref -> ref.kind() != TypeKind.UNKNOWN && ref.kind() != TypeKind.ANY)
+        .filter(ref -> ref.kind() != TypeKind.UNKNOWN)
         .reduce(TypeSet.EMPTY, (acc, ref) -> acc.union(TypeSet.of(ref)), TypeSet::union))
       .orElse(TypeSet.EMPTY);
   }
