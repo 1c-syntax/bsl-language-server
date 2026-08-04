@@ -743,15 +743,21 @@ public class ExpressionTypeInferencer {
       ctx.cycleCut = true;
       return TypeSet.EMPTY;
     }
-    ctx.dependencies.add(method.getOwner().getUri());
+    var owner = method.getOwner();
     ctx.consulted.add(method);
     try {
       var declared = symbolTypeIndex.getDeclaredReturnTypes(method);
       // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
-      // документа, считаем на месте — дерево разбора здесь доступно.
-      var computed = method.getOwner().getUri().equals(ctx.documentContext.getUri())
-        ? methodReturnTypeIndex.getOrCompute(method, () -> returnTypesOfBody(method, ctx))
-        : methodReturnTypeIndex.get(method);
+      // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
+      // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
+      // сравнение самих URI нормализует проценты и стоит заметно дороже.
+      TypeSet computed;
+      if (owner == ctx.documentContext) {
+        computed = methodReturnTypeIndex.getOrCompute(method, () -> returnTypesOfBody(method, ctx));
+      } else {
+        computed = methodReturnTypeIndex.get(method);
+        ctx.dependencies.add(owner.getUri());
+      }
       return declared.union(withoutDeclaredRefs(computed, declared));
     } finally {
       ctx.visited.remove(method);
@@ -832,7 +838,9 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
     var owner = variable.getOwner();
-    if (!owner.getUri().equals(ctx.documentContext.getUri())) {
+    // Сравнение по ссылке: на URI в рабочей области приходится ровно один DocumentContext,
+    // а сравнение самих URI нормализует проценты и стоит заметно дороже.
+    if (owner != ctx.documentContext) {
       // Переменная из другого документа: чужое дерево разбора не читаем, берём
       // объявленное о ней — оно есть в самом символе.
       return declaredTypes(variable);
