@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -89,6 +92,9 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    */
   @Qualifier("populateContextExecutor")
   private final ExecutorService populateContextExecutor;
+
+  private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
 
   private final Map<MethodSymbol, TypeSet> typesByMethod = new ConcurrentHashMap<>();
   private final Map<MethodSymbol, Set<MethodSymbol>> dependentsByMethod = new ConcurrentHashMap<>();
@@ -180,11 +186,17 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
     maintenance = true;
     var deferred = pending.size();
     rebuilt.set(0);
+    var progressReporter = workDoneProgressHelper.createProgress(
+      documentsOf(pending).size(),
+      getMessage("resolveDocumentsPostfix")
+    );
+    progressReporter.beginProgress(getMessage("resolveReturnTypes"));
     try {
-      drainPending(serverContext);
+      drainPending(serverContext, progressReporter);
     } finally {
       maintenance = false;
       pending.clear();
+      progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
     }
     LOGGER.debug("Доразрешение типов возврата: отложено методов {}, перечитано документов {}",
       deferred, rebuilt.get());
@@ -338,14 +350,28 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   /**
    * Разносит накопленные общим проходом изменения, догружая документы потребителей.
    *
-   * @param serverContext рабочая область.
+   * @param serverContext    рабочая область.
+   * @param progressReporter индикатор хода работы.
    */
-  private void drainPending(ServerContext serverContext) {
+  private void drainPending(
+    ServerContext serverContext,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+  ) {
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
-      var uris = pending.stream().map(method -> method.getOwner().getUri()).distinct().toList();
+      var uris = documentsOf(pending);
       pending.clear();
-      recomputeAll(serverContext, uris);
+      recomputeAll(serverContext, uris, progressReporter);
     }
+  }
+
+  /**
+   * Документы перечисленных методов.
+   *
+   * @param methods методы.
+   * @return URI их документов без повторов.
+   */
+  private static List<URI> documentsOf(Collection<MethodSymbol> methods) {
+    return methods.stream().map(method -> method.getOwner().getUri()).distinct().toList();
   }
 
   /**
@@ -354,12 +380,18 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    * Задача уходит в пул рабочей области: его воркеры несут её контекст, без которого
    * workspace-бины из форков потока недоступны.
    *
-   * @param serverContext рабочая область.
-   * @param uris          URI документов.
+   * @param serverContext    рабочая область.
+   * @param uris             URI документов.
+   * @param progressReporter индикатор хода работы.
    */
-  private void recomputeAll(ServerContext serverContext, List<URI> uris) {
+  private void recomputeAll(
+    ServerContext serverContext,
+    List<URI> uris,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+  ) {
     try {
       populateContextExecutor.submit(() -> uris.parallelStream().forEach(uri -> {
+        progressReporter.tick();
         var documentContext = serverContext.getDocuments().get(uri);
         if (documentContext != null) {
           recomputeLoading(serverContext, documentContext);
@@ -465,6 +497,16 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   private static boolean isReadable(DocumentContext documentContext) {
     return documentContext.getServerContext().getDocumentState(documentContext)
       == DocumentState.WITH_CONTENT;
+  }
+
+  /**
+   * Сообщение для индикатора хода работы на языке сервера.
+   *
+   * @param key ключ сообщения.
+   * @return текст сообщения.
+   */
+  private String getMessage(String key) {
+    return Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), key);
   }
 
   /**
