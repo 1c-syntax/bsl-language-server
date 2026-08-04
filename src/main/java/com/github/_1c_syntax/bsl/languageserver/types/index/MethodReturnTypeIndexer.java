@@ -162,8 +162,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     clear(documentContext.getUri());
     var changed = recomputeDocument(documentContext);
     if (maintenance) {
-      // Идёт общий проход: он сам разнесёт изменения, когда переберёт все документы.
-      pending.addAll(changed);
+      // Идёт общий проход, и разбор здесь — его же догрузка. Складывать «изменившиеся» в
+      // очередь нельзя: записи документа только что стёрты, поэтому изменившимся выглядит
+      // каждый его метод, и проход крутил бы одно и то же до предохранителя. Что надо
+      // пересчитать, решает сам проход — по методам, чей расчёт видел непосчитанное.
       return;
     }
     propagate(changed);
@@ -315,6 +317,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Расчёт видел метод, значение которого ещё не посчитано: так бывает, пока рабочая
       // область наполняется. Такой метод пересчитывается проходом после наполнения.
       pending.add(method);
+      if (maintenance && LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Отложен повторно: {} из {}; не посчитаны: {}",
+          method.getName(), method.getOwner().getUri(),
+          computed.consulted().stream()
+            .filter(dependency -> !indexed.contains(dependency))
+            .map(dependency -> dependency.getName() + "@" + dependency.getOwner().getMdoRef())
+            .toList());
+      }
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, computed.types());
@@ -369,6 +379,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       planned += roots.size();
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
+      LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}",
+        pass + 1, roots.size(), pending.size());
     }
   }
 
