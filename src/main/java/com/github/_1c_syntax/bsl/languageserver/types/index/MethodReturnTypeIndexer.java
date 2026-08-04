@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -369,20 +370,21 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Доводит до конца значения перечисленных методов, спускаясь по их зависимостям.
+   * Пересчитывает отложенные методы, группируя их по документам.
    * <p>
-   * Каждый корень обходится вглубь: сначала доводятся значения вызванных методов, потом
-   * пересчитывается вызывающий. В ширину пришлось бы держать всю волну и перечитывать
-   * документы на каждом уровне; вглубь одновременно нужна лишь текущая цепочка, а её
-   * глубина на порядки меньше.
+   * Единица работы — документ: он загружается один раз, на нём пересчитываются все его
+   * отложенные методы, и он тут же отпускается. В памяти поэтому находится ровно один
+   * документ. Спуск по зависимостям вглубь пробовался и оказался хуже: грузить всё равно
+   * приходится документ целиком, а обход идёт по методам, и один документ загружался
+   * заново под каждый свой метод — на ssl_3_1 это дало 4252 разбора против 181.
    * <p>
-   * Обход последовательный: работы здесь на десятки документов, а не на всю область, зато
-   * блокировки документов берутся и отпускаются в одном потоке. Разложенный по пулу, он
-   * упирался в то, что воркеры ждут чужие блокировки, а компенсировать такое ожидание
-   * {@code ForkJoinPool} не умеет — пул голодал и проход вставал.
+   * Проход последовательный: блокировки документов берутся и отпускаются в одном потоке.
+   * Разложенный по пулу, он упирался в то, что воркеры ждут чужие блокировки, а
+   * компенсировать такое ожидание {@code ForkJoinPool} не умеет — пул голодал и проход
+   * вставал.
    *
    * @param serverContext    рабочая область.
-   * @param roots            методы, с которых начинается обход.
+   * @param roots            отложенные методы.
    * @param progressReporter индикатор хода работы.
    */
   private void resolveAll(
@@ -390,40 +392,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     List<MethodSymbol> roots,
     WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
   ) {
-    var inProgress = Collections.<MethodSymbol>newSetFromMap(new IdentityHashMap<>());
+    var byDocument = new LinkedHashMap<URI, List<MethodSymbol>>();
     for (var root : roots) {
-      progressReporter.tick();
-      resolveDeep(serverContext, root, inProgress);
-      inProgress.clear();
+      byDocument.computeIfAbsent(root.getOwner().getUri(), k -> new ArrayList<>()).add(root);
     }
-  }
-
-  /**
-   * Доводит значение метода, предварительно доведя те, от которых оно зависит.
-   *
-   * @param serverContext рабочая область.
-   * @param method        метод.
-   * @param inProgress    методы, лежащие выше по цепочке обхода: наткнувшись на такой,
-   *                      спуск обрывается — это цикл, и его добирает следующий проход.
-   */
-  private void resolveDeep(
-    ServerContext serverContext,
-    MethodSymbol method,
-    Set<MethodSymbol> inProgress
-  ) {
-    if (!inProgress.add(method)) {
-      return;
-    }
-    try {
-      var dependencies = dependenciesByMethod.get(method);
-      if (dependencies != null) {
-        for (var dependency : List.copyOf(dependencies)) {
-          resolveDeep(serverContext, dependency, inProgress);
-        }
-      }
-      recomputeLoading(serverContext, method.getOwner());
-    } finally {
-      inProgress.remove(method);
+    for (var methods : byDocument.values()) {
+      methods.forEach(method -> progressReporter.tick());
+      recomputeLoading(serverContext, methods);
     }
   }
 
@@ -443,16 +418,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param serverContext   рабочая область.
    * @param documentContext документ.
    */
-  private void recomputeLoading(ServerContext serverContext, DocumentContext documentContext) {
+  private void recomputeLoading(ServerContext serverContext, List<MethodSymbol> methods) {
+    var documentContext = methods.get(0).getOwner();
     var lock = serverContext.getDocumentLock(documentContext.getUri());
     lock.readLock().lock();
     try {
       if (isReadable(documentContext)) {
-        // Пометки снимаются так же, как это делает разбор документа: иначе неэкспортные
-        // методы остались бы со значениями, посчитанными до того, как их зависимости
-        // дошли до ума, и экспортные пересчитались бы по ним.
-        clear(documentContext.getUri());
-        pending.addAll(recomputeDocument(documentContext));
+        recomputeEach(methods);
         return;
       }
     } finally {
@@ -463,16 +435,32 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
       if (isReadable(documentContext)) {
-        clear(documentContext.getUri());
-        pending.addAll(recomputeDocument(documentContext));
+        recomputeEach(methods);
         return;
       }
       rebuilt.incrementAndGet();
       rebuiltUris.add(documentContext.getUri());
+      // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
+      // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
+      recomputeEach(methods);
       serverContext.tryClearDocument(documentContext);
     } finally {
       lock.writeLock().unlock();
+    }
+  }
+
+  /**
+   * Пересчитывает перечисленные методы одного, уже разобранного документа.
+   *
+   * @param methods методы.
+   */
+  private void recomputeEach(List<MethodSymbol> methods) {
+    for (var method : methods) {
+      // Пометка снимается, чтобы расчёт по запросу не отдал прежнее значение: зависимости
+      // метода с прошлого раза могли дойти до ума.
+      indexed.remove(method);
+      recompute(method);
     }
   }
 
