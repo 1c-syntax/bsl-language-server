@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785754926368,
+  "lastUpdate": 1785863725680,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42067,6 +42067,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.472206527549881",
             "extra": "mean: 96.34688989321391 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a86d262a069cac3d776c1e55b76f0fe244cf033c",
+          "message": "Merge pull request #4405 from 1c-syntax/fix/form-attribute-to-value-table-columns\n\nfix(types): обратное преобразование данных формы сохраняет колонки",
+          "timestamp": "2026-08-04T19:01:38+02:00",
+          "tree_id": "20fcfa5559050a39ea6044f35200306f6d549ac8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a86d262a069cac3d776c1e55b76f0fe244cf033c"
+        },
+        "date": 1785863712388,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.35461171468098,
+            "unit": "sec",
+            "range": "stddev: 2.3234598767783186",
+            "extra": "mean: 96.35461171468098 sec\nrounds: 3"
           }
         ]
       }
