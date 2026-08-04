@@ -38,7 +38,6 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeI
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -54,8 +53,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -87,13 +84,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private final ExpressionTypeInferencer inferencer;
   private final SymbolTypeIndex symbolTypeIndex;
-
-  /**
-   * Пул рабочей области: его воркеры несут её контекст, поэтому запущенный внутри задачи
-   * {@code parallelStream} видит нужные workspace-бины. Общий пул его не несёт.
-   */
-  @Qualifier("populateContextExecutor")
-  private final ExecutorService populateContextExecutor;
 
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
@@ -193,8 +183,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     rebuilt.set(0);
     rebuiltUris.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
-      documentsOf(pending).size(),
-      getMessage("resolveDocumentsPostfix")
+      pending.size(),
+      getMessage("resolveMethodsPostfix")
     );
     progressReporter.beginProgress(getMessage("resolveReturnTypes"));
     try {
@@ -369,9 +359,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
-      // Обход вскрывает новые зависимости, поэтому общее число документов заранее не
-      // известно: наращиваем его по мере того, как работа находится.
-      planned += documentsOf(roots).size();
+      // Обход вскрывает новые зависимости, поэтому общее число методов заранее не
+      // известно: наращиваем его по мере того, как работа находится. Считается ровно то,
+      // по чему идёт отсчёт, — корни обхода, иначе числитель убегает за знаменатель.
+      planned += roots.size();
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
     }
@@ -380,10 +371,15 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /**
    * Доводит до конца значения перечисленных методов, спускаясь по их зависимостям.
    * <p>
-   * Корни разбираются параллельно в пуле рабочей области, а каждый — вглубь: сначала
-   * доводятся значения вызванных методов, потом пересчитывается вызывающий. В ширину
-   * пришлось бы держать всю волну и перечитывать документы на каждом уровне; вглубь
-   * одновременно нужна лишь текущая цепочка, а её глубина на порядки меньше.
+   * Каждый корень обходится вглубь: сначала доводятся значения вызванных методов, потом
+   * пересчитывается вызывающий. В ширину пришлось бы держать всю волну и перечитывать
+   * документы на каждом уровне; вглубь одновременно нужна лишь текущая цепочка, а её
+   * глубина на порядки меньше.
+   * <p>
+   * Обход последовательный: работы здесь на десятки документов, а не на всю область, зато
+   * блокировки документов берутся и отпускаются в одном потоке. Разложенный по пулу, он
+   * упирался в то, что воркеры ждут чужие блокировки, а компенсировать такое ожидание
+   * {@code ForkJoinPool} не умеет — пул голодал и проход вставал.
    *
    * @param serverContext    рабочая область.
    * @param roots            методы, с которых начинается обход.
@@ -394,15 +390,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     List<MethodSymbol> roots,
     WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
   ) {
-    try {
-      populateContextExecutor.submit(() -> roots.parallelStream().forEach(root -> {
-        progressReporter.tick();
-        resolveDeep(serverContext, root, Collections.newSetFromMap(new IdentityHashMap<>()));
-      })).get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("Не удалось пересчитать типы возврата", e);
+    var inProgress = Collections.<MethodSymbol>newSetFromMap(new IdentityHashMap<>());
+    for (var root : roots) {
+      progressReporter.tick();
+      resolveDeep(serverContext, root, inProgress);
+      inProgress.clear();
     }
   }
 
@@ -433,16 +425,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     } finally {
       inProgress.remove(method);
     }
-  }
-
-  /**
-   * Документы перечисленных методов.
-   *
-   * @param methods методы.
-   * @return URI их документов без повторов.
-   */
-  private static List<URI> documentsOf(Collection<MethodSymbol> methods) {
-    return methods.stream().map(method -> method.getOwner().getUri()).distinct().toList();
   }
 
   /**
