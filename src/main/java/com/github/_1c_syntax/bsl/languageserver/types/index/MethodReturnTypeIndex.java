@@ -285,6 +285,11 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       dependenciesByMethod.computeIfAbsent(method, k -> ConcurrentHashMap.newKeySet()).add(dependency);
       dependentsByMethod.computeIfAbsent(dependency, k -> ConcurrentHashMap.newKeySet()).add(method);
     }
+    if (computed.incomplete()) {
+      // Расчёт видел метод, значение которого ещё не посчитано: так бывает, пока рабочая
+      // область наполняется. Такой метод пересчитывается проходом после наполнения.
+      pending.add(method);
+    }
     var previous = computed.types().isEmpty()
       ? typesByMethod.remove(method)
       : typesByMethod.put(method, computed.types());
@@ -307,12 +312,10 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       queue.clear();
       var changed = new ArrayList<MethodSymbol>();
       for (var method : wave) {
-        if (!isReadable(method)) {
-          // Документ выгружен. Догружать его ради одной правки дорого, поэтому метод
-          // откладывается: его подтянет проход после наполнения рабочей области либо
-          // следующий разбор его документа.
-          pending.add(method);
-        } else if (recompute(method)) {
+        // Выгруженный документ пропускается: догружать его ради разноса одной волны
+        // слишком дорого. Значение подтянется при следующем разборе документа, а если
+        // расчёт шёл по незаполненному значению — методом из очереди отложенных.
+        if (isReadable(method) && recompute(method)) {
           changed.add(method);
         }
       }
@@ -438,9 +441,11 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   /**
    * Результат расчёта типов возврата метода.
    *
-   * @param types     рассчитанные типы.
-   * @param consulted методы, значения которых участвовали в расчёте.
+   * @param types      рассчитанные типы.
+   * @param consulted  методы, значения которых участвовали в расчёте.
+   * @param incomplete расчёт обращался к методу, значение которого ещё не посчитано, —
+   *                   значит его надо повторить, когда рабочая область будет наполнена.
    */
-  public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted) {
+  public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete) {
   }
 }

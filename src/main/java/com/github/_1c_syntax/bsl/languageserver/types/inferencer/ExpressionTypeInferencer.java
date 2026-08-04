@@ -757,6 +757,11 @@ public class ExpressionTypeInferencer {
       } else {
         computed = methodReturnTypeIndex.get(method);
         ctx.dependencies.add(owner.getUri());
+        if (computed.isEmpty() && method.isFunction()) {
+          // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
+          // наполняется. Расчёт, опирающийся на него, придётся повторить.
+          ctx.sawMissing = true;
+        }
       }
       return declared.union(withoutDeclaredRefs(computed, declared));
     } finally {
@@ -795,13 +800,13 @@ public class ExpressionTypeInferencer {
     InferenceContext ctx
   ) {
     if (ctx.depth >= MAX_DEPTH) {
-      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of());
+      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
     try {
       var types = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx));
-      return new MethodReturnTypeIndex.ComputedReturnTypes(types, Set.copyOf(ctx.consulted));
+      return new MethodReturnTypeIndex.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing);
     } catch (StackOverflowError | RuntimeException e) {
-      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of());
+      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
   }
 
@@ -1471,6 +1476,8 @@ public class ExpressionTypeInferencer {
     final Set<MethodSymbol> consulted = new HashSet<>();
     /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
     boolean cycleCut;
+    /** Расчёт читал значение метода, которое ещё не посчитано. */
+    boolean sawMissing;
     int depth;
 
     InferenceContext(DocumentContext documentContext) {
