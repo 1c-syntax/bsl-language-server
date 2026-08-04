@@ -112,6 +112,8 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
           * **Поле32**: `Структура` \s
       &nbsp;&nbsp;`Строка` - вернувшаяся строка
 
+      **Выведено по коду:** Неопределено
+
       """);
   }
 
@@ -243,8 +245,8 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
   }
 
   @Test
-  void testDescribedReturnedValueSectionWins() {
-    // given: тип возвращаемого значения описан автором.
+  void testDescribedReturnedValueIsShownWithDivergence() {
+    // given: автор описал Булево, а тело возвращает массив.
     var documentContext = TestUtils.getDocumentContext("""
       // Возвращаемое значение:
       //  Булево - признак
@@ -257,9 +259,29 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     // when
     var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
-    // then: показывается написанное автором, вместе с его текстом.
+    // then: написанное автором остаётся вместе с его текстом, а расхождение видно припиской.
     assertThat(content).contains("Булево");
     assertThat(content).contains("признак");
+    assertThat(content).contains("**Выведено по коду:** Массив");
+  }
+
+  @Test
+  void testDescribedReturnedValueWithoutDivergenceHasNoNote() {
+    // given: описание совпадает с тем, что возвращает тело.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Массив - список
+      Функция Список() Экспорт
+      	Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Список").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).doesNotContain("Выведено по коду");
   }
 
   private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
