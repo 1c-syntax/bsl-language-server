@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
@@ -137,6 +139,24 @@ public class DescriptionFormatter {
     }
 
     return returnedValue;
+  }
+
+  /**
+   * Секция «Возвращаемое значение» по рассчитанным типам — для метода, у которого автор
+   * ничего не написал.
+   *
+   * @param returnTypes типы возвращаемого значения.
+   * @return размеченная секция; пустая строка, если типов нет.
+   */
+  public String getComputedReturnedValueSection(TypeSet returnTypes) {
+    if (returnTypes.isEmpty()) {
+      return "";
+    }
+    var types = returnTypes.refs().stream()
+      .map(TypeRef::qualifiedName)
+      .distinct()
+      .collect(Collectors.joining(", "));
+    return "**" + getResourceString(RETURNED_VALUE_KEY) + ":**\n\n" + types;
   }
 
   public String getExamplesSection(MethodSymbol methodSymbol) {

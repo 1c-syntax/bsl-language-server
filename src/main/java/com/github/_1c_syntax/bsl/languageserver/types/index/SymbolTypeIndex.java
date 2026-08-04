@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -54,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Индекс декларативных типов символов.
@@ -105,6 +107,18 @@ public class SymbolTypeIndex {
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
 
+  /**
+   * Типы возвращаемого значения, выведенные по телу метода. Пишет их
+   * {@code MethodReturnTypeIndexer}; сюда они складываются, чтобы ответ на вопрос
+   * «что возвращает метод» был один и тот же у всех потребителей.
+   */
+  private final Map<MethodSymbol, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
+  private final Map<URI, List<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
+
+  // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
+  // а здесь записи документа сначала стираются. Без явного порядка слушатель без
+  // аннотации идёт последним и стёр бы только что записанное.
+  @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
@@ -122,6 +136,46 @@ public class SymbolTypeIndex {
    */
   public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
     return declaredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
+   * Типы возвращаемого значения метода: объявленные в документирующем комментарии вместе
+   * с рассчитанными по телу.
+   * <p>
+   * По общим типам верим описанию: у {@code Массив из Число} из комментария состав
+   * элементов точнее, чем у того же {@code Массив}, собранного по телу.
+   *
+   * @param method метод.
+   * @return типы возвращаемого значения; {@link TypeSet#EMPTY}, если ни один источник
+   *     ничего не дал.
+   */
+  public TypeSet getReturnTypes(MethodSymbol method) {
+    var declared = getDeclaredReturnTypes(method);
+    var inferred = inferredReturnTypes.get(method);
+    if (inferred == null || inferred.isEmpty()) {
+      return declared;
+    }
+    var extra = inferred;
+    for (var ref : declared.refs()) {
+      extra = extra.without(ref);
+    }
+    return declared.union(extra);
+  }
+
+  /**
+   * Запомнить типы возвращаемого значения, выведенные по телу метода.
+   *
+   * @param method метод.
+   * @param types  выведенные типы; пустой набор стирает прежнюю запись.
+   */
+  public void putReturnTypes(MethodSymbol method, TypeSet types) {
+    if (types.isEmpty()) {
+      inferredReturnTypes.remove(method);
+      return;
+    }
+    inferredReturnTypes.put(method, types);
+    inferredByUri.computeIfAbsent(method.getOwner().getUri(), k -> new CopyOnWriteArrayList<>())
+      .add(method);
   }
 
   /**
@@ -294,6 +348,10 @@ public class SymbolTypeIndex {
    * Очистить записи, относящиеся к данному URI.
    */
   public void clear(URI uri) {
+    var computed = inferredByUri.remove(uri);
+    if (computed != null) {
+      computed.forEach(inferredReturnTypes::remove);
+    }
     var methods = indexedByUri.remove(uri);
     if (methods == null) {
       return;

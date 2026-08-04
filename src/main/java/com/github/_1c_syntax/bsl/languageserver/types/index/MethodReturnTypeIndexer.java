@@ -38,7 +38,6 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeI
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -56,7 +55,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 /**
  * Типы возвращаемого значения методов, рассчитанные по их телам.
@@ -79,12 +77,13 @@ import java.util.function.Supplier;
 @WorkspaceScope
 @RequiredArgsConstructor
 @Slf4j
-public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableIndex {
+public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableIndex {
 
   /** Предохранитель на случай незамеченной немонотонности пересчёта. */
   private static final int MAX_PASSES = 10;
 
-  private final ObjectProvider<ExpressionTypeInferencer> inferencerProvider;
+  private final ExpressionTypeInferencer inferencer;
+  private final SymbolTypeIndex symbolTypeIndex;
 
   /**
    * Пул рабочей области: его воркеры несут её контекст, поэтому запущенный внутри задачи
@@ -96,7 +95,6 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
 
-  private final Map<MethodSymbol, TypeSet> typesByMethod = new ConcurrentHashMap<>();
   private final Map<MethodSymbol, Set<MethodSymbol>> dependentsByMethod = new ConcurrentHashMap<>();
   private final Map<MethodSymbol, Set<MethodSymbol>> dependenciesByMethod = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> methodsByUri = new ConcurrentHashMap<>();
@@ -107,43 +105,41 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   /** Методы, изменившиеся в ходе общего прохода и ждущие разноса по потребителям. */
   private final Set<MethodSymbol> pending = ConcurrentHashMap.newKeySet();
 
+  /** Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает». */
+  private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
+
   /** Сколько документов пришлось перечитать за общий проход — для отладочного счёта. */
   private final AtomicInteger rebuilt = new AtomicInteger();
 
   /**
-   * Типы, которые метод возвращает по своему телу.
-   *
-   * @param method метод.
-   * @return рассчитанные типы; {@link TypeSet#EMPTY}, если тело ещё не разбиралось либо
-   *     не дало типов.
-   */
-  public TypeSet get(MethodSymbol method) {
-    return typesByMethod.getOrDefault(method, TypeSet.EMPTY);
-  }
-
-  /**
-   * Типы, которые метод возвращает по своему телу, с расчётом на месте, если он ещё не
-   * делался.
+   * Считает типы возврата метода по телу, если этого ещё не делалось, и складывает
+   * результат в {@link SymbolTypeIndex}.
    * <p>
    * Для неэкспортных методов заранее ничего не считается: они видны только внутри своего
    * документа, а там дерево разбора под рукой, и расчёт по запросу дешевле, чем расчёт
    * всех функций конфигурации при её разборе.
    *
    * @param method метод.
-   * @return рассчитанные типы; {@link TypeSet#EMPTY}, если тело недоступно либо не дало
-   *     типов.
    */
-  public TypeSet getOrCompute(MethodSymbol method, Supplier<ComputedReturnTypes> computation) {
-    var known = typesByMethod.get(method);
-    if (known != null) {
-      return known;
+  public void computeIfAbsent(MethodSymbol method) {
+    if (indexed.contains(method) || !method.isFunction() || !isReadable(method)) {
+      return;
     }
-    if (!method.isFunction() || !isReadable(method)) {
-      return TypeSet.EMPTY;
-    }
-    store(method, computation.get());
+    store(method, inferencer.computeReturnTypes(method));
     rememberMethodOfUri(method);
-    return typesByMethod.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
+   * Разбиралось ли уже тело метода.
+   * <p>
+   * Пока рабочая область наполняется, до части модулей очередь ещё не дошла, и пустой
+   * ответ у них означает «неизвестно», а не «ничего не возвращает».
+   *
+   * @param method метод.
+   * @return {@code true}, если типы возврата метода уже выводились.
+   */
+  public boolean isIndexed(MethodSymbol method) {
+    return indexed.contains(method);
   }
 
   /**
@@ -225,7 +221,8 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   }
 
   /**
-   * Удаляет записи методов документа и снимает их связи.
+   * Снимает связи методов документа. Сами значения живут в {@link SymbolTypeIndex} и
+   * стираются им же по тому же событию.
    *
    * @param uri URI документа.
    */
@@ -236,9 +233,9 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       return;
     }
     for (var method : methods) {
-      typesByMethod.remove(method);
       unlinkDependencies(method);
       dependentsByMethod.remove(method);
+      indexed.remove(method);
     }
   }
 
@@ -290,7 +287,7 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    * @return {@code true}, если набор типов изменился.
    */
   private boolean recompute(MethodSymbol method) {
-    return store(method, inferencerProvider.getObject().computeReturnTypes(method));
+    return store(method, inferencer.computeReturnTypes(method));
   }
 
   /**
@@ -314,10 +311,10 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
       // область наполняется. Такой метод пересчитывается проходом после наполнения.
       pending.add(method);
     }
-    var previous = computed.types().isEmpty()
-      ? typesByMethod.remove(method)
-      : typesByMethod.put(method, computed.types());
-    return !computed.types().equals(previous == null ? TypeSet.EMPTY : previous);
+    var previous = symbolTypeIndex.getReturnTypes(method);
+    symbolTypeIndex.putReturnTypes(method, computed.types());
+    indexed.add(method);
+    return !symbolTypeIndex.getReturnTypes(method).equals(previous);
   }
 
   /**

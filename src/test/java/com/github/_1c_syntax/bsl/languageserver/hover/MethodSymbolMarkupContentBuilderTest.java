@@ -219,6 +219,49 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
   }
 
 
+  @Test
+  void testReturnedValueSectionIsInferredWhenNotDescribed() {
+    // given: описания у функции нет, а тело возвращает массив и число.
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция РазныеТипы(Флаг) Экспорт
+      	Если Флаг Тогда
+      		Возврат Новый Массив;
+      	Иначе
+      		Возврат 10;
+      	КонецЕсли;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("РазныеТипы").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: секция строится по рассчитанным типам.
+    assertThat(content).contains("**Возвращаемое значение:**");
+    assertThat(content).contains("Массив");
+    assertThat(content).contains("Число");
+  }
+
+  @Test
+  void testDescribedReturnedValueSectionWins() {
+    // given: тип возвращаемого значения описан автором.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Булево - признак
+      Функция Признак() Экспорт
+      	Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Признак").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: показывается написанное автором, вместе с его текстом.
+    assertThat(content).contains("Булево");
+    assertThat(content).contains("признак");
+  }
+
   private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
     return Reference.of(documentContext.getSymbolTree().getModule(), symbol,
       new Location(documentContext.getUri().toString(), symbol.getSelectionRange()));

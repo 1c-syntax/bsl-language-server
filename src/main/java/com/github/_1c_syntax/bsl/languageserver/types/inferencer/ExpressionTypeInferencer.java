@@ -39,7 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
-import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -127,7 +127,7 @@ public class ExpressionTypeInferencer {
   private final ControlFlowGraphIndex controlFlowGraphIndex;
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReturnTypeFromBodyInference returnTypeFromBodyInference;
-  private final MethodReturnTypeIndex methodReturnTypeIndex;
+  private final MethodReturnTypeIndexer methodReturnTypeIndexer;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final ScopeMemberTypeResolver scopeMemberTypeResolver;
@@ -746,24 +746,21 @@ public class ExpressionTypeInferencer {
     var owner = method.getOwner();
     ctx.consulted.add(method);
     try {
-      var declared = symbolTypeIndex.getDeclaredReturnTypes(method);
       // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
       // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
       // сравнение самих URI нормализует проценты и стоит заметно дороже.
-      TypeSet computed;
       if (owner == ctx.documentContext) {
-        computed = methodReturnTypeIndex.getOrCompute(method, () -> returnTypesOfBody(method, ctx));
+        methodReturnTypeIndexer.computeIfAbsent(method);
       } else {
-        computed = methodReturnTypeIndex.get(method);
         ctx.dependencies.add(owner.getUri());
-        if (computed.isEmpty() && method.isFunction()) {
+        if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
           // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
           // наполняется. Расчёт, опирающийся на него, придётся повторить.
           ctx.sawMissing = true;
         }
       }
-      return declared.union(withoutDeclaredRefs(computed, declared));
+      return symbolTypeIndex.getReturnTypes(method);
     } finally {
       ctx.visited.remove(method);
     }
@@ -775,13 +772,13 @@ public class ExpressionTypeInferencer {
    * <p>
    * Разбирается тело метода в его же документе, поэтому вызывать это можно только тогда,
    * когда дерево разбора владельца доступно — то есть при построении его контекста.
-   * Значения вызванных методов читаются из {@link MethodReturnTypeIndex} как есть: до
+   * Значения вызванных методов читаются из {@link MethodReturnTypeIndexer} как есть: до
    * неподвижной точки их доводит пересчёт по зависимым, а не рекурсия по стеку.
    *
    * @param method метод, чьё тело разбирается.
    * @return рассчитанные типы и методы, участвовавшие в расчёте.
    */
-  public MethodReturnTypeIndex.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
+  public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
     return returnTypesOfBody(method, new InferenceContext(method.getOwner()));
   }
 
@@ -795,40 +792,22 @@ public class ExpressionTypeInferencer {
    * @param ctx    контекст расчёта.
    * @return рассчитанные типы и методы, участвовавшие в расчёте.
    */
-  private MethodReturnTypeIndex.ComputedReturnTypes returnTypesOfBody(
+  private MethodReturnTypeIndexer.ComputedReturnTypes returnTypesOfBody(
     MethodSymbol method,
     InferenceContext ctx
   ) {
     if (ctx.depth >= MAX_DEPTH) {
-      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
     try {
       var types = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx));
-      return new MethodReturnTypeIndex.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing);
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing);
     } catch (StackOverflowError | RuntimeException e) {
-      return new MethodReturnTypeIndex.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
   }
 
-  /**
-   * Убирает из расчётного набора типы, уже названные в описании метода.
-   * <p>
-   * По общему типу верим описанию: там у коллекции объявлен тип элементов
-   * ({@code Массив из Число}), а у того же типа, собранного по телу, элемент —
-   * платформенный умолчательный. Без этого объявленный состав элементов размывался бы
-   * умолчательным при объединении.
-   *
-   * @param computed расчётные типы по телу метода.
-   * @param declared типы, объявленные в описании метода.
-   * @return расчётные типы без тех, что уже объявлены.
-   */
-  private static TypeSet withoutDeclaredRefs(TypeSet computed, TypeSet declared) {
-    var result = computed;
-    for (var ref : declared.refs()) {
-      result = result.without(ref);
-    }
-    return result;
-  }
+
 
   /**
    * Тип переменной в точке использования, рассчитанный по потоку управления тела:
