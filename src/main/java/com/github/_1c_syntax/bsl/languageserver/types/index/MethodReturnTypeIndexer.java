@@ -55,6 +55,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * Типы возвращаемого значения методов, рассчитанные по их телам.
@@ -119,13 +120,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * документа, а там дерево разбора под рукой, и расчёт по запросу дешевле, чем расчёт
    * всех функций конфигурации при её разборе.
    *
-   * @param method метод.
+   * @param method      метод.
+   * @param computation расчёт в контексте вызывающего: у него общая с ним защита от
+   *                    циклов и общая глубина, без которых цепочка вызовов внутри модуля
+   *                    уходит в рекурсию до переполнения стека.
    */
-  public void computeIfAbsent(MethodSymbol method) {
+  public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation) {
     if (indexed.contains(method) || !method.isFunction() || !isReadable(method)) {
       return;
     }
-    store(method, inferencer.computeReturnTypes(method));
+    store(method, computation.get());
     rememberMethodOfUri(method);
   }
 

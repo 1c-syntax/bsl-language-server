@@ -751,7 +751,7 @@ public class ExpressionTypeInferencer {
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
       // сравнение самих URI нормализует проценты и стоит заметно дороже.
       if (owner == ctx.documentContext) {
-        methodReturnTypeIndexer.computeIfAbsent(method);
+        methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx));
       } else {
         ctx.dependencies.add(owner.getUri());
         if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
