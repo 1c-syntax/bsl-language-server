@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
@@ -50,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -72,6 +74,7 @@ import java.util.function.Supplier;
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
+@Slf4j
 public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableIndex {
 
   /** Предохранитель на случай незамеченной немонотонности пересчёта. */
@@ -96,6 +99,9 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
 
   /** Методы, изменившиеся в ходе общего прохода и ждущие разноса по потребителям. */
   private final Set<MethodSymbol> pending = ConcurrentHashMap.newKeySet();
+
+  /** Сколько документов пришлось перечитать за общий проход — для отладочного счёта. */
+  private final AtomicInteger rebuilt = new AtomicInteger();
 
   /**
    * Типы, которые метод возвращает по своему телу.
@@ -171,12 +177,16 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
     maintenance = true;
+    var deferred = pending.size();
+    rebuilt.set(0);
     try {
       drainPending(serverContext);
     } finally {
       maintenance = false;
       pending.clear();
     }
+    LOGGER.debug("Доразрешение типов возврата: отложено методов {}, перечитано документов {}",
+      deferred, rebuilt.get());
   }
 
   /**
@@ -366,20 +376,41 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    * <p>
    * Разбор документа сам публикует событие изменения содержимого, поэтому пересчёт
    * выполняет обработчик этого события — здесь остаётся только довести документ до
-   * состояния, в котором его тела читаются.
+   * состояния, в котором его тела читаются, и вернуть обратно.
+   * <p>
+   * Догрузка и освобождение идут под блокировкой документа на запись: без неё другой
+   * поток, работающий с тем же документом, остался бы без вторичных данных посреди
+   * своего расчёта. Одновременно загруженных документов не больше, чем потоков в пуле,
+   * поэтому память не зависит от размера рабочей области.
    *
    * @param serverContext   рабочая область.
    * @param documentContext документ.
    */
   private void recomputeLoading(ServerContext serverContext, DocumentContext documentContext) {
-    if (isReadable(documentContext)) {
-      pending.addAll(recomputeDocument(documentContext));
-      return;
+    var lock = serverContext.getDocumentLock(documentContext.getUri());
+    lock.readLock().lock();
+    try {
+      if (isReadable(documentContext)) {
+        pending.addAll(recomputeDocument(documentContext));
+        return;
+      }
+    } finally {
+      lock.readLock().unlock();
     }
-    // Освобождать документ обратно нельзя: его прямо сейчас может разбирать другой поток,
-    // и вырванные из-под него вторичные данные роняют расчёт. Освобождением занимается
-    // тот, кто документ открывал.
-    serverContext.rebuildDocument(documentContext);
+    lock.writeLock().lock();
+    try {
+      // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
+      // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
+      if (isReadable(documentContext)) {
+        pending.addAll(recomputeDocument(documentContext));
+        return;
+      }
+      rebuilt.incrementAndGet();
+      serverContext.rebuildDocument(documentContext);
+      serverContext.tryClearDocument(documentContext);
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   /**
