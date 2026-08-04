@@ -70,7 +70,8 @@ public class FormAttributeTypeIndex {
    *
    * @param formRef       тип формы.
    * @param attributeName имя реквизита.
-   * @return объявленный тип; пустой набор, если это не форма либо реквизита с таким
+   * @return объявленный тип — у реквизита-таблицы (дерева) значений вместе с колонками,
+   *     объявленными в форме; пустой набор, если это не форма либо реквизита с таким
    *     именем у неё нет.
    */
   public TypeSet declaredType(TypeRef formRef, String attributeName) {

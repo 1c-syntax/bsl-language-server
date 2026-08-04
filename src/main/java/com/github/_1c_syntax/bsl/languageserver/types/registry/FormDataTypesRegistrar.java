@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
@@ -58,6 +59,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @WorkspaceScope
 @RequiredArgsConstructor
 class FormDataTypesRegistrar {
+
+  /**
+   * Строка табличной коллекции: {@code коллекция → её строка}. Колонки такой коллекции
+   * ложатся полями строки, а не самой коллекции, — то же представление, в котором их
+   * видит таблица значений, собранная в коде.
+   */
+  private static final Map<String, String> COLLECTION_ROWS = Map.of(
+    "ТаблицаЗначений", CollectionReturnsSpecializer.VALUE_TABLE_ROW,
+    "ДеревоЗначений", "СтрокаДереваЗначений");
 
   private final TypeRegistry typeRegistry;
 
@@ -153,11 +163,58 @@ class FormDataTypesRegistrar {
     for (var attribute : attributes) {
       var name = attribute.getName();
       if (!name.isBlank()) {
-        byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
-          ValueTypes.resolve(typeRegistry, attribute.getValueType()));
+        byName.putIfAbsent(name.toLowerCase(Locale.ROOT), declaredAttributeType(attribute));
       }
     }
     return Map.copyOf(byName);
+  }
+
+  /**
+   * Объявленный тип одного реквизита — вместе с колонками, если это таблица или дерево
+   * значений. Колонки такого реквизита объявлены в самой форме, и обратное
+   * преобразование возвращает коллекцию с ними: без этого на сервере получалась бы
+   * таблица значений без единой колонки.
+   */
+  private TypeSet declaredAttributeType(FormAttribute attribute) {
+    return withColumns(ValueTypes.resolve(typeRegistry, attribute.getValueType()), attribute.getColumns());
+  }
+
+  /**
+   * Тип табличной коллекции с колонками, приписанными её строке.
+   * <p>
+   * Представление то же, что у таблицы значений, собранной в коде ({@code Новый
+   * ТаблицаЗначений} + {@code Колонки.Добавить}): колонки — поля строки, строка — тип
+   * элемента коллекции. Его и читают обход коллекции, {@code Колонки},
+   * {@code Выгрузить} и {@code ВыгрузитьКолонку}.
+   *
+   * @param declared объявленный тип реквизита.
+   * @param columns  колонки, объявленные в форме.
+   * @return тип с колонками; исходный, если колонок нет либо тип не табличная коллекция.
+   */
+  private TypeSet withColumns(TypeSet declared, List<FormAttribute> columns) {
+    if (columns.isEmpty() || declared.isEmpty()) {
+      return declared;
+    }
+    var result = declared;
+    for (var collectionRef : declared.refs()) {
+      var rowName = COLLECTION_ROWS.get(collectionRef.qualifiedName());
+      var rowRef = rowName == null ? null : typeRegistry.resolve(rowName).orElse(null);
+      if (rowRef != null) {
+        result = result.withElement(collectionRef, rowWithColumns(rowRef, columns));
+      }
+    }
+    return result;
+  }
+
+  /** Строка коллекции, несущая её колонки полями. */
+  private TypeSet rowWithColumns(TypeRef rowRef, List<FormAttribute> columns) {
+    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(columns.size());
+    // Через членов, а не по самим колонкам: имя, описание и дедуп одноимённых у колонки
+    // ровно те же, что у реквизита, — правило одно и живёт в одном месте.
+    for (var column : buildAttributeMembers(columns, declaredAttributeTypes(columns))) {
+      fields.put(column.name(), new LocalField(column.returnTypes(), column.description()));
+    }
+    return TypeSet.of(rowRef).withFields(rowRef, fields);
   }
 
   /** Объявленные типы реквизита, переведённые в типы данных формы. */

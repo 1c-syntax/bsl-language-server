@@ -143,6 +143,23 @@
 				</Column>
 			</Columns>
 		</Attribute>
+		<Attribute name="ДеревоПодбора" id="6">
+			<Type>
+				<v8:Type>v8:ValueTree</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Группа" id="7">
+					<Type>
+						<v8:Type>cfg:CatalogRef.Справочник1</v8:Type>
+					</Type>
+				</Column>
+				<Column name="Пометка" id="8">
+					<Type>
+						<v8:Type>xs:boolean</v8:Type>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
 	</Attributes>
 	<Commands>
 		<Command name="ЗаполнитьПоОснованию" id="1">
