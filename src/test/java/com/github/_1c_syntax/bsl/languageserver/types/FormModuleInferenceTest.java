@@ -287,6 +287,106 @@ class FormModuleInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void convertedValueTableCarriesColumnsDeclaredInTheForm() {
+    // Репорт: обратное преобразование отдавало реквизит-таблицу без единой колонки.
+    // Колонки такого реквизита объявлены в самой форме (блок <Columns>), и на сервер
+    // таблица приходит вместе с ними.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        Таблица = РеквизитФормыВЗначение("ТаблицаПодбора");
+        СЯвнымТипом = РеквизитФормыВЗначение("ТаблицаПодбора", Тип("ТаблицаЗначений"));
+        Для Каждого Строка Из Таблица Цикл
+          Товар = Строка.Номенклатура;
+        КонецЦикла;
+        Колонки = Таблица.Колонки;
+      КонецПроцедуры
+      """);
+
+    var table = typeSetAtRhs(documentContext, "Таблица");
+    assertThat(table.refs()).extracting(TypeRef::qualifiedName).containsExactly("ТаблицаЗначений");
+    assertThat(table.getElementTypes().refs()).extracting(TypeRef::qualifiedName)
+      .as("колонки лежат на строке таблицы, а не на ней самой")
+      .containsExactly("СтрокаТаблицыЗначений");
+    assertThat(table.getElementTypes().getAllFieldNames())
+      .containsExactlyInAnyOrder("Номенклатура", "Количество");
+    assertThat(typesAtRhs(documentContext, "Товар"))
+      .as("обход преобразованной таблицы даёт строку с колонками")
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(typeSetAtRhs(documentContext, "СЯвнымТипом").getElementTypes().getAllFieldNames())
+      .as("названный вторым параметром тип не должен терять колонки объявления")
+      .containsExactlyInAnyOrder("Номенклатура", "Количество");
+    var columns = typeSetAtRhs(documentContext, "Колонки");
+    assertThat(columns.getLocalFields(columns.refs().iterator().next()))
+      .as("та же таблица через переменную: каждая колонка — свойство коллекции колонок")
+      .containsKeys("Номенклатура", "Количество");
+  }
+
+  @Test
+  void convertedValueTreeCarriesColumnsToo() {
+    // Дерево значений устроено так же: колонки объявлены в форме и лежат полями строки,
+    // только обходят его через `Строки`, а не напрямую.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        Дерево = РеквизитФормыВЗначение("ДеревоПодбора");
+        Для Каждого Строка Из Дерево.Строки Цикл
+          Группа = Строка.Группа;
+        КонецЦикла;
+      КонецПроцедуры
+      """);
+
+    var tree = typeSetAtRhs(documentContext, "Дерево");
+    assertThat(tree.refs()).extracting(TypeRef::qualifiedName).containsExactly("ДеревоЗначений");
+    assertThat(tree.getElementTypes().getAllFieldNames())
+      .containsExactlyInAnyOrder("Группа", "Пометка");
+    assertThat(typesAtRhs(documentContext, "Группа"))
+      .as("обход строк преобразованного дерева даёт строку с колонками")
+      .containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  @Test
+  void convertedFormDataCarriesColumnsOfTheDataItself() {
+    // У `ДанныеФормыВЗначение` тип назван вторым параметром, но про состав колонок имя
+    // типа не говорит ничего: колонки берутся у самих преобразуемых данных.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        Данные = Объект.ТабличнаяЧасть1;
+        Таблица = ДанныеФормыВЗначение(Данные, Тип("ТаблицаЗначений"));
+        Для Каждого Строка Из Таблица Цикл
+          Значение = Строка.Реквизит1;
+        КонецЦикла;
+      КонецПроцедуры
+      """);
+
+    var table = typeSetAtRhs(documentContext, "Таблица");
+    assertThat(table.refs()).extracting(TypeRef::qualifiedName).containsExactly("ТаблицаЗначений");
+    assertThat(table.getElementTypes().getAllFieldNames())
+      .as("колонки преобразованной таблицы — колонки табличной части, лежавшей на форме")
+      .contains("Реквизит1", "Реквизит2");
+    assertThat(typesAtRhs(documentContext, "Значение")).isNotEmpty();
+  }
+
+  @Test
+  void convertedFormDataTreeCarriesColumnsOfTheDataItself() {
+    // Тот же перенос, но в дерево: колонки берутся у данных формы, а не у имени типа.
+    var documentContext = formModuleWith("""
+      &НаСервере
+      Процедура Тест()
+        Данные = ДеревоПодбора;
+        Дерево = ДанныеФормыВЗначение(Данные, Тип("ДеревоЗначений"));
+      КонецПроцедуры
+      """);
+
+    var tree = typeSetAtRhs(documentContext, "Дерево");
+    assertThat(tree.refs()).extracting(TypeRef::qualifiedName).containsExactly("ДеревоЗначений");
+    assertThat(tree.getElementTypes().getAllFieldNames())
+      .as("колонки преобразованного дерева — колонки дерева, лежавшего на форме")
+      .contains("Группа", "Пометка");
+  }
+
+  @Test
   void explicitTypeArgumentWinsOverTheDeclaredOne() {
     // У ДанныеФормыВЗначение второй параметр обязателен, у РеквизитФормыВЗначение —
     // нет, но если он передан, преобразование идёт именно в него.

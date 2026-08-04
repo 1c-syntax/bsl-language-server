@@ -394,7 +394,7 @@ public class ExpressionTypeInferencer {
       return adjusted;
     }
     var formTypes = formExpressionInference.refinedCallTypes(
-      ctx.documentContext, leftTypes, memberName, call);
+      ctx.documentContext, leftTypes, memberName, call, node -> inferInternal(node, ctx));
     if (formTypes != null) {
       return formTypes;
     }
@@ -481,7 +481,7 @@ public class ExpressionTypeInferencer {
     //     объявленный возврат обобщённый (`Произвольный`), а прикладной тип известен
     //     из аргументов вызова либо из объявления реквизита.
     var convertedValue = formExpressionInference.convertedValueType(
-      ctx.documentContext, name.getText(), call, null);
+      ctx.documentContext, name.getText(), call, null, node -> inferInternal(node, ctx));
     if (convertedValue != null) {
       return convertedValue;
     }
