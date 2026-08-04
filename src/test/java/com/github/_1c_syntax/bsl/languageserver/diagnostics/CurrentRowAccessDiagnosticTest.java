@@ -36,9 +36,11 @@ class CurrentRowAccessDiagnosticTest
   @Test
   void detectsDataAccessViaCurrentRow() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(2);
+    // 3 dereference: .Наименование, .ДатаДокумента, .Записать()
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(1, 22, 1, 35)
-      .hasRange(2, 18, 2, 31);
+      .hasRange(2, 18, 2, 31)
+      .hasRange(3, 11, 3, 24);
   }
 }
