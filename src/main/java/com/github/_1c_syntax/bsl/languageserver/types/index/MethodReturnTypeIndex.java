@@ -357,9 +357,14 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
     ServerContext serverContext,
     WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
   ) {
+    var planned = 0;
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var uris = documentsOf(pending);
       pending.clear();
+      // Волна вскрывает новых потребителей, поэтому общее число документов заранее не
+      // известно: наращиваем его по мере того, как работа находится.
+      planned += uris.size();
+      progressReporter.setSize(planned);
       recomputeAll(serverContext, uris, progressReporter);
     }
   }
