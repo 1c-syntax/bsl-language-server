@@ -83,6 +83,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Предохранитель на случай незамеченной немонотонности пересчёта. */
   private static final int MAX_PASSES = 10;
 
+  /** Сколько документов допустимо держать разобранными разом ради обхода цикла. */
+  private static final int MAX_DOCUMENTS_IN_MEMORY = 8;
+
   private final ExpressionTypeInferencer inferencer;
   private final SymbolTypeIndex symbolTypeIndex;
 
@@ -360,9 +363,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
-      // Обход вскрывает новые зависимости, поэтому общее число методов заранее не
+      // Проход вскрывает новые зависимости, поэтому общее число методов заранее не
       // известно: наращиваем его по мере того, как работа находится. Считается ровно то,
-      // по чему идёт отсчёт, — корни обхода, иначе числитель убегает за знаменатель.
+      // по чему идёт отсчёт, — методы, иначе числитель убегает за знаменатель.
       planned += roots.size();
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
@@ -370,13 +373,22 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Пересчитывает отложенные методы, группируя их по документам.
+   * Пересчитывает отложенные методы в порядке их зависимостей.
    * <p>
    * Единица работы — документ: он загружается один раз, на нём пересчитываются все его
-   * отложенные методы, и он тут же отпускается. В памяти поэтому находится ровно один
-   * документ. Спуск по зависимостям вглубь пробовался и оказался хуже: грузить всё равно
-   * приходится документ целиком, а обход идёт по методам, и один документ загружался
-   * заново под каждый свой метод — на ssl_3_1 это дало 4252 разбора против 181.
+   * отложенные методы, и он отпускается. Порядок задаёт граф зависимостей между
+   * документами, свёрнутый по компонентам сильной связности: к моменту разбора документа
+   * всё, от чего он зависит, уже посчитано окончательно, поэтому второй заход не нужен.
+   * Без этого порядка документ перечитывался волнами по восемь-десять раз.
+   * <p>
+   * Внутри компоненты сходимости за один заход нет — там цикл, — поэтому её документы
+   * держатся загруженными и крутятся до неподвижной точки. Компонента крупнее
+   * {@link #MAX_DOCUMENTS_IN_MEMORY} обрабатывается по-старому, с загрузкой и
+   * освобождением на каждом обороте: память дороже лишних разборов.
+   * <p>
+   * Спуск по зависимостям вглубь по методам пробовался и оказался хуже: грузить всё равно
+   * приходится документ целиком, и один документ загружался заново под каждый свой
+   * метод — на ssl_3_1 это дало 4252 разбора против 215.
    * <p>
    * Проход последовательный: блокировки документов берутся и отпускаются в одном потоке.
    * Разложенный по пулу, он упирался в то, что воркеры ждут чужие блокировки, а
@@ -396,9 +408,96 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var root : roots) {
       byDocument.computeIfAbsent(root.getOwner().getUri(), k -> new ArrayList<>()).add(root);
     }
-    for (var methods : byDocument.values()) {
+    var order = DocumentDependencies.of(byDocument,
+      method -> dependenciesByMethod.getOrDefault(method, Set.of()));
+    for (var component : order.components()) {
+      var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
       methods.forEach(method -> progressReporter.tick());
-      recomputeLoading(serverContext, methods);
+      resolveComponent(serverContext, component, byDocument, methods);
+    }
+  }
+
+  /**
+   * Доводит до неподвижной точки компоненту сильной связности.
+   * <p>
+   * Компонента из одного документа считается за один заход: всё, от чего она зависит, уже
+   * посчитано. В цикле заходов несколько, поэтому его документы держатся загруженными —
+   * так повторные обороты не стоят ни одного лишнего разбора.
+   *
+   * @param serverContext рабочая область.
+   * @param component     документы компоненты.
+   * @param byDocument    отложенные методы по документам.
+   * @param methods       отложенные методы компоненты.
+   */
+  private void resolveComponent(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    List<MethodSymbol> methods
+  ) {
+    if (component.size() == 1) {
+      recomputeLoading(serverContext, byDocument.get(component.get(0)));
+      return;
+    }
+    if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
+      // Держать столько документов разом нельзя, поэтому крутим с загрузкой и
+      // освобождением: лишние разборы дешевле переполнения памяти.
+      for (var pass = 0; pass < MAX_PASSES; pass++) {
+        var changed = false;
+        for (var uri : component) {
+          changed |= recomputeLoading(serverContext, byDocument.get(uri));
+        }
+        if (!changed) {
+          return;
+        }
+      }
+      return;
+    }
+    withDocumentsLoaded(serverContext, component, () -> {
+      for (var pass = 0; pass < MAX_PASSES; pass++) {
+        var changed = false;
+        for (var method : methods) {
+          changed |= recompute(method);
+        }
+        if (!changed) {
+          return;
+        }
+      }
+    });
+  }
+
+  /**
+   * Выполняет работу, держа документы компоненты разобранными, и возвращает их в прежнее
+   * состояние после неё.
+   *
+   * @param serverContext рабочая область.
+   * @param component     документы компоненты.
+   * @param work          работа над ними.
+   */
+  private void withDocumentsLoaded(ServerContext serverContext, List<URI> component, Runnable work) {
+    var locked = new ArrayList<URI>(component.size());
+    var loaded = new ArrayList<DocumentContext>(component.size());
+    try {
+      for (var uri : component) {
+        var documentContext = serverContext.getDocuments().get(uri);
+        if (documentContext == null) {
+          continue;
+        }
+        serverContext.getDocumentLock(uri).writeLock().lock();
+        locked.add(uri);
+        if (!isReadable(documentContext)) {
+          rebuilt.incrementAndGet();
+          rebuiltUris.add(uri);
+          serverContext.rebuildDocument(documentContext);
+          loaded.add(documentContext);
+        }
+      }
+      work.run();
+    } finally {
+      loaded.forEach(serverContext::tryClearDocument);
+      for (var index = locked.size() - 1; index >= 0; index--) {
+        serverContext.getDocumentLock(locked.get(index)).writeLock().unlock();
+      }
     }
   }
 
@@ -415,17 +514,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * своего расчёта. Одновременно загруженных документов не больше, чем потоков в пуле,
    * поэтому память не зависит от размера рабочей области.
    *
-   * @param serverContext   рабочая область.
-   * @param documentContext документ.
+   * @param serverContext рабочая область.
+   * @param methods       отложенные методы одного документа.
+   * @return {@code true}, если хоть у одного метода набор типов изменился.
    */
-  private void recomputeLoading(ServerContext serverContext, List<MethodSymbol> methods) {
+  private boolean recomputeLoading(ServerContext serverContext, List<MethodSymbol> methods) {
     var documentContext = methods.get(0).getOwner();
     var lock = serverContext.getDocumentLock(documentContext.getUri());
     lock.readLock().lock();
     try {
       if (isReadable(documentContext)) {
-        recomputeEach(methods);
-        return;
+        return recomputeEach(methods);
       }
     } finally {
       lock.readLock().unlock();
@@ -435,16 +534,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
       if (isReadable(documentContext)) {
-        recomputeEach(methods);
-        return;
+        return recomputeEach(methods);
       }
       rebuilt.incrementAndGet();
       rebuiltUris.add(documentContext.getUri());
       // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
       // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
-      recomputeEach(methods);
+      var changed = recomputeEach(methods);
       serverContext.tryClearDocument(documentContext);
+      return changed;
     } finally {
       lock.writeLock().unlock();
     }
@@ -454,14 +553,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * Пересчитывает перечисленные методы одного, уже разобранного документа.
    *
    * @param methods методы.
+   * @return {@code true}, если хоть у одного набор типов изменился.
    */
-  private void recomputeEach(List<MethodSymbol> methods) {
+  private boolean recomputeEach(List<MethodSymbol> methods) {
+    var changed = false;
     for (var method : methods) {
-      // Пометка снимается, чтобы расчёт по запросу не отдал прежнее значение: зависимости
-      // метода с прошлого раза могли дойти до ума.
-      indexed.remove(method);
-      recompute(method);
+      // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
+      // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
+      // ушёл бы в отложенные — очередь не сходилась бы.
+      changed |= recompute(method);
     }
+    return changed;
   }
 
   /**
