@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -231,15 +232,16 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
 
   /**
    * Пересчитывает все функции документа.
+   * <p>
+   * Вызывается там, где дерево разбора заведомо на месте: сразу после разбора документа
+   * либо под блокировкой, снятой с проверенного состояния. Само состояние здесь не
+   * спрашивается — при разборе оно выставляется уже после публикации события.
    *
    * @param documentContext документ.
    * @return методы, у которых набор типов изменился.
    */
   private List<MethodSymbol> recomputeDocument(DocumentContext documentContext) {
     var changed = new ArrayList<MethodSymbol>();
-    if (!isReadable(documentContext)) {
-      return changed;
-    }
     var methods = new ArrayList<MethodSymbol>();
     for (var method : documentContext.getSymbolTree().getMethods()) {
       // Заранее считаются только экспортные функции: остальные видны лишь внутри своего
@@ -461,12 +463,8 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
    * @return {@code true}, если тела его методов можно разобрать прямо сейчас.
    */
   private static boolean isReadable(DocumentContext documentContext) {
-    try {
-      documentContext.getAst();
-      return true;
-    } catch (RuntimeException e) {
-      return false;
-    }
+    return documentContext.getServerContext().getDocumentState(documentContext)
+      == DocumentState.WITH_CONTENT;
   }
 
   /**

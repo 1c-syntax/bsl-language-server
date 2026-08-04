@@ -121,7 +121,7 @@ public class ServerContext {
     = new ConcurrentHashMap<>();
   private final Map<URI, ReadWriteLock> documentLocks = new ConcurrentHashMap<>();
 
-  private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
+  private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
 
@@ -396,18 +396,33 @@ public class ServerContext {
   }
 
   /**
+   * Состояние документа в контексте.
+   * <p>
+   * Ответ действителен ровно до ближайшей операции над документом; чтобы он не устарел
+   * посреди работы, спрашивать состояние и читать вторичные данные надо под одной
+   * блокировкой (см. {@link #getDocumentLock(URI)}).
+   *
+   * @param documentContext документ.
+   * @return состояние документа; {@link DocumentState#WITHOUT_CONTENT} для документа, о котором
+   *     контексту ещё ничего не известно.
+   */
+  public DocumentState getDocumentState(DocumentContext documentContext) {
+    return states.getOrDefault(documentContext, DocumentState.WITHOUT_CONTENT);
+  }
+
+  /**
    * Перестроить документ. В качестве содержимого будут использоваться данные,
    * прочитанные из файла, с которым связан документ.
    *
    * @param documentContext документ, который необходимо перестроить.
    */
   public void rebuildDocument(DocumentContext documentContext) {
-    if (states.get(documentContext) == State.WITH_CONTENT) {
+    if (states.get(documentContext) == DocumentState.WITH_CONTENT) {
       return;
     }
 
     documentContext.rebuildFromFileSystem();
-    states.put(documentContext, State.WITH_CONTENT);
+    states.put(documentContext, DocumentState.WITH_CONTENT);
   }
 
   /**
@@ -419,7 +434,7 @@ public class ServerContext {
    */
   public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
     documentContext.rebuild(content, version);
-    states.put(documentContext, State.WITH_CONTENT);
+    states.put(documentContext, DocumentState.WITH_CONTENT);
   }
 
   /**
@@ -434,7 +449,7 @@ public class ServerContext {
       return false;
     }
 
-    states.put(documentContext, State.WITHOUT_CONTENT);
+    states.put(documentContext, DocumentState.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
     return true;
   }
@@ -446,7 +461,7 @@ public class ServerContext {
    */
   public void closeDocument(DocumentContext documentContext) {
     openedDocuments.remove(documentContext);
-    states.put(documentContext, State.WITHOUT_CONTENT);
+    states.put(documentContext, DocumentState.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
   }
 
@@ -570,18 +585,5 @@ public class ServerContext {
     return Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), key);
   }
 
-  /**
-   * Состояние документа в контексте.
-   */
-  private enum State {
-    /**
-     * В документе отсутствует контент или он был очищен.
-     */
-    WITHOUT_CONTENT,
-    /**
-     * В документе присутствует контент.
-     */
-    WITH_CONTENT
-  }
 
 }
