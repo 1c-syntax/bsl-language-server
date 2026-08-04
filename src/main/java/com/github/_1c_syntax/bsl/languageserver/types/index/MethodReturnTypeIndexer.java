@@ -47,6 +47,8 @@ import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -109,8 +111,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает». */
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
-  /** Сколько документов пришлось перечитать за общий проход — для отладочного счёта. */
+  /** Сколько раз пришлось перечитать документ за общий проход — для отладочного счёта. */
   private final AtomicInteger rebuilt = new AtomicInteger();
+
+  /** Какие документы перечитывались: волн несколько, и один документ может попасть в разбор не раз. */
+  private final Set<URI> rebuiltUris = ConcurrentHashMap.newKeySet();
 
   /**
    * Считает типы возврата метода по телу, если этого ещё не делалось, и складывает
@@ -186,6 +191,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     maintenance = true;
     var deferred = pending.size();
     rebuilt.set(0);
+    rebuiltUris.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
       documentsOf(pending).size(),
       getMessage("resolveDocumentsPostfix")
@@ -198,8 +204,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       pending.clear();
       progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
     }
-    LOGGER.debug("Доразрешение типов возврата: отложено методов {}, перечитано документов {}",
-      deferred, rebuilt.get());
+    LOGGER.debug("Доразрешение типов возврата: отложено методов {}, разборов документов {},"
+        + " из них различных документов {}",
+      deferred, rebuilt.get(), rebuiltUris.size());
   }
 
   /**
@@ -360,13 +367,71 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   ) {
     var planned = 0;
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
-      var uris = documentsOf(pending);
+      var roots = List.copyOf(pending);
       pending.clear();
-      // Волна вскрывает новых потребителей, поэтому общее число документов заранее не
+      // Обход вскрывает новые зависимости, поэтому общее число документов заранее не
       // известно: наращиваем его по мере того, как работа находится.
-      planned += uris.size();
+      planned += documentsOf(roots).size();
       progressReporter.setSize(planned);
-      recomputeAll(serverContext, uris, progressReporter);
+      resolveAll(serverContext, roots, progressReporter);
+    }
+  }
+
+  /**
+   * Доводит до конца значения перечисленных методов, спускаясь по их зависимостям.
+   * <p>
+   * Корни разбираются параллельно в пуле рабочей области, а каждый — вглубь: сначала
+   * доводятся значения вызванных методов, потом пересчитывается вызывающий. В ширину
+   * пришлось бы держать всю волну и перечитывать документы на каждом уровне; вглубь
+   * одновременно нужна лишь текущая цепочка, а её глубина на порядки меньше.
+   *
+   * @param serverContext    рабочая область.
+   * @param roots            методы, с которых начинается обход.
+   * @param progressReporter индикатор хода работы.
+   */
+  private void resolveAll(
+    ServerContext serverContext,
+    List<MethodSymbol> roots,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+  ) {
+    try {
+      populateContextExecutor.submit(() -> roots.parallelStream().forEach(root -> {
+        progressReporter.tick();
+        resolveDeep(serverContext, root, Collections.newSetFromMap(new IdentityHashMap<>()));
+      })).get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Не удалось пересчитать типы возврата", e);
+    }
+  }
+
+  /**
+   * Доводит значение метода, предварительно доведя те, от которых оно зависит.
+   *
+   * @param serverContext рабочая область.
+   * @param method        метод.
+   * @param inProgress    методы, лежащие выше по цепочке обхода: наткнувшись на такой,
+   *                      спуск обрывается — это цикл, и его добирает следующий проход.
+   */
+  private void resolveDeep(
+    ServerContext serverContext,
+    MethodSymbol method,
+    Set<MethodSymbol> inProgress
+  ) {
+    if (!inProgress.add(method)) {
+      return;
+    }
+    try {
+      var dependencies = dependenciesByMethod.get(method);
+      if (dependencies != null) {
+        for (var dependency : List.copyOf(dependencies)) {
+          resolveDeep(serverContext, dependency, inProgress);
+        }
+      }
+      recomputeLoading(serverContext, method.getOwner());
+    } finally {
+      inProgress.remove(method);
     }
   }
 
@@ -378,36 +443,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private static List<URI> documentsOf(Collection<MethodSymbol> methods) {
     return methods.stream().map(method -> method.getOwner().getUri()).distinct().toList();
-  }
-
-  /**
-   * Пересчитывает методы перечисленных документов параллельно.
-   * <p>
-   * Задача уходит в пул рабочей области: его воркеры несут её контекст, без которого
-   * workspace-бины из форков потока недоступны.
-   *
-   * @param serverContext    рабочая область.
-   * @param uris             URI документов.
-   * @param progressReporter индикатор хода работы.
-   */
-  private void recomputeAll(
-    ServerContext serverContext,
-    List<URI> uris,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
-  ) {
-    try {
-      populateContextExecutor.submit(() -> uris.parallelStream().forEach(uri -> {
-        progressReporter.tick();
-        var documentContext = serverContext.getDocuments().get(uri);
-        if (documentContext != null) {
-          recomputeLoading(serverContext, documentContext);
-        }
-      })).get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("Не удалось пересчитать типы возврата", e);
-    }
   }
 
   /**
@@ -431,6 +466,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     lock.readLock().lock();
     try {
       if (isReadable(documentContext)) {
+        // Пометки снимаются так же, как это делает разбор документа: иначе неэкспортные
+        // методы остались бы со значениями, посчитанными до того, как их зависимости
+        // дошли до ума, и экспортные пересчитались бы по ним.
+        clear(documentContext.getUri());
         pending.addAll(recomputeDocument(documentContext));
         return;
       }
@@ -442,10 +481,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
       if (isReadable(documentContext)) {
+        clear(documentContext.getUri());
         pending.addAll(recomputeDocument(documentContext));
         return;
       }
       rebuilt.incrementAndGet();
+      rebuiltUris.add(documentContext.getUri());
       serverContext.rebuildDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
     } finally {
