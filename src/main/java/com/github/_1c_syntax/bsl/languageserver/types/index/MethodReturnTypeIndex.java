@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeI
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -47,6 +48,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /**
@@ -75,6 +78,13 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
   private static final int MAX_PASSES = 10;
 
   private final ObjectProvider<ExpressionTypeInferencer> inferencerProvider;
+
+  /**
+   * Пул рабочей области: его воркеры несут её контекст, поэтому запущенный внутри задачи
+   * {@code parallelStream} видит нужные workspace-бины. Общий пул его не несёт.
+   */
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
 
   private final Map<MethodSymbol, TypeSet> typesByMethod = new ConcurrentHashMap<>();
   private final Map<MethodSymbol, Set<MethodSymbol>> dependentsByMethod = new ConcurrentHashMap<>();
@@ -319,12 +329,31 @@ public class MethodReturnTypeIndex extends AbstractDocumentLifecycleClearableInd
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var uris = pending.stream().map(method -> method.getOwner().getUri()).distinct().toList();
       pending.clear();
-      for (var uri : uris) {
+      recomputeAll(serverContext, uris);
+    }
+  }
+
+  /**
+   * Пересчитывает методы перечисленных документов параллельно.
+   * <p>
+   * Задача уходит в пул рабочей области: его воркеры несут её контекст, без которого
+   * workspace-бины из форков потока недоступны.
+   *
+   * @param serverContext рабочая область.
+   * @param uris          URI документов.
+   */
+  private void recomputeAll(ServerContext serverContext, List<URI> uris) {
+    try {
+      populateContextExecutor.submit(() -> uris.parallelStream().forEach(uri -> {
         var documentContext = serverContext.getDocuments().get(uri);
         if (documentContext != null) {
           recomputeLoading(serverContext, documentContext);
         }
-      }
+      })).get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Не удалось пересчитать типы возврата", e);
     }
   }
 
