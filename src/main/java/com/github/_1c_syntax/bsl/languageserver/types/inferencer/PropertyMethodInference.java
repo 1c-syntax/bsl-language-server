@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.DereferenceLocator;
 import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -132,10 +133,17 @@ public class PropertyMethodInference {
       return incoming;
     }
     var receiver = receiverTypes(call, inferrer);
-    if (receiver == null || !readsNamedProperties(receiver)) {
+    if (receiver == null) {
       return incoming;
     }
-    var value = propertyTypes(receiver, key, variable.getOwner().getFileType());
+    // Читаем только у тех типов получателя, у которых `Свойство` и правда читает
+    // именованный ключ. В смешанном наборе (`Структура, ДокументОбъект.Заказ`) одноимённый
+    // член неподдержанной части — не то, что положит платформа: у неё этого метода нет.
+    var supported = propertyBearingPart(receiver);
+    if (supported.isEmpty()) {
+      return incoming;
+    }
+    var value = propertyTypes(supported, key, variable.getOwner().getFileType());
     return value.isEmpty() ? incoming : value;
   }
 
@@ -156,17 +164,29 @@ public class PropertyMethodInference {
     return dereference == null ? null : inferrer.apply(dereference.getLeft());
   }
 
-  /** Читает ли {@code Свойство} у такого получателя именованный ключ. */
-  private static boolean readsNamedProperties(TypeSet receiver) {
+  /**
+   * Часть набора получателя, у которой {@code Свойство} читает именованный ключ.
+   * Уточнения (поля, накопленные по коду) переезжают вместе со своими типами.
+   *
+   * @param receiver типы получателя.
+   * @return поддержанная часть; {@link TypeSet#EMPTY}, если таких типов нет вовсе.
+   */
+  private static TypeSet propertyBearingPart(TypeSet receiver) {
+    var result = TypeSet.EMPTY;
     for (var ref : receiver.refs()) {
-      var qualifiedName = ref.qualifiedName();
-      var dot = qualifiedName.indexOf('.');
-      var family = (dot < 0 ? qualifiedName : qualifiedName.substring(0, dot)).toLowerCase(Locale.ROOT);
-      if (PROPERTY_BEARING_FAMILIES.contains(family)) {
-        return true;
+      if (readsNamedProperties(ref)) {
+        result = result.union(receiver.retaining(ref));
       }
     }
-    return false;
+    return result;
+  }
+
+  /** Читает ли {@code Свойство} у этого типа именованный ключ. */
+  private static boolean readsNamedProperties(TypeRef ref) {
+    var qualifiedName = ref.qualifiedName();
+    var dot = qualifiedName.indexOf('.');
+    var family = (dot < 0 ? qualifiedName : qualifiedName.substring(0, dot)).toLowerCase(Locale.ROOT);
+    return PROPERTY_BEARING_FAMILIES.contains(family);
   }
 
   /**

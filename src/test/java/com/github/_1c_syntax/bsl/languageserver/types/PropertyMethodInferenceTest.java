@@ -307,6 +307,28 @@ class PropertyMethodInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void memberOfUnsupportedPartOfMixedReceiverIsNotRead() {
+    // Получатель — union структуры и документа. `Реквизит1` объявлен только у документа,
+    // а у него метода `Свойство` нет вовсе: класть его тип в приёмник нельзя. У структуры
+    // же про такой ключ ничего не известно — значит, приёмник остаётся собой.
+    var documentContext = moduleWith("""
+      Процедура Тест(Условие) Экспорт
+        Если Условие Тогда
+          Получатель = Новый Структура;
+        Иначе
+          Получатель = Документы.Документ1.СоздатьДокумент();
+        КонецЕсли;
+        Приемник = 0;
+        Если Получатель.Свойство("Реквизит1", Приемник) Тогда
+          НаИстиннойВетке = Приемник;
+        КонецЕсли;
+      КонецПроцедуры
+      """);
+
+    assertThat(typesOf(documentContext, "НаИстиннойВетке")).containsExactly("Число");
+  }
+
+  @Test
   void receiverThatIsNotStructureLikeIsLeftAlone() {
     // `Свойство` есть и у других типов, но именованный ключ читают только структуроподобные.
     var documentContext = moduleWith("""
