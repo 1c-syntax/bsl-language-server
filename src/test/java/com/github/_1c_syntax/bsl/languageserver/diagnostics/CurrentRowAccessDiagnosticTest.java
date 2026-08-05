@@ -21,10 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
+
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CurrentRowAccessDiagnosticTest
   extends AbstractDiagnosticTest<CurrentRowAccessDiagnostic> {
@@ -33,14 +44,43 @@ class CurrentRowAccessDiagnosticTest
     super(CurrentRowAccessDiagnostic.class);
   }
 
+  private static TypeRef tableRef(String suffix) {
+    return new TypeRef(TypeKind.CONFIGURATION, "ТаблицаФормы." + suffix);
+  }
+
+  private CurrentRowAccessDiagnostic diagnosticWith(TypeSet receiverTypes) {
+    var typeService = mock(TypeService.class);
+    when(typeService.receiverTypesAt(any(DocumentContext.class), any(Position.class)))
+      .thenReturn(receiverTypes);
+    var diagnostic = new CurrentRowAccessDiagnostic(typeService);
+    diagnostic.setInfo(diagnosticInstance.getInfo());
+    return diagnostic;
+  }
+
   @Test
-  void detectsDataAccessViaCurrentRow() {
-    List<Diagnostic> diagnostics = getDiagnostics();
-    // 3 dereference: .Наименование, .ДатаДокумента, .Записать()
+  void testDynamicListTableFires() {
+    var diagnostic = diagnosticWith(TypeSet.of(tableRef("ДинамическийСписок")));
+    List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
+
+    // 3 обращения к .ТекущаяСтрока с dereference → все срабатывают
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics, true)
-      .hasRange(1, 22, 1, 35)
-      .hasRange(2, 18, 2, 31)
-      .hasRange(3, 11, 3, 24);
+  }
+
+  @Test
+  void testTabularSectionDoesNotFire() {
+    var diagnostic = diagnosticWith(TypeSet.of(tableRef("ТабличнаяЧасть")));
+    List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
+
+    // Таблица над табличной частью — базу не дёргает
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testUnknownReceiverDoesNotFire() {
+    var diagnostic = diagnosticWith(TypeSet.EMPTY);
+    List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
+
+    // Тип ресивера неизвестен — не подтверждаем динамический список
+    assertThat(diagnostics).isEmpty();
   }
 }

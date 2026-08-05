@@ -5,6 +5,8 @@
 
 Accessing properties or methods via `CurrentRow` of a dynamic list triggers a database object read per row. Use `CurrentData` instead, which works with already-fetched row data.
 
+The diagnostic only fires for form tables displaying a dynamic list (type `TableForm.DynamicList`). Tables over tabular sections, value trees and other form data do not touch the database when accessing `CurrentRow` — no diagnostic is reported there.
+
 ## Examples
 
 ### Incorrect

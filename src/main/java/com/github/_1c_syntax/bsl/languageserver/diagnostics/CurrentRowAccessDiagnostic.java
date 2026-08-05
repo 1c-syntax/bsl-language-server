@@ -21,48 +21,69 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.*;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser.AccessPropertyContext;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
- * Обращение к свойствам через {@code ТекущаяСтрока} динамического списка.
+ * Обращение к данным строки динамического списка через {@code ТекущаяСтрока}.
  * <p>
- * {@code ТабличноеПоле.ТекущаяСтрока.Реквизит} вызывает чтение объекта из базы
+ * {@code ТаблицаФормы.ТекущаяСтрока.Реквизит} вызывает чтение объекта из базы
  * для каждой строки. Правильно использовать {@code .ТекущиеДанные.Реквизит},
  * который работает с уже считанными данными.
  * <p>
- * Детект dereference: в грамматике bsl-parser каждый {@code accessProperty}
- * обёрнут в {@code modifier} внутри {@code complexIdentifier}. Когда
- * {@code .ТекущаяСтрока} используется как ресивер для дальнейшего доступа,
- * внешний {@code complexIdentifier} содержит дополнительного ребёнка —
- * отсюда проверка {@code childCount >= 3}.
- *
- * @see <a href="https://its.1c.ru/db/metod8dev/content/2812/hdoc">ИТС: Динамический список</a>
+ * Диагностика срабатывает только если {@code ТекущаяСтрока} вызывается на
+ * таблице формы, отображающей динамический список (тип
+ * {@code ТаблицаФормы.ДинамическийСписок}): у таблиц над табличными частями,
+ * деревьями значений и прочими данными формы обращение к текущей строке
+ * базу не дёргает.
  */
-@DiagnosticMetadata(type=DiagnosticType.CODE_SMELL, severity=DiagnosticSeverity.MAJOR,
-  scope=DiagnosticScope.BSL, minutesToFix=2,
-  tags={DiagnosticTag.PERFORMANCE, DiagnosticTag.BADPRACTICE})
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 2,
+  tags = { DiagnosticTag.PERFORMANCE, DiagnosticTag.BADPRACTICE }
+)
+@RequiredArgsConstructor
 public class CurrentRowAccessDiagnostic extends AbstractVisitorDiagnostic {
 
-  /**
-   * Посещает узел доступа к свойству. Если свойство — {@code ТекущаяСтрока}
-   * (или {@code CurrentRow}) и оно используется как ресивер для дальнейшего
-   * обращения (dereference), добавляет диагностику.
-   *
-   * @param ctx контекст свойства доступа (содержит DOT и IDENTIFIER).
-   * @return {@code ctx} для продолжения обхода дерева.
-   */
-  @Override public ParseTree visitAccessProperty(AccessPropertyContext ctx) {
+  private static final String DYNAMIC_LIST_TABLE = "ТаблицаФормы.ДинамическийСписок";
+
+  private final TypeService typeService;
+
+  @Override
+  public ParseTree visitAccessProperty(AccessPropertyContext ctx) {
     var id = ctx.IDENTIFIER();
     if (id == null) return ctx;
+
     if (!"ТекущаяСтрока".equalsIgnoreCase(id.getText())
       && !"CurrentRow".equalsIgnoreCase(id.getText())) return ctx;
 
-    var ci = ctx.getParent().getParent(); // modifier → complexIdentifier
-    if (ci != null && ci.getChildCount() >= 3) {
-      diagnosticStorage.addDiagnostic(id, info.getMessage("ТекущиеДанные", "CurrentData"));
-    }
+    // modifier → complexIdentifier; dereference — когда у complexIdentifier
+    // есть ещё дети помимо базового идентификатора и этого доступа
+    var ci = ctx.getParent().getParent();
+    if (ci == null || ci.getChildCount() < 3) return ctx;
+
+    // Ресивер должен быть таблицей формы над динамическим списком
+    var receiverTypes = typeService.receiverTypesAt(documentContext, Ranges.create(id).getStart());
+    if (!isDynamicListTable(receiverTypes)) return ctx;
+
+    diagnosticStorage.addDiagnostic(id, info.getMessage("ТекущиеДанные", "CurrentData"));
     return ctx;
+  }
+
+  private static boolean isDynamicListTable(TypeSet types) {
+    return types.refs().stream()
+      .anyMatch(type -> type.qualifiedName().toLowerCase()
+        .contains(DYNAMIC_LIST_TABLE.toLowerCase()));
   }
 }
