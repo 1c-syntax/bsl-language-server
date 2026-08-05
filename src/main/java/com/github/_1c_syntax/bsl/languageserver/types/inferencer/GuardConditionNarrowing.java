@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -102,12 +103,15 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   private static final String TYPE_RU = "ТИП";
   private static final String TYPE_EN = "TYPE";
 
-  /** Метод-читатель ключа: {@code Стр.Свойство("Ключ", Приёмник)}. */
-  private static final String PROPERTY_RU = "СВОЙСТВО";
-  private static final String PROPERTY_EN = "PROPERTY";
-
-  /** Позиция переменной-приёмника среди аргументов {@code Свойство}. */
-  private static final int OUT_PARAMETER_INDEX = 1;
+  /**
+   * Метод-читатель ключа ({@code Стр.Свойство("Ключ", Приёмник)}) и позиция приёмника —
+   * берутся у индекса таких вызовов, а не объявляются заново. Индекс решает, вызов какой
+   * записать изменением типа, а этот класс — какое условие считать проверкой его исхода;
+   * разойдись правила, расхождение было бы молчаливым.
+   */
+  private static final String PROPERTY_RU = PropertyMethodCallIndex.PROPERTY_METHOD_RU;
+  private static final String PROPERTY_EN = PropertyMethodCallIndex.PROPERTY_METHOD_EN;
+  private static final int OUT_PARAMETER_INDEX = PropertyMethodCallIndex.OUT_PARAMETER_INDEX;
 
   private final Map<URI, Map<BSLParser.ExpressionContext, CompiledGuard>> compiledByUri = new ConcurrentHashMap<>();
 
@@ -566,8 +570,8 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
       || !(binary.getRight() instanceof MethodCallNode call)) {
       return null;
     }
-    var name = call.getName().getText().toUpperCase(Locale.ROOT);
-    if (!PROPERTY_RU.equals(name) && !PROPERTY_EN.equals(name)) {
+    var name = call.getName().getText();
+    if (!PROPERTY_RU.equalsIgnoreCase(name) && !PROPERTY_EN.equalsIgnoreCase(name)) {
       return null;
     }
     var arguments = call.arguments();

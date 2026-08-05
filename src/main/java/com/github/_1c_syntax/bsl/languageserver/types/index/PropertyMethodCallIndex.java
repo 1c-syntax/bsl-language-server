@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleC
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -55,12 +56,19 @@ import java.util.regex.Pattern;
 @WorkspaceScope
 public class PropertyMethodCallIndex extends AbstractDocumentLifecycleClearableIndex {
 
-  /** Имя метода-читателя свойства в обеих локалях. */
-  private static final String PROPERTY_METHOD_RU = "Свойство";
-  private static final String PROPERTY_METHOD_EN = "Property";
+  /**
+   * Имя метода-читателя свойства в обеих локалях.
+   * <p>
+   * Публичные: то же правило нужно сужению по условию
+   * ({@code GuardConditionNarrowing}) — оно решает, какие условия считать проверкой
+   * наличия ключа. Разойдись эти два места, расхождение было бы молчаливым: условие
+   * сузило бы приёмник, вызов которого индекс не записал, либо наоборот.
+   */
+  public static final String PROPERTY_METHOD_RU = "Свойство";
+  public static final String PROPERTY_METHOD_EN = "Property";
 
-  /** Позиция переменной-приёмника среди аргументов. */
-  private static final int OUT_PARAMETER_INDEX = 1;
+  /** Позиция переменной-приёмника среди аргументов — общая с сужением по условию. */
+  public static final int OUT_PARAMETER_INDEX = 1;
 
   /**
    * Аргумент, целиком состоящий из одного идентификатора. Текст узла ANTLR склеен без
@@ -85,7 +93,15 @@ public class PropertyMethodCallIndex extends AbstractDocumentLifecycleClearableI
                                                           String variableName) {
     // Та же модель гонки clear<->computeIfAbsent, что у соседних индексов: осевший индекс
     // по прежнему AST уберёт следующая инвалидация.
-    var index = byUri.computeIfAbsent(uri, k -> build(ast));
+    // Построение идёт ВНЕ computeIfAbsent: обход всего AST под замком корзины выстраивал бы
+    // на нём потоки пакетного анализа. Двойная работа при гонке безвредна — индекс зависит
+    // только от AST (так же поступают VariableFlowAnalyzer.layoutOf и GuardConditionNarrowing).
+    var index = byUri.get(uri);
+    if (index == null) {
+      var built = build(ast);
+      var previous = byUri.putIfAbsent(uri, built);
+      index = previous == null ? built : previous;
+    }
     return index.getOrDefault(variableName.toLowerCase(Locale.ROOT), List.of());
   }
 
@@ -106,29 +122,39 @@ public class PropertyMethodCallIndex extends AbstractDocumentLifecycleClearableI
    * @return имя; {@code null}, если это не {@code Свойство} либо второй аргумент —
    *     не голая переменная.
    */
-  private static String outParameterName(BSLParser.MethodCallContext call) {
-    var methodName = call.methodName();
-    if (methodName == null) {
+  private static @Nullable String outParameterName(BSLParser.MethodCallContext call) {
+    if (!isPropertyMethod(call.methodName())) {
       return null;
+    }
+    var argument = outParameterArgument(call);
+    if (argument == null) {
+      return null;
+    }
+    var text = argument.getText();
+    return BARE_IDENTIFIER.matcher(text).matches() ? text : null;
+  }
+
+  /** Тот ли это метод — {@code Свойство} в любом из двух написаний. */
+  private static boolean isPropertyMethod(BSLParser.@Nullable MethodNameContext methodName) {
+    if (methodName == null) {
+      return false;
     }
     var text = methodName.getText();
-    if (!PROPERTY_METHOD_RU.equalsIgnoreCase(text) && !PROPERTY_METHOD_EN.equalsIgnoreCase(text)) {
-      return null;
-    }
+    return PROPERTY_METHOD_RU.equalsIgnoreCase(text) || PROPERTY_METHOD_EN.equalsIgnoreCase(text);
+  }
+
+  /**
+   * Выражение, отданное вызову вторым аргументом.
+   *
+   * @return выражение; {@code null}, если аргументов меньше двух.
+   */
+  private static BSLParser.@Nullable ExpressionContext outParameterArgument(BSLParser.MethodCallContext call) {
     var paramList = call.doCall() == null ? null : call.doCall().callParamList();
     if (paramList == null) {
       return null;
     }
     var params = paramList.callParam();
-    if (params.size() <= OUT_PARAMETER_INDEX) {
-      return null;
-    }
-    var argument = params.get(OUT_PARAMETER_INDEX).expression();
-    if (argument == null) {
-      return null;
-    }
-    var argumentText = argument.getText();
-    return BARE_IDENTIFIER.matcher(argumentText).matches() ? argumentText : null;
+    return params.size() <= OUT_PARAMETER_INDEX ? null : params.get(OUT_PARAMETER_INDEX).expression();
   }
 
   /**
