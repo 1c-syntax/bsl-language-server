@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785863725680,
+  "lastUpdate": 1785929375124,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42098,6 +42098,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.3234598767783186",
             "extra": "mean: 96.35461171468098 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6b788a854f43ffc86d82852906aea8346f3cb658",
+          "message": "Merge pull request #4407 from 1c-syntax/feat/inlayhints-nullable-type\n\nfeat(inlayhints): составной тип «Тип, Неопределено» показывается как «Тип?»",
+          "timestamp": "2026-08-05T13:09:10+02:00",
+          "tree_id": "366697da2440cb76c4412b5d668285ca9fb87da0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6b788a854f43ffc86d82852906aea8346f3cb658"
+        },
+        "date": 1785929361480,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.14996703465779,
+            "unit": "sec",
+            "range": "stddev: 1.4364365912334833",
+            "extra": "mean: 96.14996703465779 sec\nrounds: 3"
           }
         ]
       }
