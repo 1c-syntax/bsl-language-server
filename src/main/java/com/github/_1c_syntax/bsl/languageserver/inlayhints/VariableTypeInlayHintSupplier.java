@@ -86,6 +86,9 @@ import java.util.Optional;
 @Component
 public class VariableTypeInlayHintSupplier implements InlayHintSupplier<VariableTypeInlayHintData> {
 
+  /** Значимый тип плюс {@code Неопределено} — единственный union, который подсказка показывает. */
+  private static final int NULLABLE_UNION_SIZE = 2;
+
   private final TypeService typeService;
   private final LanguageServerConfiguration configuration;
 
@@ -149,9 +152,6 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     var inferredType = maybeInferredType.get().ref();
 
     var typeName = typeService.displayName(inferredType, configuration.getLanguage());
-    // `?` вместо перечисления: `Число, Неопределено` читается как «число, которого может
-    // не быть», и знак вопроса говорит это короче, чем вторая половина union'а.
-    var label = maybeInferredType.get().nullable() ? typeName + "?" : typeName;
 
     // Имя переменной уже несёт имя типа (напр. «Массив = ...» с выведенным типом
     // «Массив» или «МассивТоваров = ...» с типом «Массив») — подсказка лишь дублирует
@@ -169,6 +169,9 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     inlayHint.setPosition(namePosition);
     inlayHint.setPaddingRight(Boolean.TRUE);
 
+    // `?` вместо перечисления: `Число, Неопределено` читается как «число, которого может
+    // не быть», и знак вопроса говорит это короче, чем вторая половина union'а.
+    var label = maybeInferredType.get().nullable() ? (typeName + "?") : typeName;
     var labelPart = new InlayHintLabelPart(": " + label);
     inlayHint.setLabel(List.of(labelPart));
 
@@ -254,7 +257,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     // `Тип, Неопределено` — самый частый union: так выглядит всё, чего может не оказаться
     // (ключ структуры, поиск по имени, необязательный параметр). Значимый тип там один,
     // и подсказка по нему осмысленна — `Неопределено` уходит в `?`.
-    var nullable = types.size() == 2 && types.refs().contains(TypeRef.UNDEFINED);
+    var nullable = types.size() == NULLABLE_UNION_SIZE && types.refs().contains(TypeRef.UNDEFINED);
     var significant = nullable ? types.without(TypeRef.UNDEFINED) : types;
     if (significant.size() != 1) {
       return Optional.empty();
