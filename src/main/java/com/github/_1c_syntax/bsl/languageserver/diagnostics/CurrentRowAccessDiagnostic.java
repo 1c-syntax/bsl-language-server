@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser.AccessPropertyContext;
@@ -68,22 +69,44 @@ public class CurrentRowAccessDiagnostic extends AbstractVisitorDiagnostic {
     if (!"ТекущаяСтрока".equalsIgnoreCase(id.getText())
       && !"CurrentRow".equalsIgnoreCase(id.getText())) return ctx;
 
-    // modifier → complexIdentifier; dereference — когда у complexIdentifier
-    // есть ещё дети помимо базового идентификатора и этого доступа
-    var ci = ctx.getParent().getParent();
-    if (ci == null || ci.getChildCount() < 3) return ctx;
+    // .ТекущаяСтрока живёт в complexIdentifier (внутри выражения) либо в
+    // callStatement (вызов вида X.ТекущаяСтрока.Записать()); dereference — когда
+    // после модификатора .ТекущаяСтрока в контейнере есть ещё дети
+    var modifier = ctx.getParent();
+    var container = modifier.getParent();
+    if (container == null || !hasFollowingChildren(container, modifier)) return ctx;
 
     // Ресивер должен быть таблицей формы над динамическим списком
     var receiverTypes = typeService.receiverTypesAt(documentContext, Ranges.create(id).getStart());
-    if (!isDynamicListTable(receiverTypes)) return ctx;
+    if (receiverTypes.refs().stream().noneMatch(type -> isDynamicListTable(type, typeService))) {
+      return ctx;
+    }
 
     diagnosticStorage.addDiagnostic(id, info.getMessage("ТекущиеДанные", "CurrentData"));
     return ctx;
   }
 
-  private static boolean isDynamicListTable(TypeSet types) {
-    return types.refs().stream()
-      .anyMatch(type -> type.qualifiedName().toLowerCase()
-        .contains(DYNAMIC_LIST_TABLE.toLowerCase()));
+  /**
+   * Таблица формы над динамическим списком: сам ресивер может быть типизирован
+   * как {@code ТаблицаФормы.ДинамическийСписок} (колонки строки неизвестны), либо
+   * как пер-форма тип {@code ТаблицаФормы.<mdoRef>.<имя элемента>}, наследующий
+   * вид данных через расширение — проверяем оба пути.
+   */
+  private static boolean isDynamicListTable(TypeRef type, TypeService typeService) {
+    if (type.qualifiedName().equalsIgnoreCase(DYNAMIC_LIST_TABLE)) {
+      return true;
+    }
+    return typeService.extensionsOf(type).stream()
+      .anyMatch(extension -> extension.qualifiedName().equalsIgnoreCase(DYNAMIC_LIST_TABLE));
+  }
+
+  /** Есть ли у контейнера дети после {@code child}. */
+  private static boolean hasFollowingChildren(ParseTree container, ParseTree child) {
+    for (int i = 0; i < container.getChildCount(); i++) {
+      if (container.getChild(i) == child) {
+        return i < container.getChildCount() - 1;
+      }
+    }
+    return false;
   }
 }

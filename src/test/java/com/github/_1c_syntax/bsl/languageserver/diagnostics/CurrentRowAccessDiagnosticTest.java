@@ -44,14 +44,17 @@ class CurrentRowAccessDiagnosticTest
     super(CurrentRowAccessDiagnostic.class);
   }
 
-  private static TypeRef tableRef(String suffix) {
-    return new TypeRef(TypeKind.CONFIGURATION, "ТаблицаФормы." + suffix);
+  private static TypeRef tableRef(String name) {
+    return new TypeRef(TypeKind.CONFIGURATION, name);
   }
 
-  private CurrentRowAccessDiagnostic diagnosticWith(TypeSet receiverTypes) {
+  private CurrentRowAccessDiagnostic diagnosticWith(TypeSet receiverTypes, TypeRef... extensions) {
     var typeService = mock(TypeService.class);
     when(typeService.receiverTypesAt(any(DocumentContext.class), any(Position.class)))
       .thenReturn(receiverTypes);
+    for (var type : receiverTypes.refs()) {
+      when(typeService.extensionsOf(type)).thenReturn(List.of(extensions));
+    }
     var diagnostic = new CurrentRowAccessDiagnostic(typeService);
     diagnostic.setInfo(diagnosticInstance.getInfo());
     return diagnostic;
@@ -59,19 +62,43 @@ class CurrentRowAccessDiagnosticTest
 
   @Test
   void testDynamicListTableFires() {
-    var diagnostic = diagnosticWith(TypeSet.of(tableRef("ДинамическийСписок")));
+    // Ресивер типизирован базовым видом данных (колонки строки неизвестны)
+    var diagnostic = diagnosticWith(TypeSet.of(tableRef("ТаблицаФормы.ДинамическийСписок")));
     List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
 
-    // 3 обращения к .ТекущаяСтрока с dereference → все срабатывают
+    // 3 обращения к .ТекущаяСтрока с dereference → все срабатывают;
+    // Список.ТекущаяСтрока без dereference → молчит
+    assertThat(diagnostics).hasSize(3);
+  }
+
+  @Test
+  void testPerFormTableWithDynamicListExtensionFires() {
+    // Реальный прод-кейс: пер-форма тип ТаблицаФормы.<mdoRef>.<имя элемента>,
+    // наследующий вид данных через расширение
+    var receiver = tableRef("ТаблицаФормы.Документ.Документ1.Форма.ФормаДокумента.Список");
+    var diagnostic = diagnosticWith(TypeSet.of(receiver),
+      tableRef("ТаблицаФормы"), tableRef("ТаблицаФормы.ДинамическийСписок"));
+    List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
+
     assertThat(diagnostics).hasSize(3);
   }
 
   @Test
   void testTabularSectionDoesNotFire() {
-    var diagnostic = diagnosticWith(TypeSet.of(tableRef("ТабличнаяЧасть")));
+    var diagnostic = diagnosticWith(TypeSet.of(tableRef("ТаблицаФормы.ТабличнаяЧасть")));
     List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
 
     // Таблица над табличной частью — базу не дёргает
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testPerFormTabularSectionDoesNotFire() {
+    var receiver = tableRef("ТаблицаФормы.Документ.Документ1.Форма.ФормаДокумента.ТабличнаяЧасть1");
+    var diagnostic = diagnosticWith(TypeSet.of(receiver),
+      tableRef("ТаблицаФормы"), tableRef("ТаблицаФормы.ТабличнаяЧасть"));
+    List<Diagnostic> diagnostics = diagnostic.getDiagnostics(getDocumentContext());
+
     assertThat(diagnostics).isEmpty();
   }
 
