@@ -85,6 +85,65 @@ class VariableTypeInlayHintSupplierTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void testNullableTypeIsRenderedWithQuestionMark() {
+
+    // given
+    // `Число, Неопределено` — самый частый union: значимый тип один, а `Неопределено`
+    // говорит лишь «значения может не быть». Подсказка показывает это знаком вопроса.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест(Условие)
+      	Если Условие Тогда
+      		Значение = 1;
+      	Иначе
+      		Значение = Неопределено;
+      	КонецЕсли;
+      	Итог = Значение;
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints)
+      .hasSize(1)
+      .first()
+      .satisfies(inlayHint -> assertThat(labelValue(inlayHint)).isEqualTo(": Число?"));
+  }
+
+  @Test
+  void testNoHintForUnionOfSignificantTypes() {
+
+    // given
+    // Два значимых типа — знаком вопроса не обойтись, а перечислять их подсказкой
+    // слишком шумно: хинт не строится, как и раньше.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест(Условие)
+      	Если Условие Тогда
+      		Значение = 1;
+      	Иначе
+      		Значение = "Текст";
+      	КонецЕсли;
+      	Итог = Значение;
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var params = new InlayHintParams(textDocumentIdentifier, method.getRange());
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints).isEmpty();
+  }
+
+  @Test
   void testNoHintForNewExpressionAssignment() {
 
     // given

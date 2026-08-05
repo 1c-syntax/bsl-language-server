@@ -53,6 +53,13 @@ import java.util.Optional;
  * из литерала), показывает подсказку {@link InlayHintKind#Type} сразу после
  * имени переменной — например {@code Контрагент: Массив = Новый Массив()}.
  * <p>
+ * Значимый тип должен быть <b>один</b>: перечислять union подсказкой слишком шумно.
+ * Исключение — {@code Тип, Неопределено}: значимый тип там всё равно один, а
+ * {@code Неопределено} говорит лишь «значения может не оказаться», и подсказка пишет его
+ * знаком вопроса — {@code Значение: Число?}. Так выглядит всё необязательное: ключ
+ * структуры, прочитанный через {@code Свойство}, поиск по имени, ветвление с
+ * {@code Неопределено} в одной из ветвей.
+ * <p>
  * Если имя переменной уже содержит имя выведенного типа (например
  * {@code Массив = ...} или {@code МассивТоваров = ...} с типом {@code Массив}),
  * подсказка лишь дублирует видимое в имени и по умолчанию подавляется — по аналогии
@@ -139,9 +146,12 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     if (maybeInferredType.isEmpty()) {
       return Optional.empty();
     }
-    var inferredType = maybeInferredType.get();
+    var inferredType = maybeInferredType.get().ref();
 
     var typeName = typeService.displayName(inferredType, configuration.getLanguage());
+    // `?` вместо перечисления: `Число, Неопределено` читается как «число, которого может
+    // не быть», и знак вопроса говорит это короче, чем вторая половина union'а.
+    var label = maybeInferredType.get().nullable() ? typeName + "?" : typeName;
 
     // Имя переменной уже несёт имя типа (напр. «Массив = ...» с выведенным типом
     // «Массив» или «МассивТоваров = ...» с типом «Массив») — подсказка лишь дублирует
@@ -159,7 +169,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
     inlayHint.setPosition(namePosition);
     inlayHint.setPaddingRight(Boolean.TRUE);
 
-    var labelPart = new InlayHintLabelPart(": " + typeName);
+    var labelPart = new InlayHintLabelPart(": " + label);
     inlayHint.setLabel(List.of(labelPart));
 
     // Tooltip (полное описание типа) дорассчитывается лениво на inlayHint/resolve —
@@ -228,25 +238,41 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
   }
 
   /**
-   * Единственный выведенный тип выражения правой части присваивания.
+   * Выведенный тип выражения правой части присваивания вместе с признаком «может быть
+   * и {@code Неопределено}».
    *
    * @param documentContext Контекст документа.
    * @param expression      Выражение правой части присваивания.
    * @return Выведенный тип, либо {@code empty}, если тип не выведен, выведен как
-   *   union из нескольких типов или тривиален ({@link TypeRef#ANY}/{@link TypeRef#UNKNOWN}).
+   *   union из нескольких значимых типов или тривиален ({@link TypeRef#ANY}/{@link TypeRef#UNKNOWN}).
    */
-  private Optional<TypeRef> inferType(DocumentContext documentContext, BSLParser.ExpressionContext expression) {
+  private Optional<InferredType> inferType(DocumentContext documentContext,
+                                           BSLParser.ExpressionContext expression) {
     var start = expression.getStart();
     var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
     var types = typeService.expressionTypesAt(documentContext, position);
-    if (types.size() != 1) {
+    // `Тип, Неопределено` — самый частый union: так выглядит всё, чего может не оказаться
+    // (ключ структуры, поиск по имени, необязательный параметр). Значимый тип там один,
+    // и подсказка по нему осмысленна — `Неопределено` уходит в `?`.
+    var nullable = types.size() == 2 && types.refs().contains(TypeRef.UNDEFINED);
+    var significant = nullable ? types.without(TypeRef.UNDEFINED) : types;
+    if (significant.size() != 1) {
       return Optional.empty();
     }
-    var ref = types.refs().iterator().next();
+    var ref = significant.refs().iterator().next();
     if (ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN)) {
       return Optional.empty();
     }
-    return Optional.of(ref);
+    return Optional.of(new InferredType(ref, nullable));
+  }
+
+  /**
+   * Тип для подсказки: значимый тип и признак, что рядом с ним стоит {@code Неопределено}.
+   *
+   * @param ref      значимый тип.
+   * @param nullable может ли значение оказаться {@code Неопределено}.
+   */
+  private record InferredType(TypeRef ref, boolean nullable) {
   }
 
   /**
