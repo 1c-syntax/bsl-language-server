@@ -48,6 +48,8 @@ public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable
 
   public static final TypeRef UNKNOWN = new TypeRef(TypeKind.UNKNOWN, "Unknown");
   public static final TypeRef ANY = new TypeRef(TypeKind.ANY, "Any");
+  /** {@code Неопределено} — «значения нет»; в наборе типов встречается чаще прочих примитивов. */
+  public static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
 
   /**
    * Канонизация на самом нижнем уровне: универсальный тип-вершина решётки,
