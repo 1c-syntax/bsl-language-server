@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -39,6 +40,12 @@ import java.util.regex.Pattern;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
+  modules = {
+    ModuleType.FormModule,
+    ModuleType.CommandModule,
+    ModuleType.OrdinaryApplicationModule,
+    ModuleType.ManagedApplicationModule
+  },
   minutesToFix = 5,
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_21,
   tags = {

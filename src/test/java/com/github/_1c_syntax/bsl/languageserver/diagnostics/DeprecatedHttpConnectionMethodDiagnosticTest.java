@@ -21,13 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class DeprecatedHttpConnectionMethodDiagnosticTest
   extends AbstractDiagnosticTest<DeprecatedHttpConnectionMethodDiagnostic> {
@@ -39,11 +43,12 @@ class DeprecatedHttpConnectionMethodDiagnosticTest
   @Test
   void testOnArrayDoesNotFire() {
     initServerContext(TestUtils.PATH_TO_METADATA);
-    List<Diagnostic> diagnostics = getDiagnostics();
+    var documentContext = spy(getDocumentContext());
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
-    // Массив.Получить/Удалить совпадают по имени с deprecated методами,
-    // но TypeService резолвит владельца как Массив (не HTTPСоединение)
-    // → диагностика не срабатывает
+    // Массив.Получить/Удалить совпадают по имени, но TypeService
+    // резолвит владельца как Массив (не HTTPСоединение) → 0 срабатываний.
     assertThat(diagnostics).isEmpty();
   }
 }
