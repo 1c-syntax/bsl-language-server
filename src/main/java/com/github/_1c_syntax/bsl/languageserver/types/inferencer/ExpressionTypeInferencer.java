@@ -121,6 +121,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final FormExpressionInference formExpressionInference;
+  private final PropertyMethodInference propertyMethodInference;
   private final XdtoFactoryInference xdtoFactoryInference;
   private final CommentTypeResolver commentTypeResolver;
   private final VariableFlowAnalyzer variableFlowAnalyzer;
@@ -165,7 +166,11 @@ public class ExpressionTypeInferencer {
     // контекст-независимость результата, и принадлежность узла текущему
     // документу (кросс-модульный спуск всегда идёт уже после резолва символа,
     // т.е. при непустом visited), поэтому ключ по URI корректен.
-    var cacheKey = ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
+    // Идущий расчёт по потоку — такая же нечистота: пока он не дошёл до неподвижной
+    // точки, тип переменной в точке слияния ещё приближение, и посчитанный от него тип
+    // выражения запоминать нельзя. Правая часть каждого присваивания считается как раз
+    // изнутри расчёта, поэтому без этой проверки в кэш оседало промежуточное значение.
+    var cacheKey = ctx.visited.isEmpty() && ctx.inProgress.isEmpty() && !ctx.flowSession.computing()
       ? node.getRepresentingAst()
       : null;
     var uri = ctx.documentContext.getUri();
@@ -972,6 +977,13 @@ public class ExpressionTypeInferencer {
       kindsByVariable
         .computeIfAbsent(target, key -> new Lazy<>(() -> formExpressionInference.kindAssignmentsOf(key)))
         .getOrCompute();
+    // Чтение ключа через выходной параметр (`Стр.Свойство("Ключ", Приёмник)`) — тоже
+    // изменение типа на месте, только переменная тут не получатель вызова, а его аргумент.
+    Map<VariableSymbol, Lazy<Map<Position, BSLParser.MethodCallContext>>> propertiesByVariable = new HashMap<>();
+    Function<VariableSymbol, Map<Position, BSLParser.MethodCallContext>> propertiesOf = target ->
+      propertiesByVariable
+        .computeIfAbsent(target, key -> new Lazy<>(() -> propertyMethodInference.outParameterCallsOf(key)))
+        .getOrCompute();
     var owner = variable.getOwner();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
@@ -983,48 +995,58 @@ public class ExpressionTypeInferencer {
       target -> target.getKind() == VariableKind.MODULE,
       declaredOf,
       this::definitionPositions,
-      target -> mutationPositions(callsOf.apply(target), kindsOf.apply(target)),
+      target -> mutationPositions(callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       (target, statement, position) ->
         attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
       (target, position, incoming) -> applyMutation(target, position, incoming, ctx,
-        callsOf.apply(target), kindsOf.apply(target)),
+        callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       narrowingCallback(owner)
     );
   }
 
   /**
-   * Позиции всех изменений типа на месте — операторов-мутаторов и присваиваний вида.
+   * Позиции всех изменений типа на месте — операторов-мутаторов, присваиваний вида и
+   * чтений ключа через выходной параметр.
    *
-   * @param calls мутаторы по позициям.
-   * @param kinds присваивания вида по позициям.
+   * @param calls      мутаторы по позициям.
+   * @param kinds      присваивания вида по позициям.
+   * @param properties вызовы {@code Свойство} по позициям.
    * @return объединение позиций без повторов.
    */
-  private static Collection<Position> mutationPositions(Map<Position, ?> calls, Map<Position, ?> kinds) {
-    if (kinds.isEmpty()) {
+  private static Collection<Position> mutationPositions(Map<Position, ?> calls, Map<Position, ?> kinds,
+                                                        Map<Position, ?> properties) {
+    if (kinds.isEmpty() && properties.isEmpty()) {
       return calls.keySet();
     }
     Collection<Position> positions = new LinkedHashSet<>(calls.keySet());
     positions.addAll(kinds.keySet());
+    positions.addAll(properties.keySet());
     return positions;
   }
 
   /**
    * Вклад одного изменения на месте: по позиции определяется, какого оно вида.
    *
-   * @param variable переменная-получатель.
-   * @param position позиция изменения.
-   * @param incoming тип переменной перед ним.
-   * @param ctx      контекст текущего инференса.
-   * @param calls    мутаторы этой переменной по позициям.
-   * @param kinds    присваивания вида этой переменной по позициям.
+   * @param variable   переменная-получатель.
+   * @param position   позиция изменения.
+   * @param incoming   тип переменной перед ним.
+   * @param ctx        контекст текущего инференса.
+   * @param calls      мутаторы этой переменной по позициям.
+   * @param kinds      присваивания вида этой переменной по позициям.
+   * @param properties вызовы {@code Свойство}, типизирующие эту переменную, по позициям.
    * @return изменённый тип; исходный, если по позиции ничего не нашлось.
    */
   private TypeSet applyMutation(VariableSymbol variable, Position position, TypeSet incoming, InferenceContext ctx,
                                 Map<Position, BSLParser.CallStatementContext> calls,
-                                Map<Position, BSLParser.AssignmentContext> kinds) {
+                                Map<Position, BSLParser.AssignmentContext> kinds,
+                                Map<Position, BSLParser.MethodCallContext> properties) {
     var call = calls.get(position);
     if (call != null) {
       return openDataObjectInference.apply(variable, call, incoming, node -> inferInternal(node, ctx));
+    }
+    var property = properties.get(position);
+    if (property != null) {
+      return propertyMethodInference.apply(variable, property, incoming, node -> inferInternal(node, ctx));
     }
     return formExpressionInference.applyKindAssignment(variable, kinds.get(position), incoming);
   }

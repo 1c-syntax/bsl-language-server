@@ -102,6 +102,13 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   private static final String TYPE_RU = "ТИП";
   private static final String TYPE_EN = "TYPE";
 
+  /** Метод-читатель ключа: {@code Стр.Свойство("Ключ", Приёмник)}. */
+  private static final String PROPERTY_RU = "СВОЙСТВО";
+  private static final String PROPERTY_EN = "PROPERTY";
+
+  /** Позиция переменной-приёмника среди аргументов {@code Свойство}. */
+  private static final int OUT_PARAMETER_INDEX = 1;
+
   private final Map<URI, Map<BSLParser.ExpressionContext, CompiledGuard>> compiledByUri = new ConcurrentHashMap<>();
 
   private final TypeRegistry typeRegistry;
@@ -110,18 +117,37 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   /**
    * Утверждение о типе переменной, снятое с одной проверки в условии.
    *
-   * @param type     проверяемый тип; {@code null} — проверка на {@code Неопределено}.
-   * @param equality было ли сравнение на равенство: {@code <>} переворачивает смысл.
+   * @param type              проверяемый тип; {@code null} — проверка на {@code Неопределено}.
+   * @param equality          было ли сравнение на равенство: {@code <>} переворачивает смысл.
+   * @param provesInequality  доказывает ли проверка <b>отсутствие</b> типа на противоположной
+   *                          ветке. У сравнения — да, из него следуют обе стороны. У чтения
+   *                          ключа ({@code Стр.Свойство("Ключ", Приёмник)}) — нет: истина
+   *                          говорит лишь «ключ нашёлся», а лежать в нём может и
+   *                          {@code Неопределено} (его туда мог положить {@code Вставить}).
    */
   private record Assertion(
     SourceDefinedSymbol variable,
     @Nullable TypeRef type,
-    boolean equality
+    boolean equality,
+    boolean provesInequality
   ) {
+
+    /** Утверждение сравнения: из него следуют обе ветки. */
+    private static Assertion ofComparison(SourceDefinedSymbol variable, @Nullable TypeRef type, boolean equality) {
+      return new Assertion(variable, type, equality, true);
+    }
+
+    /**
+     * Утверждение чтения ключа: значение известно только когда ключ <b>не</b> нашёлся —
+     * тогда платформа кладёт в приёмник {@code Неопределено}.
+     */
+    private static Assertion ofKeyPresence(SourceDefinedSymbol variable) {
+      return new Assertion(variable, null, false, false);
+    }
 
     /** То же утверждение с обратным знаком — для проверки под отрицанием. */
     private Assertion negated() {
-      return new Assertion(variable, type, !equality);
+      return new Assertion(variable, type, !equality, provesInequality);
     }
 
     /** Применить утверждение к типу на указанной ветке. */
@@ -129,7 +155,7 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
       var ref = type == null ? UNDEFINED : type;
       // «Утверждается ли равенство на этой ветке»: `<>` переворачивает смысл, ложная ветка — ещё раз.
       if (equality != whenTrue) {
-        return incoming.without(ref);
+        return provesInequality ? incoming.without(ref) : incoming;
       }
       if (type == null) {
         return TypeSet.of(UNDEFINED);
@@ -393,6 +419,10 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   /** Утверждение, снятое с одной проверки; {@code null}, если проверка ни о чём не говорит. */
   @Nullable
   private Assertion assertionOf(BslExpression check, DocumentContext documentContext) {
+    var keyPresence = keyPresenceOf(check, documentContext);
+    if (keyPresence != null) {
+      return keyPresence;
+    }
     if (!(check instanceof BinaryOperationNode binary)) {
       return null;
     }
@@ -405,10 +435,10 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
     var typeCheck = typeCheckOf(binary, documentContext);
     if (typeCheck != null) {
       var resolved = typeRegistry.resolve(typeCheck.typeName(), documentContext.getFileType()).orElse(null);
-      return resolved == null ? null : new Assertion(typeCheck.variable(), resolved, equality);
+      return resolved == null ? null : Assertion.ofComparison(typeCheck.variable(), resolved, equality);
     }
     var undefinedCheck = undefinedCheckOf(binary, documentContext);
-    return undefinedCheck == null ? null : new Assertion(undefinedCheck, null, equality);
+    return undefinedCheck == null ? null : Assertion.ofComparison(undefinedCheck, null, equality);
   }
 
   /**
@@ -511,6 +541,41 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
     }
     var typeName = stringLiteral(typeArgument);
     return typeName == null ? null : new TypeCheck(variable, typeName);
+  }
+
+  /**
+   * Утверждение проверки {@code Стр.Свойство("Ключ", Приёмник)}.
+   * <p>
+   * Информативна ровно одна ветка — <b>ложная</b>: ключа нет, и платформа кладёт в приёмник
+   * {@code Неопределено}. Из истины же следует только «ключ нашёлся», а какое там значение —
+   * вопрос отдельный: {@code Вставить("Ключ", Неопределено)} даёт истину при
+   * {@code Неопределено} в приёмнике, так что убирать его с истинной ветки нельзя. Тип
+   * значения ключа приходит не отсюда, а от {@link PropertyMethodInference} — он же добавляет
+   * к нему {@code Неопределено} на случай отсутствия ключа.
+   * <p>
+   * Проверка тут не про сам операнд условия, а про его <b>аргумент</b>: условие говорит
+   * «нашлось ли», а сужается переменная, которую вызову отдали приёмником.
+   *
+   * @return утверждение про переменную-приёмник; {@code null}, если это не {@code Свойство}
+   *     либо приёмником отдана не переменная.
+   */
+  @Nullable
+  private Assertion keyPresenceOf(BslExpression check, DocumentContext documentContext) {
+    if (!(check instanceof BinaryOperationNode binary)
+      || binary.getOperator() != BslOperator.DEREFERENCE
+      || !(binary.getRight() instanceof MethodCallNode call)) {
+      return null;
+    }
+    var name = call.getName().getText().toUpperCase(Locale.ROOT);
+    if (!PROPERTY_RU.equals(name) && !PROPERTY_EN.equals(name)) {
+      return null;
+    }
+    var arguments = call.arguments();
+    if (arguments.size() <= OUT_PARAMETER_INDEX) {
+      return null;
+    }
+    var receiver = resolvedVariable(arguments.get(OUT_PARAMETER_INDEX), documentContext);
+    return receiver == null ? null : Assertion.ofKeyPresence(receiver);
   }
 
   /** Переменная из проверки {@code Х = Неопределено} в любом порядке операндов, либо {@code null}. */
