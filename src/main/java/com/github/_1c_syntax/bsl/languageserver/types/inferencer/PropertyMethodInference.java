@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.DereferenceLocator;
 import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
@@ -99,7 +99,7 @@ public class PropertyMethodInference {
    * @param variable переменная-приёмник.
    * @return вызовы по позициям, в порядке следования в документе.
    */
-  public Map<Position, BSLParser.MethodCallContext> outParameterCallsOf(VariableSymbol variable) {
+  public Map<Position, BSLParser.MethodCallContext> outParameterCallsOf(SourceDefinedSymbol variable) {
     var owner = variable.getOwner();
     var ast = safeGetAst(owner);
     if (ast == null) {
@@ -122,7 +122,7 @@ public class PropertyMethodInference {
    * @return тип значения ключа; исходный тип, если ключ не литерал, получатель не
    *     структуроподобен либо про такой ключ ничего не известно.
    */
-  public TypeSet apply(VariableSymbol variable, BSLParser.@Nullable MethodCallContext call, TypeSet incoming,
+  public TypeSet apply(SourceDefinedSymbol variable, BSLParser.@Nullable MethodCallContext call, TypeSet incoming,
                        Function<BslExpression, TypeSet> inferrer) {
     if (call == null) {
       return incoming;
