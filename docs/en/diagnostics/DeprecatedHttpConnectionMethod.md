@@ -5,6 +5,8 @@
 
 In platform 8.3.21, `HTTPConnection` object methods are deprecated in client context. Use their asynchronous equivalents with the `Async` suffix instead.
 
+Asynchronous methods are only available on the client. Therefore the diagnostic only fires in modules with a client context (forms, commands, ordinary/managed application, client common modules) and only inside methods that execute on the client (`&AtClient`, `&AtClientAtServer` or no directive in a client module). Methods with `&AtServer` and `&AtServerNoContext` directives, as well as server modules, are not reported — there are no asynchronous equivalents available there.
+
 ## Deprecated methods
 
 - `CallHTTPMethod()` → `CallHTTPMethodAsync()`
