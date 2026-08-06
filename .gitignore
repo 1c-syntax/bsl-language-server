@@ -72,9 +72,9 @@ gen/
 *.bak
 *.orig
 
-# mkdocs
+# каталог, в который workflow gh-pages собирает публикуемый сайт
 temp/
-public/
+/public/
 
 # jpackage
 bsl-language-server/
