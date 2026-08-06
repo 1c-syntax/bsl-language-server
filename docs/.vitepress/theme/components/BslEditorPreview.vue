@@ -8,18 +8,16 @@ const isRu = computed(() => lang.value.startsWith('ru'))
 const copy = computed(() =>
   isRu.value
     ? {
-        file: 'ОбработкаЗаказа.bsl',
-        problems: 'Проблемы',
-        message: 'Ограничение на использование устаревшего метода «Сообщить»',
-        severity: 'Незначительный',
-        hint: 'Быстрое исправление: заменить на СообщитьПользователю',
+        file: 'РасчётОстатков.bsl',
+        message: 'Выполнение запроса в цикле',
+        severity: 'Критичный',
+        hint: 'Необходимо модифицировать запрос для поддержки множества значений и удалить цикл',
       }
     : {
-        file: 'OrderProcessing.bsl',
-        problems: 'Problems',
-        message: 'Restriction on the use of deprecated method "Message"',
-        severity: 'Minor',
-        hint: 'Quick fix: replace with MessageToUser',
+        file: 'StockBalance.bsl',
+        message: 'Execution query on cycle',
+        severity: 'Critical',
+        hint: 'Modify query to support multiple values and remove cycle',
       },
 )
 </script>
@@ -34,14 +32,14 @@ const copy = computed(() =>
       <span class="bsl-editor__badge">BSL</span>
     </div>
 
-    <pre class="bsl-editor__code"><code><span class="ln">1</span><span class="kw">Процедура</span> <span class="fn">ПровестиЗаказ</span>(<span class="pm">Заказ</span>) <span class="kw">Экспорт</span>
+    <pre class="bsl-editor__code"><code><span class="ln">1</span><span class="kw">Процедура</span> <span class="fn">ЗаполнитьОстатки</span>(<span class="pm">Заказы</span>) <span class="kw">Экспорт</span>
 <span class="ln">2</span>
-<span class="ln">3</span>	<span class="kw">Если</span> <span class="kw">Не</span> <span class="fn">ЗначениеЗаполнено</span>(<span class="pm">Заказ</span>.Контрагент) <span class="kw">Тогда</span>
-<span class="ln">4</span>		<span class="err">Сообщить</span>(<span class="str">"Не заполнен контрагент"</span>);
-<span class="ln">5</span>		<span class="kw">Возврат</span>;
-<span class="ln">6</span>	<span class="kw">КонецЕсли</span>;
-<span class="ln">7</span>
-<span class="ln">8</span>	<span class="pm">Заказ</span>.<span class="fn">Записать</span>(<span class="cm">РежимЗаписиДокумента</span>.Проведение);
+<span class="ln">3</span>	<span class="pm">Запрос</span> = <span class="kw">Новый</span> <span class="cm">Запрос</span>(<span class="pm">ТекстЗапроса</span>);
+<span class="ln">4</span>
+<span class="ln">5</span>	<span class="kw">Для Каждого</span> <span class="pm">Заказ</span> <span class="kw">Из</span> <span class="pm">Заказы</span> <span class="kw">Цикл</span>
+<span class="ln">6</span>		<span class="pm">Запрос</span>.<span class="fn">УстановитьПараметр</span>(<span class="str">"Товар"</span>, <span class="pm">Заказ</span>.Товар);
+<span class="ln">7</span>		<span class="pm">Выборка</span> = <span class="pm">Запрос</span>.<span class="err">Выполнить</span>().<span class="fn">Выбрать</span>();
+<span class="ln">8</span>	<span class="kw">КонецЦикла</span>;
 <span class="ln">9</span>
 <span class="ln">10</span><span class="kw">КонецПроцедуры</span></code></pre>
 
@@ -49,7 +47,7 @@ const copy = computed(() =>
       <span class="bsl-editor__severity">{{ copy.severity }}</span>
       <div class="bsl-editor__body">
         <p class="bsl-editor__message">{{ copy.message }}</p>
-        <p class="bsl-editor__meta"><code>BSLLS:DeprecatedMessage</code> · {{ copy.hint }}</p>
+        <p class="bsl-editor__meta"><code>BSLLS:CreateQueryInCycle</code> · {{ copy.hint }}</p>
       </div>
     </figcaption>
   </figure>
