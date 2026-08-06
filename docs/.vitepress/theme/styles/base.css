@@ -1,0 +1,474 @@
+/**
+ * Оформление общего каркаса: шапка, боковое меню, типографика статей.
+ * Всё, что относится к главной странице и виджетам, лежит в отдельных файлах.
+ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------------ шапка */
+
+.VPNav {
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+}
+
+.VPNavBar:not(.has-sidebar):not(.home.top) {
+  background-color: color-mix(in srgb, var(--vp-c-bg) 78%, transparent);
+}
+
+.VPNavBar .divider {
+  display: none;
+}
+
+.VPNavBar {
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s, background-color 0.25s;
+}
+
+.VPNavBar:not(.top) {
+  border-bottom-color: var(--vp-c-divider);
+}
+
+.VPNavBar .title {
+  font-family: var(--bsl-font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-size: 1.02rem;
+}
+
+.VPNavBar .logo {
+  height: 26px;
+  filter: drop-shadow(0 0 0 transparent);
+}
+
+.dark .VPNavBar .logo {
+  filter: invert(100%);
+}
+
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup .VPFlyout .button {
+  font-family: var(--bsl-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Активный пункт меню подчёркивается фирменным градиентом. */
+.VPNavBarMenuLink.active {
+  position: relative;
+  color: var(--vp-c-text-1);
+}
+
+.VPNavBarMenuLink.active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--bsl-gradient);
+}
+
+.VPNavBarSearchButton,
+.DocSearch-Button,
+.VPNavBarSearch .DocSearch-Button {
+  border-radius: 999px !important;
+}
+
+/* --------------------------------------------------------- боковое меню */
+
+.VPSidebar {
+  background-color: var(--vp-c-bg-alt);
+  border-right: 1px solid var(--vp-c-divider);
+  padding-top: 24px;
+}
+
+.VPSidebarItem.level-0 > .item > .text {
+  font-family: var(--bsl-font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+  white-space: normal;
+}
+
+/* Названия разделов и ключи диагностик длинные — переносим, а не обрезаем. */
+.VPSidebarItem .text,
+.VPSidebarItem .link .link-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.VPSidebarItem.level-0 {
+  padding-bottom: 20px;
+}
+
+.VPSidebarItem.level-1 .items,
+.VPSidebarItem.level-2 .items {
+  border-left: 1px solid var(--vp-c-divider);
+  margin-left: 2px;
+  padding-left: 14px;
+}
+
+.VPSidebarItem .link .link-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  transition: color 0.2s;
+}
+
+/* Активный пункт: золотая «рельса» слева и мягкая заливка. */
+.VPSidebarItem.is-link > .item .link {
+  position: relative;
+  border-radius: 8px;
+  margin-left: -10px;
+  padding-left: 10px;
+}
+
+.VPSidebarItem.is-active > .item .link {
+  background: var(--vp-c-brand-soft);
+}
+
+.VPSidebarItem.is-active > .item .link::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--bsl-gradient);
+}
+
+.VPSidebarItem.is-active > .item .link .link-text {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+}
+
+/* Длинный список диагностик — моноширинный, читается как список ключей. */
+.VPSidebarItem.level-2 .link-text,
+.VPSidebarItem.level-3 .link-text {
+  font-family: var(--bsl-font-mono);
+  font-size: 12.5px;
+}
+
+/* ----------------------------------------------------------- типографика */
+
+.VPDoc {
+  padding-top: 32px !important;
+}
+
+@media (min-width: 960px) {
+  .VPDoc:not(.has-sidebar) .container {
+    max-width: 1180px;
+  }
+
+  .VPDoc .content {
+    padding-top: 8px;
+  }
+
+  /* Дефолтные 688px тесноваты: в документации много широких таблиц. */
+  .VPDoc .content-container {
+    max-width: 872px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPDoc .content-container {
+    max-width: 936px;
+  }
+}
+
+/* Страницы-каталоги: таблица на всю доступную ширину, без колонки оглавления. */
+.bsl-wide .VPDoc .aside {
+  display: none;
+}
+
+.bsl-wide .VPDoc .content {
+  max-width: 100% !important;
+}
+
+.bsl-wide .VPDoc .content-container {
+  max-width: 1240px !important;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4 {
+  font-family: var(--bsl-font-display);
+  letter-spacing: -0.03em;
+}
+
+.vp-doc h1 {
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.vp-doc h2 {
+  position: relative;
+  margin-top: 56px;
+  padding-top: 26px;
+  padding-left: 0;
+  border-top: 1px solid var(--vp-c-divider);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.vp-doc h2::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 52px;
+  height: 2px;
+  background: var(--bsl-gradient);
+}
+
+.vp-doc h3 {
+  margin-top: 34px;
+  font-size: 1.16rem;
+  font-weight: 700;
+}
+
+.vp-doc p,
+.vp-doc li {
+  line-height: 1.72;
+}
+
+.vp-doc a {
+  font-weight: 500;
+  text-decoration-color: color-mix(in srgb, var(--vp-c-brand-1) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+
+.vp-doc a:hover {
+  text-decoration-color: var(--vp-c-brand-1);
+}
+
+/* Инлайновый код — «чипом», а не просто фоном. */
+.vp-doc h1 code,
+.vp-doc h2 code,
+.vp-doc h3 code,
+.vp-doc h4 code {
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+.vp-doc :not(pre) > code {
+  font-family: var(--bsl-font-mono);
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--bsl-hairline);
+  background-color: var(--vp-c-bg-soft);
+  padding: 2px 6px;
+}
+
+.vp-doc div[class*='language-'] {
+  border-radius: var(--bsl-radius);
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: var(--bsl-shadow);
+  background-color: var(--bsl-surface-2);
+}
+
+.dark .vp-doc div[class*='language-'] {
+  background-color: #0d1117;
+}
+
+.vp-doc div[class*='language-'] > span.lang {
+  font-family: var(--bsl-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vp-doc div[class*='language-'] pre {
+  padding: 20px 0;
+}
+
+/* --------------------------------------------------------------- таблицы */
+
+.vp-doc table {
+  display: table;
+  width: 100%;
+  margin: 22px 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: var(--bsl-radius);
+}
+
+.vp-doc .table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--bsl-radius);
+}
+
+.vp-doc th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--vp-c-bg-soft);
+  font-family: var(--bsl-font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+  border: none;
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding: 12px 14px;
+  white-space: nowrap;
+}
+
+.vp-doc td {
+  border: none;
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding: 11px 14px;
+  vertical-align: top;
+}
+
+.vp-doc tr:last-child td {
+  border-bottom: none;
+}
+
+.vp-doc tr {
+  background: transparent;
+  transition: background-color 0.15s;
+}
+
+.vp-doc tbody tr:nth-child(even) {
+  background-color: color-mix(in srgb, var(--vp-c-bg-soft) 55%, transparent);
+}
+
+.vp-doc tbody tr:hover {
+  background-color: var(--vp-c-brand-soft);
+}
+
+/* Сортируемые заголовки (см. useSortableTables). */
+.vp-doc th.bsl-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.vp-doc th.bsl-sortable::after {
+  content: '↕';
+  opacity: 0.3;
+  margin-left: 6px;
+  font-size: 11px;
+}
+
+.vp-doc th.bsl-sortable.bsl-asc::after {
+  content: '↑';
+  opacity: 1;
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc th.bsl-sortable.bsl-desc::after {
+  content: '↓';
+  opacity: 1;
+  color: var(--vp-c-brand-1);
+}
+
+/* ------------------------------------------------------- блоки-контейнеры */
+
+.vp-doc .custom-block {
+  border: 1px solid var(--vp-c-divider);
+  border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 10px;
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc .custom-block.warning {
+  border-left-color: var(--vp-c-warning-1);
+}
+
+.vp-doc .custom-block.danger {
+  border-left-color: var(--vp-c-danger-1);
+}
+
+.vp-doc .custom-block.details summary {
+  font-family: var(--bsl-font-display);
+  font-weight: 700;
+}
+
+.vp-doc .custom-block-title {
+  font-family: var(--bsl-font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Иконки поддержки протокола (галочка/крестик) в больших таблицах. */
+.vp-doc td img[alt='yes'],
+.vp-doc td img[alt='no'] {
+  display: inline-block;
+  vertical-align: -3px;
+}
+
+/* Логотип JetBrains — чёрная монохромная версия, в тёмной теме её не видно. */
+.dark .vp-doc img[src*='jetbrains'] {
+  filter: invert(100%);
+}
+
+/* ------------------------------------------------------- прочие элементы */
+
+.VPDocFooter .prev-link,
+.VPDocFooter .next-link {
+  border-radius: var(--bsl-radius);
+  border-color: var(--vp-c-divider);
+  transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+}
+
+.VPDocFooter .pager-link:hover {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-bg-soft);
+  transform: translateY(-1px);
+}
+
+.VPDocFooter .desc {
+  font-family: var(--bsl-font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.VPDocAsideOutline .outline-title {
+  font-family: var(--bsl-font-display);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider);
+  background-color: var(--vp-c-bg-alt);
+}
+
+.VPLocalSearchBox .title {
+  font-family: var(--bsl-font-display);
+}
+
+/* Кнопки на главной. */
+.VPButton {
+  font-family: var(--bsl-font-display);
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
+}
+
+.VPBadge {
+  font-family: var(--bsl-font-display);
+  border-radius: 999px;
+}

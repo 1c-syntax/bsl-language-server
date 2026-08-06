@@ -90,3 +90,9 @@ __pycache__/
 # держим под версионным контролем — он нужен веб-сессиям всех контрибьюторов.
 .claude/*
 !.claude/settings.json
+
+# Сайт документации (VitePress)
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/public/configuration/

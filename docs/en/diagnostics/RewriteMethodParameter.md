@@ -41,4 +41,4 @@ EndProcedure
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* [PVS-Studio V763. Parameter is always rewritten in function body before being used](https://pvs-studio.com/ru/docs/warnings/v6023)
+* [PVS-Studio V763. Parameter is always rewritten in function body before being used](https://pvs-studio.com/ru/docs/warnings/v6023) -->

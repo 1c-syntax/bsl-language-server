@@ -1,33 +1,9 @@
-# BSL Language Server
-
-[![Actions Status](https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg)](https://github.com/1c-syntax/bsl-language-server/actions)
-[![Download](https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&style=flat)](https://github.com/1c-syntax/bsl-language-server/releases/latest)
-[![Latest release](https://badgen.net/github/release/1c-syntax/bsl-language-server)](https://github.com/1c-syntax/bsl-language-server/releases)
-[![GitHub Releases](https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/latest/total?style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases)
-[![GitHub All Releases](https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/total?style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
-[![Transifex](https://img.shields.io/badge/translation-transifex-green)](https://www.transifex.com/1c-syntax/bsl-language-server)
-[![Benchmark](bench/benchmark.svg)](bench/index.html)
-[![telegram](https://img.shields.io/badge/telegram-chat-green.svg)](https://t.me/bsl_language_server)
-
-Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
-
-* [Руководство контрибьютора](contributing/index.md)
-* <a href="#capabilities">Возможности</a>
-* <a href="#cli">Запуск из командной строки</a>
-* <a href="#websocket">Запуск в режиме websocket</a>
-* <a href="#analyze">Запуск в режиме анализатора</a>
-* <a href="#format">Запуск в режиме форматтера</a>
-* [Запуск в режиме MCP](features/McpMode.md)
-* <a href="#configuration">Конфигурационный файл</a>
-* <a href="reporters">Репортеры</a>
-* <a href="diagnostics">Диагностики</a>
-* <a href="features">Дополнительные возможности</a>
-* [Часто задаваемые вопросы](faq.md)
-* [Системные требования](systemRequirements.md)
-* <a href="#thanks">Благодарности</a>
+---
+layout: home
+heroPage: true
+title: BSL Language Server — статический анализ кода 1С
+titleTemplate: false
+---
 
 <a id="capabilities"></a>
 

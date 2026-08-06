@@ -16,7 +16,7 @@ When actively reworking a form or associated metadata, there may be elements on 
 ```
 Справочник.Контрагенты.Форма.ФормаЭлемента.Форма Неразрешимые ссылки на объекты метаданных (12)
 ```
-In this case, in form files from XML unloading, the value of the "Data path" property begins with a "~" sign, for example, for the "Description" field: "<DataPath>~Object.Description</DataPath>".
+In this case, in form files from XML unloading, the value of the "Data path" property begins with a "~" sign, for example, for the "Description" field: `<DataPath>~Object.Description</DataPath>`.
 
 When you manually change the query of a dynamic list, the "Data path" property of its fields on the form is cleared. This leads to a breakdown of the connection between the form element (table column) and the dynamic list field, and it disappears from the table on the form.
 

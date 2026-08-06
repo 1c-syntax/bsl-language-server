@@ -123,6 +123,29 @@ src/jmh/             бенчмарки JMH;     docs/ (ru) · docs/en/ (en) · 
 java -jar build/libs/bsl-language-server-*-exec.jar --help    # запуск; подкоманды см. выше
 ```
 
+## Сайт документации
+
+Сайт собирается **VitePress** из каталога `docs/` (конфиг и тема — `docs/.vitepress/`),
+публикуется workflow'ом `.github/workflows/gh-pages.yml`. Русская локаль лежит в корне
+`docs/`, английская — в `docs/en/`.
+
+```bash
+npm ci                # зависимости сайта (Node 22+)
+npm run docs:dev      # локальный сервер с hot reload
+npm run docs:build    # прод-сборка в docs/.vitepress/dist
+```
+
+Перед сборкой сайта CI прогоняет `./gradlew generateDiagnosticDocs --build` и
+`./gradlew generateDiagnosticsIndex --build` — **флаг `--build` обязателен**: без него
+задачи пишут в `build/docs`, а с ним дополняют файлы прямо в `docs/` (шапки с метаданными
+диагностик и таблицу каталога). Локально запускать их не нужно, если правишь только текст.
+
+Страницы отдаются каталогами (`/diagnostics/ИмяДиагностики/`) — те же адреса, что были у
+MkDocs; на них ссылается сам языковой сервер. За это отвечают `rewrites` в конфиге и
+`docs/.vitepress/lib/mkdocs-compat.ts`, который на лету конвертирует унаследованную
+разметку (`!!!`/`???`) и нормализует относительные ссылки. Разметку в `.md` менять
+под VitePress не нужно — часть этих файлов встраивается в jar и показывается в hover.
+
 ## Тесты и их длительность
 
 ```bash

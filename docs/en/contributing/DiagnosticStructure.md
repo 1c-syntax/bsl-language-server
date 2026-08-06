@@ -232,7 +232,7 @@ The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
 ### Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**
 
-_**<Work in Progress>**_
+_**&lt;Work in Progress&gt;**_
 
 ## Diagnostics test class
 
@@ -345,7 +345,7 @@ Test method example
 
 ### Quick fixes test **(Work in progress)**
 
-_**<Work in Progress>**_
+_**&lt;Work in Progress&gt;**_
 
 ## Diagnostics resources
 

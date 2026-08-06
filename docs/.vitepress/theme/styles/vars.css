@@ -1,0 +1,117 @@
+/**
+ * Дизайн-токены сайта BSL Language Server.
+ *
+ * Палитра построена вокруг «жёлтого» 1С: тёплый градиент золото → янтарь → коралл
+ * на холодной графитовой подложке. Ссылочный цвет в светлой теме затемнён до
+ * приемлемого контраста (AA) — чистое золото на белом нечитаемо.
+ */
+
+:root {
+  --bsl-gold: #ffc857;
+  --bsl-amber: #f0932b;
+  --bsl-coral: #ff6b5b;
+  --bsl-ink: #0b0d11;
+
+  --bsl-gradient: linear-gradient(115deg, var(--bsl-gold) 0%, var(--bsl-amber) 46%, var(--bsl-coral) 100%);
+  --bsl-gradient-soft: linear-gradient(
+    115deg,
+    rgba(255, 200, 87, 0.16) 0%,
+    rgba(240, 147, 43, 0.14) 46%,
+    rgba(255, 107, 91, 0.12) 100%
+  );
+
+  --bsl-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bsl-font-display: 'Manrope', var(--bsl-font-sans);
+  --bsl-font-hero: 'Unbounded', var(--bsl-font-display);
+  --bsl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Consolas, monospace;
+
+  --bsl-radius: 14px;
+  --bsl-radius-lg: 20px;
+
+  /* Геометрия макета: шире дефолтного VitePress — в документации много широких таблиц. */
+  --vp-layout-max-width: 1560px;
+  --vp-sidebar-width: 296px;
+  --vp-nav-height: 68px;
+
+  --vp-font-family-base: var(--bsl-font-sans);
+  --vp-font-family-mono: var(--bsl-font-mono);
+
+  --vp-c-brand-1: #9a5a00;
+  --vp-c-brand-2: #b56b04;
+  --vp-c-brand-3: #d98324;
+  --vp-c-brand-soft: rgba(240, 147, 43, 0.16);
+
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #faf7f2;
+  --vp-c-bg-soft: #f6f2ea;
+  --vp-c-bg-elv: #ffffff;
+
+  --vp-c-divider: #eae3d7;
+  --vp-c-border: #ded5c6;
+  --vp-c-gutter: #eae3d7;
+
+  --vp-c-text-1: #171a1f;
+  --vp-c-text-2: #565d68;
+  --vp-c-text-3: #8a919c;
+
+  --vp-button-brand-bg: var(--bsl-amber);
+  --vp-button-brand-hover-bg: #e0851f;
+  --vp-button-brand-active-bg: #cc7717;
+  --vp-button-brand-text: #1a1206;
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #1a1206;
+  --vp-button-brand-active-text: #1a1206;
+
+  --vp-code-font-size: 0.875em;
+  --vp-custom-block-font-size: 0.94rem;
+
+  --bsl-surface: #ffffff;
+  --bsl-surface-2: #faf7f2;
+  --bsl-hairline: rgba(23, 26, 31, 0.08);
+  --bsl-shadow: 0 1px 2px rgba(23, 26, 31, 0.04), 0 12px 32px -18px rgba(23, 26, 31, 0.28);
+  --bsl-shadow-lg: 0 2px 6px rgba(23, 26, 31, 0.05), 0 32px 64px -28px rgba(23, 26, 31, 0.34);
+  --bsl-grid: rgba(23, 26, 31, 0.05);
+}
+
+.dark {
+  --vp-c-brand-1: #ffc061;
+  --vp-c-brand-2: #ffb03d;
+  --vp-c-brand-3: #f0932b;
+  --vp-c-brand-soft: rgba(240, 147, 43, 0.18);
+
+  --vp-c-bg: #0b0d11;
+  --vp-c-bg-alt: #0e1116;
+  --vp-c-bg-soft: #14181f;
+  --vp-c-bg-elv: #161a21;
+
+  --vp-c-divider: #232830;
+  --vp-c-border: #2c333d;
+  --vp-c-gutter: #05070a;
+
+  --vp-c-text-1: #e9edf3;
+  --vp-c-text-2: #a3acb9;
+  --vp-c-text-3: #6c7684;
+
+  --vp-button-brand-bg: var(--bsl-gold);
+  --vp-button-brand-hover-bg: #ffd47f;
+  --vp-button-brand-active-bg: #f0b544;
+  --vp-button-brand-text: #1a1206;
+  --vp-button-brand-hover-text: #1a1206;
+  --vp-button-brand-active-text: #1a1206;
+
+  --bsl-surface: #12161c;
+  --bsl-surface-2: #0e1116;
+  --bsl-hairline: rgba(233, 237, 243, 0.09);
+  --bsl-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -20px rgba(0, 0, 0, 0.8);
+  --bsl-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.55), 0 40px 80px -30px rgba(0, 0, 0, 0.9);
+  --bsl-grid: rgba(233, 237, 243, 0.05);
+}
+
+/* Ссылка на текущий язык / внешние иконки и прочие акценты. */
+:root {
+  --vp-c-tip-1: var(--vp-c-brand-1);
+  --vp-c-tip-soft: var(--vp-c-brand-soft);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: var(--bsl-gradient);
+}
