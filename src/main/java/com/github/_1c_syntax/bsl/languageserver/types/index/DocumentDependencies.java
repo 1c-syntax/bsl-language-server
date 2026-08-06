@@ -59,35 +59,28 @@ final class DocumentDependencies {
   }
 
   /**
-   * Строит граф зависимостей между документами по отложенным методам.
+   * Строит граф зависимостей между документами.
    *
-   * @param methodsByDocument отложенные методы, разложенные по документам.
-   * @param dependenciesOf    зависимости метода — методы, значения которых он читает.
+   * @param documents      документы, которые предстоит пересчитать.
+   * @param dependenciesOf документы, на значениях которых построен этот.
    * @return граф, готовый выдать порядок обхода.
    */
   static DocumentDependencies of(
-    Map<URI, List<MethodSymbol>> methodsByDocument,
-    Function<MethodSymbol, Collection<MethodSymbol>> dependenciesOf
+    Collection<URI> documents,
+    Function<URI, Collection<URI>> dependenciesOf
   ) {
-    var deferred = new HashSet<MethodSymbol>();
-    methodsByDocument.values().forEach(deferred::addAll);
-
+    var pending = new HashSet<>(documents);
     var edges = new HashMap<URI, List<URI>>();
-    methodsByDocument.forEach((uri, methods) -> {
+    for (var uri : documents) {
       var targets = new ArrayList<URI>();
-      for (var method : methods) {
-        for (var dependency : dependenciesOf.apply(method)) {
-          if (!deferred.contains(dependency)) {
-            continue;
-          }
-          var target = dependency.getOwner().getUri();
-          if (!target.equals(uri) && !targets.contains(target)) {
-            targets.add(target);
-          }
+      for (var dependency : dependenciesOf.apply(uri)) {
+        // Документы вне пересчёта в порядок не входят: их значения уже окончательны.
+        if (pending.contains(dependency) && !dependency.equals(uri) && !targets.contains(dependency)) {
+          targets.add(dependency);
         }
       }
       edges.put(uri, targets);
-    });
+    }
     return new DocumentDependencies(edges);
   }
 

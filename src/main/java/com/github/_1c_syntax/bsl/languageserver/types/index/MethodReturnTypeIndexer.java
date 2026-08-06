@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,8 +93,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
 
-  private final Map<MethodSymbol, Set<MethodSymbol>> dependentsByMethod = new ConcurrentHashMap<>();
-  private final Map<MethodSymbol, Set<MethodSymbol>> dependenciesByMethod = new ConcurrentHashMap<>();
+  /**
+   * Документы, чьи значения построены на этом. Связи держатся по документам, а не по
+   * методам: правка пересчитывает документ целиком, поэтому связь метода с соседом по
+   * тому же файлу никогда не спрашивается, а хранение по методам стоит на порядок
+   * дороже — на реальной конфигурации это сотни тысяч наборов вместо десятка тысяч.
+   */
+  private final Map<URI, Set<URI>> dependentsByUri = new ConcurrentHashMap<>();
+
+  /** Документы, на значениях которых построен этот. */
+  private final Map<URI, Set<URI>> dependenciesByUri = new ConcurrentHashMap<>();
+
   private final Map<URI, List<MethodSymbol>> methodsByUri = new ConcurrentHashMap<>();
 
   /** Идёт общий проход по рабочей области: разбор документа в нём — не правка, а догрузка. */
@@ -228,21 +238,20 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Снимает связи методов документа. Сами значения живут в {@link SymbolTypeIndex} и
-   * стираются им же по тому же событию.
+   * Снимает связи документа с теми, на ком он построен, и пометки о разборе его методов.
+   * Сами значения живут в {@link SymbolTypeIndex} и стираются им же по тому же событию.
+   * <p>
+   * Записи о потребителях сохраняются: содержимое документа изменилось, но построены они
+   * по-прежнему на нём, и именно им предстоит получить новое значение.
    *
    * @param uri URI документа.
    */
   @Override
   public void clear(URI uri) {
+    unlinkDependencies(uri);
     var methods = methodsByUri.remove(uri);
-    if (methods == null) {
-      return;
-    }
-    for (var method : methods) {
-      unlinkDependencies(method);
-      dependentsByMethod.remove(method);
-      indexed.remove(method);
+    if (methods != null) {
+      methods.forEach(indexed::remove);
     }
   }
 
@@ -305,14 +314,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если набор типов изменился.
    */
   private boolean store(MethodSymbol method, ComputedReturnTypes computed) {
-    unlinkDependencies(method);
-    for (var dependency : computed.consulted()) {
-      if (dependency.equals(method)) {
-        continue;
-      }
-      dependenciesByMethod.computeIfAbsent(method, k -> ConcurrentHashMap.newKeySet()).add(dependency);
-      dependentsByMethod.computeIfAbsent(dependency, k -> ConcurrentHashMap.newKeySet()).add(method);
-    }
+    link(method, computed.consulted());
     if (computed.incomplete()) {
       // Расчёт видел метод, значение которого ещё не посчитано: так бывает, пока рабочая
       // область наполняется. Такой метод пересчитывается проходом после наполнения.
@@ -335,6 +337,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /**
    * Разносит изменение значений по потребителям до неподвижной точки.
    * <p>
+   * Единица разноса — документ: связи держатся по документам, и пересчитать его методы
+   * целиком дешевле, чем хранить, какой из них на чём построен.
+   * <p>
    * Пересчитываются только те, чьи документы разобраны прямо сейчас: догрузка ради
    * отдельной правки в редакторе слишком дорога. Остальные подтянутся общим проходом
    * либо при следующем разборе своего документа.
@@ -342,21 +347,37 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param seeds методы, значения которых изменились.
    */
   private void propagate(Collection<MethodSymbol> seeds) {
-    var queue = new ArrayDeque<>(dependentsOf(seeds));
+    var changedUris = seeds.stream().map(method -> method.getOwner().getUri()).toList();
+    var queue = new ArrayDeque<>(dependentsOf(changedUris));
     for (var pass = 0; pass < MAX_PASSES && !queue.isEmpty(); pass++) {
-      var wave = new ArrayList<MethodSymbol>(queue);
+      var wave = List.copyOf(queue);
       queue.clear();
-      var changed = new ArrayList<MethodSymbol>();
-      for (var method : wave) {
-        // Выгруженный документ пропускается: догружать его ради разноса одной волны
-        // слишком дорого. Значение подтянется при следующем разборе документа, а если
-        // расчёт шёл по незаполненному значению — методом из очереди отложенных.
-        if (isReadable(method) && recompute(method)) {
-          changed.add(method);
+      var changed = new ArrayList<URI>();
+      for (var uri : wave) {
+        if (recomputeLoaded(uri)) {
+          changed.add(uri);
         }
       }
       queue.addAll(dependentsOf(changed));
     }
+  }
+
+  /**
+   * Пересчитывает методы документа, если его дерево разбора под рукой.
+   * <p>
+   * Выгруженный документ пропускается: догружать его ради разноса одной волны слишком
+   * дорого. Значение подтянется при следующем разборе документа, а если расчёт шёл по
+   * незаполненному значению — методом из очереди отложенных.
+   *
+   * @param uri URI документа.
+   * @return {@code true}, если хоть у одного метода набор типов изменился.
+   */
+  private boolean recomputeLoaded(URI uri) {
+    var methods = methodsByUri.get(uri);
+    if (methods == null || methods.isEmpty() || !isReadable(methods.get(0))) {
+      return false;
+    }
+    return recomputeEach(methods);
   }
 
   /**
@@ -420,8 +441,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var root : roots) {
       byDocument.computeIfAbsent(root.getOwner().getUri(), k -> new ArrayList<>()).add(root);
     }
-    var order = DocumentDependencies.of(byDocument,
-      method -> dependenciesByMethod.getOrDefault(method, Set.of()));
+    var order = DocumentDependencies.of(byDocument.keySet(),
+      uri -> dependenciesByUri.getOrDefault(uri, Set.of()));
     for (var component : order.components()) {
       var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
       methods.forEach(method -> progressReporter.tick());
@@ -579,15 +600,36 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Потребители перечисленных методов.
+   * Запоминает, на каких чужих документах построено значение метода.
+   * <p>
+   * Связи внутри документа не хранятся: его правка пересчитывает все его методы разом,
+   * поэтому такая связь никогда не спрашивается.
    *
-   * @param methods методы.
-   * @return методы, значения которых на них построены.
+   * @param method    метод.
+   * @param consulted методы, значения которых участвовали в расчёте.
    */
-  private Set<MethodSymbol> dependentsOf(Collection<MethodSymbol> methods) {
-    var result = ConcurrentHashMap.<MethodSymbol>newKeySet();
-    for (var method : methods) {
-      var dependents = dependentsByMethod.get(method);
+  private void link(MethodSymbol method, Set<MethodSymbol> consulted) {
+    var uri = method.getOwner().getUri();
+    for (var dependency : consulted) {
+      var dependencyUri = dependency.getOwner().getUri();
+      if (dependencyUri.equals(uri)) {
+        continue;
+      }
+      dependenciesByUri.computeIfAbsent(uri, k -> ConcurrentHashMap.newKeySet()).add(dependencyUri);
+      dependentsByUri.computeIfAbsent(dependencyUri, k -> ConcurrentHashMap.newKeySet()).add(uri);
+    }
+  }
+
+  /**
+   * Потребители перечисленных документов.
+   *
+   * @param uris URI документов.
+   * @return URI документов, значения которых на них построены.
+   */
+  private Set<URI> dependentsOf(Collection<URI> uris) {
+    var result = new LinkedHashSet<URI>();
+    for (var uri : uris) {
+      var dependents = dependentsByUri.get(uri);
       if (dependents != null) {
         result.addAll(dependents);
       }
@@ -595,16 +637,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     return result;
   }
 
-  /** Снимает связи метода с теми, от кого он зависел. */
-  private void unlinkDependencies(MethodSymbol method) {
-    var dependencies = dependenciesByMethod.remove(method);
+  /** Снимает связи документа с теми, на ком он был построен. */
+  private void unlinkDependencies(URI uri) {
+    var dependencies = dependenciesByUri.remove(uri);
     if (dependencies == null) {
       return;
     }
     for (var dependency : dependencies) {
-      var dependents = dependentsByMethod.get(dependency);
+      var dependents = dependentsByUri.get(dependency);
       if (dependents != null) {
-        dependents.remove(method);
+        dependents.remove(uri);
       }
     }
   }
