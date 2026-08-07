@@ -2310,10 +2310,14 @@
 <h1 id="Console-reporter">Console reporter<a class="headerlink" href="#Console-reporter" title="Permanent link">&para;</a></h1>
 <p>Ключ репортера - <code>console</code></p>
 <h2 id="Описание">Описание<a class="headerlink" href="#Описание" title="Permanent link">&para;</a></h2>
-<p>Выводит результаты анализа в stdout и/или подключенные к логгеру. Выводится результат работы метода <code>toString()</code> объекта <a href="https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/reporter/AnalysisInfo.java">AnalysisInfo</a></p>
+<p>Выводит результаты анализа в stdout и/или подключенные к логгеру. Результат каждого файла выводится
+отдельной записью по мере его разбора — результат работы метода <code>toString()</code> объекта
+<a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/data/FileInfo.java">FileInfo</a>.</p>
+<p>Порядок файлов соответствует порядку завершения их разбора и от запуска к запуску может отличаться.</p>
 <h2 id="Пример-вывода">Пример вывода<a class="headerlink" href="#Пример-вывода" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Analysis date: 2019-01-28T15:32:06.856
-[FileInfo(path=C:\src\cf\Catalogs\МойСправочник\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [
+FileInfo(path=Catalogs\МойСправочник\Ext\ManagerModule.bsl, mdoRef=Catalog.МойСправочник, diagnostics=[], metrics=...)
+FileInfo(path=Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, mdoRef=Catalog.АккредитационныеКомиссии, diagnostics=[Diagnostic [
   range = Range [
     start = Position [
       line = 55
@@ -2329,7 +2333,7 @@
   source = &quot;bsl-language-server&quot;
   message = &quot;Превышена длина строки&quot;
   relatedInformation = null
-]])]
+]], metrics=...)
 </code></pre></div>
 
 
