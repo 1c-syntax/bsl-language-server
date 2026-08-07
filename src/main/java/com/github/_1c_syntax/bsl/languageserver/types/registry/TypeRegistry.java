@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -568,15 +569,45 @@ public class TypeRegistry {
    * @param ref         тип-глобал-свойство.
    * @param fileType    язык, в котором он виден без префикса.
    * @param declaration символ-источник, объявивший тип.
+   * @return {@code true}, если объявление отличается от прежнего и члена глобального
+   *     контекста надо пересобрать; {@code false}, если сложился тот же самый —
+   *     тогда memo глобального контекста остаётся в силе.
    */
-  public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+  public boolean registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
+    var previous = globalPropertySymbols.put(ref, new WeakReference<>(declaration));
     if (globalPropertyTypes.get(fileType).add(ref)) {
       membersEpoch.incrementAndGet();
+      return true;
     }
-    // Повторная пометка (правка уже зарегистрированного модуля) обновляет только
-    // symbol-источник; инвалидацию memo GLOBAL_CONTEXT-члена и name-индекса, куда
-    // символ уже вошёл, выполняет вызывающий провайдер точечно.
+    // Повторная пометка (разбор уже зарегистрированного модуля) обновляет только
+    // symbol-источник. Пересобирать члена глобального контекста стоит лишь тогда, когда
+    // в символе изменилось то, что в этого члена входит, — иначе каждый разбор модуля
+    // тянул бы за собой и сборку членов, и пересборку индекса глобальных имён.
+    var stored = previous == null ? null : previous.get();
+    return stored == null || !sameDeclaration(stored, declaration);
+  }
+
+  /**
+   * Одинаковы ли объявления с точки зрения члена глобального контекста: в него входят
+   * положение символа и его описание, а состав модуля — нет, он живёт в членах самого
+   * типа модуля.
+   *
+   * @param stored      прежний символ.
+   * @param declaration новый символ.
+   * @return {@code true}, если для члена глобального контекста они неразличимы.
+   */
+  private static boolean sameDeclaration(SourceDefinedSymbol stored, SourceDefinedSymbol declaration) {
+    if (!stored.equals(declaration)) {
+      return false;
+    }
+    if (stored instanceof Describable storedDescribable && declaration instanceof Describable fresh) {
+      var before = storedDescribable.getSymbolDescription();
+      var after = fresh.getSymbolDescription();
+      return before.getPurposeDescription().equals(after.getPurposeDescription())
+        && before.isDeprecated() == after.isDeprecated()
+        && before.getDeprecationInfo().equals(after.getDeprecationInfo());
+    }
+    return true;
   }
 
   /**

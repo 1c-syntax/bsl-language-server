@@ -28,6 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
+
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -79,6 +82,27 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(moduleMembersAfter).isNotSameAs(moduleMembersBefore);
     assertThat(moduleMembersAfter)
       .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
+  }
+
+  @Test
+  void reparseWithSameContentKeepsGlobalContextMemo() {
+    // given — общий модуль прогрет, члены глобального контекста посчитаны.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var moduleDoc = context.getDocument(Absolute.uri(Path.of(
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl").toUri()));
+    globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL).orElseThrow();
+    var globalsBefore = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+
+    // when — документ разобран заново: дерево символов пересобрано, объявление модуля
+    // сложилось новым экземпляром с теми же данными.
+    context.rebuildDocument(moduleDoc);
+
+    // then — memo глобального контекста осталось тем же экземпляром. Иначе следом за ним
+    // пересобирался бы и индекс глобальных имён, а он строится на каждый разбор документа.
+    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL))
+      .isSameAs(globalsBefore);
+    assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)).isPresent();
   }
 
   @Test

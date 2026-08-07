@@ -253,16 +253,20 @@ public class ConfigurationModuleMembersProvider {
     // общий модуль — глобальное свойство (value-type = тип модуля,
     // sourceSymbol = ModuleSymbol для навигации/раскраски). Помечаем на каждом
     // изменении — символ освежается из актуального SymbolTree.
-    typeRegistry.registerGlobalPropertyType(ref, FileType.BSL,
+    var declarationChanged = typeRegistry.registerGlobalPropertyType(ref, FileType.BSL,
       documentContext.getSymbolTree().getModule());
 
     if (prev != null && prev.equals(ref)) {
-      // содержимое изменилось (rebuild): точечно пересобрать memo членов самого модуля
-      // и члена GLOBAL_CONTEXT (в него вошёл обновлённый symbol-источник модуля) — без
-      // сдвига глобальной эпохи членов. Name-индекс глобальной области отдельно сбрасывать
-      // не нужно: он кэширован по набору-источнику и пересоберётся сам, увидев новый набор.
+      // Разобрали заново уже зарегистрированный модуль: точечно пересобрать memo членов
+      // самого модуля — его состав читается из символьного дерева лениво.
       typeRegistry.invalidateMembers(ref);
-      typeRegistry.invalidateMembers(TypeRegistry.GLOBAL_CONTEXT);
+      // Члена GLOBAL_CONTEXT трогаем, только если в объявлении что-то изменилось. Разбор
+      // сам по себе даёт новый экземпляр символа с теми же данными, и сбрасывать по нему
+      // дорого: следом пересобираются все члены глобального контекста, а за ними и индекс
+      // глобальных имён — карта на удвоенное число членов.
+      if (declarationChanged) {
+        typeRegistry.invalidateMembers(TypeRegistry.GLOBAL_CONTEXT);
+      }
       return;
     }
 
