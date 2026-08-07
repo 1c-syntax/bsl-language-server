@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
@@ -39,6 +41,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
 
@@ -73,11 +77,14 @@ class MethodReturnTypeIndexerTest {
   void prepare() {
     inferencer = mock(ExpressionTypeInferencer.class);
     symbolTypeIndex = mock(SymbolTypeIndex.class);
+    // Язык нужен настоящий: на нём индекс берёт тексты для индикатора хода работы.
+    var configuration = mock(GlobalLanguageServerConfiguration.class);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
     indexer = new MethodReturnTypeIndexer(
       inferencer,
       symbolTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
-      mock(GlobalLanguageServerConfiguration.class, RETURNS_DEEP_STUBS)
+      configuration
     );
 
     source = document("file:///source.bsl");
@@ -129,6 +136,83 @@ class MethodReturnTypeIndexerTest {
 
     // then: пересчитывать потребителя незачем.
     verify(inferencer, never()).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void deferredMethodIsRecomputedAfterWorkspaceIsPopulated() {
+    // given: при разборе значение метода вышло неполным — вызванный метод ещё не посчитан.
+    returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+    clearInvocations(inferencer);
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
+
+    // then: отложенный метод пересчитан на месте — документ разобран, догружать нечего.
+    verify(inferencer).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void releasedDocumentIsLoadedForRecomputeAndReleasedBack() {
+    // given: отложенный метод лежит в документе, вторичные данные которого уже освобождены.
+    returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+    var serverContext = serverContextOf(consumer);
+    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: документ разобран ради пересчёта и сразу отпущен — иначе на большой рабочей
+    // области в памяти осело бы всё, что проход трогал.
+    verify(serverContext).rebuildDocument(consumer);
+    verify(serverContext).tryClearDocument(consumer);
+  }
+
+  @Test
+  void documentsOfCycleAreHeldLoadedUntilFixedPoint() {
+    // given: два документа ссылаются друг на друга, и оба отложены. Вторичные данные обоих
+    // освобождены, так что проходу придётся их догрузить.
+    returns(sourceMethod, TypeSet.EMPTY, consumerMethod);
+    returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
+    indexer.computeIfAbsent(sourceMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(consumerMethod), true));
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+
+    var serverContext = source.getServerContext();
+    var documents = Map.of(source.getUri(), source, consumer.getUri(), consumer);
+    when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
+    when(serverContext.getDocuments()).thenReturn(documents);
+    when(serverContext.getDocumentState(any())).thenReturn(DocumentState.WITHOUT_CONTENT);
+    when(consumer.getServerContext()).thenReturn(serverContext);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: оба документа догружены и отпущены. Цикл крутится на загруженных документах,
+    // поэтому повторные обороты не стоят ни одного лишнего разбора.
+    verify(serverContext).rebuildDocument(source);
+    verify(serverContext).rebuildDocument(consumer);
+    verify(serverContext).tryClearDocument(source);
+    verify(serverContext).tryClearDocument(consumer);
+  }
+
+  /**
+   * Рабочая область, в которой живёт документ: блокировки настоящие, состояние документа
+   * спрашивается у неё же.
+   *
+   * @param documentContext документ.
+   * @return рабочая область.
+   */
+  private static ServerContext serverContextOf(DocumentContext documentContext) {
+    var serverContext = documentContext.getServerContext();
+    var documents = Map.of(documentContext.getUri(), documentContext);
+    when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
+    when(serverContext.getDocuments()).thenReturn(documents);
+    return serverContext;
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {
