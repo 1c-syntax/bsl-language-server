@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786110805496,
+  "lastUpdate": 1786118379685,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42160,6 +42160,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7074290182978057",
             "extra": "mean: 94.42295408248901 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "efa51878e812313294d7b2b2540812d8cbd97c0f",
+          "message": "Merge pull request #4420 from 1c-syntax/claude/bsl-language-server-4418-uzpe7q\n\nperf(context): не клонировать массив значений VariableKind на каждый getKind()",
+          "timestamp": "2026-08-07T17:39:08+02:00",
+          "tree_id": "a90f5fa25a0b80182eda81b37dd57b54419355a0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/efa51878e812313294d7b2b2540812d8cbd97c0f"
+        },
+        "date": 1786118366231,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.17494074503581,
+            "unit": "sec",
+            "range": "stddev: 0.7864430594433983",
+            "extra": "mean: 94.17494074503581 sec\nrounds: 3"
           }
         ]
       }
