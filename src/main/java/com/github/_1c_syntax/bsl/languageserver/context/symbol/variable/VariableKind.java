@@ -44,5 +44,25 @@ public enum VariableKind {
   /**
    * Глобальная переменная.
    */
-  GLOBAL
+  GLOBAL;
+
+  /**
+   * Значения перечисления, вычисленные один раз.
+   * <p>
+   * {@link #values()} по контракту возвращает новый массив на каждый вызов (клон внутреннего),
+   * а вид переменной спрашивают на горячем пути — обход дерева символов, автодополнение,
+   * вывод типов, диагностики по переменным.
+   */
+  private static final VariableKind[] VALUES = values();
+
+  /**
+   * Значение перечисления по его порядковому номеру.
+   *
+   * @param ordinal порядковый номер значения ({@link #ordinal()}).
+   * @return значение перечисления с указанным порядковым номером.
+   * @throws ArrayIndexOutOfBoundsException если номер выходит за границы перечисления.
+   */
+  public static VariableKind byOrdinal(int ordinal) {
+    return VALUES[ordinal];
+  }
 }

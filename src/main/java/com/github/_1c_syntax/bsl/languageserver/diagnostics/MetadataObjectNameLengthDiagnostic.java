@@ -47,6 +47,12 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
 
   private static final int MAX_METADATA_OBJECT_NAME_LENGTH = 80;
 
+  /**
+   * Все типы объектов метаданных, вычисленные один раз: {@link MDOType#values()} клонирует
+   * внутренний массив на каждый вызов, а диагностика создаётся на каждый документ.
+   */
+  private static final List<MDOType> ALL_MDO_TYPES = List.of(MDOType.values());
+
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + MAX_METADATA_OBJECT_NAME_LENGTH
@@ -54,7 +60,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
   private int maxMetadataObjectNameLength = MAX_METADATA_OBJECT_NAME_LENGTH;
 
   MetadataObjectNameLengthDiagnostic() {
-    super(List.of(MDOType.values()));
+    super(ALL_MDO_TYPES);
   }
 
   @Override
