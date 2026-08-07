@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786118379685,
+  "lastUpdate": 1786130563120,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42191,6 +42191,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7864430594433983",
             "extra": "mean: 94.17494074503581 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e51047683f0da72f3b24cd9aecca9d0b8971644b",
+          "message": "Merge pull request #4428 from 1c-syntax/nixel2007-patch-1\n\nUpdate ArchUnit dependency to use JUnit 6",
+          "timestamp": "2026-08-07T20:46:43+02:00",
+          "tree_id": "85daa3c11247ad5b3a47493b0cfb4327fad41bcb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e51047683f0da72f3b24cd9aecca9d0b8971644b"
+        },
+        "date": 1786130551829,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.59775575002034,
+            "unit": "sec",
+            "range": "stddev: 2.0504351626944044",
+            "extra": "mean: 94.59775575002034 sec\nrounds: 3"
           }
         ]
       }
