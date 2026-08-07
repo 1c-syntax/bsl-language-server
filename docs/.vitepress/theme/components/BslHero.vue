@@ -11,34 +11,36 @@ const copy = computed(() =>
   isRu.value
     ? {
         eyebrow: 'Language Server Protocol · 1С:Предприятие 8 · OneScript',
-        title: 'Статический анализ и IDE-возможности для кода на 1С',
+        title: 'Ваш редактор начинает понимать код на 1С',
         lead:
-          'Один языковой сервер, который подключается к любому редактору с поддержкой LSP, ' +
-          'находит ошибки и нарушения стандартов и умеет работать в пакетном режиме на CI.',
+          'Автодополнение, переходы, подсказки и рефакторинги — на основе разбора конфигурации, ' +
+          'индекса символов и вывода типов. Тот же контекст языковой сервер отдаёт AI-ассистентам ' +
+          'по MCP, а движок диагностик — редактору и сборочной линии.',
         primary: 'Возможности',
-        secondary: 'Каталог диагностик',
+        secondary: 'Режим MCP',
         tertiary: 'GitHub',
         stats: [
-          { value: String(theme.value.diagnosticsCount ?? 186), label: 'диагностик' },
           { value: '23', label: 'возможности LSP' },
+          { value: '10', label: 'инструментов MCP' },
+          { value: String(theme.value.diagnosticsCount ?? 186), label: 'диагностик' },
           { value: '2', label: 'языка интерфейса' },
-          { value: 'Java 21+', label: 'рантайм' },
         ],
       }
     : {
         eyebrow: 'Language Server Protocol · 1C:Enterprise 8 · OneScript',
-        title: 'Static analysis and IDE features for 1C code',
+        title: 'Your editor starts to understand 1C code',
         lead:
-          'A single language server that plugs into any LSP-capable editor, finds bugs and ' +
-          'coding standard violations, and runs headless in your CI pipeline.',
+          'Completion, navigation, hints and refactorings — built on a parsed configuration, ' +
+          'a symbol index and type inference. The same context is exposed to AI assistants over ' +
+          'MCP, and the diagnostics engine serves both the editor and your build pipeline.',
         primary: 'Capabilities',
-        secondary: 'Diagnostics catalog',
+        secondary: 'MCP mode',
         tertiary: 'GitHub',
         stats: [
-          { value: String(theme.value.diagnosticsCount ?? 186), label: 'diagnostics' },
           { value: '23', label: 'LSP capabilities' },
+          { value: '10', label: 'MCP tools' },
+          { value: String(theme.value.diagnosticsCount ?? 186), label: 'diagnostics' },
           { value: '2', label: 'UI languages' },
-          { value: 'Java 21+', label: 'runtime' },
         ],
       },
 )
@@ -65,7 +67,7 @@ const copy = computed(() =>
           <a class="bsl-btn bsl-btn--primary" :href="withBase(root + 'capabilities/')">
             {{ copy.primary }}
           </a>
-          <a class="bsl-btn" :href="withBase(root + 'diagnostics/')">{{ copy.secondary }}</a>
+          <a class="bsl-btn" :href="withBase(root + 'features/McpMode/')">{{ copy.secondary }}</a>
           <a
             class="bsl-btn bsl-btn--ghost"
             href="https://github.com/1c-syntax/bsl-language-server"

@@ -17,78 +17,78 @@ const features = computed<Feature[]>(() =>
   isRu.value
     ? [
         {
-          icon: 'shield',
-          title: 'Движок диагностик',
-          text: 'Проверки на соответствие стандартам разработки 1С, поиск ошибок и уязвимостей. Каждое правило настраивается и документировано.',
-          link: 'diagnostics/',
+          icon: 'braces',
+          title: 'Контекст и вывод типов',
+          text: 'Разбирает конфигурацию с её метаданными и типами платформы, строит индекс символов и ссылок и выводит типы выражений — по присваиваниям, документирующим комментариям и цепочкам вызовов.',
+          link: 'capabilities/hover/',
         },
         {
           icon: 'plug',
-          title: 'Любой редактор с LSP',
-          text: 'VS Code, 1C:EDT, IntelliJ IDEA, Vim, Emacs. Автодополнение, переходы, hover, переименование, code actions.',
-          link: 'capabilities/',
-        },
-        {
-          icon: 'terminal',
-          title: 'Пакетный анализ для CI',
-          text: 'Режим analyze прогоняет весь проект и выгружает отчёты в SARIF, Generic Issue, JUnit и другие форматы.',
-          link: 'reporters/',
-        },
-        {
-          icon: 'wand',
-          title: 'Форматирование кода',
-          text: 'Форматирование документа, выделенного фрагмента и по мере набора — из редактора или из командной строки.',
-          link: 'capabilities/formatting/',
+          title: 'Навигация и автодополнение',
+          text: 'Члены объектов после точки с типами, переходы к определению и реализациям, поиск использований, иерархии вызовов и типов. VS Code, 1C:EDT, IntelliJ IDEA, Vim, Emacs — любой клиент LSP.',
+          link: 'capabilities/completion/',
         },
         {
           icon: 'sparkles',
-          title: 'Режим MCP',
-          text: 'Model Context Protocol: языковой сервер отдаёт AI-ассистентам структуру кода и результаты анализа.',
+          title: 'Подсказки прямо в коде',
+          text: 'Выведенные типы переменных и имена параметров подсказками-вставками, код-линзы со сложностью методов, семантическая подсветка, превью цветов и гиперссылки в комментариях.',
+          link: 'capabilities/inlayHint/',
+        },
+        {
+          icon: 'robot',
+          title: 'Режим MCP для AI-ассистентов',
+          text: 'Ещё одна «голова» поверх того же ядра: инструменты отдают тип в позиции, члены и конструкторы типа, символы, ссылки и иерархию вызовов. stdio, SSE или Streamable HTTP — в том числе рядом с LSP.',
           link: 'features/McpMode/',
         },
         {
-          icon: 'sliders',
-          title: 'Гибкая настройка',
-          text: 'Конфигурационный файл, экранирование участков кода комментариями и параметры у каждой диагностики.',
-          link: 'features/ConfigurationFile/',
+          icon: 'wand',
+          title: 'Рефакторинги и форматирование',
+          text: 'Переименование символа со всеми использованиями, связанное редактирование, быстрые исправления и форматирование — документа, фрагмента или по мере набора.',
+          link: 'capabilities/rename/',
+        },
+        {
+          icon: 'shield',
+          title: 'Диагностики и анализ на CI',
+          text: 'Правила проверки стандартов разработки 1С с настройкой у каждого. Режим analyze прогоняет проект целиком и выгружает SARIF, Generic Issue, JUnit и другие отчёты.',
+          link: 'diagnostics/',
         },
       ]
     : [
         {
-          icon: 'shield',
-          title: 'Diagnostics engine',
-          text: '1C development standards checks, bug and vulnerability detection. Every rule is documented and configurable.',
-          link: 'diagnostics/',
+          icon: 'braces',
+          title: 'Context and type inference',
+          text: 'Parses the configuration with its metadata and platform types, builds a symbol and reference index, and infers expression types from assignments, doc comments and call chains.',
+          link: 'capabilities/hover/',
         },
         {
           icon: 'plug',
-          title: 'Any LSP-capable editor',
-          text: 'VS Code, 1C:EDT, IntelliJ IDEA, Vim, Emacs. Completion, navigation, hover, rename and code actions.',
-          link: 'capabilities/',
-        },
-        {
-          icon: 'terminal',
-          title: 'Batch analysis for CI',
-          text: 'The analyze mode scans the whole project and exports SARIF, Generic Issue, JUnit and other reports.',
-          link: 'reporters/',
-        },
-        {
-          icon: 'wand',
-          title: 'Code formatting',
-          text: 'Format the document, a selected range or as you type — from the editor or from the command line.',
-          link: 'capabilities/formatting/',
+          title: 'Navigation and completion',
+          text: 'Typed object members after the dot, go to definition and implementations, find references, call and type hierarchies. VS Code, 1C:EDT, IntelliJ IDEA, Vim, Emacs — any LSP client.',
+          link: 'capabilities/completion/',
         },
         {
           icon: 'sparkles',
-          title: 'MCP mode',
-          text: 'Model Context Protocol: the language server exposes code structure and analysis results to AI assistants.',
+          title: 'Hints right in the code',
+          text: 'Inferred variable types and parameter names as inlay hints, code lenses with method complexity, semantic highlighting, color previews and links inside comments.',
+          link: 'capabilities/inlayHint/',
+        },
+        {
+          icon: 'robot',
+          title: 'MCP mode for AI assistants',
+          text: 'Another head on the same core: tools expose the type at a position, type members and constructors, symbols, references and the call hierarchy. stdio, SSE or Streamable HTTP — including alongside LSP.',
           link: 'features/McpMode/',
         },
         {
-          icon: 'sliders',
-          title: 'Fine-grained configuration',
-          text: 'A configuration file, comment-based suppressions and per-diagnostic parameters.',
-          link: 'features/ConfigurationFile/',
+          icon: 'wand',
+          title: 'Refactorings and formatting',
+          text: 'Rename a symbol with all its usages, linked editing, quick fixes and formatting — the document, a range or as you type.',
+          link: 'capabilities/rename/',
+        },
+        {
+          icon: 'shield',
+          title: 'Diagnostics and CI analysis',
+          text: '1C development standards rules, each individually configurable. The analyze mode scans the whole project and exports SARIF, Generic Issue, JUnit and other reports.',
+          link: 'diagnostics/',
         },
       ],
 )
@@ -185,10 +185,10 @@ const titles = computed(() =>
 const ICONS: Record<string, string> = {
   shield: 'M12 3l7 3v6c0 4.2-2.9 7.9-7 9-4.1-1.1-7-4.8-7-9V6l7-3z M9.2 11.8l2 2 3.6-3.8',
   plug: 'M9 3v6 M15 3v6 M6 9h12v3a6 6 0 0 1-6 6 6 6 0 0 1-6-6V9z M12 18v3',
-  terminal: 'M4 5h16v14H4z M7.5 9.5l3 2.5-3 2.5 M13 15h4',
+  braces: 'M9 4H8a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h1 M15 4h1a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2h-1 M12 10v4',
+  robot: 'M12 3v3 M6 6h12v10H6z M9.5 10.5v1.5 M14.5 10.5v1.5 M9.5 19v2 M14.5 19v2 M4 10v4 M20 10v4',
   wand: 'M5 19L19 5 M15 5l4 4 M8 3v4 M6 5h4 M16 15v4 M14 17h4',
   sparkles: 'M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z M18 16l.9 2.1 2.1.9-2.1.9L18 22l-.9-2.1-2.1-.9 2.1-.9z',
-  sliders: 'M4 7h10 M18 7h2 M4 12h4 M12 12h8 M4 17h12 M20 17h0 M14 5v4 M8 10v4 M16 15v4',
 }
 </script>
 
@@ -297,10 +297,23 @@ const ICONS: Record<string, string> = {
 
 /* ------------------------------------------------------------- карточки */
 
+/* Шесть карточек: раскладка 3×2, чтобы последний ряд не оставался полупустым. */
 .bsl-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .bsl-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .bsl-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .bsl-card {

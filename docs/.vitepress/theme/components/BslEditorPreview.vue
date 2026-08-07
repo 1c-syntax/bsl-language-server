@@ -5,25 +5,32 @@ import { useData } from 'vitepress'
 const { lang } = useData()
 const isRu = computed(() => lang.value.startsWith('ru'))
 
+/** Члены `ТаблицаЗначений` — тот набор, что языковой сервер отдаёт после точки. */
+const MEMBERS = [
+  { name: 'Итог', signature: '(<Колонка>)', returns: 'Число', active: true },
+  { name: 'НайтиСтроки', signature: '(<Отбор>)', returns: 'Массив' },
+  { name: 'Сортировать', signature: '(<Колонки>)', returns: '' },
+  { name: 'Свернуть', signature: '(<Колонки>, <КолонкиСуммирования>)', returns: '' },
+  { name: 'Скопировать', signature: '()', returns: 'ТаблицаЗначений' },
+]
+
 const copy = computed(() =>
   isRu.value
     ? {
-        file: 'РасчётОстатков.bsl',
-        message: 'Выполнение запроса в цикле',
-        severity: 'Критичный',
-        hint: 'Необходимо модифицировать запрос для поддержки множества значений и удалить цикл',
+        file: 'РасчётЗаказа.bsl',
+        doc: 'Подсчитывает сумму значений числовой колонки по всем строкам таблицы.',
+        legend: 'Тип из документирующего комментария → вывод типов переменных → члены после точки',
       }
     : {
-        file: 'StockBalance.bsl',
-        message: 'Execution query on cycle',
-        severity: 'Critical',
-        hint: 'Modify query to support multiple values and remove cycle',
+        file: 'OrderTotals.bsl',
+        doc: 'Calculates the sum of a numeric column across all rows of the table.',
+        legend: 'Type from the doc comment → inferred variable types → members after the dot',
       },
 )
 </script>
 
 <template>
-  <figure class="bsl-editor" role="img" :aria-label="copy.message">
+  <figure class="bsl-editor">
     <div class="bsl-editor__chrome">
       <span class="bsl-editor__dot bsl-editor__dot--red" />
       <span class="bsl-editor__dot bsl-editor__dot--amber" />
@@ -32,24 +39,36 @@ const copy = computed(() =>
       <span class="bsl-editor__badge">BSL</span>
     </div>
 
-    <pre class="bsl-editor__code"><code><span class="ln">1</span><span class="kw">Процедура</span> <span class="fn">ЗаполнитьОстатки</span>(<span class="pm">Заказы</span>) <span class="kw">Экспорт</span>
-<span class="ln">2</span>
-<span class="ln">3</span>	<span class="pm">Запрос</span> = <span class="kw">Новый</span> <span class="cm">Запрос</span>(<span class="pm">ТекстЗапроса</span>);
+    <pre class="bsl-editor__code"><code><span class="ln">1</span><span class="cmt">// Параметры:</span>
+<span class="ln">2</span><span class="cmt">//   Таблица - ТаблицаЗначений - строки заказа</span>
+<span class="ln">3</span><span class="kw">Процедура</span> <span class="fn">РассчитатьИтоги</span>(<span class="pm">Таблица</span>) <span class="kw">Экспорт</span>
 <span class="ln">4</span>
-<span class="ln">5</span>	<span class="kw">Для Каждого</span> <span class="pm">Заказ</span> <span class="kw">Из</span> <span class="pm">Заказы</span> <span class="kw">Цикл</span>
-<span class="ln">6</span>		<span class="pm">Запрос</span>.<span class="fn">УстановитьПараметр</span>(<span class="str">"Товар"</span>, <span class="pm">Заказ</span>.Товар);
-<span class="ln">7</span>		<span class="pm">Выборка</span> = <span class="pm">Запрос</span>.<span class="err">Выполнить</span>().<span class="fn">Выбрать</span>();
-<span class="ln">8</span>	<span class="kw">КонецЦикла</span>;
-<span class="ln">9</span>
-<span class="ln">10</span><span class="kw">КонецПроцедуры</span></code></pre>
+<span class="ln">5</span>	<span class="pm">Колонки</span><span class="hint">: КоллекцияКолонокТаблицыЗначений</span> = <span class="pm">Таблица</span>.Колонки;
+<span class="ln">6</span>	<span class="pm">Всего</span><span class="hint">: Число</span> = <span class="pm">Таблица</span>.<span class="fn">Количество</span>();
+<span class="ln">7</span>
+<span class="ln">8</span>	<span class="pm">Таблица</span>.<span class="caret" /></code></pre>
 
-    <figcaption class="bsl-editor__diagnostic">
-      <span class="bsl-editor__severity">{{ copy.severity }}</span>
-      <div class="bsl-editor__body">
-        <p class="bsl-editor__message">{{ copy.message }}</p>
-        <p class="bsl-editor__meta"><code>BSLLS:CreateQueryInCycle</code> · {{ copy.hint }}</p>
+    <div class="bsl-editor__completion">
+      <ul class="bsl-editor__list">
+        <li
+          v-for="member in MEMBERS"
+          :key="member.name"
+          class="bsl-editor__item"
+          :class="{ 'is-active': member.active }"
+        >
+          <span class="bsl-editor__kind">ƒ</span>
+          <span class="bsl-editor__name">{{ member.name }}<span class="bsl-editor__signature">{{ member.signature }}</span></span>
+          <span v-if="member.returns" class="bsl-editor__returns">{{ member.returns }}</span>
+        </li>
+      </ul>
+
+      <div class="bsl-editor__docs">
+        <code>Итог(&lt;Колонка&gt;) : Число</code>
+        <p>{{ copy.doc }}</p>
       </div>
-    </figcaption>
+    </div>
+
+    <figcaption class="bsl-editor__legend">{{ copy.legend }}</figcaption>
   </figure>
 </template>
 
@@ -57,6 +76,7 @@ const copy = computed(() =>
 .bsl-editor {
   position: relative;
   margin: 0;
+  padding-bottom: 18px;
   border: 1px solid var(--vp-c-divider);
   border-radius: var(--bsl-radius-lg);
   background: var(--bsl-surface);
@@ -111,7 +131,7 @@ const copy = computed(() =>
 
 .bsl-editor__code {
   margin: 0;
-  padding: 20px 20px 24px 0;
+  padding: 18px 20px 0 0;
   overflow-x: auto;
   font-family: var(--bsl-font-mono);
   font-size: 12.5px;
@@ -145,11 +165,8 @@ const copy = computed(() =>
 .pm {
   color: #8a6d1f;
 }
-.str {
-  color: #1f7a4d;
-}
-.cm {
-  color: #7d5bb0;
+.cmt {
+  color: #6f7a86;
 }
 
 .dark .kw {
@@ -161,71 +178,134 @@ const copy = computed(() =>
 .dark .pm {
   color: #ffc061;
 }
-.dark .str {
-  color: #7ee787;
-}
-.dark .cm {
-  color: #c4a2ff;
+.dark .cmt {
+  color: #7d8896;
 }
 
-/* Подчёркивание проблемного вызова — как в редакторе. */
-.err {
-  position: relative;
-  color: inherit;
-  text-decoration-line: underline;
-  text-decoration-style: wavy;
-  text-decoration-color: var(--bsl-coral);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-}
-
-.bsl-editor__diagnostic {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  margin: 0 16px 16px;
-  padding: 14px 16px;
-  border: 1px solid var(--vp-c-divider);
-  border-left: 3px solid var(--bsl-amber);
-  border-radius: 12px;
-  background: var(--vp-c-bg-soft);
-}
-
-.bsl-editor__severity {
-  flex-shrink: 0;
-  margin-top: 1px;
-  padding: 3px 10px;
-  border-radius: 999px;
+/* Подсказка-вставка с выведенным типом — как её рисует редактор. */
+.hint {
+  margin: 0 1px;
+  padding: 1px 6px;
+  border-radius: 5px;
   background: var(--vp-c-brand-soft);
-  font-family: var(--bsl-font-display);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 0.86em;
   color: var(--vp-c-brand-1);
+  opacity: 0.95;
+}
+
+.caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.05em;
+  vertical-align: -0.2em;
+  background: var(--vp-c-brand-1);
+  animation: bsl-blink 1.15s steps(2, start) infinite;
+}
+
+@keyframes bsl-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------- список автодополнения */
+
+.bsl-editor__completion {
+  margin: 2px 16px 0 62px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  background: var(--vp-c-bg-elv);
+  box-shadow: var(--bsl-shadow);
+  overflow: hidden;
+}
+
+.bsl-editor__list {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.bsl-editor__item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-family: var(--bsl-font-mono);
+  font-size: 12px;
+  color: var(--vp-c-text-2);
   white-space: nowrap;
 }
 
-.bsl-editor__body {
-  min-width: 0;
-}
-
-.bsl-editor__message {
-  margin: 0;
-  font-size: 0.86rem;
-  font-weight: 600;
-  line-height: 1.45;
+.bsl-editor__item.is-active {
+  background: var(--vp-c-brand-soft);
   color: var(--vp-c-text-1);
 }
 
-.bsl-editor__meta {
+.bsl-editor__kind {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  font-style: italic;
+  color: var(--vp-c-brand-1);
+}
+
+.bsl-editor__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bsl-editor__signature {
+  color: var(--vp-c-text-3);
+}
+
+.bsl-editor__returns {
+  flex-shrink: 0;
+  color: var(--vp-c-text-3);
+  font-size: 11px;
+}
+
+.bsl-editor__docs {
+  padding: 12px 16px;
+  border-top: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+}
+
+.bsl-editor__docs code {
+  font-family: var(--bsl-font-mono);
+  font-size: 11.5px;
+  color: var(--vp-c-brand-1);
+}
+
+.bsl-editor__docs p {
   margin: 6px 0 0;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+.bsl-editor__legend {
+  padding: 14px 20px 0;
+  font-size: 0.74rem;
   line-height: 1.5;
   color: var(--vp-c-text-3);
 }
 
-.bsl-editor__meta code {
-  font-family: var(--bsl-font-mono);
-  font-size: 0.95em;
-  color: var(--vp-c-text-2);
+@media (max-width: 640px) {
+  .bsl-editor__completion {
+    margin-left: 16px;
+  }
+
+  .bsl-editor__returns {
+    display: none;
+  }
 }
 </style>
