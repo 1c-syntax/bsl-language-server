@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,6 +28,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,13 +52,31 @@ public class ReportersAggregator {
   private List<DiagnosticReporter> filteredReporters;
 
   /**
-   * Сформировать отчеты с использованием всех активных репортеров.
+   * Начать формирование отчётов всеми активными репортёрами.
+   * <p>
+   * Результаты анализа передаются в возвращённую сессию по одному. Сессию необходимо закрыть,
+   * а при успешном завершении анализа — предварительно зафиксировать.
    *
-   * @param analysisInfo Информация о результатах анализа
-   * @param outputDir Директория для сохранения отчетов
+   * @param context   сведения об анализе
+   * @param outputDir директория для сохранения отчётов
+   * @return сессия формирования отчётов
    */
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    filteredReporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo, outputDir));
+  public ReportSession beginReport(ReportContext context, Path outputDir) {
+    var activeReporters = List.copyOf(filteredReporters);
+    var startedReporters = new ArrayList<DiagnosticReporter>(activeReporters.size());
+
+    try {
+      for (DiagnosticReporter reporter : activeReporters) {
+        // в список до вызова: упавший на полпути тоже мог успеть создать файл
+        startedReporters.add(reporter);
+        reporter.beginReport(context, outputDir);
+      }
+    } catch (RuntimeException e) {
+      startedReporters.forEach(DiagnosticReporter::abortReport);
+      throw e;
+    }
+
+    return new ReportSession(activeReporters);
   }
 
   /**

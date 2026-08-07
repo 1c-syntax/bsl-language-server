@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import com.github._1c_syntax.bsl.languageserver.reporters.JsonReporter;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -186,9 +186,18 @@ class AnalyzeCommandTest {
     }
 
     @Override
-    public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    public void beginReport(ReportContext context, Path outputDir) {
       captured.clear();
-      captured.addAll(analysisInfo.fileinfos());
+    }
+
+    @Override
+    public void accept(FileInfo fileInfo) {
+      captured.add(fileInfo);
+    }
+
+    @Override
+    public void endReport() {
+      // накопленного достаточно, файл не пишется
     }
 
     List<FileInfo> captured() {

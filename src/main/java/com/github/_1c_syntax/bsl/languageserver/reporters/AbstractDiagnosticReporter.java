@@ -25,10 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -41,18 +39,6 @@ public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
   protected final ServerContextProvider serverContextProvider;
   /** Реестр метаинформации о диагностиках. */
   protected final DiagnosticInfos diagnosticInfos;
-
-  /**
-   * Получить {@link ServerContext} для workspace из {@link AnalysisInfo}.
-   *
-   * @param analysisInfo информация об анализе, содержащая каталог исходников workspace
-   * @return контекст workspace, соответствующий каталогу исходников
-   */
-  protected ServerContext getServerContext(AnalysisInfo analysisInfo) {
-    var workspaceUri = Path.of(analysisInfo.sourceDir()).toUri();
-    return serverContextProvider.getServerContext(workspaceUri)
-      .orElseThrow(() -> new IllegalStateException("No workspace found for " + workspaceUri));
-  }
 
   /**
    * Получить соответствие «код диагностики → {@link DiagnosticInfo}».
