@@ -102,7 +102,7 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
 
   @Override
   public VariableKind getKind() {
-    return VariableKind.values()[kind];
+    return VariableKind.byOrdinal(kind);
   }
 
   @Override

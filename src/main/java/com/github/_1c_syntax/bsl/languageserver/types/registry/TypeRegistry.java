@@ -96,6 +96,12 @@ public class TypeRegistry {
    */
   static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
 
+  /**
+   * Языки файлов, вычисленные один раз: {@link FileType#values()} клонирует внутренний
+   * массив на каждый вызов, а перебор языков идёт при каждой точечной инвалидации кэша.
+   */
+  private static final FileType[] FILE_TYPES = FileType.values();
+
   private final List<PlatformTypesProvider> platformProviders;
   /**
    * Индекс метаданных членов (read-only свойства + версионные члены) для
@@ -788,7 +794,7 @@ public class TypeRegistry {
    * @param ref тип, memo членов которого нужно пересобрать.
    */
   public void invalidateMembers(TypeRef ref) {
-    for (var fileType : FileType.values()) {
+    for (var fileType : FILE_TYPES) {
       membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
     }
   }
