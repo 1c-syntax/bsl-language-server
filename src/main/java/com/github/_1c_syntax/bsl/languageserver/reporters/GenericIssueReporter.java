@@ -23,19 +23,24 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import lombok.SneakyThrows;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SequenceWriter;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.io.File;
 import java.nio.file.Path;
 
 @Slf4j
 @Component
 public class GenericIssueReporter extends AbstractDiagnosticReporter {
+
+  private ReportFile reportFile;
+  private JsonGenerator generator;
+  private SequenceWriter writer;
 
   public GenericIssueReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
     super(serverContextProvider, diagnosticInfos);
@@ -47,19 +52,47 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
   }
 
   @Override
-  @SneakyThrows
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var diagnosticInfos = getDiagnosticInfosByCode();
-
-    GenericIssueReport report = new GenericIssueReport(analysisInfo, diagnosticInfos);
-
-    JsonMapper mapper = JsonMapper.builder()
+  public void beginReport(ReportContext context, Path outputDir) {
+    var mapper = JsonMapper.builder()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .build();
 
-    File reportFile = new File(outputDir.toFile(), "bsl-generic-json.json");
-    mapper.writeValue(reportFile, report);
-    LOGGER.info("Generic issue report saved to {}", reportFile.getCanonicalPath());
+    reportFile = ReportFile.create(outputDir, "bsl-generic-json.json");
+    generator = mapper.createGenerator(reportFile.stream());
+    generator.writeStartObject();
+    generator.writeName("issues");
+    writer = mapper.writerFor(GenericIssueReport.GenericIssueEntry.class).writeValuesAsArray(generator);
   }
 
+  @Override
+  public void accept(FileInfo fileInfo) {
+    var diagnosticInfosByCode = getDiagnosticInfosByCode();
+    var path = fileInfo.getPath().toString();
+
+    var entries = fileInfo.getDiagnostics().stream()
+      .map(diagnostic -> new GenericIssueReport.GenericIssueEntry(
+        path,
+        diagnostic,
+        diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
+      ))
+      .toList();
+
+    writer.writeAll(entries);
+  }
+
+  @Override
+  public void endReport() {
+    writer.close();
+    generator.writeEndObject();
+    generator.close();
+    reportFile.commit();
+    LOGGER.info("Generic issue report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
+    }
+  }
 }

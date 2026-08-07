@@ -26,13 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportContext;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportSession;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -189,33 +191,15 @@ public class AnalyzeCommand implements Callable<Integer> {
       // активному репортеру они действительно нужны (см. ReportersAggregator).
       var metricCalculationRequired = aggregator.isMetricCalculationRequired();
 
-      List<FileInfo> fileInfos;
-      if (silentMode) {
-        fileInfos = cliExecutor.submit(() ->
-          files.parallelStream()
-            .map((File file) -> getFileInfoFromFile(workspaceDir, file, metricCalculationRequired))
-            .toList()
-        ).get();
-      } else {
-        try (ProgressBar pb = new ProgressBarBuilder()
-          .setTaskName("Analyzing files...")
-          .setInitialMax(files.size())
-          .setStyle(ProgressBarStyle.ASCII)
-          .build()) {
-          fileInfos = cliExecutor.submit(() ->
-            files.parallelStream()
-              .map((File file) -> {
-                pb.step();
-                return getFileInfoFromFile(workspaceDir, file, metricCalculationRequired);
-              })
-              .toList()
-          ).get();
-        }
-      }
-
-      var analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
+      var context = new ReportContext(LocalDateTime.now(), srcDir.toString());
       var outputDir = Absolute.path(outputDirOption);
-      aggregator.report(analysisInfo, outputDir);
+
+      // Результаты передаются репортёрам по одному сразу после разбора файла и больше нигде не
+      // удерживаются: пик памяти не зависит от размера конфигурации (см. issue #4412).
+      try (var session = aggregator.beginReport(context, outputDir)) {
+        analyze(files, workspaceDir, metricCalculationRequired, session);
+        session.commit();
+      }
       return 0;
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error analyzing files", e);
@@ -227,6 +211,45 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   public String[] getReportersOptions() {
     return reportersOptions.clone();
+  }
+
+  private void analyze(
+    List<File> files,
+    Path workspaceDir,
+    boolean metricCalculationRequired,
+    ReportSession session
+  ) throws ExecutionException, InterruptedException {
+    if (silentMode) {
+      analyze(files, workspaceDir, metricCalculationRequired, session, null);
+      return;
+    }
+
+    try (var progressBar = new ProgressBarBuilder()
+      .setTaskName("Analyzing files...")
+      .setInitialMax(files.size())
+      .setStyle(ProgressBarStyle.ASCII)
+      .build()) {
+      analyze(files, workspaceDir, metricCalculationRequired, session, progressBar);
+    }
+  }
+
+  private void analyze(
+    List<File> files,
+    Path workspaceDir,
+    boolean metricCalculationRequired,
+    ReportSession session,
+    @Nullable ProgressBar progressBar
+  ) throws ExecutionException, InterruptedException {
+    cliExecutor.submit(() ->
+      files.parallelStream()
+        .map((File file) -> {
+          if (progressBar != null) {
+            progressBar.step();
+          }
+          return getFileInfoFromFile(workspaceDir, file, metricCalculationRequired);
+        })
+        .forEach(session::accept)
+    ).get();
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file, boolean metricCalculationRequired) {

@@ -76,7 +76,7 @@ class JsonReporterTest {
     JsonReporter reporter = new JsonReporter();
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of(sourceDir));
 
     // then
     var mapper = new AnalysisInfoJsonMapper();

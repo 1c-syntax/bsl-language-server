@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.Getter;
 import lombok.Value;
@@ -56,15 +55,6 @@ class JUnitTestSuites {
   @Getter
   @JacksonXmlElementWrapper(useWrapping = false)
   private final List<JUnitTestSuite> testsuite;
-
-  public JUnitTestSuites(AnalysisInfo analysisInfo) {
-    name = "bsl-language-server";
-
-    testsuite = analysisInfo.fileinfos().stream()
-      .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
-      .map(JUnitTestSuite::new)
-      .toList();
-  }
 
   public JUnitTestSuites(
     @JacksonXmlProperty(localName = "package") String name,

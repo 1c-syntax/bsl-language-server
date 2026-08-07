@@ -19,29 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.reporters.data;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import tools.jackson.databind.annotation.JsonDeserialize;
-import tools.jackson.databind.annotation.JsonSerialize;
-import tools.jackson.databind.ext.javatime.deser.LocalDateTimeDeserializer;
-import tools.jackson.databind.ext.javatime.ser.LocalDateTimeSerializer;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-public record AnalysisInfo(
-  @JsonFormat(
-    pattern = AnalysisInfo.DATE_PATTERN,
-    shape = JsonFormat.Shape.STRING)
-  @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-  @JsonSerialize(using = LocalDateTimeSerializer.class)
-  LocalDateTime date,
-  List<FileInfo> fileinfos,
-  String sourceDir) {
-
-  /**
-   * Формат даты анализа в отчёте {@code bsl-json.json}.
-   */
-  public static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
+/**
+ * Сведения об анализе, известные до его выполнения.
+ * <p>
+ * Это «шапка» отчёта: всё, что репортёру нужно для {@code beginReport}. Результаты по файлам
+ * сюда не входят — они поступают по одному.
+ *
+ * @param date      время начала анализа
+ * @param sourceDir каталог исходных файлов
+ */
+public record ReportContext(LocalDateTime date, String sourceDir) {
 }

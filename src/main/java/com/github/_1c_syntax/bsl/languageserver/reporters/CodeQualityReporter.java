@@ -24,25 +24,23 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.util.DefaultIndenter;
 import tools.jackson.core.util.DefaultPrettyPrinter;
+import tools.jackson.databind.SequenceWriter;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Component
 public class CodeQualityReporter extends AbstractDiagnosticReporter {
+
+  private ReportFile reportFile;
+  private SequenceWriter writer;
 
   public CodeQualityReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
     super(serverContextProvider, diagnosticInfos);
@@ -54,20 +52,7 @@ public class CodeQualityReporter extends AbstractDiagnosticReporter {
   }
 
   @Override
-  @SneakyThrows
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var diagnosticInfosByCode = getDiagnosticInfosByCode();
-
-    List<CodeQualityReportEntry> report = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.fileinfos()) {
-      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        var diagnosticInfo = diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnostic.getCode()));
-        var path = fileInfo.getPath().toString().replace("\\", "/");
-        var entry = new CodeQualityReportEntry(path, diagnostic, diagnosticInfo);
-        report.add(entry);
-      }
-    }
-
+  public void beginReport(ReportContext context, Path outputDir) {
     var indenter = new DefaultIndenter().withLinefeed("\n");
     var printer = new DefaultPrettyPrinter()
       .withObjectIndenter(indenter);
@@ -77,8 +62,37 @@ public class CodeQualityReporter extends AbstractDiagnosticReporter {
       .defaultPrettyPrinter(printer)
       .build();
 
-    var reportFile = new File(outputDir.toFile(), "./bsl-code-quality.json");
-    mapper.writer().writeValue(reportFile, report);
-    LOGGER.info("CodeQuality report saved to {}", reportFile.getAbsolutePath());
+    reportFile = ReportFile.create(outputDir, "bsl-code-quality.json");
+    writer = mapper.writerFor(CodeQualityReportEntry.class).writeValuesAsArray(reportFile.stream());
+  }
+
+  @Override
+  public void accept(FileInfo fileInfo) {
+    var diagnosticInfosByCode = getDiagnosticInfosByCode();
+    var path = fileInfo.getPath().toString().replace("\\", "/");
+
+    var entries = fileInfo.getDiagnostics().stream()
+      .map(diagnostic -> new CodeQualityReportEntry(
+        path,
+        diagnostic,
+        diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
+      ))
+      .toList();
+
+    writer.writeAll(entries);
+  }
+
+  @Override
+  public void endReport() {
+    writer.close();
+    reportFile.commit();
+    LOGGER.info("CodeQuality report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
+    }
   }
 }
