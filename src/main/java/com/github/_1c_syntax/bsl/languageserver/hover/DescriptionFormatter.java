@@ -172,8 +172,11 @@ public class DescriptionFormatter {
       .map(MethodDescription::getReturnedValue)
       .orElseGet(List::of)
       .stream()
-      .map(TypeDescription::name)
+      // Автор вправе перечислить типы через запятую одной строкой — тогда это несколько
+      // объявленных имён, а не одно.
+      .flatMap(type -> Stream.of(type.name().split(",")))
       .map(DescriptionFormatter::headName)
+      .filter(name -> !name.isEmpty())
       .collect(Collectors.toSet());
     var undescribed = returnTypes.refs().stream()
       .map(TypeRef::qualifiedName)

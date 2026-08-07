@@ -106,9 +106,12 @@ public class ReturnTypeFromBodyInference {
     var last = lastStatementOf(vertex);
     if (last instanceof BSLParser.ReturnStatementContext returnStatement) {
       var expression = returnStatement.expression();
-      return expression == null
-        ? TypeSet.EMPTY
-        : expressionTypes.of(ExpressionTreeBuildingVisitor.buildExpressionTree(expression));
+      if (expression == null) {
+        return TypeSet.EMPTY;
+      }
+      // Дерево выражения не строится на нераспознанном тексте — тогда и типов нет.
+      var tree = ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
+      return tree == null ? TypeSet.EMPTY : expressionTypes.of(tree);
     }
     if (last instanceof BSLParser.RaiseStatementContext) {
       return TypeSet.EMPTY;

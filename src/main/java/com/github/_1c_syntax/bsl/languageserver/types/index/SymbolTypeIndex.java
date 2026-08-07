@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Индекс декларативных типов символов.
@@ -113,7 +112,14 @@ public class SymbolTypeIndex {
    * «что возвращает метод» был один и тот же у всех потребителей.
    */
   private final Map<MethodSymbol, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
-  private final Map<URI, List<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Методы документа, у которых есть выведенное значение, — по ним запись стирается вместе
+   * с документом. Набор, а не список: значение метода пересчитывается многократно (разбор,
+   * доразрешение, разнос по потребителям), и список копил бы один и тот же метод при каждом
+   * пересчёте.
+   */
+  private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
 
   // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
   // а здесь записи документа сначала стираются. Без явного порядка слушатель без
@@ -169,13 +175,24 @@ public class SymbolTypeIndex {
    * @param types  выведенные типы; пустой набор стирает прежнюю запись.
    */
   public void putReturnTypes(MethodSymbol method, TypeSet types) {
-    if (types.isEmpty()) {
-      inferredReturnTypes.remove(method);
-      return;
-    }
-    inferredReturnTypes.put(method, types);
-    inferredByUri.computeIfAbsent(method.getOwner().getUri(), k -> new CopyOnWriteArrayList<>())
-      .add(method);
+    // Обе карты меняются под одним замком — по ключу документа. Иначе расчёт по запросу,
+    // идущий вне событий жизненного цикла, мог бы вклиниться в сброс между снятием набора
+    // и обходом, и значение осталось бы в карте типов без ссылки из карты по документам —
+    // то есть недостижимым для следующего сброса.
+    inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
+      if (types.isEmpty()) {
+        inferredReturnTypes.remove(method);
+        if (methods == null) {
+          return null;
+        }
+        methods.remove(method);
+        return methods.isEmpty() ? null : methods;
+      }
+      inferredReturnTypes.put(method, types);
+      var target = methods == null ? ConcurrentHashMap.<MethodSymbol>newKeySet() : methods;
+      target.add(method);
+      return target;
+    });
   }
 
   /**
@@ -348,10 +365,14 @@ public class SymbolTypeIndex {
    * Очистить записи, относящиеся к данному URI.
    */
   public void clear(URI uri) {
-    var computed = inferredByUri.remove(uri);
-    if (computed != null) {
-      computed.forEach(inferredReturnTypes::remove);
-    }
+    // Снятие набора и удаление значений — под тем же замком по ключу документа, что и запись
+    // (см. putReturnTypes): иначе параллельная запись осталась бы в карте типов навсегда.
+    inferredByUri.compute(uri, (key, methods) -> {
+      if (methods != null) {
+        methods.forEach(inferredReturnTypes::remove);
+      }
+      return null;
+    });
     var methods = indexedByUri.remove(uri);
     if (methods == null) {
       return;

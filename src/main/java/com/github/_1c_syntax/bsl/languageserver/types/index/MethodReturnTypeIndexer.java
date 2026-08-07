@@ -47,6 +47,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -510,8 +511,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private void withDocumentsLoaded(ServerContext serverContext, List<URI> component, Runnable work) {
     var locked = new ArrayList<URI>(component.size());
     var loaded = new ArrayList<DocumentContext>(component.size());
+    // Замки берутся в порядке имён: здесь их держится сразу несколько, и без общего порядка
+    // два потока на пересекающихся компонентах встали бы друг против друга.
+    var ordered = component.stream().sorted(Comparator.comparing(URI::toString)).toList();
     try {
-      for (var uri : component) {
+      for (var uri : ordered) {
         var documentContext = serverContext.getDocuments().get(uri);
         if (documentContext == null) {
           continue;
