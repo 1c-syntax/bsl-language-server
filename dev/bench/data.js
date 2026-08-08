@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786173227363,
+  "lastUpdate": 1786175393366,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42284,6 +42284,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.7024458602843255",
             "extra": "mean: 101.58638072013855 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nikita.fedkin@booking.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nikita.fedkin@booking.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "f377f95aefa16a4cf0e4d9af5b1c83800366bebc",
+          "message": "fix(types): встроенные JSON-ресурсы читаются загрузчиком классов BSL LS\n\nРесурсы builtin-*.json открывались через ClassPathResource(String), а этот\nконструктор резолвит путь context class loader'ом потока. Когда BSL LS\nвстроен в хост с изолированными загрузчиками (плагин SonarQube), context\nclass loader принадлежит хосту и jar-а BSL LS не видит: классы грузятся\nнормально, а ресурсы — нет.\n\nВ плагине SonarQube это давало четыре FileNotFoundException на\nbuiltin-globals.json и builtin-oscript-globals.json. Ошибки проглатываются,\nпоэтому анализ молча шёл с пустой глобальной областью.\n\nBSLLSBinding уже пиннит context class loader на время старта Spring-контекста,\nно workspace-scoped бины создаются лениво — уже во время анализа, когда\ncontext class loader снова хостовый.\n\nРесурсы лежат в jar-е BSL LS, поэтому и искать их нужно тем загрузчиком,\nкоторый этот jar загрузил: все четыре места читают их через BuiltinResources.\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-08T09:36:57+02:00",
+          "tree_id": "d35bff66b260a1025198aa1ba07ff8fae6579694",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f377f95aefa16a4cf0e4d9af5b1c83800366bebc"
+        },
+        "date": 1786175381552,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.36968421936035,
+            "unit": "sec",
+            "range": "stddev: 1.0378343441794804",
+            "extra": "mean: 92.36968421936035 sec\nrounds: 3"
           }
         ]
       }
