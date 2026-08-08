@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786165379868,
+  "lastUpdate": 1786173227363,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42253,6 +42253,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6566370046163328",
             "extra": "mean: 98.80370855331421 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4879d10d932bcb8ea51b29fb8ac1b48fe79185fb",
+          "message": "Merge pull request #4406 from 1c-syntax/feat/types-property-method-out-parameter\n\nfeat(types): метод Свойство типизирует переменную-приёмник",
+          "timestamp": "2026-08-08T08:53:38+02:00",
+          "tree_id": "d4432f596d317fe89739c1ae3d62910ddd887e32",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4879d10d932bcb8ea51b29fb8ac1b48fe79185fb"
+        },
+        "date": 1786173216496,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.58638072013855,
+            "unit": "sec",
+            "range": "stddev: 2.7024458602843255",
+            "extra": "mean: 101.58638072013855 sec\nrounds: 3"
           }
         ]
       }
