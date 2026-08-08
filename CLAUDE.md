@@ -135,7 +135,8 @@ javadoc.io. Когда внешний ресурс недоступен, сбо�
 ```bash
 ./gradlew test --tests "*SomeDiagnosticTest"   # один класс — используй это при разработке
 ./gradlew test                                  # весь набор (МЕДЛЕННО)
-./gradlew check                                 # то, что гоняет CI: test + jacoco + spotless + javadoc
+./gradlew check                                 # то, что гоняет CI: test + jacoco + spotless
+                                                # (javadoc в `check` не входит — он отдельным workflow)
 ```
 
 - **600+ тестовых классов**, многие перезагружают Spring-контекст (`@DirtiesContext`,
