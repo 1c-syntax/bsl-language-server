@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
@@ -42,6 +43,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Тип, объявленный автором в комментарии рядом с кодом — единый для обоих языков
@@ -155,22 +157,68 @@ public class CommentTypeResolver implements VariableTypeSource {
     DocumentContext owner,
     FileType fileType
   ) {
-    var directRefs = new ArrayList<TypeRef>();
+    var direct = TypeSet.EMPTY;
     if (types != null) {
       for (var type : types) {
         var name = DescriptionTypes.resolveName(type);
-        if (!name.isBlank()) {
-          typeRegistry.resolve(name, fileType).ifPresent(directRefs::add);
+        if (name.isBlank()) {
+          continue;
+        }
+        var ref = typeRegistry.resolve(name, fileType).orElse(null);
+        if (ref != null) {
+          direct = direct.union(withElementTypes(ref, type, fileType));
         }
       }
     }
-    if (!directRefs.isEmpty()) {
-      return TypeSet.of(directRefs);
+    if (!direct.isEmpty()) {
+      return direct;
     }
     var result = TypeSet.EMPTY;
     for (var link : links) {
       result = result.union(symbolTypeIndex.resolveSeeReference(link.link(), owner, fileType));
     }
     return result;
+  }
+
+  /**
+   * Тип-голова вместе с типами элементов записи {@code Массив из Строка}.
+   * <p>
+   * Элементы навешиваются только там, где элемент коллекции сам по себе неизвестен:
+   * у {@code Массив} реестр знает лишь {@code Произвольный}, и объявленный тип его
+   * уточняет. Если же у коллекции элемент собственный — {@code КлючИЗначение} у
+   * {@code Соответствие}, {@code ЭлементСпискаЗначений} у {@code СписокЗначений} —
+   * запись {@code из Строка} называет не элемент, а значение внутри него, и выразить
+   * это одной строкой нельзя. Реестровый элемент тогда точнее, объявленный отбрасывается.
+   *
+   * @param headRef  разрешённый тип-голова записи.
+   * @param type     описание типа из комментария.
+   * @param fileType язык, на котором резолвятся имена элементов.
+   * @return набор из одного типа-головы, при наличии — с типами элементов.
+   */
+  private TypeSet withElementTypes(TypeRef headRef, TypeDescription type, FileType fileType) {
+    var head = TypeSet.of(headRef);
+    if (!(type instanceof CollectionTypeDescription collection) || hasOwnElementType(headRef)) {
+      return head;
+    }
+    var elements = new ArrayList<TypeRef>();
+    for (var valueType : collection.valueTypes()) {
+      var name = DescriptionTypes.resolveName(valueType);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name, fileType).ifPresent(elements::add);
+      }
+    }
+    return elements.isEmpty() ? head : head.withElement(headRef, TypeSet.of(elements));
+  }
+
+  /**
+   * Знает ли реестр собственный тип элемента коллекции.
+   *
+   * @param ref тип коллекции.
+   * @return {@code true}, если элемент известен и это не {@link TypeRef#ANY} —
+   *     заглушка «элемент любой».
+   */
+  private boolean hasOwnElementType(TypeRef ref) {
+    var defaults = typeRegistry.getDefaultElementTypes(ref).refs();
+    return !defaults.isEmpty() && !defaults.equals(Set.of(TypeRef.ANY));
   }
 }
