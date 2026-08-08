@@ -123,6 +123,13 @@ src/jmh/             бенчмарки JMH;     docs/ (ru) · docs/en/ (en) · 
 java -jar build/libs/bsl-language-server-*-exec.jar --help    # запуск; подкоманды см. выше
 ```
 
+**Javadoc и внешние ссылки.** `./gradlew javadoc` ходит в сеть: качает `element-list` с каждого
+сайта из `-link`, а плагин `io.freefair.javadoc-links` вдобавок ищет javadoc зависимостей в
+javadoc.io. Когда внешний ресурс недоступен, сборка падает без всякой связи с качеством кода —
+на этот случай есть `./gradlew javadoc -PjavadocLinks=false`: без внешних ссылок и без сети,
+проверки doclint при этом работают как обычно. В CI сборка javadoc дополнительно повторяется
+при падении (`.github/scripts/retry.sh`).
+
 ## Тесты и их длительность
 
 ```bash

@@ -12,7 +12,8 @@ plugins {
     id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.5.0"
-    id("io.freefair.javadoc-links") version "9.5.0"
+    // Применяется условно, см. javadocLinksEnabled ниже.
+    id("io.freefair.javadoc-links") version "9.5.0" apply false
     id("io.freefair.javadoc-utf-8") version "9.5.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
     id("io.freefair.maven-central.validate-poms") version "9.5.0"
@@ -26,6 +27,20 @@ plugins {
     id("org.sonarqube") version "7.3.1.8318"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "4.0.1"
+}
+
+// Внешние ссылки javadoc (`-link`) резолвятся по сети: javadoc качает `element-list` с каждого
+// сайта, а плагин `io.freefair.javadoc-links` вдобавок ищет javadoc зависимостей в javadoc.io
+// (задача `resolveJavadocLinks`) и добавляет ссылку на Java SE API. Недоступность любого из
+// этих ресурсов валит сборку javadoc, хотя к качеству кода отношения не имеет.
+//
+// `-PjavadocLinks=false` (или переменная окружения `ORG_GRADLE_PROJECT_javadocLinks=false`)
+// собирает javadoc вообще без внешних ссылок и без похода в сеть. Проверки doclint при этом
+// работают как обычно — теряются только перекрёстные ссылки на чужой javadoc.
+val javadocLinksEnabled = (project.findProperty("javadocLinks") as String?)?.toBoolean() ?: true
+
+if (javadocLinksEnabled) {
+    apply(plugin = "io.freefair.javadoc-links")
 }
 
 repositories {
@@ -377,11 +392,13 @@ tasks.javadoc {
 
     options {
         this as StandardJavadocDocletOptions
-        links(
-            "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
-            "https://1c-syntax.github.io/mdclasses/dev/javadoc",
-            "https://1c-syntax.github.io/antlr/javadoc/"
-        )
+        if (javadocLinksEnabled) {
+            links(
+                "https://1c-syntax.github.io/bsl-parser/dev/javadoc",
+                "https://1c-syntax.github.io/mdclasses/dev/javadoc",
+                "https://1c-syntax.github.io/antlr/javadoc/"
+            )
+        }
         // Проверяем корректность javadoc (битые ссылки, синтаксис, html),
         // но не требуем наличия комментариев у каждого элемента (группа missing).
         addBooleanOption("Xdoclint:all,-missing", true)

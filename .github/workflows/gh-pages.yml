@@ -27,8 +27,10 @@ jobs:
         distribution: 'corretto'
         cache: gradle
 
+    # javadoc скачивает element-list с каждого сайта из -link (в том числе с javadoc.io,
+    # который периодически недоступен), поэтому повторяем сборку при падении.
     - name: Build javadoc
-      run: ./gradlew --no-daemon javadoc
+      run: .github/scripts/retry.sh 3 30 ./gradlew --no-daemon javadoc
 
     - name: Set up Python
       uses: actions/setup-python@v7
