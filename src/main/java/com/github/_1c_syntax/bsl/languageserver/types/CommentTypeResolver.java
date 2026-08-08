@@ -43,7 +43,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Тип, объявленный автором в комментарии рядом с кодом — единый для обоих языков
@@ -183,12 +182,13 @@ public class CommentTypeResolver implements VariableTypeSource {
   /**
    * Тип-голова вместе с типами элементов записи {@code Массив из Строка}.
    * <p>
-   * Элементы навешиваются только там, где элемент коллекции сам по себе неизвестен:
-   * у {@code Массив} реестр знает лишь {@code Произвольный}, и объявленный тип его
-   * уточняет. Если же у коллекции элемент собственный — {@code КлючИЗначение} у
-   * {@code Соответствие}, {@code ЭлементСпискаЗначений} у {@code СписокЗначений} —
-   * запись {@code из Строка} называет не элемент, а значение внутри него, и выразить
-   * это одной строкой нельзя. Реестровый элемент тогда точнее, объявленный отбрасывается.
+   * Элементы навешиваются только там, где элемент коллекции сам по себе неизвестен
+   * ({@link TypeRegistry#getOwnElementTypes}): у {@code Массив} реестр не называет
+   * ничего, и объявленный тип занимает пустое место. Если же у коллекции элемент
+   * собственный — {@code КлючИЗначение} у {@code Соответствие},
+   * {@code ЭлементСпискаЗначений} у {@code СписокЗначений} — запись {@code из Строка}
+   * называет не элемент, а значение внутри него, и выразить это одной строкой нельзя.
+   * Реестровый элемент тогда точнее, объявленный отбрасывается.
    *
    * @param headRef  разрешённый тип-голова записи.
    * @param type     описание типа из комментария.
@@ -197,7 +197,8 @@ public class CommentTypeResolver implements VariableTypeSource {
    */
   private TypeSet withElementTypes(TypeRef headRef, TypeDescription type, FileType fileType) {
     var head = TypeSet.of(headRef);
-    if (!(type instanceof CollectionTypeDescription collection) || hasOwnElementType(headRef)) {
+    if (!(type instanceof CollectionTypeDescription collection)
+      || !typeRegistry.getOwnElementTypes(headRef).isEmpty()) {
       return head;
     }
     var elements = new ArrayList<TypeRef>();
@@ -208,17 +209,5 @@ public class CommentTypeResolver implements VariableTypeSource {
       }
     }
     return elements.isEmpty() ? head : head.withElement(headRef, TypeSet.of(elements));
-  }
-
-  /**
-   * Знает ли реестр собственный тип элемента коллекции.
-   *
-   * @param ref тип коллекции.
-   * @return {@code true}, если элемент известен и это не {@link TypeRef#ANY} —
-   *     заглушка «элемент любой».
-   */
-  private boolean hasOwnElementType(TypeRef ref) {
-    var defaults = typeRegistry.getDefaultElementTypes(ref).refs();
-    return !defaults.isEmpty() && !defaults.equals(Set.of(TypeRef.ANY));
   }
 }
