@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.DereferenceLocator;
 import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
@@ -96,19 +97,31 @@ public class PropertyMethodInference {
 
   /**
    * Вызовы {@code Свойство}, типизирующие эту переменную, по позиции их начала.
+   * <p>
+   * Тип параметра — {@link VariableSymbol}, а не общий {@link SourceDefinedSymbol}:
+   * нужна область объявления переменной, по которой отбираются свои вызовы.
    *
    * @param variable переменная-приёмник.
    * @return вызовы по позициям, в порядке следования в документе.
    */
-  public Map<Position, BSLParser.MethodCallContext> outParameterCallsOf(SourceDefinedSymbol variable) {
+  public Map<Position, BSLParser.MethodCallContext> outParameterCallsOf(VariableSymbol variable) {
     var owner = variable.getOwner();
     var ast = safeGetAst(owner);
     if (ast == null) {
       return Map.of();
     }
+    // Индекс ищет по имени, а имена переменных в разных методах повторяются сплошь и
+    // рядом. Отбор по области видимости оставляет только свои вызовы — так же поступает
+    // `OpenDataObjectInference` с операторами-мутаторами. У переменной модуля область —
+    // весь модуль, и туда попадают вызовы из всех его тел, как и должно быть.
+    var scope = variable.getScope();
+    var scopeRange = scope == null ? null : scope.getRange();
     Map<Position, BSLParser.MethodCallContext> calls = new LinkedHashMap<>();
     for (var call : propertyMethodCallIndex.byOutParameter(owner.getUri(), ast, variable.getName())) {
-      calls.put(Ranges.create(call).getStart(), call);
+      var range = Ranges.create(call);
+      if (scopeRange == null || Ranges.containsRange(scopeRange, range)) {
+        calls.put(range.getStart(), call);
+      }
     }
     return calls;
   }
