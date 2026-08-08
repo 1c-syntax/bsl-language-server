@@ -154,6 +154,25 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
       .containsExactly("КлючИЗначение");
   }
 
+  @Test
+  void arbitraryAmongDeclaredElementTypesIsKept() {
+    // given: «Смешанный = Новый Массив; // Массив из Произвольный, Строка -» —
+    // «Произвольный» здесь написан автором, а не подставлен реестром: он говорит, что
+    // элементы бывают всякие, и в частности строки. Отбрасывать его нельзя — сужение
+    // до «Строка» назовёт единственным тип, о котором автор сказал обратное.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "ЭСм = ЭлементСмешанного", "ЭСм = ".length());
+
+    // then
+    assertThat(types.refs())
+      .as("объявленный «Произвольный» доходит до элемента обхода вместе с названным типом")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder(TypeRef.ANY.qualifiedName(), "Строка");
+  }
+
   private com.github._1c_syntax.bsl.languageserver.types.model.TypeSet inferAtMarker(
     com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
     String marker,
