@@ -44,7 +44,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -719,7 +718,7 @@ public class GlobalScopeProvider {
 
   private static LanguageData loadFromResource(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       @SuppressWarnings("unchecked")
       Map<String, Object> root = mapper.readValue(stream, Map.class);
       var functions = readFunctions(root);
@@ -776,7 +775,7 @@ public class GlobalScopeProvider {
   @SuppressWarnings("unchecked")
   static List<MemberDescriptor> globalContextMembers(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       Map<String, Object> root = mapper.readValue(stream, Map.class);
       var members = new ArrayList<MemberDescriptor>();
       for (var entry : (List<Map<String, Object>>) root.getOrDefault("functions", Collections.emptyList())) {
