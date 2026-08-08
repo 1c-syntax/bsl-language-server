@@ -774,7 +774,8 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
   @Test
   @DisplayName("3.32 Текущие данные динамического списка через элемент формы")
   void currentDataOfDynamicListThroughFormItem() {
-    // given: параметр объявлен обобщённым типом ТаблицаФормы.
+    // given: параметр объявлен ссылкой на элемент формы, как предписывает рекомендация:
+    // тип текущих данных ссылкой не записывается, передают сам элемент формы.
     // when
     var types = typeOf("3.32");
     var attribute = typeOfVariable("Проба_3_32_Реквизит");
