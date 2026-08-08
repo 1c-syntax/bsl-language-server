@@ -329,14 +329,16 @@ public class ExpressionTypeInferencer {
 
   /**
    * Прикрепить к каждому {@link TypeRef} в наборе элементы-по-умолчанию из
-   * {@link TypeRegistry#getDefaultElementTypes(TypeRef)}. Это позволяет
+   * {@link TypeRegistry#getOwnElementTypes(TypeRef)}. Это позволяет
    * {@code Для Каждого X Из Коллекция Цикл} увидеть тип X (например,
    * {@code КлючИЗначение} для {@code Соответствие}) без явных JsDoc-аннотаций.
    * <p>
    * Уточнение, добытое на месте, не перетирается: оно точнее реестрового умолчания.
    * Так {@code Массив из Число} не превращается в {@code Массив из Число, Произвольный}
    * (#4179), а {@code ТаблицаЗначений}, выгруженная из табличной части, сохраняет
-   * строку с её колонками вместо обобщённой {@code СтрокаТаблицыЗначений}.
+   * строку с её колонками вместо обобщённой {@code СтрокаТаблицыЗначений}. Отсюда же
+   * берётся заглушка «элемент любой»: реестр её не отдаёт, поэтому уточнению не с чем
+   * смешиваться и там, где уточнение приходит не сюда, а слиянием наборов.
    */
   private TypeSet attachDefaultElementTypes(TypeSet base) {
     if (base.isEmpty()) {
@@ -347,7 +349,7 @@ public class ExpressionTypeInferencer {
       if (!base.getElementTypes(ref).isEmpty()) {
         continue;
       }
-      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      var defaults = typeRegistry.getOwnElementTypes(ref);
       if (!defaults.isEmpty()) {
         result = result.withElement(ref, defaults);
       }

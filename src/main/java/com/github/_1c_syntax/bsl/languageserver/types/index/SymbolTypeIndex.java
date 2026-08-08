@@ -699,7 +699,7 @@ public class SymbolTypeIndex {
         || types.lazyElements().containsKey(ref)) {
         continue;
       }
-      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      var defaults = typeRegistry.getOwnElementTypes(ref);
       if (!defaults.isEmpty()) {
         result = result.withElement(ref, defaults);
       }

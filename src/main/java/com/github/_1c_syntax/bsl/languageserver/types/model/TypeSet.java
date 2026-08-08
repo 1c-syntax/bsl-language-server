@@ -118,29 +118,6 @@ public record TypeSet(
     };
   }
 
-  /**
-   * Слияние типов элементов коллекции.
-   * <p>
-   * Отличается от обычного объединения тем, что {@link TypeRef#ANY} среди элементов
-   * означает «элемент неизвестен» и рядом с названным типом не несёт ничего: элемент
-   * массива, объявленный как {@code Массив из Строка}, не должен превращаться в
-   * {@code Строка, Произвольный} от слияния с умолчанием реестра.
-   *
-   * @param left  типы элементов одной стороны.
-   * @param right типы элементов другой стороны.
-   * @return объединение без {@link TypeRef#ANY}, если в нём есть названный тип.
-   */
-  private static TypeSet mergedElements(TypeSet left, TypeSet right) {
-    var merged = left.union(right);
-    if (merged.refs.size() < 2 || !merged.refs.contains(TypeRef.ANY)) {
-      return merged;
-    }
-    var known = new LinkedHashSet<>(merged.refs);
-    known.remove(TypeRef.ANY);
-    return new TypeSet(known, merged.elementTypes, merged.localFields,
-      merged.lazyElements, merged.lazyFields, merged.describedTypes);
-  }
-
   public boolean isEmpty() {
     return refs.isEmpty();
   }
@@ -172,7 +149,7 @@ public record TypeSet(
 
     return new TypeSet(
       merged,
-      TypeDecorations.mergedFlat(this.elementTypes, other.elementTypes, TypeSet::mergedElements),
+      TypeDecorations.mergedFlat(this.elementTypes, other.elementTypes, TypeSet::union),
       TypeDecorations.mergedNested(this.localFields, other.localFields, LocalField::merge),
       TypeDecorations.mergedFlat(this.lazyElements, other.lazyElements, LazyTypeSet::combine),
       TypeDecorations.mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
@@ -316,7 +293,7 @@ public record TypeSet(
     }
     var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
     var merged = new LinkedHashMap<>(this.elementTypes);
-    merged.merge(ref, element, TypeSet::mergedElements);
+    merged.merge(ref, element, TypeSet::union);
     return new TypeSet(newRefs, merged, this.localFields, this.lazyElements, this.lazyFields,
       this.describedTypes);
   }
