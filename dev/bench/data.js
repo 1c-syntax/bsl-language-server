@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786175393366,
+  "lastUpdate": 1786178252348,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42315,6 +42315,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0378343441794804",
             "extra": "mean: 92.36968421936035 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nikita.fedkin@booking.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nikita.fedkin@booking.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "c8b064b21c14b4689e8993955241d23e5660f417",
+          "message": "Merge remote-tracking branch 'origin/master' into develop",
+          "timestamp": "2026-08-08T09:59:32+02:00",
+          "tree_id": "0b69b131e8435ac83b8667fa6d61a77f9c2cec52",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c8b064b21c14b4689e8993955241d23e5660f417"
+        },
+        "date": 1786178240303,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 99.66025948524475,
+            "unit": "sec",
+            "range": "stddev: 1.1987520225525872",
+            "extra": "mean: 99.66025948524475 sec\nrounds: 3"
           }
         ]
       }
