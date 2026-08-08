@@ -37,7 +37,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypePackProvider.TypeDecl;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
@@ -100,7 +99,7 @@ public class BuiltinTypesJsonLoader {
   @SuppressWarnings("unchecked")
   private static List<TypeDecl> parse(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
       var result = new ArrayList<TypeDecl>(raw.size());
       for (var entry : raw) {
