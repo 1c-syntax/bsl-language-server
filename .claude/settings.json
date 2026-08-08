@@ -3,5 +3,13 @@
   "env": {
     "LANG": "C.UTF-8",
     "LC_ALL": "C.UTF-8"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(*|python:*)",
+      "Bash(*|python3:*)"
+    ]
   }
 }

@@ -123,6 +123,12 @@ public class TypeRegistry {
   private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+
+  /**
+   * Запомненные ответы {@link #resolveGenericByPrefix(String)}, включая промахи.
+   * Сбрасывается при любом изменении {@link #aliasIndex}.
+   */
+  private final Map<String, Optional<TypeRef>> genericByPrefix = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -367,7 +373,21 @@ public class TypeRegistry {
     if (prefix == null || prefix.isEmpty()) {
       return Optional.empty();
     }
-    var needle = prefix.toLowerCase(Locale.ROOT) + ".<";
+    // Ответ зависит только от содержимого индекса имён, а тот меняется лишь при
+    // регистрации типов — поэтому запоминается, включая промахи. Без этого перебор всего
+    // индекса шёл на каждое разрешаемое имя: в профиле analyze по cpm это была вторая
+    // строка сверху.
+    return genericByPrefix.computeIfAbsent(prefix.toLowerCase(Locale.ROOT), this::findGenericByPrefix);
+  }
+
+  /**
+   * Ищет generic-тип перебором индекса имён.
+   *
+   * @param needlePrefix начало имени в нижнем регистре.
+   * @return тип семейства; {@link Optional#empty()}, если такого нет.
+   */
+  private Optional<TypeRef> findGenericByPrefix(String needlePrefix) {
+    var needle = needlePrefix + ".<";
     for (var entry : aliasIndex.entrySet()) {
       if (entry.getKey().startsWith(needle)) {
         return Optional.of(entry.getValue());
@@ -1413,6 +1433,7 @@ public class TypeRegistry {
     membersEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
+    genericByPrefix.clear();
     collectionTraits.remove(ref);
   }
 
@@ -1734,6 +1755,7 @@ public class TypeRegistry {
 
   private void addAlias(String name, TypeRef ref) {
     aliasIndex.put(name.toLowerCase(Locale.ROOT), ref);
+    genericByPrefix.clear();
   }
 
   /**

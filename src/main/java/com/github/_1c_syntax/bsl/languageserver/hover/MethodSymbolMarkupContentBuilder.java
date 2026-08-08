@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
@@ -41,6 +42,7 @@ import java.util.StringJoiner;
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final DescriptionFormatter descriptionFormatter;
+  private final TypeService typeService;
   private final EventContractFormatter eventContractFormatter;
   private final EventContractsIndex eventContractsIndex;
   private final PlatformMetadataRenderer metadataRenderer;
@@ -95,8 +97,19 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
       : descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 
-    // возвращаемое значение
+    // возвращаемое значение: описанное автором, а если он ничего не написал — выведенное
+    // по коду. Когда код возвращает что-то сверх описанного, расхождение показывается
+    // отдельной припиской: описание могло устареть, а работает код по своему возврату.
+    var returnTypes = typeService.getReturnTypes(symbol);
     var returnedValueSection = descriptionFormatter.getReturnedValueSection(symbol);
+    if (returnedValueSection.isEmpty()) {
+      returnedValueSection = descriptionFormatter.getInferredReturnedValueSection(returnTypes);
+    } else {
+      var note = descriptionFormatter.getInferredReturnedValueNote(symbol, returnTypes);
+      if (!note.isEmpty()) {
+        returnedValueSection = returnedValueSection + "\n\n" + note;
+      }
+    }
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, returnedValueSection);
 
     // примеры

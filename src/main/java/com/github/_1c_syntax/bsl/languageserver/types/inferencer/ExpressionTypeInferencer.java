@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -69,6 +70,7 @@ import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -124,6 +126,8 @@ public class ExpressionTypeInferencer {
   private final VariableFlowAnalyzer variableFlowAnalyzer;
   private final ControlFlowGraphIndex controlFlowGraphIndex;
   private final GuardConditionNarrowing guardConditionNarrowing;
+  private final ReturnTypeFromBodyInference returnTypeFromBodyInference;
+  private final MethodReturnTypeIndexer methodReturnTypeIndexer;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final ScopeMemberTypeResolver scopeMemberTypeResolver;
@@ -183,8 +187,10 @@ public class ExpressionTypeInferencer {
         case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
         case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
       };
-      if (cacheKey != null) {
-        inferredExpressionTypeIndex.put(uri, cacheKey, result);
+      // Результат, полученный с обрывом цикла, зависит от точки входа в него и
+      // потому не годится в кэш: вход с другой стороны цикла даст другой набор.
+      if (cacheKey != null && !ctx.cycleCut) {
+        inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies);
       }
       return result;
     } finally {
@@ -469,7 +475,7 @@ public class ExpressionTypeInferencer {
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast);
     if (localMethod.isPresent()) {
-      return symbolTypeIndex.getDeclaredReturnTypes(localMethod.get());
+      return methodReturnType(localMethod.get(), ctx);
     }
     // 2. Открытие формы по имени: тип конкретной формы точнее, чем обобщённый
     //    возвращаемый тип платформенной функции, поэтому проверяется до шага 3.
@@ -635,13 +641,13 @@ public class ExpressionTypeInferencer {
         // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
         // несёт лишь головной ref, поэтому без этого поля структуры терялись.
         if (expectedKind == MemberKind.METHOD) {
-          var declaredReturn = member.getSourceSymbol()
+          var symbolReturn = member.getSourceSymbol()
             .filter(MethodSymbol.class::isInstance)
             .map(MethodSymbol.class::cast)
-            .map(symbolTypeIndex::getDeclaredReturnTypes)
-            .filter(declared -> !declared.isEmpty());
-          if (declaredReturn.isPresent()) {
-            result = result.union(declaredReturn.get());
+            .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
+            .filter(returned -> !returned.isEmpty());
+          if (symbolReturn.isPresent()) {
+            result = result.union(symbolReturn.get());
             continue;
           }
         }
@@ -734,14 +740,74 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
     if (!ctx.visited.add(method)) {
+      ctx.cycleCut = true;
       return TypeSet.EMPTY;
     }
+    var owner = method.getOwner();
+    ctx.consulted.add(method);
     try {
-      return symbolTypeIndex.getDeclaredReturnTypes(method);
+      // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
+      // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
+      // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
+      // сравнение самих URI нормализует проценты и стоит заметно дороже.
+      if (owner == ctx.documentContext) {
+        methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx));
+      } else {
+        ctx.dependencies.add(owner.getUri());
+        if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
+          // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
+          // наполняется. Расчёт, опирающийся на него, придётся повторить.
+          ctx.sawMissing = true;
+        }
+      }
+      return symbolTypeIndex.getReturnTypes(method);
     } finally {
       ctx.visited.remove(method);
     }
   }
+
+  /**
+   * Типы, которые метод возвращает по своему телу, и методы, значения которых для этого
+   * понадобились.
+   * <p>
+   * Разбирается тело метода в его же документе, поэтому вызывать это можно только тогда,
+   * когда дерево разбора владельца доступно — то есть при построении его контекста.
+   * Значения вызванных методов читаются из {@link MethodReturnTypeIndexer} как есть: до
+   * неподвижной точки их доводит пересчёт по зависимым, а не рекурсия по стеку.
+   *
+   * @param method метод, чьё тело разбирается.
+   * @return рассчитанные типы и методы, участвовавшие в расчёте.
+   */
+  public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
+    return returnTypesOfBody(method, new InferenceContext(method.getOwner()));
+  }
+
+  /**
+   * Типы, возвращаемые методом по телу, в рамках уже идущего расчёта.
+   * <p>
+   * Контекст передаётся тот же самый: у него общая защита от циклов и общая глубина, без
+   * которой цепочка вызовов внутри модуля уходила бы в рекурсию до переполнения стека.
+   *
+   * @param method метод, чьё тело разбирается.
+   * @param ctx    контекст расчёта.
+   * @return рассчитанные типы и методы, участвовавшие в расчёте.
+   */
+  private MethodReturnTypeIndexer.ComputedReturnTypes returnTypesOfBody(
+    MethodSymbol method,
+    InferenceContext ctx
+  ) {
+    if (ctx.depth >= MAX_DEPTH) {
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
+    }
+    try {
+      var types = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx));
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing);
+    } catch (StackOverflowError | RuntimeException e) {
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
+    }
+  }
+
+
 
   /**
    * Тип переменной в точке использования, рассчитанный по потоку управления тела:
@@ -756,7 +822,9 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
     var owner = variable.getOwner();
-    if (!owner.getUri().equals(ctx.documentContext.getUri())) {
+    // Сравнение по ссылке: на URI в рабочей области приходится ровно один DocumentContext,
+    // а сравнение самих URI нормализует проценты и стоит заметно дороже.
+    if (owner != ctx.documentContext) {
       // Переменная из другого документа: чужое дерево разбора не читаем, берём
       // объявленное о ней — оно есть в самом символе.
       return declaredTypes(variable);
@@ -1363,14 +1431,14 @@ public class ExpressionTypeInferencer {
    */
   static final class InferenceContext {
     final DocumentContext documentContext;
-    final Set<SourceDefinedSymbol> visited = new HashSet<>();
+    final Set<SourceDefinedSymbol> visited;
     /**
      * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
      * завершён. Self-reference (например, {@code Строка = Строка + "..."}) резолвится
      * в это частичное значение вместо {@link TypeSet#EMPTY}, что даёт one-pass
      * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
      */
-    final Map<SourceDefinedSymbol, TypeSet> inProgress = new HashMap<>();
+    final Map<SourceDefinedSymbol, TypeSet> inProgress;
     /**
      * Расчёты по потоку, идущие прямо сейчас в рамках этого вывода. Вывод типа
      * присваивания просит типы переменных из правой части, и если они из того же тела,
@@ -1378,10 +1446,24 @@ public class ExpressionTypeInferencer {
      * а не запускает расчёт тела заново.
      */
     final VariableFlowAnalyzer.FlowSession flowSession = new VariableFlowAnalyzer.FlowSession();
+    /**
+     * Документы, чьё содержимое участвовало в расчёте: их правка делает
+     * закэшированный результат недействительным.
+     */
+    final Set<URI> dependencies;
+    /** Методы, типы возврата которых понадобились расчёту. */
+    final Set<MethodSymbol> consulted = new HashSet<>();
+    /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
+    boolean cycleCut;
+    /** Расчёт читал значение метода, которое ещё не посчитано. */
+    boolean sawMissing;
     int depth;
 
     InferenceContext(DocumentContext documentContext) {
       this.documentContext = documentContext;
+      this.visited = new HashSet<>();
+      this.inProgress = new HashMap<>();
+      this.dependencies = new HashSet<>();
     }
   }
 }

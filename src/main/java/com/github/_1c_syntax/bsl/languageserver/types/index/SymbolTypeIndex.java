@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -105,6 +106,25 @@ public class SymbolTypeIndex {
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
 
+  /**
+   * Типы возвращаемого значения, выведенные по телу метода. Пишет их
+   * {@code MethodReturnTypeIndexer}; сюда они складываются, чтобы ответ на вопрос
+   * «что возвращает метод» был один и тот же у всех потребителей.
+   */
+  private final Map<MethodSymbol, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
+
+  /**
+   * Методы документа, у которых есть выведенное значение, — по ним запись стирается вместе
+   * с документом. Набор, а не список: значение метода пересчитывается многократно (разбор,
+   * доразрешение, разнос по потребителям), и список копил бы один и тот же метод при каждом
+   * пересчёте.
+   */
+  private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
+
+  // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
+  // а здесь записи документа сначала стираются. Без явного порядка слушатель без
+  // аннотации идёт последним и стёр бы только что записанное.
+  @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
@@ -122,6 +142,57 @@ public class SymbolTypeIndex {
    */
   public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
     return declaredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
+   * Типы возвращаемого значения метода: объявленные в документирующем комментарии вместе
+   * с рассчитанными по телу.
+   * <p>
+   * По общим типам верим описанию: у {@code Массив из Число} из комментария состав
+   * элементов точнее, чем у того же {@code Массив}, собранного по телу.
+   *
+   * @param method метод.
+   * @return типы возвращаемого значения; {@link TypeSet#EMPTY}, если ни один источник
+   *     ничего не дал.
+   */
+  public TypeSet getReturnTypes(MethodSymbol method) {
+    var declared = getDeclaredReturnTypes(method);
+    var inferred = inferredReturnTypes.get(method);
+    if (inferred == null || inferred.isEmpty()) {
+      return declared;
+    }
+    var extra = inferred;
+    for (var ref : declared.refs()) {
+      extra = extra.without(ref);
+    }
+    return declared.union(extra);
+  }
+
+  /**
+   * Запомнить типы возвращаемого значения, выведенные по телу метода.
+   *
+   * @param method метод.
+   * @param types  выведенные типы; пустой набор стирает прежнюю запись.
+   */
+  public void putReturnTypes(MethodSymbol method, TypeSet types) {
+    // Обе карты меняются под одним замком — по ключу документа. Иначе расчёт по запросу,
+    // идущий вне событий жизненного цикла, мог бы вклиниться в сброс между снятием набора
+    // и обходом, и значение осталось бы в карте типов без ссылки из карты по документам —
+    // то есть недостижимым для следующего сброса.
+    inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
+      if (types.isEmpty()) {
+        inferredReturnTypes.remove(method);
+        if (methods == null) {
+          return null;
+        }
+        methods.remove(method);
+        return methods.isEmpty() ? null : methods;
+      }
+      inferredReturnTypes.put(method, types);
+      var target = methods == null ? ConcurrentHashMap.<MethodSymbol>newKeySet() : methods;
+      target.add(method);
+      return target;
+    });
   }
 
   /**
@@ -294,6 +365,14 @@ public class SymbolTypeIndex {
    * Очистить записи, относящиеся к данному URI.
    */
   public void clear(URI uri) {
+    // Снятие набора и удаление значений — под тем же замком по ключу документа, что и запись
+    // (см. putReturnTypes): иначе параллельная запись осталась бы в карте типов навсегда.
+    inferredByUri.compute(uri, (key, methods) -> {
+      if (methods != null) {
+        methods.forEach(inferredReturnTypes::remove);
+      }
+      return null;
+    });
     var methods = indexedByUri.remove(uri);
     if (methods == null) {
       return;

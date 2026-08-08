@@ -49,10 +49,12 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
       "./src/test/resources/types/InlineTypeComment.bsl");
 
     var types = inferAtMarker(documentContext, "X = Значение", "X = ".length());
+    // Комментарий дополняет расчётные типы, а не заменяет их: заглушка возвращает строку,
+    // поэтому к объявленному Число добавляется Строка из тела функции.
     assertThat(types.refs())
-      .as("inline `// Число -` produces Число")
+      .as("inline `// Число -` дополняет расчётный тип заглушки")
       .extracting(TypeRef::qualifiedName)
-      .containsExactly("Число");
+      .containsExactlyInAnyOrder("Строка", "Число");
   }
 
   @Test
@@ -76,11 +78,15 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     // when
     var types = inferAtMarker(documentContext, "П = ПоЛокальнойСсылке", "П = ".length());
 
-    // then: тип из описания функции приходит вместе с её полями.
+    // then: тип из описания функции приходит вместе с её полями и дополняет расчётный
+    // тип заглушки.
     assertThat(types.refs())
       .extracting(TypeRef::qualifiedName)
-      .containsExactly("Структура");
-    var structureRef = types.refs().iterator().next();
+      .containsExactlyInAnyOrder("Строка", "Структура");
+    var structureRef = types.refs().stream()
+      .filter(ref -> "Структура".equals(ref.qualifiedName()))
+      .findFirst()
+      .orElseThrow();
     assertThat(types.getLocalFields(structureRef).keySet())
       .containsExactlyInAnyOrder("Ссылка", "Количество");
   }
@@ -96,10 +102,10 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
     // when
     var types = inferAtMarker(documentContext, "М = ПоМежмодульнойСсылке", "М = ".length());
 
-    // then
+    // then: тип по ссылке дополняет расчётный тип заглушки.
     assertThat(types.refs())
       .extracting(TypeRef::qualifiedName)
-      .containsExactly("Структура");
+      .containsExactlyInAnyOrder("Строка", "Структура");
   }
 
   @Test

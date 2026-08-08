@@ -202,13 +202,15 @@ public class TypeService implements SelfMemberClassifier {
    }
 
   /**
-   * Объявленный тип возвращаемого значения метода — для signature help/hover.
+   * Типы возвращаемого значения метода — объявленные в документирующем комментарии вместе
+   * с рассчитанными по телу.
    *
    * @param method метод.
-   * @return набор типов возвращаемого значения; {@link TypeSet#EMPTY}, если не объявлен.
+   * @return набор типов возвращаемого значения; {@link TypeSet#EMPTY}, если ни один
+   *     источник ничего не дал.
    */
-  public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
-    return symbolTypeIndex.getDeclaredReturnTypes(method);
+  public TypeSet getReturnTypes(MethodSymbol method) {
+    return symbolTypeIndex.getReturnTypes(method);
   }
 
   /**

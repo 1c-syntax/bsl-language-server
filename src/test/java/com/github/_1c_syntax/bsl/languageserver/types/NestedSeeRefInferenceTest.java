@@ -48,7 +48,7 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void collectionElementTypeViaSeeRef() {
     // // Возвращаемое значение: Массив из см. ОшибкаВалидации
-    var declared = typeService.getDeclaredReturnTypes(method("ВалидироватьДанные"));
+    var declared = typeService.getReturnTypes(method("ВалидироватьДанные"));
 
     assertThat(declared.refs())
       .extracting(TypeRef::qualifiedName)
@@ -72,7 +72,7 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void structureFieldTypeViaSeeRef() {
     // поле `* ДанныеТокена - см. ДанныеТокена`
-    var declared = typeService.getDeclaredReturnTypes(method("КонтекстЗапроса"));
+    var declared = typeService.getReturnTypes(method("КонтекстЗапроса"));
 
     assertThat(declared.refs())
       .extracting(TypeRef::qualifiedName)
@@ -120,7 +120,7 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void seeRefToTypeNameResolvesViaRegistry() {
     // см. ТаблицаЗначений — не локальная функция: трактуется как имя типа.
-    var declared = typeService.getDeclaredReturnTypes(method("ПолучитьТаблицу"));
+    var declared = typeService.getReturnTypes(method("ПолучитьТаблицу"));
 
     assertThat(declared.refs())
       .as("См.-ссылка на имя типа разрешается через TypeRegistry")
@@ -133,7 +133,7 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
     // Массив из см. ОбщегоНазначения.НеизвестныйМетод — квалифицированная ссылка
     // не считается локальной функцией (не лениво) и, не разрешившись, не даёт
     // тип элемента; головной тип коллекции при этом сохраняется.
-    var declared = typeService.getDeclaredReturnTypes(method("СписокСКвалифицированнойСсылкой"));
+    var declared = typeService.getReturnTypes(method("СписокСКвалифицированнойСсылкой"));
 
     assertThat(declared.refs())
       .extracting(TypeRef::qualifiedName)
@@ -153,7 +153,7 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
     assertTimeout(Duration.ofSeconds(30), () -> {
       var dc = cyclicDoc();
       var first = method(dc, "ПервыйУзел");
-      var declared = typeService.getDeclaredReturnTypes(first);
+      var declared = typeService.getReturnTypes(first);
       assertThat(declared.refs())
         .as("головной тип разрешается, рекурсия по закольцованной ссылке оборвана")
         .extracting(TypeRef::qualifiedName)
@@ -167,7 +167,7 @@ class NestedSeeRefInferenceTest extends AbstractServerContextAwareTest {
     // (eager-путь) должна оборваться через visited, дав пустой тип, без зацикливания.
     assertTimeout(Duration.ofSeconds(30), () -> {
       var dc = cyclicDoc();
-      var echoA = typeService.getDeclaredReturnTypes(method(dc, "ЭхоА"));
+      var echoA = typeService.getReturnTypes(method(dc, "ЭхоА"));
       assertThat(echoA.isEmpty())
         .as("чистая закольцованная см.-цепочка не образует типа и не зацикливается")
         .isTrue();

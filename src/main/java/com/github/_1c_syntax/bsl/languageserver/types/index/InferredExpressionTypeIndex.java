@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -31,7 +33,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -67,6 +72,12 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
 
   private final Map<URI, Map<ParseTree, TypeSet>> typesByUri = new ConcurrentHashMap<>();
 
+  /** Документ → те, чьи записи на нём построены. Правка документа сбрасывает их вместе с ним. */
+  private final Map<URI, Set<URI>> dependentsByDependency = new ConcurrentHashMap<>();
+
+  /** Обратная сторона той же связи — нужна, чтобы снимать её при сбросе документа-потребителя. */
+  private final Map<URI, Set<URI>> dependenciesByDependent = new ConcurrentHashMap<>();
+
   /**
    * Кэшированный тип узла-выражения либо {@code null}, если ещё не вычислялся.
    *
@@ -83,26 +94,112 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
   /**
    * Запомнить выведенный тип узла-выражения.
    *
-   * @param uri   URI документа, которому принадлежит узел.
-   * @param node  AST-узел выражения.
-   * @param types выведенный тип.
+   * @param uri          URI документа, которому принадлежит узел.
+   * @param node         AST-узел выражения.
+   * @param types        выведенный тип.
+   * @param dependencies URI документов, чьё содержимое участвовало в расчёте: их правка
+   *                     делает запись недействительной.
    */
-  public void put(URI uri, ParseTree node, TypeSet types) {
+  public void put(URI uri, ParseTree node, TypeSet types, Set<URI> dependencies) {
     typesByUri.computeIfAbsent(uri, k -> new ConcurrentHashMap<>()).put(node, types);
+    rememberDependencies(uri, dependencies);
   }
 
+  /**
+   * Сбрасывает бакет документа и бакеты всех, чьи типы на нём построены.
+   *
+   * @param uri URI документа.
+   */
   @Override
   public void clear(URI uri) {
+    clearRecursive(uri, Collections.newSetFromMap(new HashMap<>()));
+  }
+
+  /**
+   * Освобождение вторичных данных — не правка: содержимое документа то же самое,
+   * поэтому типы, построенные на нём в других документах, остаются в силе. Сбрасывается
+   * только бакет самого документа — ключи в нём указывают на узлы выброшенного дерева
+   * разбора.
+   *
+   * @param event событие освобождения вторичных данных документа.
+   */
+  @Override
+  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
+    typesByUri.remove(event.getDocumentContext().getUri());
+  }
+
+  /**
+   * Запомнить, на каких документах построены типы этого.
+   *
+   * @param uri          URI документа-потребителя.
+   * @param dependencies URI документов, чьё содержимое участвовало в расчёте.
+   */
+  private void rememberDependencies(URI uri, Set<URI> dependencies) {
+    for (var dependency : dependencies) {
+      if (dependency.equals(uri)) {
+        continue;
+      }
+      dependentsByDependency.computeIfAbsent(dependency, k -> ConcurrentHashMap.newKeySet()).add(uri);
+      dependenciesByDependent.computeIfAbsent(uri, k -> ConcurrentHashMap.newKeySet()).add(dependency);
+    }
+  }
+
+  /**
+   * Сбрасывает бакет документа и обходит его зависимых.
+   *
+   * @param uri     URI документа.
+   * @param visited уже пройденные документы — обрывает круговые зависимости модулей.
+   */
+  private void clearRecursive(URI uri, Set<URI> visited) {
+    if (!visited.add(uri)) {
+      return;
+    }
     typesByUri.remove(uri);
+    var dependencies = dependenciesByDependent.remove(uri);
+    if (dependencies != null) {
+      for (var dependency : dependencies) {
+        var dependents = dependentsByDependency.get(dependency);
+        if (dependents != null) {
+          dependents.remove(uri);
+        }
+      }
+    }
+    var dependents = dependentsByDependency.remove(uri);
+    if (dependents != null) {
+      for (var dependent : dependents) {
+        clearRecursive(dependent, visited);
+      }
+    }
+  }
+
+  /**
+   * Полный сброс после наполнения рабочей области: расчёт по телам методов идёт через
+   * ссылки между документами, а до конца наполнения часть документов ещё не
+   * зарегистрирована — типы, посчитанные в это время, неполны.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    clearAll();
   }
 
   /**
    * Полный сброс после регистрации конфигурационных типов: до неё член-доступы
    * на конфигурационных типах инферились в пусто (реестр ещё не заполнен), и эти
    * «пустые» результаты надо пересчитать.
+   *
+   * @param event событие регистрации конфигурационных типов.
    */
   @EventListener
   public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    clearAll();
+  }
+
+  /** Сбросить и типы, и связи между документами. */
+  private void clearAll() {
     typesByUri.clear();
+    dependentsByDependency.clear();
+    dependenciesByDependent.clear();
   }
 }
