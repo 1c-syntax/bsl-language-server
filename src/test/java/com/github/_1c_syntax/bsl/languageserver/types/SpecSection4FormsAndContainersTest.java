@@ -35,7 +35,9 @@ import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.types.SpecProbes.fieldNames;
 import static com.github._1c_syntax.bsl.languageserver.types.SpecProbes.names;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 
 /**
  * Сверка с методической рекомендацией «Типизация кода», раздел «Лучшие практики»:
@@ -128,10 +130,14 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
     var reference = typeOfVariable("Проба_4_45_Ссылка");
     var formItem = typeOfVariable("Проба_4_45_Элемент");
 
-    // then: поведение из рекомендации (строки 1605-1606).
+    // then: имя типа расходится с буквой рекомендации. Она называет тип обобщённо —
+    // «ДанныеФормыСтруктура», а система типов отдаёт тип основного реквизита этой конкретной
+    // формы («ДанныеФормыСтруктура.СправочникОбъект.Справочник1»): он строго точнее, потому
+    // что знает её реквизиты. Поэтому имя сверяется по вхождению, а не точным совпадением.
     assertThat(names(types))
       .as("рекомендация: через ссылку на форму доступен её основной реквизит")
-      .containsExactly("ДанныеФормыСтруктура");
+      .singleElement(as(STRING))
+      .contains("ДанныеФормыСтруктура");
     assertThat(names(reference))
       .as("рекомендация: «Ссылка = Форма.Объект.Ссылка»")
       .containsExactly("СправочникСсылка.Справочник1");
@@ -180,8 +186,10 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
     var types = typeOf("4.47");
     var reference = typeOfVariable("Проба_4_47_Ссылка");
 
-    // then: рекомендация требует, чтобы был доступен весь контекст этой формы.
-    assertThat(names(types)).containsExactly(FORM_TYPE);
+    // then: рекомендация требует, чтобы был доступен весь контекст этой формы, то есть
+    // конкретный тип формы. Обобщённое имя «ФормаКлиентскогоПриложения» — это голова имени
+    // конкретного типа, поэтому оно сверяется по вхождению.
+    assertThat(names(types)).singleElement(as(STRING)).contains(FORM_TYPE);
     assertThat(names(reference))
       .as("рекомендация: у полученной формы доступен её основной реквизит")
       .containsExactly("СправочникСсылка.Справочник1");
@@ -201,8 +209,8 @@ class SpecSection4FormsAndContainersTest extends AbstractServerContextAwareTest 
     var types = typeOf("4.48");
     var reference = typeOfVariable("Проба_4_48_Ссылка");
 
-    // then
-    assertThat(names(types)).containsExactly(FORM_TYPE);
+    // then: как и в 4.47, конкретный тип формы сверяется по вхождению обобщённого имени.
+    assertThat(names(types)).singleElement(as(STRING)).contains(FORM_TYPE);
     assertThat(names(reference))
       .as("рекомендация: у полученной формы доступен её основной реквизит")
       .containsExactly("СправочникСсылка.Справочник1");
