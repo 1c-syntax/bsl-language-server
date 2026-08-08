@@ -28,9 +28,14 @@ jobs:
         cache: gradle
 
     # javadoc скачивает element-list с каждого сайта из -link (в том числе с javadoc.io,
-    # который периодически недоступен), поэтому повторяем сборку при падении.
+    # который периодически недоступен). Если сборка со ссылками упала, повторяем без них:
+    # документация опубликуется без перекрёстных ссылок на чужой javadoc.
     - name: Build javadoc
-      run: .github/scripts/retry.sh 3 30 ./gradlew --no-daemon javadoc
+      run: |
+        ./gradlew --no-daemon javadoc || {
+          echo "::warning::Сборка javadoc со внешними ссылками не удалась, повторяем без них"
+          ./gradlew --no-daemon javadoc -PjavadocLinks=false
+        }
 
     - name: Set up Python
       uses: actions/setup-python@v7
