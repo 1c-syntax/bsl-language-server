@@ -498,6 +498,12 @@ public class ExpressionTypeInferencer {
     if (localMethod.isPresent()) {
       return methodReturnType(localMethod.get(), ctx);
     }
+    // Обращение в индексе есть, а символа за ним нет: документ, в котором объявлен вызванный
+    // метод, ещё не зарегистрирован. Пока рабочая область наполняется, это норма, но расчёт,
+    // построенный на таком вызове, неполон — его придётся повторить.
+    if (reference.isPresent() && !methodReturnTypeIndexer.isWorkspacePopulated()) {
+      ctx.sawMissing = true;
+    }
     // 2. Открытие формы по имени: тип конкретной формы точнее, чем обобщённый
     //    возвращаемый тип платформенной функции, поэтому проверяется до шага 3.
     var formType = formExpressionInference.openedFormType(ctx.documentContext, name.getText(), call);

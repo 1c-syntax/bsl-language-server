@@ -53,6 +53,7 @@ import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -168,6 +169,42 @@ class MethodReturnTypeIndexerTest {
 
     // then: отложенный метод пересчитан на месте — документ разобран, догружать нечего.
     verify(inferencer).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void changedValueReachesConsumersDuringPostPopulatePass() {
+    // given: значение потребителя построено на методе источника, а сам источник отложен.
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), false));
+    indexer.computeIfAbsent(sourceMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+    clearInvocations(inferencer);
+    // Пересчёт источника в проходе даёт другое значение.
+    returns(sourceMethod, STRING);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
+
+    // then: потребитель пересчитан. Он ничем не помечен — непосчитанного он не видел, —
+    // поэтому измениться его значение может только разносом от источника.
+    verify(inferencer).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void passStopsWhenValuesStopChanging() {
+    // given: метод отложен и остаётся отложенным — обращение, которое у него не
+    // разрешилось, не разрешится и дальше, — но значение его не меняется.
+    when(inferencer.computeReturnTypes(consumerMethod))
+      .thenReturn(new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+    clearInvocations(inferencer);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
+
+    // then: одна волна, а не десять до предохранителя.
+    verify(inferencer, times(1)).computeReturnTypes(consumerMethod);
   }
 
   @Test

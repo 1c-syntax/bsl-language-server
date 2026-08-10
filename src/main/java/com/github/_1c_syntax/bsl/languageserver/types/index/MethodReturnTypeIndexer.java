@@ -110,6 +110,15 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Идёт общий проход по рабочей области: разбор документа в нём — не правка, а догрузка. */
   private volatile boolean maintenance;
 
+  /**
+   * Наполнена ли рабочая область. Пока нет, вызов может не разрешиться просто потому, что
+   * до его модуля ещё не дошла очередь, и такой расчёт придётся повторить.
+   */
+  private volatile boolean workspacePopulated;
+
+  /** Сколько значений изменилось за текущую волну общего прохода. */
+  private final AtomicInteger changesOfPass = new AtomicInteger();
+
   /** Методы, изменившиеся в ходе общего прохода и ждущие разноса по потребителям. */
   private final Set<MethodSymbol> pending = ConcurrentHashMap.newKeySet();
 
@@ -154,6 +163,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   public boolean isIndexed(MethodSymbol method) {
     return indexed.contains(method);
+  }
+
+  /**
+   * Наполнена ли рабочая область.
+   * <p>
+   * Пока не наполнена, часть документов ещё не зарегистрирована, и обращение в них никуда
+   * не ведёт: расчёт, наткнувшийся на такое обращение, неполон и должен быть повторён.
+   *
+   * @return {@code true}, если наполнение рабочей области и доразрешение уже завершены.
+   */
+  public boolean isWorkspacePopulated() {
+    return workspacePopulated;
   }
 
   /**
@@ -215,6 +236,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       drainPending(serverContext, progressReporter);
     } finally {
       maintenance = false;
+      workspacePopulated = true;
       pending.clear();
       progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
     }
@@ -339,7 +361,30 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, computed.types());
     indexed.add(method);
-    return !symbolTypeIndex.getReturnTypes(method).equals(previous);
+    var changed = !symbolTypeIndex.getReturnTypes(method).equals(previous);
+    if (changed && maintenance) {
+      changesOfPass.incrementAndGet();
+      deferDependentsOf(method);
+    }
+    return changed;
+  }
+
+  /**
+   * Откладывает методы документов, чьи значения построены на документе этого метода.
+   * <p>
+   * Потребитель, прочитавший значение посчитанным, но ещё неполным, ничем не помечен:
+   * неполноту видит только тот, кто наткнулся на непосчитанное. Поэтому изменившееся
+   * значение приходится разносить по потребителям самому, иначе они останутся с прежним.
+   *
+   * @param method метод, значение которого изменилось.
+   */
+  private void deferDependentsOf(MethodSymbol method) {
+    for (var dependentUri : dependentsOf(List.of(method.getOwner().getUri()))) {
+      var methods = methodsByUri.get(dependentUri);
+      if (methods != null) {
+        pending.addAll(methods);
+      }
+    }
   }
 
   /**
@@ -390,6 +435,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /**
    * Разносит накопленные общим проходом изменения, догружая документы потребителей.
+   * <p>
+   * Волны идут, пока значения меняются. Метод, оставшийся помеченным, но не изменившийся,
+   * работы не создаёт: обращение, которое у него не разрешилось, не разрешится и на
+   * следующей волне — рабочая область уже вся зарегистрирована.
    *
    * @param serverContext    рабочая область.
    * @param progressReporter индикатор хода работы.
@@ -402,14 +451,19 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
+      changesOfPass.set(0);
       // Проход вскрывает новые зависимости, поэтому общее число методов заранее не
       // известно: наращиваем его по мере того, как работа находится. Считается ровно то,
       // по чему идёт отсчёт, — методы, иначе числитель убегает за знаменатель.
       planned += roots.size();
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
-      LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}",
-        pass + 1, roots.size(), pending.size());
+      var changes = changesOfPass.get();
+      LOGGER.debug("Волна {}: пересчитано методов {}, изменилось значений {}, снова отложено {}",
+        pass + 1, roots.size(), changes, pending.size());
+      if (changes == 0) {
+        return;
+      }
     }
   }
 
