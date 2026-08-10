@@ -697,7 +697,7 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.Map.of(http.getMdoReference(), (MD) http),
       (registry, p) -> {
         p.tryRegister();
-        var typeRef = registry.resolve("Модуль HTTP-сервиса").orElseThrow();
+        var typeRef = registry.resolve("Модуль HTTP-сервиса.HTTPСервис1").orElseThrow();
         var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("URLTemplate1GET");
       });
@@ -771,7 +771,9 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.Map.of(web.getMdoReference(), (MD) web),
       (registry, p) -> {
         p.tryRegister();
-        var typeRef = registry.resolve("Модуль Web-сервиса").orElseThrow();
+        // Обработчики висят на типе своего сервиса: у разных сервисов операции сплошь
+        // и рядом называются одинаково, а параметры у них разные.
+        var typeRef = registry.resolve("Модуль Web-сервиса.WebСервис1").orElseThrow();
         var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("Операция1");
       });
@@ -804,7 +806,7 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.Map.of(isvc.getMdoReference(), (MD) isvc),
       (registry, p) -> {
         p.tryRegister();
-        var typeRef = registry.resolve("Модуль сервиса интеграции").orElseThrow();
+        var typeRef = registry.resolve("Модуль сервиса интеграции.Сервис1").orElseThrow();
         var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("ОбработчикСообщения");
       });
