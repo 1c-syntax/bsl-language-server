@@ -53,6 +53,13 @@ public record LocalField(TypeSet types, String description) {
   /**
    * Слияние одноимённых полей при union наборов типов: типы объединяются,
    * описание — первое непустое (детерминированно, приоритет у {@code first}).
+   * <p>
+   * Типы сливаются по правилам {@link TypeSet#union(TypeSet)}, то есть вглубь не
+   * дальше предела вложенности декораций.
+   *
+   * @param first  поле левого набора.
+   * @param second поле правого набора.
+   * @return слитое поле.
    */
   public static LocalField merge(LocalField first, LocalField second) {
     return merge(first, second, 0);
