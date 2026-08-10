@@ -343,8 +343,12 @@ public class EventHandlerResolver implements EventHandlerClassifier {
    * Owner-тип модуля: {@code ДокументОбъект.Покупатели},
    * {@code СправочникМенеджер.Контрагенты}, {@code РегистрСведенийНаборЗаписей.Курсы},
    * {@code КонстантаМенеджерЗначения.КодВалюты} — для MDO-specific обёрток.
-   * Для модулей с фиксированным типом (команды, HTTP/Web/Bot/Integration сервисы)
-   * — прямой qualifiedName типа из HBK без специализации по имени.
+   * <p>
+   * У модулей сервисов имя типа в HBK не параметризовано, поэтому спрашивается сначала
+   * тип этого сервиса ({@code Модуль Web-сервиса.Обмен}, заводит
+   * {@link ServiceModuleEventRegistrar}), и только если его нет — общий тип вида.
+   * Обработчики объявлены в конкретном сервисе, и контракт надо брать у него: у разных
+   * сервисов одноимённые операции сплошь и рядом принимают разные параметры.
    */
   private Optional<TypeRef> resolveOwnerType(DocumentContext documentContext, ModuleType moduleType) {
     if (moduleType == ModuleType.FormModule) {
@@ -354,7 +358,10 @@ public class EventHandlerResolver implements EventHandlerClassifier {
     }
     var fixed = MODULE_TYPE_TO_FIXED_OWNER_RU.get(moduleType);
     if (fixed != null) {
-      return typeRegistry.resolve(fixed);
+      return documentContext.getMdObject()
+        .map(md -> fixed + "." + md.getName())
+        .flatMap(typeRegistry::resolve)
+        .or(() -> typeRegistry.resolve(fixed));
     }
     var wrapperRu = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
     if (wrapperRu == null) {
