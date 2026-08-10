@@ -16,7 +16,7 @@ plugins {
     id("io.freefair.javadoc-utf-8") version "9.5.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
     id("io.freefair.maven-central.validate-poms") version "9.5.0"
-    id("com.github.ben-manes.versions") version "0.59.0"
+    id("com.github.ben-manes.versions") version "0.60.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "6.17.0"
