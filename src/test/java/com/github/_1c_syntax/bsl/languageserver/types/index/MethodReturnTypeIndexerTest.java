@@ -46,6 +46,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.clearInvocations;
@@ -136,6 +137,22 @@ class MethodReturnTypeIndexerTest {
 
     // then: пересчитывать потребителя незачем.
     verify(inferencer, never()).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void rereadDocumentKeepsItsValues() {
+    // given: документ разобран, значения его методов посчитаны.
+    returns(sourceMethod, STRING);
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+    clearInvocations(inferencer);
+
+    // when: тот же самый текст перечитан заново.
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source, false));
+
+    // then: посчитанное осталось в силе и заново не считалось — иначе в чужом потоке
+    // нашлась бы дыра на месте уже известного значения.
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
+    verify(inferencer, never()).computeReturnTypes(sourceMethod);
   }
 
   @Test

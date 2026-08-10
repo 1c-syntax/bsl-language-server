@@ -99,6 +99,23 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Nullable
   private String content;
 
+  /**
+   * Отпечаток последнего разобранного содержимого. В отличие от самого содержимого
+   * переживает освобождение вторичных данных: по нему повторный разбор отличает
+   * перечитывание того же текста от настоящей правки.
+   */
+  private long contentFingerprint;
+
+  /** Разбирался ли документ хоть раз: до первого разбора отпечатка ещё нет. */
+  private boolean contentFingerprintKnown;
+
+  /**
+   * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
+   * с которым он был разобран до этого. У документа, разбираемого впервые, — {@code true}.
+   */
+  @Getter
+  private boolean contentChangedOnLastRebuild = true;
+
   @Getter
   private int version;
 
@@ -335,6 +352,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
     try {
 
+      var fingerprint = contentFingerprint(content);
+      contentChangedOnLastRebuild = !contentFingerprintKnown || fingerprint != contentFingerprint;
+      contentFingerprint = fingerprint;
+      contentFingerprintKnown = true;
+
       boolean versionMatches = version == this.version && version != 0;
 
       if (versionMatches && (this.content != null)) {
@@ -359,6 +381,17 @@ public class DocumentContext implements Comparable<DocumentContext> {
       releaseLocks();
     }
 
+  }
+
+  /**
+   * Отпечаток содержимого: длина вместе с хэшем текста. Совпадение отпечатков означает
+   * совпадение содержимого с точностью до коллизии хэша.
+   *
+   * @param content содержимое документа.
+   * @return отпечаток.
+   */
+  private static long contentFingerprint(String content) {
+    return ((long) content.length() << Integer.SIZE) ^ (content.hashCode() & 0xFFFFFFFFL);
   }
 
   protected void rebuildFromFileSystem() {

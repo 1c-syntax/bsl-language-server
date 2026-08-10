@@ -169,6 +169,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   @EventListener
   @Override
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
+    if (!event.isContentChanged()) {
+      // Тот же самый текст перечитан заново — посчитанные по нему значения остаются в силе.
+      // Снести и посчитать их заново означало бы, во-первых, оставить окно, в котором чужой
+      // поток не находит значений уже посчитанного метода, а во-вторых, потерять точность:
+      // расчёт с чистого листа рвёт цепочку взаимных вызовов в другом месте.
+      return;
+    }
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     var changed = recomputeDocument(documentContext);

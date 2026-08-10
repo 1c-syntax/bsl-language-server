@@ -127,10 +127,33 @@ public class SymbolTypeIndex {
   @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
+    if (!event.isContentChanged()) {
+      // Тот же самый текст перечитан заново: записи по нему остаются верными. Символы из
+      // построенного заново дерева равны прежним (имя, документ, позиция имени), поэтому
+      // находятся по старым записям. Снести и собрать их заново означало бы оставить окно,
+      // в котором чужой поток не находит типов уже посчитанного метода.
+      return;
+    }
     var documentContext = event.getSource();
+    clear(documentContext.getUri());
+    reindexDeclared(documentContext);
+  }
+
+  /**
+   * Пересобирает объявленные типы возвращаемых значений методов документа, стирая прежние.
+   * Выведенные по телу значения не трогает.
+   * <p>
+   * Работает по дереву символов, поэтому разбор документа для этого не нужен.
+   *
+   * @param documentContext документ.
+   */
+  public void reindexDeclared(DocumentContext documentContext) {
     var uri = documentContext.getUri();
 
-    clear(uri);
+    var previous = indexedByUri.remove(uri);
+    if (previous != null) {
+      previous.forEach(declaredReturnTypes::remove);
+    }
 
     var collected = new ArrayList<MethodSymbol>();
     indexMethodsRecursive(documentContext.getSymbolTree().getModule(), collected);
