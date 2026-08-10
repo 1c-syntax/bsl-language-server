@@ -224,6 +224,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
     maintenance = true;
+    // Всё, что посчитано при наполнении, провизорно: часть вызовов тогда не разрешалась —
+    // и не потому, что расчёт это заметил, а как раз потому, что заметить было нечего.
+    // Поэтому в проход идут все методы, а не только помеченные неполными.
+    methodsByUri.values().forEach(pending::addAll);
     var deferred = pending.size();
     rebuilt.set(0);
     rebuiltUris.clear();
@@ -359,7 +363,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       }
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
-    symbolTypeIndex.putReturnTypes(method, computed.types());
+    // В общем проходе значение только копится. Расчёт не идемпотентен: цепочка взаимных
+    // вызовов рвётся там, где на неё вышли, поэтому очередной заход может дать меньше
+    // предыдущего. Замещение сделало бы результат зависящим от порядка обхода, а с
+    // накоплением проход идёт к одной и той же неподвижной точке, каким бы ни был порядок.
+    // Вне прохода значение замещается: там пересчёт вызван правкой, после которой метод
+    // может возвращать и меньше, чем возвращал.
+    var stored = maintenance
+      ? symbolTypeIndex.getInferredReturnTypes(method).union(computed.types())
+      : computed.types();
+    symbolTypeIndex.putReturnTypes(method, stored);
     indexed.add(method);
     var changed = !symbolTypeIndex.getReturnTypes(method).equals(previous);
     if (changed && maintenance) {

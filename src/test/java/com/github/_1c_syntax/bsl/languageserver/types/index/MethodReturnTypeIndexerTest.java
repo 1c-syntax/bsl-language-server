@@ -48,6 +48,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -100,6 +101,9 @@ class MethodReturnTypeIndexerTest {
     // Значения запоминаются по-настоящему: по ним индекс решает, изменился ли метод.
     var stored = new HashMap<MethodSymbol, TypeSet>();
     when(symbolTypeIndex.getReturnTypes(any()))
+      .thenAnswer(invocation -> stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY));
+    // Объявленных типов у этих методов нет, поэтому выведенные и есть всё значение.
+    when(symbolTypeIndex.getInferredReturnTypes(any()))
       .thenAnswer(invocation -> stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY));
     doAnswer(invocation -> stored.put(invocation.getArgument(0), invocation.getArgument(1)))
       .when(symbolTypeIndex).putReturnTypes(any(), any());
@@ -185,9 +189,10 @@ class MethodReturnTypeIndexerTest {
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
 
-    // then: потребитель пересчитан. Он ничем не помечен — непосчитанного он не видел, —
-    // поэтому измениться его значение может только разносом от источника.
-    verify(inferencer).computeReturnTypes(consumerMethod);
+    // then: потребитель пересчитан не один раз — первый заход был до того, как значение
+    // источника изменилось, и вернуть к потребителю проход мог только разносом. Сам он
+    // ничем не помечен: непосчитанного он не видел.
+    verify(inferencer, atLeast(2)).computeReturnTypes(consumerMethod);
   }
 
   @Test

@@ -205,6 +205,16 @@ public class SymbolTypeIndex {
   }
 
   /**
+   * Типы возвращаемого значения, выведенные по телу метода, без объявленных в описании.
+   *
+   * @param method метод.
+   * @return выведенные типы; {@link TypeSet#EMPTY}, если по телу ничего не выведено.
+   */
+  public TypeSet getInferredReturnTypes(MethodSymbol method) {
+    return inferredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
    * Запомнить типы возвращаемого значения, выведенные по телу метода.
    *
    * @param method метод.
