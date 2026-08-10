@@ -129,6 +129,9 @@ public class ExpressionTypeInferencer {
   private final GuardConditionNarrowing guardConditionNarrowing;
   private final ReturnTypeFromBodyInference returnTypeFromBodyInference;
   private final MethodReturnTypeIndexer methodReturnTypeIndexer;
+  // ПРОБА (issue #4429): помечать неполным расчёт, чей вызов не разрешился в символ.
+  private static final boolean PROBE_MARK_UNRESOLVED = Boolean.getBoolean("nd.probe.markUnresolved");
+
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final ScopeMemberTypeResolver scopeMemberTypeResolver;
@@ -481,6 +484,11 @@ public class ExpressionTypeInferencer {
       .map(MethodSymbol.class::cast);
     if (localMethod.isPresent()) {
       return methodReturnType(localMethod.get(), ctx);
+    }
+    // ПРОБА (issue #4429): обращение в индексе есть, а символа за ним нет — документ-владелец
+    // ещё не зарегистрирован. Расчёт неполон, но сейчас это никак не помечается.
+    if (PROBE_MARK_UNRESOLVED && reference.isPresent()) {
+      ctx.sawMissing = true;
     }
     // 2. Открытие формы по имени: тип конкретной формы точнее, чем обобщённый
     //    возвращаемый тип платформенной функции, поэтому проверяется до шага 3.

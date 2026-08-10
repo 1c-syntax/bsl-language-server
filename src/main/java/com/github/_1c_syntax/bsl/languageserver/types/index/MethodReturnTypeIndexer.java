@@ -82,6 +82,19 @@ import java.util.function.Supplier;
 @Slf4j
 public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableIndex {
 
+  // ПРОБА (issue #4429): после наполнения рабочей области факты о типах закрываются.
+  private static final boolean PROBE_SEAL = Boolean.getBoolean("nd.probe.sealReturnTypes");
+  private static final boolean PROBE_PROPAGATE = Boolean.getBoolean("nd.probe.propagateOnChange");
+  private static final boolean PROBE_FULL_FIXPOINT = Boolean.getBoolean("nd.probe.fullFixpoint");
+  private static final boolean PROBE_ACCUMULATE = Boolean.getBoolean("nd.probe.accumulate");
+  private static final boolean PROBE_NO_WIPE = Boolean.getBoolean("nd.probe.noWipeOnReparse");
+  private static final boolean PROBE_REINDEX_DECLARED =
+    Boolean.getBoolean("nd.probe.reindexDeclared");
+  private final AtomicInteger probeChanges = new AtomicInteger();
+  private final AtomicInteger probeInvisibleChanges = new AtomicInteger();
+  private static final int PROBE_MAX_PASSES = Integer.getInteger("nd.probe.maxPasses", 10);
+  private volatile boolean sealed;
+
   /** Предохранитель на случай незамеченной немонотонности пересчёта. */
   private static final int MAX_PASSES = 10;
 
@@ -170,7 +183,21 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   @Override
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
-    clear(documentContext.getUri());
+    if (sealed) {
+      if (PROBE_SEAL) {
+        return;
+      }
+      try {
+        clear(documentContext.getUri());
+        recomputeDocument(documentContext);
+      } finally {
+        symbolTypeIndex.endWipe(documentContext.getUri());
+      }
+      return;
+    }
+    if (!PROBE_NO_WIPE) {
+      clear(documentContext.getUri());
+    }
     var changed = recomputeDocument(documentContext);
     if (maintenance) {
       // Идёт общий проход, и разбор здесь — его же догрузка. Складывать «изменившиеся» в
@@ -196,6 +223,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
     maintenance = true;
+    if (PROBE_REINDEX_DECLARED) {
+      // ПРОБА (issue #4429): объявленные типы (см.-ссылки) резолвились против неполной
+      // рабочей области — пересобираем их до расчёта выведенных, которые их читают.
+      serverContext.getDocuments().values().forEach(symbolTypeIndex::reindexDeclared);
+    }
+    if (PROBE_FULL_FIXPOINT) {
+      // ПРОБА (issue #4429): вызов в модуль, ещё не зарегистрированный на момент разбора,
+      // не резолвится вовсе — неполнота такого расчёта ничем не помечена. Поэтому в проходе
+      // участвуют все методы, а не только те, что видели непосчитанное.
+      methodsByUri.values().forEach(pending::addAll);
+    }
     var deferred = pending.size();
     rebuilt.set(0);
     rebuiltUris.clear();
@@ -210,6 +248,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       maintenance = false;
       pending.clear();
       progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
+      // ПРОБА (issue #4429): дальше рабочая область наполнена, и разбор документа —
+      // перечитывание того же содержимого, а не правка.
+      sealed = true;
+      symbolTypeIndex.seal();
     }
     LOGGER.debug("Доразрешение типов возврата: отложено методов {}, разборов документов {},"
         + " из них различных документов {}",
@@ -330,9 +372,46 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       }
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
-    symbolTypeIndex.putReturnTypes(method, computed.types());
+    // ПРОБА (issue #4429): накопление вместо замены — пересчёт из стёртого состояния рвёт
+    // цикл вызовов иначе и даёт значение беднее прежнего, отчего проход не сходится.
+    var stored = PROBE_ACCUMULATE
+      ? symbolTypeIndex.getInferredReturnTypes(method).union(computed.types())
+      : computed.types();
+    symbolTypeIndex.putReturnTypes(method, stored);
     indexed.add(method);
-    return !symbolTypeIndex.getReturnTypes(method).equals(previous);
+    var current = symbolTypeIndex.getReturnTypes(method);
+    var changed = !current.equals(previous);
+    // ПРОБА (issue #4429): «изменилось», хотя на печать значение то же самое, —
+    // признак нестабильного equals, из-за которого проход не сходится.
+    if (changed && maintenance) {
+      probeChanges.incrementAndGet();
+      if (current.toString().equals(previous.toString())) {
+        probeInvisibleChanges.incrementAndGet();
+      }
+      if (probeChanges.get() <= 3) {
+        LOGGER.debug("Изменение: {}@{} было [{}] стало [{}]",
+          method.getName(), method.getOwner().getMdoRef(),
+          abbreviate(previous.toString()), abbreviate(current.toString()));
+      }
+    }
+    // ПРОБА (issue #4429): значение изменилось — значит потребители построены на старом.
+    // Штатный проход разносит только по признаку «видел непосчитанное», поэтому
+    // потребитель, прочитавший уже посчитанное, но ещё неполное значение, остаётся ни с чем.
+    if (PROBE_PROPAGATE && changed && maintenance) {
+      for (var dependentUri : dependentsOf(List.of(method.getOwner().getUri()))) {
+        var methods = methodsByUri.get(dependentUri);
+        if (methods != null) {
+          pending.addAll(methods);
+        }
+      }
+    }
+    return changed;
+  }
+
+  /** ПРОБА: короткая выжимка значения для отладочной печати. */
+  private static String abbreviate(String value) {
+    var oneLine = value.replace('\n', ' ');
+    return oneLine.length() <= 300 ? oneLine : oneLine.substring(0, 300) + "…";
   }
 
   /**
@@ -392,7 +471,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
   ) {
     var planned = 0;
-    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
+    for (var pass = 0; pass < PROBE_MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
       // Проход вскрывает новые зависимости, поэтому общее число методов заранее не
@@ -401,8 +480,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       planned += roots.size();
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
-      LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}",
-        pass + 1, roots.size(), pending.size());
+      var waveChanges = probeChanges.getAndSet(0);
+      LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {},"
+          + " изменений значений {}, из них без видимой разницы {}",
+        pass + 1, roots.size(), pending.size(),
+        waveChanges, probeInvisibleChanges.getAndSet(0));
+      // ПРОБА (issue #4429): значения перестали меняться — неподвижная точка достигнута,
+      // сколько бы методов ни осталось помечено неполными.
+      if (PROBE_ACCUMULATE && waveChanges == 0) {
+        return;
+      }
     }
   }
 

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.OpenDataObjectInference;
 import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -47,7 +48,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Индекс декларативных типов символов.
@@ -121,6 +126,106 @@ public class SymbolTypeIndex {
    */
   private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
 
+  // ПРОБА (issue #4429): признак «рабочая область наполнена, факты о типах закрыты».
+  private static final boolean PROBE_SEAL = Boolean.getBoolean("nd.probe.sealSymbolTypes");
+  private static final boolean PROBE_COUNT = Boolean.getBoolean("nd.probe.countRaces");
+  private static final boolean PROBE_NO_WIPE = Boolean.getBoolean("nd.probe.noWipeOnReparse");
+  private volatile boolean sealed;
+  /** URI, у которых прямо сейчас снесены и ещё не восстановлены записи. */
+  private final Set<URI> wiping = ConcurrentHashMap.newKeySet();
+  /** Сколько раз чтение пришлось ровно на окно сноса и вернуло пустоту. */
+  private final AtomicLong raceReads = new AtomicLong();
+  /** Из них — с заведомой потерей: до сноса у метода было непустое значение. */
+  private final AtomicLong lostReads = new AtomicLong();
+  /** Методы, у которых чтение хоть раз попало на снос и потеряло значение. */
+  private final Set<MethodSymbol> lostMethods = ConcurrentHashMap.newKeySet();
+  /** Сколько раз записи документа сносились после наполнения рабочей области. */
+  private final AtomicLong wipesAfterSeal = new AtomicLong();
+  /** Что было у документа до сноса — чтобы отличить потерю от честной пустоты. */
+  private final Map<URI, Map<MethodSymbol, TypeSet>> beforeWipe = new ConcurrentHashMap<>();
+
+  /**
+   * ПРОБА (issue #4429): пересобрать объявленные типы возврата документа.
+   * <p>
+   * {@code См.}-ссылки в описании метода резолвятся в момент разбора документа, когда часть
+   * модулей рабочей области ещё не зарегистрирована, и больше не пересматриваются. Дерево
+   * символов переживает освобождение вторичных данных, поэтому пересборка не требует разбора.
+   */
+  public void reindexDeclared(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    var previous = indexedByUri.remove(uri);
+    if (previous != null) {
+      previous.forEach(declaredReturnTypes::remove);
+    }
+    var collected = new ArrayList<MethodSymbol>();
+    indexMethodsRecursive(documentContext.getSymbolTree().getModule(), collected);
+    indexedByUri.put(uri, collected);
+  }
+
+  /** ПРОБА: слепок всех известных типов возврата — для сверки прогонов между собой. */
+  public void dump(String path) {
+    var lines = new ArrayList<String>();
+    inferredByUri.forEach((uri, methods) -> methods.forEach(method ->
+      lines.add(uri + "|" + method.getName() + "|inferred|"
+        + signatureOf(inferredReturnTypes.get(method)))));
+    indexedByUri.forEach((uri, methods) -> methods.forEach(method -> {
+      var declared = declaredReturnTypes.get(method);
+      if (declared != null) {
+        lines.add(uri + "|" + method.getName() + "|declared|" + signatureOf(declared));
+      }
+    }));
+    lines.sort(null);
+    try {
+      Files.write(Path.of(path), lines);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  /** ПРОБА: однострочная подпись набора типов — имена типов, полей и типов элементов. */
+  private static String signatureOf(@Nullable TypeSet types) {
+    if (types == null) {
+      return "-";
+    }
+    var refs = types.refs().stream().map(TypeRef::qualifiedName).sorted().toList();
+    var fields = types.localFields().values().stream()
+      .flatMap(byName -> byName.keySet().stream()).sorted().toList();
+    var lazyFields = types.lazyFields().values().stream()
+      .flatMap(byName -> byName.keySet().stream()).sorted().toList();
+    var elements = types.elementTypes().values().stream()
+      .flatMap(element -> element.refs().stream())
+      .map(TypeRef::qualifiedName).sorted().toList();
+    return refs + " поля" + fields + lazyFields + " элементы" + elements;
+  }
+
+  /** ПРОБА: закрыть факты о типах — дальнейшие разборы документов их не трогают. */
+  public void seal() {
+    sealed = true;
+    System.err.println("[ПРОБА 4429] на момент наполнения не нашлось документа-владельца: "
+      + ReferenceIndex.PROBE_DOCUMENT_MISSING.get() + " раз");
+    var dumpPath = System.getProperty("nd.probe.dumpAfterPopulate");
+    if (dumpPath != null) {
+      dump(dumpPath);
+    }
+    var exitDumpPath = System.getProperty("nd.probe.dumpAtExit");
+    if (exitDumpPath != null) {
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> dump(exitDumpPath)));
+    }
+    if (PROBE_COUNT) {
+      Runtime.getRuntime().addShutdownHook(new Thread(() ->
+        System.err.println("[ПРОБА 4429] сносов записей после наполнения: " + wipesAfterSeal.get()
+          + ", чтений в окно сноса: " + raceReads.get()
+          + ", из них с потерей значения: " + lostReads.get()
+          + " (различных методов " + lostMethods.size() + ")")));
+    }
+  }
+
+  /** ПРОБА: окно сноса записей документа закрыто (зовёт MethodReturnTypeIndexer). */
+  public void endWipe(URI uri) {
+    wiping.remove(uri);
+    beforeWipe.remove(uri);
+  }
+
   // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
   // а здесь записи документа сначала стираются. Без явного порядка слушатель без
   // аннотации идёт последним и стёр бы только что записанное.
@@ -130,7 +235,25 @@ public class SymbolTypeIndex {
     var documentContext = event.getSource();
     var uri = documentContext.getUri();
 
-    clear(uri);
+    if (sealed) {
+      if (PROBE_SEAL) {
+        return;
+      }
+      wipesAfterSeal.incrementAndGet();
+      if (PROBE_COUNT) {
+        var snapshot = new ConcurrentHashMap<MethodSymbol, TypeSet>();
+        Optional.ofNullable(indexedByUri.get(uri)).stream().flatMap(List::stream)
+          .forEach(m -> snapshot.put(m, getReturnTypes(m)));
+        Optional.ofNullable(inferredByUri.get(uri)).stream().flatMap(Set::stream)
+          .forEach(m -> snapshot.put(m, getReturnTypes(m)));
+        beforeWipe.put(uri, snapshot);
+      }
+      wiping.add(uri);
+    }
+
+    if (!PROBE_NO_WIPE) {
+      clear(uri);
+    }
 
     var collected = new ArrayList<MethodSymbol>();
     indexMethodsRecursive(documentContext.getSymbolTree().getModule(), collected);
@@ -158,6 +281,16 @@ public class SymbolTypeIndex {
   public TypeSet getReturnTypes(MethodSymbol method) {
     var declared = getDeclaredReturnTypes(method);
     var inferred = inferredReturnTypes.get(method);
+    if (PROBE_COUNT && declared.isEmpty() && (inferred == null || inferred.isEmpty())
+      && wiping.contains(method.getOwner().getUri())) {
+      raceReads.incrementAndGet();
+      var before = beforeWipe.get(method.getOwner().getUri());
+      var previous = before == null ? null : before.get(method);
+      if (previous != null && !previous.isEmpty()) {
+        lostReads.incrementAndGet();
+        lostMethods.add(method);
+      }
+    }
     if (inferred == null || inferred.isEmpty()) {
       return declared;
     }
@@ -166,6 +299,12 @@ public class SymbolTypeIndex {
       extra = extra.without(ref);
     }
     return declared.union(extra);
+  }
+
+  /** ПРОБА: выведенные по телу типы без объявленных — для накопительной записи. */
+  public TypeSet getInferredReturnTypes(MethodSymbol method) {
+    var inferred = inferredReturnTypes.get(method);
+    return inferred == null ? TypeSet.EMPTY : inferred;
   }
 
   /**

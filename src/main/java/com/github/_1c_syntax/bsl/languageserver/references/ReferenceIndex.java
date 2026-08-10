@@ -50,6 +50,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -428,12 +429,18 @@ public class ReferenceIndex {
         occurrence.occurrenceType()));
   }
 
+  /** ПРОБА (issue #4429): обращения, чей документ-владелец ещё не зарегистрирован. */
+  public static final AtomicLong PROBE_DOCUMENT_MISSING = new AtomicLong();
+
   private static Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {
     var mdoRef = symbolEntity.mdoRef();
     var moduleType = symbolEntity.moduleType();
     var symbolName = symbolEntity.symbolName();
 
     var maybeDocument = serverContext.getDocument(mdoRef, moduleType);
+    if (maybeDocument.isEmpty()) {
+      PROBE_DOCUMENT_MISSING.incrementAndGet();
+    }
 
     if (symbolEntity.symbolKind() == SymbolKind.Variable) {
       return maybeDocument
