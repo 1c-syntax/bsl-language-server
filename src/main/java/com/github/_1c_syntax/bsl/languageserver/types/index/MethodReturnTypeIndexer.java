@@ -224,13 +224,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
     maintenance = true;
-    // Всё, что посчитано при наполнении, провизорно: часть вызовов тогда не разрешалась —
-    // и не потому, что расчёт это заметил, а как раз потому, что заметить было нечего.
-    // Поэтому проход начинается с чистого листа и идёт по всем методам: иначе он стартовал
-    // бы из состояния, которое сложилось по порядку разбора документов, и к тому же порядку
-    // был бы привязан результат.
-    symbolTypeIndex.clearInferredReturnTypes();
-    methodsByUri.values().forEach(pending::addAll);
+    // Пересчитываются только методы, чей расчёт вышел неполным. Их значение посчитано без
+    // межмодульных фактов — при наполнении они не берутся вовсе, — поэтому состояние, из
+    // которого стартует проход, одно и то же при любом порядке разбора документов, а всё
+    // недостающее собирается здесь.
     var deferred = pending.size();
     rebuilt.set(0);
     rebuiltUris.clear();

@@ -791,10 +791,14 @@ public class ExpressionTypeInferencer {
         methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx));
       } else {
         ctx.dependencies.add(owner.getUri());
-        if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
-          // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
-          // наполняется. Расчёт, опирающийся на него, придётся повторить.
+        if (!methodReturnTypeIndexer.isWorkspacePopulated()) {
+          // Пока рабочая область наполняется, значение чужого метода зависит от того,
+          // дошла ли до его документа очередь, — то есть от порядка разбора. Поэтому оно
+          // не берётся вовсе: расчёт помечается неполным и повторяется проходом, когда
+          // область наполнена. Так значение, посчитанное при наполнении, зависит только
+          // от своего документа и одинаково от запуска к запуску.
           ctx.sawMissing = true;
+          return TypeSet.EMPTY;
         }
       }
       return symbolTypeIndex.getReturnTypes(method);

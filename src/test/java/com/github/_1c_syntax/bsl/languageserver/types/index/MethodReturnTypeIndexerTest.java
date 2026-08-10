@@ -48,7 +48,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -189,10 +188,9 @@ class MethodReturnTypeIndexerTest {
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
 
-    // then: потребитель пересчитан не один раз — первый заход был до того, как значение
-    // источника изменилось, и вернуть к потребителю проход мог только разносом. Сам он
-    // ничем не помечен: непосчитанного он не видел.
-    verify(inferencer, atLeast(2)).computeReturnTypes(consumerMethod);
+    // then: потребитель пересчитан. Сам он ничем не помечен — непосчитанного он не видел, —
+    // поэтому попасть в работу мог только разносом от изменившегося источника.
+    verify(inferencer).computeReturnTypes(consumerMethod);
   }
 
   @Test

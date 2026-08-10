@@ -215,14 +215,6 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Забыть все выведенные по телам значения, оставив объявленные в описаниях.
-   */
-  public void clearInferredReturnTypes() {
-    inferredReturnTypes.clear();
-    inferredByUri.clear();
-  }
-
-  /**
    * Запомнить типы возвращаемого значения, выведенные по телу метода.
    *
    * @param method метод.
