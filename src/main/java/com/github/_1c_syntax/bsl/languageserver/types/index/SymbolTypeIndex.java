@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -137,6 +138,18 @@ public class SymbolTypeIndex {
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     reindexDeclared(documentContext);
+  }
+
+  // Порядок раньше MethodReturnTypeIndexer (у него порядка нет, то есть он последний):
+  // расчёт типов по телу читает объявленные типы вызванных методов, поэтому пересобрать
+  // их надо до него.
+  @Order(100)
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    // Ссылка `см.` разворачивается в момент разбора документа, когда часть модулей рабочей
+    // области ещё не зарегистрирована: тогда она никуда не ведёт, и объявленный тип выходит
+    // беднее написанного. Теперь область наполнена — разворачиваем заново.
+    event.getSource().getDocuments().values().forEach(this::reindexDeclared);
   }
 
   /**
