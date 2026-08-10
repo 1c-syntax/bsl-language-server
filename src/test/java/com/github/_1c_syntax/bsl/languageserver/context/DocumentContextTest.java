@@ -59,6 +59,42 @@ class DocumentContextTest {
   }
 
   @Test
+  void rereadingSameContentIsNotAChange() {
+    // given
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+
+    // when: тот же самый текст разобран заново — так бывает после освобождения
+    // вторичных данных, когда документ понадобился снова.
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+  }
+
+  @Test
+  void firstBuildCountsAsChange() {
+    // given, when
+    var documentContext = getDocumentContext();
+
+    // then: до первого разбора сравнивать не с чем, поэтому содержимое считается новым.
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildWithOtherContentIsAChange() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
   void testClearASTData() throws IllegalAccessException {
     // given
     var documentContext = getDocumentContext();
