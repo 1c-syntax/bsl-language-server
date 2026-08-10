@@ -121,6 +121,7 @@ public class ExpressionTypeInferencer {
   private final TableCollectionInference tableCollectionInference;
   private final OpenDataObjectInference openDataObjectInference;
   private final FormExpressionInference formExpressionInference;
+  private final CommonModuleByNameInference commonModuleByNameInference;
   private final PropertyMethodInference propertyMethodInference;
   private final XdtoFactoryInference xdtoFactoryInference;
   private final CommentTypeResolver commentTypeResolver;
@@ -404,6 +405,11 @@ public class ExpressionTypeInferencer {
     if (adjusted != null) {
       return adjusted;
     }
+    var moduleByName = commonModuleByNameInference.refinedCallTypes(
+      leftTypes, memberName, call, ctx.documentContext.getFileType());
+    if (moduleByName != null) {
+      return moduleByName;
+    }
     var formTypes = formExpressionInference.refinedCallTypes(
       ctx.documentContext, leftTypes, memberName, call, node -> inferInternal(node, ctx));
     if (formTypes != null) {
@@ -479,6 +485,16 @@ public class ExpressionTypeInferencer {
       .flatMap(Reference::getSourceDefinedSymbol)
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast);
+    // 0. Общий модуль по имени: у вызова `ОбщийМодуль("Х")` объявленный возврат обобщённый —
+    //    «какой-то модуль», — а имя названо литералом, поэтому тип конкретного модуля точнее.
+    //    Проверяется до шага 1 по той же причине, что и открытие формы по имени: иначе
+    //    выиграл бы обобщённый возврат. Вызов у получателя (`ОбщегоНазначения.ОбщийМодуль("Х")`)
+    //    уточняется в refinedCallTypes — туда приходит тип получателя.
+    var moduleByName = commonModuleByNameInference.localCallTypes(
+      call, ctx.documentContext.getFileType());
+    if (moduleByName != null) {
+      return moduleByName;
+    }
     if (localMethod.isPresent()) {
       return methodReturnType(localMethod.get(), ctx);
     }
