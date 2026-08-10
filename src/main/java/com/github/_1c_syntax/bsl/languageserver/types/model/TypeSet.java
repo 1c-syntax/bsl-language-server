@@ -71,6 +71,19 @@ public record TypeSet(
 
   public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
 
+  /**
+   * Предельная глубина вложенности декораций, на которую заходит слияние наборов.
+   * <p>
+   * Поле «открытого» объекта может ссылаться на набор, внутри которого лежит он сам:
+   * значение поля пришло от того же значения, которому это поле принадлежит. Слияние
+   * такой пары разворачивает вложенность ещё на уровень, а копия делается на каждом
+   * уровне — следующее слияние обходится дороже предыдущего, и так до исчерпания памяти.
+   * Глубже предела наборы сливаются поверхностно: столкнувшиеся ключи остаются за левым
+   * набором, вглубь слияние не идёт. Восьми уровней вложенности структур с запасом
+   * хватает на то, что встречается в коде.
+   */
+  static final int MAX_MERGE_DEPTH = 8;
+
   public TypeSet {
     refs = compactRefs(refs);
     elementTypes = TypeDecorations.immutableCopy(elementTypes);
@@ -131,6 +144,18 @@ public record TypeSet(
    *         наборов сохраняются, при пересечении ref union-ятся per-key.
    */
   public TypeSet union(TypeSet other) {
+    return union(other, 0);
+  }
+
+  /**
+   * Объединение двух наборов на известной глубине вложенности декораций.
+   *
+   * @param other второй набор.
+   * @param depth сколько уровней декораций пройдено от набора, с которого началось
+   *              слияние.
+   * @return объединение наборов; декорации глубже {@link #MAX_MERGE_DEPTH} не сливаются.
+   */
+  TypeSet union(TypeSet other, int depth) {
     // Объединение набора с самим собой — это он же. Проверка по ссылке, а не по равенству:
     // она бесплатна, а случай частый. При слиянии путей расчёта по потоку у переменной,
     // которой ни одна ветка не касалась, по обеим сторонам лежит один и тот же набор —
@@ -147,14 +172,41 @@ public record TypeSet(
     var merged = new LinkedHashSet<>(this.refs);
     merged.addAll(other.refs);
 
+    if (depth >= MAX_MERGE_DEPTH) {
+      return new TypeSet(
+        merged,
+        TypeDecorations.mergedFlat(this.elementTypes, other.elementTypes, TypeSet::keepFirst),
+        TypeDecorations.mergedNested(this.localFields, other.localFields, TypeSet::keepFirst),
+        TypeDecorations.mergedFlat(this.lazyElements, other.lazyElements, LazyTypeSet::combine),
+        TypeDecorations.mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
+        TypeDecorations.mergedFlat(this.describedTypes, other.describedTypes, TypeSet::keepFirst)
+      );
+    }
+
+    var nested = depth + 1;
     return new TypeSet(
       merged,
-      TypeDecorations.mergedFlat(this.elementTypes, other.elementTypes, TypeSet::union),
-      TypeDecorations.mergedNested(this.localFields, other.localFields, LocalField::merge),
+      TypeDecorations.mergedFlat(this.elementTypes, other.elementTypes,
+        (first, second) -> first.union(second, nested)),
+      TypeDecorations.mergedNested(this.localFields, other.localFields,
+        (first, second) -> LocalField.merge(first, second, nested)),
       TypeDecorations.mergedFlat(this.lazyElements, other.lazyElements, LazyTypeSet::combine),
       TypeDecorations.mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
-      TypeDecorations.mergedFlat(this.describedTypes, other.describedTypes, TypeSet::union)
+      TypeDecorations.mergedFlat(this.describedTypes, other.describedTypes,
+        (first, second) -> first.union(second, nested))
     );
+  }
+
+  /**
+   * Слияние на предельной глубине: значение остаётся за левым набором.
+   *
+   * @param first  значение левого набора.
+   * @param second значение правого набора.
+   * @param <V>    вид декорации.
+   * @return значение левого набора.
+   */
+  private static <V> V keepFirst(V first, V second) {
+    return first;
   }
 
   /**

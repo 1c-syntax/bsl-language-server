@@ -55,7 +55,24 @@ public record LocalField(TypeSet types, String description) {
    * описание — первое непустое (детерминированно, приоритет у {@code first}).
    */
   public static LocalField merge(LocalField first, LocalField second) {
-    var mergedTypes = first.types.union(second.types);
+    return merge(first, second, 0);
+  }
+
+  /**
+   * Слияние одноимённых полей на известной глубине вложенности: типы объединяются на
+   * уровень глубже, описание — первое непустое.
+   *
+   * @param first  поле левого набора.
+   * @param second поле правого набора.
+   * @param depth  сколько уровней декораций пройдено от набора, с которого началось
+   *               слияние.
+   * @return слитое поле; левое поле, если оба — одно и то же значение.
+   */
+  static LocalField merge(LocalField first, LocalField second, int depth) {
+    if (first == second) {
+      return first;
+    }
+    var mergedTypes = first.types.union(second.types, depth);
     var mergedDescription = first.description.isBlank() ? second.description : first.description;
     return new LocalField(mergedTypes, mergedDescription);
   }

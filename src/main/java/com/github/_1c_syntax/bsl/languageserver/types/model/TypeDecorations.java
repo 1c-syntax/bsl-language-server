@@ -68,6 +68,9 @@ final class TypeDecorations {
     if (second.isEmpty()) {
       return first;
     }
+    if (first.isEmpty()) {
+      return second;
+    }
     var result = new LinkedHashMap<>(first);
     second.forEach((TypeRef ref, V value) -> result.merge(ref, value, merger));
     return result;
@@ -79,6 +82,9 @@ final class TypeDecorations {
                                                        BinaryOperator<V> merger) {
     if (second.isEmpty()) {
       return first;
+    }
+    if (first.isEmpty()) {
+      return second;
     }
     var result = new LinkedHashMap<TypeRef, Map<String, V>>();
     first.forEach((TypeRef ref, Map<String, V> entries) -> result.put(ref, new LinkedHashMap<>(entries)));
