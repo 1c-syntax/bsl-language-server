@@ -253,19 +253,12 @@ public class SymbolTypeIndex {
     }
     var result = declared.union(extra);
     for (var ref : declared.refs()) {
-      // Карты берутся сырыми. getLocalFields склеил бы их с ленивыми, а склейка форсирует
-      // ленивое: у рекурсивных и `см.`-типов источник ведёт обратно сюда же, и разворот
-      // пошёл бы вглубь на ровном месте. Ленивое перекладывается ленивым.
+      // Карта берётся сырой. getLocalFields склеил бы её с ленивыми полями, а склейка их
+      // форсирует: у рекурсивных и `см.`-типов источник ведёт обратно сюда же, и разворот
+      // пошёл бы вглубь на ровном месте.
       var eager = inferred.localFields().get(ref);
       if (eager != null && !eager.isEmpty()) {
         result = result.withFields(ref, eager);
-      }
-      var lazy = inferred.lazyFields().get(ref);
-      if (lazy != null) {
-        for (var entry : lazy.entrySet()) {
-          result = result.withLazyField(ref, entry.getKey(), entry.getValue().types(),
-            entry.getValue().description());
-        }
       }
     }
     return result;

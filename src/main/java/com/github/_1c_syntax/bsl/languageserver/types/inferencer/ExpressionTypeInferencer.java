@@ -836,11 +836,6 @@ public class ExpressionTypeInferencer {
       for (var field : known.localFields().getOrDefault(ref, Map.of()).entrySet()) {
         knot = lazyFieldOf(knot, method, ref, field.getKey(), field.getValue().description());
       }
-      // Имена ленивых полей известны без форсирования — они и есть ключи карты. Их узел
-      // перекладывает как есть: иначе поле, пришедшее от прошлого расчёта, потерялось бы.
-      for (var field : known.lazyFields().getOrDefault(ref, Map.of()).entrySet()) {
-        knot = lazyFieldOf(knot, method, ref, field.getKey(), field.getValue().description());
-      }
     }
     return knot;
   }
