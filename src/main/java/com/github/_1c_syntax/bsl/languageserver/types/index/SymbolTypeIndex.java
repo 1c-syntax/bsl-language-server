@@ -211,7 +211,18 @@ public class SymbolTypeIndex {
     for (var ref : declared.refs()) {
       extra = extra.without(ref);
     }
-    return declared.union(extra);
+    var result = declared.union(extra);
+    // Вычитание выше оставляет за описанием состав элементов: у «Массив из Число» из
+    // комментария он точнее собранного по телу. Но вместе со ссылкой оно уносило и поля,
+    // а их описание перечисляет редко — у функции, чьё описание гласит «Структура», состав
+    // ключей, собранный из Вставить, пропадал целиком. Поля возвращаются.
+    for (var ref : declared.refs()) {
+      var fields = inferred.getLocalFields(ref);
+      if (!fields.isEmpty()) {
+        result = result.withFields(ref, fields);
+      }
+    }
+    return result;
   }
 
   /**
