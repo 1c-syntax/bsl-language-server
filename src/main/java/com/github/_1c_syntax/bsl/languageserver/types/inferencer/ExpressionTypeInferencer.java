@@ -42,6 +42,8 @@ import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTy
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -104,6 +106,16 @@ import java.util.function.Function;
 public class ExpressionTypeInferencer {
 
   private static final int MAX_DEPTH = 32;
+
+  /**
+   * Сколько раз тело рекурсивной функции пересчитывается со своим же приближением.
+   * <p>
+   * Каждый проход добавляет к узлу поля, которых на прошлом приближении ещё не было:
+   * первый знает поля, заполненные не из рекурсии, второй — и те, что пришли из неё.
+   * Дальше набор имён перестаёт расти, и расчёт останавливается сам; предел нужен
+   * только как страховка.
+   */
+  private static final int MAX_REFINING_PASSES = 3;
 
   /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
   private static final String ELEMENT_GETTER = "Получить";
@@ -762,7 +774,7 @@ public class ExpressionTypeInferencer {
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
     if (!ctx.visited.add(method)) {
       ctx.cycleCut = true;
-      return TypeSet.EMPTY;
+      return recursiveKnot(method, ctx);
     }
     var owner = method.getOwner();
     ctx.consulted.add(method);
@@ -788,6 +800,47 @@ public class ExpressionTypeInferencer {
   }
 
   /**
+   * Значение метода, вызвавшего сам себя, — ссылкой на него же, а не содержимым.
+   * <p>
+   * Функция, кладущая свой же результат в поле возвращаемой структуры (обход дерева:
+   * {@code Условие = Новый Структура("Узел, Аргумент", Условие.Узел,
+   * ЭтаЖеФункция(Условие.Аргумент))}), задаёт своим значением уравнение вида
+   * {@code T = Структура{Аргумент: T}}. Подставить в это ребро содержимое нельзя:
+   * каждая подстановка вкладывает известное на уровень глубже, и приближения не
+   * сходятся, сколько их ни делай. Поэтому набор берётся поверхностным — те же типы,
+   * те же имена полей, — а типы полей остаются ссылкой на метод и разрешаются на
+   * чтении ({@link LazyTypeSet}). Ссылка равна себе по ключу, поэтому неподвижная
+   * точка достигается, а разыменование выражения под курсором форсит по одному уровню.
+   *
+   * @param method метод, вызвавший сам себя.
+   * @param ctx    контекст расчёта: в нём может лежать первое приближение значения.
+   * @return поверхностный набор со ссылками вместо вложенных значений; пустой набор,
+   *     пока о значении метода ничего не известно.
+   */
+  private TypeSet recursiveKnot(MethodSymbol method, InferenceContext ctx) {
+    var approximation = ctx.inProgress.get(method);
+    var known = approximation == null ? symbolTypeIndex.getReturnTypes(method) : approximation;
+    if (known.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var knot = TypeSet.of(known.refs());
+    for (var ref : known.refs()) {
+      if (!known.getElementTypes(ref).isEmpty()) {
+        knot = knot.withLazyElement(ref, new LazyTypeSet(List.of(method, ref),
+          () -> symbolTypeIndex.getReturnTypes(method).getElementTypes(ref)));
+      }
+      for (var field : known.getLocalFields(ref).entrySet()) {
+        var name = field.getKey();
+        knot = knot.withLazyField(ref, name, new LazyTypeSet(List.of(method, ref, name),
+          () -> symbolTypeIndex.getReturnTypes(method).getLocalFields(ref)
+            .getOrDefault(name, LocalField.of(TypeSet.EMPTY)).types()),
+          field.getValue().description());
+      }
+    }
+    return knot;
+  }
+
+  /**
    * Типы, которые метод возвращает по своему телу, и методы, значения которых для этого
    * понадобились.
    * <p>
@@ -800,7 +853,13 @@ public class ExpressionTypeInferencer {
    * @return рассчитанные типы и методы, участвовавшие в расчёте.
    */
   public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
-    return returnTypesOfBody(method, new InferenceContext(method.getOwner()));
+    var ctx = new InferenceContext(method.getOwner());
+    // Метод помечается считающимся до разбора собственного тела: вызов самого себя должен
+    // распознаться как рекурсия. Без этого он выглядит обычным вызовом и читает значение
+    // метода из индекса, где его ещё нет, — то есть пустоту, и весь вклад рекурсивной
+    // ветки теряется.
+    ctx.visited.add(method);
+    return returnTypesOfBody(method, ctx);
   }
 
   /**
@@ -822,10 +881,47 @@ public class ExpressionTypeInferencer {
     }
     try {
       var types = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx));
+      if (ctx.cycleCut && !types.isEmpty() && !ctx.inProgress.containsKey(method)) {
+        types = refinedByOwnValue(method, types, ctx);
+      }
       return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing);
     } catch (StackOverflowError | RuntimeException e) {
       return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
+  }
+
+  /**
+   * Значение рекурсивной функции, пересчитанное по телу с её же первым приближением.
+   * <p>
+   * В первом проходе рекурсивное ребро отвечать нечем: значения метода ещё нет, и поле,
+   * заполняемое вызовом самого себя, теряется целиком. Второй проход идёт с приближением
+   * на руках, поэтому ребро отдаёт узел ({@link #recursiveKnot}) и поле остаётся — со
+   * ссылкой на метод вместо вложенного значения. Больше двух проходов не нужно: узел
+   * равен себе по ключу, поэтому третий дал бы то же самое.
+   *
+   * @param method        рекурсивная функция.
+   * @param approximation значение, посчитанное первым проходом.
+   * @param ctx           контекст расчёта; в него переносится всё, что увидел второй проход.
+   * @return уточнённое значение; приближение, если второй проход не дал ничего.
+   */
+  private TypeSet refinedByOwnValue(MethodSymbol method, TypeSet approximation, InferenceContext ctx) {
+    var current = approximation;
+    for (var pass = 0; pass < MAX_REFINING_PASSES; pass++) {
+      var refining = new InferenceContext(ctx.documentContext);
+      refining.depth = ctx.depth + 1;
+      refining.refining = true;
+      refining.visited.add(method);
+      refining.inProgress.put(method, current);
+      var refined = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, refining));
+      ctx.consulted.addAll(refining.consulted);
+      ctx.dependencies.addAll(refining.dependencies);
+      ctx.sawMissing = ctx.sawMissing || refining.sawMissing;
+      if (refined.isEmpty() || refined.getAllFieldNames().equals(current.getAllFieldNames())) {
+        return refined.isEmpty() ? current : refined;
+      }
+      current = refined;
+    }
+    return current;
   }
 
 
@@ -1005,8 +1101,10 @@ public class ExpressionTypeInferencer {
       ctx.flowSession,
       // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
       // (внутри инференса другой переменной) мог быть усечён защитой от циклов,
-      // и переиспользовать такой результат как самостоятельный нельзя.
-      ctx.visited.size() <= 1,
+      // и переиспользовать такой результат как самостоятельный нельзя. Уточняющий
+      // проход по рекурсивной функции не кэшируется и сам кэш не читает: иначе он
+      // получил бы окружения, посчитанные первым проходом, — то есть свой же вопрос.
+      ctx.visited.size() <= 1 && !ctx.refining,
       body -> variablesOfBody(owner, body),
       target -> target.getKind() == VariableKind.MODULE,
       declaredOf,
@@ -1493,6 +1591,8 @@ public class ExpressionTypeInferencer {
     final Set<MethodSymbol> consulted = new HashSet<>();
     /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
     boolean cycleCut;
+    /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
+    boolean refining;
     /** Расчёт читал значение метода, которое ещё не посчитано. */
     boolean sawMissing;
     int depth;
