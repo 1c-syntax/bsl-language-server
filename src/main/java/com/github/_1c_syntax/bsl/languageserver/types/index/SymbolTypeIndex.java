@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -137,6 +138,28 @@ public class SymbolTypeIndex {
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     reindexDeclared(documentContext);
+  }
+
+  /**
+   * Пересобирает объявленные типы возвращаемых значений по всей рабочей области.
+   * <p>
+   * Имя типа в описании метода разрешается в момент разбора его документа, а до части
+   * модулей области очередь тогда ещё не дошла: такое имя никуда не ведёт, и объявленный
+   * тип выходит беднее написанного. Кому не повезло — решает порядок обхода файлов, то
+   * есть без пересборки результат от него и зависит. Теперь область наполнена, и все имена
+   * разрешаются одинаково.
+   * <p>
+   * Разбор документов для этого не нужен: объявленные типы читаются по дереву символов,
+   * которое переживает освобождение вторичных данных.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  // Раньше MethodReturnTypeIndexer: расчёт типов по телу читает объявленные типы вызванных
+  // методов, поэтому пересобрать их надо до него.
+  @Order(100)
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    event.getSource().getDocuments().values().forEach(this::reindexDeclared);
   }
 
   /**
