@@ -65,9 +65,9 @@ class DeclaredStructureFieldsTest extends AbstractServerContextAwareTest {
       //   Структура - описание.
       //
       Функция Ф() Экспорт
-      \tР = Новый Структура;
-      \tР.Вставить("Первое", "");
-      \tВозврат Р;
+        Р = Новый Структура;
+        Р.Вставить("Первое", "");
+        Возврат Р;
       КонецФункции
       """);
     var method = documentContext.getSymbolTree().getMethodSymbol("Ф");
@@ -80,9 +80,9 @@ class DeclaredStructureFieldsTest extends AbstractServerContextAwareTest {
       //   Структура - описание.
       //
       Функция Ф() Экспорт
-      \tР = Новый Структура;
-      \tР.Вставить("Второе", "");
-      \tВозврат Р;
+        Р = Новый Структура;
+        Р.Вставить("Второе", "");
+        Возврат Р;
       КонецФункции
       """);
 
@@ -103,10 +103,10 @@ class DeclaredStructureFieldsTest extends AbstractServerContextAwareTest {
       //   Структура - узел дерева.
       //
       Функция Узел() Экспорт
-      \tР = Новый Структура;
-      \tР.Вставить("Имя", "");
-      \tР.Вставить("Вложенный", Узел());
-      \tВозврат Р;
+        Р = Новый Структура;
+        Р.Вставить("Имя", "");
+        Р.Вставить("Вложенный", Узел());
+        Возврат Р;
       КонецФункции
       """);
     var method = documentContext.getSymbolTree().getMethodSymbol("Узел");
