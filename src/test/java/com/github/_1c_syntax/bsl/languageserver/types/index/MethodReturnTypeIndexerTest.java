@@ -171,6 +171,24 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void emptyValuedFunctionIsRecomputedAfterWorkspaceIsPopulated() {
+    // given: при разборе значение функции вышло пустым, и неполным расчёт себя не считает:
+    // вызов вёл в модуль, ещё не зарегистрированный в рабочей области, поэтому не разрешился
+    // ни во что — и о пропущенном сообщить было некому.
+    returns(sourceMethod, TypeSet.EMPTY);
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+    clearInvocations(inferencer);
+
+    // when: рабочая область наполнена, и теперь тот же вызов разрешается.
+    returns(sourceMethod, STRING);
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(source)));
+
+    // then: пустое значение пересчитано. Иначе функция навсегда осталась бы без типа, а
+    // повезло ей или нет — решал бы порядок наполнения, разный от запуска к запуску.
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(STRING);
+  }
+
+  @Test
   void releasedDocumentIsLoadedForRecomputeAndReleasedBack() {
     // given: отложенный метод лежит в документе, вторичные данные которого уже освобождены.
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
