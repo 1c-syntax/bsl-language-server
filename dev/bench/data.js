@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786459222326,
+  "lastUpdate": 1786479339934,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42532,6 +42532,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.29914882716615887",
             "extra": "mean: 93.62402478853862 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0b0a484375df6cb7815c858a94d1b3ca76cb5cef",
+          "message": "Merge pull request #4447 from 1c-syntax/fix/declared-type-keeps-fields\n\nfix(types): названный в описании тип не уносит с собой посчитанные поля",
+          "timestamp": "2026-08-11T21:37:33+02:00",
+          "tree_id": "2522dbe532ebda36b420a853adaaadfd09d8feaa",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0b0a484375df6cb7815c858a94d1b3ca76cb5cef"
+        },
+        "date": 1786479328277,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.33403015136719,
+            "unit": "sec",
+            "range": "stddev: 0.3104503555682951",
+            "extra": "mean: 101.33403015136719 sec\nrounds: 3"
           }
         ]
       }
