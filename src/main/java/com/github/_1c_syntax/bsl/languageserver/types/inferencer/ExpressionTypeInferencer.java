@@ -826,13 +826,21 @@ public class ExpressionTypeInferencer {
     var knot = TypeSet.of(known.refs());
     for (var ref : known.refs()) {
       if (!known.getElementTypes(ref).isEmpty()) {
+        // Читается жадный состав элементов, без склейки с ленивым: склейка форсирует
+        // ленивое, а ленивое здесь — этот же узел, и разворот пошёл бы до переполнения
+        // стека. Узел разрешает ровно один уровень, ради этого он и заведён.
         knot = knot.withLazyElement(ref, new LazyTypeSet(List.of(method, ref),
-          () -> symbolTypeIndex.getReturnTypes(method).getElementTypes(ref)));
+          () -> symbolTypeIndex.getReturnTypes(method).elementTypes()
+            .getOrDefault(ref, TypeSet.EMPTY)));
       }
       for (var field : known.getLocalFields(ref).entrySet()) {
         var name = field.getKey();
+        // Читаются жадные поля, без склейки с ленивыми: склейка форсирует ленивое, а
+        // ленивое здесь — этот же самый узел. Форс замкнул бы его на себя, и разворот
+        // пошёл бы до переполнения стека. Один уровень — ровно то, ради чего узел заведён.
         knot = knot.withLazyField(ref, name, new LazyTypeSet(List.of(method, ref, name),
-          () -> symbolTypeIndex.getReturnTypes(method).getLocalFields(ref)
+          () -> symbolTypeIndex.getReturnTypes(method).localFields()
+            .getOrDefault(ref, Map.of())
             .getOrDefault(name, LocalField.of(TypeSet.EMPTY)).types()),
           field.getValue().description());
       }
