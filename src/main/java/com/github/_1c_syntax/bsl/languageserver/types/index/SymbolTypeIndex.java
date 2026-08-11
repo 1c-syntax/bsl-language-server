@@ -123,14 +123,15 @@ public class SymbolTypeIndex {
   private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
 
   /**
-   * Значение метода, соединённое из описания и вывода по телу.
+   * Значение метода, соединённое из описания и вывода по телу, вместе с источниками, из
+   * которых оно посчитано.
    * <p>
-   * Соединение спрашивают на каждом разрешении вызова, а стоит оно копии карты полей —
-   * у метода с сотней ключей это заметно даже при одном обращении. Поэтому считается один
-   * раз и снимается записью любого из источников (см. {@link #putReturnTypes},
-   * {@link #reindexDeclared}, {@link #clear}).
+   * Соединение спрашивают на каждом разрешении вызова, а стоит оно копии карты полей — у
+   * метода с сотней ключей это заметно даже при одном обращении. Поэтому запоминается;
+   * годность проверяется сравнением источников по ссылке, поэтому отдельного сброса при
+   * записи не нужно и гонки между записью и чтением тоже нет.
    */
-  private final Map<MethodSymbol, TypeSet> combinedReturnTypes = new ConcurrentHashMap<>();
+  private final Map<MethodSymbol, CombinedReturnTypes> combinedReturnTypes = new ConcurrentHashMap<>();
 
   // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
   // а здесь записи документа сначала стираются. Без явного порядка слушатель без
@@ -214,11 +215,22 @@ public class SymbolTypeIndex {
    */
   public TypeSet getReturnTypes(MethodSymbol method) {
     var inferred = inferredReturnTypes.get(method);
+    var declared = getDeclaredReturnTypes(method);
     if (inferred == null || inferred.isEmpty()) {
-      return getDeclaredReturnTypes(method);
+      return declared;
     }
-    return combinedReturnTypes.computeIfAbsent(method,
-      key -> combine(getDeclaredReturnTypes(key), inferred));
+    // Запомненное годится, только если посчитано из тех же самых источников. Сравнение по
+    // ссылке, а не по равенству: наборы неизменяемы, запись кладёт новый объект, и этого
+    // достаточно. Так запись и чтение могут идти одновременно: запись, случившаяся между
+    // взятием источников и укладыванием результата, обесценит его сама — следующее чтение
+    // увидит другие источники и посчитает заново.
+    var remembered = combinedReturnTypes.get(method);
+    if (remembered != null && remembered.declared() == declared && remembered.inferred() == inferred) {
+      return remembered.value();
+    }
+    var value = combine(declared, inferred);
+    combinedReturnTypes.put(method, new CombinedReturnTypes(declared, inferred, value));
+    return value;
   }
 
   /**
@@ -270,7 +282,10 @@ public class SymbolTypeIndex {
     // идущий вне событий жизненного цикла, мог бы вклиниться в сброс между снятием набора
     // и обходом, и значение осталось бы в карте типов без ссылки из карты по документам —
     // то есть недостижимым для следующего сброса.
-    combinedReturnTypes.remove(method);
+    // Запомненное соединение здесь не снимается: его годность проверяется сравнением
+    // источников по ссылке, и запись обесценит его сама. Снятие тут ничего бы не
+    // гарантировало — читатель, взявший источники до него, всё равно уложил бы результат
+    // после.
     inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
       if (types.isEmpty()) {
         inferredReturnTypes.remove(method);
@@ -1048,5 +1063,19 @@ public class SymbolTypeIndex {
     return byName.isEmpty()
       ? resolveOne(name).map(TypeSet::of).orElse(TypeSet.EMPTY)
       : byName;
+  }
+
+  /**
+   * Соединённое значение метода вместе с источниками, из которых оно посчитано.
+   * <p>
+   * Источники хранятся ради проверки годности: наборы неизменяемы, поэтому запись любого
+   * из них кладёт другой объект, и сравнения по ссылке достаточно, чтобы отличить
+   * посчитанное по нынешнему состоянию от посчитанного по прежнему.
+   *
+   * @param declared объявленное в описании метода на момент расчёта.
+   * @param inferred выведенное по телу на момент расчёта.
+   * @param value    соединение того и другого.
+   */
+  private record CombinedReturnTypes(TypeSet declared, TypeSet inferred, TypeSet value) {
   }
 }
