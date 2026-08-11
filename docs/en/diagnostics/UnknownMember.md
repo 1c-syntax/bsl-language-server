@@ -10,6 +10,8 @@ The diagnostic detects references to methods and properties that do not exist �
 
 The diagnostic relies on type inference and member data from the 1C platform syntax assistant (via `bsl-context`) or the bundled reference. When the receiver type cannot be inferred or is arbitrary/undefined, the diagnostic stays silent to avoid false positives.
 
+Members of "open" data objects — `Структура`, a value table row and the like — are collected from the code itself: a key added by `Вставить("Name", …)` or listed in the constructor counts as a known member. The key name is known even when the type of its value cannot be inferred: these are different facts, and the absence of the latter does not cancel the former.
+
 **The diagnostic is disabled by default** — it is heuristic and needs validation on real configurations (reference completeness, dynamic typing, etc.).
 
 ## Examples
