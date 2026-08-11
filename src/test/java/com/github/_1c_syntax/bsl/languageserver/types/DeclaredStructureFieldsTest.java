@@ -120,9 +120,18 @@ class DeclaredStructureFieldsTest extends AbstractServerContextAwareTest {
 
     // и разрешается на чтении — на один уровень, как и задумано узлом.
     var ref = returnTypes.refs().iterator().next();
-    assertThat(returnTypes.getLocalFields(ref).get("Вложенный").types().getAllFieldNames())
+    var nested = returnTypes.getLocalFields(ref).get("Вложенный").types();
+    assertThat(nested.getAllFieldNames())
       .as("поле, заполненное вызовом самой функции, несёт её же тип")
       .contains("Имя");
+
+    // then: тип вложенного поля берётся у метода в момент чтения. Имена узел знает и без
+    // разворота, а вот сам тип — только через ссылку, и она обязана вести к настоящему
+    // значению, а не в пустоту.
+    var nestedRef = nested.refs().iterator().next();
+    assertThat(nested.getLocalFields(nestedRef).get("Имя").types().refs())
+      .as("ссылка узла разрешается в посчитанный тип поля")
+      .isNotEmpty();
   }
 
 }
