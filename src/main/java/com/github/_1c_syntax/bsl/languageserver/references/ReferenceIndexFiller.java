@@ -98,13 +98,11 @@ public class ReferenceIndexFiller {
   private final SelfMemberResolver selfMemberResolver;
 
   /**
-   * Отпечаток содержимого, для которого документ был проиндексирован в последний раз.
-   * Позволяет пропускать переиндексацию при повторном перестроении документа с тем же
-   * содержимым (например, второй rebuild того же файла в пакетном анализе) и при этом
-   * гарантированно переиндексировать документ, чьё содержимое реально изменилось —
-   * независимо от признака заморозки вычисленных данных.
+   * Документы, для которых индексация дошла до конца. Незавершённая (упавшая на обходе)
+   * сюда не попадает, поэтому следующее событие по такому документу его переиндексирует,
+   * даже если содержимое с тех пор не менялось.
    */
-  private final Map<URI, Long> filledContentFingerprints = new ConcurrentHashMap<>();
+  private final Set<URI> filled = ConcurrentHashMap.newKeySet();
 
   // Порядок 200 — ПОСЛЕ ConfigurationModuleMembersProvider и OScriptModuleMembersProvider
   // с порядком 100: они наполняют moduleTypeRefByUri, от которого зависит self-member проход
@@ -115,9 +113,8 @@ public class ReferenceIndexFiller {
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
-    var previousFingerprint = filledContentFingerprints.get(documentContext.getUri());
-    if (previousFingerprint != null && previousFingerprint == contentFingerprint(documentContext.getContent())) {
-      // Содержимое не менялось с последней индексации — индекс актуален.
+    if (!event.isContentChanged() && filled.contains(documentContext.getUri())) {
+      // Тот же самый текст разобран заново, а вхождения по нему уже собраны — индекс актуален.
       return;
     }
     fill(documentContext);
@@ -133,7 +130,7 @@ public class ReferenceIndexFiller {
    */
   @EventListener
   public void handleEvent(ServerContextDocumentRemovedEvent event) {
-    filledContentFingerprints.remove(event.getUri());
+    filled.remove(event.getUri());
     index.clearReferences(event.getUri());
   }
 
@@ -153,7 +150,7 @@ public class ReferenceIndexFiller {
   @EventListener
   public void handleEvent(ConfigurationTypesRegisteredEvent event) {
     for (var documentContext : event.getSource().getDocuments().values()) {
-      if (filledContentFingerprints.containsKey(documentContext.getUri())
+      if (filled.contains(documentContext.getUri())
         && globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
         fill(documentContext);
       }
@@ -169,11 +166,6 @@ public class ReferenceIndexFiller {
    * прежнее содержимое индекса остаётся нетронутым.
    */
   public void fill(DocumentContext documentContext) {
-    // Снимок содержимого берётся ДО чтения AST: если конкурентное перестроение
-    // документа вклинится в процесс индексации, отпечаток останется от той версии,
-    // что не новее проиндексированной, и следующее событие переиндексирует документ
-    // (лишний fill безопасен, «залипание» устаревшего индекса — нет).
-    var content = documentContext.getContent();
     var batch = new ArrayList<SymbolOccurrence>();
     var sink = new BatchingSink(batch);
     var documentContextAst = documentContext.getAst();
@@ -185,11 +177,7 @@ public class ReferenceIndexFiller {
       new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     }
     index.replaceReferences(documentContext.getUri(), batch);
-    filledContentFingerprints.put(documentContext.getUri(), contentFingerprint(content));
-  }
-
-  private static long contentFingerprint(String content) {
-    return ((long) content.length() << Integer.SIZE) ^ (content.hashCode() & 0xFFFFFFFFL);
+    filled.add(documentContext.getUri());
   }
 
   /**

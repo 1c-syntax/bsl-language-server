@@ -114,6 +114,39 @@ class DocumentContextTest {
   }
 
   @Test
+  void frozenDocumentDropsSecondaryDataWhenContentReallyChanged() throws IllegalAccessException {
+    // given: документ заморожен — так область поступает с файлом, который никто не открывал.
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+
+    // when: файл изменился на диске и перечитан.
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then: посчитанное по прежнему тексту сброшено. Заморозка — политика хранения, а
+    // изменение содержимого — факт, и факт сильнее: иначе диагностики остались бы от
+    // текста, которого больше нет.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
+  }
+
+  @Test
+  void frozenDocumentKeepsSecondaryDataOnRereadOfSameContent() throws IllegalAccessException {
+    // given
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+
+    // when: тот же самый текст перечитан заново.
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: пересчитывать нечего — ради этого заморозка и заведена.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNotNull();
+  }
+
+  @Test
   void testClearASTData() throws IllegalAccessException {
     // given
     var documentContext = getDocumentContext();

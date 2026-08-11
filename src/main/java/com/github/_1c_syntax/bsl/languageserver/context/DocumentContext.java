@@ -365,7 +365,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
         return;
       }
 
-      if (!isComputedDataFrozen) {
+      // Заморозка — политика («этот документ не редактируют, его вторичные данные держим»),
+      // а изменение содержимого — факт. Факт сильнее: замороженным остаётся документ, который
+      // после наполнения области перечитали из-за правки файла на диске, и его прежние
+      // диагностики с метриками посчитаны уже по другому тексту.
+      if (!isComputedDataFrozen || contentChangedOnLastRebuild) {
         clearSecondaryData();
       }
 

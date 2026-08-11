@@ -110,6 +110,11 @@ public class OScriptModuleMembersProvider {
     if (documentContext.getFileType() != FileType.OS) {
       return;
     }
+    if (!event.isContentChanged() && registeredByUri.containsKey(documentContext.getUri())) {
+      // Тот же самый текст разобран заново: члены по нему уже зарегистрированы, а сбрасывать
+      // memo у наследников тем более незачем — их символьные деревья не менялись.
+      return;
+    }
     register(documentContext);
     invalidateMembersOfDocumentAndSubtypes(documentContext);
   }
