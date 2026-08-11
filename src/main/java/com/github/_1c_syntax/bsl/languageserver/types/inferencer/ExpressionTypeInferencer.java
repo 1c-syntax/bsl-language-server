@@ -161,6 +161,10 @@ public class ExpressionTypeInferencer {
     try {
       return inferInternal(expression, ctx);
     } catch (StackOverflowError | RuntimeException e) {
+      // Сорвавшийся расчёт отдаёт пустой тип — анализ из-за одного выражения падать не
+      // должен. Но молча это делать нельзя: снаружи пустой тип неотличим от честного
+      // «ничего не вывелось», и поломка выглядит как «типы просто не выводятся».
+      LOGGER.error("Вывод типа выражения сорвался: {}", documentContext.getUri(), e);
       return TypeSet.EMPTY;
     }
   }
@@ -904,6 +908,11 @@ public class ExpressionTypeInferencer {
       }
       return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing);
     } catch (StackOverflowError | RuntimeException e) {
+      // Пустое значение метода сохранится как окончательное, и все его вызывающие останутся
+      // ни с чем. Без записи в журнал это выглядит как «у метода не выводится тип», а не
+      // как сорвавшийся расчёт, и найти причину можно только замером на живой конфигурации.
+      LOGGER.error("Расчёт значения метода {} сорвался: {}", method.getName(),
+        method.getOwner().getUri(), e);
       return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
   }
