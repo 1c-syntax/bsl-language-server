@@ -122,6 +122,17 @@ public class SymbolTypeIndex {
    */
   private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
 
+  /**
+   * Значение метода, соединённое из описания и вывода по телу, вместе с источниками, из
+   * которых оно посчитано.
+   * <p>
+   * Соединение спрашивают на каждом разрешении вызова, а стоит оно копии карты полей — у
+   * метода с сотней ключей это заметно даже при одном обращении. Поэтому запоминается;
+   * годность проверяется сравнением источников по ссылке, поэтому отдельного сброса при
+   * записи не нужно и гонки между записью и чтением тоже нет.
+   */
+  private final Map<MethodSymbol, CombinedReturnTypes> combinedReturnTypes = new ConcurrentHashMap<>();
+
   // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
   // а здесь записи документа сначала стираются. Без явного порядка слушатель без
   // аннотации идёт последним и стёр бы только что записанное.
@@ -176,6 +187,7 @@ public class SymbolTypeIndex {
     var previous = indexedByUri.remove(uri);
     if (previous != null) {
       previous.forEach(declaredReturnTypes::remove);
+      previous.forEach(combinedReturnTypes::remove);
     }
 
     var collected = new ArrayList<MethodSymbol>();
@@ -202,16 +214,54 @@ public class SymbolTypeIndex {
    *     ничего не дал.
    */
   public TypeSet getReturnTypes(MethodSymbol method) {
-    var declared = getDeclaredReturnTypes(method);
     var inferred = inferredReturnTypes.get(method);
+    var declared = getDeclaredReturnTypes(method);
     if (inferred == null || inferred.isEmpty()) {
       return declared;
     }
+    // Запомненное годится, только если посчитано из тех же самых источников. Сравнение по
+    // ссылке, а не по равенству: наборы неизменяемы, запись кладёт новый объект, и этого
+    // достаточно. Так запись и чтение могут идти одновременно: запись, случившаяся между
+    // взятием источников и укладыванием результата, обесценит его сама — следующее чтение
+    // увидит другие источники и посчитает заново.
+    var remembered = combinedReturnTypes.get(method);
+    if (remembered != null && remembered.declared() == declared && remembered.inferred() == inferred) {
+      return remembered.value();
+    }
+    var value = combine(declared, inferred);
+    combinedReturnTypes.put(method, new CombinedReturnTypes(declared, inferred, value));
+    return value;
+  }
+
+  /**
+   * Соединяет объявленное описанием значение с выведенным по телу.
+   * <p>
+   * За описанием остаётся состав элементов: у {@code Массив из Число} из комментария он
+   * точнее собранного по телу, — поэтому названный в описании тип вычитается из
+   * выведенного. Но вычитание уносит ссылку со всеми её декорациями, включая поля, а их
+   * описание перечисляет редко: у функции с описанием «Структура» состав ключей, собранный
+   * из {@code Вставить}, пропадал целиком. Поля возвращаются — и жадные, и ленивые.
+   *
+   * @param declared объявленное в описании метода.
+   * @param inferred выведенное по телу.
+   * @return значение метода.
+   */
+  private static TypeSet combine(TypeSet declared, TypeSet inferred) {
     var extra = inferred;
     for (var ref : declared.refs()) {
       extra = extra.without(ref);
     }
-    return declared.union(extra);
+    var result = declared.union(extra);
+    for (var ref : declared.refs()) {
+      // Карта берётся сырой. getLocalFields склеил бы её с ленивыми полями, а склейка их
+      // форсирует: у рекурсивных и `см.`-типов источник ведёт обратно сюда же, и разворот
+      // пошёл бы вглубь на ровном месте.
+      var eager = inferred.localFields().get(ref);
+      if (eager != null && !eager.isEmpty()) {
+        result = result.withFields(ref, eager);
+      }
+    }
+    return result;
   }
 
   /**
@@ -225,6 +275,10 @@ public class SymbolTypeIndex {
     // идущий вне событий жизненного цикла, мог бы вклиниться в сброс между снятием набора
     // и обходом, и значение осталось бы в карте типов без ссылки из карты по документам —
     // то есть недостижимым для следующего сброса.
+    // Запомненное соединение здесь не снимается: его годность проверяется сравнением
+    // источников по ссылке, и запись обесценит его сама. Снятие тут ничего бы не
+    // гарантировало — читатель, взявший источники до него, всё равно уложил бы результат
+    // после.
     inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
       if (types.isEmpty()) {
         inferredReturnTypes.remove(method);
@@ -416,6 +470,7 @@ public class SymbolTypeIndex {
     inferredByUri.compute(uri, (key, methods) -> {
       if (methods != null) {
         methods.forEach(inferredReturnTypes::remove);
+        methods.forEach(combinedReturnTypes::remove);
       }
       return null;
     });
@@ -425,6 +480,7 @@ public class SymbolTypeIndex {
     }
     for (var m : methods) {
       declaredReturnTypes.remove(m);
+      combinedReturnTypes.remove(m);
     }
   }
 
@@ -1000,5 +1056,19 @@ public class SymbolTypeIndex {
     return byName.isEmpty()
       ? resolveOne(name).map(TypeSet::of).orElse(TypeSet.EMPTY)
       : byName;
+  }
+
+  /**
+   * Соединённое значение метода вместе с источниками, из которых оно посчитано.
+   * <p>
+   * Источники хранятся ради проверки годности: наборы неизменяемы, поэтому запись любого
+   * из них кладёт другой объект, и сравнения по ссылке достаточно, чтобы отличить
+   * посчитанное по нынешнему состоянию от посчитанного по прежнему.
+   *
+   * @param declared объявленное в описании метода на момент расчёта.
+   * @param inferred выведенное по телу на момент расчёта.
+   * @param value    соединение того и другого.
+   */
+  private record CombinedReturnTypes(TypeSet declared, TypeSet inferred, TypeSet value) {
   }
 }

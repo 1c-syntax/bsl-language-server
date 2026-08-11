@@ -825,19 +825,37 @@ public class ExpressionTypeInferencer {
     }
     var knot = TypeSet.of(known.refs());
     for (var ref : known.refs()) {
-      if (!known.getElementTypes(ref).isEmpty()) {
+      // Всюду читаются сырые карты, без склейки с ленивым: склейка форсирует ленивое, а
+      // ленивое здесь — этот же узел, и разворот пошёл бы до переполнения стека. Узел
+      // разрешает ровно один уровень, ради этого он и заведён.
+      if (!known.elementTypes().getOrDefault(ref, TypeSet.EMPTY).isEmpty()) {
         knot = knot.withLazyElement(ref, new LazyTypeSet(List.of(method, ref),
-          () -> symbolTypeIndex.getReturnTypes(method).getElementTypes(ref)));
+          () -> symbolTypeIndex.getReturnTypes(method).elementTypes()
+            .getOrDefault(ref, TypeSet.EMPTY)));
       }
-      for (var field : known.getLocalFields(ref).entrySet()) {
-        var name = field.getKey();
-        knot = knot.withLazyField(ref, name, new LazyTypeSet(List.of(method, ref, name),
-          () -> symbolTypeIndex.getReturnTypes(method).getLocalFields(ref)
-            .getOrDefault(name, LocalField.of(TypeSet.EMPTY)).types()),
-          field.getValue().description());
+      for (var field : known.localFields().getOrDefault(ref, Map.of()).entrySet()) {
+        knot = lazyFieldOf(knot, method, ref, field.getKey(), field.getValue().description());
       }
     }
     return knot;
+  }
+
+  /**
+   * Поле узла: имя известно, а тип берётся у метода на чтении.
+   *
+   * @param knot        собираемый узел.
+   * @param method      рекурсивная функция.
+   * @param ref         тип-владелец поля.
+   * @param name        имя поля.
+   * @param description описание поля из документирующего комментария.
+   * @return узел с добавленным полем.
+   */
+  private TypeSet lazyFieldOf(TypeSet knot, MethodSymbol method, TypeRef ref, String name,
+                              String description) {
+    return knot.withLazyField(ref, name, new LazyTypeSet(List.of(method, ref, name),
+      () -> symbolTypeIndex.getReturnTypes(method).localFields()
+        .getOrDefault(ref, Map.of())
+        .getOrDefault(name, LocalField.of(TypeSet.EMPTY)).types()), description);
   }
 
   /**
