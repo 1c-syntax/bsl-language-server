@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786453020115,
+  "lastUpdate": 1786459222326,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42501,6 +42501,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9718868412425665",
             "extra": "mean: 92.71885426839192 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "603b9c6af875b8d3324427f6d1986404f2e89f6d",
+          "message": "Merge pull request #4445 from 1c-syntax/fix/declared-types-after-populate\n\nfix(types): объявленные типы пересобираются после наполнения области",
+          "timestamp": "2026-08-11T16:17:00+02:00",
+          "tree_id": "98e4c96a9025f445094384fb7c622fda01a3e519",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/603b9c6af875b8d3324427f6d1986404f2e89f6d"
+        },
+        "date": 1786459207353,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.62402478853862,
+            "unit": "sec",
+            "range": "stddev: 0.29914882716615887",
+            "extra": "mean: 93.62402478853862 sec\nrounds: 3"
           }
         ]
       }
