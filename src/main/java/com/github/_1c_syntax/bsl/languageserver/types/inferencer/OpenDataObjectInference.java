@@ -236,9 +236,9 @@ public class OpenDataObjectInference {
       var valueTypes = valueArgIndex < args.size()
         ? types.of(args.get(valueArgIndex))
         : UNDEFINED;
-      if (!valueTypes.isEmpty()) {
-        fields.merge(keyName, LocalField.of(valueTypes), LocalField::merge);
-      }
+      // Ключ записывается и с пустым типом значения — по той же причине, что и у Вставить:
+      // имя ключа известно из самого конструктора, а тип значения может быть невыводим.
+      fields.merge(keyName, LocalField.of(valueTypes), LocalField::merge);
     }
     return base.withFields(base.refs().iterator().next(), fields);
   }
@@ -358,7 +358,10 @@ public class OpenDataObjectInference {
     var structureRef = headRefOf(incoming, OpenDataObjectInference::isStructureOrMapLike);
     if (structureRef != null) {
       var field = insertedField(call, variableName, scopeRange, types);
-      if (field != null && !field.types().isEmpty()) {
+      if (field != null) {
+        // Поле записывается и с пустым типом значения: знать, что ключ есть, — это не то же
+        // самое, что знать его тип. Без имени обращение к ключу выглядит обращением к
+        // несуществующему свойству, а тип значения ниоткуда взяться и не мог.
         return incoming.withField(structureRef, field.name(), field.types());
       }
     }
