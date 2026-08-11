@@ -95,6 +95,25 @@ class DocumentContextTest {
   }
 
   @Test
+  void rebuildIsAChangeEvenWhenTextsCollideByLengthAndHash() {
+    // given: два разных текста одинаковой длины, у которых совпадает String.hashCode() —
+    // классическая пара "Aa" / "BB". Отпечаток, построенный на этом хэше, счёл бы правку
+    // перечитыванием и оставил бы записи от прежнего текста.
+    var documentContext = getDocumentContext();
+    var first = "Процедура Aa() КонецПроцедуры";
+    var second = "Процедура BB() КонецПроцедуры";
+    assertThat(second).hasSameSizeAs(first);
+    assertThat(second.hashCode()).isEqualTo(first.hashCode());
+    documentContext.rebuild(first, documentContext.getVersion() + 1);
+
+    // when
+    documentContext.rebuild(second, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
   void testClearASTData() throws IllegalAccessException {
     // given
     var documentContext = getDocumentContext();

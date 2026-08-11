@@ -65,6 +65,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -100,14 +103,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private String content;
 
   /**
-   * Отпечаток последнего разобранного содержимого. В отличие от самого содержимого
-   * переживает освобождение вторичных данных: по нему повторный разбор отличает
-   * перечитывание того же текста от настоящей правки.
+   * Отпечаток последнего разобранного содержимого; {@code null}, пока документ не
+   * разбирался ни разу. В отличие от самого содержимого переживает освобождение
+   * вторичных данных: по нему повторный разбор отличает перечитывание того же текста
+   * от настоящей правки.
    */
-  private long contentFingerprint;
-
-  /** Разбирался ли документ хоть раз: до первого разбора отпечатка ещё нет. */
-  private boolean contentFingerprintKnown;
+  @Nullable
+  private byte[] contentFingerprint;
 
   /**
    * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
@@ -353,9 +355,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
     try {
 
       var fingerprint = contentFingerprint(content);
-      contentChangedOnLastRebuild = !contentFingerprintKnown || fingerprint != contentFingerprint;
+      contentChangedOnLastRebuild = !Arrays.equals(fingerprint, contentFingerprint);
       contentFingerprint = fingerprint;
-      contentFingerprintKnown = true;
 
       boolean versionMatches = version == this.version && version != 0;
 
@@ -384,14 +385,24 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   /**
-   * Отпечаток содержимого: длина вместе с хэшем текста. Совпадение отпечатков означает
-   * совпадение содержимого с точностью до коллизии хэша.
+   * Отпечаток содержимого — криптографическая свёртка текста.
+   * <p>
+   * Разрядность здесь важна: по совпадению отпечатков документ считается неизменившимся
+   * и сохраняет посчитанные по нему записи. У {@code String.hashCode()} всего 32 бита, и
+   * совпадения у него не редкость, а конструируемое свойство — {@code "Aa"} и {@code "BB"}
+   * равны по нему при равной длине. Ошибка в эту сторону тихая: правку не заметят, и
+   * записи останутся от прежнего текста.
    *
    * @param content содержимое документа.
    * @return отпечаток.
    */
-  private static long contentFingerprint(String content) {
-    return ((long) content.length() << Integer.SIZE) ^ (content.hashCode() & 0xFFFFFFFFL);
+  private static byte[] contentFingerprint(String content) {
+    try {
+      return MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8));
+    } catch (NoSuchAlgorithmException e) {
+      // SHA-256 обязателен для любой реализации Java, поэтому сюда попасть нельзя.
+      throw new IllegalStateException(e);
+    }
   }
 
   protected void rebuildFromFileSystem() {
