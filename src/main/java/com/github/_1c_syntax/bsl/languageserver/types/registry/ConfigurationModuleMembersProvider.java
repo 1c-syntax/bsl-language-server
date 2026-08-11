@@ -107,10 +107,6 @@ public class ConfigurationModuleMembersProvider {
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
-    if (!event.isContentChanged() && registeredByUri.containsKey(documentContext.getUri())) {
-      // Тот же самый текст разобран заново, а члены по нему уже зарегистрированы.
-      return;
-    }
     register(documentContext);
   }
 

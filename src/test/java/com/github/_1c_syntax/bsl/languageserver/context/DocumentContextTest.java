@@ -147,6 +147,27 @@ class DocumentContextTest {
   }
 
   @Test
+  void rebuildWithRepeatedVersionLeavesFingerprintOfLoadedTree() {
+    // given: разбор с тем же номером версии содержимое не применяет — дерево остаётся прежним.
+    var documentContext = getDocumentContext();
+    var first = "Процедура Первая() КонецПроцедуры";
+    var second = "Процедура Вторая() КонецПроцедуры\nПроцедура Третья() КонецПроцедуры";
+    documentContext.rebuild(first, 1);
+    documentContext.rebuild(second, 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild())
+      .as("содержимое не применялось — значит и не менялось")
+      .isFalse();
+
+    // when: тот же текст приходит с новым номером версии и наконец применяется.
+    documentContext.rebuild(second, 2);
+
+    // then: разбор обязан считаться изменением. Если бы отпечаток записался в неприменённом
+    // разборе, здесь вышло бы «не менялось», и записи по прежнему дереву остались бы жить.
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+    assertThat(documentContext.getSymbolTree().getMethods()).hasSize(2);
+  }
+
+  @Test
   void testClearASTData() throws IllegalAccessException {
     // given
     var documentContext = getDocumentContext();

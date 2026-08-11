@@ -355,12 +355,15 @@ public class DocumentContext implements Comparable<DocumentContext> {
     try {
 
       var fingerprint = contentFingerprint(content);
-      contentChangedOnLastRebuild = !Arrays.equals(fingerprint, contentFingerprint);
-      contentFingerprint = fingerprint;
+      var contentChanged = !Arrays.equals(fingerprint, contentFingerprint);
 
       boolean versionMatches = version == this.version && version != 0;
 
       if (versionMatches && (this.content != null)) {
+        // Содержимое не применяется — дерево остаётся прежним. Значит и отпечаток обязан
+        // описывать его, а не то, что пришло: иначе следующий разбор того же текста счёл бы
+        // документ неизменившимся, и записи, построенные по прежнему дереву, остались бы жить.
+        contentChangedOnLastRebuild = false;
         clearDependantData();
         return;
       }
@@ -369,7 +372,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       // а изменение содержимого — факт. Факт сильнее: замороженным остаётся документ, который
       // после наполнения области перечитали из-за правки файла на диске, и его прежние
       // диагностики с метриками посчитаны уже по другому тексту.
-      if (!isComputedDataFrozen || contentChangedOnLastRebuild) {
+      if (!isComputedDataFrozen || contentChanged) {
         clearSecondaryData();
       }
 
@@ -381,6 +384,12 @@ public class DocumentContext implements Comparable<DocumentContext> {
       }
       this.version = version;
       symbolTree = computeSymbolTree();
+
+      // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
+      // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
+      // текст прежним и работу не переделает.
+      contentFingerprint = fingerprint;
+      contentChangedOnLastRebuild = contentChanged;
 
     } finally {
       releaseLocks();
