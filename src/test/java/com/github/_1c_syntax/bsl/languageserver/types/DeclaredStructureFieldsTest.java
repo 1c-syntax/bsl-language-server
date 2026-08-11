@@ -55,4 +55,74 @@ class DeclaredStructureFieldsTest extends AbstractServerContextAwareTest {
     // ним станет обращением к несуществующему свойству.
     assertThat(returnTypes.getAllFieldNames()).contains("Первое", "Второе");
   }
+
+  @Test
+  void changedBodyReplacesValueRememberedForTheOldOne() {
+    // given: значение соединяется из описания и тела и запоминается, чтобы не считать его
+    // на каждом чтении. Прочитали — запомнилось.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //   Структура - описание.
+      //
+      Функция Ф() Экспорт
+      \tР = Новый Структура;
+      \tР.Вставить("Первое", "");
+      \tВозврат Р;
+      КонецФункции
+      """);
+    var method = documentContext.getSymbolTree().getMethodSymbol("Ф");
+    assertThat(method).isPresent();
+    assertThat(symbolTypeIndex.getReturnTypes(method.get()).getAllFieldNames()).contains("Первое");
+
+    // when: тело изменилось.
+    var changed = TestUtils.getDocumentContext(documentContext.getUri(), """
+      // Возвращаемое значение:
+      //   Структура - описание.
+      //
+      Функция Ф() Экспорт
+      \tР = Новый Структура;
+      \tР.Вставить("Второе", "");
+      \tВозврат Р;
+      КонецФункции
+      """);
+
+    // then: читается новое значение, а не запомненное по прежнему телу.
+    var updated = changed.getSymbolTree().getMethodSymbol("Ф");
+    assertThat(updated).isPresent();
+    assertThat(symbolTypeIndex.getReturnTypes(updated.get()).getAllFieldNames())
+      .contains("Второе")
+      .doesNotContain("Первое");
+  }
+
+  @Test
+  void declaredTypeKeepsLazyFieldsOfRecursiveFunction() {
+    // given: у рекурсивной функции в описании назван тип, а поле, заполненное вызовом
+    // самой себя, хранится ссылкой на метод — то есть лениво.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //   Структура - узел дерева.
+      //
+      Функция Узел() Экспорт
+      \tР = Новый Структура;
+      \tР.Вставить("Имя", "");
+      \tР.Вставить("Вложенный", Узел());
+      \tВозврат Р;
+      КонецФункции
+      """);
+    var method = documentContext.getSymbolTree().getMethodSymbol("Узел");
+    assertThat(method).isPresent();
+
+    // when
+    var returnTypes = symbolTypeIndex.getReturnTypes(method.get());
+
+    // then: ленивое поле переживает соединение с описанием наравне с жадным.
+    assertThat(returnTypes.getAllFieldNames()).contains("Имя", "Вложенный");
+
+    // и разрешается на чтении — на один уровень, как и задумано узлом.
+    var ref = returnTypes.refs().iterator().next();
+    assertThat(returnTypes.getLocalFields(ref).get("Вложенный").types().getAllFieldNames())
+      .as("поле, заполненное вызовом самой функции, несёт её же тип")
+      .contains("Имя");
+  }
+
 }
