@@ -86,6 +86,9 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0)))
+      .as("вхождения собраны первым разбором")
+      .isPresent();
 
     // when: тот же самый текст разобран заново — обходить дерево незачем.
     referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext, false));
@@ -101,6 +104,9 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0)))
+      .as("вхождения собраны первым разбором")
+      .isPresent();
     referenceIndexFiller.handleEvent(
       new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
     assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isEmpty();

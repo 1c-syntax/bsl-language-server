@@ -99,6 +99,9 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
       КонецПроцедуры
       """);
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
 
     // when: тот же самый текст разобран заново — записи переиндексировать незачем.
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
@@ -117,6 +120,9 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
       КонецПроцедуры
       """);
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
     index.clear(documentContext.getUri());
     assertThat(index.search("Забытая", NO_CANCEL)).isEmpty();
 
