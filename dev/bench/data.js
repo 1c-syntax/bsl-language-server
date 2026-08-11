@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786449054400,
+  "lastUpdate": 1786453020115,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42470,6 +42470,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.2687014965763064",
             "extra": "mean: 92.98111979166667 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "35998acff970f472e2fc46165ea94fb96303140a",
+          "message": "Merge pull request #4444 from 1c-syntax/fix/structure-field-without-type\n\nfix(types): ключ структуры известен и без типа своего значения",
+          "timestamp": "2026-08-11T14:35:55+02:00",
+          "tree_id": "ff181c74e975656f51421a43bfaa02077baa01c3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/35998acff970f472e2fc46165ea94fb96303140a"
+        },
+        "date": 1786453007502,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.71885426839192,
+            "unit": "sec",
+            "range": "stddev: 1.9718868412425665",
+            "extra": "mean: 92.71885426839192 sec\nrounds: 3"
           }
         ]
       }
