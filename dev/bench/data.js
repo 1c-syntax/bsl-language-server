@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786379512666,
+  "lastUpdate": 1786436519742,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42408,6 +42408,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.4865295877283202",
             "extra": "mean: 101.97659238179524 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ee425fe546f5830506826385af89d0bebb16fa0",
+          "message": "Merge pull request #4440 from 1c-syntax/fix/recursive-return-knot\n\nfix(types): рекурсивная функция получает свой же тип, а не теряет его",
+          "timestamp": "2026-08-11T09:59:28+02:00",
+          "tree_id": "d5d93250de654cff7400328d4dc34faf4ce8666c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8ee425fe546f5830506826385af89d0bebb16fa0"
+        },
+        "date": 1786436506237,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.50064404805501,
+            "unit": "sec",
+            "range": "stddev: 0.38411139202189326",
+            "extra": "mean: 94.50064404805501 sec\nrounds: 3"
           }
         ]
       }
