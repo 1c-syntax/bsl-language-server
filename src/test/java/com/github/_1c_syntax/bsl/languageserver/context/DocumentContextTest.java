@@ -59,6 +59,115 @@ class DocumentContextTest {
   }
 
   @Test
+  void rereadingSameContentIsNotAChange() {
+    // given
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+
+    // when: тот же самый текст разобран заново — так бывает после освобождения
+    // вторичных данных, когда документ понадобился снова.
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+  }
+
+  @Test
+  void firstBuildCountsAsChange() {
+    // given, when
+    var documentContext = getDocumentContext();
+
+    // then: до первого разбора сравнивать не с чем, поэтому содержимое считается новым.
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildWithOtherContentIsAChange() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildIsAChangeEvenWhenTextsCollideByLengthAndHash() {
+    // given: два разных текста одинаковой длины, у которых совпадает String.hashCode() —
+    // классическая пара "Aa" / "BB". Отпечаток, построенный на этом хэше, счёл бы правку
+    // перечитыванием и оставил бы записи от прежнего текста.
+    var documentContext = getDocumentContext();
+    var first = "Процедура Aa() КонецПроцедуры";
+    var second = "Процедура BB() КонецПроцедуры";
+    assertThat(second).hasSameSizeAs(first);
+    assertThat(second.hashCode()).isEqualTo(first.hashCode());
+    documentContext.rebuild(first, documentContext.getVersion() + 1);
+
+    // when
+    documentContext.rebuild(second, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void frozenDocumentDropsSecondaryDataWhenContentReallyChanged() throws IllegalAccessException {
+    // given: документ заморожен — так область поступает с файлом, который никто не открывал.
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+
+    // when: файл изменился на диске и перечитан.
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then: посчитанное по прежнему тексту сброшено. Заморозка — политика хранения, а
+    // изменение содержимого — факт, и факт сильнее: иначе диагностики остались бы от
+    // текста, которого больше нет.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
+  }
+
+  @Test
+  void frozenDocumentKeepsSecondaryDataOnRereadOfSameContent() throws IllegalAccessException {
+    // given
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+
+    // when: тот же самый текст перечитан заново.
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: пересчитывать нечего — ради этого заморозка и заведена.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNotNull();
+  }
+
+  @Test
+  void rebuildWithRepeatedVersionLeavesFingerprintOfLoadedTree() {
+    // given: разбор с тем же номером версии содержимое не применяет — дерево остаётся прежним.
+    var documentContext = getDocumentContext();
+    var first = "Процедура Первая() КонецПроцедуры";
+    var second = "Процедура Вторая() КонецПроцедуры\nПроцедура Третья() КонецПроцедуры";
+    documentContext.rebuild(first, 1);
+    documentContext.rebuild(second, 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild())
+      .as("содержимое не применялось — значит и не менялось")
+      .isFalse();
+
+    // when: тот же текст приходит с новым номером версии и наконец применяется.
+    documentContext.rebuild(second, 2);
+
+    // then: разбор обязан считаться изменением. Если бы отпечаток записался в неприменённом
+    // разборе, здесь вышло бы «не менялось», и записи по прежнему дереву остались бы жить.
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+    assertThat(documentContext.getSymbolTree().getMethods()).hasSize(2);
+  }
+
+  @Test
   void testClearASTData() throws IllegalAccessException {
     // given
     var documentContext = getDocumentContext();
