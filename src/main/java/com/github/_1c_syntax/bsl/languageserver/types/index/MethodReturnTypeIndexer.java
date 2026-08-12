@@ -60,6 +60,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -459,8 +460,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * распараллеливается почти целиком. Пул нужен именно тот, чьи воркеры несут рабочую
    * область: без неё бины workspace-скоупа из чужого потока не достаются.
    * <p>
-   * Одновременно разобранных документов при этом не больше ширины пула: параллельно идут
-   * только компоненты из одного документа, а держащие несколько — по одной.
+   * Разом разобранных документов при этом не больше {@link #MAX_DOCUMENTS_IN_MEMORY} —
+   * столько же, сколько проход и так позволяет себе на одном цикле. Параллельно идут
+   * только компоненты из одного документа, держащие несколько считаются по одной, а место
+   * в пределе занимается на время расчёта компоненты.
    * <p>
    * Независимость компонент яруса опирается на связи, собранные прошлым расчётом, а
    * пересчёт способен дойти до документа, которого в них не было: до наполнения области
@@ -499,12 +502,41 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         resolveComponent(serverContext, singles.get(0), byDocument, progressReporter);
         continue;
       }
+      var loaded = new Semaphore(MAX_DOCUMENTS_IN_MEMORY);
       var tasks = singles.stream()
         .map(component -> CompletableFuture.runAsync(
-          () -> resolveComponent(serverContext, component, byDocument, progressReporter),
+          () -> resolveHoldingPermit(loaded, serverContext, component, byDocument, progressReporter),
           resolveReturnTypesExecutor))
         .toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(tasks).join();
+    }
+  }
+
+  /**
+   * Считает компоненту, заняв место в пределе разом разобранных документов.
+   * <p>
+   * Предел явный, а не «сколько воркеров в пуле»: ширина пула берётся из числа ядер, и на
+   * большой машине проход держал бы разобранными десятки документов. Дерево разбора —
+   * самое тяжёлое, что есть у документа, поэтому счёт идёт на документы, а не на потоки.
+   *
+   * @param loaded           предел разом разобранных документов.
+   * @param serverContext    рабочая область.
+   * @param component        документы компоненты.
+   * @param byDocument       отложенные методы по документам.
+   * @param progressReporter индикатор хода работы.
+   */
+  private void resolveHoldingPermit(
+    Semaphore loaded,
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+  ) {
+    loaded.acquireUninterruptibly();
+    try {
+      resolveComponent(serverContext, component, byDocument, progressReporter);
+    } finally {
+      loaded.release();
     }
   }
 
