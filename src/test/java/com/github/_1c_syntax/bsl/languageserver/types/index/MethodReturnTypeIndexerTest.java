@@ -270,10 +270,10 @@ class MethodReturnTypeIndexerTest {
   }
 
   /**
-   * Рабочая область, в которой живёт документ: блокировки настоящие, состояние документа
+   * Рабочая область, в которой живут документы: блокировки настоящие, состояние документа
    * спрашивается у неё же.
    *
-   * @param documentContext документ.
+   * @param documentContexts документы рабочей области.
    * @return рабочая область.
    */
   private static ServerContext serverContextOf(DocumentContext... documentContexts) {
