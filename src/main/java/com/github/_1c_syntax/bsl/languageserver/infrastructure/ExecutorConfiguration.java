@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
 import io.sentry.spring7.SentryTaskDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -114,14 +113,11 @@ public class ExecutorConfiguration {
 
   // resolveReturnTypesExecutor — отдельный от populateContextExecutor: проход доразрешения
   // запускается слушателем события наполнения, то есть изнутри задачи того пула, и класть
-  // в него же собственные задачи означало бы занимать пул, который сейчас занят. Работа
-  // прохода упирается в число разом разобранных документов, а не в число ядер, поэтому пул
-  // не шире этого предела.
+  // в него же собственные задачи означало бы занимать пул, который сейчас занят.
   @Bean(destroyMethod = "shutdown")
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService resolveReturnTypesExecutor() {
-    return createWorkspaceForkJoinPool("resolve-return-types-",
-      Math.min(ForkJoinPool.getCommonPoolParallelism(), MethodReturnTypeIndexer.MAX_DOCUMENTS_IN_MEMORY));
+    return createWorkspaceForkJoinPool("resolve-return-types-");
   }
 
   // computeConfigurationExecutor — singleton, вызывает MDClasses (не использует ThreadLocal BSL LS)
@@ -168,10 +164,6 @@ public class ExecutorConfiguration {
   }
 
   private static ExecutorService createWorkspaceForkJoinPool(String prefix) {
-    return createWorkspaceForkJoinPool(prefix, ForkJoinPool.getCommonPoolParallelism());
-  }
-
-  private static ExecutorService createWorkspaceForkJoinPool(String prefix, int parallelism) {
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
       throw new IllegalStateException("Workspace context is not set when creating ForkJoinPool");
@@ -179,7 +171,7 @@ public class ExecutorConfiguration {
     var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
       .orElse("default");
     var factory = new WorkspaceAwareFJWTFactory(workspaceUri, workspaceName, prefix);
-    var pool = new ForkJoinPool(Math.max(1, parallelism), factory, null, true);
+    var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     return new ContextPropagatingExecutorService(pool);
   }
 
