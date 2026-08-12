@@ -458,6 +458,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * конфигурации единицы, а компонент в первом — больше половины, поэтому ярусный обход
    * распараллеливается почти целиком. Пул нужен именно тот, чьи воркеры несут рабочую
    * область: без неё бины workspace-скоупа из чужого потока не достаются.
+   * <p>
+   * Одновременно разобранных документов при этом не больше ширины пула: параллельно идут
+   * только компоненты из одного документа, а держащие несколько — по одной.
+   * <p>
+   * Независимость компонент яруса опирается на связи, собранные прошлым расчётом, а
+   * пересчёт способен дойти до документа, которого в них не было: до наполнения области
+   * вызов туда не разрешался вовсе. Такой документ может считаться в это же время
+   * соседней компонентой, и что прочтёт расчёт, решит момент. Из-под порядка это не
+   * выбивается: он и в последовательном проходе задан набором отложенного, то есть тоже
+   * не воспроизводится дословно; замер мерцания на ssl_3_1 разницы между проходами не
+   * показал.
    *
    * @param serverContext    рабочая область.
    * @param roots            отложенные методы.
@@ -475,11 +486,20 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var order = DocumentDependencies.of(byDocument.keySet(),
       uri -> dependenciesByUri.getOrDefault(uri, Set.of()));
     for (var tier : tiersOf(order.components(), byDocument.keySet())) {
-      if (tier.size() == 1) {
-        resolveComponent(serverContext, tier.get(0), byDocument, progressReporter);
+      // Компонента из нескольких документов — цикл: она держит их разобранными до
+      // неподвижной точки. Такие считаются по одной, иначе предел держимых документов
+      // множился бы на ширину пула, а память здесь дороже секунд. Их единицы: на реальной
+      // конфигурации почти каждая компонента — один документ.
+      var cycles = tier.stream().filter(component -> component.size() > 1).toList();
+      for (var cycle : cycles) {
+        resolveComponent(serverContext, cycle, byDocument, progressReporter);
+      }
+      var singles = tier.stream().filter(component -> component.size() == 1).toList();
+      if (singles.size() == 1) {
+        resolveComponent(serverContext, singles.get(0), byDocument, progressReporter);
         continue;
       }
-      var tasks = tier.stream()
+      var tasks = singles.stream()
         .map(component -> CompletableFuture.runAsync(
           () -> resolveComponent(serverContext, component, byDocument, progressReporter),
           resolveReturnTypesExecutor))
