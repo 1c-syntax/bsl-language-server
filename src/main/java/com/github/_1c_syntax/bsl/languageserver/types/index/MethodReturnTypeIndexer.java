@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeI
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -48,14 +49,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -93,6 +97,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
+
+  /**
+   * Пул, на котором считаются компоненты одного яруса. Тот же, на котором наполняется
+   * рабочая область: его воркеры выставляют себе её URI, без чего workspace-скоуп из
+   * чужого потока не резолвится. К началу прохода наполнение закончено, и пул свободен.
+   */
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService resolveReturnTypesExecutor;
 
   /**
    * Документы, чьи значения построены на этом. Связи держатся по документам, а не по
@@ -440,10 +452,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * приходится документ целиком, и один документ загружался заново под каждый свой
    * метод — на ssl_3_1 это дало 4252 разбора против 215.
    * <p>
-   * Проход последовательный: блокировки документов берутся и отпускаются в одном потоке.
-   * Разложенный по пулу, он упирался в то, что воркеры ждут чужие блокировки, а
-   * компенсировать такое ожидание {@code ForkJoinPool} не умеет — пул голодал и проход
-   * вставал.
+   * Компоненты одного яруса считаются разом: зависимостей между ними нет по построению,
+   * документы у них разные, и каждая берёт замки только своих. Ярусов на реальной
+   * конфигурации единицы, а компонент в первом — больше половины, поэтому ярусный обход
+   * распараллеливается почти целиком. Пул нужен именно тот, чьи воркеры несут рабочую
+   * область: без неё бины workspace-скоупа из чужого потока не достаются.
    *
    * @param serverContext    рабочая область.
    * @param roots            отложенные методы.
@@ -460,11 +473,50 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var order = DocumentDependencies.of(byDocument.keySet(),
       uri -> dependenciesByUri.getOrDefault(uri, Set.of()));
-    for (var component : order.components()) {
-      var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
-      methods.forEach(method -> progressReporter.tick());
-      resolveComponent(serverContext, component, byDocument, methods);
+    for (var tier : tiersOf(order.components(), byDocument.keySet())) {
+      if (tier.size() == 1) {
+        resolveComponent(serverContext, tier.get(0), byDocument, progressReporter);
+        continue;
+      }
+      var tasks = tier.stream()
+        .map(component -> CompletableFuture.runAsync(
+          () -> resolveComponent(serverContext, component, byDocument, progressReporter),
+          resolveReturnTypesExecutor))
+        .toArray(CompletableFuture[]::new);
+      CompletableFuture.allOf(tasks).join();
     }
+  }
+
+  /**
+   * Разбивает компоненты на ярусы: компонента попадает на ярус следующий за наибольшим
+   * ярусом тех, от кого она зависит.
+   * <p>
+   * Компоненты приходят в обратном топологическом порядке, поэтому ярус каждой известен к
+   * моменту, когда до неё дошла очередь. Внутри яруса зависимостей нет, и считать его
+   * компоненты можно в любом порядке и одновременно.
+   *
+   * @param components компоненты в обратном топологическом порядке.
+   * @param inWork     документы, которые предстоит пересчитать: зависимости на прочие
+   *                   порядка не задают — те уже посчитаны окончательно.
+   * @return ярусы в порядке возрастания.
+   */
+  private List<List<List<URI>>> tiersOf(List<List<URI>> components, Set<URI> inWork) {
+    var tierOfUri = new HashMap<URI, Integer>();
+    var tiers = new ArrayList<List<List<URI>>>();
+    for (var component : components) {
+      var tier = component.stream()
+        .flatMap(uri -> dependenciesByUri.getOrDefault(uri, Set.<URI>of()).stream())
+        .filter(inWork::contains)
+        .map(dependency -> tierOfUri.getOrDefault(dependency, 0))
+        .max(Integer::compare)
+        .orElse(0);
+      component.forEach(uri -> tierOfUri.put(uri, tier + 1));
+      while (tiers.size() <= tier) {
+        tiers.add(new ArrayList<>());
+      }
+      tiers.get(tier).add(component);
+    }
+    return tiers;
   }
 
   /**
@@ -474,17 +526,19 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * посчитано. В цикле заходов несколько, поэтому его документы держатся загруженными —
    * так повторные обороты не стоят ни одного лишнего разбора.
    *
-   * @param serverContext рабочая область.
-   * @param component     документы компоненты.
-   * @param byDocument    отложенные методы по документам.
-   * @param methods       отложенные методы компоненты.
+   * @param serverContext    рабочая область.
+   * @param component        документы компоненты.
+   * @param byDocument       отложенные методы по документам.
+   * @param progressReporter индикатор хода работы.
    */
   private void resolveComponent(
     ServerContext serverContext,
     List<URI> component,
     Map<URI, List<MethodSymbol>> byDocument,
-    List<MethodSymbol> methods
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
   ) {
+    var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
+    methods.forEach(method -> progressReporter.tick());
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
