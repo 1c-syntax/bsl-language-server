@@ -37,11 +37,14 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
@@ -68,6 +71,7 @@ class MethodReturnTypeIndexerTest {
   private ExpressionTypeInferencer inferencer;
   private SymbolTypeIndex symbolTypeIndex;
   private MethodReturnTypeIndexer indexer;
+  private ExecutorService resolveExecutor;
 
   private DocumentContext source;
   private DocumentContext consumer;
@@ -81,11 +85,15 @@ class MethodReturnTypeIndexerTest {
     // Язык нужен настоящий: на нём индекс берёт тексты для индикатора хода работы.
     var configuration = mock(GlobalLanguageServerConfiguration.class);
     when(configuration.getLanguage()).thenReturn(Language.RU);
+    // Ярусы прохода считаются на пуле; здесь он однопоточный, чтобы проверялось поведение
+    // прохода, а не работа пула.
+    resolveExecutor = Executors.newSingleThreadExecutor();
     indexer = new MethodReturnTypeIndexer(
       inferencer,
       symbolTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
-      configuration
+      configuration,
+      resolveExecutor
     );
 
     source = document("file:///source.bsl");
@@ -105,6 +113,11 @@ class MethodReturnTypeIndexerTest {
 
     returns(sourceMethod, TypeSet.EMPTY);
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
+  }
+
+  @AfterEach
+  void stopExecutor() {
+    resolveExecutor.shutdownNow();
   }
 
   @Test
@@ -168,6 +181,24 @@ class MethodReturnTypeIndexerTest {
 
     // then: отложенный метод пересчитан на месте — документ разобран, догружать нечего.
     verify(inferencer).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void emptyValuedFunctionIsRecomputedAfterWorkspaceIsPopulated() {
+    // given: при разборе значение функции вышло пустым, и неполным расчёт себя не считает:
+    // вызов вёл в модуль, ещё не зарегистрированный в рабочей области, поэтому не разрешился
+    // ни во что — и о пропущенном сообщить было некому.
+    returns(sourceMethod, TypeSet.EMPTY);
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+    clearInvocations(inferencer);
+
+    // when: рабочая область наполнена, и теперь тот же вызов разрешается.
+    returns(sourceMethod, STRING);
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(source)));
+
+    // then: пустое значение пересчитано. Иначе функция навсегда осталась бы без типа, а
+    // повезло ей или нет — решал бы порядок наполнения, разный от запуска к запуску.
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(STRING);
   }
 
   @Test

@@ -111,6 +111,15 @@ public class ExecutorConfiguration {
     return createWorkspaceForkJoinPool("populate-context-");
   }
 
+  // resolveReturnTypesExecutor — отдельный от populateContextExecutor: проход доразрешения
+  // запускается слушателем события наполнения, то есть изнутри задачи того пула, и класть
+  // в него же собственные задачи означало бы занимать пул, который сейчас занят.
+  @Bean(destroyMethod = "shutdown")
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
+  public ExecutorService resolveReturnTypesExecutor() {
+    return createWorkspaceForkJoinPool("resolve-return-types-");
+  }
+
   // computeConfigurationExecutor — singleton, вызывает MDClasses (не использует ThreadLocal BSL LS)
   @Bean(destroyMethod = "shutdown")
   public ExecutorService computeConfigurationExecutor() {

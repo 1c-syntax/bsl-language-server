@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeI
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -48,14 +49,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -85,7 +90,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Предохранитель на случай незамеченной немонотонности пересчёта. */
   private static final int MAX_PASSES = 10;
 
-  /** Сколько документов допустимо держать разобранными разом ради обхода цикла. */
+  /**
+   * Сколько документов допустимо держать разобранными разом: и ради обхода цикла, и ради
+   * параллельного счёта яруса.
+   */
   private static final int MAX_DOCUMENTS_IN_MEMORY = 8;
 
   private final ExpressionTypeInferencer inferencer;
@@ -93,6 +101,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
+
+  /**
+   * Пул, на котором считаются компоненты одного яруса. Свой, а не пул наполнения: проход
+   * запускается слушателем события наполнения, то есть изнутри задачи того пула, и класть
+   * туда собственные задачи означало бы занимать пул, который сейчас занят. Воркеры
+   * выставляют себе URI рабочей области — без этого workspace-скоуп из чужого потока не
+   * резолвится.
+   */
+  @Qualifier("resolveReturnTypesExecutor")
+  private final ExecutorService resolveReturnTypesExecutor;
 
   /**
    * Документы, чьи значения построены на этом. Связи держатся по документам, а не по
@@ -204,11 +222,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var serverContext = event.getSource();
     maintenance = true;
     var deferred = pending.size();
+    var startedAt = System.nanoTime();
     rebuilt.set(0);
     rebuiltUris.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
-      pending.size(),
-      getMessage("resolveMethodsPostfix")
+      documentsOf(pending),
+      getMessage("resolveDocumentsPostfix")
     );
     progressReporter.beginProgress(getMessage("resolveReturnTypes"));
     try {
@@ -219,8 +238,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
     }
     LOGGER.debug("Доразрешение типов возврата: отложено методов {}, разборов документов {},"
-        + " из них различных документов {}",
-      deferred, rebuilt.get(), rebuiltUris.size());
+        + " из них различных документов {}, заняло {} мс",
+      deferred, rebuilt.get(), rebuiltUris.size(), (System.nanoTime() - startedAt) / 1_000_000);
   }
 
   /**
@@ -288,8 +307,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       }
     }
     if (!methods.isEmpty()) {
-      methodsByUri.computeIfAbsent(documentContext.getUri(), k -> new CopyOnWriteArrayList<>())
-        .addAll(methods);
+      rememberMethodsOfUri(documentContext.getUri(), methods);
     }
     return changed;
   }
@@ -300,8 +318,26 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param method метод.
    */
   private void rememberMethodOfUri(MethodSymbol method) {
-    methodsByUri.computeIfAbsent(method.getOwner().getUri(), k -> new CopyOnWriteArrayList<>())
-      .add(method);
+    rememberMethodsOfUri(method.getOwner().getUri(), List.of(method));
+  }
+
+  /**
+   * Запоминает методы в списке методов их документа, чтобы записи ушли вместе с ним.
+   * <p>
+   * Список берётся и пополняется одним неделимым действием: возьми его отдельно, и
+   * очистка документа успеет выкинуть список из карты между взятием и пополнением. Метод
+   * остался бы помеченным как посчитанный, но недостижимым из карты — и следующая
+   * очистка пометку бы уже не сняла.
+   *
+   * @param uri     URI документа.
+   * @param methods методы документа.
+   */
+  private void rememberMethodsOfUri(URI uri, List<MethodSymbol> methods) {
+    methodsByUri.compute(uri, (key, remembered) -> {
+      var all = remembered == null ? new CopyOnWriteArrayList<MethodSymbol>() : remembered;
+      all.addAll(methods);
+      return all;
+    });
   }
 
   /**
@@ -323,6 +359,15 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean store(MethodSymbol method, ComputedReturnTypes computed) {
     link(method, computed.consulted());
+    if (!maintenance && computed.types().isEmpty()) {
+      // Пустое значение функции, посчитанное при наполнении области, значит «неизвестно»
+      // чаще, чем «ничего не возвращает»: вызов в модуль, до которого очередь ещё не
+      // дошла, не разрешается ни во что, поэтому и о пропущенном сообщить некому — расчёт
+      // сам себя неполным не считает. Такие пересчитываются проходом, когда область
+      // наполнена и все имена разрешаются одинаково. Повторно сюда они не попадают: в
+      // самом проходе пустое значение уже окончательно.
+      pending.add(method);
+    }
     if (computed.incomplete()) {
       // Расчёт видел метод, значение которого ещё не посчитано: так бывает, пока рабочая
       // область наполняется. Такой метод пересчитывается проходом после наполнения.
@@ -389,6 +434,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
+   * Сколько различных документов стоит за методами.
+   *
+   * @param methods методы.
+   * @return число документов.
+   */
+  private static int documentsOf(Collection<MethodSymbol> methods) {
+    return (int) methods.stream().map(method -> method.getOwner().getUri()).distinct().count();
+  }
+
+  /**
    * Разносит накопленные общим проходом изменения, догружая документы потребителей.
    *
    * @param serverContext    рабочая область.
@@ -402,10 +457,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
-      // Проход вскрывает новые зависимости, поэтому общее число методов заранее не
-      // известно: наращиваем его по мере того, как работа находится. Считается ровно то,
-      // по чему идёт отсчёт, — методы, иначе числитель убегает за знаменатель.
-      planned += roots.size();
+      // Проход вскрывает новые зависимости, поэтому общий объём работы заранее не
+      // известен: наращиваем его по мере того, как работа находится. Считается ровно то,
+      // по чему идёт отсчёт, — документы, иначе числитель убегает за знаменатель.
+      planned += documentsOf(roots);
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
       LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}",
@@ -431,10 +486,24 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * приходится документ целиком, и один документ загружался заново под каждый свой
    * метод — на ssl_3_1 это дало 4252 разбора против 215.
    * <p>
-   * Проход последовательный: блокировки документов берутся и отпускаются в одном потоке.
-   * Разложенный по пулу, он упирался в то, что воркеры ждут чужие блокировки, а
-   * компенсировать такое ожидание {@code ForkJoinPool} не умеет — пул голодал и проход
-   * вставал.
+   * Компоненты одного яруса считаются разом: зависимостей между ними нет по построению,
+   * документы у них разные, и каждая берёт замки только своих. Ярусов на реальной
+   * конфигурации единицы, а компонент в первом — больше половины, поэтому ярусный обход
+   * распараллеливается почти целиком. Пул нужен именно тот, чьи воркеры несут рабочую
+   * область: без неё бины workspace-скоупа из чужого потока не достаются.
+   * <p>
+   * Разом разобранных документов при этом не больше {@link #MAX_DOCUMENTS_IN_MEMORY} —
+   * столько же, сколько проход и так позволяет себе на одном цикле. Параллельно идут
+   * только компоненты из одного документа, держащие несколько считаются по одной, а место
+   * в пределе занимается на время расчёта компоненты.
+   * <p>
+   * Независимость компонент яруса опирается на связи, собранные прошлым расчётом, а
+   * пересчёт способен дойти до документа, которого в них не было: до наполнения области
+   * вызов туда не разрешался вовсе. Такой документ может считаться в это же время
+   * соседней компонентой, и что прочтёт расчёт, решит момент. Из-под порядка это не
+   * выбивается: он и в последовательном проходе задан набором отложенного, то есть тоже
+   * не воспроизводится дословно; замер мерцания на ssl_3_1 разницы между проходами не
+   * показал.
    *
    * @param serverContext    рабочая область.
    * @param roots            отложенные методы.
@@ -451,11 +520,88 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var order = DocumentDependencies.of(byDocument.keySet(),
       uri -> dependenciesByUri.getOrDefault(uri, Set.of()));
-    for (var component : order.components()) {
-      var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
-      methods.forEach(method -> progressReporter.tick());
-      resolveComponent(serverContext, component, byDocument, methods);
+    for (var tier : tiersOf(order.components(), byDocument.keySet())) {
+      // Компонента из нескольких документов — цикл: она держит их разобранными до
+      // неподвижной точки. Такие считаются по одной, иначе предел держимых документов
+      // множился бы на ширину пула, а память здесь дороже секунд. Их единицы: на реальной
+      // конфигурации почти каждая компонента — один документ.
+      var cycles = tier.stream().filter(component -> component.size() > 1).toList();
+      for (var cycle : cycles) {
+        resolveComponent(serverContext, cycle, byDocument, progressReporter);
+      }
+      var singles = tier.stream().filter(component -> component.size() == 1).toList();
+      if (singles.size() == 1) {
+        resolveComponent(serverContext, singles.get(0), byDocument, progressReporter);
+        continue;
+      }
+      var loaded = new Semaphore(MAX_DOCUMENTS_IN_MEMORY);
+      var tasks = singles.stream()
+        .map(component -> CompletableFuture.runAsync(
+          () -> resolveHoldingPermit(loaded, serverContext, component, byDocument, progressReporter),
+          resolveReturnTypesExecutor))
+        .toArray(CompletableFuture[]::new);
+      CompletableFuture.allOf(tasks).join();
     }
+  }
+
+  /**
+   * Считает компоненту, заняв место в пределе разом разобранных документов.
+   * <p>
+   * Предел явный, а не «сколько воркеров в пуле»: ширина пула берётся из числа ядер, и на
+   * большой машине проход держал бы разобранными десятки документов. Дерево разбора —
+   * самое тяжёлое, что есть у документа, поэтому счёт идёт на документы, а не на потоки.
+   *
+   * @param loaded           предел разом разобранных документов.
+   * @param serverContext    рабочая область.
+   * @param component        документы компоненты.
+   * @param byDocument       отложенные методы по документам.
+   * @param progressReporter индикатор хода работы.
+   */
+  private void resolveHoldingPermit(
+    Semaphore loaded,
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+  ) {
+    loaded.acquireUninterruptibly();
+    try {
+      resolveComponent(serverContext, component, byDocument, progressReporter);
+    } finally {
+      loaded.release();
+    }
+  }
+
+  /**
+   * Разбивает компоненты на ярусы: компонента попадает на ярус следующий за наибольшим
+   * ярусом тех, от кого она зависит.
+   * <p>
+   * Компоненты приходят в обратном топологическом порядке, поэтому ярус каждой известен к
+   * моменту, когда до неё дошла очередь. Внутри яруса зависимостей нет, и считать его
+   * компоненты можно в любом порядке и одновременно.
+   *
+   * @param components компоненты в обратном топологическом порядке.
+   * @param inWork     документы, которые предстоит пересчитать: зависимости на прочие
+   *                   порядка не задают — те уже посчитаны окончательно.
+   * @return ярусы в порядке возрастания.
+   */
+  private List<List<List<URI>>> tiersOf(List<List<URI>> components, Set<URI> inWork) {
+    var tierOfUri = new HashMap<URI, Integer>();
+    var tiers = new ArrayList<List<List<URI>>>();
+    for (var component : components) {
+      var tier = component.stream()
+        .flatMap(uri -> dependenciesByUri.getOrDefault(uri, Set.<URI>of()).stream())
+        .filter(inWork::contains)
+        .map(dependency -> tierOfUri.getOrDefault(dependency, 0))
+        .max(Integer::compare)
+        .orElse(0);
+      component.forEach(uri -> tierOfUri.put(uri, tier + 1));
+      while (tiers.size() <= tier) {
+        tiers.add(new ArrayList<>());
+      }
+      tiers.get(tier).add(component);
+    }
+    return tiers;
   }
 
   /**
@@ -464,6 +610,31 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * Компонента из одного документа считается за один заход: всё, от чего она зависит, уже
    * посчитано. В цикле заходов несколько, поэтому его документы держатся загруженными —
    * так повторные обороты не стоят ни одного лишнего разбора.
+   *
+   * @param serverContext    рабочая область.
+   * @param component        документы компоненты.
+   * @param byDocument       отложенные методы по документам.
+   * @param progressReporter индикатор хода работы.
+   */
+  private void resolveComponent(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+  ) {
+    var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
+    try {
+      resolveComponent(serverContext, component, byDocument, methods);
+    } finally {
+      // Единица счёта — документ: он и есть единица работы прохода, а методов в нём
+      // сколько угодно. Отсчёт после работы: компонента считается целиком, и до её конца
+      // сказать про её документы нечего, а ярус вдобавок считается сразу многими потоками.
+      component.forEach(uri -> progressReporter.tick());
+    }
+  }
+
+  /**
+   * Доводит компоненту до неподвижной точки.
    *
    * @param serverContext рабочая область.
    * @param component     документы компоненты.
