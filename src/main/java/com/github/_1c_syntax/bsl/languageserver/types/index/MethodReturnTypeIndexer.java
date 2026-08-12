@@ -613,7 +613,30 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
   ) {
     var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
-    methods.forEach(method -> progressReporter.tick());
+    try {
+      resolveComponent(serverContext, component, byDocument, methods);
+    } finally {
+      // Отсчёт по сделанному, а не по взятому в работу: компонента считается целиком, и
+      // до её конца сказать про её методы нечего. Ярус вдобавок считается сразу многими
+      // потоками — отсчёт наперёд показывал бы готовым весь ярус на его старте.
+      methods.forEach(method -> progressReporter.tick());
+    }
+  }
+
+  /**
+   * Доводит компоненту до неподвижной точки.
+   *
+   * @param serverContext рабочая область.
+   * @param component     документы компоненты.
+   * @param byDocument    отложенные методы по документам.
+   * @param methods       отложенные методы компоненты.
+   */
+  private void resolveComponent(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    List<MethodSymbol> methods
+  ) {
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
