@@ -41,6 +41,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -202,6 +203,26 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void consumerOfDeferredMethodIsRecomputedToo() {
+    // given: значение источника вышло неполным и отложено, а значение потребителя посчитано
+    // на нём — то есть на значении, которое само ещё ждёт пересчёта. Сам потребитель
+    // неполным не считается: вызванный метод посчитан, просто посчитан предварительно.
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), false));
+    returns(sourceMethod, NUMBER);
+    when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(source, consumer)));
+
+    // then: потребитель пересчитан по доразрешённому значению источника. Иначе он навсегда
+    // остался бы с предварительным, а каким оно вышло, решает порядок наполнения.
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
   void releasedDocumentIsLoadedForRecomputeAndReleasedBack() {
     // given: отложенный метод лежит в документе, вторичные данные которого уже освобождены.
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
@@ -249,17 +270,22 @@ class MethodReturnTypeIndexerTest {
   }
 
   /**
-   * Рабочая область, в которой живёт документ: блокировки настоящие, состояние документа
+   * Рабочая область, в которой живут документы: блокировки настоящие, состояние документа
    * спрашивается у неё же.
    *
-   * @param documentContext документ.
+   * @param documentContexts документы рабочей области.
    * @return рабочая область.
    */
-  private static ServerContext serverContextOf(DocumentContext documentContext) {
-    var serverContext = documentContext.getServerContext();
-    var documents = Map.of(documentContext.getUri(), documentContext);
+  private static ServerContext serverContextOf(DocumentContext... documentContexts) {
+    var serverContext = documentContexts[0].getServerContext();
+    var documents = new HashMap<URI, DocumentContext>();
+    for (var documentContext : documentContexts) {
+      documents.put(documentContext.getUri(), documentContext);
+      when(documentContext.getServerContext()).thenReturn(serverContext);
+      when(serverContext.getDocumentState(documentContext)).thenReturn(DocumentState.WITH_CONTENT);
+    }
     when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
-    when(serverContext.getDocuments()).thenReturn(documents);
+    when(serverContext.getDocuments()).thenReturn(Map.copyOf(documents));
     return serverContext;
   }
 

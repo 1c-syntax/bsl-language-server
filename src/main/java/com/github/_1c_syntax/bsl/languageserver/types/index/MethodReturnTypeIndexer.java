@@ -359,6 +359,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean store(MethodSymbol method, ComputedReturnTypes computed) {
     link(method, computed.consulted());
+    if (!maintenance && computed.consulted().stream().anyMatch(pending::contains)) {
+      // Расчёт опирался на значение, которое само ждёт пересчёта: вызванный метод посчитан,
+      // но предварительно. Когда проход доведёт его до полного, вызывающему понадобится
+      // пересчёт — иначе он навсегда останется с предварительным, а каким оно вышло, решает
+      // порядок наполнения. Шаг один, без обхода потребителей по цепочке: цепочку проход
+      // разматывает сам, волна за волной.
+      pending.add(method);
+    }
     if (!maintenance && computed.types().isEmpty()) {
       // Пустое значение функции, посчитанное при наполнении области, значит «неизвестно»
       // чаще, чем «ничего не возвращает»: вызов в модуль, до которого очередь ещё не
