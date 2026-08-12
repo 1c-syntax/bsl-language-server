@@ -216,6 +216,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var serverContext = event.getSource();
     maintenance = true;
     var deferred = pending.size();
+    var startedAt = System.nanoTime();
     rebuilt.set(0);
     rebuiltUris.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
@@ -231,8 +232,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
     }
     LOGGER.debug("Доразрешение типов возврата: отложено методов {}, разборов документов {},"
-        + " из них различных документов {}",
-      deferred, rebuilt.get(), rebuiltUris.size());
+        + " из них различных документов {}, заняло {} мс",
+      deferred, rebuilt.get(), rebuiltUris.size(), (System.nanoTime() - startedAt) / 1_000_000);
   }
 
   /**
