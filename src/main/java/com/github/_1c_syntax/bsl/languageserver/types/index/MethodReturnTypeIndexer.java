@@ -226,8 +226,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     rebuilt.set(0);
     rebuiltUris.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
-      pending.size(),
-      getMessage("resolveMethodsPostfix")
+      documentsOf(pending),
+      getMessage("resolveDocumentsPostfix")
     );
     progressReporter.beginProgress(getMessage("resolveReturnTypes"));
     try {
@@ -434,6 +434,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
+   * Сколько различных документов стоит за методами.
+   *
+   * @param methods методы.
+   * @return число документов.
+   */
+  private static int documentsOf(Collection<MethodSymbol> methods) {
+    return (int) methods.stream().map(method -> method.getOwner().getUri()).distinct().count();
+  }
+
+  /**
    * Разносит накопленные общим проходом изменения, догружая документы потребителей.
    *
    * @param serverContext    рабочая область.
@@ -447,10 +457,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
-      // Проход вскрывает новые зависимости, поэтому общее число методов заранее не
-      // известно: наращиваем его по мере того, как работа находится. Считается ровно то,
-      // по чему идёт отсчёт, — методы, иначе числитель убегает за знаменатель.
-      planned += roots.size();
+      // Проход вскрывает новые зависимости, поэтому общий объём работы заранее не
+      // известен: наращиваем его по мере того, как работа находится. Считается ровно то,
+      // по чему идёт отсчёт, — документы, иначе числитель убегает за знаменатель.
+      planned += documentsOf(roots);
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
       LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}",
@@ -616,10 +626,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     try {
       resolveComponent(serverContext, component, byDocument, methods);
     } finally {
-      // Отсчёт по сделанному, а не по взятому в работу: компонента считается целиком, и
-      // до её конца сказать про её методы нечего. Ярус вдобавок считается сразу многими
-      // потоками — отсчёт наперёд показывал бы готовым весь ярус на его старте.
-      methods.forEach(method -> progressReporter.tick());
+      // Единица счёта — документ: он и есть единица работы прохода, а методов в нём
+      // сколько угодно. Отсчёт после работы: компонента считается целиком, и до её конца
+      // сказать про её документы нечего, а ярус вдобавок считается сразу многими потоками.
+      component.forEach(uri -> progressReporter.tick());
     }
   }
 
