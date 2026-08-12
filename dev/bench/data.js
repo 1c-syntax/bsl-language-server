@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786566819894,
+  "lastUpdate": 1786573799069,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42656,6 +42656,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.342306010691744",
             "extra": "mean: 103.95365603764851 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9078737e621c51fe7163d8c370492f5f92023db8",
+          "message": "Merge pull request #4454 from 1c-syntax/fix/defer-consumers-of-deferred\n\nfix(types): опиравшийся на отложенное значение пересчитывается тоже",
+          "timestamp": "2026-08-13T00:08:30+02:00",
+          "tree_id": "267dd211bb429e33f5d7aefcd206e6c28de53f63",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9078737e621c51fe7163d8c370492f5f92023db8"
+        },
+        "date": 1786573784848,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.82703232765198,
+            "unit": "sec",
+            "range": "stddev: 1.0622566142324412",
+            "extra": "mean: 104.82703232765198 sec\nrounds: 3"
           }
         ]
       }
