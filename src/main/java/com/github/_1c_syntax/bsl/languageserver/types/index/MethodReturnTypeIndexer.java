@@ -90,8 +90,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Предохранитель на случай незамеченной немонотонности пересчёта. */
   private static final int MAX_PASSES = 10;
 
-  /** Сколько документов допустимо держать разобранными разом ради обхода цикла. */
-  private static final int MAX_DOCUMENTS_IN_MEMORY = 8;
+  /**
+   * Сколько документов допустимо держать разобранными разом: и ради обхода цикла, и ради
+   * параллельного счёта яруса. Этим же числом ограничена ширина пула прохода — работа
+   * упирается в разом разобранные документы, а не в число ядер.
+   */
+  public static final int MAX_DOCUMENTS_IN_MEMORY = 8;
 
   private final ExpressionTypeInferencer inferencer;
   private final SymbolTypeIndex symbolTypeIndex;
@@ -100,11 +104,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final GlobalLanguageServerConfiguration globalConfiguration;
 
   /**
-   * Пул, на котором считаются компоненты одного яруса. Тот же, на котором наполняется
-   * рабочая область: его воркеры выставляют себе её URI, без чего workspace-скоуп из
-   * чужого потока не резолвится. К началу прохода наполнение закончено, и пул свободен.
+   * Пул, на котором считаются компоненты одного яруса. Свой, а не пул наполнения: проход
+   * запускается слушателем события наполнения, то есть изнутри задачи того пула, и класть
+   * туда собственные задачи означало бы занимать пул, который сейчас занят. Воркеры
+   * выставляют себе URI рабочей области — без этого workspace-скоуп из чужого потока не
+   * резолвится.
    */
-  @Qualifier("populateContextExecutor")
+  @Qualifier("resolveReturnTypesExecutor")
   private final ExecutorService resolveReturnTypesExecutor;
 
   /**
