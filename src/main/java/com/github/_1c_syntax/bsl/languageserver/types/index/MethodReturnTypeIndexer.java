@@ -92,10 +92,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /**
    * Сколько документов допустимо держать разобранными разом: и ради обхода цикла, и ради
-   * параллельного счёта яруса. Этим же числом ограничена ширина пула прохода — работа
-   * упирается в разом разобранные документы, а не в число ядер.
+   * параллельного счёта яруса.
    */
-  public static final int MAX_DOCUMENTS_IN_MEMORY = 8;
+  private static final int MAX_DOCUMENTS_IN_MEMORY = 8;
 
   private final ExpressionTypeInferencer inferencer;
   private final SymbolTypeIndex symbolTypeIndex;
@@ -308,8 +307,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       }
     }
     if (!methods.isEmpty()) {
-      methodsByUri.computeIfAbsent(documentContext.getUri(), k -> new CopyOnWriteArrayList<>())
-        .addAll(methods);
+      rememberMethodsOfUri(documentContext.getUri(), methods);
     }
     return changed;
   }
@@ -320,8 +318,26 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param method метод.
    */
   private void rememberMethodOfUri(MethodSymbol method) {
-    methodsByUri.computeIfAbsent(method.getOwner().getUri(), k -> new CopyOnWriteArrayList<>())
-      .add(method);
+    rememberMethodsOfUri(method.getOwner().getUri(), List.of(method));
+  }
+
+  /**
+   * Запоминает методы в списке методов их документа, чтобы записи ушли вместе с ним.
+   * <p>
+   * Список берётся и пополняется одним неделимым действием: возьми его отдельно, и
+   * очистка документа успеет выкинуть список из карты между взятием и пополнением. Метод
+   * остался бы помеченным как посчитанный, но недостижимым из карты — и следующая
+   * очистка пометку бы уже не сняла.
+   *
+   * @param uri     URI документа.
+   * @param methods методы документа.
+   */
+  private void rememberMethodsOfUri(URI uri, List<MethodSymbol> methods) {
+    methodsByUri.compute(uri, (key, remembered) -> {
+      var all = remembered == null ? new CopyOnWriteArrayList<MethodSymbol>() : remembered;
+      all.addAll(methods);
+      return all;
+    });
   }
 
   /**
