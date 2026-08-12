@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -41,6 +43,9 @@ class RecursiveReturnTypeTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
+
+  @Autowired
+  private ExpressionTypeInferencer inferencer;
 
   @Test
   void recursiveFunctionKeepsItsOwnTypeInField() {
@@ -62,6 +67,71 @@ class RecursiveReturnTypeTest extends AbstractServerContextAwareTest {
     assertThat(nested.getAllFieldNames())
       .as("поле, заполненное рекурсивным вызовом, несёт тот же тип")
       .contains("Имя", "Вложенный");
+  }
+
+  @Test
+  void arrayDeclaredAsCollectionOfItselfCarriesItsOwnType() {
+    // given: функция объявлена возвращающей массив своих же результатов —
+    // `Массив из см. ЭтаЖеФункция`. Уравнение то же, что у структуры с полем, только
+    // ребро идёт через элемент коллекции.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/RecursiveCollection.bsl");
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext,
+      positionOf(documentContext, "Ветки();"));
+
+    // then: элемент массива — снова массив, то есть ребро не обрублено.
+    var ref = types.refs().iterator().next();
+    assertThat(types.getElementTypes(ref).refs())
+      .as("элемент массива, объявленного через себя, несёт тот же тип")
+      .containsExactly(ref);
+  }
+
+  @Test
+  void navigationThroughSelfTypedArrayResolves() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/RecursiveCollection.bsl");
+
+    // when: два уровня индексации по массиву, объявленному через себя.
+    var types = typeService.expressionTypesAt(documentContext,
+      positionOf(documentContext, "Ветки()[0][0]"));
+
+    // then: разворачивается по уровню на обращение и не уходит в бесконечность.
+    assertThat(types.refs())
+      .as("обращение по индексу к массиву из самого себя снова даёт массив")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Массив");
+  }
+
+  @Test
+  void repeatedComputationOfSelfTypedArrayGivesTheSame() {
+    // given: значение функции уже посчитано и лежит в индексе.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/RecursiveCollection.bsl");
+    var method = documentContext.getSymbolTree().getMethods().stream()
+      .filter(candidate -> "Ветки".equals(candidate.getName()))
+      .findFirst()
+      .orElseThrow();
+
+    // when: значение посчитано ещё дважды — теперь при непустом индексе, откуда узел
+    // рекурсии и берёт своё приближение.
+    var first = inferencer.computeReturnTypes(method).types();
+    var second = inferencer.computeReturnTypes(method).types();
+
+    // then: заходы совпадают. Разойдись они — значит каждый заход разворачивает
+    // самоссылку ещё на уровень, и приближения не сходятся: ровно та беда, ради которой
+    // ребро рекурсии и держится ссылкой, а не содержимым.
+    assertThat(second)
+      .as("повторный расчёт значения не разворачивает самоссылку глубже")
+      .isEqualTo(first);
   }
 
   /** Позиция первого вхождения текста в документе — на его первом символе. */
