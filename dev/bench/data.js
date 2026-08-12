@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786486259908,
+  "lastUpdate": 1786551009497,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42594,6 +42594,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6248849347457613",
             "extra": "mean: 98.20173597335815 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "10c26e2544954c481ef12dd27d8f699e037dd9b1",
+          "message": "Merge pull request #4449 from 1c-syntax/fix/recompute-empty-return-types\n\nfix(types): пустое значение функции доразрешается после наполнения",
+          "timestamp": "2026-08-12T17:56:11+02:00",
+          "tree_id": "236d8f9f12089390996ec70eb0e407d84c0632cb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/10c26e2544954c481ef12dd27d8f699e037dd9b1"
+        },
+        "date": 1786550996010,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.7390383084615,
+            "unit": "sec",
+            "range": "stddev: 3.331243166804583",
+            "extra": "mean: 105.7390383084615 sec\nrounds: 3"
           }
         ]
       }
