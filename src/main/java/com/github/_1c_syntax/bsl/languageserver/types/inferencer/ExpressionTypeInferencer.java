@@ -660,13 +660,21 @@ public class ExpressionTypeInferencer {
       }
     }
     TypeSet result = TypeSet.EMPTY;
+    var unparsedModule = false;
     for (var leftType : leftTypes.refs()) {
       // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
       // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
       // методами вида .Добавить()/.Получить()/.Вставить(), у которых return-тип
       // совпадает с element-ref'ом коллекции.
       var elementSet = leftTypes.getElementTypes(leftType);
-      for (var member : typeRegistry.getMembers(leftType, ctx.documentContext.getFileType())) {
+      var members = typeRegistry.getMembers(leftType, ctx.documentContext.getFileType());
+      // Тип конфигурационного модуля без единого члена — модуль, чей файл ещё не разобран:
+      // сами по себе типы объявлены заранее, а члены приходят с разбором. Пока области
+      // наполняются, до части модулей очередь не дошла, и обращение в такой модуль
+      // отвечает пустотой, ничем не отличимой от честной. Расчёт придётся повторить.
+      unparsedModule = unparsedModule
+        || (leftType.kind() == TypeKind.CONFIGURATION && members.isEmpty());
+      for (var member : members) {
         if (member.kind() != expectedKind) {
           continue;
         }
@@ -696,6 +704,9 @@ public class ExpressionTypeInferencer {
           }
         }
       }
+    }
+    if (result.isEmpty() && unparsedModule) {
+      ctx.sawMissing = true;
     }
     return attachDefaultElementTypes(result);
   }

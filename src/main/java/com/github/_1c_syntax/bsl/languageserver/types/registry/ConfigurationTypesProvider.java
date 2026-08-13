@@ -185,6 +185,7 @@ public class ConfigurationTypesProvider {
   private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
   private final FormTypesProvider formTypesProvider;
+  private final ConfigurationModuleMembersProvider moduleMembersProvider;
   private final XdtoTypesProvider xdtoTypesProvider;
   private final FormDataTypesRegistrar formDataTypesRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
@@ -267,6 +268,12 @@ public class ConfigurationTypesProvider {
     recorderIndex.index(children);
     int count = 0;
     for (var md : children) {
+      if (md.getMdoType() == MDOType.COMMON_MODULE) {
+        // Имя общего модуля известно уже здесь, а разбор его файла нужен только членам.
+        // Объявляем тип сразу: иначе обращение в модуль из документа, разобранного раньше
+        // него, не находит даже получателя.
+        moduleMembersProvider.declareCommonModuleType(md);
+      }
       if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
         count++;
       }
