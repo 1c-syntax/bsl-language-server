@@ -129,7 +129,7 @@ public class ConfigurationModuleMembersProvider {
    */
   public void declareCommonModuleType(MD mdObject) {
     var name = mdObject.getName();
-    if (name == null || name.isBlank()) {
+    if (name.isBlank()) {
       return;
     }
     typeRegistry.registerGlobalPropertyType(typeRegistry.registerConfigurationType(name), FileType.BSL);

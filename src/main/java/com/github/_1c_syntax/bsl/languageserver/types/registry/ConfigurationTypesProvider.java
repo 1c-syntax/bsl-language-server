@@ -268,12 +268,6 @@ public class ConfigurationTypesProvider {
     recorderIndex.index(children);
     int count = 0;
     for (var md : children) {
-      if (md.getMdoType() == MDOType.COMMON_MODULE) {
-        // Имя общего модуля известно уже здесь, а разбор его файла нужен только членам.
-        // Объявляем тип сразу: иначе обращение в модуль из документа, разобранного раньше
-        // него, не находит даже получателя.
-        moduleMembersProvider.declareCommonModuleType(md);
-      }
       if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
         count++;
       }
@@ -336,6 +330,13 @@ public class ConfigurationTypesProvider {
       return false;
     }
     var mdoType = md.getMdoType();
+    if (mdoType == MDOType.COMMON_MODULE) {
+      // Имя общего модуля известно уже здесь, а разбор его файла нужен только членам.
+      // Тип объявляется сразу: иначе обращение в модуль из документа, разобранного раньше
+      // него, не находит даже получателя.
+      moduleMembersProvider.declareCommonModuleType(md);
+      return false;
+    }
     if (!MANAGER_TYPES.contains(mdoType)) {
       return false;
     }

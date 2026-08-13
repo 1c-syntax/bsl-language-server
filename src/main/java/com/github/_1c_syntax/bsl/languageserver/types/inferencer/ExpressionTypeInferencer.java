@@ -628,6 +628,47 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
+  /**
+   * Типы, которые даёт один член получателя, если он тот самый.
+   *
+   * @param member       член типа-получателя.
+   * @param memberName   имя, которое ищется.
+   * @param expectedKind вид: метод или свойство.
+   * @param elementSet   элементы получателя — их поля прокидываются на строку, возвращённую
+   *                     методами вида {@code Добавить}/{@code Получить}.
+   * @param ctx          контекст расчёта.
+   * @return типы члена; {@link TypeSet#EMPTY}, если член не тот.
+   */
+  private TypeSet typesOfMember(MemberDescriptor member, String memberName, MemberKind expectedKind,
+                                TypeSet elementSet, InferenceContext ctx) {
+    if (member.kind() != expectedKind || !member.matches(memberName)) {
+      return TypeSet.EMPTY;
+    }
+    // Для метода проектного модуля (в т.ч. вызванного межмодульно как
+    // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
+    // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
+    // несёт лишь головной ref, поэтому без этого поля структуры терялись.
+    if (expectedKind == MemberKind.METHOD) {
+      var symbolReturn = member.getSourceSymbol()
+        .filter(MethodSymbol.class::isInstance)
+        .map(MethodSymbol.class::cast)
+        .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
+        .filter(returned -> !returned.isEmpty());
+      if (symbolReturn.isPresent()) {
+        return symbolReturn.get();
+      }
+    }
+    // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
+    var result = TypeSet.EMPTY;
+    for (var ref : member.returnTypes().refs()) {
+      if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+        var returned = enrichReturnRefWithElementFields(ref, elementSet);
+        result = result.union(carryDeclaredDecorations(member.returnTypes(), ref, returned));
+      }
+    }
+    return result;
+  }
+
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {
     var leftTypes = inferInternal(node.getLeft(), ctx);
     if (leftTypes.isEmpty()) {
@@ -675,34 +716,7 @@ public class ExpressionTypeInferencer {
       unparsedModule = unparsedModule
         || (leftType.kind() == TypeKind.CONFIGURATION && members.isEmpty());
       for (var member : members) {
-        if (member.kind() != expectedKind) {
-          continue;
-        }
-        if (!member.matches(memberName)) {
-          continue;
-        }
-        // Для метода проектного модуля (в т.ч. вызванного межмодульно как
-        // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
-        // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
-        // несёт лишь головной ref, поэтому без этого поля структуры терялись.
-        if (expectedKind == MemberKind.METHOD) {
-          var symbolReturn = member.getSourceSymbol()
-            .filter(MethodSymbol.class::isInstance)
-            .map(MethodSymbol.class::cast)
-            .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
-            .filter(returned -> !returned.isEmpty());
-          if (symbolReturn.isPresent()) {
-            result = result.union(symbolReturn.get());
-            continue;
-          }
-        }
-        // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
-        for (var ref : member.returnTypes().refs()) {
-          if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-            var returned = enrichReturnRefWithElementFields(ref, elementSet);
-            result = result.union(carryDeclaredDecorations(member.returnTypes(), ref, returned));
-          }
-        }
+        result = result.union(typesOfMember(member, memberName, expectedKind, elementSet, ctx));
       }
     }
     if (result.isEmpty() && unparsedModule) {
