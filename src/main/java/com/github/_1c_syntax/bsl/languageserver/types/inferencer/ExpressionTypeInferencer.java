@@ -709,12 +709,15 @@ public class ExpressionTypeInferencer {
       // совпадает с element-ref'ом коллекции.
       var elementSet = leftTypes.getElementTypes(leftType);
       var members = typeRegistry.getMembers(leftType, ctx.documentContext.getFileType());
-      // Тип конфигурационного модуля без единого члена — модуль, чей файл ещё не разобран:
-      // сами по себе типы объявлены заранее, а члены приходят с разбором. Пока области
-      // наполняются, до части модулей очередь не дошла, и обращение в такой модуль
-      // отвечает пустотой, ничем не отличимой от честной. Расчёт придётся повторить.
+      // Тип конфигурации, у которого нет ни одного члена из самой конфигурации, — модуль,
+      // чей файл ещё не разобран: типы объявлены заранее, а члены приносит разбор.
+      // Платформенные члены (у общего модуля это ЭтотОбъект) не в счёт: они приходят из
+      // синтакс-помощника и о разборе ничего не говорят — потому и различаются по
+      // standardLibrary. Пока область наполняется, обращение в такой модуль отвечает
+      // пустотой, ничем не отличимой от честной; расчёт придётся повторить.
       unparsedModule = unparsedModule
-        || (leftType.kind() == TypeKind.CONFIGURATION && members.isEmpty());
+        || (leftType.kind() == TypeKind.CONFIGURATION
+        && members.stream().allMatch(MemberDescriptor::standardLibrary));
       for (var member : members) {
         result = result.union(typesOfMember(member, memberName, expectedKind, elementSet, ctx));
       }
