@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786790852314,
+  "lastUpdate": 1786792398673,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42718,6 +42718,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3940552294189836",
             "extra": "mean: 103.22003142038982 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "60fd2d20afefee68186a800b51d7172ce9cafa4f",
+          "message": "Merge pull request #4460 from 1c-syntax/nixel2007-patch-1\n\nFix loop syntax in CreateQueryInCycleDiagnostic.bsl",
+          "timestamp": "2026-08-15T12:30:10+02:00",
+          "tree_id": "2a89f735dbc22ee87f93d77b266d24f497a3749f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/60fd2d20afefee68186a800b51d7172ce9cafa4f"
+        },
+        "date": 1786792386390,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.55952088038127,
+            "unit": "sec",
+            "range": "stddev: 4.789284514689891",
+            "extra": "mean: 105.55952088038127 sec\nrounds: 3"
           }
         ]
       }
