@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +109,30 @@ public class ConfigurationModuleMembersProvider {
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
     register(documentContext);
+  }
+
+  /**
+   * Объявляет тип общего модуля, не дожидаясь разбора его файла.
+   * <p>
+   * Имя общего модуля известно из метаданных, а разбор нужен только его членам. Без этого
+   * объявления имя модуля до разбора его файла не разрешается ни во что: обращение
+   * {@code ОбщийМодуль.Метод()} из чужого документа не находит даже получателя, тип
+   * результата выходит пустым — и сообщить о пропуске некому, потому что и метода-то не
+   * нашлось. Документы разбираются параллельно, поэтому кому не повезло, решает порядок,
+   * разный от запуска к запуску.
+   * <p>
+   * Члены остаются за разбором: здесь объявляется только сам тип и его видимость как
+   * глобального имени. Символ-источник для навигации доложит {@link #register}, когда
+   * дойдёт очередь до файла модуля.
+   *
+   * @param mdObject объект метаданных общего модуля.
+   */
+  public void declareCommonModuleType(MD mdObject) {
+    var name = mdObject.getName();
+    if (name.isBlank()) {
+      return;
+    }
+    typeRegistry.registerGlobalPropertyType(typeRegistry.registerConfigurationType(name), FileType.BSL);
   }
 
   /**

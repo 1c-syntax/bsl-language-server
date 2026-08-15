@@ -185,6 +185,7 @@ public class ConfigurationTypesProvider {
   private final CatalogOwnerTypesRegistrar catalogOwnerTypes;
   private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
   private final FormTypesProvider formTypesProvider;
+  private final ConfigurationModuleMembersProvider moduleMembersProvider;
   private final XdtoTypesProvider xdtoTypesProvider;
   private final FormDataTypesRegistrar formDataTypesRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
@@ -329,6 +330,13 @@ public class ConfigurationTypesProvider {
       return false;
     }
     var mdoType = md.getMdoType();
+    if (mdoType == MDOType.COMMON_MODULE) {
+      // Имя общего модуля известно уже здесь, а разбор его файла нужен только членам.
+      // Тип объявляется сразу: иначе обращение в модуль из документа, разобранного раньше
+      // него, не находит даже получателя.
+      moduleMembersProvider.declareCommonModuleType(md);
+      return false;
+    }
     if (!MANAGER_TYPES.contains(mdoType)) {
       return false;
     }

@@ -628,6 +628,47 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
+  /**
+   * Типы, которые даёт один член получателя, если он тот самый.
+   *
+   * @param member       член типа-получателя.
+   * @param memberName   имя, которое ищется.
+   * @param expectedKind вид: метод или свойство.
+   * @param elementSet   элементы получателя — их поля прокидываются на строку, возвращённую
+   *                     методами вида {@code Добавить}/{@code Получить}.
+   * @param ctx          контекст расчёта.
+   * @return типы члена; {@link TypeSet#EMPTY}, если член не тот.
+   */
+  private TypeSet typesOfMember(MemberDescriptor member, String memberName, MemberKind expectedKind,
+                                TypeSet elementSet, InferenceContext ctx) {
+    if (member.kind() != expectedKind || !member.matches(memberName)) {
+      return TypeSet.EMPTY;
+    }
+    // Для метода проектного модуля (в т.ч. вызванного межмодульно как
+    // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
+    // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
+    // несёт лишь головной ref, поэтому без этого поля структуры терялись.
+    if (expectedKind == MemberKind.METHOD) {
+      var symbolReturn = member.getSourceSymbol()
+        .filter(MethodSymbol.class::isInstance)
+        .map(MethodSymbol.class::cast)
+        .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
+        .filter(returned -> !returned.isEmpty());
+      if (symbolReturn.isPresent()) {
+        return symbolReturn.get();
+      }
+    }
+    // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
+    var result = TypeSet.EMPTY;
+    for (var ref : member.returnTypes().refs()) {
+      if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+        var returned = enrichReturnRefWithElementFields(ref, elementSet);
+        result = result.union(carryDeclaredDecorations(member.returnTypes(), ref, returned));
+      }
+    }
+    return result;
+  }
+
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {
     var leftTypes = inferInternal(node.getLeft(), ctx);
     if (leftTypes.isEmpty()) {
@@ -660,42 +701,29 @@ public class ExpressionTypeInferencer {
       }
     }
     TypeSet result = TypeSet.EMPTY;
+    var unparsedModule = false;
     for (var leftType : leftTypes.refs()) {
       // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
       // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
       // методами вида .Добавить()/.Получить()/.Вставить(), у которых return-тип
       // совпадает с element-ref'ом коллекции.
       var elementSet = leftTypes.getElementTypes(leftType);
-      for (var member : typeRegistry.getMembers(leftType, ctx.documentContext.getFileType())) {
-        if (member.kind() != expectedKind) {
-          continue;
-        }
-        if (!member.matches(memberName)) {
-          continue;
-        }
-        // Для метода проектного модуля (в т.ч. вызванного межмодульно как
-        // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
-        // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
-        // несёт лишь головной ref, поэтому без этого поля структуры терялись.
-        if (expectedKind == MemberKind.METHOD) {
-          var symbolReturn = member.getSourceSymbol()
-            .filter(MethodSymbol.class::isInstance)
-            .map(MethodSymbol.class::cast)
-            .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
-            .filter(returned -> !returned.isEmpty());
-          if (symbolReturn.isPresent()) {
-            result = result.union(symbolReturn.get());
-            continue;
-          }
-        }
-        // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
-        for (var ref : member.returnTypes().refs()) {
-          if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-            var returned = enrichReturnRefWithElementFields(ref, elementSet);
-            result = result.union(carryDeclaredDecorations(member.returnTypes(), ref, returned));
-          }
-        }
+      var members = typeRegistry.getMembers(leftType, ctx.documentContext.getFileType());
+      // Тип конфигурации, у которого нет ни одного члена из самой конфигурации, — модуль,
+      // чей файл ещё не разобран: типы объявлены заранее, а члены приносит разбор.
+      // Платформенные члены (у общего модуля это ЭтотОбъект) не в счёт: они приходят из
+      // синтакс-помощника и о разборе ничего не говорят — потому и различаются по
+      // standardLibrary. Пока область наполняется, обращение в такой модуль отвечает
+      // пустотой, ничем не отличимой от честной; расчёт придётся повторить.
+      unparsedModule = unparsedModule
+        || (leftType.kind() == TypeKind.CONFIGURATION
+        && members.stream().allMatch(MemberDescriptor::standardLibrary));
+      for (var member : members) {
+        result = result.union(typesOfMember(member, memberName, expectedKind, elementSet, ctx));
       }
+    }
+    if (result.isEmpty() && unparsedModule) {
+      ctx.sawMissing = true;
     }
     return attachDefaultElementTypes(result);
   }
