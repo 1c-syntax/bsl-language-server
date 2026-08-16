@@ -91,6 +91,8 @@ Additional sources of workspaces:
 
 Positions (`line`, `character`) are zero-based, as in LSP.
 
+No tool modifies files on disk. The analysis tools are marked read-only (`readOnlyHint`), so a client should not ask for confirmation on every call. The workspace management tools change server state and are therefore not read-only; `unregister_workspace` is additionally marked destructive (`destructiveHint`) because it throws away the index that was built, so a client may reasonably ask for confirmation on that one.
+
 ## Launch options
 
 | Option | Mode | Purpose |
