@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp.dto;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  * Зарегистрированное рабочее пространство: 1С-конфигурация или OneScript-проект,
@@ -38,8 +39,8 @@ public record WorkspaceDto(URI root, String name) {
 
   public static WorkspaceDto from(URI workspaceUri) {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-      var name = WorkspaceContextHolder.getName();
-      return new WorkspaceDto(workspaceUri, name == null ? workspaceUri.toString() : name);
+      // Имя после forUri всегда есть: незарегистрированное рабочее пространство отсекается там же.
+      return new WorkspaceDto(workspaceUri, Objects.requireNonNull(WorkspaceContextHolder.getName()));
     }
   }
 }
