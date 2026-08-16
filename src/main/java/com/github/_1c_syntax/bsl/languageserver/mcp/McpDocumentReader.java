@@ -39,7 +39,7 @@ import java.util.function.Function;
  * тот же, что наполняет LSP-сессия (и {@code analyze}/{@code format}).
  * <p>
  * Никакого отдельного состояния: документ ищется в зарегистрированных рабочих
- * пространствах провайдера. Чтение выполняется в контексте рабочего пространства
+ * папках провайдера. Чтение выполняется в контексте рабочей папки
  * ({@link WorkspaceContextHolder}) и под блокировкой документа — так же, как обработчики
  * LSP-запросов (см. {@code BSLTextDocumentService#withFreshDocumentContext}).
  * <p>
@@ -92,8 +92,8 @@ public class McpDocumentReader {
     var uri = Absolute.uri(new File(path));
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(
-        "File is not part of any registered workspace: " + path + ". "
-          + McpWorkspaces.registrationHint(serverContextProvider.getAllContexts().keySet())));
+        "File is not part of any registered workspace folder: " + path + ". "
+          + McpWorkspaceFolders.registrationHint(serverContextProvider.getAllContexts().keySet())));
 
     var lock = serverContext.getDocumentLock(uri);
     var existing = serverContext.getDocument(uri);

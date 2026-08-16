@@ -30,19 +30,19 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 
 /**
- * Выбор workspace для MCP-инструментов, у которых нет явной привязки к конкретному
+ * Выбор рабочей папки для MCP-инструментов, у которых нет явной привязки к конкретному
  * файлу (например, {@code type_info}, {@code global_member_info}). Клиент обязан явно
- * указать {@code root} (одно из значений, которые вернул {@code list_workspaces}), потому что
- * ответ может различаться между несколькими зарегистрированными пространствами (конфигурации,
- * OneScript-проекты, библиотеки).
+ * указать {@code root} (одно из значений, которые вернул {@code list_workspace_folders}), потому что
+ * ответ может различаться между зарегистрированными папками (конфигурации, OneScript-проекты,
+ * библиотеки).
  * <p>
- * Сравнение URI ведётся через {@link McpWorkspaces#toWorkspaceUri(String)} — чтобы клиентское
- * представление ({@code file://D:/repo} / {@code file:///D:/repo/} / голый путь {@code D:\repo})
- * сходилось с тем URI, под которым workspace зарегистрирован.
+ * Сравнение URI ведётся через {@link McpWorkspaceFolders#toWorkspaceFolderUri(String)} — чтобы
+ * клиентское представление ({@code file://D:/repo} / {@code file:///D:/repo/} / голый путь
+ * {@code D:\repo}) сходилось с тем URI, под которым папка зарегистрирована.
  * <p>
- * Инвариант ошибки: если корень не передан или не совпал ни с одним рабочим пространством,
+ * Инвариант ошибки: если корень не передан или не совпал ни с одной рабочей папкой,
  * сообщение перечисляет зарегистрированные корни и называет инструмент их регистрации
- * (см. {@link McpWorkspaces#registrationHint}).
+ * (см. {@link McpWorkspaceFolders#registrationHint}).
  */
 @Component
 @Profile("mcp")
@@ -52,27 +52,27 @@ public class McpWorkspaceResolver {
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Выбрать workspace для tool-запроса.
+   * Выбрать рабочую папку для tool-запроса.
    *
-   * @param requestedRoot Корень workspace (URI либо путь), на который ссылается запрос.
-   * @return URI зарегистрированного workspace.
+   * @param requestedRoot Корень рабочей папки (URI либо путь), на который ссылается запрос.
+   * @return URI зарегистрированной рабочей папки.
    * @throws IllegalArgumentException если {@code requestedRoot} пуст/отсутствует, либо не
-   *   совпадает ни с одним зарегистрированным workspace. Сообщение содержит список
-   *   зарегистрированных корней и указание на {@code register_workspace}.
+   *   совпадает ни с одной зарегистрированной рабочей папкой. Сообщение содержит список
+   *   зарегистрированных корней и указание на {@code register_workspace_folder}.
    */
   public URI resolveWorkspaceUri(@Nullable String requestedRoot) {
     var registeredRoots = serverContextProvider.getAllContexts().keySet();
     if (requestedRoot == null || requestedRoot.isBlank()) {
       throw new IllegalArgumentException(
-        "Workspace root is required: every workspace-scoped BSL tool must say which workspace to answer for. "
-          + McpWorkspaces.registrationHint(registeredRoots));
+        "Workspace folder root is required: every folder-scoped BSL tool must say which workspace "
+          + "folder to answer for. " + McpWorkspaceFolders.registrationHint(registeredRoots));
     }
-    var normalized = McpWorkspaces.toWorkspaceUri(requestedRoot);
+    var normalized = McpWorkspaceFolders.toWorkspaceFolderUri(requestedRoot);
     return registeredRoots.stream()
       .filter(uri -> uri.equals(normalized))
       .findFirst()
       .orElseThrow(() -> new IllegalArgumentException(
-        "No registered workspace matches root: " + requestedRoot + ". "
-          + McpWorkspaces.registrationHint(registeredRoots)));
+        "No registered workspace folder matches root: " + requestedRoot + ". "
+          + McpWorkspaceFolders.registrationHint(registeredRoots)));
   }
 }

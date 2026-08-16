@@ -30,33 +30,33 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class McpWorkspacesTest {
+class McpWorkspaceFoldersTest {
 
   @Test
   void normalizesFileUri() {
     var expected = Absolute.path("src/test/resources/cli").toUri();
 
-    assertThat(McpWorkspaces.toWorkspaceUri(expected.toString())).isEqualTo(expected);
+    assertThat(McpWorkspaceFolders.toWorkspaceFolderUri(expected.toString())).isEqualTo(expected);
   }
 
   @Test
   void normalizesPlainPath() {
     var expected = Absolute.path("src/test/resources/cli").toUri();
 
-    assertThat(McpWorkspaces.toWorkspaceUri("src/test/resources/cli")).isEqualTo(expected);
-    assertThat(McpWorkspaces.toWorkspaceUri("  src/test/resources/cli  ")).isEqualTo(expected);
-    assertThat(McpWorkspaces.toWorkspaceUri(Absolute.path("src/test/resources/cli").toString()))
+    assertThat(McpWorkspaceFolders.toWorkspaceFolderUri("src/test/resources/cli")).isEqualTo(expected);
+    assertThat(McpWorkspaceFolders.toWorkspaceFolderUri("  src/test/resources/cli  ")).isEqualTo(expected);
+    assertThat(McpWorkspaceFolders.toWorkspaceFolderUri(Absolute.path("src/test/resources/cli").toString()))
       .isEqualTo(expected);
   }
 
   @Test
   void hintAsksToRegisterWhenNothingIsRegistered() {
-    var hint = McpWorkspaces.registrationHint(List.of());
+    var hint = McpWorkspaceFolders.registrationHint(List.of());
 
     assertThat(hint)
-      .contains("No workspace is registered")
-      .contains("register_workspace")
-      .doesNotContain("Registered workspace roots");
+      .contains("No workspace folder is registered")
+      .contains("register_workspace_folder")
+      .doesNotContain("Registered workspace folders");
   }
 
   @Test
@@ -64,9 +64,9 @@ class McpWorkspacesTest {
     var first = URI.create("file:///a/first");
     var second = URI.create("file:///b/second");
 
-    var hint = McpWorkspaces.registrationHint(Set.of(second, first));
+    var hint = McpWorkspaceFolders.registrationHint(Set.of(second, first));
 
-    assertThat(hint).contains("Registered workspace roots: " + first + ", " + second);
-    assertThat(hint).contains("list_workspaces", "register_workspace");
+    assertThat(hint).contains("Registered workspace folders: " + first + ", " + second);
+    assertThat(hint).contains("list_workspace_folders", "register_workspace_folder");
   }
 }

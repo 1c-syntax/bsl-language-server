@@ -43,7 +43,7 @@ import static picocli.CommandLine.Option;
  * автоконфигурация Spring AI (профили {@code mcp,mcp-stdio} / {@code mcp,mcp-sse} /
  * {@code mcp,mcp-streamable}); инструменты ({@code @McpTool}) работают через общий
  * {@code ServerContextProvider}. Рабочие пространства клиент регистрирует инструментами
- * {@code register_workspace}/{@code list_workspaces}; дополнительно поддерживаются MCP roots
+ * {@code register_workspace_folder}/{@code list_workspace_folders}; дополнительно поддерживаются MCP roots
  * (см. {@code McpRootsChangeConsumer}).
  * <p>
  * Для {@code stdio} команда применяет глобальную конфигурацию и блокируется до отключения клиента

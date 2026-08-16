@@ -38,13 +38,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP-инструмент {@code unregister_workspace}: убирает ранее зарегистрированное рабочее
- * пространство из общего контекста сервера и освобождает его индекс. Файлы на диске не трогаются.
+ * MCP-инструмент {@code unregister_workspace_folder}: убирает ранее зарегистрированную рабочую
+ * папку из общего контекста сервера и освобождает её индекс. Файлы на диске не трогаются.
  */
 @Component
 @Profile("mcp")
 @RequiredArgsConstructor
-public class UnregisterWorkspaceTool {
+public class UnregisterWorkspaceFolderTool {
 
   private final McpWorkspaceResolver workspaceResolver;
   private final McpWorkspaceBootstrap workspaceBootstrap;
@@ -53,31 +53,31 @@ public class UnregisterWorkspaceTool {
   /**
    * Результат удаления.
    *
-   * @param root Корень удалённого рабочего пространства.
-   * @param remaining Рабочие пространства, оставшиеся зарегистрированными.
+   * @param root Корень удалённой рабочей папки.
+   * @param remaining Рабочие папки, оставшиеся зарегистрированными.
    */
   public record Result(URI root, List<WorkspaceDto> remaining) {
   }
 
   /**
-   * Снять регистрацию рабочего пространства.
+   * Снять регистрацию рабочей папки.
    * <p>
-   * Побочный эффект: рабочее пространство удаляется из общего контекста сервера вместе с
-   * собранным индексом; файлы на диске не изменяются.
+   * Побочный эффект: папка удаляется из общего контекста сервера вместе с собранным индексом;
+   * файлы на диске не изменяются.
    *
-   * @param root Корень зарегистрированного рабочего пространства (URI либо путь).
-   * @return Корень удалённого рабочего пространства и оставшиеся зарегистрированными.
-   * @throws IllegalArgumentException Если корень не совпал ни с одним зарегистрированным рабочим
-   *   пространством либо за ним не стоит каталог (синтетическое пространство LSP-клиента).
+   * @param root Корень зарегистрированной рабочей папки (URI либо путь).
+   * @return Корень удалённой рабочей папки и оставшиеся зарегистрированными.
+   * @throws IllegalArgumentException Если корень не совпал ни с одной зарегистрированной рабочей
+   *   папкой либо за ним не стоит каталог (синтетическая рабочая область LSP-клиента).
    */
   @McpTool(
-    name = "unregister_workspace",
+    name = "unregister_workspace_folder",
     description = """
-      Remove a previously registered workspace from this server and release its index. Pass the \
-      `root` reported by `list_workspaces`.
+      Remove a previously registered workspace folder from this server and release its index. Pass \
+      the `root` reported by `list_workspace_folders`.
       Only server-side state is dropped — no file on disk is touched. Afterwards the other BSL \
-      tools stop answering for that project until it is registered again with \
-      `register_workspace`.""",
+      tools stop answering for that folder until it is registered again with \
+      `register_workspace_folder`.""",
     // Output schema disabled for every tool of this server: Spring AI generates a schema the results
     // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
     // results are still returned, just unvalidated.
@@ -92,20 +92,20 @@ public class UnregisterWorkspaceTool {
       destructiveHint = true,
       idempotentHint = true,
       openWorldHint = false))
-  public Result unregisterWorkspace(
+  public Result unregisterWorkspaceFolder(
     @McpToolParam(required = true, description = McpToolParams.WORKSPACE_ROOT)
     String root
   ) {
     var workspaceUri = workspaceResolver.resolveWorkspaceUri(root);
     if (!"file".equalsIgnoreCase(workspaceUri.getScheme())) {
-      // Синтетическое рабочее пространство LSP-клиента (одиночный файл, untitled-буфер):
-      // каталога за ним нет, снимать нечего.
-      throw new IllegalArgumentException("Workspace `" + workspaceUri
+      // Синтетическая рабочая область LSP-клиента (одиночный файл, untitled-буфер):
+      // каталога за ней нет, снимать нечего.
+      throw new IllegalArgumentException("Workspace folder `" + workspaceUri
         + "` is not backed by a directory and cannot be unregistered.");
     }
     workspaceBootstrap.remove(Absolute.path(workspaceUri));
 
-    // Снимок живого представления: см. ListWorkspacesTool.
+    // Снимок живого представления: см. ListWorkspaceFoldersTool.
     var remaining = Map.copyOf(serverContextProvider.getAllContexts()).keySet().stream()
       .map(WorkspaceDto::from)
       .sorted(Comparator.comparing(workspace -> workspace.root().toString()))

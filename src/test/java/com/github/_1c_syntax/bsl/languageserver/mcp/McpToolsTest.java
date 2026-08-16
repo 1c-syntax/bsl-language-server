@@ -32,11 +32,11 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberCategory;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.tools.ListWorkspacesTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.ListWorkspaceFoldersTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -109,11 +109,11 @@ class McpToolsTest {
   @Autowired
   private GlobalMemberSearchTool globalMemberSearchTool;
   @Autowired
-  private ListWorkspacesTool listWorkspacesTool;
+  private ListWorkspaceFoldersTool listWorkspaceFoldersTool;
   @Autowired
-  private RegisterWorkspaceTool registerWorkspaceTool;
+  private RegisterWorkspaceFolderTool registerWorkspaceFolderTool;
   @Autowired
-  private UnregisterWorkspaceTool unregisterWorkspaceTool;
+  private UnregisterWorkspaceFolderTool unregisterWorkspaceFolderTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
@@ -398,7 +398,7 @@ class McpToolsTest {
     assertThatThrownBy(() ->
       globalMemberSearchTool.globalMemberSearch(FileType.BSL, unknownRoot, null, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace folder matches root");
   }
 
   @Test
@@ -406,7 +406,7 @@ class McpToolsTest {
     assertThatThrownBy(() ->
       globalMemberSearchTool.globalMemberSearch(FileType.BSL, null, null, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder root is required");
   }
 
   @Test
@@ -415,7 +415,7 @@ class McpToolsTest {
 
     assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace folder matches root");
   }
 
   @Test
@@ -424,21 +424,21 @@ class McpToolsTest {
 
     assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, unknownRoot, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace folder matches root");
   }
 
   @Test
   void typeInfoThrowsWhenRootIsMissing() {
     assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, "  ", null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder root is required");
   }
 
   @Test
   void globalMemberInfoThrowsWhenRootIsMissing() {
     assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder root is required");
   }
 
   @Test
@@ -455,7 +455,7 @@ class McpToolsTest {
 
   @Test
   void listWorkspacesReportsIndexedWorkspace() {
-    var result = listWorkspacesTool.listWorkspaces();
+    var result = listWorkspaceFoldersTool.listWorkspaceFolders();
 
     assertThat(result.workspaces()).extracting(WorkspaceDto::root).contains(WORKSPACE_URI);
     assertThat(result.workspaces())
@@ -463,24 +463,24 @@ class McpToolsTest {
       .singleElement()
       .satisfies(workspace ->
         assertThat(workspace.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString()));
-    assertThat(result.hint()).contains("Registered workspace roots", WORKSPACE_ROOT);
+    assertThat(result.hint()).contains("Registered workspace folders", WORKSPACE_ROOT);
   }
 
   @Test
   void listWorkspacesTellsHowToRegisterWhenNothingIsIndexed() {
-    unregisterWorkspaceTool.unregisterWorkspace(WORKSPACE_ROOT);
+    unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(WORKSPACE_ROOT);
 
-    var result = listWorkspacesTool.listWorkspaces();
+    var result = listWorkspaceFoldersTool.listWorkspaceFolders();
 
     assertThat(result.workspaces()).isEmpty();
-    assertThat(result.hint()).contains("No workspace is registered", "register_workspace");
+    assertThat(result.hint()).contains("No workspace folder is registered", "register_workspace_folder");
   }
 
   @Test
   void registerWorkspaceIndexesDirectoryAndUnblocksTools() {
     var cliDir = Absolute.path("src/test/resources/cli");
 
-    var result = registerWorkspaceTool.registerWorkspace(cliDir.toString(), null);
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), null);
 
     assertThat(result.alreadyRegistered()).isFalse();
     assertThat(result.workspace().root()).isEqualTo(cliDir.toUri());
@@ -492,7 +492,7 @@ class McpToolsTest {
   void registerWorkspaceAcceptsFileUri() {
     var cliUri = Absolute.path("src/test/resources/cli").toUri();
 
-    var result = registerWorkspaceTool.registerWorkspace(cliUri.toString(), null);
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliUri.toString(), null);
 
     assertThat(result.workspace().root()).isEqualTo(cliUri);
   }
@@ -501,10 +501,10 @@ class McpToolsTest {
   void registerWorkspaceKeepsNameGivenByClient() {
     var cliDir = Absolute.path("src/test/resources/cli");
 
-    var result = registerWorkspaceTool.registerWorkspace(cliDir.toString(), "Демо-конфигурация");
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), "Демо-конфигурация");
 
     assertThat(result.workspace().name()).isEqualTo("Демо-конфигурация");
-    assertThat(listWorkspacesTool.listWorkspaces().workspaces())
+    assertThat(listWorkspaceFoldersTool.listWorkspaceFolders().workspaces())
       .filteredOn(workspace -> cliDir.toUri().equals(workspace.root()))
       .singleElement()
       .satisfies(workspace -> assertThat(workspace.name()).isEqualTo("Демо-конфигурация"));
@@ -512,7 +512,7 @@ class McpToolsTest {
 
   @Test
   void registerWorkspaceDoesNotReindexKnownDirectory() {
-    var result = registerWorkspaceTool.registerWorkspace(Absolute.path(SRC_DIR).toString(), null);
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(SRC_DIR).toString(), null);
 
     assertThat(result.alreadyRegistered()).isTrue();
     assertThat(result.workspace().root()).isEqualTo(WORKSPACE_URI);
@@ -520,7 +520,7 @@ class McpToolsTest {
 
   @Test
   void registerWorkspaceRejectsFileInsteadOfDirectory() {
-    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(Absolute.path(FILE).toString(), null))
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(FILE).toString(), null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("is a file, not a directory");
   }
@@ -529,16 +529,16 @@ class McpToolsTest {
   void registerWorkspaceRejectsMissingDirectory() {
     var missing = Absolute.path("src/test/resources/there-is-no-such-directory").toString();
 
-    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(missing, null))
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(missing, null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("does not exist");
   }
 
   @Test
   void unregisterWorkspaceRemovesItAndReportsTheRest() {
-    registerWorkspaceTool.registerWorkspace(Absolute.path("src/test/resources/cli").toString(), null);
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path("src/test/resources/cli").toString(), null);
 
-    var result = unregisterWorkspaceTool.unregisterWorkspace(WORKSPACE_ROOT);
+    var result = unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(WORKSPACE_ROOT);
 
     assertThat(result.root()).isEqualTo(WORKSPACE_URI);
     assertThat(result.remaining()).extracting(WorkspaceDto::root).doesNotContain(WORKSPACE_URI);
@@ -549,9 +549,9 @@ class McpToolsTest {
   void unregisterWorkspaceThrowsWhenRootIsUnknown() {
     var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
 
-    assertThatThrownBy(() -> unregisterWorkspaceTool.unregisterWorkspace(unknownRoot))
+    assertThatThrownBy(() -> unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(unknownRoot))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root")
+      .hasMessageContaining("No registered workspace folder matches root")
       .hasMessageContaining(WORKSPACE_ROOT);
   }
 
@@ -562,24 +562,24 @@ class McpToolsTest {
     assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining(WORKSPACE_ROOT)
-      .hasMessageContaining("register_workspace")
-      .hasMessageContaining("list_workspaces");
+      .hasMessageContaining("register_workspace_folder")
+      .hasMessageContaining("list_workspace_folders");
   }
 
   @Test
   void missingRootErrorPointsAtWorkspaceTools() {
     assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required")
-      .hasMessageContaining("list_workspaces");
+      .hasMessageContaining("Workspace folder root is required")
+      .hasMessageContaining("list_workspace_folders");
   }
 
   @Test
   void fileOutsideWorkspaceErrorPointsAtRegisterTool() {
     assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("File is not part of any registered workspace")
-      .hasMessageContaining("register_workspace");
+      .hasMessageContaining("File is not part of any registered workspace folder")
+      .hasMessageContaining("register_workspace_folder");
   }
 
   @Test

@@ -2,7 +2,7 @@
 
 BSL Language Server can act as a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server — exposing 1C (BSL) and OneScript code analysis to AI agents and tools that support MCP.
 
-MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspaces are registered with the `register_workspace`/`list_workspaces` tools — see the "Workspaces" section below.
+MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspace folders are registered with the `register_workspace_folder`/`list_workspace_folders` tools — see the "Workspace folders" section below.
 
 !!! warning "Experimental feature"
     The MCP mode is built on Spring AI 2.0 (a milestone version at the time of writing). The API and behavior may change.
@@ -51,33 +51,35 @@ LSP over websocket and MCP over Streamable HTTP on the same web server:
 java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 ```
 
-## Workspaces
+## Workspace folders
 
-Every analysis tool answers only inside a registered workspace — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered workspace is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `root` argument.
+The terminology is LSP's: a **workspace folder** is a single project root directory, and the set of registered folders makes up the **workspace** this server serves. What gets registered and passed to the tools is a folder.
+
+Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `root` argument.
 
 The client workflow:
 
-1. `list_workspaces` — see what is already registered and get the `root` values.
-2. `register_workspace` with the project directory — if the project is not in the list yet. Pass the **workspace folder**: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the workspace root. The tool indexes the sources and returns the `root`; registering an already registered directory does not re-index it.
-3. `unregister_workspace` — release the index when the project is no longer needed.
+1. `list_workspace_folders` — see what is already registered and get the `root` values.
+2. `register_workspace_folder` with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the folder root. The tool indexes the sources and returns the `root`; registering an already registered directory does not re-index it.
+3. `unregister_workspace_folder` — release the index when the project is no longer needed.
 
 The error messages are self-contained: for an unknown or missing `root` the server lists the registered roots and names the tool that registers a new one, so an agent can recover without asking a human.
 
-Additional sources of workspaces:
+Additional sources of workspace folders:
 
-- **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspaces come from the LSP client (workspace folders) into the same shared context — there is no need to register them over MCP, they show up in `list_workspaces` right away.
+- **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspace folders come from the LSP client into the same shared context — there is no need to register them over MCP, they show up in `list_workspace_folders` right away.
 - **MCP roots.** Roots declared by the client through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) are still indexed automatically, including re-sync on `roots/list_changed`. This works as long as the server speaks the `2025-11-25` revision of the protocol — the one implemented by the MCP SDK it is built on — where roots are still active.
 
 !!! warning "MCP roots are deprecated"
-    In the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog) revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the `roots/list_changed` notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what `register_workspace`/`list_workspaces` do. Roots support is kept for compatibility with older clients; under the MCP feature lifecycle policy it cannot be removed earlier than twelve months after that revision, and this server will drop it when it moves to the new revision.
+    In the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog) revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the `roots/list_changed` notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what `register_workspace_folder`/`list_workspace_folders` do. Roots support is kept for compatibility with older clients; under the MCP feature lifecycle policy it cannot be removed earlier than twelve months after that revision, and this server will drop it when it moves to the new revision.
 
 ## Available tools
 
 | Tool | Purpose |
 | --- | --- |
-| `list_workspaces` | Registered workspaces: the `root` for the other tools and the name |
-| `register_workspace` | Register a project directory as a workspace and index its sources; the name can be given explicitly, otherwise the directory name is used |
-| `unregister_workspace` | Remove a workspace and release its index |
+| `list_workspace_folders` | Registered workspace folders: the `root` for the other tools and the name |
+| `register_workspace_folder` | Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used |
+| `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |
 | `document_symbols` | Symbol tree of a file (methods, regions, variables) |
 | `find_references` | All references to the symbol at a position |
@@ -91,7 +93,7 @@ Additional sources of workspaces:
 
 Positions (`line`, `character`) are zero-based, as in LSP.
 
-No tool modifies files on disk. The analysis tools are marked read-only (`readOnlyHint`), so a client should not ask for confirmation on every call. The workspace management tools change server state and are therefore not read-only; `unregister_workspace` is additionally marked destructive (`destructiveHint`) because it throws away the index that was built, so a client may reasonably ask for confirmation on that one.
+No tool modifies files on disk. The analysis tools are marked read-only (`readOnlyHint`), so a client should not ask for confirmation on every call. The workspace-folder management tools change server state and are therefore not read-only; `unregister_workspace_folder` is additionally marked destructive (`destructiveHint`) because it throws away the index that was built, so a client may reasonably ask for confirmation on that one.
 
 ## Launch options
 

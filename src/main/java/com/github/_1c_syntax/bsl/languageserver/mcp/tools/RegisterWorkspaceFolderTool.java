@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaces;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceFolders;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +36,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * MCP-инструмент {@code register_workspace}: регистрирует каталог рабочей области (аналог LSP
- * workspace folder — корень проекта, а не подкаталог с исходниками: конфигурационный файл
- * {@code .bsl-language-server.json} читается только из корня) и индексирует его исходники
- * 1С/OneScript, после чего файлы каталога становятся видны остальным инструментам, а его корень —
- * допустимым значением параметра {@code root}.
+ * MCP-инструмент {@code register_workspace_folder}: регистрирует каталог как рабочую папку
+ * (workspace folder в терминах LSP — корень проекта, а не подкаталог с исходниками:
+ * конфигурационный файл {@code .bsl-language-server.json} читается только из корня) и индексирует
+ * её исходники 1С/OneScript, после чего файлы папки становятся видны остальным инструментам,
+ * а её корень — допустимым значением параметра {@code root}.
  * <p>
  * Повторная регистрация уже зарегистрированного каталога переиндексацию не запускает: возвращается
  * текущее состояние с признаком {@code alreadyRegistered}.
@@ -48,14 +48,14 @@ import java.nio.file.Path;
 @Component
 @Profile("mcp")
 @RequiredArgsConstructor
-public class RegisterWorkspaceTool {
+public class RegisterWorkspaceFolderTool {
 
   private final McpWorkspaceBootstrap workspaceBootstrap;
 
   /**
    * Результат регистрации.
    *
-   * @param workspace Зарегистрированное рабочее пространство: его {@code root} нужно передавать
+   * @param workspace Зарегистрированная рабочая папка: её {@code root} нужно передавать
    *   в остальные инструменты.
    * @param alreadyRegistered {@code true}, если каталог был зарегистрирован ранее и повторная
    *   индексация не выполнялась.
@@ -64,31 +64,30 @@ public class RegisterWorkspaceTool {
   }
 
   /**
-   * Зарегистрировать каталог как рабочее пространство.
+   * Зарегистрировать каталог как рабочую папку.
    * <p>
    * Побочный эффект: для нового каталога выполняется индексация исходников — операция может быть
    * длительной. Уже зарегистрированный каталог не переиндексируется, возвращается его текущее
    * состояние.
    *
-   * @param path Каталог рабочей области (workspace folder): абсолютный или относительный путь
-   *   либо {@code file:}-URI.
-   * @param name Имя рабочего пространства; {@code null} — взять из имени каталога.
-   * @return Рабочее пространство и признак того, что оно было зарегистрировано ранее.
+   * @param path Каталог рабочей папки: абсолютный или относительный путь либо {@code file:}-URI.
+   * @param name Имя рабочей папки; {@code null} — взять из имени каталога.
+   * @return Рабочая папка и признак того, что она была зарегистрирована ранее.
    * @throws IllegalArgumentException Если путь пуст, не указывает на локальный каталог,
    *   не существует либо является файлом.
    */
   @McpTool(
-    name = "register_workspace",
+    name = "register_workspace_folder",
     description = """
-      Register a workspace folder and index its 1C:Enterprise (BSL) and OneScript sources, so that \
-      the other BSL tools can analyse it. Required before analysing any project the \
-      `list_workspaces` tool does not already report.
-      Pass the project root directory — the same folder an editor opens as an LSP workspace folder \
-      — not a sources subfolder and not a single file: `.bsl-language-server.json` is only read \
-      from the workspace root.
-      Indexing a large configuration may take a while; registering an already registered directory \
-      returns immediately without re-indexing. Returns the `root` to pass to the other tools. \
-      Nothing on disk is modified.""",
+      Add a workspace folder to this server and index its 1C:Enterprise (BSL) and OneScript \
+      sources, so that the other BSL tools can analyse it. Required before analysing any project \
+      the `list_workspace_folders` tool does not already report.
+      Pass the project root directory — a workspace folder in the LSP sense, the folder an editor \
+      opens — not a subfolder of it and not a single file: `.bsl-language-server.json` is only read \
+      from the folder root.
+      Indexing a large configuration may take a while; adding an already registered folder returns \
+      immediately without re-indexing. Returns the `root` to pass to the other tools. Nothing on \
+      disk is modified.""",
     // Output schema disabled for every tool of this server: Spring AI generates a schema the results
     // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
     // results are still returned, just unvalidated.
@@ -101,7 +100,7 @@ public class RegisterWorkspaceTool {
       destructiveHint = false,
       idempotentHint = true,
       openWorldHint = false))
-  public Result registerWorkspace(
+  public Result registerWorkspaceFolder(
     @McpToolParam(required = true, description = McpToolParams.WORKSPACE_PATH)
     String path,
     @McpToolParam(required = false, description = McpToolParams.WORKSPACE_NAME)
@@ -120,7 +119,7 @@ public class RegisterWorkspaceTool {
       throw new IllegalArgumentException(
         "Workspace path is required: pass the project root directory to index.");
     }
-    var uri = McpWorkspaces.toWorkspaceUri(rawPath);
+    var uri = McpWorkspaceFolders.toWorkspaceFolderUri(rawPath);
     if (!"file".equalsIgnoreCase(uri.getScheme())) {
       throw new IllegalArgumentException(
         "Workspace path must point to a local directory, got: " + rawPath);

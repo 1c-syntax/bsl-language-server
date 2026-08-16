@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaces;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceFolders;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -34,37 +34,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP-инструмент {@code list_workspaces}: перечисляет рабочие пространства, зарегистрированные
- * и проиндексированные сервером, с корнем ({@code root}) для остальных инструментов.
+ * MCP-инструмент {@code list_workspace_folders}: перечисляет рабочие папки (workspace folders
+ * в терминах LSP), зарегистрированные и проиндексированные сервером, с корнем ({@code root})
+ * для остальных инструментов.
  * <p>
- * Точка входа для клиента: пока рабочее пространство не зарегистрировано, ни один
- * workspace-зависимый инструмент работать не может. Поле {@code hint} в ответе описывает
- * следующий шаг — в том числе когда список пуст.
+ * Точка входа для клиента: пока не зарегистрирована ни одна папка, ни один зависящий от неё
+ * инструмент работать не может. Поле {@code hint} в ответе описывает следующий шаг — в том
+ * числе когда список пуст.
  */
 @Component
 @Profile("mcp")
 @RequiredArgsConstructor
-public class ListWorkspacesTool {
+public class ListWorkspaceFoldersTool {
 
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Список рабочих пространств.
+   * Список рабочих папок.
    *
-   * @param workspaces Зарегистрированные рабочие пространства, упорядоченные по корню.
+   * @param workspaces Зарегистрированные рабочие папки, упорядоченные по корню.
    * @param hint Что делать дальше: какие корни доступны и как зарегистрировать недостающий.
    */
   public record Result(List<WorkspaceDto> workspaces, String hint) {
   }
 
   @McpTool(
-    name = "list_workspaces",
+    name = "list_workspace_folders",
     description = """
-      List the workspaces (1C:Enterprise configurations and OneScript projects) currently registered \
-      and indexed by this server, together with the `root` value the other BSL tools expect.
-      Start here: every other BSL tool answers only inside a registered workspace, and file paths \
-      outside every registered workspace are rejected. An empty list means nothing is indexed yet — \
-      register the workspace folder with `register_workspace` first.""",
+      List the workspace folders (1C:Enterprise configurations and OneScript projects) currently \
+      registered and indexed by this server, together with the `root` value the other BSL tools \
+      expect. Together these folders make up the workspace this server serves, the same way an LSP \
+      client's workspace is made up of workspace folders.
+      Start here: every other BSL tool answers only inside a registered folder, and file paths \
+      outside every registered folder are rejected. An empty list means nothing is indexed yet — \
+      register the project directory with `register_workspace_folder` first.""",
     // Output schema disabled for every tool of this server: Spring AI generates a schema the results
     // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
     // results are still returned, just unvalidated.
@@ -76,7 +79,7 @@ public class ListWorkspacesTool {
       destructiveHint = false,
       idempotentHint = true,
       openWorldHint = false))
-  public Result listWorkspaces() {
+  public Result listWorkspaceFolders() {
     // Снимок: getAllContexts отдаёт живое представление, а список и подсказка обходят его порознь —
     // без копии параллельная регистрация попала бы в один из них и не попала в другой.
     var contexts = Map.copyOf(serverContextProvider.getAllContexts());
@@ -84,6 +87,6 @@ public class ListWorkspacesTool {
       .map(WorkspaceDto::from)
       .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
       .toList();
-    return new Result(workspaces, McpWorkspaces.registrationHint(contexts.keySet()));
+    return new Result(workspaces, McpWorkspaceFolders.registrationHint(contexts.keySet()));
   }
 }

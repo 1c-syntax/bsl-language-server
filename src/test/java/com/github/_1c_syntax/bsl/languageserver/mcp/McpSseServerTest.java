@@ -70,7 +70,7 @@ class McpSseServerTest {
       .containsExactlyInAnyOrder(
         "analyze_file", "document_symbols", "find_references", "call_hierarchy", "hover", "definition",
         "type_info", "type_at_position", "global_member_info", "global_member_search",
-        "list_workspaces", "register_workspace", "unregister_workspace");
+        "list_workspace_folders", "register_workspace_folder", "unregister_workspace_folder");
   }
 
   @Test

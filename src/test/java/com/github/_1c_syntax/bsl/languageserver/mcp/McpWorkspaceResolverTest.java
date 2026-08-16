@@ -50,16 +50,16 @@ class McpWorkspaceResolverTest {
   void throwsWhenRootIsNull() {
     assertThatThrownBy(() -> resolver.resolveWorkspaceUri(null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required")
+      .hasMessageContaining("Workspace folder root is required")
       // Ничего не зарегистрировано — сообщение должно вести к регистрации, а не просто фиксировать отказ.
-      .hasMessageContaining("register_workspace");
+      .hasMessageContaining("register_workspace_folder");
   }
 
   @Test
   void throwsWhenRootIsBlank() {
     assertThatThrownBy(() -> resolver.resolveWorkspaceUri("   "))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder root is required");
   }
 
   @Test
@@ -96,11 +96,11 @@ class McpWorkspaceResolverTest {
 
     assertThatThrownBy(() -> resolver.resolveWorkspaceUri(orphan))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root")
+      .hasMessageContaining("No registered workspace folder matches root")
       // Клиент должен узнать, что зарегистрировано и как добавить недостающее.
       .hasMessageContaining(uri.toString())
-      .hasMessageContaining("list_workspaces")
-      .hasMessageContaining("register_workspace");
+      .hasMessageContaining("list_workspace_folders")
+      .hasMessageContaining("register_workspace_folder");
   }
 
   @Test

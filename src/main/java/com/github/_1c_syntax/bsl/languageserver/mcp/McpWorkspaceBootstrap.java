@@ -36,12 +36,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 /**
- * Регистрация и удаление рабочих пространств MCP в общем {@link ServerContextProvider}.
+ * Регистрация и удаление рабочих папок MCP в общем {@link ServerContextProvider}.
  * <p>
- * Каталог приходит от клиента: явно — инструментом {@code register_workspace}, либо через MCP roots
- * (см. {@link McpRootsChangeConsumer}). Индексация выполняется так же, как в {@code analyze}.
+ * Каталог приходит от клиента: явно — инструментом {@code register_workspace_folder}, либо через
+ * MCP roots (см. {@link McpRootsChangeConsumer}). Индексация выполняется так же, как в {@code analyze}.
  * <p>
- * Все изменения набора рабочих пространств сериализованы на мониторе этого бина: источников
+ * Все изменения набора рабочих папок сериализованы на мониторе этого бина: источников
  * несколько (инструменты и roots), а регистрация — «проверить и добавить» с долгой индексацией
  * между шагами, так что параллельные вызовы иначе индексировали бы один каталог дважды.
  */
@@ -56,10 +56,10 @@ public class McpWorkspaceBootstrap {
   /**
    * Зарегистрировать и проиндексировать каталог, если он ещё не зарегистрирован.
    * <p>
-   * Атомарно относительно других изменений набора рабочих пространств.
+   * Атомарно относительно других изменений набора рабочих папок.
    *
    * @param srcDir Каталог исходных файлов.
-   * @param workspaceName Имя рабочего пространства; {@code null} — взять из последнего сегмента URI.
+   * @param workspaceName Имя рабочей папки; {@code null} — взять из последнего сегмента URI.
    * @return {@code true}, если каталог был зарегистрирован ранее и индексация не выполнялась.
    */
   public synchronized boolean register(Path srcDir, @Nullable String workspaceName) {
@@ -72,13 +72,14 @@ public class McpWorkspaceBootstrap {
     index(srcDir, workspaceName);
 
     if (!serverContextProvider.getAllContexts().containsKey(workspaceUri)) {
-      throw new IllegalStateException("Workspace was indexed but is not registered: " + workspaceUri);
+      throw new IllegalStateException(
+        "Workspace folder was indexed but is not registered: " + workspaceUri);
     }
     return false;
   }
 
   /**
-   * Зарегистрировать каталог исходников как рабочее пространство и проиндексировать его.
+   * Зарегистрировать каталог исходников как рабочую папку и проиндексировать его.
    * <p>
    * Уже зарегистрированный каталог индексируется повторно — если это нежелательно,
    * используйте {@link #register(Path, String)}.
@@ -91,11 +92,11 @@ public class McpWorkspaceBootstrap {
   }
 
   /**
-   * Зарегистрировать каталог исходников как рабочее пространство под заданным именем
+   * Зарегистрировать каталог исходников как рабочую папку под заданным именем
    * и проиндексировать его.
    *
    * @param srcDir Каталог исходных файлов.
-   * @param workspaceName Имя рабочего пространства; {@code null} — взять из последнего сегмента URI.
+   * @param workspaceName Имя рабочей папки; {@code null} — взять из последнего сегмента URI.
    * @return Количество проиндексированных файлов.
    */
   public synchronized int index(Path srcDir, @Nullable String workspaceName) {
@@ -113,9 +114,9 @@ public class McpWorkspaceBootstrap {
   }
 
   /**
-   * Удалить рабочее пространство из общего контекста сервера.
+   * Удалить рабочую папку из общего контекста сервера.
    *
-   * @param srcDir Каталог исходных файлов ранее добавленного рабочего пространства.
+   * @param srcDir Каталог исходных файлов ранее добавленной рабочей папки.
    */
   public synchronized void remove(Path srcDir) {
     var uri = srcDir.toUri().toString();

@@ -22,8 +22,12 @@
    `spring.ai.mcp.server.streamable-http.mcp-endpoint`). Профили: `mcp` + `lsp-mcp` (LSP по stdio,
    stdout занят каналом LSP) либо `mcp` + `websocket-mcp` (рядом с LSP-WebSocket, тот же порт).
 
-Workspaces клиент регистрирует **сам, инструментами** `register_workspace`/`list_workspaces`/
-`unregister_workspace` — это основной путь. Дополнительные источники: LSP workspace folders (при
+**Терминология — из LSP:** регистрируется *рабочая папка* (workspace folder) — один корень проекта;
+множество папок и есть *рабочая область* (workspace). В текстах для клиента и в javadoc пиши
+«рабочая папка», не «рабочее пространство» — иначе термины разъезжаются с протоколом.
+
+Папки клиент регистрирует **сам, инструментами** `register_workspace_folder`/`list_workspace_folders`/
+`unregister_workspace_folder` — это основной путь. Дополнительные источники: LSP workspace folders (при
 `--mcp` оба источника питают общий `ServerContextProvider`) и **MCP roots** (`McpRootsChangeConsumer`).
 Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_changed` оттуда уже удалён) —
 поддерживаются как совместимость, новую функциональность на них не завязывай.
@@ -31,19 +35,19 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 
 Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
 `McpWorkspaceBootstrap` (регистрация + индексация каталога), `McpWorkspaceResolver` (`root` →
-workspace), `McpWorkspaces` (нормализация `root`: URI или путь; общий текст подсказки о
+рабочая папка), `McpWorkspaceFolders` (нормализация `root`: URI или путь; общий текст подсказки о
 регистрации), `McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
 `McpDocumentReader` (единый доступ к документу: `read()` — из кэша, `analyze()` — свежий AST +
 диагностики).
 
-**Ошибки — часть API для агента.** Сообщение о незарегистрированном workspace обязано перечислять
+**Ошибки — часть API для агента.** Сообщение о незарегистрированной рабочей папке обязано перечислять
 доступные корни и называть инструмент регистрации: агент исправляется сам, без человека. Единый
-текст — `McpWorkspaces.registrationHint`, не пиши свой.
+текст — `McpWorkspaceFolders.registrationHint`, не пиши свой.
 
 ## Инструменты (`@McpTool`)
 
-`ListWorkspacesTool`/`RegisterWorkspaceTool`/`UnregisterWorkspaceTool` (управление рабочими
-пространствами) · `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
+`ListWorkspaceFoldersTool`/`RegisterWorkspaceFolderTool`/`UnregisterWorkspaceFolderTool` (управление
+рабочими папками) · `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
 члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
 `TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
 `FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`
@@ -53,7 +57,7 @@ workspace), `McpWorkspaces` (нормализация `root`: URI или пут�
 
 - Новый инструмент = метод `@McpTool`, делегирующий в существующий провайдер/подсистему через
   `McpDocumentReader`/`McpWorkspaceResolver`; бизнес-логику в `mcp/` не дублируй.
-- Инструментам, которым нужен workspace, его выдаёт `McpWorkspaceResolver` — не полагайся на
-  «текущий» неявно.
+- Инструментам, которым нужна рабочая папка, её выдаёт `McpWorkspaceResolver` — не полагайся на
+  «текущую» неявно.
 - Транспорт/профили задаёт `MainApplication` по аргументам — при добавлении транспорта правь и
   выбор профиля там, и соответствующий `application-*-mcp.properties`.

@@ -39,12 +39,12 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
- * Синхронизирует рабочие пространства MCP с корнями (roots), объявленными клиентом —
+ * Синхронизирует рабочие папки MCP с корнями (roots), объявленными клиентом —
  * прямой аналог workspace folders в LSP ({@code workspace/didChangeWorkspaceFolders}).
  * <p>
  * Бин подхватывается автоконфигурацией Spring AI как обработчик изменения roots: при каждом
  * {@code notifications/roots/list_changed} сервер регистрирует новые корни как рабочие
- * пространства (с индексацией в общий {@code ServerContextProvider}) и удаляет исчезнувшие.
+ * папки (с индексацией в общий {@code ServerContextProvider}) и удаляет исчезнувшие.
  */
 @Slf4j
 @Component
@@ -55,7 +55,7 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
   private final McpWorkspaceBootstrap workspaceBootstrap;
 
   /**
-   * Корни, ранее зарегистрированные как рабочие пространства (для вычисления разницы).
+   * Корни, ранее зарегистрированные как рабочие папки (для вычисления разницы).
    */
   private final Set<Path> registeredRoots = ConcurrentHashMap.newKeySet();
 

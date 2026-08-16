@@ -27,19 +27,19 @@ import java.net.URI;
 import java.util.Objects;
 
 /**
- * Зарегистрированное рабочее пространство: 1С-конфигурация или OneScript-проект,
- * исходники которого проиндексированы сервером.
+ * Зарегистрированная рабочая папка — workspace folder в терминах LSP: 1С-конфигурация или
+ * OneScript-проект, исходники которого проиндексированы сервером.
  *
- * @param root URI рабочего пространства — значение, которое инструменты принимают в параметре
+ * @param root URI рабочей папки — значение, которое инструменты принимают в параметре
  *   {@code root}.
- * @param name Имя рабочего пространства — то же, что {@code name} у workspace folder в LSP:
+ * @param name Имя рабочей папки — то же, что {@code name} у workspace folder в LSP:
  *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code root}.
  */
 public record WorkspaceDto(URI root, String name) {
 
   public static WorkspaceDto from(URI workspaceUri) {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-      // Имя после forUri всегда есть: незарегистрированное рабочее пространство отсекается там же.
+      // Имя после forUri всегда есть: незарегистрированная папка отсекается там же.
       return new WorkspaceDto(workspaceUri, Objects.requireNonNull(WorkspaceContextHolder.getName()));
     }
   }

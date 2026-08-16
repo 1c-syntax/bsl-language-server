@@ -29,40 +29,44 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
- * Адресация рабочих пространств в MCP: приведение корня, присланного клиентом, к URI
- * зарегистрированного workspace и общий текст подсказки о том, как workspace зарегистрировать.
+ * Адресация рабочих папок в MCP: приведение корня, присланного клиентом, к URI
+ * зарегистрированной рабочей папки и общий текст подсказки о том, как папку зарегистрировать.
  * <p>
- * Подсказка выносится сюда, чтобы все сообщения о незарегистрированном workspace
- * (резолв {@code root}, доступ к файлу, ответ {@code list_workspaces}) вели клиента в одно
+ * Рабочая папка здесь — то же, что workspace folder в LSP: один корневой каталог проекта.
+ * Множество зарегистрированных папок и составляет рабочую область (workspace), которую
+ * обслуживает сервер.
+ * <p>
+ * Подсказка выносится сюда, чтобы все сообщения о незарегистрированной папке
+ * (резолв {@code root}, доступ к файлу, ответ {@code list_workspace_folders}) вели клиента в одно
  * и то же место и не расходились между собой.
  */
-public final class McpWorkspaces {
+public final class McpWorkspaceFolders {
 
   /**
-   * Имя MCP-инструмента, который регистрирует и индексирует каталог как рабочее пространство.
+   * Имя MCP-инструмента, который регистрирует и индексирует каталог как рабочую папку.
    */
-  public static final String REGISTER_TOOL = "register_workspace";
+  public static final String REGISTER_TOOL = "register_workspace_folder";
 
   /**
-   * Имя MCP-инструмента, который перечисляет зарегистрированные рабочие пространства.
+   * Имя MCP-инструмента, который перечисляет зарегистрированные рабочие папки.
    */
-  public static final String LIST_TOOL = "list_workspaces";
+  public static final String LIST_TOOL = "list_workspace_folders";
 
-  private McpWorkspaces() {
+  private McpWorkspaceFolders() {
   }
 
   /**
-   * Привести корень, присланный клиентом, к URI в том же виде, в котором рабочие пространства
+   * Привести корень, присланный клиентом, к URI в том же виде, в котором рабочие папки
    * регистрируются в {@code ServerContextProvider}.
    * <p>
    * Принимается и URI ({@code file:///C:/repo}), и обычный путь файловой системы
    * ({@code C:\repo}, {@code /home/user/repo}, {@code ./repo}) — MCP-клиенты присылают и то, и другое.
    *
    * @param rawRoot Корень в виде URI либо пути файловой системы.
-   * @return Нормализованный URI рабочего пространства.
+   * @return Нормализованный URI рабочей папки.
    * @throws IllegalArgumentException Если значение не удаётся разобрать ни как URI, ни как путь.
    */
-  public static URI toWorkspaceUri(String rawRoot) {
+  public static URI toWorkspaceFolderUri(String rawRoot) {
     var trimmed = rawRoot.trim();
     try {
       if (hasUriScheme(trimmed)) {
@@ -71,26 +75,27 @@ public final class McpWorkspaces {
       return Absolute.path(trimmed).toUri();
     } catch (RuntimeException e) {
       throw new IllegalArgumentException(
-        "Unsupported workspace root `" + rawRoot + "`: expected an absolute directory path or a file: URI.", e);
+        "Unsupported workspace folder root `" + rawRoot
+          + "`: expected an absolute directory path or a file: URI.", e);
     }
   }
 
   /**
-   * Текст, объясняющий клиенту, какие рабочие пространства доступны и что делать, если нужного нет.
+   * Текст, объясняющий клиенту, какие рабочие папки доступны и что делать, если нужной нет.
    *
-   * @param registeredRoots Корни зарегистрированных рабочих пространств.
+   * @param registeredRoots Корни зарегистрированных рабочих папок.
    * @return Подсказка для добавления к сообщению об ошибке или к ответу инструмента.
    */
   public static String registrationHint(Collection<URI> registeredRoots) {
     if (registeredRoots.isEmpty()) {
-      return "No workspace is registered on this server yet, so no 1C/OneScript sources are indexed. "
-        + "Call the `" + REGISTER_TOOL + "` tool with the workspace folder — the project root directory "
-        + "an editor would open, the one holding the sources and, when present, "
+      return "No workspace folder is registered on this server yet, so no 1C/OneScript sources are "
+        + "indexed. Call the `" + REGISTER_TOOL + "` tool with the project root directory an editor "
+        + "would open as a workspace folder — the one holding the sources and, when present, "
         + "`.bsl-language-server.json` — and retry with the `root` it returns.";
     }
-    return "Registered workspace roots: "
+    return "Registered workspace folders: "
       + registeredRoots.stream().map(URI::toString).sorted().collect(Collectors.joining(", "))
-      + ". Pass one of them, or call the `" + REGISTER_TOOL + "` tool to register another project root. "
+      + ". Pass one of them, or call the `" + REGISTER_TOOL + "` tool to add another project directory. "
       + "The `" + LIST_TOOL + "` tool always returns the current list.";
   }
 
