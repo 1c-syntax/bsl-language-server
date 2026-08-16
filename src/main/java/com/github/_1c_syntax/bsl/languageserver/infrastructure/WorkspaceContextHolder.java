@@ -83,16 +83,6 @@ public final class WorkspaceContextHolder {
   }
 
   /**
-   * Имя, под которым зарегистрирован workspace.
-   *
-   * @param workspaceUri URI workspace.
-   * @return Зарегистрированное имя либо {@code null}, если workspace не зарегистрирован.
-   */
-  public static @Nullable String getName(URI workspaceUri) {
-    return WORKSPACE_NAMES.get(workspaceUri);
-  }
-
-  /**
    * Создать AutoCloseable-контекст workspace с URI и именем.
    * При закрытии восстанавливает предыдущее значение ThreadLocal.
    */

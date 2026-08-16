@@ -113,7 +113,7 @@ public class RegisterWorkspaceTool {
     // проиндексировали бы его дважды.
     var registration = workspaceBootstrap.register(srcDir, name);
     return new Result(
-      WorkspaceDto.from(srcDir.toUri(), registration.serverContext()),
+      WorkspaceDto.from(registration.serverContext()),
       registration.alreadyRegistered()
     );
   }

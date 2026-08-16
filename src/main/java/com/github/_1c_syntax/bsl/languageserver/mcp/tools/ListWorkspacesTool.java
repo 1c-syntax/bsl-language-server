@@ -80,8 +80,8 @@ public class ListWorkspacesTool {
     // Снимок: getAllContexts отдаёт живое представление, а список и подсказка обходят его порознь —
     // без копии параллельная регистрация попала бы в один из них и не попала в другой.
     var contexts = Map.copyOf(serverContextProvider.getAllContexts());
-    var workspaces = contexts.entrySet().stream()
-      .map(entry -> WorkspaceDto.from(entry.getKey(), entry.getValue()))
+    var workspaces = contexts.values().stream()
+      .map(WorkspaceDto::from)
       .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
       .toList();
     return new Result(workspaces, McpWorkspaces.registrationHint(contexts.keySet()));

@@ -461,10 +461,8 @@ class McpToolsTest {
     assertThat(result.workspaces())
       .filteredOn(workspace -> WORKSPACE_URI.equals(workspace.root()))
       .singleElement()
-      .satisfies(workspace -> {
-        assertThat(workspace.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString());
-        assertThat(workspace.documents()).isPositive();
-      });
+      .satisfies(workspace ->
+        assertThat(workspace.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString()));
     assertThat(result.hint()).contains("Registered workspace roots", WORKSPACE_ROOT);
   }
 
@@ -487,7 +485,6 @@ class McpToolsTest {
     assertThat(result.alreadyRegistered()).isFalse();
     assertThat(result.workspace().root()).isEqualTo(cliDir.toUri());
     assertThat(result.workspace().name()).isEqualTo("cli");
-    assertThat(result.workspace().documents()).isPositive();
     assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
   }
 

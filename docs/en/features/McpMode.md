@@ -75,7 +75,7 @@ Additional sources of workspaces:
 
 | Tool | Purpose |
 | --- | --- |
-| `list_workspaces` | Registered workspaces: the `root` for the other tools, the name and the number of indexed files |
+| `list_workspaces` | Registered workspaces: the `root` for the other tools and the name |
 | `register_workspace` | Register a project directory as a workspace and index its sources; the name can be given explicitly, otherwise the directory name is used |
 | `unregister_workspace` | Remove a workspace and release its index |
 | `analyze_file` | Diagnostics for a file |

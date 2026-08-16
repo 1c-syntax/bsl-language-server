@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.dto;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 
 import java.net.URI;
 
@@ -34,16 +33,10 @@ import java.net.URI;
  *   {@code root}.
  * @param name Имя рабочего пространства — то же, что {@code name} у workspace folder в LSP:
  *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code root}.
- * @param documents Количество проиндексированных в нём файлов {@code .bsl}/{@code .os}.
  */
-public record WorkspaceDto(URI root, String name, int documents) {
+public record WorkspaceDto(URI root, String name) {
 
-  public static WorkspaceDto from(URI workspaceUri, ServerContext serverContext) {
-    var name = WorkspaceContextHolder.getName(workspaceUri);
-    return new WorkspaceDto(
-      workspaceUri,
-      name == null ? workspaceUri.toString() : name,
-      serverContext.getDocuments().size()
-    );
+  public static WorkspaceDto from(ServerContext serverContext) {
+    return new WorkspaceDto(serverContext.getWorkspaceUri(), serverContext.getWorkspaceName());
   }
 }
