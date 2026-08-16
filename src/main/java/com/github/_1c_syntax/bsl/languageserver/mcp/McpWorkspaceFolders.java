@@ -62,12 +62,12 @@ public final class McpWorkspaceFolders {
    * Принимается и URI ({@code file:///C:/repo}), и обычный путь файловой системы
    * ({@code C:\repo}, {@code /home/user/repo}, {@code ./repo}) — MCP-клиенты присылают и то, и другое.
    *
-   * @param rawRoot Корень в виде URI либо пути файловой системы.
+   * @param rawFolder Рабочая папка в виде URI либо пути файловой системы.
    * @return Нормализованный URI рабочей папки.
    * @throws IllegalArgumentException Если значение не удаётся разобрать ни как URI, ни как путь.
    */
-  public static URI toWorkspaceFolderUri(String rawRoot) {
-    var trimmed = rawRoot.trim();
+  public static URI toWorkspaceFolderUri(String rawFolder) {
+    var trimmed = rawFolder.trim();
     try {
       if (hasUriScheme(trimmed)) {
         return Absolute.uri(trimmed);
@@ -75,7 +75,7 @@ public final class McpWorkspaceFolders {
       return Absolute.path(trimmed).toUri();
     } catch (RuntimeException e) {
       throw new IllegalArgumentException(
-        "Unsupported workspace folder root `" + rawRoot
+        "Unsupported workspace folder `" + rawFolder
           + "`: expected an absolute directory path or a file: URI.", e);
     }
   }
@@ -83,18 +83,18 @@ public final class McpWorkspaceFolders {
   /**
    * Текст, объясняющий клиенту, какие рабочие папки доступны и что делать, если нужной нет.
    *
-   * @param registeredRoots Корни зарегистрированных рабочих папок.
+   * @param registeredFolders URI зарегистрированных рабочих папок.
    * @return Подсказка для добавления к сообщению об ошибке или к ответу инструмента.
    */
-  public static String registrationHint(Collection<URI> registeredRoots) {
-    if (registeredRoots.isEmpty()) {
+  public static String registrationHint(Collection<URI> registeredFolders) {
+    if (registeredFolders.isEmpty()) {
       return "No workspace folder is registered on this server yet, so no 1C/OneScript sources are "
         + "indexed. Call the `" + REGISTER_TOOL + "` tool with the project root directory an editor "
         + "would open as a workspace folder — the one holding the sources and, when present, "
-        + "`.bsl-language-server.json` — and retry with the `root` it returns.";
+        + "`.bsl-language-server.json` — and retry with the `uri` it returns.";
     }
     return "Registered workspace folders: "
-      + registeredRoots.stream().map(URI::toString).sorted().collect(Collectors.joining(", "))
+      + registeredFolders.stream().map(URI::toString).sorted().collect(Collectors.joining(", "))
       + ". Pass one of them, or call the `" + REGISTER_TOOL + "` tool to add another project directory. "
       + "The `" + LIST_TOOL + "` tool always returns the current list.";
   }

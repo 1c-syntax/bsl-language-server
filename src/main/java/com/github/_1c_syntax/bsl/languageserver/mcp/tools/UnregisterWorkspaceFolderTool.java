@@ -53,10 +53,10 @@ public class UnregisterWorkspaceFolderTool {
   /**
    * Результат удаления.
    *
-   * @param root Корень удалённой рабочей папки.
+   * @param removed Удалённая рабочая папка.
    * @param remaining Рабочие папки, оставшиеся зарегистрированными.
    */
-  public record Result(URI root, List<WorkspaceDto> remaining) {
+  public record Result(WorkspaceDto removed, List<WorkspaceDto> remaining) {
   }
 
   /**
@@ -65,16 +65,16 @@ public class UnregisterWorkspaceFolderTool {
    * Побочный эффект: папка удаляется из общего контекста сервера вместе с собранным индексом;
    * файлы на диске не изменяются.
    *
-   * @param root Корень зарегистрированной рабочей папки (URI либо путь).
-   * @return Корень удалённой рабочей папки и оставшиеся зарегистрированными.
-   * @throws IllegalArgumentException Если корень не совпал ни с одной зарегистрированной рабочей
+   * @param workspaceFolder URI зарегистрированной рабочей папки (либо путь к ней).
+   * @return Удалённая рабочая папка и оставшиеся зарегистрированными.
+   * @throws IllegalArgumentException Если значение не совпало ни с одной зарегистрированной рабочей
    *   папкой либо за ним не стоит каталог (синтетическая рабочая область LSP-клиента).
    */
   @McpTool(
     name = "unregister_workspace_folder",
     description = """
       Remove a previously registered workspace folder from this server and release its index. Pass \
-      the `root` reported by `list_workspace_folders`.
+      the `uri` reported by `list_workspace_folders`.
       Only server-side state is dropped — no file on disk is touched. Afterwards the other BSL \
       tools stop answering for that folder until it is registered again with \
       `register_workspace_folder`.""",
@@ -93,23 +93,25 @@ public class UnregisterWorkspaceFolderTool {
       idempotentHint = true,
       openWorldHint = false))
   public Result unregisterWorkspaceFolder(
-    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_ROOT)
-    String root
+    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_FOLDER)
+    String workspaceFolder
   ) {
-    var workspaceUri = workspaceResolver.resolveWorkspaceUri(root);
+    var workspaceUri = workspaceResolver.resolveWorkspaceFolderUri(workspaceFolder);
     if (!"file".equalsIgnoreCase(workspaceUri.getScheme())) {
       // Синтетическая рабочая область LSP-клиента (одиночный файл, untitled-буфер):
       // каталога за ней нет, снимать нечего.
       throw new IllegalArgumentException("Workspace folder `" + workspaceUri
         + "` is not backed by a directory and cannot be unregistered.");
     }
+    // Описание собираем до снятия регистрации: вместе с ней уходит и имя папки из реестра.
+    var removed = WorkspaceDto.from(workspaceUri);
     workspaceBootstrap.remove(Absolute.path(workspaceUri));
 
     // Снимок живого представления: см. ListWorkspaceFoldersTool.
     var remaining = Map.copyOf(serverContextProvider.getAllContexts()).keySet().stream()
       .map(WorkspaceDto::from)
-      .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
+      .sorted(Comparator.comparing(workspace -> workspace.uri().toString()))
       .toList();
-    return new Result(workspaceUri, remaining);
+    return new Result(removed, remaining);
   }
 }

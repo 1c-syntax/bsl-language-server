@@ -96,13 +96,14 @@ public class GlobalMemberInfoTool {
     String name,
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
-    @McpToolParam(required = true, description = McpToolParams.ROOT)
-    String root,
+    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_FOLDER)
+    String workspaceFolder,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
     @Nullable Language language
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
-    try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
+    try (var ignored = WorkspaceContextHolder.forUri(
+      workspaceResolver.resolveWorkspaceFolderUri(workspaceFolder))) {
       var member = globalScopeProvider.globalMember(name, fileType);
       if (member.isPresent()) {
         var resolved = member.get();

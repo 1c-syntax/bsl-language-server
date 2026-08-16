@@ -55,15 +55,15 @@ java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 
 The terminology is LSP's: a **workspace folder** is a single project root directory, and the set of registered folders makes up the **workspace** this server serves. What gets registered and passed to the tools is a folder.
 
-Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `root` argument.
+Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `workspaceFolder` argument.
 
 The client workflow:
 
-1. `list_workspace_folders` — see what is already registered and get the `root` values.
-2. `register_workspace_folder` with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the folder root. The tool indexes the sources and returns the `root`; registering an already registered directory does not re-index it.
+1. `list_workspace_folders` — see what is already registered and get the `uri` values.
+2. `register_workspace_folder` with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the folder root. The tool indexes the sources and returns the folder's `uri`; registering an already registered directory does not re-index it.
 3. `unregister_workspace_folder` — release the index when the project is no longer needed.
 
-The error messages are self-contained: for an unknown or missing `root` the server lists the registered roots and names the tool that registers a new one, so an agent can recover without asking a human.
+The error messages are self-contained: for an unknown or missing `workspaceFolder` the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.
 
 Additional sources of workspace folders:
 
@@ -77,7 +77,7 @@ Additional sources of workspace folders:
 
 | Tool | Purpose |
 | --- | --- |
-| `list_workspace_folders` | Registered workspace folders: the `root` for the other tools and the name |
+| `list_workspace_folders` | Registered workspace folders: the `uri` for the other tools and the name |
 | `register_workspace_folder` | Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used |
 | `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |

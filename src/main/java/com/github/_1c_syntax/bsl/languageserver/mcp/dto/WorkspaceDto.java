@@ -30,12 +30,14 @@ import java.util.Objects;
  * Зарегистрированная рабочая папка — workspace folder в терминах LSP: 1С-конфигурация или
  * OneScript-проект, исходники которого проиндексированы сервером.
  *
- * @param root URI рабочей папки — значение, которое инструменты принимают в параметре
- *   {@code root}.
+ * Форма повторяет {@code WorkspaceFolder} из LSP: {@code uri} + {@code name}.
+ *
+ * @param uri URI рабочей папки — значение, которое инструменты принимают в параметре
+ *   {@code workspaceFolder}.
  * @param name Имя рабочей папки — то же, что {@code name} у workspace folder в LSP:
- *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code root}.
+ *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code uri}.
  */
-public record WorkspaceDto(URI root, String name) {
+public record WorkspaceDto(URI uri, String name) {
 
   public static WorkspaceDto from(URI workspaceUri) {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {

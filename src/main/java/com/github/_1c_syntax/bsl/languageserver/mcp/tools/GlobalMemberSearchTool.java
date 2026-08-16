@@ -115,8 +115,8 @@ public class GlobalMemberSearchTool {
   public Result globalMemberSearch(
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
-    @McpToolParam(required = true, description = McpToolParams.ROOT)
-    String root,
+    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_FOLDER)
+    String workspaceFolder,
     @McpToolParam(required = false, description = McpToolParams.GLOBAL_MEMBER_QUERY)
     @Nullable String query,
     @McpToolParam(required = false, description = McpToolParams.GLOBAL_MEMBER_CATEGORIES)
@@ -130,7 +130,8 @@ public class GlobalMemberSearchTool {
       : EnumSet.copyOf(categories);
     var lowerQuery = query == null || query.isBlank() ? null : query.toLowerCase(Locale.ROOT);
 
-    try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
+    try (var ignored = WorkspaceContextHolder.forUri(
+      workspaceResolver.resolveWorkspaceFolderUri(workspaceFolder))) {
       var functions = requested.contains(GlobalMemberCategory.FUNCTION)
         ? search(globalScopeProvider.globalFunctions(fileType), lowerQuery, effectiveLanguage)
         : List.<TypeMemberDto>of();

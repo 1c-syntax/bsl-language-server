@@ -44,12 +44,13 @@ final class McpToolParams {
     + "(exact > prefix > substring > subsequence, case-insensitive, over both the Russian and English "
     + "spelling, e.g. `Сценар` / `Script`), like the editor's autocomplete. Results are ranked by "
     + "relevance. When omitted, every member in the selected categories is returned.";
-  static final String ROOT = """
-    URI of the workspace folder to scope the lookup to — one of the `root` values returned by the \
-    `list_workspace_folders` tool. Required because the answer can differ between folders: 1C configuration \
-    vs OneScript project, different configurations, different library sets. For purely platform \
-    names any registered folder will do. Do not guess this value: call `list_workspace_folders` first and, \
-    if the project is not there yet, register it with `register_workspace_folder`.""";
+  static final String WORKSPACE_FOLDER = """
+    URI of the workspace folder to answer for — one of the `uri` values returned by the \
+    `list_workspace_folders` tool. Required because the answer can differ between folders: 1C \
+    configuration vs OneScript project, different configurations, different library sets. For purely \
+    platform names any registered folder will do. Do not guess this value: call \
+    `list_workspace_folders` first and, if the project is not there yet, register it with \
+    `register_workspace_folder`.""";
   static final String WORKSPACE_PATH = """
     Path to the workspace folder to register — an LSP workspace folder in the protocol's sense: the \
     project root directory an editor opens, not a subfolder of it. It holds the sources (`src/cf` of \
@@ -62,8 +63,6 @@ final class McpToolParams {
     Optional display name of the workspace folder, the same thing as `name` of an LSP workspace \
     folder: how the folder is referred to in a user interface. Defaults to the name of the \
     registered directory.""";
-  static final String WORKSPACE_ROOT = """
-    URI of the workspace folder to operate on, as returned by the `list_workspace_folders` tool.""";
 
   private McpToolParams() {
   }

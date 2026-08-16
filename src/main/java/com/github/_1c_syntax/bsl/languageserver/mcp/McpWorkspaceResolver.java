@@ -32,9 +32,9 @@ import java.net.URI;
 /**
  * Выбор рабочей папки для MCP-инструментов, у которых нет явной привязки к конкретному
  * файлу (например, {@code type_info}, {@code global_member_info}). Клиент обязан явно
- * указать {@code root} (одно из значений, которые вернул {@code list_workspace_folders}), потому что
- * ответ может различаться между зарегистрированными папками (конфигурации, OneScript-проекты,
- * библиотеки).
+ * указать {@code workspaceFolder} (одно из значений, которые вернул
+ * {@code list_workspace_folders}), потому что ответ может различаться между зарегистрированными
+ * папками (конфигурации, OneScript-проекты, библиотеки).
  * <p>
  * Сравнение URI ведётся через {@link McpWorkspaceFolders#toWorkspaceFolderUri(String)} — чтобы
  * клиентское представление ({@code file://D:/repo} / {@code file:///D:/repo/} / голый путь
@@ -54,25 +54,25 @@ public class McpWorkspaceResolver {
   /**
    * Выбрать рабочую папку для tool-запроса.
    *
-   * @param requestedRoot Корень рабочей папки (URI либо путь), на который ссылается запрос.
+   * @param requestedFolder URI рабочей папки (либо путь к ней), на которую ссылается запрос.
    * @return URI зарегистрированной рабочей папки.
-   * @throws IllegalArgumentException если {@code requestedRoot} пуст/отсутствует, либо не
+   * @throws IllegalArgumentException если {@code requestedFolder} пуст/отсутствует, либо не
    *   совпадает ни с одной зарегистрированной рабочей папкой. Сообщение содержит список
-   *   зарегистрированных корней и указание на {@code register_workspace_folder}.
+   *   зарегистрированных папок и указание на {@code register_workspace_folder}.
    */
-  public URI resolveWorkspaceUri(@Nullable String requestedRoot) {
-    var registeredRoots = serverContextProvider.getAllContexts().keySet();
-    if (requestedRoot == null || requestedRoot.isBlank()) {
+  public URI resolveWorkspaceFolderUri(@Nullable String requestedFolder) {
+    var registeredFolders = serverContextProvider.getAllContexts().keySet();
+    if (requestedFolder == null || requestedFolder.isBlank()) {
       throw new IllegalArgumentException(
-        "Workspace folder root is required: every folder-scoped BSL tool must say which workspace "
-          + "folder to answer for. " + McpWorkspaceFolders.registrationHint(registeredRoots));
+        "Workspace folder is required: every folder-scoped BSL tool must say which workspace "
+          + "folder to answer for. " + McpWorkspaceFolders.registrationHint(registeredFolders));
     }
-    var normalized = McpWorkspaceFolders.toWorkspaceFolderUri(requestedRoot);
-    return registeredRoots.stream()
+    var normalized = McpWorkspaceFolders.toWorkspaceFolderUri(requestedFolder);
+    return registeredFolders.stream()
       .filter(uri -> uri.equals(normalized))
       .findFirst()
       .orElseThrow(() -> new IllegalArgumentException(
-        "No registered workspace folder matches root: " + requestedRoot + ". "
-          + McpWorkspaceFolders.registrationHint(registeredRoots)));
+        "No registered workspace folder matches: " + requestedFolder + ". "
+          + McpWorkspaceFolders.registrationHint(registeredFolders)));
   }
 }

@@ -47,23 +47,23 @@ class McpWorkspaceResolverTest {
   }
 
   @Test
-  void throwsWhenRootIsNull() {
-    assertThatThrownBy(() -> resolver.resolveWorkspaceUri(null))
+  void throwsWhenWorkspaceFolderIsNull() {
+    assertThatThrownBy(() -> resolver.resolveWorkspaceFolderUri(null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace folder root is required")
+      .hasMessageContaining("Workspace folder is required")
       // Ничего не зарегистрировано — сообщение должно вести к регистрации, а не просто фиксировать отказ.
       .hasMessageContaining("register_workspace_folder");
   }
 
   @Test
-  void throwsWhenRootIsBlank() {
-    assertThatThrownBy(() -> resolver.resolveWorkspaceUri("   "))
+  void throwsWhenWorkspaceFolderIsBlank() {
+    assertThatThrownBy(() -> resolver.resolveWorkspaceFolderUri("   "))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace folder root is required");
+      .hasMessageContaining("Workspace folder is required");
   }
 
   @Test
-  void resolvesExplicitRootByExactMatch() {
+  void resolvesExplicitWorkspaceFolderByExactMatch() {
     var first = Absolute.path("src/test/resources/cli").toUri();
     var second = Absolute.path("src/test/resources/providers").toUri();
     Map<URI, ServerContext> contexts = new LinkedHashMap<>();
@@ -71,11 +71,11 @@ class McpWorkspaceResolverTest {
     contexts.put(second, contextOf(second));
     when(serverContextProvider.getAllContexts()).thenReturn(contexts);
 
-    assertThat(resolver.resolveWorkspaceUri(second.toString())).isEqualTo(second);
+    assertThat(resolver.resolveWorkspaceFolderUri(second.toString())).isEqualTo(second);
   }
 
   @Test
-  void normalisesRootBeforeMatching() {
+  void normalisesWorkspaceFolderBeforeMatching() {
     var registered = Absolute.path("src/test/resources/cli").toUri();
     var ctx = contextOf(registered);
     when(serverContextProvider.getAllContexts()).thenReturn(Map.of(registered, ctx));
@@ -83,20 +83,20 @@ class McpWorkspaceResolverTest {
     // Та же папка, но обращаемся к ней через ./ — Absolute.uri нормализует обе формы к одному URI.
     var pathThroughDot = Absolute.path("./src/test/resources/cli").toUri().toString();
 
-    assertThat(resolver.resolveWorkspaceUri(pathThroughDot)).isEqualTo(registered);
+    assertThat(resolver.resolveWorkspaceFolderUri(pathThroughDot)).isEqualTo(registered);
   }
 
   @Test
-  void throwsWhenExplicitRootDoesNotMatchAnyRegisteredWorkspace() {
+  void throwsWhenExplicitWorkspaceFolderDoesNotMatchAnyRegisteredFolder() {
     var uri = Absolute.path("src/test/resources/cli").toUri();
     var ctx = contextOf(uri);
     when(serverContextProvider.getAllContexts()).thenReturn(Map.of(uri, ctx));
 
     var orphan = Absolute.path("src/test/resources/providers").toUri().toString();
 
-    assertThatThrownBy(() -> resolver.resolveWorkspaceUri(orphan))
+    assertThatThrownBy(() -> resolver.resolveWorkspaceFolderUri(orphan))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace folder matches root")
+      .hasMessageContaining("No registered workspace folder matches")
       // Клиент должен узнать, что зарегистрировано и как добавить недостающее.
       .hasMessageContaining(uri.toString())
       .hasMessageContaining("list_workspace_folders")
@@ -104,7 +104,7 @@ class McpWorkspaceResolverTest {
   }
 
   @Test
-  void resolvesRootPassedAsPlainFileSystemPath() {
+  void resolvesWorkspaceFolderPassedAsPlainFileSystemPath() {
     var registered = Absolute.path("src/test/resources/cli").toUri();
     var ctx = contextOf(registered);
     when(serverContextProvider.getAllContexts()).thenReturn(Map.of(registered, ctx));
@@ -112,6 +112,6 @@ class McpWorkspaceResolverTest {
     // Агенты нередко присылают путь, а не URI — он должен резолвиться так же.
     var plainPath = Absolute.path("src/test/resources/cli").toString();
 
-    assertThat(resolver.resolveWorkspaceUri(plainPath)).isEqualTo(registered);
+    assertThat(resolver.resolveWorkspaceFolderUri(plainPath)).isEqualTo(registered);
   }
 }

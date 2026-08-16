@@ -34,9 +34,10 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 Методы-инструменты помечены `@McpTool`.
 
 Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
-`McpWorkspaceBootstrap` (регистрация + индексация каталога), `McpWorkspaceResolver` (`root` →
-рабочая папка), `McpWorkspaceFolders` (нормализация `root`: URI или путь; общий текст подсказки о
-регистрации), `McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
+`McpWorkspaceBootstrap` (регистрация + индексация каталога), `McpWorkspaceResolver`
+(`workspaceFolder` → рабочая папка), `McpWorkspaceFolders` (нормализация `workspaceFolder`: URI или
+путь; общий текст подсказки о регистрации),
+`McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
 `McpDocumentReader` (единый доступ к документу: `read()` — из кэша, `analyze()` — свежий AST +
 диагностики).
 

@@ -86,8 +86,8 @@ public class RegisterWorkspaceFolderTool {
       opens — not a subfolder of it and not a single file: `.bsl-language-server.json` is only read \
       from the folder root.
       Indexing a large configuration may take a while; adding an already registered folder returns \
-      immediately without re-indexing. Returns the `root` to pass to the other tools. Nothing on \
-      disk is modified.""",
+      immediately without re-indexing. Returns the `uri` to pass to the other tools as \
+      `workspaceFolder`. Nothing on disk is modified.""",
     // Output schema disabled for every tool of this server: Spring AI generates a schema the results
     // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
     // results are still returned, just unvalidated.

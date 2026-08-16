@@ -62,8 +62,8 @@ public class ListWorkspaceFoldersTool {
     name = "list_workspace_folders",
     description = """
       List the workspace folders (1C:Enterprise configurations and OneScript projects) currently \
-      registered and indexed by this server, together with the `root` value the other BSL tools \
-      expect. Together these folders make up the workspace this server serves, the same way an LSP \
+      registered and indexed by this server, together with the `uri` the other BSL tools expect in \
+      their `workspaceFolder` argument. Together these folders make up the workspace this server serves, the same way an LSP \
       client's workspace is made up of workspace folders.
       Start here: every other BSL tool answers only inside a registered folder, and file paths \
       outside every registered folder are rejected. An empty list means nothing is indexed yet — \
@@ -85,7 +85,7 @@ public class ListWorkspaceFoldersTool {
     var contexts = Map.copyOf(serverContextProvider.getAllContexts());
     var workspaces = contexts.keySet().stream()
       .map(WorkspaceDto::from)
-      .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
+      .sorted(Comparator.comparing(workspace -> workspace.uri().toString()))
       .toList();
     return new Result(workspaces, McpWorkspaceFolders.registrationHint(contexts.keySet()));
   }
