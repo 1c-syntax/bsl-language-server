@@ -37,12 +37,12 @@ import java.util.Objects;
  * @param name Имя рабочей папки — то же, что {@code name} у workspace folder в LSP:
  *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code uri}.
  */
-public record WorkspaceDto(URI uri, String name) {
+public record WorkspaceFolderDto(URI uri, String name) {
 
-  public static WorkspaceDto from(URI workspaceUri) {
+  public static WorkspaceFolderDto from(URI workspaceUri) {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       // Имя после forUri всегда есть: незарегистрированная папка отсекается там же.
-      return new WorkspaceDto(workspaceUri, Objects.requireNonNull(WorkspaceContextHolder.getName()));
+      return new WorkspaceFolderDto(workspaceUri, Objects.requireNonNull(WorkspaceContextHolder.getName()));
     }
   }
 }

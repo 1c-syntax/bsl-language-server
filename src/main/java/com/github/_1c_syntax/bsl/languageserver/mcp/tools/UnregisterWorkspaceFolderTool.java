@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
-import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -53,20 +53,28 @@ public class UnregisterWorkspaceFolderTool {
   /**
    * Результат удаления.
    *
-   * @param removed Удалённая рабочая папка.
+   * @param workspaceFolder Рабочая папка, регистрация которой снята.
+   * @param stillDeclaredByRoots {@code true}, если папка осталась в контексте сервера: её
+   *   продолжает удерживать корень, объявленный клиентом через MCP roots.
    * @param remaining Рабочие папки, оставшиеся зарегистрированными.
    */
-  public record Result(WorkspaceDto removed, List<WorkspaceDto> remaining) {
+  public record Result(
+    WorkspaceFolderDto workspaceFolder,
+    boolean stillDeclaredByRoots,
+    List<WorkspaceFolderDto> remaining
+  ) {
   }
 
   /**
    * Снять регистрацию рабочей папки.
    * <p>
    * Побочный эффект: папка удаляется из общего контекста сервера вместе с собранным индексом;
-   * файлы на диске не изменяются.
+   * файлы на диске не изменяются. Папка, которую сверх этого удерживает корень, объявленный
+   * клиентом через MCP roots, остаётся в контексте.
    *
    * @param workspaceFolder URI зарегистрированной рабочей папки (либо путь к ней).
-   * @return Удалённая рабочая папка и оставшиеся зарегистрированными.
+   * @return Рабочая папка, признак того, что она осталась в контексте, и оставшиеся
+   *   зарегистрированными папки.
    * @throws IllegalArgumentException Если значение не совпало ни с одной зарегистрированной рабочей
    *   папкой либо за ним не стоит каталог (синтетическая рабочая область LSP-клиента).
    */
@@ -77,7 +85,9 @@ public class UnregisterWorkspaceFolderTool {
       the `uri` reported by `list_workspace_folders`.
       Only server-side state is dropped — no file on disk is touched. Afterwards the other BSL \
       tools stop answering for that folder until it is registered again with \
-      `register_workspace_folder`.""",
+      `register_workspace_folder`.
+      A folder the client also declares through MCP roots stays indexed and keeps answering; the \
+      result reports that as `stillDeclaredByRoots`.""",
     // Output schema disabled for every tool of this server: Spring AI generates a schema the results
     // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
     // results are still returned, just unvalidated.
@@ -104,14 +114,14 @@ public class UnregisterWorkspaceFolderTool {
         + "` is not backed by a directory and cannot be unregistered.");
     }
     // Описание собираем до снятия регистрации: вместе с ней уходит и имя папки из реестра.
-    var removed = WorkspaceDto.from(workspaceUri);
-    workspaceBootstrap.remove(Absolute.path(workspaceUri));
+    var folder = WorkspaceFolderDto.from(workspaceUri);
+    var removed = workspaceBootstrap.unregister(Absolute.path(workspaceUri));
 
     // Снимок живого представления: см. ListWorkspaceFoldersTool.
     var remaining = Map.copyOf(serverContextProvider.getAllContexts()).keySet().stream()
-      .map(WorkspaceDto::from)
-      .sorted(Comparator.comparing(workspace -> workspace.uri().toString()))
+      .map(WorkspaceFolderDto::from)
+      .sorted(Comparator.comparing(workspaceFolderDto -> workspaceFolderDto.uri().toString()))
       .toList();
-    return new Result(removed, remaining);
+    return new Result(folder, !removed, remaining);
   }
 }

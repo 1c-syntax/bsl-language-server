@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceFolders;
-import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -40,7 +40,7 @@ import java.nio.file.Path;
  * (workspace folder в терминах LSP — корень проекта, а не подкаталог с исходниками:
  * конфигурационный файл {@code .bsl-language-server.json} читается только из корня) и индексирует
  * её исходники 1С/OneScript, после чего файлы папки становятся видны остальным инструментам,
- * а её корень — допустимым значением параметра {@code root}.
+ * а её {@code uri} — допустимым значением параметра {@code workspaceFolder}.
  * <p>
  * Повторная регистрация уже зарегистрированного каталога переиндексацию не запускает: возвращается
  * текущее состояние с признаком {@code alreadyRegistered}.
@@ -55,12 +55,12 @@ public class RegisterWorkspaceFolderTool {
   /**
    * Результат регистрации.
    *
-   * @param workspace Зарегистрированная рабочая папка: её {@code root} нужно передавать
+   * @param workspaceFolder Зарегистрированная рабочая папка: её {@code uri} нужно передавать
    *   в остальные инструменты.
    * @param alreadyRegistered {@code true}, если каталог был зарегистрирован ранее и повторная
    *   индексация не выполнялась.
    */
-  public record Result(WorkspaceDto workspace, boolean alreadyRegistered) {
+  public record Result(WorkspaceFolderDto workspaceFolder, boolean alreadyRegistered) {
   }
 
   /**
@@ -111,7 +111,7 @@ public class RegisterWorkspaceFolderTool {
     // параллельных вызова для одного каталога оба увидели бы «не зарегистрирован» и
     // проиндексировали бы его дважды.
     var alreadyRegistered = workspaceBootstrap.register(srcDir, name);
-    return new Result(WorkspaceDto.from(srcDir.toUri()), alreadyRegistered);
+    return new Result(WorkspaceFolderDto.from(srcDir.toUri()), alreadyRegistered);
   }
 
   private static Path toSourceDirectory(String rawPath) {

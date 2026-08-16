@@ -33,8 +33,12 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 поддерживаются как совместимость, новую функциональность на них не завязывай.
 Методы-инструменты помечены `@McpTool`.
 
+Владение папками считает **только** `McpWorkspaceBootstrap`: у папки может быть несколько источников
+(явная регистрация инструментом, MCP roots), и она живёт, пока её держит хотя бы один. Своих копий
+этого состояния в других бинах заводить нельзя — разойдутся с фактическим набором папок.
+
 Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
-`McpWorkspaceBootstrap` (регистрация + индексация каталога), `McpWorkspaceResolver`
+`McpWorkspaceBootstrap` (регистрация + индексация каталога, владение папками), `McpWorkspaceResolver`
 (`workspaceFolder` → рабочая папка), `McpWorkspaceFolders` (нормализация `workspaceFolder`: URI или
 путь; общий текст подсказки о регистрации),
 `McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),

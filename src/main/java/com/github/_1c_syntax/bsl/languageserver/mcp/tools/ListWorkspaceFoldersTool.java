@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceFolders;
-import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.context.annotation.Profile;
@@ -35,12 +35,12 @@ import java.util.Map;
 
 /**
  * MCP-инструмент {@code list_workspace_folders}: перечисляет рабочие папки (workspace folders
- * в терминах LSP), зарегистрированные и проиндексированные сервером, с корнем ({@code root})
- * для остальных инструментов.
+ * в терминах LSP), зарегистрированные и проиндексированные сервером, с их {@code uri} —
+ * значением, которое остальные инструменты принимают в параметре {@code workspaceFolder}.
  * <p>
- * Точка входа для клиента: пока не зарегистрирована ни одна папка, ни один зависящий от неё
- * инструмент работать не может. Поле {@code hint} в ответе описывает следующий шаг — в том
- * числе когда список пуст.
+ * Пока не зарегистрирована ни одна папка, ни один зависящий от неё инструмент работать не может,
+ * поэтому в ответе есть поле {@code hint} — текстовое описание следующего шага, в том числе
+ * когда список пуст.
  */
 @Component
 @Profile("mcp")
@@ -52,10 +52,10 @@ public class ListWorkspaceFoldersTool {
   /**
    * Список рабочих папок.
    *
-   * @param workspaces Зарегистрированные рабочие папки, упорядоченные по корню.
-   * @param hint Что делать дальше: какие корни доступны и как зарегистрировать недостающий.
+   * @param workspaceFolders Зарегистрированные рабочие папки, упорядоченные по {@code uri}.
+   * @param hint Что делать дальше: какие папки зарегистрированы и как зарегистрировать недостающую.
    */
-  public record Result(List<WorkspaceDto> workspaces, String hint) {
+  public record Result(List<WorkspaceFolderDto> workspaceFolders, String hint) {
   }
 
   @McpTool(
@@ -83,10 +83,10 @@ public class ListWorkspaceFoldersTool {
     // Снимок: getAllContexts отдаёт живое представление, а список и подсказка обходят его порознь —
     // без копии параллельная регистрация попала бы в один из них и не попала в другой.
     var contexts = Map.copyOf(serverContextProvider.getAllContexts());
-    var workspaces = contexts.keySet().stream()
-      .map(WorkspaceDto::from)
-      .sorted(Comparator.comparing(workspace -> workspace.uri().toString()))
+    var workspaceFolders = contexts.keySet().stream()
+      .map(WorkspaceFolderDto::from)
+      .sorted(Comparator.comparing(workspaceFolder -> workspaceFolder.uri().toString()))
       .toList();
-    return new Result(workspaces, McpWorkspaceFolders.registrationHint(contexts.keySet()));
+    return new Result(workspaceFolders, McpWorkspaceFolders.registrationHint(contexts.keySet()));
   }
 }

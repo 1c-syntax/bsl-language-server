@@ -38,7 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -457,12 +457,12 @@ class McpToolsTest {
   void listWorkspacesReportsIndexedWorkspace() {
     var result = listWorkspaceFoldersTool.listWorkspaceFolders();
 
-    assertThat(result.workspaces()).extracting(WorkspaceDto::uri).contains(WORKSPACE_URI);
-    assertThat(result.workspaces())
-      .filteredOn(workspace -> WORKSPACE_URI.equals(workspace.uri()))
+    assertThat(result.workspaceFolders()).extracting(WorkspaceFolderDto::uri).contains(WORKSPACE_URI);
+    assertThat(result.workspaceFolders())
+      .filteredOn(folder -> WORKSPACE_URI.equals(folder.uri()))
       .singleElement()
-      .satisfies(workspace ->
-        assertThat(workspace.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString()));
+      .satisfies(folder ->
+        assertThat(folder.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString()));
     assertThat(result.hint()).contains("Registered workspace folders", WORKSPACE_FOLDER);
   }
 
@@ -472,7 +472,7 @@ class McpToolsTest {
 
     var result = listWorkspaceFoldersTool.listWorkspaceFolders();
 
-    assertThat(result.workspaces()).isEmpty();
+    assertThat(result.workspaceFolders()).isEmpty();
     assertThat(result.hint()).contains("No workspace folder is registered", "register_workspace_folder");
   }
 
@@ -483,8 +483,8 @@ class McpToolsTest {
     var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), null);
 
     assertThat(result.alreadyRegistered()).isFalse();
-    assertThat(result.workspace().uri()).isEqualTo(cliDir.toUri());
-    assertThat(result.workspace().name()).isEqualTo("cli");
+    assertThat(result.workspaceFolder().uri()).isEqualTo(cliDir.toUri());
+    assertThat(result.workspaceFolder().name()).isEqualTo("cli");
     assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
   }
 
@@ -494,7 +494,7 @@ class McpToolsTest {
 
     var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliUri.toString(), null);
 
-    assertThat(result.workspace().uri()).isEqualTo(cliUri);
+    assertThat(result.workspaceFolder().uri()).isEqualTo(cliUri);
   }
 
   @Test
@@ -503,11 +503,11 @@ class McpToolsTest {
 
     var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), "Демо-конфигурация");
 
-    assertThat(result.workspace().name()).isEqualTo("Демо-конфигурация");
-    assertThat(listWorkspaceFoldersTool.listWorkspaceFolders().workspaces())
-      .filteredOn(workspace -> cliDir.toUri().equals(workspace.uri()))
+    assertThat(result.workspaceFolder().name()).isEqualTo("Демо-конфигурация");
+    assertThat(listWorkspaceFoldersTool.listWorkspaceFolders().workspaceFolders())
+      .filteredOn(folder -> cliDir.toUri().equals(folder.uri()))
       .singleElement()
-      .satisfies(workspace -> assertThat(workspace.name()).isEqualTo("Демо-конфигурация"));
+      .satisfies(folder -> assertThat(folder.name()).isEqualTo("Демо-конфигурация"));
   }
 
   @Test
@@ -515,7 +515,7 @@ class McpToolsTest {
     var result = registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(SRC_DIR).toString(), null);
 
     assertThat(result.alreadyRegistered()).isTrue();
-    assertThat(result.workspace().uri()).isEqualTo(WORKSPACE_URI);
+    assertThat(result.workspaceFolder().uri()).isEqualTo(WORKSPACE_URI);
   }
 
   @Test
@@ -540,8 +540,9 @@ class McpToolsTest {
 
     var result = unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(WORKSPACE_FOLDER);
 
-    assertThat(result.removed().uri()).isEqualTo(WORKSPACE_URI);
-    assertThat(result.remaining()).extracting(WorkspaceDto::uri).doesNotContain(WORKSPACE_URI);
+    assertThat(result.workspaceFolder().uri()).isEqualTo(WORKSPACE_URI);
+    assertThat(result.stillDeclaredByRoots()).isFalse();
+    assertThat(result.remaining()).extracting(WorkspaceFolderDto::uri).doesNotContain(WORKSPACE_URI);
     assertThat(result.remaining()).isNotEmpty();
   }
 
@@ -596,6 +597,24 @@ class McpToolsTest {
     // Root removed -> workspace is gone, the file is no longer part of a registered workspace.
     rootsChangeConsumer.accept(null, List.of());
 
+    assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void mcpRootAndExplicitRegistrationDoNotEvictEachOther() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+    var root = new Root(cliDir.toUri().toString(), "cli");
+    registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), null);
+    rootsChangeConsumer.accept(null, List.of(root));
+
+    // Папку держат оба владельца: снятие явной регистрации её не убирает.
+    var unregistered = unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(cliDir.toUri().toString());
+    assertThat(unregistered.stillDeclaredByRoots()).isTrue();
+    assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
+
+    // Ушёл последний владелец — ушла и папка.
+    rootsChangeConsumer.accept(null, List.of());
     assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
       .isInstanceOf(IllegalArgumentException.class);
   }

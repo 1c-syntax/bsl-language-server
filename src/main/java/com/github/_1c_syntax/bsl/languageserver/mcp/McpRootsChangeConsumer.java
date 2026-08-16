@@ -33,18 +33,15 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 /**
- * Синхронизирует рабочие папки MCP с корнями (roots), объявленными клиентом —
- * прямой аналог workspace folders в LSP ({@code workspace/didChangeWorkspaceFolders}).
+ * Приводит набор рабочих папок к корням (roots), объявленным клиентом — прямому аналогу
+ * workspace folders в LSP ({@code workspace/didChangeWorkspaceFolders}).
  * <p>
- * Бин подхватывается автоконфигурацией Spring AI как обработчик изменения roots: при каждом
- * {@code notifications/roots/list_changed} сервер регистрирует новые корни как рабочие
- * папки (с индексацией в общий {@code ServerContextProvider}) и удаляет исчезнувшие.
+ * Бин подхватывается автоконфигурацией Spring AI как обработчик изменения roots. Разницу
+ * с текущим набором и само владение папками считает {@link McpWorkspaceBootstrap}: своей копии
+ * состояния здесь нет, иначе она разошлась бы с фактическим набором папок.
  */
 @Slf4j
 @Component
@@ -54,50 +51,16 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
 
   private final McpWorkspaceBootstrap workspaceBootstrap;
 
-  /**
-   * Корни, ранее зарегистрированные как рабочие папки (для вычисления разницы).
-   */
-  private final Set<Path> registeredRoots = ConcurrentHashMap.newKeySet();
-
   private static final String FILE_SCHEME_PREFIX = "file://";
 
   @Override
-  public synchronized void accept(McpSyncServerExchange exchange, List<Root> roots) {
-    var desired = roots.stream()
+  public void accept(McpSyncServerExchange exchange, List<Root> roots) {
+    var declared = roots.stream()
       .map(McpRootsChangeConsumer::toPath)
       .filter(Objects::nonNull)
-      .collect(Collectors.toSet());
+      .toList();
 
-    desired.stream()
-      .filter(path -> !registeredRoots.contains(path))
-      .forEach(this::addWorkspace);
-
-    registeredRoots.stream()
-      .filter(path -> !desired.contains(path))
-      .toList()
-      .forEach(this::removeWorkspace);
-  }
-
-  private void addWorkspace(Path path) {
-    try {
-      var indexed = workspaceBootstrap.index(path);
-      registeredRoots.add(path);
-      LOGGER.info("Workspace `{}` added from MCP root ({} files)", path, indexed);
-    } catch (RuntimeException e) {
-      LOGGER.warn("Failed to add workspace from MCP root `{}`", path, e);
-    }
-  }
-
-  private void removeWorkspace(Path path) {
-    try {
-      workspaceBootstrap.remove(path);
-      LOGGER.info("Workspace `{}` removed (MCP root gone)", path);
-    } catch (RuntimeException e) {
-      LOGGER.warn("Failed to remove workspace from MCP root `{}`", path, e);
-    } finally {
-      // Снимаем отметку в любом случае, иначе состояние разойдётся с фактическим набором roots.
-      registeredRoots.remove(path);
-    }
+    workspaceBootstrap.syncRoots(declared);
   }
 
   private static @Nullable Path toPath(Root root) {
