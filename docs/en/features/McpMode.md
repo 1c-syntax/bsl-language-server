@@ -2,7 +2,7 @@
 
 BSL Language Server can act as a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server — exposing 1C (BSL) and OneScript code analysis to AI agents and tools that support MCP.
 
-MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspaces are provided through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) — the direct analog of LSP workspace folders.
+MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspaces are registered with the `register_workspace`/`list_workspaces` tools — see the "Workspaces" section below.
 
 !!! warning "Experimental feature"
     The MCP mode is built on Spring AI 2.0 (a milestone version at the time of writing). The API and behavior may change.
@@ -51,14 +51,33 @@ LSP over websocket and MCP over Streamable HTTP on the same web server:
 java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 ```
 
-## Workspaces (MCP roots)
+## Workspaces
 
-Source directories are provided by the client through MCP roots — just like an LSP client sends workspace folders. The server indexes the declared roots into the shared context and re-syncs them on change (`roots/list_changed`). In the combined modes (`lsp --mcp`, `websocket --mcp`) workspaces come from both the LSP client (workspace folders) and the MCP client (roots) into one shared context.
+Every analysis tool answers only inside a registered workspace — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered workspace is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `root` argument.
+
+The client workflow:
+
+1. `list_workspaces` — see what is already registered and get the `root` values.
+2. `register_workspace` with the project directory (the folder holding `Configuration.xml`/`src/cf` or the OneScript sources) — if the project is not in the list yet. The tool indexes the sources and returns the `root`; registering an already registered directory does not re-index it.
+3. `unregister_workspace` — release the index when the project is no longer needed.
+
+The error messages are self-contained: for an unknown or missing `root` the server lists the registered roots and names the tool that registers a new one, so an agent can recover without asking a human.
+
+Additional sources of workspaces:
+
+- **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspaces come from the LSP client (workspace folders) into the same shared context — there is no need to register them over MCP, they show up in `list_workspaces` right away.
+- **MCP roots.** Roots declared by the client through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) are still indexed automatically, including re-sync on `roots/list_changed`.
+
+!!! warning "MCP roots are deprecated"
+    In the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog) revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the `roots/list_changed` notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what `register_workspace`/`list_workspaces` do. Roots support is kept for compatibility with older clients and will be dropped once the server moves to the new protocol revision.
 
 ## Available tools
 
 | Tool | Purpose |
 | --- | --- |
+| `list_workspaces` | Registered workspaces and their `root` for the other tools |
+| `register_workspace` | Register a project directory as a workspace and index its sources |
+| `unregister_workspace` | Remove a workspace and release its index |
 | `analyze_file` | Diagnostics for a file |
 | `document_symbols` | Symbol tree of a file (methods, regions, variables) |
 | `find_references` | All references to the symbol at a position |

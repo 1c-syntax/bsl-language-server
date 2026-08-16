@@ -37,8 +37,8 @@ import java.util.ArrayList;
 /**
  * Регистрация и удаление рабочих пространств MCP в общем {@link ServerContextProvider}.
  * <p>
- * Рабочие пространства приходят от клиента через MCP roots (см. {@link McpRootsChangeConsumer}) —
- * аналог workspace folders в LSP. Индексация выполняется так же, как в {@code analyze}.
+ * Каталог приходит от клиента: явно — инструментом {@code register_workspace}, либо через MCP roots
+ * (см. {@link McpRootsChangeConsumer}). Индексация выполняется так же, как в {@code analyze}.
  */
 @Slf4j
 @Component

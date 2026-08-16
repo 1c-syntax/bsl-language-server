@@ -92,7 +92,8 @@ public class McpDocumentReader {
     var uri = Absolute.uri(new File(path));
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(
-        "File is not part of any registered workspace: " + path));
+        "File is not part of any registered workspace: " + path + ". "
+          + McpWorkspaces.registrationHint(serverContextProvider.getAllContexts().keySet())));
 
     var lock = serverContext.getDocumentLock(uri);
     var existing = serverContext.getDocument(uri);

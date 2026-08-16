@@ -32,9 +32,13 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberCategory;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.ListWorkspacesTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -102,6 +106,12 @@ class McpToolsTest {
   private GlobalMemberInfoTool globalMemberInfoTool;
   @Autowired
   private GlobalMemberSearchTool globalMemberSearchTool;
+  @Autowired
+  private ListWorkspacesTool listWorkspacesTool;
+  @Autowired
+  private RegisterWorkspaceTool registerWorkspaceTool;
+  @Autowired
+  private UnregisterWorkspaceTool unregisterWorkspaceTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
@@ -439,6 +449,124 @@ class McpToolsTest {
 
     assertThat(result.types()).contains("Массив");
     assertThat(result.members()).extracting(TypeMemberDto::name).contains("Добавить");
+  }
+
+  @Test
+  void listWorkspacesReportsIndexedWorkspace() {
+    var result = listWorkspacesTool.listWorkspaces();
+
+    assertThat(result.workspaces()).extracting(WorkspaceDto::root).contains(WORKSPACE_ROOT);
+    assertThat(result.workspaces())
+      .filteredOn(workspace -> WORKSPACE_ROOT.equals(workspace.root()))
+      .singleElement()
+      .satisfies(workspace -> {
+        assertThat(workspace.path()).isEqualTo(Absolute.path(SRC_DIR).toString());
+        assertThat(workspace.documents()).isPositive();
+      });
+    assertThat(result.hint()).contains("Registered workspace roots", WORKSPACE_ROOT);
+  }
+
+  @Test
+  void listWorkspacesTellsHowToRegisterWhenNothingIsIndexed() {
+    unregisterWorkspaceTool.unregisterWorkspace(WORKSPACE_ROOT);
+
+    var result = listWorkspacesTool.listWorkspaces();
+
+    assertThat(result.workspaces()).isEmpty();
+    assertThat(result.hint()).contains("No workspace is registered", "register_workspace");
+  }
+
+  @Test
+  void registerWorkspaceIndexesDirectoryAndUnblocksTools() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+
+    var result = registerWorkspaceTool.registerWorkspace(cliDir.toString());
+
+    assertThat(result.alreadyRegistered()).isFalse();
+    assertThat(result.workspace().root()).isEqualTo(cliDir.toUri().toString());
+    assertThat(result.workspace().documents()).isPositive();
+    assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
+  }
+
+  @Test
+  void registerWorkspaceAcceptsFileUri() {
+    var cliUri = Absolute.path("src/test/resources/cli").toUri().toString();
+
+    var result = registerWorkspaceTool.registerWorkspace(cliUri);
+
+    assertThat(result.workspace().root()).isEqualTo(cliUri);
+  }
+
+  @Test
+  void registerWorkspaceDoesNotReindexKnownDirectory() {
+    var result = registerWorkspaceTool.registerWorkspace(Absolute.path(SRC_DIR).toString());
+
+    assertThat(result.alreadyRegistered()).isTrue();
+    assertThat(result.workspace().root()).isEqualTo(WORKSPACE_ROOT);
+  }
+
+  @Test
+  void registerWorkspaceRejectsFileInsteadOfDirectory() {
+    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(Absolute.path(FILE).toString()))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("is a file, not a directory");
+  }
+
+  @Test
+  void registerWorkspaceRejectsMissingDirectory() {
+    var missing = Absolute.path("src/test/resources/there-is-no-such-directory").toString();
+
+    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(missing))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("does not exist");
+  }
+
+  @Test
+  void unregisterWorkspaceRemovesItAndReportsTheRest() {
+    registerWorkspaceTool.registerWorkspace(Absolute.path("src/test/resources/cli").toString());
+
+    var result = unregisterWorkspaceTool.unregisterWorkspace(WORKSPACE_ROOT);
+
+    assertThat(result.root()).isEqualTo(WORKSPACE_ROOT);
+    assertThat(result.remaining()).extracting(WorkspaceDto::root).doesNotContain(WORKSPACE_ROOT);
+    assertThat(result.remaining()).isNotEmpty();
+  }
+
+  @Test
+  void unregisterWorkspaceThrowsWhenRootIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> unregisterWorkspaceTool.unregisterWorkspace(unknownRoot))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace matches root")
+      .hasMessageContaining(WORKSPACE_ROOT);
+  }
+
+  @Test
+  void unknownRootErrorPointsAtWorkspaceTools() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining(WORKSPACE_ROOT)
+      .hasMessageContaining("register_workspace")
+      .hasMessageContaining("list_workspaces");
+  }
+
+  @Test
+  void missingRootErrorPointsAtWorkspaceTools() {
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace root is required")
+      .hasMessageContaining("list_workspaces");
+  }
+
+  @Test
+  void fileOutsideWorkspaceErrorPointsAtRegisterTool() {
+    assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("File is not part of any registered workspace")
+      .hasMessageContaining("register_workspace");
   }
 
   @Test

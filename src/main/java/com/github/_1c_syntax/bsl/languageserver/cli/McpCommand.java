@@ -42,8 +42,9 @@ import static picocli.CommandLine.Option;
  * (Server-Sent Events по HTTP) или {@code streamable} (Streamable HTTP). Сервер поднимает
  * автоконфигурация Spring AI (профили {@code mcp,mcp-stdio} / {@code mcp,mcp-sse} /
  * {@code mcp,mcp-streamable}); инструменты ({@code @McpTool}) работают через общий
- * {@code ServerContextProvider}. Рабочие пространства приходят от клиента через MCP roots
- * (см. {@code McpRootsChangeConsumer}) — аналог workspace folders в LSP.
+ * {@code ServerContextProvider}. Рабочие пространства клиент регистрирует инструментами
+ * {@code register_workspace}/{@code list_workspaces}; дополнительно поддерживаются MCP roots
+ * (см. {@code McpRootsChangeConsumer}).
  * <p>
  * Для {@code stdio} команда применяет глобальную конфигурацию и блокируется до отключения клиента
  * (EOF stdin). Для HTTP-транспортов ({@code sse}, {@code streamable}) процесс жив за счёт

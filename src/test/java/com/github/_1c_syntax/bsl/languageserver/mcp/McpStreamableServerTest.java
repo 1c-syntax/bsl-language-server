@@ -64,27 +64,39 @@ class McpStreamableServerTest {
     assertThat(toolNames)
       .containsExactlyInAnyOrder(
         "analyze_file", "document_symbols", "find_references", "call_hierarchy", "hover", "definition",
-        "type_info", "type_at_position", "global_member_info", "global_member_search");
+        "type_info", "type_at_position", "global_member_info", "global_member_search",
+        "list_workspaces", "register_workspace", "unregister_workspace");
   }
 
   @Test
-  void allToolsAreMarkedReadOnly() {
-    // Все инструменты только читают код и ничего не меняют — клиент (например, Claude) не должен
-    // считать их разрушающими и спрашивать подтверждение на каждый вызов.
+  void noToolIsMarkedDestructive() {
+    // Ни один инструмент не меняет исходники: анализ только читает код, управление рабочими
+    // пространствами трогает лишь состояние сервера. Клиент (например, Claude) не должен считать
+    // их разрушающими и спрашивать подтверждение на каждый вызов.
     var tools = mcpSyncServer.listTools();
 
     assertThat(tools).isNotEmpty();
     assertThat(tools).allSatisfy(tool -> {
       assertThat(tool.annotations())
-        .as("tool '%s' must carry read-only annotations", tool.name())
+        .as("tool '%s' must carry annotations", tool.name())
         .isNotNull();
-      assertThat(tool.annotations().readOnlyHint())
-        .as("tool '%s' must be read-only", tool.name())
-        .isTrue();
       assertThat(tool.annotations().destructiveHint())
         .as("tool '%s' must not be destructive", tool.name())
         .isFalse();
     });
+  }
+
+  @Test
+  void onlyWorkspaceManagementToolsMutateServerState() {
+    // Инструменты анализа обязаны быть read-only, иначе клиент будет спрашивать подтверждение
+    // на каждый разбор файла. Регистрация рабочих пространств меняет состояние сервера — она
+    // помечается как изменяющая осознанно.
+    var tools = mcpSyncServer.listTools();
+
+    assertThat(tools)
+      .filteredOn(tool -> !tool.annotations().readOnlyHint())
+      .extracting(McpSchema.Tool::name)
+      .containsExactlyInAnyOrder("register_workspace", "unregister_workspace");
   }
 
   @Test

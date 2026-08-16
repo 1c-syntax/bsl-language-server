@@ -26,7 +26,9 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
  */
 final class McpToolParams {
 
-  static final String FILE = "Path to the .bsl/.os file (absolute or relative to the working directory).";
+  static final String FILE = "Path to the .bsl/.os file (absolute or relative to the working directory). "
+    + "The file must lie inside a registered workspace — see the `list_workspaces` and "
+    + "`register_workspace` tools.";
   static final String FILE_TYPE = "File language: `BSL` for 1C:Enterprise BSL or `OS` for OneScript.";
   static final String LINE = "Zero-based line number of the symbol.";
   static final String CHARACTER = "Zero-based character offset within the line.";
@@ -41,9 +43,17 @@ final class McpToolParams {
     + "(exact > prefix > substring > subsequence, case-insensitive, over both the Russian and English "
     + "spelling, e.g. `Сценар` / `Script`), like the editor's autocomplete. Results are ranked by "
     + "relevance. When omitted, every member in the selected categories is returned.";
-  static final String ROOT = "URI of the workspace root (one of the roots the client declared) to scope the "
-    + "lookup to. Required because the answer can differ between roots — configuration vs OneScript "
-    + "projects, different configurations, etc. For purely platform names pick any registered root.";
+  static final String ROOT = "Root of the workspace to scope the lookup to — one of the `root` values "
+    + "returned by the `list_workspaces` tool. Required because the answer can differ between "
+    + "workspaces: 1C configuration vs OneScript project, different configurations, different library "
+    + "sets. For purely platform names any registered root will do. Do not guess this value: call "
+    + "`list_workspaces` first and, if the project is not there yet, register it with "
+    + "`register_workspace`.";
+  static final String WORKSPACE_PATH = "Path to the project root directory to register: the folder holding "
+    + "`Configuration.xml`/`src/cf` of a 1C configuration, or the OneScript sources. Absolute path or "
+    + "`file:` URI; must be a directory, not a single file.";
+  static final String WORKSPACE_ROOT = "Root of the workspace to operate on, as returned by the "
+    + "`list_workspaces` tool.";
 
   private McpToolParams() {
   }

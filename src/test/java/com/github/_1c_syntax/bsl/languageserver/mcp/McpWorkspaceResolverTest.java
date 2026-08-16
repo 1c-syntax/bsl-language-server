@@ -50,7 +50,9 @@ class McpWorkspaceResolverTest {
   void throwsWhenRootIsNull() {
     assertThatThrownBy(() -> resolver.resolveWorkspaceUri(null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace root is required")
+      // Ничего не зарегистрировано — сообщение должно вести к регистрации, а не просто фиксировать отказ.
+      .hasMessageContaining("register_workspace");
   }
 
   @Test
@@ -94,6 +96,22 @@ class McpWorkspaceResolverTest {
 
     assertThatThrownBy(() -> resolver.resolveWorkspaceUri(orphan))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace matches root")
+      // Клиент должен узнать, что зарегистрировано и как добавить недостающее.
+      .hasMessageContaining(uri.toString())
+      .hasMessageContaining("list_workspaces")
+      .hasMessageContaining("register_workspace");
+  }
+
+  @Test
+  void resolvesRootPassedAsPlainFileSystemPath() {
+    var registered = Absolute.path("src/test/resources/cli").toUri();
+    var ctx = contextOf(registered);
+    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(registered, ctx));
+
+    // Агенты нередко присылают путь, а не URI — он должен резолвиться так же.
+    var plainPath = Absolute.path("src/test/resources/cli").toString();
+
+    assertThat(resolver.resolveWorkspaceUri(plainPath)).isEqualTo(registered);
   }
 }

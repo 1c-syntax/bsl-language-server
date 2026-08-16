@@ -22,18 +22,28 @@
    `spring.ai.mcp.server.streamable-http.mcp-endpoint`). Профили: `mcp` + `lsp-mcp` (LSP по stdio,
    stdout занят каналом LSP) либо `mcp` + `websocket-mcp` (рядом с LSP-WebSocket, тот же порт).
 
-Workspaces приходят от клиента через **MCP roots** (`McpRootsChangeConsumer`) — аналог LSP workspace
-folders; при `--mcp` оба источника (LSP folders + MCP roots) питают общий `ServerContextProvider`.
+Workspaces клиент регистрирует **сам, инструментами** `register_workspace`/`list_workspaces`/
+`unregister_workspace` — это основной путь. Дополнительные источники: LSP workspace folders (при
+`--mcp` оба источника питают общий `ServerContextProvider`) и **MCP roots** (`McpRootsChangeConsumer`).
+Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_changed` оттуда уже удалён) —
+поддерживаются как совместимость, новую функциональность на них не завязывай.
 Методы-инструменты помечены `@McpTool`.
 
 Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
-`McpWorkspaceBootstrap`/`McpWorkspaceResolver` (MCP roots → workspace), `McpRootsBootstrapper`/
-`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`), `McpDocumentReader` (единый доступ к
-документу: `read()` — из кэша, `analyze()` — свежий AST + диагностики).
+`McpWorkspaceBootstrap` (регистрация + индексация каталога), `McpWorkspaceResolver` (`root` →
+workspace), `McpWorkspaces` (нормализация `root`: URI или путь; общий текст подсказки о
+регистрации), `McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
+`McpDocumentReader` (единый доступ к документу: `read()` — из кэша, `analyze()` — свежий AST +
+диагностики).
+
+**Ошибки — часть API для агента.** Сообщение о незарегистрированном workspace обязано перечислять
+доступные корни и называть инструмент регистрации: агент исправляется сам, без человека. Единый
+текст — `McpWorkspaces.registrationHint`, не пиши свой.
 
 ## Инструменты (`@McpTool`)
 
-`AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
+`ListWorkspacesTool`/`RegisterWorkspaceTool`/`UnregisterWorkspaceTool` (управление рабочими
+пространствами) · `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
 члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
 `TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
 `FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`

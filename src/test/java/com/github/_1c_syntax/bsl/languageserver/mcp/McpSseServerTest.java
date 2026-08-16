@@ -69,7 +69,8 @@ class McpSseServerTest {
     assertThat(toolNames)
       .containsExactlyInAnyOrder(
         "analyze_file", "document_symbols", "find_references", "call_hierarchy", "hover", "definition",
-        "type_info", "type_at_position", "global_member_info", "global_member_search");
+        "type_info", "type_at_position", "global_member_info", "global_member_search",
+        "list_workspaces", "register_workspace", "unregister_workspace");
   }
 
   @Test
