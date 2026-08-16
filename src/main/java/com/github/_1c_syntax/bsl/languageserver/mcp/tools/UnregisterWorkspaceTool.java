@@ -106,7 +106,7 @@ public class UnregisterWorkspaceTool {
     workspaceBootstrap.remove(Absolute.path(workspaceUri));
 
     // Снимок живого представления: см. ListWorkspacesTool.
-    var remaining = Map.copyOf(serverContextProvider.getAllContexts()).values().stream()
+    var remaining = Map.copyOf(serverContextProvider.getAllContexts()).keySet().stream()
       .map(WorkspaceDto::from)
       .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
       .toList();

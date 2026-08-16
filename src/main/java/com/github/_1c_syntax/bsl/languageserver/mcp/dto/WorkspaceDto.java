@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.dto;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 
 import java.net.URI;
 
@@ -36,7 +36,10 @@ import java.net.URI;
  */
 public record WorkspaceDto(URI root, String name) {
 
-  public static WorkspaceDto from(ServerContext serverContext) {
-    return new WorkspaceDto(serverContext.getWorkspaceUri(), serverContext.getWorkspaceName());
+  public static WorkspaceDto from(URI workspaceUri) {
+    try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
+      var name = WorkspaceContextHolder.getName();
+      return new WorkspaceDto(workspaceUri, name == null ? workspaceUri.toString() : name);
+    }
   }
 }

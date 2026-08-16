@@ -106,15 +106,6 @@ public class ServerContext {
   @SuppressWarnings("NullAway.Init")
   private URI workspaceUri;
 
-  /**
-   * Имя рабочей области — то же, что {@code name} у workspace folder в LSP: задаётся клиентом,
-   * иначе выводится из последнего сегмента {@link #workspaceUri}.
-   */
-  @Getter
-  @Setter
-  @SuppressWarnings("NullAway.Init")
-  private String workspaceName;
-
   private final Map<URI, DocumentContext> documents = new ConcurrentHashMap<>();
   private final Lazy<Solution> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @Nullable

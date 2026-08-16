@@ -143,7 +143,6 @@ public class ServerContextProvider {
       var serverContext = serverContextObjectProvider.getObject();
 
       serverContext.setWorkspaceUri(workspaceUri);
-      serverContext.setWorkspaceName(name);
 
       // Access workspace-scoped LSC (triggers lazy creation with @PostConstruct init())
       // and store on ServerContext for navigation-based access
@@ -190,7 +189,6 @@ public class ServerContextProvider {
       var serverContext = serverContextObjectProvider.getObject();
 
       serverContext.setWorkspaceUri(DEFAULT_WORKSPACE_URI);
-      serverContext.setWorkspaceName(DEFAULT_WORKSPACE_NAME);
       serverContext.setLanguageServerConfiguration(languageServerConfiguration);
       // configurationRoot остаётся null: сканировать нечего, populateContext() выйдет сразу.
 

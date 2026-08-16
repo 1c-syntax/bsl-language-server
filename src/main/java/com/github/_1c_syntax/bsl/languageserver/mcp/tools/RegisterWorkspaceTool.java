@@ -111,11 +111,8 @@ public class RegisterWorkspaceTool {
     // Проверка «уже зарегистрирован» и индексация — одна атомарная операция: иначе два
     // параллельных вызова для одного каталога оба увидели бы «не зарегистрирован» и
     // проиндексировали бы его дважды.
-    var registration = workspaceBootstrap.register(srcDir, name);
-    return new Result(
-      WorkspaceDto.from(registration.serverContext()),
-      registration.alreadyRegistered()
-    );
+    var alreadyRegistered = workspaceBootstrap.register(srcDir, name);
+    return new Result(WorkspaceDto.from(srcDir.toUri()), alreadyRegistered);
   }
 
   private static Path toSourceDirectory(String rawPath) {

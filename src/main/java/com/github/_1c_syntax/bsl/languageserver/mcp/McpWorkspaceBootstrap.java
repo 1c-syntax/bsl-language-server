@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
@@ -55,39 +54,27 @@ public class McpWorkspaceBootstrap {
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Итог регистрации рабочего пространства.
-   *
-   * @param serverContext Контекст зарегистрированного рабочего пространства.
-   * @param alreadyRegistered {@code true}, если каталог был зарегистрирован ранее и повторная
-   *   индексация не выполнялась.
-   */
-  public record Registration(ServerContext serverContext, boolean alreadyRegistered) {
-  }
-
-  /**
    * Зарегистрировать и проиндексировать каталог, если он ещё не зарегистрирован.
    * <p>
    * Атомарно относительно других изменений набора рабочих пространств.
    *
    * @param srcDir Каталог исходных файлов.
    * @param workspaceName Имя рабочего пространства; {@code null} — взять из последнего сегмента URI.
-   * @return Контекст рабочего пространства и признак того, что оно существовало до вызова.
+   * @return {@code true}, если каталог был зарегистрирован ранее и индексация не выполнялась.
    */
-  public synchronized Registration register(Path srcDir, @Nullable String workspaceName) {
+  public synchronized boolean register(Path srcDir, @Nullable String workspaceName) {
     var workspaceUri = srcDir.toUri();
 
-    var existing = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (existing != null) {
-      return new Registration(existing, true);
+    if (serverContextProvider.getAllContexts().containsKey(workspaceUri)) {
+      return true;
     }
 
     index(srcDir, workspaceName);
 
-    var registered = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (registered == null) {
+    if (!serverContextProvider.getAllContexts().containsKey(workspaceUri)) {
       throw new IllegalStateException("Workspace was indexed but is not registered: " + workspaceUri);
     }
-    return new Registration(registered, false);
+    return false;
   }
 
   /**
