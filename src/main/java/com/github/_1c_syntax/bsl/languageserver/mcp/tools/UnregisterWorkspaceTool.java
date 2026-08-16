@@ -57,6 +57,17 @@ public class UnregisterWorkspaceTool {
   public record Result(String root, List<WorkspaceDto> remaining) {
   }
 
+  /**
+   * Снять регистрацию рабочего пространства.
+   * <p>
+   * Побочный эффект: рабочее пространство удаляется из общего контекста сервера вместе с
+   * собранным индексом; файлы на диске не изменяются.
+   *
+   * @param root Корень зарегистрированного рабочего пространства (URI либо путь).
+   * @return Корень удалённого рабочего пространства и оставшиеся зарегистрированными.
+   * @throws IllegalArgumentException Если корень не совпал ни с одним зарегистрированным рабочим
+   *   пространством либо за ним не стоит каталог (синтетическое пространство LSP-клиента).
+   */
   @McpTool(
     name = "unregister_workspace",
     description = "Remove a previously registered workspace from this server and release its index. "

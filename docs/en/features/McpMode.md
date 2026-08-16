@@ -58,7 +58,7 @@ Every analysis tool answers only inside a registered workspace — a 1C configur
 The client workflow:
 
 1. `list_workspaces` — see what is already registered and get the `root` values.
-2. `register_workspace` with the project directory (the folder holding `Configuration.xml`/`src/cf` or the OneScript sources) — if the project is not in the list yet. The tool indexes the sources and returns the `root`; registering an already registered directory does not re-index it.
+2. `register_workspace` with the project directory — if the project is not in the list yet. Pass the **workspace folder**: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the workspace root. The tool indexes the sources and returns the `root`; registering an already registered directory does not re-index it.
 3. `unregister_workspace` — release the index when the project is no longer needed.
 
 The error messages are self-contained: for an unknown or missing `root` the server lists the registered roots and names the tool that registers a new one, so an agent can recover without asking a human.

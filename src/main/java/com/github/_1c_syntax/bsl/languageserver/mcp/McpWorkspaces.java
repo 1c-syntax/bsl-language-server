@@ -84,9 +84,9 @@ public final class McpWorkspaces {
   public static String registrationHint(Collection<URI> registeredRoots) {
     if (registeredRoots.isEmpty()) {
       return "No workspace is registered on this server yet, so no 1C/OneScript sources are indexed. "
-        + "Call the `" + REGISTER_TOOL + "` tool with the project root directory (the folder holding "
-        + "`Configuration.xml`/`src/cf` of a 1C configuration, or the OneScript sources) and retry with "
-        + "the `root` it returns.";
+        + "Call the `" + REGISTER_TOOL + "` tool with the workspace folder — the project root directory "
+        + "an editor would open, the one holding the sources and, when present, "
+        + "`.bsl-language-server.json` — and retry with the `root` it returns.";
     }
     return "Registered workspace roots: "
       + registeredRoots.stream().map(URI::toString).sorted().collect(Collectors.joining(", "))

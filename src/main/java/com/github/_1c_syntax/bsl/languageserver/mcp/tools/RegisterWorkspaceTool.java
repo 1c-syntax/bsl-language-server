@@ -36,9 +36,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * MCP-инструмент {@code register_workspace}: регистрирует каталог как рабочее пространство и
- * индексирует его исходники 1С/OneScript, после чего файлы каталога становятся видны остальным
- * инструментам, а его корень — допустимым значением параметра {@code root}.
+ * MCP-инструмент {@code register_workspace}: регистрирует каталог рабочей области (аналог LSP
+ * workspace folder — корень проекта, а не подкаталог с исходниками: конфигурационный файл
+ * {@code .bsl-language-server.json} читается только из корня) и индексирует его исходники
+ * 1С/OneScript, после чего файлы каталога становятся видны остальным инструментам, а его корень —
+ * допустимым значением параметра {@code root}.
  * <p>
  * Повторная регистрация уже зарегистрированного каталога переиндексацию не запускает: возвращается
  * текущее состояние с признаком {@code alreadyRegistered}.
@@ -62,15 +64,29 @@ public class RegisterWorkspaceTool {
   public record Result(WorkspaceDto workspace, boolean alreadyRegistered) {
   }
 
+  /**
+   * Зарегистрировать каталог как рабочее пространство.
+   * <p>
+   * Побочный эффект: для нового каталога выполняется индексация исходников — операция может быть
+   * длительной. Уже зарегистрированный каталог не переиндексируется, возвращается его текущее
+   * состояние.
+   *
+   * @param path Каталог рабочей области (workspace folder): абсолютный или относительный путь
+   *   либо {@code file:}-URI.
+   * @return Рабочее пространство и признак того, что оно было зарегистрировано ранее.
+   * @throws IllegalArgumentException Если путь пуст, не указывает на локальный каталог,
+   *   не существует либо является файлом.
+   */
   @McpTool(
     name = "register_workspace",
-    description = "Register a directory as a workspace and index its 1C:Enterprise (BSL) and OneScript "
-      + "sources, so that the other BSL tools can analyse it. Required before analysing any project the "
-      + "`list_workspaces` tool does not already report. Pass the project root — the folder holding "
-      + "`Configuration.xml`/`src/cf` of a 1C configuration or the OneScript sources — not a single "
-      + "file. Indexing a large configuration may take a while; registering an already registered "
-      + "directory returns immediately without re-indexing. Returns the `root` to pass to the other "
-      + "tools. Nothing on disk is modified.",
+    description = "Register a workspace folder and index its 1C:Enterprise (BSL) and OneScript sources, "
+      + "so that the other BSL tools can analyse it. Required before analysing any project the "
+      + "`list_workspaces` tool does not already report. Pass the project root directory — the same "
+      + "folder an editor opens as an LSP workspace folder — not a sources subfolder and not a single "
+      + "file: `.bsl-language-server.json` is only read from the workspace root. Indexing a large "
+      + "configuration may take a while; registering an already registered directory returns "
+      + "immediately without re-indexing. Returns the `root` to pass to the other tools. Nothing on "
+      + "disk is modified.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
     // (here — the path of a workspace without a folder). Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false,
@@ -120,11 +136,10 @@ public class RegisterWorkspaceTool {
     }
     if (Files.exists(srcDir)) {
       throw new IllegalArgumentException("Workspace path is a file, not a directory: " + srcDir
-        + ". Pass the project root directory (the folder holding `Configuration.xml`/`src/cf` "
-        + "or the OneScript sources).");
+        + ". Pass the workspace folder — the project root directory that holds the sources.");
     }
     throw new IllegalArgumentException("Workspace path does not exist: " + srcDir
-      + ". Pass an existing project root directory; relative paths are resolved against the "
+      + ". Pass an existing workspace folder; relative paths are resolved against the "
       + "server working directory, so prefer an absolute path.");
   }
 }

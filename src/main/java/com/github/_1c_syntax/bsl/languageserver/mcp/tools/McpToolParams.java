@@ -49,9 +49,13 @@ final class McpToolParams {
     + "sets. For purely platform names any registered root will do. Do not guess this value: call "
     + "`list_workspaces` first and, if the project is not there yet, register it with "
     + "`register_workspace`.";
-  static final String WORKSPACE_PATH = "Path to the project root directory to register: the folder holding "
-    + "`Configuration.xml`/`src/cf` of a 1C configuration, or the OneScript sources. Absolute path or "
-    + "`file:` URI; must be a directory, not a single file.";
+  static final String WORKSPACE_PATH = "Path to the workspace folder to register: the project root "
+    + "directory, the same folder an editor opens and an LSP client sends as a workspace folder. It "
+    + "holds the sources (`src/cf` of a 1C configuration, the OneScript sources) and, when present, "
+    + "`.bsl-language-server.json` — which is only read from the workspace root, so pass that root and "
+    + "not a sources subfolder. Must be a directory, not a single file. Accepts an absolute path, a "
+    + "`file:` URI, or a relative path — a relative one is resolved against the server working "
+    + "directory, which the client usually does not control, so prefer an absolute path.";
   static final String WORKSPACE_ROOT = "Root of the workspace to operate on, as returned by the "
     + "`list_workspaces` tool.";
 
