@@ -74,13 +74,14 @@ public class RegisterWorkspaceTool {
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
     // (here — the path of a workspace without a folder). Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false,
-    // Mutates server state only (the indexed workspace set) — never the analysed sources. Repeated
-    // calls for the same directory are no-ops, hence idempotent.
+    // Mutates server state only (the indexed workspace set) — never the analysed sources, so the
+    // update is additive rather than destructive. Repeated calls for the same directory are no-ops,
+    // hence idempotent. Same shape as `create_entities` of the reference memory server.
     annotations = @McpTool.McpAnnotations(
       readOnlyHint = false,
       destructiveHint = false,
       idempotentHint = true,
-      openWorldHint = true))
+      openWorldHint = false))
   public Result registerWorkspace(
     @McpToolParam(required = true, description = McpToolParams.WORKSPACE_PATH)
     String path

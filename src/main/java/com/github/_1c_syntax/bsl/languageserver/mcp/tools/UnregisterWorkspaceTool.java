@@ -66,11 +66,14 @@ public class UnregisterWorkspaceTool {
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
     // (here — the path of a workspace without a folder). Known upstream bug, open as of 2.0.0-M6.
     generateOutputSchema = false,
-    // Drops server-side state only; sources are never modified. Removing an already removed workspace
-    // fails with an explicit error, so the call is idempotent in effect.
+    // The only destructive tool of this server: per the spec destructiveHint = false means "additive
+    // updates only", and dropping a registration throws away an index that took minutes to build on
+    // a large configuration. The sources themselves are never touched. A repeated call no longer
+    // changes anything (it fails with an explicit error), hence idempotent. Same shape as
+    // `delete_entities` of the reference memory server.
     annotations = @McpTool.McpAnnotations(
       readOnlyHint = false,
-      destructiveHint = false,
+      destructiveHint = true,
       idempotentHint = true,
       openWorldHint = false))
   public Result unregisterWorkspace(

@@ -69,21 +69,16 @@ class McpStreamableServerTest {
   }
 
   @Test
-  void noToolIsMarkedDestructive() {
-    // Ни один инструмент не меняет исходники: анализ только читает код, управление рабочими
-    // пространствами трогает лишь состояние сервера. Клиент (например, Claude) не должен считать
-    // их разрушающими и спрашивать подтверждение на каждый вызов.
+  void everyToolDeclaresItsAnnotations() {
+    // Умолчания в спеке пессимистичны (destructiveHint и openWorldHint по умолчанию true), поэтому
+    // инструмент без аннотаций клиент считает разрушающим и спрашивает подтверждение на каждый вызов.
     var tools = mcpSyncServer.listTools();
 
     assertThat(tools).isNotEmpty();
-    assertThat(tools).allSatisfy(tool -> {
+    assertThat(tools).allSatisfy(tool ->
       assertThat(tool.annotations())
         .as("tool '%s' must carry annotations", tool.name())
-        .isNotNull();
-      assertThat(tool.annotations().destructiveHint())
-        .as("tool '%s' must not be destructive", tool.name())
-        .isFalse();
-    });
+        .isNotNull());
   }
 
   @Test
@@ -97,6 +92,18 @@ class McpStreamableServerTest {
       .filteredOn(tool -> !tool.annotations().readOnlyHint())
       .extracting(McpSchema.Tool::name)
       .containsExactlyInAnyOrder("register_workspace", "unregister_workspace");
+  }
+
+  @Test
+  void onlyWorkspaceRemovalIsMarkedDestructive() {
+    // destructiveHint = false по спеке означает «правка только аддитивная». Единственная
+    // неаддитивная операция сервера — снятие регистрации рабочего пространства.
+    var tools = mcpSyncServer.listTools();
+
+    assertThat(tools)
+      .filteredOn(tool -> Boolean.TRUE.equals(tool.annotations().destructiveHint()))
+      .extracting(McpSchema.Tool::name)
+      .containsExactly("unregister_workspace");
   }
 
   @Test
