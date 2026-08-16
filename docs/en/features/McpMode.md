@@ -66,7 +66,7 @@ The error messages are self-contained: for an unknown or missing `root` the serv
 Additional sources of workspaces:
 
 - **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspaces come from the LSP client (workspace folders) into the same shared context — there is no need to register them over MCP, they show up in `list_workspaces` right away.
-- **MCP roots.** Roots declared by the client through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) are still indexed automatically, including re-sync on `roots/list_changed`. This works as long as the server is built on the `2025-11-25` revision of the MCP SDK, where roots are still active.
+- **MCP roots.** Roots declared by the client through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) are still indexed automatically, including re-sync on `roots/list_changed`. This works as long as the server speaks the `2025-11-25` revision of the protocol — the one implemented by the MCP SDK it is built on — where roots are still active.
 
 !!! warning "MCP roots are deprecated"
     In the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog) revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the `roots/list_changed` notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what `register_workspace`/`list_workspaces` do. Roots support is kept for compatibility with older clients; under the MCP feature lifecycle policy it cannot be removed earlier than twelve months after that revision, and this server will drop it when it moves to the new revision.
