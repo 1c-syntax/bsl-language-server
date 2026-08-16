@@ -22,12 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -39,6 +41,10 @@ import java.util.ArrayList;
  * <p>
  * Каталог приходит от клиента: явно — инструментом {@code register_workspace}, либо через MCP roots
  * (см. {@link McpRootsChangeConsumer}). Индексация выполняется так же, как в {@code analyze}.
+ * <p>
+ * Все изменения набора рабочих пространств сериализованы на мониторе этого бина: источников
+ * несколько (инструменты и roots), а регистрация — «проверить и добавить» с долгой индексацией
+ * между шагами, так что параллельные вызовы иначе индексировали бы один каталог дважды.
  */
 @Slf4j
 @Component
@@ -49,14 +55,65 @@ public class McpWorkspaceBootstrap {
   private final ServerContextProvider serverContextProvider;
 
   /**
+   * Итог регистрации рабочего пространства.
+   *
+   * @param serverContext Контекст зарегистрированного рабочего пространства.
+   * @param alreadyRegistered {@code true}, если каталог был зарегистрирован ранее и повторная
+   *   индексация не выполнялась.
+   */
+  public record Registration(ServerContext serverContext, boolean alreadyRegistered) {
+  }
+
+  /**
+   * Зарегистрировать и проиндексировать каталог, если он ещё не зарегистрирован.
+   * <p>
+   * Атомарно относительно других изменений набора рабочих пространств.
+   *
+   * @param srcDir Каталог исходных файлов.
+   * @param workspaceName Имя рабочего пространства; {@code null} — взять из последнего сегмента URI.
+   * @return Контекст рабочего пространства и признак того, что оно существовало до вызова.
+   */
+  public synchronized Registration register(Path srcDir, @Nullable String workspaceName) {
+    var workspaceUri = srcDir.toUri();
+
+    var existing = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (existing != null) {
+      return new Registration(existing, true);
+    }
+
+    index(srcDir, workspaceName);
+
+    var registered = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (registered == null) {
+      throw new IllegalStateException("Workspace was indexed but is not registered: " + workspaceUri);
+    }
+    return new Registration(registered, false);
+  }
+
+  /**
    * Зарегистрировать каталог исходников как рабочее пространство и проиндексировать его.
+   * <p>
+   * Уже зарегистрированный каталог индексируется повторно — если это нежелательно,
+   * используйте {@link #register(Path, String)}.
    *
    * @param srcDir Каталог исходных файлов.
    * @return Количество проиндексированных файлов.
    */
-  public int index(Path srcDir) {
+  public synchronized int index(Path srcDir) {
+    return index(srcDir, null);
+  }
+
+  /**
+   * Зарегистрировать каталог исходников как рабочее пространство под заданным именем
+   * и проиндексировать его.
+   *
+   * @param srcDir Каталог исходных файлов.
+   * @param workspaceName Имя рабочего пространства; {@code null} — взять из последнего сегмента URI.
+   * @return Количество проиндексированных файлов.
+   */
+  public synchronized int index(Path srcDir, @Nullable String workspaceName) {
     var workspaceUri = srcDir.toUri();
-    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
+    var serverContext = serverContextProvider.addWorkspace(workspaceUri, workspaceName);
 
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       configuration.update(new File(""));
@@ -73,7 +130,7 @@ public class McpWorkspaceBootstrap {
    *
    * @param srcDir Каталог исходных файлов ранее добавленного рабочего пространства.
    */
-  public void remove(Path srcDir) {
+  public synchronized void remove(Path srcDir) {
     var uri = srcDir.toUri().toString();
     serverContextProvider.removeWorkspace(new WorkspaceFolder(uri, uri));
   }

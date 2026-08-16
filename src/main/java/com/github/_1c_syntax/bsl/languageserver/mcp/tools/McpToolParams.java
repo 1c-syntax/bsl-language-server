@@ -56,8 +56,11 @@ final class McpToolParams {
     + "not a sources subfolder. Must be a directory, not a single file. Accepts an absolute path, a "
     + "`file:` URI, or a relative path — a relative one is resolved against the server working "
     + "directory, which the client usually does not control, so prefer an absolute path.";
-  static final String WORKSPACE_ROOT = "Root of the workspace to operate on, as returned by the "
-    + "`list_workspaces` tool.";
+  static final String WORKSPACE_NAME = """
+    Optional display name for the workspace, the same idea as the `name` of an LSP workspace folder. \
+    Defaults to the name of the registered directory.""";
+  static final String WORKSPACE_ROOT = """
+    Root of the workspace to operate on, as returned by the `list_workspaces` tool.""";
 
   private McpToolParams() {
   }

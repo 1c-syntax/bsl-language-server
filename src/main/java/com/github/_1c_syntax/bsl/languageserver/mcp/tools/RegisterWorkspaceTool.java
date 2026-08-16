@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaces;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceDto;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
@@ -51,7 +51,6 @@ import java.nio.file.Path;
 public class RegisterWorkspaceTool {
 
   private final McpWorkspaceBootstrap workspaceBootstrap;
-  private final ServerContextProvider serverContextProvider;
 
   /**
    * Результат регистрации.
@@ -73,22 +72,26 @@ public class RegisterWorkspaceTool {
    *
    * @param path Каталог рабочей области (workspace folder): абсолютный или относительный путь
    *   либо {@code file:}-URI.
+   * @param name Имя рабочего пространства; {@code null} — взять из имени каталога.
    * @return Рабочее пространство и признак того, что оно было зарегистрировано ранее.
    * @throws IllegalArgumentException Если путь пуст, не указывает на локальный каталог,
    *   не существует либо является файлом.
    */
   @McpTool(
     name = "register_workspace",
-    description = "Register a workspace folder and index its 1C:Enterprise (BSL) and OneScript sources, "
-      + "so that the other BSL tools can analyse it. Required before analysing any project the "
-      + "`list_workspaces` tool does not already report. Pass the project root directory — the same "
-      + "folder an editor opens as an LSP workspace folder — not a sources subfolder and not a single "
-      + "file: `.bsl-language-server.json` is only read from the workspace root. Indexing a large "
-      + "configuration may take a while; registering an already registered directory returns "
-      + "immediately without re-indexing. Returns the `root` to pass to the other tools. Nothing on "
-      + "disk is modified.",
-    // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
-    // (here — the path of a workspace without a folder). Known upstream bug, open as of 2.0.0-M6.
+    description = """
+      Register a workspace folder and index its 1C:Enterprise (BSL) and OneScript sources, so that \
+      the other BSL tools can analyse it. Required before analysing any project the \
+      `list_workspaces` tool does not already report.
+      Pass the project root directory — the same folder an editor opens as an LSP workspace folder \
+      — not a sources subfolder and not a single file: `.bsl-language-server.json` is only read \
+      from the workspace root.
+      Indexing a large configuration may take a while; registering an already registered directory \
+      returns immediately without re-indexing. Returns the `root` to pass to the other tools. \
+      Nothing on disk is modified.""",
+    // Output schema disabled for every tool of this server: Spring AI generates a schema the results
+    // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
+    // results are still returned, just unvalidated.
     generateOutputSchema = false,
     // Mutates server state only (the indexed workspace set) — never the analysed sources, so the
     // update is additive rather than destructive. Repeated calls for the same directory are no-ops,
@@ -100,23 +103,19 @@ public class RegisterWorkspaceTool {
       openWorldHint = false))
   public Result registerWorkspace(
     @McpToolParam(required = true, description = McpToolParams.WORKSPACE_PATH)
-    String path
+    String path,
+    @McpToolParam(required = false, description = McpToolParams.WORKSPACE_NAME)
+    @Nullable String name
   ) {
     var srcDir = toSourceDirectory(path);
-    var workspaceUri = srcDir.toUri();
-
-    var existing = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (existing != null) {
-      return new Result(WorkspaceDto.from(workspaceUri, existing), true);
-    }
-
-    workspaceBootstrap.index(srcDir);
-
-    var registered = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (registered == null) {
-      throw new IllegalStateException("Workspace was indexed but is not registered: " + workspaceUri);
-    }
-    return new Result(WorkspaceDto.from(workspaceUri, registered), false);
+    // Проверка «уже зарегистрирован» и индексация — одна атомарная операция: иначе два
+    // параллельных вызова для одного каталога оба увидели бы «не зарегистрирован» и
+    // проиндексировали бы его дважды.
+    var registration = workspaceBootstrap.register(srcDir, name);
+    return new Result(
+      WorkspaceDto.from(srcDir.toUri(), registration.serverContext()),
+      registration.alreadyRegistered()
+    );
   }
 
   private static Path toSourceDirectory(String rawPath) {

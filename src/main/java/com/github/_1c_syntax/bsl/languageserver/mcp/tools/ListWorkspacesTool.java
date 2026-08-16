@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * MCP-инструмент {@code list_workspaces}: перечисляет рабочие пространства, зарегистрированные
@@ -58,13 +59,15 @@ public class ListWorkspacesTool {
 
   @McpTool(
     name = "list_workspaces",
-    description = "List the workspaces (1C:Enterprise configurations and OneScript projects) currently "
-      + "registered and indexed by this server, together with the `root` value the other BSL tools "
-      + "expect. Start here: every other BSL tool answers only inside a registered workspace, and file "
-      + "paths outside every registered workspace are rejected. An empty list means nothing is indexed "
-      + "yet — register the project root with `register_workspace` first.",
-    // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
-    // (here — the path of a workspace without a folder). Known upstream bug, open as of 2.0.0-M6.
+    description = """
+      List the workspaces (1C:Enterprise configurations and OneScript projects) currently registered \
+      and indexed by this server, together with the `root` value the other BSL tools expect.
+      Start here: every other BSL tool answers only inside a registered workspace, and file paths \
+      outside every registered workspace are rejected. An empty list means nothing is indexed yet — \
+      register the workspace folder with `register_workspace` first.""",
+    // Output schema disabled for every tool of this server: Spring AI generates a schema the results
+    // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
+    // results are still returned, just unvalidated.
     generateOutputSchema = false,
     // Read-only: only reports server state, never mutates anything. Hint clients so the tool is not
     // treated as destructive.
@@ -74,10 +77,12 @@ public class ListWorkspacesTool {
       idempotentHint = true,
       openWorldHint = false))
   public Result listWorkspaces() {
-    var contexts = serverContextProvider.getAllContexts();
+    // Снимок: getAllContexts отдаёт живое представление, а список и подсказка обходят его порознь —
+    // без копии параллельная регистрация попала бы в один из них и не попала в другой.
+    var contexts = Map.copyOf(serverContextProvider.getAllContexts());
     var workspaces = contexts.entrySet().stream()
       .map(entry -> WorkspaceDto.from(entry.getKey(), entry.getValue()))
-      .sorted(Comparator.comparing(WorkspaceDto::root))
+      .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
       .toList();
     return new Result(workspaces, McpWorkspaces.registrationHint(contexts.keySet()));
   }

@@ -32,8 +32,10 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * MCP-инструмент {@code unregister_workspace}: убирает ранее зарегистрированное рабочее
@@ -54,7 +56,7 @@ public class UnregisterWorkspaceTool {
    * @param root Корень удалённого рабочего пространства.
    * @param remaining Рабочие пространства, оставшиеся зарегистрированными.
    */
-  public record Result(String root, List<WorkspaceDto> remaining) {
+  public record Result(URI root, List<WorkspaceDto> remaining) {
   }
 
   /**
@@ -70,12 +72,15 @@ public class UnregisterWorkspaceTool {
    */
   @McpTool(
     name = "unregister_workspace",
-    description = "Remove a previously registered workspace from this server and release its index. "
-      + "Pass the `root` reported by `list_workspaces`. Only server-side state is dropped — no file on "
-      + "disk is touched. Afterwards the other BSL tools stop answering for that project until it is "
-      + "registered again with `register_workspace`.",
-    // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO fields
-    // (here — the path of a workspace without a folder). Known upstream bug, open as of 2.0.0-M6.
+    description = """
+      Remove a previously registered workspace from this server and release its index. Pass the \
+      `root` reported by `list_workspaces`.
+      Only server-side state is dropped — no file on disk is touched. Afterwards the other BSL \
+      tools stop answering for that project until it is registered again with \
+      `register_workspace`.""",
+    // Output schema disabled for every tool of this server: Spring AI generates a schema the results
+    // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
+    // results are still returned, just unvalidated.
     generateOutputSchema = false,
     // The only destructive tool of this server: per the spec destructiveHint = false means "additive
     // updates only", and dropping a registration throws away an index that took minutes to build on
@@ -100,10 +105,11 @@ public class UnregisterWorkspaceTool {
     }
     workspaceBootstrap.remove(Absolute.path(workspaceUri));
 
-    var remaining = serverContextProvider.getAllContexts().entrySet().stream()
+    // Снимок живого представления: см. ListWorkspacesTool.
+    var remaining = Map.copyOf(serverContextProvider.getAllContexts()).entrySet().stream()
       .map(entry -> WorkspaceDto.from(entry.getKey(), entry.getValue()))
-      .sorted(Comparator.comparing(WorkspaceDto::root))
+      .sorted(Comparator.comparing(workspace -> workspace.root().toString()))
       .toList();
-    return new Result(workspaceUri.toString(), remaining);
+    return new Result(workspaceUri, remaining);
   }
 }

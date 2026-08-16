@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -76,7 +77,8 @@ class McpToolsTest {
 
   private static final String SRC_DIR = "src/test/resources/providers";
   private static final String FILE = SRC_DIR + "/callHierarchy.bsl";
-  private static final String WORKSPACE_ROOT = Absolute.path(SRC_DIR).toUri().toString();
+  private static final URI WORKSPACE_URI = Absolute.path(SRC_DIR).toUri();
+  private static final String WORKSPACE_ROOT = WORKSPACE_URI.toString();
 
   // Объявление ПерваяФункция и место её вызова в callHierarchy.bsl.
   private static final int DECLARATION_LINE = 6;
@@ -455,12 +457,12 @@ class McpToolsTest {
   void listWorkspacesReportsIndexedWorkspace() {
     var result = listWorkspacesTool.listWorkspaces();
 
-    assertThat(result.workspaces()).extracting(WorkspaceDto::root).contains(WORKSPACE_ROOT);
+    assertThat(result.workspaces()).extracting(WorkspaceDto::root).contains(WORKSPACE_URI);
     assertThat(result.workspaces())
-      .filteredOn(workspace -> WORKSPACE_ROOT.equals(workspace.root()))
+      .filteredOn(workspace -> WORKSPACE_URI.equals(workspace.root()))
       .singleElement()
       .satisfies(workspace -> {
-        assertThat(workspace.path()).isEqualTo(Absolute.path(SRC_DIR).toString());
+        assertThat(workspace.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString());
         assertThat(workspace.documents()).isPositive();
       });
     assertThat(result.hint()).contains("Registered workspace roots", WORKSPACE_ROOT);
@@ -480,34 +482,48 @@ class McpToolsTest {
   void registerWorkspaceIndexesDirectoryAndUnblocksTools() {
     var cliDir = Absolute.path("src/test/resources/cli");
 
-    var result = registerWorkspaceTool.registerWorkspace(cliDir.toString());
+    var result = registerWorkspaceTool.registerWorkspace(cliDir.toString(), null);
 
     assertThat(result.alreadyRegistered()).isFalse();
-    assertThat(result.workspace().root()).isEqualTo(cliDir.toUri().toString());
+    assertThat(result.workspace().root()).isEqualTo(cliDir.toUri());
+    assertThat(result.workspace().name()).isEqualTo("cli");
     assertThat(result.workspace().documents()).isPositive();
     assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
   }
 
   @Test
   void registerWorkspaceAcceptsFileUri() {
-    var cliUri = Absolute.path("src/test/resources/cli").toUri().toString();
+    var cliUri = Absolute.path("src/test/resources/cli").toUri();
 
-    var result = registerWorkspaceTool.registerWorkspace(cliUri);
+    var result = registerWorkspaceTool.registerWorkspace(cliUri.toString(), null);
 
     assertThat(result.workspace().root()).isEqualTo(cliUri);
   }
 
   @Test
+  void registerWorkspaceKeepsNameGivenByClient() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+
+    var result = registerWorkspaceTool.registerWorkspace(cliDir.toString(), "Демо-конфигурация");
+
+    assertThat(result.workspace().name()).isEqualTo("Демо-конфигурация");
+    assertThat(listWorkspacesTool.listWorkspaces().workspaces())
+      .filteredOn(workspace -> cliDir.toUri().equals(workspace.root()))
+      .singleElement()
+      .satisfies(workspace -> assertThat(workspace.name()).isEqualTo("Демо-конфигурация"));
+  }
+
+  @Test
   void registerWorkspaceDoesNotReindexKnownDirectory() {
-    var result = registerWorkspaceTool.registerWorkspace(Absolute.path(SRC_DIR).toString());
+    var result = registerWorkspaceTool.registerWorkspace(Absolute.path(SRC_DIR).toString(), null);
 
     assertThat(result.alreadyRegistered()).isTrue();
-    assertThat(result.workspace().root()).isEqualTo(WORKSPACE_ROOT);
+    assertThat(result.workspace().root()).isEqualTo(WORKSPACE_URI);
   }
 
   @Test
   void registerWorkspaceRejectsFileInsteadOfDirectory() {
-    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(Absolute.path(FILE).toString()))
+    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(Absolute.path(FILE).toString(), null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("is a file, not a directory");
   }
@@ -516,19 +532,19 @@ class McpToolsTest {
   void registerWorkspaceRejectsMissingDirectory() {
     var missing = Absolute.path("src/test/resources/there-is-no-such-directory").toString();
 
-    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(missing))
+    assertThatThrownBy(() -> registerWorkspaceTool.registerWorkspace(missing, null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("does not exist");
   }
 
   @Test
   void unregisterWorkspaceRemovesItAndReportsTheRest() {
-    registerWorkspaceTool.registerWorkspace(Absolute.path("src/test/resources/cli").toString());
+    registerWorkspaceTool.registerWorkspace(Absolute.path("src/test/resources/cli").toString(), null);
 
     var result = unregisterWorkspaceTool.unregisterWorkspace(WORKSPACE_ROOT);
 
-    assertThat(result.root()).isEqualTo(WORKSPACE_ROOT);
-    assertThat(result.remaining()).extracting(WorkspaceDto::root).doesNotContain(WORKSPACE_ROOT);
+    assertThat(result.root()).isEqualTo(WORKSPACE_URI);
+    assertThat(result.remaining()).extracting(WorkspaceDto::root).doesNotContain(WORKSPACE_URI);
     assertThat(result.remaining()).isNotEmpty();
   }
 

@@ -22,8 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.dto;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.utils.Absolute;
-import org.jspecify.annotations.Nullable;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 
 import java.net.URI;
 
@@ -33,24 +32,18 @@ import java.net.URI;
  *
  * @param root URI рабочего пространства — значение, которое инструменты принимают в параметре
  *   {@code root}.
- * @param path Путь к каталогу в файловой системе. {@code null} для синтетического рабочего
- *   пространства, созданного LSP-клиентом без папки проекта (одиночный файл, untitled-буфер).
+ * @param name Имя рабочего пространства — то же, что {@code name} у workspace folder в LSP:
+ *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code root}.
  * @param documents Количество проиндексированных в нём файлов {@code .bsl}/{@code .os}.
  */
-public record WorkspaceDto(String root, @Nullable String path, int documents) {
+public record WorkspaceDto(URI root, String name, int documents) {
 
   public static WorkspaceDto from(URI workspaceUri, ServerContext serverContext) {
+    var name = WorkspaceContextHolder.getName(workspaceUri);
     return new WorkspaceDto(
-      workspaceUri.toString(),
-      filePath(workspaceUri),
+      workspaceUri,
+      name == null ? workspaceUri.toString() : name,
       serverContext.getDocuments().size()
     );
-  }
-
-  private static @Nullable String filePath(URI workspaceUri) {
-    if (!"file".equalsIgnoreCase(workspaceUri.getScheme())) {
-      return null;
-    }
-    return Absolute.path(workspaceUri).toString();
   }
 }
