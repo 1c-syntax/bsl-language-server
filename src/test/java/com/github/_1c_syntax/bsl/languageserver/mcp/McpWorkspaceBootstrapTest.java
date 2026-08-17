@@ -187,7 +187,7 @@ class McpWorkspaceBootstrapTest {
 
   @Test
   void folderIsUnregisteredByItsRegisteredUri() throws IOException {
-    var srcDir = Files.createTempDirectory("mcp-workspace");
+    var srcDir = tempWorkspaceDirectory();
     bootstrap.register(srcDir, null);
 
     assertThat(bootstrap.unregister(srcDir.toUri())).isTrue();
@@ -196,7 +196,7 @@ class McpWorkspaceBootstrapTest {
 
   @Test
   void unregisterOfFolderWithGoneDirectoryFailsInsteadOfLeakingSilently() throws IOException {
-    var srcDir = Files.createTempDirectory("mcp-workspace");
+    var srcDir = tempWorkspaceDirectory();
     bootstrap.register(srcDir, null);
     var registered = srcDir.toUri();
 
@@ -214,6 +214,17 @@ class McpWorkspaceBootstrapTest {
     // Владение сохранено: повторная попытка не выглядит обращением к чужой папке.
     assertThatThrownBy(() -> bootstrap.unregister(registered))
       .isInstanceOf(IllegalStateException.class);
+  }
+
+  /**
+   * Временный каталог в том виде, в котором его увидит контекст сервера.
+   * <p>
+   * Канонизация обязательна: на macOS {@code /var} — симлинк на {@code /private/var}, поэтому сырой
+   * путь из {@code createTempDirectory} дал бы ключ реестра, который {@code removeWorkspace} затем
+   * не нашёл бы — он канонизирует URI ещё раз.
+   */
+  private static Path tempWorkspaceDirectory() throws IOException {
+    return Absolute.path(Files.createTempDirectory("mcp-workspace"));
   }
 
   private URI addWorkspaceOutsideMcp(Path srcDir) {
