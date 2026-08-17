@@ -36,9 +36,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,6 +49,14 @@ import java.util.stream.Collectors;
  * зарегистрированную явно, и наоборот. Единственный источник правды о владении — этот бин;
  * отдельных копий состояния заводить нельзя, иначе они разойдутся с реальным набором папок.
  * Владение при этом вторично: папка, убранная из контекста мимо этого бина, теряет владельцев.
+ * <p>
+ * Удаляются <b>только папки, созданные через MCP</b>. Папки из других источников — прежде всего
+ * workspace folders LSP-клиента в режимах {@code lsp --mcp}/{@code websocket --mcp} — MCP забирать
+ * не вправе: их удаление снесло бы рабочий контекст редактора, а вернуть его клиент не может.
+ * <p>
+ * Идентичность папки — URI, под которым она лежит в {@link ServerContextProvider}, а не путь:
+ * {@code Path.toUri()} добавляет завершающий слэш только пока каталог существует, поэтому у
+ * удалённого с диска каталога тот же {@link Path} даёт уже другой URI.
  * <p>
  * Все изменения набора сериализованы на мониторе бина: источников несколько, а регистрация —
  * «проверить и добавить» с долгой индексацией между шагами, так что параллельные вызовы иначе
@@ -70,10 +76,14 @@ public class McpWorkspaceBootstrap {
   private final Set<URI> ownedByTool = new HashSet<>();
 
   /**
-   * Папки, удерживаемые корнями, объявленными клиентом через MCP roots,
-   * вместе с каталогом, из которого получен URI.
+   * Папки, удерживаемые корнями, объявленными клиентом через MCP roots.
    */
-  private final Map<URI, Path> ownedByRoots = new HashMap<>();
+  private final Set<URI> ownedByRoots = new HashSet<>();
+
+  /**
+   * Папки, добавленные в контекст сервера этим бином, — единственные, которые он вправе удалять.
+   */
+  private final Set<URI> createdHere = new HashSet<>();
 
   /**
    * Взять каталог во владение явной регистрацией, проиндексировав его, если он ещё не
@@ -101,25 +111,35 @@ public class McpWorkspaceBootstrap {
   }
 
   /**
-   * Отказаться от явного владения каталогом и удалить папку, если её больше никто не удерживает.
+   * Отказаться от явного владения папкой и удалить её, если её больше никто не удерживает.
    * <p>
    * Атомарно относительно других изменений набора рабочих папок.
    *
-   * @param srcDir Каталог исходных файлов ранее зарегистрированной папки.
+   * @param workspaceUri URI ранее зарегистрированной рабочей папки — в том виде, в котором она
+   *   лежит в {@link ServerContextProvider}.
    * @return {@code true}, если папка удалена; {@code false}, если она осталась —
    *   её продолжает удерживать корень, объявленный клиентом через MCP roots.
+   * @throws IllegalArgumentException Если папку добавили не через MCP: забирать чужую папку
+   *   (например, workspace folder LSP-клиента) этот бин не вправе.
    */
-  public synchronized boolean unregister(Path srcDir) {
+  public synchronized boolean unregister(URI workspaceUri) {
     forgetGoneFolders();
-    var workspaceUri = srcDir.toUri();
+
+    if (!createdHere.contains(workspaceUri)) {
+      throw new IllegalArgumentException("Workspace folder `" + workspaceUri
+        + "` was not registered through MCP: it comes from the editor (an LSP workspace folder), "
+        + "and unregistering it here would tear down the editor's context. Only folders registered "
+        + "with `" + McpWorkspaceFolders.REGISTER_TOOL + "` can be removed.");
+    }
+
     ownedByTool.remove(workspaceUri);
 
-    if (ownedByRoots.containsKey(workspaceUri)) {
-      LOGGER.info("Workspace folder `{}` stays registered: still declared through MCP roots", srcDir);
+    if (ownedByRoots.contains(workspaceUri)) {
+      LOGGER.info("Workspace folder `{}` stays registered: still declared through MCP roots", workspaceUri);
       return false;
     }
 
-    remove(srcDir);
+    remove(workspaceUri);
     return true;
   }
 
@@ -136,14 +156,12 @@ public class McpWorkspaceBootstrap {
     var declaredUris = declaredRoots.stream().map(Path::toUri).collect(Collectors.toSet());
 
     declaredRoots.stream()
-      .filter(srcDir -> !ownedByRoots.containsKey(srcDir.toUri()))
+      .filter(srcDir -> !ownedByRoots.contains(srcDir.toUri()))
       .forEach(this::addRoot);
 
-    Map.copyOf(ownedByRoots).forEach((workspaceUri, srcDir) -> {
-      if (!declaredUris.contains(workspaceUri)) {
-        dropRoot(workspaceUri, srcDir);
-      }
-    });
+    Set.copyOf(ownedByRoots).stream()
+      .filter(workspaceUri -> !declaredUris.contains(workspaceUri))
+      .forEach(this::dropRoot);
   }
 
   /**
@@ -154,7 +172,8 @@ public class McpWorkspaceBootstrap {
   private void forgetGoneFolders() {
     var registered = serverContextProvider.getAllContexts().keySet();
     ownedByTool.retainAll(registered);
-    ownedByRoots.keySet().retainAll(registered);
+    ownedByRoots.retainAll(registered);
+    createdHere.retainAll(registered);
   }
 
   private void addRoot(Path srcDir) {
@@ -164,24 +183,29 @@ public class McpWorkspaceBootstrap {
         var indexed = index(srcDir, null);
         LOGGER.info("Workspace folder `{}` added from MCP root ({} files)", srcDir, indexed);
       }
-      ownedByRoots.put(workspaceUri, srcDir);
+      ownedByRoots.add(workspaceUri);
     } catch (RuntimeException e) {
       // Не берём во владение то, что не удалось проиндексировать: следующая синхронизация повторит.
       LOGGER.warn("Failed to add workspace folder from MCP root `{}`", srcDir, e);
     }
   }
 
-  private void dropRoot(URI workspaceUri, Path srcDir) {
+  private void dropRoot(URI workspaceUri) {
     ownedByRoots.remove(workspaceUri);
     if (ownedByTool.contains(workspaceUri)) {
-      LOGGER.info("Workspace folder `{}` stays registered: registered explicitly", srcDir);
+      LOGGER.info("Workspace folder `{}` stays registered: registered explicitly", workspaceUri);
+      return;
+    }
+    if (!createdHere.contains(workspaceUri)) {
+      // Корень лишь ссылался на чужую папку (workspace folder LSP-клиента) — забирать её нельзя.
+      LOGGER.info("Workspace folder `{}` stays registered: added outside MCP", workspaceUri);
       return;
     }
     try {
-      remove(srcDir);
-      LOGGER.info("Workspace folder `{}` removed (MCP root gone)", srcDir);
+      remove(workspaceUri);
+      LOGGER.info("Workspace folder `{}` removed (MCP root gone)", workspaceUri);
     } catch (RuntimeException e) {
-      LOGGER.warn("Failed to remove workspace folder `{}`", srcDir, e);
+      LOGGER.warn("Failed to remove workspace folder `{}`", workspaceUri, e);
     }
   }
 
@@ -220,30 +244,38 @@ public class McpWorkspaceBootstrap {
       var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
       serverContext.populateContext(files);
       LOGGER.info("Indexed {} files in workspace `{}`", files.size(), srcDir);
+      if (addedHere) {
+        createdHere.add(workspaceUri);
+      }
       return files.size();
     } catch (RuntimeException e) {
       if (addedHere) {
-        rollbackQuietly(srcDir);
+        rollbackQuietly(workspaceUri);
       }
       throw e;
     }
   }
 
-  private void rollbackQuietly(Path srcDir) {
+  private void rollbackQuietly(URI workspaceUri) {
     try {
-      remove(srcDir);
+      remove(workspaceUri);
     } catch (RuntimeException suppressed) {
-      LOGGER.warn("Failed to roll back partially indexed workspace folder `{}`", srcDir, suppressed);
+      LOGGER.warn("Failed to roll back partially indexed workspace folder `{}`", workspaceUri, suppressed);
     }
   }
 
   /**
    * Удалить рабочую папку из общего контекста сервера.
    *
-   * @param srcDir Каталог исходных файлов ранее добавленной рабочей папки.
+   * @param workspaceUri URI ранее добавленной рабочей папки — в том виде, в котором она лежит
+   *   в {@link ServerContextProvider}.
    */
-  public synchronized void remove(Path srcDir) {
-    var uri = srcDir.toUri().toString();
+  public synchronized void remove(URI workspaceUri) {
+    createdHere.remove(workspaceUri);
+    ownedByTool.remove(workspaceUri);
+    ownedByRoots.remove(workspaceUri);
+
+    var uri = workspaceUri.toString();
     serverContextProvider.removeWorkspace(new WorkspaceFolder(uri, uri));
   }
 }

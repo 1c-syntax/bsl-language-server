@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
@@ -76,7 +75,8 @@ public class UnregisterWorkspaceFolderTool {
    * @return Рабочая папка, признак того, что она осталась в контексте, и оставшиеся
    *   зарегистрированными папки.
    * @throws IllegalArgumentException Если значение не совпало ни с одной зарегистрированной рабочей
-   *   папкой либо за ним не стоит каталог (синтетическая рабочая область LSP-клиента).
+   *   папкой, за ним не стоит каталог (синтетическая рабочая область LSP-клиента) либо папку
+   *   добавили не через MCP — папку редактора инструмент забирать не вправе.
    */
   @McpTool(
     name = "unregister_workspace_folder",
@@ -87,7 +87,8 @@ public class UnregisterWorkspaceFolderTool {
       tools stop answering for that folder until it is registered again with \
       `register_workspace_folder`.
       A folder the client also declares through MCP roots stays indexed and keeps answering; the \
-      result reports that as `stillDeclaredByRoots`.""",
+      result reports that as `stillDeclaredByRoots`. A folder that came from the editor over LSP \
+      is not yours to drop — the call fails and says so.""",
     // Output schema disabled for every tool of this server: Spring AI generates a schema the results
     // then fail validation against (spring-ai#4825, #4487 — both still open as of 2.0.0). Structured
     // results are still returned, just unvalidated.
@@ -115,11 +116,13 @@ public class UnregisterWorkspaceFolderTool {
     }
     // Описание собираем до снятия регистрации: вместе с ней уходит и имя папки из реестра.
     var folder = WorkspaceFolderDto.from(workspaceUri);
-    var removed = workspaceBootstrap.unregister(Absolute.path(workspaceUri));
+    // Папку адресуем ровно тем URI, под которым она зарегистрирована: обратный путь через Path
+    // менял бы идентичность, если каталог уже удалён с диска.
+    var removed = workspaceBootstrap.unregister(workspaceUri);
 
     // Снимок живого представления: см. ListWorkspaceFoldersTool.
     var remaining = Map.copyOf(serverContextProvider.getAllContexts()).keySet().stream()
-      .map(WorkspaceFolderDto::from)
+      .flatMap(uri -> WorkspaceFolderDto.fromSnapshot(uri).stream())
       .sorted(Comparator.comparing(workspaceFolderDto -> workspaceFolderDto.uri().toString()))
       .toList();
     return new Result(folder, !removed, remaining);

@@ -23,12 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class McpWorkspaceFoldersTest {
 
@@ -47,6 +52,19 @@ class McpWorkspaceFoldersTest {
     assertThat(McpWorkspaceFolders.toWorkspaceFolderUri("  src/test/resources/cli  ")).isEqualTo(expected);
     assertThat(McpWorkspaceFolders.toWorkspaceFolderUri(Absolute.path("src/test/resources/cli").toString()))
       .isEqualTo(expected);
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void explainsPathThatCannotBeCanonicalized() throws IOException {
+    // Absolute.path приводит путь к каноническому виду через getCanonicalFile(), а тот бросает
+    // IOException, не объявляя его (здесь — «File name too long»). Сообщение всё равно должно
+    // объяснять, что передать, иначе агент получит сырую ошибку ввода-вывода.
+    var tooLong = Files.createTempDirectory("mcp-too-long").resolve("x".repeat(5000));
+
+    assertThatThrownBy(() -> McpWorkspaceFolders.toWorkspaceFolderUri(tooLong.toString()))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Unsupported workspace folder");
   }
 
   @Test

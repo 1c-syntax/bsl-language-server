@@ -61,7 +61,7 @@ The client workflow:
 
 1. `list_workspace_folders` — see what is already registered and get the `uri` values.
 2. `register_workspace_folder` with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the folder root. The tool indexes the sources and returns the folder's `uri`; registering an already registered directory does not re-index it.
-3. `unregister_workspace_folder` — release the index when the project is no longer needed. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as `stillDeclaredByRoots`: the folder goes away once the last source releases it.
+3. `unregister_workspace_folder` — release the index when the project is no longer needed. Only folders registered over MCP can be removed: a folder that came from the LSP client is the editor's workspace folder and is left alone, because the client cannot get it back. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as `stillDeclaredByRoots`: the folder goes away once the last source releases it.
 
 The error messages are self-contained: for an unknown or missing `workspaceFolder` the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.
 

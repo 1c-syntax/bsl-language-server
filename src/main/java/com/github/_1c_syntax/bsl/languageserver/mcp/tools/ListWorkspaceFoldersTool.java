@@ -84,7 +84,7 @@ public class ListWorkspaceFoldersTool {
     // без копии параллельная регистрация попала бы в один из них и не попала в другой.
     var contexts = Map.copyOf(serverContextProvider.getAllContexts());
     var workspaceFolders = contexts.keySet().stream()
-      .map(WorkspaceFolderDto::from)
+      .flatMap(uri -> WorkspaceFolderDto.fromSnapshot(uri).stream())
       .sorted(Comparator.comparing(workspaceFolder -> workspaceFolder.uri().toString()))
       .toList();
     return new Result(workspaceFolders, McpWorkspaceFolders.registrationHint(contexts.keySet()));

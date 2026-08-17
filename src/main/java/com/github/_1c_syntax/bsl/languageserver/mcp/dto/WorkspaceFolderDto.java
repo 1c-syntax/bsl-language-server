@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Зарегистрированная рабочая папка — workspace folder в терминах LSP: 1С-конфигурация или
@@ -43,6 +44,21 @@ public record WorkspaceFolderDto(URI uri, String name) {
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       // Имя после forUri всегда есть: незарегистрированная папка отсекается там же.
       return new WorkspaceFolderDto(workspaceUri, Objects.requireNonNull(WorkspaceContextHolder.getName()));
+    }
+  }
+
+  /**
+   * Описать папку из снятого ранее снимка набора папок.
+   *
+   * @param workspaceUri URI рабочей папки из снимка.
+   * @return Описание папки либо пусто, если папку успели снять с регистрации: снимок набора
+   *   не замораживает реестр имён, и папка могла уйти между снимком и чтением имени.
+   */
+  public static Optional<WorkspaceFolderDto> fromSnapshot(URI workspaceUri) {
+    try {
+      return Optional.of(from(workspaceUri));
+    } catch (IllegalStateException alreadyUnregistered) {
+      return Optional.empty();
     }
   }
 }

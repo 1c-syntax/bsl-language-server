@@ -72,7 +72,9 @@ public final class McpWorkspaceFolders {
         return Absolute.uri(trimmed);
       }
       return Absolute.path(trimmed).toUri();
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
+      // Именно Exception: Absolute.path прокидывает IOException из getCanonicalFile(), не объявляя
+      // его, поэтому на RuntimeException самодостаточное сообщение об ошибке было бы потеряно.
       throw new IllegalArgumentException(
         "Unsupported workspace folder `" + rawFolder
           + "`: expected an absolute directory path or a file: URI.", e);

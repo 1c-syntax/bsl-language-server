@@ -125,7 +125,17 @@ public class RegisterWorkspaceFolderTool {
         "Workspace path must point to a local directory, got: " + rawPath);
     }
 
-    var srcDir = Absolute.path(uri);
+    Path srcDir;
+    try {
+      srcDir = Absolute.path(uri);
+    } catch (Exception e) {
+      // Канонизация пути повторяется здесь уже после нормализации, и между двумя обращениями
+      // к диску каталог может исчезнуть. Absolute.path прокидывает IOException из
+      // getCanonicalFile(), не объявляя его, поэтому ловим Exception: иначе клиент получил бы
+      // сырую ошибку ввода-вывода вместо объяснения, что передать.
+      throw new IllegalArgumentException("Workspace path cannot be resolved: " + rawPath
+        + ". Pass an existing directory — the project root the editor opens.", e);
+    }
     if (Files.isDirectory(srcDir)) {
       return srcDir;
     }

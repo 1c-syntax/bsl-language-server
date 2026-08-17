@@ -32,7 +32,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -142,7 +144,7 @@ class McpWorkspaceBootstrapTest {
     bootstrap.register(CLI_DIR, null);
     bootstrap.syncRoots(List.of(CLI_DIR));
 
-    assertThat(bootstrap.unregister(CLI_DIR)).isFalse();
+    assertThat(bootstrap.unregister(CLI_DIR.toUri())).isFalse();
     assertThat(contexts).containsKey(CLI_DIR.toUri());
 
     // Владелец остался один: с исчезновением корня папка уходит.
@@ -154,8 +156,52 @@ class McpWorkspaceBootstrapTest {
   void folderWithoutOtherOwnersIsRemovedByUnregisterTool() {
     bootstrap.register(CLI_DIR, null);
 
-    assertThat(bootstrap.unregister(CLI_DIR)).isTrue();
+    assertThat(bootstrap.unregister(CLI_DIR.toUri())).isTrue();
     assertThat(contexts).doesNotContainKey(CLI_DIR.toUri());
+  }
+
+  @Test
+  void folderAddedOutsideMcpIsNotUnregistered() {
+    // Так папка попадает в контекст от LSP-клиента: мимо этого бина.
+    var lspFolder = addWorkspaceOutsideMcp(CLI_DIR);
+
+    assertThatThrownBy(() -> bootstrap.unregister(lspFolder))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("was not registered through MCP")
+      .hasMessageContaining("register_workspace_folder");
+    assertThat(contexts).containsKey(lspFolder);
+  }
+
+  @Test
+  void disappearedRootDoesNotTakeAwayFolderAddedOutsideMcp() {
+    var lspFolder = addWorkspaceOutsideMcp(CLI_DIR);
+
+    // Корень лишь сослался на уже существующую папку редактора — забирать её он не вправе.
+    bootstrap.syncRoots(List.of(CLI_DIR));
+    bootstrap.syncRoots(List.of());
+
+    assertThat(contexts).containsKey(lspFolder);
+  }
+
+  @Test
+  void folderIsUnregisteredAfterItsDirectoryIsGone() throws IOException {
+    var srcDir = Files.createTempDirectory("mcp-workspace");
+    bootstrap.register(srcDir, null);
+    var registered = srcDir.toUri();
+
+    // Каталог удалён: Path.toUri() теряет завершающий слэш, поэтому идентичность папки должна
+    // считаться по URI из реестра, а не выводиться из пути заново.
+    Files.delete(srcDir);
+    assertThat(srcDir.toUri()).isNotEqualTo(registered);
+
+    assertThat(bootstrap.unregister(registered)).isTrue();
+    assertThat(contexts).doesNotContainKey(registered);
+  }
+
+  private URI addWorkspaceOutsideMcp(Path srcDir) {
+    var workspaceUri = srcDir.toUri();
+    serverContextProvider.addWorkspace(workspaceUri, "lsp");
+    return workspaceUri;
   }
 
   @Test

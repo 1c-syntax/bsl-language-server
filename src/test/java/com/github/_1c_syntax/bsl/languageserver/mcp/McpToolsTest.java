@@ -47,6 +47,8 @@ import io.modelcontextprotocol.spec.McpSchema.Root;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -523,6 +525,18 @@ class McpToolsTest {
     assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(FILE).toString(), null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("is a file, not a directory");
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void registerWorkspaceExplainsPathThatCannotBeCanonicalized() {
+    // Канонизация пути падает необъявленным IOException («File name too long»); клиент должен
+    // получить объяснение, что передать, а не сырую ошибку ввода-вывода.
+    var tooLong = Absolute.path("src/test/resources").resolve("x".repeat(5000)).toString();
+
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(tooLong, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Unsupported workspace folder");
   }
 
   @Test
