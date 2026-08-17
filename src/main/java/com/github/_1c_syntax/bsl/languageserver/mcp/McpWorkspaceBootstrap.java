@@ -121,6 +121,8 @@ public class McpWorkspaceBootstrap {
    *   её продолжает удерживать корень, объявленный клиентом через MCP roots.
    * @throws IllegalArgumentException Если папку добавили не через MCP: забирать чужую папку
    *   (например, workspace folder LSP-клиента) этот бин не вправе.
+   * @throws IllegalStateException Если папку не удалось адресовать для удаления — см.
+   *   {@link #remove(URI)}.
    */
   public synchronized boolean unregister(URI workspaceUri) {
     forgetGoneFolders();
@@ -132,13 +134,13 @@ public class McpWorkspaceBootstrap {
         + "with `" + McpWorkspaceFolders.REGISTER_TOOL + "` can be removed.");
     }
 
-    ownedByTool.remove(workspaceUri);
-
     if (ownedByRoots.contains(workspaceUri)) {
+      ownedByTool.remove(workspaceUri);
       LOGGER.info("Workspace folder `{}` stays registered: still declared through MCP roots", workspaceUri);
       return false;
     }
 
+    // Владение снимает уже сама remove — и только когда папка действительно ушла из контекста.
     remove(workspaceUri);
     return true;
   }
@@ -269,13 +271,24 @@ public class McpWorkspaceBootstrap {
    *
    * @param workspaceUri URI ранее добавленной рабочей папки — в том виде, в котором она лежит
    *   в {@link ServerContextProvider}.
+   * @throws IllegalStateException Если папка осталась в контексте: {@code removeWorkspace} ищет
+   *   запись, повторно приводя URI к каноническому виду, а для каталога, которого уже нет на диске,
+   *   такое приведение даёт другой URI и запись не находится. Владение в этом случае сохраняется,
+   *   чтобы повторная попытка не выглядела обращением к чужой папке.
    */
   public synchronized void remove(URI workspaceUri) {
+    var uri = workspaceUri.toString();
+    serverContextProvider.removeWorkspace(new WorkspaceFolder(uri, uri));
+
+    if (serverContextProvider.getAllContexts().containsKey(workspaceUri)) {
+      throw new IllegalStateException("Workspace folder `" + workspaceUri
+        + "` stays registered: the server could not address it for removal, most likely because its"
+        + " directory no longer exists on disk. The built index is still served; re-create the"
+        + " directory to be able to unregister the folder.");
+    }
+
     createdHere.remove(workspaceUri);
     ownedByTool.remove(workspaceUri);
     ownedByRoots.remove(workspaceUri);
-
-    var uri = workspaceUri.toString();
-    serverContextProvider.removeWorkspace(new WorkspaceFolder(uri, uri));
   }
 }

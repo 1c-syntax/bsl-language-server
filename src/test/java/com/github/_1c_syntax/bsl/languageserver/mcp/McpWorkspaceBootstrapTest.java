@@ -85,7 +85,9 @@ class McpWorkspaceBootstrapTest {
       });
     doAnswer(invocation -> {
       WorkspaceFolder folder = invocation.getArgument(0);
-      var workspaceUri = URI.create(folder.getUri());
+      // Ровно как настоящий removeWorkspace: ищет запись, повторно приводя URI к каноническому
+      // виду. Через URI.create стаб был бы добрее реальности и прятал бы потерю идентичности.
+      var workspaceUri = Absolute.uri(folder.getUri());
       contexts.remove(workspaceUri);
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
       return null;
@@ -184,18 +186,34 @@ class McpWorkspaceBootstrapTest {
   }
 
   @Test
-  void folderIsUnregisteredAfterItsDirectoryIsGone() throws IOException {
+  void folderIsUnregisteredByItsRegisteredUri() throws IOException {
+    var srcDir = Files.createTempDirectory("mcp-workspace");
+    bootstrap.register(srcDir, null);
+
+    assertThat(bootstrap.unregister(srcDir.toUri())).isTrue();
+    assertThat(contexts).doesNotContainKey(srcDir.toUri());
+  }
+
+  @Test
+  void unregisterOfFolderWithGoneDirectoryFailsInsteadOfLeakingSilently() throws IOException {
     var srcDir = Files.createTempDirectory("mcp-workspace");
     bootstrap.register(srcDir, null);
     var registered = srcDir.toUri();
 
-    // Каталог удалён: Path.toUri() теряет завершающий слэш, поэтому идентичность папки должна
-    // считаться по URI из реестра, а не выводиться из пути заново.
+    // Каталога больше нет: и Path.toUri(), и Absolute.uri теряют завершающий слэш, поэтому
+    // removeWorkspace не находит запись по ключу реестра.
     Files.delete(srcDir);
-    assertThat(srcDir.toUri()).isNotEqualTo(registered);
+    assertThat(Absolute.uri(registered.toString())).isNotEqualTo(registered);
 
-    assertThat(bootstrap.unregister(registered)).isTrue();
-    assertThat(contexts).doesNotContainKey(registered);
+    // Отвечать «удалено», оставив папку в контексте, нельзя: клиент должен узнать правду.
+    assertThatThrownBy(() -> bootstrap.unregister(registered))
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("stays registered");
+    assertThat(contexts).containsKey(registered);
+
+    // Владение сохранено: повторная попытка не выглядит обращением к чужой папке.
+    assertThatThrownBy(() -> bootstrap.unregister(registered))
+      .isInstanceOf(IllegalStateException.class);
   }
 
   private URI addWorkspaceOutsideMcp(Path srcDir) {

@@ -55,6 +55,45 @@ class McpWorkspaceFoldersTest {
   }
 
   @Test
+  void normalizeWindowsFileUriRewritesDriveLetterAsHost() {
+    assertThat(McpWorkspaceFolders.normalizeWindowsFileUri("file://D:\\git\\1C\\upp\\src\\cf"))
+      .isEqualTo("file:///D:/git/1C/upp/src/cf");
+  }
+
+  @Test
+  void normalizeWindowsFileUriRewritesDriveLetterAsHostWithForwardSlashes() {
+    // Без этой нормализации Absolute.uri съедает двоеточие и получает хост `D`: путь теряется.
+    assertThat(McpWorkspaceFolders.normalizeWindowsFileUri("file://D:/git/1C/upp/src/cf"))
+      .isEqualTo("file:///D:/git/1C/upp/src/cf");
+  }
+
+  @Test
+  void normalizeWindowsFileUriKeepsRfcCompliantValueUntouched() {
+    assertThat(McpWorkspaceFolders.normalizeWindowsFileUri("file:///D:/git/1C/upp/src/cf"))
+      .isEqualTo("file:///D:/git/1C/upp/src/cf");
+  }
+
+  @Test
+  void normalizeWindowsFileUriIgnoresNonFileSchemes() {
+    assertThat(McpWorkspaceFolders.normalizeWindowsFileUri("https://example.com/path"))
+      .isEqualTo("https://example.com/path");
+  }
+
+  @Test
+  void normalizeWindowsFileUriKeepsPlainPathUntouched() {
+    // Обычный windows-путь без схемы разбирает файловая система — нормализатор его не трогает.
+    assertThat(McpWorkspaceFolders.normalizeWindowsFileUri("D:\\git\\upp")).isEqualTo("D:\\git\\upp");
+  }
+
+  @Test
+  void windowsDriveAsAuthorityKeepsDriveLetterInWorkspaceFolderUri() {
+    // Клиент, чей корень приняли через MCP roots, обязан получить тот же URI и через параметр
+    // workspaceFolder: иначе ни один инструмент не найдёт папку по присланному значению.
+    assertThat(McpWorkspaceFolders.toWorkspaceFolderUri("file://D:/git/upp").toString())
+      .startsWith("file:///D:/");
+  }
+
+  @Test
   @DisabledOnOs(OS.WINDOWS)
   void explainsPathThatCannotBeCanonicalized() throws IOException {
     // Absolute.path приводит путь к каноническому виду через getCanonicalFile(), а тот бросает

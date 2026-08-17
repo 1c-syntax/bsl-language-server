@@ -53,6 +53,8 @@ public final class McpWorkspaceFolders {
    */
   public static final String LIST_TOOL = "list_workspace_folders";
 
+  private static final String FILE_SCHEME_PREFIX = "file://";
+
   private McpWorkspaceFolders() {
   }
 
@@ -68,7 +70,7 @@ public final class McpWorkspaceFolders {
    * @throws IllegalArgumentException Если значение не удаётся разобрать ни как URI, ни как путь.
    */
   public static URI toWorkspaceFolderUri(String rawFolder) {
-    var trimmed = rawFolder.trim();
+    var trimmed = normalizeWindowsFileUri(rawFolder.trim());
     try {
       if (hasUriScheme(trimmed)) {
         return Absolute.uri(trimmed);
@@ -102,6 +104,46 @@ public final class McpWorkspaceFolders {
       + registeredFolders.stream().map(URI::toString).sorted().collect(Collectors.joining(", "))
       + ". Pass one of them, or call the `" + REGISTER_TOOL + "` tool to add another project directory. "
       + "The `" + LIST_TOOL + "` tool always returns the current list.";
+  }
+
+  /**
+   * Починить {@code file://}-URI в windows-патологии, которую шлют некоторые MCP-клиенты:
+   * {@code file://D:\path\with\backslashes} вместо RFC 8089 {@code file:///D:/path}.
+   * <p>
+   * Покрытые случаи: {@code file://<letter>:<path>} (буква диска как «host» — {@code Absolute.uri}
+   * съел бы двоеточие и получил хост {@code D}) и backslash'и в path-части. Оба приводятся к
+   * {@code file:///<letter>:/<path-with-forward-slashes>}. Значение без схемы (обычный
+   * windows-путь) не меняется: его разбирает уже файловая система.
+   *
+   * @param raw Значение, присланное клиентом.
+   * @return Нормализованный URI, либо исходное значение, если нормализация не требуется.
+   */
+  static String normalizeWindowsFileUri(String raw) {
+    if (raw.isEmpty()) {
+      return raw;
+    }
+    var result = raw;
+    if (startsWithIgnoreCase(result, FILE_SCHEME_PREFIX)
+      && hasDriveLetterAfterPrefix(result, FILE_SCHEME_PREFIX.length())) {
+      result = "file:///" + result.substring(FILE_SCHEME_PREFIX.length());
+    }
+    var schemeDelimiter = result.indexOf("://");
+    if (schemeDelimiter >= 0 && result.indexOf('\\', schemeDelimiter) >= 0) {
+      var head = result.substring(0, schemeDelimiter + "://".length());
+      var tail = result.substring(schemeDelimiter + "://".length()).replace('\\', '/');
+      result = head + tail;
+    }
+    return result;
+  }
+
+  private static boolean startsWithIgnoreCase(String value, String prefix) {
+    return value.regionMatches(true, 0, prefix, 0, prefix.length());
+  }
+
+  private static boolean hasDriveLetterAfterPrefix(String value, int offset) {
+    return value.length() > offset + 1
+      && Character.isLetter(value.charAt(offset))
+      && value.charAt(offset + 1) == ':';
   }
 
   // Путь и URI различаем по схеме, но букву диска (`C:/repo`) схемой не считаем: она однобуквенная,

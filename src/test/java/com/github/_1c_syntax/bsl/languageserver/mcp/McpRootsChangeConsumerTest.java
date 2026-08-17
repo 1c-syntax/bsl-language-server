@@ -76,7 +76,7 @@ class McpRootsChangeConsumerTest {
     // нормализуем до RFC 8089 file:///D:/path до передачи в Absolute. Соответствие пути
     // Windows-стилю выводится из реального filesystem-роута тестового каталога, поэтому
     // end-to-end ассерт ограничен Windows; кросс-платформенно само нормализаторное правило
-    // покрыто чистыми string-тестами normalizeWindowsFileUri* ниже.
+    // покрыто string-тестами в McpWorkspaceFoldersTest — оно живёт там, где общая нормализация.
     var path = Absolute.path("src/test/resources/cli");
     var driveLetter = path.getRoot().toString().substring(0, 2); // "D:"
     var withoutRoot = path.subpath(0, path.getNameCount()).toString(); // backslashes на Windows
@@ -85,24 +85,6 @@ class McpRootsChangeConsumerTest {
     consumer.accept(null, List.of(new Root(brokenUri, "broken")));
 
     verify(bootstrap).syncRoots(List.of(path));
-  }
-
-  @Test
-  void normalizeWindowsFileUriRewritesDriveLetterAsHost() {
-    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("file://D:\\git\\1C\\upp\\src\\cf"))
-      .isEqualTo("file:///D:/git/1C/upp/src/cf");
-  }
-
-  @Test
-  void normalizeWindowsFileUriKeepsRfcCompliantValueUntouched() {
-    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("file:///D:/git/1C/upp/src/cf"))
-      .isEqualTo("file:///D:/git/1C/upp/src/cf");
-  }
-
-  @Test
-  void normalizeWindowsFileUriIgnoresNonFileSchemes() {
-    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("https://example.com/path"))
-      .isEqualTo("https://example.com/path");
   }
 
 }
