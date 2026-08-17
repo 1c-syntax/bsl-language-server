@@ -22,9 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.utils.Absolute;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,7 @@ import java.util.stream.Collectors;
  * Подсказка — единственный текст о незарегистрированной папке во всём MCP-слое: свой вариант
  * писать нельзя, иначе сообщения разойдутся между собой.
  */
+@Slf4j
 public final class McpWorkspaceFolders {
 
   /**
@@ -69,16 +73,40 @@ public final class McpWorkspaceFolders {
     var trimmed = rawFolder.trim();
     try {
       if (hasUriScheme(trimmed)) {
-        return Absolute.uri(trimmed);
+        return canonicalUri(trimmed);
       }
-      return Absolute.path(trimmed).toUri();
-    } catch (Exception e) {
-      // Именно Exception: Absolute.path прокидывает IOException из getCanonicalFile(), не объявляя
-      // его, поэтому на RuntimeException самодостаточное сообщение об ошибке было бы потеряно.
+      return canonicalPath(trimmed).toUri();
+    } catch (RuntimeException | IOException e) {
       throw new IllegalArgumentException(
         "Unsupported workspace folder `" + rawFolder
           + "`: expected an absolute directory path or a file: URI.", e);
     }
+  }
+
+  /**
+   * Нормализовать URI, объявив ввод-вывод, который прокидывает {@link Absolute}.
+   *
+   * @param value URI рабочей папки.
+   * @return Нормализованный URI.
+   * @throws IOException Нормализация приводит путь к каноническому виду и обращается к диску.
+   *   {@code Absolute} прокидывает {@code IOException} из {@code getCanonicalFile()}, не объявляя
+   *   его; здесь он объявлен, чтобы вызывающий код мог поймать его как обычное checked-исключение.
+   */
+  @SuppressWarnings("RedundantThrows")
+  private static URI canonicalUri(String value) throws IOException {
+    return Absolute.uri(value);
+  }
+
+  /**
+   * Привести путь к каноническому виду, объявив ввод-вывод, который прокидывает {@link Absolute}.
+   *
+   * @param value Путь к рабочей папке.
+   * @return Канонический абсолютный путь.
+   * @throws IOException См. {@link #canonicalUri(String)}.
+   */
+  @SuppressWarnings("RedundantThrows")
+  private static Path canonicalPath(String value) throws IOException {
+    return Absolute.path(value);
   }
 
   /**
@@ -108,6 +136,7 @@ public final class McpWorkspaceFolders {
       return scheme != null && scheme.length() > 1;
     } catch (URISyntaxException e) {
       // Не URI (например, windows-путь с обратными слэшами) — значит, путь.
+      LOGGER.debug("Workspace folder `{}` is not a URI, treating it as a path", value, e);
       return false;
     }
   }

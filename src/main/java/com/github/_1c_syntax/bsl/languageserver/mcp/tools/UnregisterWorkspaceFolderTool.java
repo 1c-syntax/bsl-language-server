@@ -31,7 +31,6 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

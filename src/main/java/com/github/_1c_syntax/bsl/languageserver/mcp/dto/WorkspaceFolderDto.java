@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.dto;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 import java.util.Objects;
@@ -38,6 +39,7 @@ import java.util.Optional;
  * @param name Имя рабочей папки — то же, что {@code name} у workspace folder в LSP:
  *   задаётся клиентом при регистрации, иначе берётся из последнего сегмента {@code uri}.
  */
+@Slf4j
 public record WorkspaceFolderDto(URI uri, String name) {
 
   public static WorkspaceFolderDto from(URI workspaceUri) {
@@ -58,6 +60,8 @@ public record WorkspaceFolderDto(URI uri, String name) {
     try {
       return Optional.of(from(workspaceUri));
     } catch (IllegalStateException alreadyUnregistered) {
+      LOGGER.debug("Workspace folder `{}` left the snapshot before it was described",
+        workspaceUri, alreadyUnregistered);
       return Optional.empty();
     }
   }

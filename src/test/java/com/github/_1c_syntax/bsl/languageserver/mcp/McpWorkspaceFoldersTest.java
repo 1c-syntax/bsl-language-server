@@ -60,9 +60,9 @@ class McpWorkspaceFoldersTest {
     // Absolute.path приводит путь к каноническому виду через getCanonicalFile(), а тот бросает
     // IOException, не объявляя его (здесь — «File name too long»). Сообщение всё равно должно
     // объяснять, что передать, иначе агент получит сырую ошибку ввода-вывода.
-    var tooLong = Files.createTempDirectory("mcp-too-long").resolve("x".repeat(5000));
+    var tooLong = Files.createTempDirectory("mcp-too-long").resolve("x".repeat(5000)).toString();
 
-    assertThatThrownBy(() -> McpWorkspaceFolders.toWorkspaceFolderUri(tooLong.toString()))
+    assertThatThrownBy(() -> McpWorkspaceFolders.toWorkspaceFolderUri(tooLong))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("Unsupported workspace folder");
   }
@@ -84,7 +84,8 @@ class McpWorkspaceFoldersTest {
 
     var hint = McpWorkspaceFolders.registrationHint(Set.of(second, first));
 
-    assertThat(hint).contains("Registered workspace folders: " + first + ", " + second);
-    assertThat(hint).contains("list_workspace_folders", "register_workspace_folder");
+    assertThat(hint)
+      .contains("Registered workspace folders: " + first + ", " + second)
+      .contains("list_workspace_folders", "register_workspace_folder");
   }
 }

@@ -211,8 +211,9 @@ class McpWorkspaceBootstrapTest {
 
     bootstrap.syncRoots(List.of(MCP_DIR));
 
-    assertThat(contexts).doesNotContainKey(CLI_DIR.toUri());
-    assertThat(contexts).containsKey(MCP_DIR.toUri());
+    assertThat(contexts)
+      .doesNotContainKey(CLI_DIR.toUri())
+      .containsKey(MCP_DIR.toUri());
   }
 
   @Test

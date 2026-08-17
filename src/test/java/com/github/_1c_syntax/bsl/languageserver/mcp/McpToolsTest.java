@@ -522,7 +522,9 @@ class McpToolsTest {
 
   @Test
   void registerWorkspaceRejectsFileInsteadOfDirectory() {
-    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(FILE).toString(), null))
+    var file = Absolute.path(FILE).toString();
+
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(file, null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("is a file, not a directory");
   }
