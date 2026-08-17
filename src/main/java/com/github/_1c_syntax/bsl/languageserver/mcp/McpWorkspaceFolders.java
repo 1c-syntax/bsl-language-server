@@ -24,10 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.mcp;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -73,40 +71,18 @@ public final class McpWorkspaceFolders {
     var trimmed = rawFolder.trim();
     try {
       if (hasUriScheme(trimmed)) {
-        return canonicalUri(trimmed);
+        return Absolute.uri(trimmed);
       }
-      return canonicalPath(trimmed).toUri();
-    } catch (RuntimeException | IOException e) {
+      return Absolute.path(trimmed).toUri();
+    } catch (Exception e) {
+      // Ловится Exception, а не RuntimeException: приведение к каноническому виду обращается
+      // к диску, и Absolute прокидывает оттуда IOException, не объявляя его. Поймать его отдельно
+      // нельзя — компилятор такого перехвата не примет, — а без него клиент вместо
+      // самодостаточного объяснения получил бы сырую ошибку ввода-вывода.
       throw new IllegalArgumentException(
         "Unsupported workspace folder `" + rawFolder
           + "`: expected an absolute directory path or a file: URI.", e);
     }
-  }
-
-  /**
-   * Нормализовать URI, объявив ввод-вывод, который прокидывает {@link Absolute}.
-   *
-   * @param value URI рабочей папки.
-   * @return Нормализованный URI.
-   * @throws IOException Нормализация приводит путь к каноническому виду и обращается к диску.
-   *   {@code Absolute} прокидывает {@code IOException} из {@code getCanonicalFile()}, не объявляя
-   *   его; здесь он объявлен, чтобы вызывающий код мог поймать его как обычное checked-исключение.
-   */
-  @SuppressWarnings("RedundantThrows")
-  private static URI canonicalUri(String value) throws IOException {
-    return Absolute.uri(value);
-  }
-
-  /**
-   * Привести путь к каноническому виду, объявив ввод-вывод, который прокидывает {@link Absolute}.
-   *
-   * @param value Путь к рабочей папке.
-   * @return Канонический абсолютный путь.
-   * @throws IOException См. {@link #canonicalUri(String)}.
-   */
-  @SuppressWarnings("RedundantThrows")
-  private static Path canonicalPath(String value) throws IOException {
-    return Absolute.path(value);
   }
 
   /**

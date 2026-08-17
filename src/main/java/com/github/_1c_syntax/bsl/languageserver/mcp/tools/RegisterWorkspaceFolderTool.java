@@ -32,8 +32,6 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -129,11 +127,12 @@ public class RegisterWorkspaceFolderTool {
 
     Path srcDir;
     try {
-      srcDir = canonicalPath(uri);
-    } catch (RuntimeException | IOException e) {
+      srcDir = Absolute.path(uri);
+    } catch (Exception e) {
       // Канонизация пути повторяется здесь уже после нормализации, и между двумя обращениями
-      // к диску каталог может исчезнуть: без перехвата клиент получил бы сырую ошибку
-      // ввода-вывода вместо объяснения, что передать.
+      // к диску каталог может исчезнуть. Ловится Exception, а не RuntimeException: Absolute
+      // прокидывает IOException из обращения к диску, не объявляя его (см. McpWorkspaceFolders),
+      // и без перехвата клиент получил бы сырую ошибку ввода-вывода вместо объяснения.
       throw new IllegalArgumentException("Workspace path cannot be resolved: " + rawPath
         + ". Pass an existing directory — the project root the editor opens.", e);
     }
@@ -147,19 +146,5 @@ public class RegisterWorkspaceFolderTool {
     throw new IllegalArgumentException("Workspace path does not exist: " + srcDir
       + ". Pass an existing workspace folder; relative paths are resolved against the "
       + "server working directory, so prefer an absolute path.");
-  }
-
-  /**
-   * Привести URI к каноническому пути, объявив ввод-вывод, который прокидывает {@link Absolute}.
-   *
-   * @param uri URI рабочей папки.
-   * @return Канонический абсолютный путь.
-   * @throws IOException Канонизация обращается к диску: {@code Absolute} прокидывает
-   *   {@code IOException} из {@code getCanonicalFile()}, не объявляя его; здесь он объявлен, чтобы
-   *   вызывающий код мог поймать его как обычное checked-исключение.
-   */
-  @SuppressWarnings("RedundantThrows")
-  private static Path canonicalPath(URI uri) throws IOException {
-    return Absolute.path(uri);
   }
 }
