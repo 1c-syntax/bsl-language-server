@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceFolders;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import lombok.RequiredArgsConstructor;
@@ -116,7 +117,12 @@ public class UnregisterWorkspaceFolderTool {
         + "` is not backed by a directory and cannot be unregistered.");
     }
     // Описание собираем до снятия регистрации: вместе с ней уходит и имя папки из реестра.
-    var folder = WorkspaceFolderDto.from(workspaceUri);
+    // Через fromSnapshot, а не from: параллельное снятие регистрации иначе вылезло бы наружу
+    // внутренним «Workspace not registered … Call registerWorkspace() first».
+    var folder = WorkspaceFolderDto.fromSnapshot(workspaceUri)
+      .orElseThrow(() -> new IllegalArgumentException("Workspace folder `" + workspaceUri
+        + "` is no longer registered. " + McpWorkspaceFolders.registrationHint(
+        serverContextProvider.getAllContexts().keySet())));
     // Папку адресуем ровно тем URI, под которым она зарегистрирована: обратный путь через Path
     // менял бы идентичность, если каталог уже удалён с диска.
     var removed = workspaceBootstrap.unregister(workspaceUri);
