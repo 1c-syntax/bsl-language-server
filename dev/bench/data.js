@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786792398673,
+  "lastUpdate": 1787145467116,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42749,6 +42749,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.789284514689891",
             "extra": "mean: 105.55952088038127 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ace99ab29a414aaca44649f82a94b9580976ec43",
+          "message": "Merge pull request #4472 from 1c-syntax/claude/semantic-tokens-number-type-0hz598\n\nfix(types): примитивы видимы в OneScript-файлах",
+          "timestamp": "2026-08-19T15:05:45+02:00",
+          "tree_id": "ccc248c93a44e7d5ef7740334682518ee28ed250",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ace99ab29a414aaca44649f82a94b9580976ec43"
+        },
+        "date": 1787145453948,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.13996386528015,
+            "unit": "sec",
+            "range": "stddev: 1.3490297161662825",
+            "extra": "mean: 105.13996386528015 sec\nrounds: 3"
           }
         ]
       }
