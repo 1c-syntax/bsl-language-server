@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypePackProvider.TypeDecl;
@@ -189,6 +190,37 @@ class BuiltinTypesJsonLoaderTest {
     assertThat(networkError.matches("NetworkError")).as("значение находится по en-имени").isTrue();
     assertThat(typeNames(networkError.returnTypes())).containsExactly("КатегорияОшибки");
     assertThat(networkError.metadata().sinceVersion()).isEqualTo("8.3.17");
+  }
+
+  @Test
+  void valueTypeIsLoadedFromBslPack() {
+    // given — «Тип» — результат встроенных функций Тип() и ТипЗнч(),
+    // в синтакс-помощнике описан как примитив без членов и конструкторов
+
+    // when
+    var valueType = bslType("Тип");
+
+    // then
+    assertThat(valueType.kind()).isEqualTo(TypeKind.PRIMITIVE);
+    assertThat(valueType.name().en()).isEqualTo("Type");
+    assertThat(valueType.members()).isEmpty();
+    assertThat(valueType.constructors()).isEmpty();
+    assertThat(valueType.description().primary()).isNotEmpty();
+  }
+
+  @Test
+  void valueTypeIsLoadedFromOscriptPack() {
+    // given — тот же «Тип» доступен и в OneScript
+
+    // when
+    var valueType = oscriptType("Тип");
+
+    // then
+    assertThat(valueType.kind()).isEqualTo(TypeKind.PRIMITIVE);
+    assertThat(valueType.name().en()).isEqualTo("Type");
+    assertThat(valueType.members()).isEmpty();
+    assertThat(valueType.constructors()).isEmpty();
+    assertThat(valueType.description().primary()).isNotEmpty();
   }
 
   private static TypeDecl oscriptType(String name) {
