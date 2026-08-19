@@ -111,11 +111,12 @@ class TypeRegistryRegistrationTest {
     // when
     var bsl = typeRegistry.resolve(name, FileType.BSL);
 
-    // then — в OneScript примитивы те же самые, и это тот же самый тип
+    // then — в OneScript примитив резолвится в тот же самый (интернированный) TypeRef,
+    // а не в равный ему: реестр обязан отдавать канонический ref обоим языкам.
     assertThat(bsl).isNotEmpty();
-    assertThat(typeRegistry.resolve(name, FileType.OS))
+    assertThat(typeRegistry.resolve(name, FileType.OS).orElseThrow())
       .as("примитив «%s» должен резолвиться в OneScript-файле", name)
-      .isEqualTo(bsl);
+      .isSameAs(bsl.orElseThrow());
   }
 
   @Test
