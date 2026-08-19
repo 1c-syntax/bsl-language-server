@@ -1452,23 +1452,7 @@ public class TypeRegistry {
     if (!decl.name().isEmpty()) {
       displayNames.putIfAbsent(ref, decl.name());
     }
-    registerPackFileType(ref, fileType);
-  }
-
-  /**
-   * Языковая видимость типа из пака. Примитивы видимы в обоих языках независимо от того,
-   * чей пак их принёс: {@code Строка}/{@code Число}/{@code Дата}/{@code Булево}/
-   * {@code Неопределено}/{@code Null} есть и в BSL, и в OneScript, но объявляет их только
-   * BSL-сторона — ни встроенный OneScript-пак, ни OneScript-провайдеры примитивов не содержат.
-   * Без этого {@link #isVisibleIn} признаёт примитив «зарегистрированным в чужом языке»,
-   * и {@code resolve(имя, OS)} возвращает пусто для всех примитивов сразу.
-   */
-  private void registerPackFileType(TypeRef ref, FileType fileType) {
-    if (ref.kind() == TypeKind.PRIMITIVE) {
-      visibleTypes.keySet().forEach(language -> registerFileType(ref, language));
-    } else {
-      registerFileType(ref, fileType);
-    }
+    registerFileType(ref, fileType);
   }
 
   /**
