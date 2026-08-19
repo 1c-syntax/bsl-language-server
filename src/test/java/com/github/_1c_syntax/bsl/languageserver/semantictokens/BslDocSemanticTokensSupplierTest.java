@@ -294,6 +294,27 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testOsVariableDescriptionPrimitiveTypeHighlighting() {
+    // given - описание переменной OneScript-модуля с примитивом в начале. Примитивы объявлены
+    // только BSL-паком, поэтому при регистрации их видимости строго по языку пака
+    // TypeService.resolve в OS-файле не находил тип, и вся строка описания уезжала
+    // одним комментарием.
+    String os = """
+      // Строка - Ключ владельца, удерживающего блокировку записи.
+      Перем ВладелецЗаписи;
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - «Строка» подсвечена как тип, ровно как в BSL-модуле
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 3, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+    ));
+  }
+
+  @Test
   void testTrailingVariableDescriptionUnresolvedTypeNotHighlighted() {
     // given - висячий комментарий, у которого первый токен (по нотации «тип в начале») — свободный
     // текст, не резолвящийся в реальный тип.
