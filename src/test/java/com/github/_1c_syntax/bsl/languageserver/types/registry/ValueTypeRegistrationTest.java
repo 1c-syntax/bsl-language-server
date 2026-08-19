@@ -35,8 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code ТипЗнч()}. Тип объявлен возвращаемым в паках глобального контекста
  * обоих языков, поэтому и в реестре он должен быть виден и в BSL-, и в
  * OneScript-файлах — иначе ссылка на возвращаемое значение никуда не ведёт.
- * <p>
- * В тестах платформа 1С не подключается, так что источник — json-фоллбэки.
  */
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -47,7 +45,9 @@ class ValueTypeRegistrationTest {
 
   @Test
   void valueTypeIsVisibleInBslFiles() {
-    // given / when
+    // given — платформа 1С не подключена, типы берутся из json-фоллбэка
+
+    // when
     var ref = typeRegistry.resolve("Тип", FileType.BSL);
 
     // then
@@ -58,7 +58,9 @@ class ValueTypeRegistrationTest {
 
   @Test
   void valueTypeIsVisibleInOscriptFiles() {
-    // given / when
+    // given — платформа 1С не подключена, типы берутся из json-фоллбэка
+
+    // when
     var ref = typeRegistry.resolve("Тип", FileType.OS);
 
     // then
