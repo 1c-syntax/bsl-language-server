@@ -223,28 +223,6 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
-  void consumerIsRecomputedWhenDependencyChangesLaterInPass() {
-    // given: отложены оба метода. Связь, известная проходу на старте, ведёт от источника к
-    // потребителю, поэтому потребитель считается первым. Обратной связи — что сам он
-    // построен на источнике — в плане прохода нет: она вскроется только его расчётом.
-    indexer.computeIfAbsent(sourceMethod,
-      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(consumerMethod), true));
-    indexer.computeIfAbsent(consumerMethod,
-      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
-    when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
-      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
-    returns(sourceMethod, NUMBER, consumerMethod);
-
-    // when: рабочая область наполнена.
-    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(source, consumer)));
-
-    // then: источник изменился уже после того, как потребитель на нём построился, и
-    // потребитель пересчитан по новому значению. Иначе он навсегда остался бы с тем, что
-    // успело попасться, а что успело — решает порядок разбора, разный от запуска к запуску.
-    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
-  }
-
-  @Test
   void releasedDocumentIsLoadedForRecomputeAndReleasedBack() {
     // given: отложенный метод лежит в документе, вторичные данные которого уже освобождены.
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);

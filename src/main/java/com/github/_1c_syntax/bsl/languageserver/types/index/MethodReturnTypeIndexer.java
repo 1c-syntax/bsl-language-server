@@ -62,7 +62,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 /**
@@ -135,19 +134,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает». */
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
-  /**
-   * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
-   * время, а не системное: сравниваются только порядковые отметки, и брать их надо в том
-   * же порядке, в каком идут сами события.
-   */
-  private final AtomicLong clock = new AtomicLong();
-
-  /** Отметка часов на момент, когда начинался последний расчёт метода. */
-  private final Map<MethodSymbol, Long> computedAt = new ConcurrentHashMap<>();
-
-  /** Отметка часов на момент, когда в документе в последний раз менялось чьё-то значение. */
-  private final Map<URI, Long> changedAt = new ConcurrentHashMap<>();
-
   /** Сколько раз пришлось перечитать документ за общий проход — для отладочного счёта. */
   private final AtomicInteger rebuilt = new AtomicInteger();
 
@@ -171,8 +157,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     if (indexed.contains(method) || !method.isFunction() || !isReadable(method)) {
       return;
     }
-    var startedAt = clock.incrementAndGet();
-    store(method, computation.get(), startedAt);
+    store(method, computation.get());
     rememberMethodOfUri(method);
   }
 
@@ -291,13 +276,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   @Override
   public void clear(URI uri) {
     unlinkDependencies(uri);
-    changedAt.remove(uri);
     var methods = methodsByUri.remove(uri);
     if (methods != null) {
-      methods.forEach(method -> {
-        indexed.remove(method);
-        computedAt.remove(method);
-      });
+      methods.forEach(indexed::remove);
     }
   }
 
@@ -366,21 +347,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если набор типов изменился.
    */
   private boolean recompute(MethodSymbol method) {
-    // Отметка снимается до расчёта: значение, изменившееся уже во время него, расчёт
-    // застать не мог, и вызывающему понадобится ещё один заход.
-    var startedAt = clock.incrementAndGet();
-    return store(method, inferencer.computeReturnTypes(method), startedAt);
+    return store(method, inferencer.computeReturnTypes(method));
   }
 
   /**
    * Запоминает результат расчёта и обновляет связи метода.
    *
-   * @param method    метод.
-   * @param computed  результат расчёта.
-   * @param startedAt отметка часов на момент начала расчёта.
+   * @param method   метод.
+   * @param computed результат расчёта.
    * @return {@code true}, если набор типов изменился.
    */
-  private boolean store(MethodSymbol method, ComputedReturnTypes computed, long startedAt) {
+  private boolean store(MethodSymbol method, ComputedReturnTypes computed) {
     link(method, computed.consulted());
     if (!maintenance && computed.consulted().stream().anyMatch(pending::contains)) {
       // Расчёт опирался на значение, которое само ждёт пересчёта: вызванный метод посчитан,
@@ -415,41 +392,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, computed.types());
     indexed.add(method);
-    var valueChanged = !symbolTypeIndex.getReturnTypes(method).equals(previous);
-    computedAt.put(method, startedAt);
-    if (valueChanged) {
-      changedAt.merge(method.getOwner().getUri(), startedAt, Math::max);
-    }
-    return valueChanged;
-  }
-
-  /**
-   * Методы, чей расчёт устарел: документ, на значениях которого он построен, изменился уже
-   * после того, как расчёт прошёл.
-   * <p>
-   * Отложить такой метод в момент расчёта было некому: значение, на котором он построился,
-   * выглядело посчитанным, а обогатилось позже. Учёт по документам, а не по методам: по
-   * документам держатся и сами связи, а лишний пересчёт стоит дешевле, чем хранение связей
-   * по методам — их на реальной конфигурации на порядок больше.
-   *
-   * @return методы, которые надо посчитать заново.
-   */
-  private Set<MethodSymbol> outdated() {
-    var outdated = new LinkedHashSet<MethodSymbol>();
-    for (var method : indexed) {
-      var dependencies = dependenciesByUri.get(method.getOwner().getUri());
-      if (dependencies == null) {
-        continue;
-      }
-      var computed = computedAt.getOrDefault(method, 0L);
-      for (var dependency : dependencies) {
-        if (changedAt.getOrDefault(dependency, 0L) > computed) {
-          outdated.add(method);
-          break;
-        }
-      }
-    }
-    return outdated;
+    return !symbolTypeIndex.getReturnTypes(method).equals(previous);
   }
 
   /**
@@ -528,12 +471,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       planned += documentsOf(roots);
       progressReporter.setSize(planned);
       resolveAll(serverContext, roots, progressReporter);
-      // План волны строится по связям, известным на её начало, а вскрываются они её же
-      // расчётом: метод, чья зависимость обогатилась после него, отложить было некому.
-      var outdated = outdated();
-      pending.addAll(outdated);
-      LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}, из них устаревших {}",
-        pass + 1, roots.size(), pending.size(), outdated.size());
+      LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}",
+        pass + 1, roots.size(), pending.size());
     }
   }
 
