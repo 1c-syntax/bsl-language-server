@@ -418,6 +418,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var valueChanged = !symbolTypeIndex.getReturnTypes(method).equals(previous);
     computedAt.put(method, startedAt);
     if (valueChanged) {
+      // Обе отметки берутся из одной точки — до расчёта. Строго полнее было бы отмечать
+      // изменение уже после того, как значение выложено: тогда ловился бы и расчёт,
+      // начавшийся раньше выкладки, но успевший прочитать прежнее значение. Пока так
+      // делать нельзя — лишние пересчёты вскрывают немонотонность самого пересчёта, и
+      // воспроизводимость падает вместо того, чтобы вырасти (замеры в #4480).
       changedAt.merge(method.getOwner().getUri(), startedAt, Math::max);
     }
     return valueChanged;
