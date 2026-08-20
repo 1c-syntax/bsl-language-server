@@ -623,6 +623,14 @@ public class ExpressionTypeInferencer {
     }
     TypeSet result = TypeSet.EMPTY;
     for (var ref : leftTypes.refs()) {
+      if (OpenDataObjectInference.isStructureOrMapLike(ref.qualifiedName())) {
+        // Индексатор KV-коллекции даёт значение по ключу. Состав ключей неизвестен — значит,
+        // неизвестен и тип значения; элемент коллекции тут не годится, потому что элемент
+        // соответствия — пара «ключ и значение», и её отдают только обходу `Для Каждого`.
+        // Подставить пару значило бы объявить у значения чужие члены, а его собственные —
+        // несуществующими.
+        continue;
+      }
       result = result.union(leftTypes.getElementTypes(ref));
     }
     return result;
