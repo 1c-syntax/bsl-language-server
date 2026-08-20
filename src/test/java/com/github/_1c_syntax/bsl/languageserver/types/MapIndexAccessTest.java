@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -51,9 +52,10 @@ class MapIndexAccessTest extends AbstractServerContextAwareTest {
     var types = at("Правило = Правила[ИмяПравила]", "Правило = ".length());
 
     // then
-    assertThat(types.refs().stream().map(ref -> ref.qualifiedName()).toList())
-      .as("значение по ключу — не пара «ключ и значение»")
-      .doesNotContain("КлючИЗначение");
+    var names = types.refs().stream().map(TypeRef::qualifiedName).toList();
+    assertThat(names.contains("КлючИЗначение"))
+      .as("значение по ключу — не пара «ключ и значение», получено %s", names)
+      .isFalse();
   }
 
   private TypeSet at(String marker, int offsetInMarker) {
