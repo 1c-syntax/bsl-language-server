@@ -2260,7 +2260,7 @@
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Тест1</span><span class="p">()</span>
 
     <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Запрос</span><span class="p">;</span>
-    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">"</span><span class="kd">ВЫБРАТЬ</span>
                    <span class="s">|</span>    <span class="nv">Товары</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="kd">КАК</span> <span class="nv">Номенклатура</span><span class="p">,</span>
                    <span class="s">|</span>    <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">СуммаПлан</span><span class="p">,</span>
                    <span class="s">|</span>    <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">ФактическиеПродажи</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">СуммаФакт</span>
@@ -2269,7 +2269,7 @@
                    <span class="s">|</span>        <span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">ПланПродаж</span> <span class="kd">КАК</span> <span class="nv">ПланПродаж</span>
                    <span class="s">|</span>            <span class="kd">ПОЛНОЕ</span> <span class="kd">ВНЕШНЕЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">ФактическиеПродажи</span> <span class="kd">КАК</span> <span class="nv">ФактическиеПродажи</span> <span class="c1">// Диагностика должна сработать здесь</span>
                    <span class="s">|</span>            <span class="kd">ПО</span> <span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="o">=</span> <span class="nv">ФактическиеПродажи</span><span class="o">.</span><span class="nv">Номенклатура</span>
-                   <span class="s">|</span>        <span class="kd">ПО</span> <span class="nv">Товары</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="o">=</span> <span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Номенклатура</span><span class="s">&quot;</span><span class="p">;</span>
+                   <span class="s">|</span>        <span class="kd">ПО</span> <span class="nv">Товары</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="o">=</span> <span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Номенклатура</span><span class="s">"</span><span class="p">;</span>
 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div></p>
@@ -2287,7 +2287,7 @@
 <span class="c1">// BSLLS:FullOuterJoinQuery-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;FullOuterJoinQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"FullOuterJoinQuery"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

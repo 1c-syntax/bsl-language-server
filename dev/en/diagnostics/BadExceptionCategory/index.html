@@ -2266,13 +2266,13 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Incorrect
 <div class="highlight"><pre><span></span><code><span class="c1">// Using a category that is too broad or abstract</span>
-<span class="ne">Raise</span><span class="p">(</span><span class="s">&quot;Failed to connect to the service&quot;</span><span class="p">,</span> <span class="nv">ErrorCategory</span><span class="o">.</span><span class="nv">AllErrors</span><span class="p">);</span>
-<span class="ne">ВызватьИсключение</span><span class="p">(</span><span class="s">&quot;Invalid data format&quot;</span><span class="p">,</span> <span class="nv">КатегорияОшибки</span><span class="o">.</span><span class="nv">ПрочаяОшибка</span><span class="p">);</span>
+<span class="ne">Raise</span><span class="p">(</span><span class="s">"Failed to connect to the service"</span><span class="p">,</span> <span class="nv">ErrorCategory</span><span class="o">.</span><span class="nv">AllErrors</span><span class="p">);</span>
+<span class="ne">ВызватьИсключение</span><span class="p">(</span><span class="s">"Invalid data format"</span><span class="p">,</span> <span class="nv">КатегорияОшибки</span><span class="o">.</span><span class="nv">ПрочаяОшибка</span><span class="p">);</span>
 </code></pre></div>
 Correct
 <div class="highlight"><pre><span></span><code><span class="c1">// Specifying a distinct application-level error category</span>
-<span class="ne">Raise</span><span class="p">(</span><span class="s">&quot;Failed to connect to the service&quot;</span><span class="p">,</span> <span class="nv">ErrorCategory</span><span class="o">.</span><span class="nv">NetworkError</span><span class="p">);</span>
-<span class="ne">ВызватьИсключение</span><span class="p">(</span><span class="s">&quot;Invalid data format&quot;</span><span class="p">,</span> <span class="nv">КатегорияОшибки</span><span class="o">.</span><span class="nv">ОшибкаКонфигурации</span><span class="p">);</span>
+<span class="ne">Raise</span><span class="p">(</span><span class="s">"Failed to connect to the service"</span><span class="p">,</span> <span class="nv">ErrorCategory</span><span class="o">.</span><span class="nv">NetworkError</span><span class="p">);</span>
+<span class="ne">ВызватьИсключение</span><span class="p">(</span><span class="s">"Invalid data format"</span><span class="p">,</span> <span class="nv">КатегорияОшибки</span><span class="o">.</span><span class="nv">ОшибкаКонфигурации</span><span class="p">);</span>
 </code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -2290,7 +2290,7 @@ Correct
 <span class="c1">// BSLLS:BadExceptionCategory-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;BadExceptionCategory&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"BadExceptionCategory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

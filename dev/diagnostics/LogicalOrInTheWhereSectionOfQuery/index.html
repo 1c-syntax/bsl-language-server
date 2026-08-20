@@ -2261,10 +2261,10 @@
 
 <p>Например, запрос:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> 
-<span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span> <span class="k">ИЛИ</span> <span class="nv">Цена</span> <span class="o">=</span> <span class="m">10</span>
+<span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s">"001"</span> <span class="k">ИЛИ</span> <span class="nv">Цена</span> <span class="o">=</span> <span class="m">10</span>
 </code></pre></div>
 <p>следует заменить на запрос:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> <span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> <span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s">"001"</span>
 <span class="nv">ОБЪЕДИНИТЬ</span> <span class="nv">ВСЕ</span>
 <span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> <span class="nv">ГДЕ</span> <span class="nv">Цена</span> <span class="o">=</span> <span class="m">10</span>
 </code></pre></div>
@@ -2331,7 +2331,7 @@
 <span class="c1">// BSLLS:LogicalOrInTheWhereSectionOfQuery-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;LogicalOrInTheWhereSectionOfQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"LogicalOrInTheWhereSectionOfQuery"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

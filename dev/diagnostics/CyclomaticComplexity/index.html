@@ -2302,17 +2302,17 @@
 <div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nf">СерверныйМодульМенеджера</span><span class="p">(</span><span class="nv">Имя</span><span class="p">)</span>                                                   <span class="c1">// 1</span>
     <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                                <span class="c1">// 0</span>
                                                                                         <span class="c1">// 0</span>
-    <span class="nv">ЧастиИмени</span> <span class="o">=</span> <span class="nb">СтрРазделить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">,</span> <span class="s">&quot;.&quot;</span><span class="p">);</span>                                                <span class="c1">// 0</span>
+    <span class="nv">ЧастиИмени</span> <span class="o">=</span> <span class="nb">СтрРазделить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">,</span> <span class="s">"."</span><span class="p">);</span>                                                <span class="c1">// 0</span>
     <span class="k">Если</span> <span class="nv">ЧастиИмени</span><span class="o">.</span><span class="nf">Количество</span><span class="p">()</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Тогда</span>                                              <span class="c1">// 1</span>
                                                                                         <span class="c1">// 0</span>
         <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>                                                  <span class="c1">// 0</span>
         <span class="nv">ИмяОбъекта</span> <span class="o">=</span> <span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">1</span><span class="p">];</span>                                                     <span class="c1">// 0</span>
                                                                                         <span class="c1">// 0</span>
-        <span class="k">Если</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;Константы&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                                          <span class="c1">// 1</span>
+        <span class="k">Если</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">"Константы"</span><span class="p">)</span> <span class="k">Тогда</span>                                          <span class="c1">// 1</span>
             <span class="k">Если</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">Константы</span><span class="o">.</span><span class="nf">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>           <span class="c1">// 1</span>
                 <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c1">// 0</span>
             <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c1">// 0</span>
-        <span class="k">ИначеЕсли</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;РегистрыСведений&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                              <span class="c1">// 1</span>
+        <span class="k">ИначеЕсли</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">"РегистрыСведений"</span><span class="p">)</span> <span class="k">Тогда</span>                              <span class="c1">// 1</span>
             <span class="k">Если</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">РегистрыСведений</span><span class="o">.</span><span class="nf">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>    <span class="c1">// 1</span>
                 <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c1">// 0</span>
             <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c1">// 0</span>
@@ -2323,8 +2323,8 @@
                                                                                         <span class="c1">// 0</span>
     <span class="k">Если</span> <span class="k">Не</span> <span class="nv">ОбъектНайден</span> <span class="k">Тогда</span>                                                          <span class="c1">// 1</span>
         <span class="ne">ВызватьИсключение</span> <span class="nv">СтроковыеФункцииКлиентСервер</span><span class="o">.</span><span class="nf">ПодставитьПараметрыВСтроку</span><span class="p">(</span>      <span class="c1">// 0</span>
-            <span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">&#39;</span><span class="s">Объект метаданных </span><span class="se">&quot;&quot;</span><span class="si">%1</span><span class="se">&quot;&quot;</span><span class="s"> не найден,                             // 0</span>
-                       <span class="s">|либо для него не поддерживается получение модуля менеджера.</span><span class="se">&#39;</span><span class="s">&quot;</span><span class="p">),</span> <span class="c1">// 0</span>
+            <span class="nb">НСтр</span><span class="p">(</span><span class="s">"</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">'</span><span class="s">Объект метаданных </span><span class="se">""</span><span class="si">%1</span><span class="se">""</span><span class="s"> не найден,                             // 0</span>
+                       <span class="s">|либо для него не поддерживается получение модуля менеджера.</span><span class="se">'</span><span class="s">"</span><span class="p">),</span> <span class="c1">// 0</span>
             <span class="nv">Имя</span><span class="p">);</span>                                                                       <span class="c1">// 0</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c1">// 0</span>
     <span class="nb">УстановитьБезопасныйРежим</span><span class="p">(</span><span class="kc">Истина</span><span class="p">);</span>                                                  <span class="c1">// 0</span>
@@ -2349,9 +2349,9 @@
 <span class="c1">// BSLLS:CyclomaticComplexity-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;CyclomaticComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"CyclomaticComplexity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"complexityThreshold"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"checkModuleBody"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <span class="p">}</span>
 </code></pre></div>
 

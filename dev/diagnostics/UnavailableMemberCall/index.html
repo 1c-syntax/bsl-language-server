@@ -2263,11 +2263,11 @@
 
 <p>Целевая версия платформы — <code>8.3.10</code> (<code>v8platform.targetVersion</code> или режим совместимости), а метод <code>ВопросАсинх</code> доступен только начиная с <code>8.3.18</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Срабатывание: метод доступен только с версии 8.3.18</span>
-<span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВопроса&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
-<span class="nb">ВопросАсинх</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+<span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">"ПослеВопроса"</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+<span class="nb">ВопросАсинх</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="s">"Продолжить?"</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
 </code></pre></div>
 <p>Исправление — поднять целевую версию платформы до поддерживаемой либо использовать член, доступный в целевой версии (например, синхронный <code>Вопрос</code>):</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Ответ</span> <span class="o">=</span> <span class="nb">Вопрос</span><span class="p">(</span><span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Ответ</span> <span class="o">=</span> <span class="nb">Вопрос</span><span class="p">(</span><span class="s">"Продолжить?"</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
 </code></pre></div>
 <p>Конструирование типа, которого нет в целевой версии. Тип <code>ЧтениеJSON</code> доступен только начиная с <code>8.3.6</code>, а целевая версия платформы - <code>8.3.5</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Срабатывание: тип доступен только с версии 8.3.6</span>
@@ -2289,7 +2289,7 @@
 <span class="c1">// BSLLS:UnavailableMemberCall-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnavailableMemberCall&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"UnavailableMemberCall"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

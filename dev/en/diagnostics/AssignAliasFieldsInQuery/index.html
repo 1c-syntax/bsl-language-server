@@ -2270,7 +2270,7 @@ then changing the attribute name will only change the request text.</p>
 
 <div class="highlight"><pre><span></span><code>    <span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
 <span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span>
-<span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">"</span><span class="kd">SELECT</span>
 <span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Incorrectly</span>
 <span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">AliasFieldsRef</span><span class="p">,</span> <span class="c1">// Correctly</span>
 <span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Code</span> <span class="nv">Code</span> <span class="c1">// Incorrectly</span>
@@ -2302,17 +2302,17 @@ then changing the attribute name will only change the request text.</p>
 <span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Ignored</span>
 <span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Code</span> <span class="c1">// Ignored</span>
 <span class="s">|</span><span class="kd">FROM</span>
-<span class="s">|</span>   <span class="nn">Catalog</span><span class="o">.</span><span class="nc">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Ignored</span>
+<span class="s">|</span>   <span class="nn">Catalog</span><span class="o">.</span><span class="nc">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span><span class="s">"</span><span class="p">;</span> <span class="c1">// Ignored</span>
 
 <span class="nv">Query1</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
 <span class="nv">Query1</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span>
-<span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">"</span><span class="kd">SELECT</span>
 <span class="s">|</span>   <span class="nv">NestedRequest</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">Ref</span> <span class="c1">// Correctly</span>
 <span class="s">|</span><span class="kd">FROM</span>
 <span class="s">|</span>   <span class="p">(</span><span class="kd">SELECT</span>
 <span class="s">|</span>       <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span> <span class="c1">// Incorrectly</span>
 <span class="s">|</span>   <span class="kd">FROM</span>
-<span class="s">|</span>       <span class="nn">Catalog</span><span class="o">.</span><span class="nc">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">NestedRequest</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Ignored </span>
+<span class="s">|</span>       <span class="nn">Catalog</span><span class="o">.</span><span class="nc">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">NestedRequest</span><span class="s">"</span><span class="p">;</span> <span class="c1">// Ignored </span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -2330,7 +2330,7 @@ then changing the attribute name will only change the request text.</p>
 <span class="c1">// BSLLS:AssignAliasFieldsInQuery-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;AssignAliasFieldsInQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"AssignAliasFieldsInQuery"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

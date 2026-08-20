@@ -2258,19 +2258,19 @@
 <div class="highlight"><pre><span></span><code><span class="nv">GoodsServer</span><span class="o">.</span><span class="nf">MakeGoods</span><span class="p">(</span>
   <span class="nv">Object</span><span class="o">.</span><span class="nv">Products</span><span class="p">,</span>
   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span>
-  <span class="s">&quot;CharacteristicsUsed,</span>
-  <span class="s">|Type, Variant&quot;</span><span class="p">,</span>
-   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Good&quot;</span><span class="p">,</span> <span class="s">&quot;CharacteristicsUsed&quot;</span><span class="p">),</span>
-   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Good&quot;</span><span class="p">,</span> <span class="s">&quot;Type&quot;</span><span class="p">),</span>
-   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Good&quot;</span><span class="p">,</span> <span class="s">&quot;Variant&quot;</span><span class="p">)</span>
+  <span class="s">"CharacteristicsUsed,</span>
+  <span class="s">|Type, Variant"</span><span class="p">,</span>
+   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Good"</span><span class="p">,</span> <span class="s">"CharacteristicsUsed"</span><span class="p">),</span>
+   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Good"</span><span class="p">,</span> <span class="s">"Type"</span><span class="p">),</span>
+   <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Good"</span><span class="p">,</span> <span class="s">"Variant"</span><span class="p">)</span>
   <span class="p">)</span>
  <span class="p">);</span>
 </code></pre></div>
 <p>Correct</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Parameters</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">;</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;CharacteristicsUsed&quot;</span><span class="p">,</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Good&quot;</span><span class="p">,</span> <span class="s">&quot;CharacteristicsUsed&quot;</span><span class="p">));</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Type&quot;</span><span class="p">,</span>                <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Good&quot;</span><span class="p">,</span> <span class="s">&quot;Type&quot;</span><span class="p">));</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Variant&quot;</span><span class="p">,</span>             <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Good&quot;</span><span class="p">,</span> <span class="s">&quot;Variant&quot;</span><span class="p">));</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"CharacteristicsUsed"</span><span class="p">,</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Good"</span><span class="p">,</span> <span class="s">"CharacteristicsUsed"</span><span class="p">));</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"Type"</span><span class="p">,</span>                <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Good"</span><span class="p">,</span> <span class="s">"Type"</span><span class="p">));</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"Variant"</span><span class="p">,</span>             <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Good"</span><span class="p">,</span> <span class="s">"Variant"</span><span class="p">));</span>
 <span class="nv">GoodsServer</span><span class="o">.</span><span class="nf">MakeGoods</span><span class="p">(</span><span class="nv">Object</span><span class="o">.</span><span class="nv">Products</span><span class="p">,</span>     <span class="nv">Parameters</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
@@ -2280,7 +2280,7 @@
 <span class="c1">// BSLLS:NestedConstructorsInStructureDeclaration-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;NestedConstructorsInStructureDeclaration&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"NestedConstructorsInStructureDeclaration"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

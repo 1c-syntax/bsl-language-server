@@ -2292,26 +2292,26 @@
 <p>Пример с передачей параметров с клиента на сервер без "Знач" и со "Знач"
 <div class="highlight"><pre><span></span><code><span class="nd">&amp;НаСервереБезКонтекста</span>
 <span class="k">Процедура</span> <span class="nf">ПередачаПараметровНаСервер</span><span class="p">(</span><span class="nv">Парам1</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">ПарамСоЗнач</span><span class="p">,</span> <span class="nv">Коллекция</span><span class="p">,</span> <span class="k">Знач</span> <span class="nv">КоллекцияСоЗнач</span><span class="p">)</span>
-    <span class="nv">Парам1</span> <span class="o">=</span> <span class="s">&quot;Изменено1&quot;</span><span class="p">;</span>   
-    <span class="nv">ПарамСоЗнач</span> <span class="o">=</span> <span class="s">&quot;Изменено2&quot;</span><span class="p">;</span>
-    <span class="nv">Коллекция</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Ключ1&quot;</span><span class="p">,</span> <span class="s">&quot;Изменено1&quot;</span><span class="p">);</span>
-    <span class="nv">КоллекцияСоЗнач</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Ключ2&quot;</span><span class="p">,</span> <span class="s">&quot;Изменено2&quot;</span><span class="p">);</span>
+    <span class="nv">Парам1</span> <span class="o">=</span> <span class="s">"Изменено1"</span><span class="p">;</span>   
+    <span class="nv">ПарамСоЗнач</span> <span class="o">=</span> <span class="s">"Изменено2"</span><span class="p">;</span>
+    <span class="nv">Коллекция</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"Ключ1"</span><span class="p">,</span> <span class="s">"Изменено1"</span><span class="p">);</span>
+    <span class="nv">КоллекцияСоЗнач</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"Ключ2"</span><span class="p">,</span> <span class="s">"Изменено2"</span><span class="p">);</span>
 <span class="k">КонецПроцедуры</span>
 
 <span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">ПередачаПараметров</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
-    <span class="nv">Парам1</span> <span class="o">=</span> <span class="s">&quot;Исходное1&quot;</span><span class="p">;</span>   
-    <span class="nv">ПарамСоЗнач</span> <span class="o">=</span> <span class="s">&quot;Исходное2&quot;</span><span class="p">;</span>
-    <span class="nv">Коллекция</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Ключ1&quot;</span><span class="p">,</span> <span class="s">&quot;Исходное1&quot;</span><span class="p">);</span>
-    <span class="nv">КоллекцияСоЗнач</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Ключ2&quot;</span><span class="p">,</span> <span class="s">&quot;Исходное2&quot;</span><span class="p">);</span>
+    <span class="nv">Парам1</span> <span class="o">=</span> <span class="s">"Исходное1"</span><span class="p">;</span>   
+    <span class="nv">ПарамСоЗнач</span> <span class="o">=</span> <span class="s">"Исходное2"</span><span class="p">;</span>
+    <span class="nv">Коллекция</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">"Ключ1"</span><span class="p">,</span> <span class="s">"Исходное1"</span><span class="p">);</span>
+    <span class="nv">КоллекцияСоЗнач</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">"Ключ2"</span><span class="p">,</span> <span class="s">"Исходное2"</span><span class="p">);</span>
 
     <span class="nf">ПередачаПараметровНаСервер</span><span class="p">(</span><span class="nv">Парам1</span><span class="p">,</span> <span class="nv">ПарамСоЗнач</span><span class="p">,</span> <span class="nv">Коллекция</span><span class="p">,</span> <span class="nv">КоллекцияСоЗнач</span><span class="p">);</span>
 
-    <span class="nv">Шаблон</span> <span class="o">=</span> <span class="s">&quot;после сервера </span><span class="si">%1</span><span class="s"> = &lt;</span><span class="si">%2</span><span class="s">&gt;&quot;</span><span class="p">;</span>
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">&quot;Парам1&quot;</span><span class="p">,</span> <span class="nv">Парам1</span><span class="p">));</span>
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">&quot;ПарамСоЗнач&quot;</span><span class="p">,</span> <span class="nv">ПарамСоЗнач</span><span class="p">));</span>
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">&quot;Коллекция.Ключ1&quot;</span><span class="p">,</span> <span class="nv">Коллекция</span><span class="o">.</span><span class="nv">Ключ1</span><span class="p">));</span>
-    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">&quot;КоллекцияСоЗнач.Ключ2&quot;</span><span class="p">,</span> <span class="nv">КоллекцияСоЗнач</span><span class="o">.</span><span class="nv">Ключ2</span><span class="p">));</span>
+    <span class="nv">Шаблон</span> <span class="o">=</span> <span class="s">"после сервера </span><span class="si">%1</span><span class="s"> = &lt;</span><span class="si">%2</span><span class="s">&gt;"</span><span class="p">;</span>
+    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">"Парам1"</span><span class="p">,</span> <span class="nv">Парам1</span><span class="p">));</span>
+    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">"ПарамСоЗнач"</span><span class="p">,</span> <span class="nv">ПарамСоЗнач</span><span class="p">));</span>
+    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">"Коллекция.Ключ1"</span><span class="p">,</span> <span class="nv">Коллекция</span><span class="o">.</span><span class="nv">Ключ1</span><span class="p">));</span>
+    <span class="nb">Сообщить</span><span class="p">(</span><span class="nb">СтрШаблон</span><span class="p">(</span><span class="nv">Шаблон</span><span class="p">,</span> <span class="s">"КоллекцияСоЗнач.Ключ2"</span><span class="p">,</span> <span class="nv">КоллекцияСоЗнач</span><span class="o">.</span><span class="nv">Ключ2</span><span class="p">));</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 Этот код при выполнении покажет следующий результат
@@ -2368,8 +2368,8 @@
 <p>Это полезно для кэшируемых значений, которые специально передаются с сервера на клиент для хранения в переменных модуля формы.</p>
 <p>Пример:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;КэшированныеЗначения,КэшДанных&quot;</span>
+<span class="w">  </span><span class="nt">"TransferringParametersBetweenClientAndServer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cachedValueNames"</span><span class="p">:</span><span class="w"> </span><span class="s2">"КэшированныеЗначения,КэшДанных"</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -2406,8 +2406,8 @@
 <span class="c1">// BSLLS:TransferringParametersBetweenClientAndServer-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"TransferringParametersBetweenClientAndServer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cachedValueNames"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
 <span class="p">}</span>
 </code></pre></div>
 

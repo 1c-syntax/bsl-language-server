@@ -2269,12 +2269,12 @@
 <p>Пример, показывающий проблемы сравнения с NULL - в примере 2 таблицы соединяются заведомо неверно и приведены разные способы сравнения
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
   <span class="kd">ВЫБОР</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="m">0</span> <span class="kd">ТОГДА</span> <span class="s">&quot;Равно 0 - не работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="kd">ТОГДА</span> <span class="s">&quot;НЕ Равно 0 - не работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">&quot;Равно NULL - не работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="ow">ЕСТЬ</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">&quot;ЕСТЬ NULL - этот вариант работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span>  <span class="kd">ТОГДА</span> <span class="s">&quot;ЕСТЬNULL() - этот вариант также работает&quot;</span>
-    <span class="kd">ИНАЧЕ</span> <span class="s">&quot;Иначе&quot;</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="m">0</span> <span class="kd">ТОГДА</span> <span class="s">"Равно 0 - не работает"</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="kd">ТОГДА</span> <span class="s">"НЕ Равно 0 - не работает"</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">"Равно NULL - не работает"</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="ow">ЕСТЬ</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">"ЕСТЬ NULL - этот вариант работает"</span>
+    <span class="kd">КОГДА</span> <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span>  <span class="kd">ТОГДА</span> <span class="s">"ЕСТЬNULL() - этот вариант также работает"</span>
+    <span class="kd">ИНАЧЕ</span> <span class="s">"Иначе"</span>
   <span class="kd">КОНЕЦ</span>
 <span class="kd">ИЗ</span>
   <span class="nv">Первая</span> <span class="kd">КАК</span> <span class="nv">Первая</span>
@@ -2348,7 +2348,7 @@
 <span class="c1">// BSLLS:FieldsFromJoinsWithoutIsNull-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;FieldsFromJoinsWithoutIsNull&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"FieldsFromJoinsWithoutIsNull"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

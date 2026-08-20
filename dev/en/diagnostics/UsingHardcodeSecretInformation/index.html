@@ -2279,14 +2279,14 @@
 <p>If the project uses SSL sub-system, then passwords should be stored in safe storage.</p>
 <h3 id="Addition">Addition<a class="headerlink" href="#Addition" title="Permanent link">&para;</a></h3>
 <p>Strings with all symbols <code>*</code> are excluded from the check:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s">&quot;**********&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s">"**********"</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s">&quot;12345&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s">"12345"</span><span class="p">;</span>
 </code></pre></div>
 <p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Passwords</span> <span class="o">=</span> <span class="nv">CommonModule</span><span class="o">.</span><span class="nf">ReadDataFromSafeStorage</span><span class="p">(</span><span class="s">&quot;StoringIdentifier&quot;</span><span class="p">,</span> <span class="s">&quot;Password&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Passwords</span> <span class="o">=</span> <span class="nv">CommonModule</span><span class="o">.</span><span class="nf">ReadDataFromSafeStorage</span><span class="p">(</span><span class="s">"StoringIdentifier"</span><span class="p">,</span> <span class="s">"Password"</span><span class="p">);</span>
 <span class="nv">Password</span> <span class="o">=</span> <span class="nv">Passwords</span><span class="o">.</span><span class="nv">Password</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
@@ -2300,8 +2300,8 @@
 <span class="c1">// BSLLS:UsingHardcodeSecretInformation-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingHardcodeSecretInformation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;searchWords&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Пароль|Password&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"UsingHardcodeSecretInformation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"searchWords"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Пароль|Password"</span>
 <span class="p">}</span>
 </code></pre></div>
 

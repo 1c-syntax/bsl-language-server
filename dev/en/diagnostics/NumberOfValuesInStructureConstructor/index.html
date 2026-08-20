@@ -2275,7 +2275,7 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Parameters</span>  <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span>
-   <span class="s">&quot;UseParam1,</span>
+   <span class="s">"UseParam1,</span>
    <span class="s">|UseParam2,</span>
    <span class="s">|UseParam3,</span>
    <span class="s">|UseParam4,</span>
@@ -2283,7 +2283,7 @@
    <span class="s">|DataAddress,</span>
    <span class="s">|SettingsAddress,</span>
    <span class="s">|UUID,</span>
-   <span class="s">|Description&quot;</span><span class="p">,</span>
+   <span class="s">|Description"</span><span class="p">,</span>
    <span class="kc">True</span><span class="p">,</span>
    <span class="kc">True</span><span class="p">,</span>
    <span class="kc">True</span><span class="p">,</span>
@@ -2299,17 +2299,17 @@
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Parameters</span>  <span class="o">=</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">;</span>
 
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;UseParam1&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;UseParam2&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;UseParam3&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;UseParam4&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;UseParam5&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;DataAddress&quot;</span><span class="p">,</span> <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;SettingsAddress&quot;</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span><span class="p">,</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"UseParam1"</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"UseParam2"</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"UseParam3"</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"UseParam4"</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"UseParam5"</span><span class="p">,</span> <span class="kc">True</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"DataAddress"</span><span class="p">,</span> <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"SettingsAddress"</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span> <span class="o">&lt;&gt;</span> <span class="kc">Undefined</span><span class="p">,</span>
                                                                                                                          <span class="nv">Current</span><span class="o">.</span><span class="nv">DataAddress</span><span class="p">,</span>
                                                                                                                          <span class="nv">EmptyAddress</span><span class="p">));</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;UUID &quot;</span><span class="p">,</span> <span class="nv">UUID</span><span class="p">);</span>
-<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Description&quot;</span><span class="p">,</span> <span class="nv">Description</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"UUID "</span><span class="p">,</span> <span class="nv">UUID</span><span class="p">);</span>
+<span class="nv">Parameters</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"Description"</span><span class="p">,</span> <span class="nv">Description</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2322,8 +2322,8 @@
 <span class="c1">// BSLLS:NumberOfValuesInStructureConstructor-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;maxValuesCount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"NumberOfValuesInStructureConstructor"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"maxValuesCount"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>
 

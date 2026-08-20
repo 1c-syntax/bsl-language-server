@@ -2261,11 +2261,11 @@
 
 <p>The target platform version is <code>8.3.10</code> (<code>v8platform.targetVersion</code> or the compatibility mode), while the <code>ВопросАсинх</code> (<code>DoQueryBoxAsync</code>) method is available only since <code>8.3.18</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Triggers: the method is available only since version 8.3.18</span>
-<span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВопроса&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
-<span class="nb">ВопросАсинх</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+<span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">"ПослеВопроса"</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+<span class="nb">ВопросАсинх</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="s">"Продолжить?"</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
 </code></pre></div>
 <p>Fix it by raising the target platform version to a supported one, or by using a member available in the target version (for example, the synchronous <code>Вопрос</code> / <code>DoQueryBox</code>):</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Ответ</span> <span class="o">=</span> <span class="nb">Вопрос</span><span class="p">(</span><span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Ответ</span> <span class="o">=</span> <span class="nb">Вопрос</span><span class="p">(</span><span class="s">"Продолжить?"</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
 </code></pre></div>
 <p>Construction of a type missing from the target version. The <code>JSONReader</code> type is available only since <code>8.3.6</code>, while the target platform version is <code>8.3.5</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Triggers: the type is available only since version 8.3.6</span>
@@ -2287,7 +2287,7 @@
 <span class="c1">// BSLLS:UnavailableMemberCall-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnavailableMemberCall&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"UnavailableMemberCall"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

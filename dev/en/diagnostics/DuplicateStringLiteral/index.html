@@ -2305,18 +2305,18 @@
 
 <p>Bad code</p>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
-    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
-        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">"Value"</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">"One"</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="s">"Value"</span><span class="p">);</span>
     <span class="k">Else</span>
-        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="s">"Value"</span><span class="p">);</span>
     <span class="k">EndIf</span><span class="p">;</span> 
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <p>Сorrected:</p>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
-    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">"Value"</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">"One"</span> <span class="k">Then</span>
         <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="nv">Result</span><span class="p">);</span>
     <span class="k">Else</span>
         <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="nv">Result</span><span class="p">);</span>
@@ -2325,24 +2325,24 @@
 </code></pre></div>
 <p>Bad code</p>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test2</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
-    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
-        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">"Value"</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">"One"</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="s">"Value"</span><span class="p">);</span>
     <span class="k">Else</span>
-        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="s">"Value"</span><span class="p">);</span>
     <span class="k">EndIf</span><span class="p">;</span> 
 <span class="k">EndProcedure</span>
 
 <span class="k">Procedure</span> <span class="nf">Test3</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
-    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;Five&quot;</span> <span class="k">Then</span>
-        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Five</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">);</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">"Five"</span> <span class="k">Then</span>
+        <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Five</span><span class="p">(</span><span class="s">"Value"</span><span class="p">);</span>
     <span class="k">EndIf</span><span class="p">;</span> 
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <p>Сorrected</p>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test2</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
-    <span class="nv">Result</span> <span class="o">=</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
-    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;One&quot;</span> <span class="k">Then</span>
+    <span class="nv">Result</span> <span class="o">=</span> <span class="s">"Value"</span><span class="p">;</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">"One"</span> <span class="k">Then</span>
         <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">One</span><span class="p">(</span><span class="nf">StringValue</span><span class="p">());</span>
     <span class="k">Else</span>
         <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Two</span><span class="p">(</span><span class="nf">StringValue</span><span class="p">());</span>
@@ -2350,13 +2350,13 @@
 <span class="k">EndProcedure</span>
 
 <span class="k">Procedure</span> <span class="nf">Test3</span><span class="p">(</span><span class="nv">Param</span><span class="p">)</span>
-    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">&quot;Five&quot;</span> <span class="k">Then</span>
+    <span class="k">If</span> <span class="nv">Param</span> <span class="o">=</span> <span class="s">"Five"</span> <span class="k">Then</span>
         <span class="nv">Result</span> <span class="o">=</span> <span class="nv">Result</span> <span class="o">+</span> <span class="nf">Five</span><span class="p">(</span><span class="nf">StringValue</span><span class="p">());</span>
     <span class="k">EndIf</span><span class="p">;</span> 
 <span class="k">EndProcedure</span>
 
 <span class="k">Function</span> <span class="nf">StringValue</span><span class="p">()</span>
-   <span class="k">Return</span> <span class="s">&quot;Value&quot;</span><span class="p">;</span>
+   <span class="k">Return</span> <span class="s">"Value"</span><span class="p">;</span>
 <span class="k">EndFunction</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
@@ -2374,11 +2374,11 @@
 <span class="c1">// BSLLS:DuplicateStringLiteral-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;DuplicateStringLiteral&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;allowedNumberCopies&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;analyzeFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;caseSensitive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;minTextLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"DuplicateStringLiteral"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"allowedNumberCopies"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"analyzeFile"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"caseSensitive"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"minTextLength"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
 <span class="p">}</span>
 </code></pre></div>
 

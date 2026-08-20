@@ -2371,7 +2371,7 @@ the class — make them <code>@Value</code>-driven if needed):</p>
 <li>warms up the inferencer on every variable in the symbol tree,</li>
 <li>repeats <code>findTypes(...)</code> N times and reports wall-clock per call.</li>
 </ul>
-<div class="highlight"><pre><span></span><code>./gradlew test --tests &quot;*TypeServiceBenchmarkTest&quot; --info
+<div class="highlight"><pre><span></span><code>./gradlew test --tests "*TypeServiceBenchmarkTest" --info
 </code></pre></div>
 <p>The output is informational; the test always passes. Capture
 before/after numbers on the same machine for real performance work.</p>

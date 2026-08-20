@@ -2325,10 +2325,10 @@
 <p>BSL LS supports filtering diagnostics based on <code>git blame</code> data. If a list of author email addresses is configured, diagnostics will not fire on lines of code whose author (according to git) is one of the specified authors.</p>
 <p>To configure, specify the list of email addresses in the <code>ignoredAuthors</code> field of the <code>diagnostics</code> section in <code>.bsl-language-server.json</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;ignoredAuthors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="s2">&quot;developer@example.com&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="s2">&quot;legacy-author@company.com&quot;</span>
+<span class="w">  </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"ignoredAuthors"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">"developer@example.com"</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">"legacy-author@company.com"</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>

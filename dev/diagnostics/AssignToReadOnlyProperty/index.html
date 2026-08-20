@@ -2259,7 +2259,7 @@
 <p>Диагностика покрывает только цепочки <code>Что-то.Свойство = …</code> с доступом через точку. Индексаторы (<code>coll[0] = …</code>) и параметры процедур с режимом «Передан как параметр» здесь не диагностируются.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="c1">// плохо: свойство Метаданные у ссылочного типа доступно только для чтения</span>
-<span class="nv">Документ</span><span class="o">.</span><span class="nv">Метаданные</span> <span class="o">=</span> <span class="s">&quot;что-то&quot;</span><span class="p">;</span>
+<span class="nv">Документ</span><span class="o">.</span><span class="nv">Метаданные</span> <span class="o">=</span> <span class="s">"что-то"</span><span class="p">;</span>
 
 <span class="c1">// хорошо</span>
 <span class="nv">СвободныйОбъект</span><span class="o">.</span><span class="nv">Дата</span> <span class="o">=</span> <span class="nb">ТекущаяДата</span><span class="p">();</span>
@@ -2271,7 +2271,7 @@
 <span class="c1">// BSLLS:AssignToReadOnlyProperty-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;AssignToReadOnlyProperty&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"AssignToReadOnlyProperty"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

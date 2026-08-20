@@ -2264,36 +2264,36 @@
 
 <h3 id="String-concatenation-by-language-features">String concatenation by language features<a class="headerlink" href="#String-concatenation-by-language-features" title="Permanent link">&para;</a></h3>
 <p>Allowed:</p>
-<div class="highlight"><pre><span></span><code>Field LIKE &quot;123%&quot;
+<div class="highlight"><pre><span></span><code>Field LIKE "123%"
 </code></pre></div>
 <p>Not allowed:</p>
-<div class="highlight"><pre><span></span><code>Field LIKE &quot;123&quot; + &quot;%&quot;
+<div class="highlight"><pre><span></span><code>Field LIKE "123" + "%"
 Field LIKE Table.Template
 </code></pre></div>
 <h3 id="Operator-template-control-characters-LIKE-are-found-in-query-fields-or-in-calculated-expressions">Operator template control characters LIKE are found in query fields or in calculated expressions<a class="headerlink" href="#Operator-template-control-characters-LIKE-are-found-in-query-fields-or-in-calculated-expressions" title="Permanent link">&para;</a></h3>
 <p>For example, instead of:</p>
-<div class="highlight"><pre><span></span><code>Query = New Query(&quot;
+<div class="highlight"><pre><span></span><code>Query = New Query("
 |SELECT
 |    Goods.Ref
 |FROM
 |    Catalog.Goods AS Goods
 |WHERE
-|    Goods.Country.Description LOKE &amp;NameTemplate + &quot;_&quot;
-|&quot;);
+|    Goods.Country.Description LOKE &amp;NameTemplate + "_"
+|");
 
-Query.SetParameter(&quot;NameTemplate&quot;, &quot;FU&quot;);
+Query.SetParameter("NameTemplate", "FU");
 </code></pre></div>
 <p>Nessesary to use:</p>
-<div class="highlight"><pre><span></span><code>Query = New Query(&quot;
+<div class="highlight"><pre><span></span><code>Query = New Query("
 |SELECT
 |    Goods.Ref
 |FROM
 |    Catalog.Goods AS Goods
 |WHERE
 |    Goods.Country.Description LOKE &amp;NameTemplate
-|&quot;);
+|");
 
-Query.SetParameter(&quot;NameTemplate&quot;, &quot;FU_&quot;);
+Query.SetParameter("NameTemplate", "FU_");
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -2313,7 +2313,7 @@ Query.SetParameter(&quot;NameTemplate&quot;, &quot;FU_&quot;);
 <span class="c1">// BSLLS:IncorrectUseLikeInQuery-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;IncorrectUseLikeInQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"IncorrectUseLikeInQuery"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

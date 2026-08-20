@@ -2310,7 +2310,7 @@
 Например</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
 <span class="w">    </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">,</span>
-<span class="w">    </span><span class="n">defaultValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">DEFAULT_COMMENTS_ANNOTATION</span>
+<span class="w">    </span><span class="n">defaultValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">""</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">DEFAULT_COMMENTS_ANNOTATION</span>
 <span class="w">  </span><span class="p">)</span>
 <span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">commentsAnnotation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="p">;</span>
 </code></pre></div>
@@ -2324,13 +2324,13 @@
 <p>Тогда метод установки значений параметров будет выглядеть:</p>
 <div class="highlight"><pre><span></span><code><span class="w"> </span><span class="nd">@Override</span>
 <span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Object</span><span class="o">&gt;</span><span class="w"> </span><span class="n">configuration</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">// для установки &quot;простых свойств&quot;, включая &quot;commentAsCode&quot;</span>
+<span class="w">    </span><span class="c1">// для установки "простых свойств", включая "commentAsCode"</span>
 <span class="w">    </span><span class="kd">super</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
 
-<span class="w">    </span><span class="c1">// установка &quot;сложного&quot; свойства &quot;excludeMethods&quot;</span>
+<span class="w">    </span><span class="c1">// установка "сложного" свойства "excludeMethods"</span>
 <span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="n">excludeMethodsString</span><span class="w"> </span><span class="o">=</span>
-<span class="w">      </span><span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="w"> </span><span class="n">configuration</span><span class="p">.</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">&quot;excludeMethods&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">EXCLUDE_METHODS_DEFAULT</span><span class="p">);</span>
-<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="na">excludeMethods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">asList</span><span class="p">(</span><span class="n">excludeMethodsString</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">)));</span>
+<span class="w">      </span><span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="w"> </span><span class="n">configuration</span><span class="p">.</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">"excludeMethods"</span><span class="p">,</span><span class="w"> </span><span class="n">EXCLUDE_METHODS_DEFAULT</span><span class="p">);</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="na">excludeMethods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">asList</span><span class="p">(</span><span class="n">excludeMethodsString</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">","</span><span class="p">)));</span>
 <span class="w">  </span><span class="p">}</span>
 </code></pre></div>
 <h3 id="Доработка-тестов">Доработка тестов<a class="headerlink" href="#Доработка-тестов" title="Permanent link">&para;</a></h3>
@@ -2342,7 +2342,7 @@
 <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Object</span><span class="o">&gt;</span><span class="w"> </span><span class="n">configuration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultConfiguration</span><span class="p">();</span>
 
 <span class="c1">// установка нового значения</span>
-<span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;commentsAnnotation&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;//(с)&quot;</span><span class="p">);</span>
+<span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">"commentsAnnotation"</span><span class="p">,</span><span class="w"> </span><span class="s">"//(с)"</span><span class="p">);</span>
 
 <span class="c1">// переконфигурирование</span>
 <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>

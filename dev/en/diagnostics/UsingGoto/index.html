@@ -2257,7 +2257,7 @@ Structured control flow statements such as <code>if</code>, <code>for</code>, <c
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bad:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">I</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
- <span class="nl">~loop</span><span class="p">:</span> <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">&quot;i = </span><span class="si">%1</span><span class="s">&quot;</span><span class="p">,</span> <span class="nv">i</span><span class="p">));</span>
+ <span class="nl">~loop</span><span class="p">:</span> <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">"i = </span><span class="si">%1</span><span class="s">"</span><span class="p">,</span> <span class="nv">i</span><span class="p">));</span>
  <span class="nv">i</span> <span class="o">=</span> <span class="nv">i</span> <span class="o">+</span> <span class="m">1</span><span class="p">;</span>
 
  <span class="k">If</span> <span class="nv">i</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Then</span>
@@ -2269,7 +2269,7 @@ Structured control flow statements such as <code>if</code>, <code>for</code>, <c
 <p>Good:</p>
 <div class="highlight"><pre><span></span><code><span class="k">For</span> <span class="nv">Counter</span> <span class="o">=</span> <span class="m">0</span> <span class="k">To</span> <span class="m">10</span> <span class="k">Do</span>
 
-   <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">&quot;Counter = </span><span class="si">%1</span><span class="s">&quot;</span><span class="p">,</span> <span class="nv">Counter</span><span class="p">))</span>
+   <span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="s">"Counter = </span><span class="si">%1</span><span class="s">"</span><span class="p">,</span> <span class="nv">Counter</span><span class="p">))</span>
 
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
@@ -2286,7 +2286,7 @@ Structured control flow statements such as <code>if</code>, <code>for</code>, <c
 <span class="c1">// BSLLS:UsingGoto-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingGoto&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"UsingGoto"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

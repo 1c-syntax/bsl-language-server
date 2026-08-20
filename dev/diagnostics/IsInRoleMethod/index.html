@@ -2262,18 +2262,18 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Неправильно:
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">&quot;ДобавлениеИзменениеСтранМира&quot;</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
-<span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">&quot;ПросмотрОтчетаПопулярныеСтраны&quot;</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">"ДобавлениеИзменениеСтранМира"</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">"ПросмотрОтчетаПопулярныеСтраны"</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 Правильно:
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">ПравоДоступа</span><span class="p">(</span><span class="s">&quot;Редактирование&quot;</span><span class="p">,</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">Справочники</span><span class="o">.</span><span class="nv">СтраныМира</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
-<span class="k">Если</span> <span class="nb">ПравоДоступа</span><span class="p">(</span><span class="s">&quot;Просмотр&quot;</span><span class="p">,</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">Отчеты</span><span class="o">.</span><span class="nv">ПопулярныеСтраны</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">ПравоДоступа</span><span class="p">(</span><span class="s">"Редактирование"</span><span class="p">,</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">Справочники</span><span class="o">.</span><span class="nv">СтраныМира</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<span class="k">Если</span> <span class="nb">ПравоДоступа</span><span class="p">(</span><span class="s">"Просмотр"</span><span class="p">,</span> <span class="nc">Метаданные</span><span class="o">.</span><span class="nv">Отчеты</span><span class="o">.</span><span class="nv">ПопулярныеСтраны</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 Неправильно:
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">&quot;Казначей&quot;</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">"Казначей"</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 Правильно:
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">&quot;Казначей&quot;</span><span class="p">)</span> <span class="k">ИЛИ</span> <span class="nb">ПривилегированныйРежим</span><span class="p">()</span> <span class="k">Тогда</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s">"Казначей"</span><span class="p">)</span> <span class="k">ИЛИ</span> <span class="nb">ПривилегированныйРежим</span><span class="p">()</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -2288,7 +2288,7 @@
 <span class="c1">// BSLLS:IsInRoleMethod-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;IsInRoleMethod&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"IsInRoleMethod"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

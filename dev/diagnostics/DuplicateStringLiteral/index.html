@@ -2305,18 +2305,18 @@
 
 <p>Плохой код</p>
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Тест</span><span class="p">(</span><span class="nv">Параметр</span><span class="p">)</span>
-    <span class="nv">Результат</span> <span class="o">=</span> <span class="s">&quot;Значение&quot;</span><span class="p">;</span>
-    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">&quot;ВРег&quot;</span> <span class="k">Тогда</span>
-        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">);</span>
+    <span class="nv">Результат</span> <span class="o">=</span> <span class="s">"Значение"</span><span class="p">;</span>
+    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">"ВРег"</span> <span class="k">Тогда</span>
+        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">"Значение"</span><span class="p">);</span>
     <span class="k">Иначе</span>
-        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nf">HРег</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">);</span>
+        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nf">HРег</span><span class="p">(</span><span class="s">"Значение"</span><span class="p">);</span>
     <span class="k">КонецЕсли</span><span class="p">;</span> 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 <p>Исправленный вариант</p>
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Тест</span><span class="p">(</span><span class="nv">Параметр</span><span class="p">)</span>
-    <span class="nv">Результат</span> <span class="o">=</span> <span class="s">&quot;Значение&quot;</span><span class="p">;</span>
-    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">&quot;ВРег&quot;</span> <span class="k">Тогда</span>
+    <span class="nv">Результат</span> <span class="o">=</span> <span class="s">"Значение"</span><span class="p">;</span>
+    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">"ВРег"</span> <span class="k">Тогда</span>
         <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">ВРег</span><span class="p">(</span><span class="nv">Результат</span><span class="p">);</span>
     <span class="k">Иначе</span>
         <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nf">HРег</span><span class="p">(</span><span class="nv">Результат</span><span class="p">);</span>
@@ -2325,22 +2325,22 @@
 </code></pre></div>
 <p>Плохой код</p>
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Тест2</span><span class="p">(</span><span class="nv">Параметр</span><span class="p">)</span>
-    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">&quot;ВРег&quot;</span> <span class="k">Тогда</span>
-        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">);</span>
+    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">"ВРег"</span> <span class="k">Тогда</span>
+        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s">"Значение"</span><span class="p">);</span>
     <span class="k">Иначе</span>
-        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nf">HРег</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">);</span>
+        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nf">HРег</span><span class="p">(</span><span class="s">"Значение"</span><span class="p">);</span>
     <span class="k">КонецЕсли</span><span class="p">;</span> 
 <span class="k">КонецПроцедуры</span>
 
 <span class="k">Процедура</span> <span class="nf">Тест3</span><span class="p">(</span><span class="nv">Параметр</span><span class="p">)</span>
-    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">&quot;СОКРЛП&quot;</span> <span class="k">Тогда</span>
-        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">СокрЛП</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">);</span>
+    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">"СОКРЛП"</span> <span class="k">Тогда</span>
+        <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">СокрЛП</span><span class="p">(</span><span class="s">"Значение"</span><span class="p">);</span>
     <span class="k">КонецЕсли</span><span class="p">;</span> 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 <p>Исправленный вариант</p>
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Тест2</span><span class="p">(</span><span class="nv">Параметр</span><span class="p">)</span>
-    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">&quot;ВРег&quot;</span> <span class="k">Тогда</span>
+    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">"ВРег"</span> <span class="k">Тогда</span>
         <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">ВРег</span><span class="p">(</span><span class="nf">СтроковоеЗначение</span><span class="p">());</span>
     <span class="k">Иначе</span>
         <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nf">HРег</span><span class="p">(</span><span class="nf">СтроковоеЗначение</span><span class="p">());</span>
@@ -2348,13 +2348,13 @@
 <span class="k">КонецПроцедуры</span>
 
 <span class="k">Процедура</span> <span class="nf">Тест3</span><span class="p">(</span><span class="nv">Параметр</span><span class="p">)</span>
-    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">&quot;СОКРЛП&quot;</span> <span class="k">Тогда</span>
+    <span class="k">Если</span> <span class="nv">Параметр</span> <span class="o">=</span> <span class="s">"СОКРЛП"</span> <span class="k">Тогда</span>
         <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">Результат</span> <span class="o">+</span> <span class="nb">СокрЛП</span><span class="p">(</span><span class="nf">СтроковоеЗначение</span><span class="p">());</span>
     <span class="k">КонецЕсли</span><span class="p">;</span> 
 <span class="k">КонецПроцедуры</span>
 
 <span class="k">Функция</span> <span class="nf">СтроковоеЗначение</span><span class="p">()</span> 
-    <span class="k">Возврат</span> <span class="s">&quot;Значение&quot;</span><span class="p">;</span> 
+    <span class="k">Возврат</span> <span class="s">"Значение"</span><span class="p">;</span> 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
@@ -2372,11 +2372,11 @@
 <span class="c1">// BSLLS:DuplicateStringLiteral-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;DuplicateStringLiteral&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;allowedNumberCopies&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;analyzeFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;caseSensitive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;minTextLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"DuplicateStringLiteral"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"allowedNumberCopies"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"analyzeFile"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"caseSensitive"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"minTextLength"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
 <span class="p">}</span>
 </code></pre></div>
 

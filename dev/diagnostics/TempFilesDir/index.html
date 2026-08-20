@@ -2264,24 +2264,24 @@
 
 <p>Неправильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Каталог</span> <span class="o">=</span> <span class="nb">КаталогВременныхФайлов</span><span class="p">();</span>
-<span class="nv">ИмяФайла</span> <span class="o">=</span> <span class="nb">Строка</span><span class="p">(</span><span class="k">Новый</span> <span class="nc">УникальныйИдентификатор</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.xml&quot;</span><span class="p">;</span>
+<span class="nv">ИмяФайла</span> <span class="o">=</span> <span class="nb">Строка</span><span class="p">(</span><span class="k">Новый</span> <span class="nc">УникальныйИдентификатор</span><span class="p">)</span> <span class="o">+</span> <span class="s">".xml"</span><span class="p">;</span>
 <span class="nv">ИмяПромежуточногоФайла</span> <span class="o">=</span> <span class="nv">Каталог</span> <span class="o">+</span> <span class="nv">ИмяФайла</span><span class="p">;</span>
 <span class="nv">Данные</span><span class="o">.</span><span class="nf">Записать</span><span class="p">(</span><span class="nv">ИмяПромежуточногоФайла</span><span class="p">);</span>
 </code></pre></div>
 <p>Правильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ИмяПромежуточногоФайла</span> <span class="o">=</span> <span class="nb">ПолучитьИмяВременногоФайла</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ИмяПромежуточногоФайла</span> <span class="o">=</span> <span class="nb">ПолучитьИмяВременногоФайла</span><span class="p">(</span><span class="s">"xml"</span><span class="p">);</span>
 <span class="nv">Данные</span><span class="o">.</span><span class="nf">Записать</span><span class="p">(</span><span class="nv">ИмяПромежуточногоФайла</span><span class="p">);</span>
 </code></pre></div>
 <p>Для создания временного каталога рекомендуется также использовать имя, полученное при помощи метода ПолучитьИмяВременногоФайла (исключение составляет веб-клиент).</p>
 <p>Неправильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Архив</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ЧтениеZipФайла</span><span class="p">(</span><span class="nv">ИмяФайлаАрхива</span><span class="p">);</span> 
-<span class="nv">КаталогАрхива</span> <span class="o">=</span> <span class="nb">КаталогВременныхФайлов</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;main_zip\&quot;</span><span class="p">;</span>
+<span class="nv">КаталогАрхива</span> <span class="o">=</span> <span class="nb">КаталогВременныхФайлов</span><span class="p">()</span><span class="o">+</span><span class="s">"main_zip\"</span><span class="p">;</span>
 <span class="nb">СоздатьКаталог</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 <span class="nv">Архив</span><span class="o">.</span><span class="nf">ИзвлечьВсе</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 </code></pre></div>
 <p>Правильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Архив</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ЧтениеZipФайла</span><span class="p">(</span><span class="nv">ИмяФайлаАрхива</span><span class="p">);</span> 
-<span class="nv">КаталогАрхива</span> <span class="o">=</span> <span class="nb">ПолучитьИмяВременногоФайла</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;\main_zip\&quot;</span><span class="p">;</span>
+<span class="nv">КаталогАрхива</span> <span class="o">=</span> <span class="nb">ПолучитьИмяВременногоФайла</span><span class="p">()</span> <span class="o">+</span> <span class="s">"\main_zip\"</span><span class="p">;</span>
 <span class="nb">СоздатьКаталог</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 <span class="nv">Архив</span><span class="o">.</span><span class="nf">ИзвлечьВсе</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 </code></pre></div>
@@ -2296,7 +2296,7 @@
 <span class="c1">// BSLLS:TempFilesDir-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;TempFilesDir&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"TempFilesDir"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

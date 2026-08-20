@@ -2261,11 +2261,11 @@
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ПоменятьЦветПоляФормы</span><span class="p">(</span><span class="nv">Форма</span><span class="p">,</span> <span class="nv">ИмяПоля</span><span class="p">,</span> <span class="nv">Цвет</span><span class="p">)</span>
 </code></pre></div>
 <p>неправильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nf">ПоменятьЦветПоляФормы</span><span class="p">(,</span><span class="s">&quot;РезультатПроверки&quot;</span><span class="p">,</span> <span class="nv">ЦветаСтиля</span><span class="o">.</span><span class="nv">ПоясняющийОшибкуТекст</span><span class="p">);</span> <span class="c1">// пропущен первый параметр Форма</span>
+<div class="highlight"><pre><span></span><code><span class="nf">ПоменятьЦветПоляФормы</span><span class="p">(,</span><span class="s">"РезультатПроверки"</span><span class="p">,</span> <span class="nv">ЦветаСтиля</span><span class="o">.</span><span class="nv">ПоясняющийОшибкуТекст</span><span class="p">);</span> <span class="c1">// пропущен первый параметр Форма</span>
 <span class="nf">ПоменятьЦветПоляФормы</span><span class="p">(,,);</span> <span class="c1">// пропущены все обязательные параметры</span>
 </code></pre></div>
 <p>правильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nf">ПоменятьЦветПоляФормы</span><span class="p">(</span><span class="nv">ЭтотОбъект</span><span class="p">,</span> <span class="s">&quot;РезультатПроверки&quot;</span><span class="p">,</span> <span class="nv">Цвет</span><span class="p">);</span> <span class="c1">// указаны все обязательные параметры</span>
+<div class="highlight"><pre><span></span><code><span class="nf">ПоменятьЦветПоляФормы</span><span class="p">(</span><span class="nv">ЭтотОбъект</span><span class="p">,</span> <span class="s">"РезультатПроверки"</span><span class="p">,</span> <span class="nv">Цвет</span><span class="p">);</span> <span class="c1">// указаны все обязательные параметры</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <p><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Параметры процедур и функций</a></p>
@@ -2276,7 +2276,7 @@
 <span class="c1">// BSLLS:MissedRequiredParameter-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;MissedRequiredParameter&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"MissedRequiredParameter"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

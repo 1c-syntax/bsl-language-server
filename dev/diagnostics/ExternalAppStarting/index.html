@@ -2292,8 +2292,8 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Метод</span><span class="p">()</span>
-    <span class="nv">СтрокаКоманды</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
-    <span class="nv">ТекущийКаталог</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+    <span class="nv">СтрокаКоманды</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
+    <span class="nv">ТекущийКаталог</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
     <span class="nv">ДождатьсяЗавершения</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>
     <span class="nv">ОписаниеОповещения</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
     <span class="nv">ПараметрыКоманды</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">;</span>
@@ -2308,12 +2308,12 @@
     <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьНавигационнуюСсылку</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьНавигационнуюСсылку</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ОписаниеОповещения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
 
-    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="s">&quot;ping 127.0.0.1 -n 5&quot;</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="s">"ping 127.0.0.1 -n 5"</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nv">ФайловаяСистема</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nv">ФайловаяСистема</span><span class="o">.</span><span class="nf">ЗапуститьПрограмму</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ПараметрыКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
 
-    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьПроводник</span><span class="p">(</span><span class="s">&quot;C:\Users&quot;</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьПроводник</span><span class="p">(</span><span class="s">"C:\Users"</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьФайл</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nv">ФайловаяСистемаКлиент</span><span class="o">.</span><span class="nf">ОткрытьФайл</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ОписаниеОповещения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
 
@@ -2321,8 +2321,8 @@
 
 <span class="nd">&amp;НаКлиенте</span>
 <span class="k">Асинх</span> <span class="k">Процедура</span> <span class="nf">Подключить</span><span class="p">()</span>
-    <span class="nv">СтрокаКоманды</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
-    <span class="nv">ТекущийКаталог</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+    <span class="nv">СтрокаКоманды</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
+    <span class="nv">ТекущийКаталог</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
     <span class="nv">ДождатьсяЗавершения</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>
 
     <span class="k">Ждать</span> <span class="nb">ЗапуститьПриложениеАсинх</span><span class="p">(</span><span class="nv">СтрокаКоманды</span><span class="p">,</span> <span class="nv">ТекущийКаталог</span><span class="p">,</span> <span class="nv">ДождатьсяЗавершения</span><span class="p">);</span> <span class="c1">// есть замечание</span>
@@ -2356,9 +2356,9 @@
 <span class="c1">// BSLLS:ExternalAppStarting-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;ExternalAppStarting&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;checkGotoUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;userPatternString&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;КомандаСистемы|System|ЗапуститьСистему|RunSystem|ЗапуститьПриложение|RunApp|НачатьЗапускПриложения|BeginRunningApplication|ЗапуститьПриложениеАсинх|RunAppAsync|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"ExternalAppStarting"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"checkGotoUrl"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"userPatternString"</span><span class="p">:</span><span class="w"> </span><span class="s2">"КомандаСистемы|System|ЗапуститьСистему|RunSystem|ЗапуститьПриложение|RunApp|НачатьЗапускПриложения|BeginRunningApplication|ЗапуститьПриложениеАсинх|RunAppAsync|ЗапуститьПрограмму|ОткрытьПроводник|ОткрытьФайл"</span>
 <span class="p">}</span>
 </code></pre></div>
 

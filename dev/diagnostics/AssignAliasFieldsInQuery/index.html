@@ -2270,7 +2270,7 @@
 
 <div class="highlight"><pre><span></span><code>    <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Запрос</span><span class="p">;</span>
     <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
-    <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">"</span><span class="kd">ВЫБРАТЬ</span>
     <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Неправильно</span>
     <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ПсевдонимПоляСсылка</span><span class="p">,</span> <span class="c1">// Правильно</span>
     <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Код</span> <span class="nv">Код</span> <span class="c1">// Неправильно</span>
@@ -2302,17 +2302,17 @@
     <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Игнорируется</span>
     <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Код</span> <span class="c1">// Игнорируется</span>
     <span class="s">|</span><span class="kd">ИЗ</span>
-    <span class="s">|</span>   <span class="nn">Справочник</span><span class="o">.</span><span class="nc">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span>   <span class="nn">Справочник</span><span class="o">.</span><span class="nc">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span><span class="s">"</span><span class="p">;</span> <span class="c1">// Игнорируется</span>
 
     <span class="nv">Запрос1</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Запрос</span><span class="p">;</span>
     <span class="nv">Запрос1</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
-    <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">"</span><span class="kd">ВЫБРАТЬ</span>
     <span class="s">|</span>   <span class="nv">ВложенныйЗапрос</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">Ссылка</span> <span class="c1">// Правильно</span>
     <span class="s">|</span><span class="kd">ИЗ</span>
     <span class="s">|</span>   <span class="p">(</span><span class="kd">ВЫБРАТЬ</span>
     <span class="s">|</span>       <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="c1">// Неправильно</span>
     <span class="s">|</span>   <span class="kd">ИЗ</span>
-    <span class="s">|</span>       <span class="nn">Справочник</span><span class="o">.</span><span class="nc">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">ВложенныйЗапрос</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Игнорируется </span>
+    <span class="s">|</span>       <span class="nn">Справочник</span><span class="o">.</span><span class="nc">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">ВложенныйЗапрос</span><span class="s">"</span><span class="p">;</span> <span class="c1">// Игнорируется </span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -2330,7 +2330,7 @@
 <span class="c1">// BSLLS:AssignAliasFieldsInQuery-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;AssignAliasFieldsInQuery&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"AssignAliasFieldsInQuery"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

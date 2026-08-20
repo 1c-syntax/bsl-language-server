@@ -2274,15 +2274,15 @@
 <p>Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bad:</p>
-<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr1&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr2&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr3&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr4&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr5&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr6&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr7&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr8&quot;</span>
-    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr9&quot;</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr1"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr2"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr3"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr4"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr5"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr6"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr7"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr8"</span>
+    <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr9"</span> <span class="k">Then</span>
 
    <span class="nf">doSomeWork</span><span class="p">();</span>
 
@@ -2295,15 +2295,15 @@
 
 <span class="k">Function</span> <span class="nf">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span>
 
-    <span class="k">Return</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr1&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr2&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr3&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr4&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr5&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr6&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr7&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr8&quot;</span>
-            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">&quot;Expr9&quot;</span><span class="p">;</span>
+    <span class="k">Return</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr1"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr2"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr3"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr4"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr5"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr6"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr7"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr8"</span>
+            <span class="k">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s">"Expr9"</span><span class="p">;</span>
 
 <span class="k">EndFunction</span>
 </code></pre></div>
@@ -2314,8 +2314,8 @@
 <span class="c1">// BSLLS:IfConditionComplexity-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;IfConditionComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;maxIfConditionComplexity&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"IfConditionComplexity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"maxIfConditionComplexity"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>
 

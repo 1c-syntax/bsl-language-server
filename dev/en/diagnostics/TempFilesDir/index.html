@@ -2260,24 +2260,24 @@
 
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Catalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">();</span>
-<span class="nv">FileName</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="k">New</span> <span class="nv">UUID</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.xml&quot;</span><span class="p">;</span>
+<span class="nv">FileName</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="k">New</span> <span class="nv">UUID</span><span class="p">)</span> <span class="o">+</span> <span class="s">".xml"</span><span class="p">;</span>
 <span class="nv">TempFile</span> <span class="o">=</span> <span class="nv">Catalog</span> <span class="o">+</span> <span class="nv">FileName</span><span class="p">;</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
 </code></pre></div>
 <p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">TempFile</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">TempFile</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">"xml"</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
 </code></pre></div>
 <p>To create a temporary directory, it is recommended to use the one obtained by the GetTempFileName method (with the exception of the web client).</p>
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
-<span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;main_zip\&quot;</span><span class="p">;</span>
+<span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">()</span><span class="o">+</span><span class="s">"main_zip\"</span><span class="p">;</span>
 <span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 <span class="nv">ArchFile</span><span class="o">.</span><span class="nf">ExtractAll</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 </code></pre></div>
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
-<span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;\main_zip\&quot;</span><span class="p">;</span>
+<span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">()</span> <span class="o">+</span> <span class="s">"\main_zip\"</span><span class="p">;</span>
 <span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 <span class="nv">ArchFile</span><span class="o">.</span><span class="nf">ExtractAll</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 </code></pre></div>
@@ -2292,7 +2292,7 @@
 <span class="c1">// BSLLS:TempFilesDir-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;TempFilesDir&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"TempFilesDir"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

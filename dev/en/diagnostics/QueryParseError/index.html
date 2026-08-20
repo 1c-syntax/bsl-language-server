@@ -2260,22 +2260,22 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Incorrect</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">SELECT</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Text</span> <span class="o">=</span> <span class="s">"</span><span class="kd">SELECT</span>
 <span class="s">|</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Name</span>  <span class="kd">AS</span> <span class="nv">Name</span> <span class="p">,</span>
-<span class="s">|</span> <span class="nv">Goods</span><span class="o">.</span> <span class="s">&quot;</span> <span class="o">+</span> <span class="nv">FieldNameCode</span> <span class="o">+</span> <span class="s">&quot; AS Code</span>
+<span class="s">|</span> <span class="nv">Goods</span><span class="o">.</span> <span class="s">"</span> <span class="o">+</span> <span class="nv">FieldNameCode</span> <span class="o">+</span> <span class="s">" AS Code</span>
 <span class="s">|From</span>
-<span class="s">| Catalog.Goods КАК Goods&quot;</span><span class="p">;</span>
+<span class="s">| Catalog.Goods КАК Goods"</span><span class="p">;</span>
 </code></pre></div>
 <p>Correct</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">SELECT</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Text</span> <span class="o">=</span> <span class="s">"</span><span class="kd">SELECT</span>
 <span class="s">|</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Name</span> <span class="kd">AS</span> <span class="nv">Name</span><span class="p">,</span>
 <span class="s">|</span> <span class="si">&amp;FieldNameCode</span> <span class="kd">AS</span> <span class="nv">Code</span>
 <span class="s">|</span><span class="kd">FROM</span>
-<span class="s">|</span> <span class="nv">Catelog</span><span class="o">.</span><span class="nv">Goods</span> <span class="kd">AS</span> <span class="nv">Goods</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="s">|</span> <span class="nv">Catelog</span><span class="o">.</span><span class="nv">Goods</span> <span class="kd">AS</span> <span class="nv">Goods</span><span class="s">"</span><span class="p">;</span>
 
 <span class="nv">Text</span> <span class="o">=</span> <span class="nb">StrReplace</span><span class="p">(</span><span class="nv">Text</span><span class="p">,</span> 
-                            <span class="s">&quot;&amp;FieldNameCode&quot;</span><span class="p">,</span> 
-                            <span class="s">&quot;Goods.&quot;</span> <span class="o">+</span> <span class="nv">FieldNameCode</span><span class="p">);</span>
+                            <span class="s">"&amp;FieldNameCode"</span><span class="p">,</span> 
+                            <span class="s">"Goods."</span> <span class="o">+</span> <span class="nv">FieldNameCode</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -2295,7 +2295,7 @@
 <span class="c1">// BSLLS:QueryParseError-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;QueryParseError&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"QueryParseError"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

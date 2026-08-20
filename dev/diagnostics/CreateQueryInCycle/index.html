@@ -2260,14 +2260,14 @@
 <span class="k">Для</span> <span class="nv">индекс</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="nv">СписокДокументов</span><span class="o">.</span><span class="nf">ВГраница</span><span class="p">()</span> <span class="k">Цикл</span>
     <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Запрос</span><span class="p">;</span>
     <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> 
-        <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+        <span class="s">"</span><span class="kd">ВЫБРАТЬ</span>
         <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">СуммаДокумента</span>
         <span class="s">|</span><span class="kd">ИЗ</span>
         <span class="s">|</span>   <span class="nn">Документ</span><span class="o">.</span><span class="nc">ПоступлениеТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ПоступлениеТоваровУслуг</span>
         <span class="s">|</span><span class="kd">ГДЕ</span>
-        <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="si">&amp;Ссылка</span><span class="s">&quot;</span><span class="p">;</span>
+        <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="si">&amp;Ссылка</span><span class="s">"</span><span class="p">;</span>
 
-    <span class="nv">Запрос</span><span class="o">.</span><span class="nf">УстановитьПараметр</span><span class="p">(</span><span class="s">&quot;Ссылка&quot;</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">[</span><span class="nv">индекс</span><span class="p">]);</span>
+    <span class="nv">Запрос</span><span class="o">.</span><span class="nf">УстановитьПараметр</span><span class="p">(</span><span class="s">"Ссылка"</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">[</span><span class="nv">индекс</span><span class="p">]);</span>
 
     <span class="nv">РезультатЗапроса</span> <span class="o">=</span> <span class="nv">Запрос</span><span class="o">.</span><span class="nf">Выполнить</span><span class="p">();</span>
 
@@ -2284,14 +2284,14 @@
 
 <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Запрос</span><span class="p">;</span>
 <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> 
-    <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">"</span><span class="kd">ВЫБРАТЬ</span>
     <span class="s">|</span>   <span class="nb">СУММА</span><span class="p">(</span><span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">СуммаДокумента</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">СуммаДокумента</span>
     <span class="s">|</span><span class="kd">ИЗ</span>
     <span class="s">|</span>   <span class="nn">Документ</span><span class="o">.</span><span class="nc">ПоступлениеТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ПоступлениеТоваровУслуг</span>
     <span class="s">|</span><span class="kd">ГДЕ</span>
-    <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="ow">В</span><span class="p">(</span><span class="si">&amp;СписокДокументов</span><span class="p">)</span><span class="s">&quot;</span><span class="p">;</span>
+    <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="ow">В</span><span class="p">(</span><span class="si">&amp;СписокДокументов</span><span class="p">)</span><span class="s">"</span><span class="p">;</span>
 
-<span class="nv">Запрос</span><span class="o">.</span><span class="nf">УстановитьПараметр</span><span class="p">(</span><span class="s">&quot;Ссылка&quot;</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">);</span>
+<span class="nv">Запрос</span><span class="o">.</span><span class="nf">УстановитьПараметр</span><span class="p">(</span><span class="s">"Ссылка"</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">);</span>
 
 <span class="nv">РезультатЗапроса</span> <span class="o">=</span> <span class="nv">Запрос</span><span class="o">.</span><span class="nf">Выполнить</span><span class="p">();</span>
 
@@ -2308,7 +2308,7 @@
 <span class="c1">// BSLLS:CreateQueryInCycle-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;CreateQueryInCycle&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"CreateQueryInCycle"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

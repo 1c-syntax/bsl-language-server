@@ -2317,7 +2317,7 @@
 <span class="w">  </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/cache@v3</span>
 <span class="w">  </span><span class="nt">with</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.bsl-ls-cache</span>
-<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ runner.os }}-bsl-typo-${{ hashFiles(&#39;**/*.bsl&#39;) }}</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ runner.os }}-bsl-typo-${{ hashFiles('**/*.bsl') }}</span>
 <span class="w">    </span><span class="nt">restore-keys</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">      </span><span class="no">${{ runner.os }}-bsl-typo-</span>
 </code></pre></div>
@@ -2326,10 +2326,10 @@
 <li>
 <p>In <code>.gitlab-ci.yml</code> use the <code>cache</code> section:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">variables</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">APP_CACHE_FULLPATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.bsl-ls-cache&quot;</span>
+<span class="w">  </span><span class="nt">APP_CACHE_FULLPATH</span><span class="p">:</span><span class="w"> </span><span class="s">".bsl-ls-cache"</span>
 
 <span class="nt">cache</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bsl-ls-typo-cache&quot;</span>
+<span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">"bsl-ls-typo-cache"</span>
 <span class="w">  </span><span class="nt">paths</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.bsl-ls-cache/</span>
 <span class="w">  </span><span class="nt">policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pull-push</span>
@@ -2366,10 +2366,10 @@
 <span class="c1">// BSLLS:Typo-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;Typo&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;minWordLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;userWordsToIgnore&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;caseInsensitive&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"Typo"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"minWordLength"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"userWordsToIgnore"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"caseInsensitive"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>
 

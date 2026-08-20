@@ -2325,10 +2325,10 @@
 <p>BSL LS поддерживает фильтрацию диагностик на основе данных <code>git blame</code>. Если задан список email-адресов авторов, диагностики не будут срабатывать на строках кода, автором которых (по данным git) является один из указанных авторов.</p>
 <p>Для настройки укажите список email-адресов в поле <code>ignoredAuthors</code> секции <code>diagnostics</code> конфигурационного файла <code>.bsl-language-server.json</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;ignoredAuthors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="s2">&quot;developer@example.com&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="s2">&quot;legacy-author@company.com&quot;</span>
+<span class="w">  </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"ignoredAuthors"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">"developer@example.com"</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">"legacy-author@company.com"</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
@@ -2391,7 +2391,7 @@
 <h3 id="Отключить-диагностику-для-одной-строки">Отключить диагностику для одной строки<a class="headerlink" href="#Отключить-диагностику-для-одной-строки" title="Permanent link">&para;</a></h3>
 <p>Для экранирование одной строки можно использовать <code>обертку</code> как в примере выше, но удобнее использовать <code>висячий комментарий</code>, т.е. комментарий, расположенный в конце строки, пример</p>
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ВидимаяBSLLS</span><span class="p">()</span>
-    <span class="c1">// С помощью висячего комментария скрыта следующая строка от диагностики &quot;Каноническое написание ключевых слов&quot;</span>
+    <span class="c1">// С помощью висячего комментария скрыта следующая строка от диагностики "Каноническое написание ключевых слов"</span>
     <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">тогда</span> <span class="c1">// BSLLS:CanonicalSpellingKeywords-выкл</span>
         <span class="c1">// Видимое содержимое</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>

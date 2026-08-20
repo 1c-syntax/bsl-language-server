@@ -2263,20 +2263,20 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Примеры неверного кода
-<div class="highlight"><pre><span></span><code>    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">);</span><span class="c1">// ошибка</span>
-    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">);</span><span class="c1">// ошибка</span>
-    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">);</span><span class="c1">// ошибка</span>
-    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">()));</span>
+<div class="highlight"><pre><span></span><code>    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">);</span><span class="c1">// ошибка</span>
+    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">);</span><span class="c1">// ошибка</span>
+    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">);</span><span class="c1">// ошибка</span>
+    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">()));</span>
 
-    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">);</span><span class="c1">// ошибка</span>
+    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">);</span><span class="c1">// ошибка</span>
 
     <span class="k">Попытка</span>
       <span class="nf">КодСервер</span><span class="p">();</span>
     <span class="k">Исключение</span>
-      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
+      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
         <span class="nb">ОписаниеОшибки</span><span class="p">());</span> <span class="c1">// ошибка</span>
-      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
-        <span class="s">&quot;Комментарий 1&quot;</span><span class="p">);</span> <span class="c1">// ошибка</span>
+      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s">"Событие"</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
+        <span class="s">"Комментарий 1"</span><span class="p">);</span> <span class="c1">// ошибка</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
 </code></pre></div></p>
 <p>Правильный код
@@ -2285,7 +2285,7 @@
     <span class="k">Исключение</span>
 
       <span class="nv">ТекстОшибки</span> <span class="o">=</span> <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">());</span>
-      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">&#39;</span><span class="s">Выполнение операции</span><span class="se">&#39;</span><span class="s">&quot;</span><span class="p">),</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
+      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">"</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">'</span><span class="s">Выполнение операции</span><span class="se">'</span><span class="s">"</span><span class="p">),</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
          <span class="nv">ТекстОшибки</span><span class="p">);</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
 
@@ -2294,7 +2294,7 @@
     <span class="k">Исключение</span>
 
       <span class="nv">ТекстОшибки</span> <span class="o">=</span> <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">());</span>
-      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">&#39;</span><span class="s">Выполнение операции</span><span class="se">&#39;</span><span class="s">&quot;</span><span class="p">),</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
+      <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">"</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">'</span><span class="s">Выполнение операции</span><span class="se">'</span><span class="s">"</span><span class="p">),</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
          <span class="nv">ТекстОшибки</span><span class="p">);</span>
 
       <span class="ne">ВызватьИсключение</span><span class="p">;</span>
@@ -2339,7 +2339,7 @@
 <span class="c1">// BSLLS:UsageWriteLogEvent-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsageWriteLogEvent&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"UsageWriteLogEvent"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

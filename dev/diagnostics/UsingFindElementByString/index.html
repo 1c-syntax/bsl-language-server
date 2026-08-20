@@ -2259,13 +2259,13 @@
 <p>Константные значения данных из ИБ рекомендуется указывать в константах ИБ, предопределенных элементах метаданных.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:
-<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">Должности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">Должности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">"Ведущий бухгалтер"</span><span class="p">);</span>
 </code></pre></div>
 или
-<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">Должности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;00-0000001&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">Должности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">"00-0000001"</span><span class="p">);</span>
 </code></pre></div></p>
 <p>или</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ОбъектНазначения</span> <span class="o">=</span> <span class="nn">Документы</span><span class="o">.</span><span class="nc">ПередачаТоваровМеждуОрганизациями</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="s">&quot;0000-000001&quot;</span><span class="p">,</span> <span class="nb">ТекущаяДата</span><span class="p">());</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ОбъектНазначения</span> <span class="o">=</span> <span class="nn">Документы</span><span class="o">.</span><span class="nc">ПередачаТоваровМеждуОрганизациями</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="s">"0000-000001"</span><span class="p">,</span> <span class="nb">ТекущаяДата</span><span class="p">());</span>
 </code></pre></div>
 <p>Допустимо использование:
 <div class="highlight"><pre><span></span><code><span class="nn">Справочники</span><span class="o">.</span><span class="nc">Валюты</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
@@ -2281,7 +2281,7 @@
 <span class="c1">// BSLLS:UsingFindElementByString-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingFindElementByString&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"UsingFindElementByString"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

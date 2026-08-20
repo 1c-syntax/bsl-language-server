@@ -2269,12 +2269,12 @@ It should be remembered that simple checks in a query are performed a little fas
 <p>Example showing NULL comparison problems - joining 2 tables incorrectly and showing different comparison methods
 <div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
   <span class="kd">CASE</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">=</span> <span class="m">0</span> <span class="kd">THEN</span> <span class="s">&quot;Equals 0 - does not work&quot;</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="kd">THEN</span> <span class="s">&quot;NOT Equals 0 - does not work&quot;</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">=</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">&quot;Equals NULL - does not work&quot;</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="kd">IS</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">&quot;IS NULL - it works&quot;</span>
-    <span class="kd">WHEN</span> <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span>  <span class="kd">THEN</span> <span class="s">&quot;ISNULL() - and this works too&quot;</span>
-    <span class="kd">ELSE</span> <span class="s">&quot;else&quot;</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">=</span> <span class="m">0</span> <span class="kd">THEN</span> <span class="s">"Equals 0 - does not work"</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="kd">THEN</span> <span class="s">"NOT Equals 0 - does not work"</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">=</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">"Equals NULL - does not work"</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="kd">IS</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">"IS NULL - it works"</span>
+    <span class="kd">WHEN</span> <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span>  <span class="kd">THEN</span> <span class="s">"ISNULL() - and this works too"</span>
+    <span class="kd">ELSE</span> <span class="s">"else"</span>
   <span class="kd">END</span>
 <span class="kd">ИЗ</span>
   <span class="nv">First</span> <span class="kd">AS</span> <span class="nv">First</span>
@@ -2348,7 +2348,7 @@ It is more correct to explicitly specify <code>INNER JOIN</code> instead of usin
 <span class="c1">// BSLLS:FieldsFromJoinsWithoutIsNull-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;FieldsFromJoinsWithoutIsNull&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"FieldsFromJoinsWithoutIsNull"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

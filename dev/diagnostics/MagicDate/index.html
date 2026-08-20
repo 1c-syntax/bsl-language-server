@@ -2274,12 +2274,12 @@
 <p>Магическая дата - это любая дата в вашем коде, которая не очевидна без погружения в контекст.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Плохо</p>
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="ld">&#39;20151021&#39;</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="ld">'20151021'</span> <span class="k">Тогда</span>
     <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 <p>Хорошо</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПредсказаннаяДата</span> <span class="o">=</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span> 
+<div class="highlight"><pre><span></span><code><span class="nv">ПредсказаннаяДата</span> <span class="o">=</span> <span class="ld">'20151021'</span><span class="p">;</span> 
 <span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="nv">ПредсказаннаяДата</span> <span class="k">Тогда</span>
     <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
@@ -2287,7 +2287,7 @@
 <p>Также хорошим решением является использование специального метода с говорящим названием, который возвращает
 дату-константу</p>
 <div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nf">ДатаИзобретенияХовера</span><span class="p">()</span>
-    <span class="k">Возврат</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span>
+    <span class="k">Возврат</span> <span class="ld">'20151021'</span><span class="p">;</span>
 <span class="k">КонецФункции</span>
 
 <span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="nf">ДатаИзобретенияХовера</span><span class="p">()</span> <span class="k">Тогда</span>
@@ -2298,25 +2298,25 @@
 <p>Магические даты, используемые в структурах и соответствиях, не считаются ошибками, так как они используются в качестве ключей или значений в структурах данных, где контекст понятен:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Операция Вставить структуры - нет ошибки</span>
 <span class="nv">Структура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">;</span>
-<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ДатаНачала&quot;</span><span class="p">,</span> <span class="ld">&#39;20250101&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
-<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ДатаОкончания&quot;</span><span class="p">,</span> <span class="ld">&#39;20251231&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
-<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;МаксимальнаяДата&quot;</span><span class="p">,</span> <span class="ld">&#39;39991231235959&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"ДатаНачала"</span><span class="p">,</span> <span class="ld">'20250101'</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"ДатаОкончания"</span><span class="p">,</span> <span class="ld">'20251231'</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"МаксимальнаяДата"</span><span class="p">,</span> <span class="ld">'39991231235959'</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
 
 <span class="c1">// Конструктор структуры - нет ошибки</span>
-<span class="nv">Структура2</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;ДатаНачала, ДатаОкончания&quot;</span><span class="p">,</span> <span class="ld">&#39;20250101&#39;</span><span class="p">,</span> <span class="ld">&#39;20251231&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура2</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">"ДатаНачала, ДатаОкончания"</span><span class="p">,</span> <span class="ld">'20250101'</span><span class="p">,</span> <span class="ld">'20251231'</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
 
 <span class="c1">// Прямое присваивание свойству структуры - нет ошибки</span>
-<span class="nv">СтруктураСПолями</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;ДатаНачала, ДатаОкончания&quot;</span><span class="p">);</span>
-<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДатаНачала</span> <span class="o">=</span> <span class="ld">&#39;20250101&#39;</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
-<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДатаОкончания</span> <span class="o">=</span> <span class="ld">&#39;20251231&#39;</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">СтруктураСПолями</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">"ДатаНачала, ДатаОкончания"</span><span class="p">);</span>
+<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДатаНачала</span> <span class="o">=</span> <span class="ld">'20250101'</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДатаОкончания</span> <span class="o">=</span> <span class="ld">'20251231'</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
 
 <span class="c1">// Фиксированная структура - нет ошибки</span>
-<span class="nv">ФиксированнаяСтруктура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ФиксированнаяСтруктура</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">,</span> <span class="ld">&#39;20240101&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">ФиксированнаяСтруктура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ФиксированнаяСтруктура</span><span class="p">(</span><span class="s">"Значение"</span><span class="p">,</span> <span class="ld">'20240101'</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
 
 <span class="c1">// </span><span class="nc">Соответствие</span><span class="p"> - </span><span class="c1">нет ошибки (как ключ, так и значение)</span>
 <span class="nv">Соответствие</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Соответствие</span><span class="p">;</span>
-<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Код&quot;</span><span class="p">,</span> <span class="ld">&#39;20230101&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
-<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="ld">&#39;19800101&#39;</span><span class="p">,</span> <span class="s">&quot;Олимпиада в Москве&quot;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">"Код"</span><span class="p">,</span> <span class="ld">'20230101'</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="ld">'19800101'</span><span class="p">,</span> <span class="s">"Олимпиада в Москве"</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
 </code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
@@ -2325,8 +2325,8 @@
 <span class="c1">// BSLLS:MagicDate-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;MagicDate&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;authorizedDates&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;00010101,00010101000000,000101010000&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"MagicDate"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"authorizedDates"</span><span class="p">:</span><span class="w"> </span><span class="s2">"00010101,00010101000000,000101010000"</span>
 <span class="p">}</span>
 </code></pre></div>
 

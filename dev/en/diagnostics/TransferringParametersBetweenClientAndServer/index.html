@@ -2294,29 +2294,29 @@
 <div class="highlight"><pre><span></span><code><span class="nd">&amp;AtServerNoContext</span>
 <span class="k">Procedure</span> <span class="nf">TransferParametersToServer</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">ParamWithVal</span><span class="p">,</span> <span class="nv">Collection</span><span class="p">,</span> <span class="k">Val</span> <span class="nv">CollectionWithVal</span><span class="p">)</span>
 
-<span class="nv">Param1</span> <span class="o">=</span> <span class="s">&quot;Changed1&quot;</span><span class="p">;</span>
-<span class="nv">ParamWithVal</span> <span class="o">=</span> <span class="s">&quot;Changed2&quot;</span><span class="p">;</span>
-<span class="nv">Collection</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Key1&quot;</span><span class="p">,</span> <span class="s">&quot;Changed1&quot;</span><span class="p">);</span>
-<span class="nv">CollectionWithVal</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Key2&quot;</span><span class="p">,</span> <span class="s">&quot;Changed2&quot;</span><span class="p">);</span>
+<span class="nv">Param1</span> <span class="o">=</span> <span class="s">"Changed1"</span><span class="p">;</span>
+<span class="nv">ParamWithVal</span> <span class="o">=</span> <span class="s">"Changed2"</span><span class="p">;</span>
+<span class="nv">Collection</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"Key1"</span><span class="p">,</span> <span class="s">"Changed1"</span><span class="p">);</span>
+<span class="nv">CollectionWithVal</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">"Key2"</span><span class="p">,</span> <span class="s">"Changed2"</span><span class="p">);</span>
 
 <span class="k">EndProcedure</span>
 
 <span class="nd">&amp;AtClient</span>
 <span class="k">Procedure</span> <span class="nf">PassingParameters</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
 
-<span class="nv">Param1</span> <span class="o">=</span> <span class="s">&quot;Initial1&quot;</span><span class="p">;</span>
-<span class="nv">ParamWithVal</span> <span class="o">=</span> <span class="s">&quot;Initial2&quot;</span><span class="p">;</span>
-<span class="nv">Collection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Key1&quot;</span><span class="p">,</span> <span class="s">&quot;Source1&quot;</span><span class="p">);</span>
-<span class="nv">CollectionWithVal</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;Key2&quot;</span><span class="p">,</span> <span class="s">&quot;Source2&quot;</span><span class="p">);</span>
+<span class="nv">Param1</span> <span class="o">=</span> <span class="s">"Initial1"</span><span class="p">;</span>
+<span class="nv">ParamWithVal</span> <span class="o">=</span> <span class="s">"Initial2"</span><span class="p">;</span>
+<span class="nv">Collection</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Key1"</span><span class="p">,</span> <span class="s">"Source1"</span><span class="p">);</span>
+<span class="nv">CollectionWithVal</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">"Key2"</span><span class="p">,</span> <span class="s">"Source2"</span><span class="p">);</span>
 
 <span class="nf">PassingParametersToServer</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="nv">ParamWithVal</span><span class="p">,</span> <span class="nv">Collection</span><span class="p">,</span> <span class="nv">CollectionWithVal</span><span class="p">);</span>
 
-<span class="nv">Template</span> <span class="o">=</span> <span class="s">&quot;after server </span><span class="si">%1</span><span class="s"> = &lt;</span><span class="si">%2</span><span class="s">&gt;&quot;</span><span class="p">;</span>
+<span class="nv">Template</span> <span class="o">=</span> <span class="s">"after server </span><span class="si">%1</span><span class="s"> = &lt;</span><span class="si">%2</span><span class="s">&gt;"</span><span class="p">;</span>
 
-<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;Param1&quot;</span><span class="p">,</span> <span class="nv">Param1</span><span class="p">));</span>
-<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;ParamWithVal&quot;</span><span class="p">,</span> <span class="nv">ParamWithVal</span><span class="p">));</span>
-<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;Collection.Key1&quot;</span><span class="p">,</span> <span class="nv">Collection</span><span class="o">.</span><span class="nv">Key1</span><span class="p">));</span>
-<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">&quot;CollectionWithVal.Key2&quot;</span><span class="p">,</span> <span class="nv">CollectionWithVal</span><span class="o">.</span><span class="nv">Key2</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">"Param1"</span><span class="p">,</span> <span class="nv">Param1</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">"ParamWithVal"</span><span class="p">,</span> <span class="nv">ParamWithVal</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">"Collection.Key1"</span><span class="p">,</span> <span class="nv">Collection</span><span class="o">.</span><span class="nv">Key1</span><span class="p">));</span>
+<span class="nb">Message</span><span class="p">(</span><span class="nb">StrTemplate</span><span class="p">(</span><span class="nv">Template</span><span class="p">,</span> <span class="s">"CollectionWithVal.Key2"</span><span class="p">,</span> <span class="nv">CollectionWithVal</span><span class="o">.</span><span class="nv">Key2</span><span class="p">));</span>
 
 <span class="k">EndProcedure</span>
 </code></pre></div>
@@ -2373,8 +2373,8 @@ Default value: `` (empty string)</p>
 <p>This is useful for cached values that are intentionally transferred from the server to the client for storage in form module variables.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CachedValues,DataCache&quot;</span>
+<span class="w">  </span><span class="nt">"TransferringParametersBetweenClientAndServer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cachedValueNames"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CachedValues,DataCache"</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -2411,8 +2411,8 @@ Default value: `` (empty string)</p>
 <span class="c1">// BSLLS:TransferringParametersBetweenClientAndServer-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"TransferringParametersBetweenClientAndServer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"cachedValueNames"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
 <span class="p">}</span>
 </code></pre></div>
 

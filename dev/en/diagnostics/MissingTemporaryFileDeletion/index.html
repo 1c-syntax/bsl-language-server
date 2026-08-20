@@ -2275,12 +2275,12 @@
 You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">"xml"</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 <span class="c1">// Not delete temporary file</span>
 </code></pre></div>
 <p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">&quot;xml&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s">"xml"</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 
 <span class="c1">// Work with file</span>
@@ -2290,7 +2290,7 @@ You should not rely on automatic deletion of files and folders before platform s
 <span class="k">Try</span>
    <span class="nb">DeleteFiles</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 <span class="nv">Catch</span>
-   <span class="nb">WriteLogEvent</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">&#39;</span><span class="s">My subsystem.Action</span><span class="se">&#39;</span><span class="s">&quot;</span><span class="p">),</span> <span class="nv">EventLogLevel</span><span class="o">.</span><span class="nv">Error</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nb">DetailErrorDescription</span><span class="p">(</span><span class="nb">ErrorInfo</span><span class="p">()));</span>
+   <span class="nb">WriteLogEvent</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">"</span><span class="na">ru</span><span class="s"> </span><span class="o">=</span><span class="s"> </span><span class="se">'</span><span class="s">My subsystem.Action</span><span class="se">'</span><span class="s">"</span><span class="p">),</span> <span class="nv">EventLogLevel</span><span class="o">.</span><span class="nv">Error</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nb">DetailErrorDescription</span><span class="p">(</span><span class="nb">ErrorInfo</span><span class="p">()));</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Nuances">Nuances<a class="headerlink" href="#Nuances" title="Permanent link">&para;</a></h2>
@@ -2314,8 +2314,8 @@ You should not rely on automatic deletion of files and folders before platform s
 <span class="c1">// BSLLS:MissingTemporaryFileDeletion-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingTemporaryFileDeletion&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;searchDeleteFileMethod&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile|УдалитьФайлыАсинх|DeleteFilesAsync|ПереместитьФайлАсинх|MoveFileAsync&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"MissingTemporaryFileDeletion"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"searchDeleteFileMethod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile|УдалитьФайлыАсинх|DeleteFilesAsync|ПереместитьФайлАсинх|MoveFileAsync"</span>
 <span class="p">}</span>
 </code></pre></div>
 
