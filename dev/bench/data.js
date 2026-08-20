@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787262520115,
+  "lastUpdate": 1787265814743,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42842,6 +42842,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.063975643478742",
             "extra": "mean: 104.16328914960225 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "d4a275c88ed17a52eb190b2357f6b14e56db5ca8",
+          "message": "revert: fix(types): проход доразрешения пересчитывает устаревшие значения\n\nОткат d5f1219008: коммит попал в develop по ошибке, минуя ревью. В\nрепозитории push.default=upstream, а ветка была создана от origin/develop,\nпоэтому её upstream — develop, и `git push -u origin <ветка>` отправил её\nне в одноимённую ветку, а в develop.\n\nСама правка не отменяется по существу и вернётся через пулл-реквест.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01V5FjGhk6RPY2sz9wU4R7rk",
+          "timestamp": "2026-08-20T23:35:01+02:00",
+          "tree_id": "d1e1d6f38d8d2a67cfc515a42f8360bcdd25a782",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d4a275c88ed17a52eb190b2357f6b14e56db5ca8"
+        },
+        "date": 1787265801953,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.71404759089152,
+            "unit": "sec",
+            "range": "stddev: 0.792970854689392",
+            "extra": "mean: 104.71404759089152 sec\nrounds: 3"
           }
         ]
       }
