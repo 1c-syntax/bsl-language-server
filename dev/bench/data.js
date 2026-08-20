@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787155203783,
+  "lastUpdate": 1787262520115,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42811,6 +42811,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.374308789338328",
             "extra": "mean: 104.57963299751282 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "d5f1219008ea1819e68907e8bfa5c8544af850d7",
+          "message": "fix(types): проход доразрешения пересчитывает устаревшие значения\n\nМетод пересчитывался проходом, только если сам попал в очередь отложенных,\nа попадал он туда по признакам, снятым в момент своего расчёта. Если\nзависимость тогда выглядела посчитанной, а обогатилась позже, вызывающий\nоб этом не узнавал: разнос по потребителям во время прохода отключён, а\nпорядок обработки строится по графу связей, который сам достраивается по\nходу прохода.\n\nЗамер зондом на ssl_3_1: 761-862 метода из ~6700 в каждом прогоне были\nпосчитаны раньше последнего изменения своей зависимости, и 13 из 16\nключей индекса, реально разошедшихся между прогонами, приходились на них.\n\nИндексатор ведёт свои часы: у метода запоминается отметка на начало\nрасчёта, у документа - отметка последнего изменения значений в нём. В\nконце каждой волны прохода в очередь добираются те, чья зависимость\nизменилась после них. Отметка снимается до расчёта: значение,\nобогатившееся во время расчёта, вызывающий застать не мог.\n\nМерцание замечаний на ssl_3_1 (по 4 прогона): 22 -> 2. Попутно ушли ~270\nложных UnknownMember: значения, застревавшие бедными, давали замечания на\nсуществующих членах. Цена - около +20% времени анализа (71-74с -> 86-91с).\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01V5FjGhk6RPY2sz9wU4R7rk\n(cherry picked from commit cbed84da556e0f404ba64e1dcbd3d7a1216b90b5)",
+          "timestamp": "2026-08-20T23:29:58+02:00",
+          "tree_id": "c959716a1f37876aa0f5ebf39445bdb6eb7f7a48",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d5f1219008ea1819e68907e8bfa5c8544af850d7"
+        },
+        "date": 1787262495348,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.16328914960225,
+            "unit": "sec",
+            "range": "stddev: 2.063975643478742",
+            "extra": "mean: 104.16328914960225 sec\nrounds: 3"
           }
         ]
       }
