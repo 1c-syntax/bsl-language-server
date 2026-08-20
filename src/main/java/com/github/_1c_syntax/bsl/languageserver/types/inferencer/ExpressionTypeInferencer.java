@@ -859,7 +859,11 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet recursiveKnot(MethodSymbol method, InferenceContext ctx) {
     var approximation = ctx.inProgress.get(method);
-    var known = approximation == null ? symbolTypeIndex.getReturnTypes(method) : approximation;
+    // Приближения на руках нет — значит, метод считается прямо сейчас этим же расчётом, и
+    // о нём пока не известно ничего. Прочитать про него из индекса значит взять то, что
+    // успел положить туда чужой поток: результат стал бы зависеть от того, как далеко
+    // продвинулось наполнение области. Уточняющий проход поднимет значение снизу сам.
+    var known = approximation != null ? approximation : TypeSet.EMPTY;
     if (known.isEmpty()) {
       return TypeSet.EMPTY;
     }
@@ -979,7 +983,7 @@ public class ExpressionTypeInferencer {
       ctx.consulted.addAll(refining.consulted);
       ctx.dependencies.addAll(refining.dependencies);
       ctx.sawMissing = ctx.sawMissing || refining.sawMissing;
-      if (refined.isEmpty() || refined.getAllFieldNames().equals(current.getAllFieldNames())) {
+      if (refined.isEmpty() || refined.equals(current)) {
         return refined.isEmpty() ? current : refined;
       }
       current = refined;
