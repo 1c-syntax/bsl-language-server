@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
@@ -60,12 +61,11 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
       return Data.empty();
     }
 
-    var file = new File(uri);
-    if (!file.exists()) {
-      return Data.empty();
-    }
-
     try {
+      var file = Path.of(uri).toFile();
+      if (!file.exists()) {
+        return Data.empty();
+      }
       return computeWithGit(file);
     } catch (Exception e) {
       LOGGER.debug("Failed to compute git blame for {}", uri, e);

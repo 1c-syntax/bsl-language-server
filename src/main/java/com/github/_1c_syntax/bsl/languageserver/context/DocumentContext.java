@@ -50,7 +50,6 @@ import lombok.Locked;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -61,10 +60,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -420,9 +420,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   protected void rebuildFromFileSystem() {
     try {
-      var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+      var newContent = Files.readString(Path.of(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
-    } catch (IOException e) {
+    } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
     }
   }

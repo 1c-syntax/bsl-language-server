@@ -294,6 +294,22 @@ class DocumentContextTest {
     assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
   }
 
+  @Test
+  void rebuildFromFileSystemDoesNotThrowOnUriWithAuthority() {
+    // given: LSP-клиент на UNC отдаёт file://host/share/... — у URI есть authority.
+    // new File(uri) бросает IllegalArgumentException и рвёт populateContext.
+    var uri = URI.create("file://192.168.113.131/share/does-not-exist.bsl");
+    var documentContext = TestUtils.getDocumentContext(
+      uri,
+      "Процедура Тест() КонецПроцедуры",
+      TestUtils.getRegisteredServerContext()
+    );
+
+    // when-then: нет файла → IOException; на Unix Path.of(file://host/...) → IAE.
+    // Оба логируются, populate не рвётся.
+    assertThatCode(documentContext::rebuildFromFileSystem).doesNotThrowAnyException();
+  }
+
   @SneakyThrows
   public DocumentContext getDocumentContext() {
 
