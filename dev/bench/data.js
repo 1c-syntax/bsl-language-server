@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787265814743,
+  "lastUpdate": 1787313527595,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42873,6 +42873,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.792970854689392",
             "extra": "mean: 104.71404759089152 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "82e8b3009423a08bf2a867e54f03cb0f393e085a",
+          "message": "Merge pull request #4482 from sbodyachevskiy666/fix/unc-rebuild-from-filesystem\n\nfix(context): читать модули по UNC через Path.of",
+          "timestamp": "2026-08-21T13:39:40+02:00",
+          "tree_id": "bb7fd7e325cf89ef2f79d6df64c055ade606f4d2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/82e8b3009423a08bf2a867e54f03cb0f393e085a"
+        },
+        "date": 1787313512434,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 103.81675680478413,
+            "unit": "sec",
+            "range": "stddev: 0.824823284154827",
+            "extra": "mean: 103.81675680478413 sec\nrounds: 3"
           }
         ]
       }
