@@ -305,7 +305,8 @@ class DocumentContextTest {
       TestUtils.getRegisteredServerContext()
     );
 
-    // when-then: файл может отсутствовать (IOException логируется), но не IAE.
+    // when-then: нет файла → IOException; на Unix Path.of(file://host/...) → IAE.
+    // Оба логируются, populate не рвётся.
     assertThatCode(documentContext::rebuildFromFileSystem).doesNotThrowAnyException();
   }
 

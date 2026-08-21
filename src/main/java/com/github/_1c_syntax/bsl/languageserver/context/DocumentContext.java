@@ -422,7 +422,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
     try {
       var newContent = Files.readString(Path.of(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
-    } catch (IOException e) {
+    } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
     }
   }
