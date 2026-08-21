@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
@@ -60,12 +61,11 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
       return Data.empty();
     }
 
-    var file = new File(uri);
-    if (!file.exists()) {
-      return Data.empty();
-    }
-
     try {
+      var file = Absolute.path(uri).toFile();
+      if (!file.exists()) {
+        return Data.empty();
+      }
       return computeWithGit(file);
     } catch (Exception e) {
       LOGGER.debug("Failed to compute git blame for {}", uri, e);
