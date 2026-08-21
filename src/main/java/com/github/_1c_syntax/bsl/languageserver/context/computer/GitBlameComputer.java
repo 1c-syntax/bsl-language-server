@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
@@ -31,6 +30,7 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
@@ -62,7 +62,7 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
     }
 
     try {
-      var file = Absolute.path(uri).toFile();
+      var file = Path.of(uri).toFile();
       if (!file.exists()) {
         return Data.empty();
       }

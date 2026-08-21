@@ -43,7 +43,6 @@ import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -65,6 +64,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -420,7 +420,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   protected void rebuildFromFileSystem() {
     try {
-      var newContent = Files.readString(Absolute.path(uri), StandardCharsets.UTF_8);
+      var newContent = Files.readString(Path.of(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
     } catch (IOException e) {
       LOGGER.error("Can't rebuild content from uri", e);
