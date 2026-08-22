@@ -621,9 +621,27 @@ public class ExpressionTypeInferencer {
     if (byName != null) {
       return byName;
     }
-    TypeSet result = TypeSet.EMPTY;
+    return elementsOfSequences(leftTypes);
+  }
+
+  /**
+   * Элементы последовательностных коллекций получателя.
+   * <p>
+   * Структуроподобные пропускаются: их индексатор даёт значение по ключу, а элемент
+   * соответствия — пара «ключ и значение», и её отдают только обходу {@code Для Каждого}.
+   * Состав ключей здесь уже известен пустым, то есть тип значения неизвестен; подставить
+   * вместо него пару значило бы объявить у значения чужие члены, а его собственные —
+   * несуществующими.
+   *
+   * @param leftTypes типы получателя.
+   * @return объединение типов элементов; {@link TypeSet#EMPTY}, если элементов нет.
+   */
+  private static TypeSet elementsOfSequences(TypeSet leftTypes) {
+    var result = TypeSet.EMPTY;
     for (var ref : leftTypes.refs()) {
-      result = result.union(leftTypes.getElementTypes(ref));
+      if (!OpenDataObjectInference.isStructureOrMapLike(ref.qualifiedName())) {
+        result = result.union(leftTypes.getElementTypes(ref));
+      }
     }
     return result;
   }
