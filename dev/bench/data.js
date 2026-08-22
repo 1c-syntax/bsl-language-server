@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787387242648,
+  "lastUpdate": 1787388452170,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -42935,6 +42935,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7555672592435287",
             "extra": "mean: 105.15896685918172 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd84dd72869e18634e2ce53b6393d02192a8fd9e",
+          "message": "Merge pull request #4478 from 1c-syntax/fix/types-map-index-value\n\nfix(types): индексатор соответствия даёт значение, а не пару ключ-значение",
+          "timestamp": "2026-08-22T10:11:17+02:00",
+          "tree_id": "82ff36f2327bdf0728d19f983054141fb39086c3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cd84dd72869e18634e2ce53b6393d02192a8fd9e"
+        },
+        "date": 1787388439178,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.69488755861919,
+            "unit": "sec",
+            "range": "stddev: 3.258278185301943",
+            "extra": "mean: 105.69488755861919 sec\nrounds: 3"
           }
         ]
       }
