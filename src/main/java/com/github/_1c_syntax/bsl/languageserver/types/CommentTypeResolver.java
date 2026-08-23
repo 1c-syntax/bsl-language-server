@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
@@ -155,22 +156,58 @@ public class CommentTypeResolver implements VariableTypeSource {
     DocumentContext owner,
     FileType fileType
   ) {
-    var directRefs = new ArrayList<TypeRef>();
+    var direct = TypeSet.EMPTY;
     if (types != null) {
       for (var type : types) {
         var name = DescriptionTypes.resolveName(type);
-        if (!name.isBlank()) {
-          typeRegistry.resolve(name, fileType).ifPresent(directRefs::add);
+        if (name.isBlank()) {
+          continue;
+        }
+        var ref = typeRegistry.resolve(name, fileType).orElse(null);
+        if (ref != null) {
+          direct = direct.union(withElementTypes(ref, type, fileType));
         }
       }
     }
-    if (!directRefs.isEmpty()) {
-      return TypeSet.of(directRefs);
+    if (!direct.isEmpty()) {
+      return direct;
     }
     var result = TypeSet.EMPTY;
     for (var link : links) {
       result = result.union(symbolTypeIndex.resolveSeeReference(link.link(), owner, fileType));
     }
     return result;
+  }
+
+  /**
+   * Тип-голова вместе с типами элементов записи {@code Массив из Строка}.
+   * <p>
+   * Элементы навешиваются только там, где элемент коллекции сам по себе неизвестен
+   * ({@link TypeRegistry#getOwnElementTypes}): у {@code Массив} реестр не называет
+   * ничего, и объявленный тип занимает пустое место. Если же у коллекции элемент
+   * собственный — {@code КлючИЗначение} у {@code Соответствие},
+   * {@code ЭлементСпискаЗначений} у {@code СписокЗначений} — запись {@code из Строка}
+   * называет не элемент, а значение внутри него, и выразить это одной строкой нельзя.
+   * Реестровый элемент тогда точнее, объявленный отбрасывается.
+   *
+   * @param headRef  разрешённый тип-голова записи.
+   * @param type     описание типа из комментария.
+   * @param fileType язык, на котором резолвятся имена элементов.
+   * @return набор из одного типа-головы, при наличии — с типами элементов.
+   */
+  private TypeSet withElementTypes(TypeRef headRef, TypeDescription type, FileType fileType) {
+    var head = TypeSet.of(headRef);
+    if (!(type instanceof CollectionTypeDescription collection)
+      || !typeRegistry.getOwnElementTypes(headRef).isEmpty()) {
+      return head;
+    }
+    var elements = new ArrayList<TypeRef>();
+    for (var valueType : collection.valueTypes()) {
+      var name = DescriptionTypes.resolveName(valueType);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name, fileType).ifPresent(elements::add);
+      }
+    }
+    return elements.isEmpty() ? head : head.withElement(headRef, TypeSet.of(elements));
   }
 }
