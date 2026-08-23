@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787512905020,
+  "lastUpdate": 1787514281310,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43059,6 +43059,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9798133897410102",
             "extra": "mean: 106.67471671104431 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fb4b0e92f073e8c87d1964b117505da0b0ff4f7b",
+          "message": "Merge pull request #4476 from 1c-syntax/fix/types-outdated-values-recompute\n\nfix(types): проход доразрешения пересчитывает устаревшие значения",
+          "timestamp": "2026-08-23T20:23:23+02:00",
+          "tree_id": "4e283fdcdec73ec1f78e82d90b542e87b953ac4a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fb4b0e92f073e8c87d1964b117505da0b0ff4f7b"
+        },
+        "date": 1787514268227,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.22692783673604,
+            "unit": "sec",
+            "range": "stddev: 2.357830758760777",
+            "extra": "mean: 104.22692783673604 sec\nrounds: 3"
           }
         ]
       }
