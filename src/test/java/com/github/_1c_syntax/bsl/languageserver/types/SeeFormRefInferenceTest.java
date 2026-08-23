@@ -143,7 +143,10 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
     var row = at(documentContext, "ТипСтроки = СтрокаТаблицы", "ТипСтроки = ".length());
 
     // then: строка таблицы, а не сама таблица — такую же строку даёт «Список.ТекущиеДанные».
-    assertThat(names(row)).containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок");
+    // Тип строки — этого конкретного списка: колонки у него из его основной таблицы.
+    assertThat(names(row))
+      .containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок"
+        + ".Справочник.Справочник1.Форма.ФормаСписка.Список");
   }
 
   private DocumentContext documentWithFormReference() {

@@ -374,7 +374,10 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
     // «Список» смотрит на реквизит-динамический список, «ТабличнаяЧасть1» —
     // на табличную часть объекта (путь Объект.ТабличнаяЧасть1).
     var dynamicList = itemMemberType("Документ.Документ1.Форма.ФормаСписка", "Список");
-    assertThat(dynamicList.qualifiedName()).isEqualTo("ТаблицаФормы.ДинамическийСписок");
+    assertThat(typeRegistry.extensionsOf(dynamicList))
+      .as("таблица над динамическим списком получает списочное расширение")
+      .extracting(TypeRef::qualifiedName)
+      .contains("ТаблицаФормы.ДинамическийСписок");
     assertThat(names(typeRegistry.getMembers(dynamicList, FileType.BSL)))
       .as("собственные члены ТаблицаФормы")
       .contains("ТекущиеДанные", "Обновить")

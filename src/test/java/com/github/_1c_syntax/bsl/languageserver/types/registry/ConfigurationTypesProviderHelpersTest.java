@@ -329,7 +329,8 @@ class ConfigurationTypesProviderHelpersTest {
     var formTypesProvider = new FormTypesProvider(registry, formParametersResolver, recorderIndex,
       new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), new FormAttributeTypeIndex(),
       formDataTypesRegistrar,
-      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
+      new FormItemTypesRegistrar(registry, formDataTypesRegistrar,
+        new DynamicListTypesRegistrar(registry, formDataTypesRegistrar), typeFactory), typeFactory,
       new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
         recorderIndex),
       new StructureParameterFieldsRegistrar(registry));

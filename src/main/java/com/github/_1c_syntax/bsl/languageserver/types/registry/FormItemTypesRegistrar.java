@@ -82,6 +82,7 @@ class FormItemTypesRegistrar {
 
   private final TypeRegistry typeRegistry;
   private final FormDataTypesRegistrar formDataTypes;
+  private final DynamicListTypesRegistrar dynamicListTypes;
   private final FormTypeFactory typeFactory;
 
   /**
@@ -290,8 +291,9 @@ class FormItemTypesRegistrar {
    * <p>
    * Тип заводится и тогда, когда расширение пустое: он нужен как якорь для
    * {@code ТекущиеДанные} — вместо обобщённого {@code ДанныеФормыЭлементКоллекции}
-   * там оказывается строка именно этого вида данных. Колонки строки лягут на него же,
-   * когда mdclasses начнёт отдавать источник данных списка (mdclasses#671).
+   * там оказывается строка именно этого вида данных. Колонки на нём не лежат: они
+   * зависят от основной таблицы конкретного списка и лежат на его специализации
+   * (см. {@link DynamicListTypesRegistrar}), которая этот тип и расширяет.
    */
   private void registerRowDataKindType(TableDataKind dataKind, TypeRef tableRef) {
     var extensionName = FormPlatformTypes.rowDataExtensionName(dataKind);
@@ -338,12 +340,16 @@ class FormItemTypesRegistrar {
       return Map.of();
     }
     var declaredTypes = attributeTypesByName(data.getAttributes());
+    var dynamicLists = dynamicListTypes.prepareRows(data.getAttributes(), suffixRu);
     var result = new HashMap<String, TypeRef>();
     for (var element : data.getPlainElements()) {
       if (!(element instanceof FormTable) || element.getName().isBlank()) {
         continue;
       }
-      var rowRef = rowOf(element, attributeTypes, declaredTypes);
+      var dynamicList = dynamicListOf(element, dynamicLists);
+      var rowRef = dynamicList == null
+        ? rowOf(element, attributeTypes, declaredTypes)
+        : dynamicList.rowRef();
       var kindRef = tableTypeRef(element, declaredTypes);
       if (rowRef == null || kindRef == null) {
         continue;
@@ -354,10 +360,56 @@ class FormItemTypesRegistrar {
       typeRegistry.registerDisplayName(tableRef, BilingualString.of(
         typeRegistry.displayName(kindRef, Language.RU),
         typeRegistry.displayName(kindRef, Language.EN)));
-      typeRegistry.registerMemberOverride(tableRef, () -> currentDataMembers(rowRef), FileType.BSL);
+      // Типы идентификатора строки считаются здесь, а не в источнике членов: под
+      // `ВыделенныеСтроки` регистрируется специализация массива, а регистрация изнутри
+      // `getMembers` сбивала бы epoch кэша членов во время его же пересчёта.
+      var members = tableMembers(rowRef, dynamicList);
+      typeRegistry.registerMemberOverride(tableRef, () -> members, FileType.BSL);
       result.put(element.getName().toLowerCase(Locale.ROOT), tableRef);
     }
     return Map.copyOf(result);
+  }
+
+  /**
+   * Динамический список, на который смотрит таблица: {@code ПутьКДанным} у неё — имя
+   * реквизита-списка целиком, вглубь списка таблица не смотрит.
+   *
+   * @return разобранный список; {@code null}, если таблица показывает не список либо
+   *   источник данных списка неизвестен.
+   */
+  private static DynamicListTypesRegistrar.@Nullable DynamicList dynamicListOf(
+    FormElement element, Map<String, DynamicListTypesRegistrar.DynamicList> dynamicLists) {
+    if (dynamicLists.isEmpty()) {
+      return null;
+    }
+    var dataPath = element instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
+    if (dataPath.isBlank() || dataPath.indexOf('.') >= 0) {
+      return null;
+    }
+    return dynamicLists.get(dataPath.toLowerCase(Locale.ROOT));
+  }
+
+  /**
+   * Члены конкретной таблицы формы: строка её данных, а у динамического списка ещё и
+   * идентификатор строки. Строку списка платформа адресует ключевым полем его основной
+   * таблицы — для ссылочной таблицы это ссылка, — а у прочих видов данных тип
+   * идентификатора от конкретной таблицы не зависит и стоит на типе вида данных
+   * (см. {@link #registerTableDataRules}).
+   */
+  private List<MemberDescriptor> tableMembers(TypeRef rowRef,
+                                              DynamicListTypesRegistrar.@Nullable DynamicList dynamicList) {
+    if (dynamicList == null) {
+      return currentDataMembers(rowRef);
+    }
+    var rowIdRef = dynamicList.rowIdRef();
+    var members = new ArrayList<>(currentDataMembers(rowRef));
+    members.add(FormPlatformTypes.platformProperty(CURRENT_ROW, rowIdRef, BilingualString.EMPTY));
+    members.add(FormPlatformTypes.platformProperty(CURRENT_PARENT, rowIdRef, BilingualString.EMPTY));
+    var selectedRowsRef = registerIdentifierArray(rowIdRef);
+    if (selectedRowsRef != null) {
+      members.add(FormPlatformTypes.platformProperty(SELECTED_ROWS, selectedRowsRef, BilingualString.EMPTY));
+    }
+    return List.copyOf(members);
   }
 
   /**
