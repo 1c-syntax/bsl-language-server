@@ -532,14 +532,20 @@ final class FormPlatformTypes {
    * на рантайме — один {@code ПолеФормы}: вид поля хранится в его свойстве
    * {@code Вид}, а не в типе. Свойства, специфичные для вида, живут не здесь, а в
    * типе-расширении элемента — см. {@link #itemExtensionTypeName}.
+   * <p>
+   * Контекстное меню и расширенная подсказка — не самостоятельные виды, а части
+   * чужого элемента, и на рантайме это обычные группа и декорация. Своего расширения
+   * у них поэтому нет: специфику им даёт тот вид, которым они на самом деле являются
+   * (командная панель, надпись), а он в {@code Form.xml} не записан.
    */
   static @Nullable String itemTypeName(FormElementType elementType) {
     return switch (elementType) {
       case SEARCH_STRING_ADDITION, SEARCH_CONTROL_ADDITION, VIEW_STATUS_ADDITION ->
         FORM_ITEM_ADDITION;
-      case BUTTON_GROUP, COLUMN_GROUP, COMMAND_BAR, PAGE, PAGES, POPUP, USUAL_GROUP -> FORM_GROUP;
+      case BUTTON_GROUP, COLUMN_GROUP, COMMAND_BAR, CONTEXT_MENU, PAGE, PAGES, POPUP, USUAL_GROUP ->
+        FORM_GROUP;
       case COMMAND_BAR_BUTTON, COMMAND_BAR_HYPERLINK, HYPERLINK, USUAL_BUTTON -> FORM_BUTTON;
-      case LABEL_DECORATION, PICTURE_DECORATION -> FORM_DECORATION;
+      case EXTENDED_TOOLTIP, LABEL_DECORATION, PICTURE_DECORATION -> FORM_DECORATION;
       case TABLE -> FORM_TABLE;
       case UNKNOWN -> null;
       default -> FORM_FIELD;
