@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787510213045,
+  "lastUpdate": 1787512905020,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43028,6 +43028,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6930619451506095",
             "extra": "mean: 104.70435269673665 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "42ebea527cd210911d61bf16005128b46d38fab4",
+          "message": "Merge pull request #4385 from BaniBaushev/feat/code-lens-resolve-support\n\nfeat(code-lens): учитывать client resolveSupport для CodeLens (LSP 3.18)",
+          "timestamp": "2026-08-23T20:20:36+02:00",
+          "tree_id": "cf389c352d54118e160ba46b3a4f57b1a3d955d7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/42ebea527cd210911d61bf16005128b46d38fab4"
+        },
+        "date": 1787512900364,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.67471671104431,
+            "unit": "sec",
+            "range": "stddev: 1.9798133897410102",
+            "extra": "mean: 106.67471671104431 sec\nrounds: 3"
           }
         ]
       }
