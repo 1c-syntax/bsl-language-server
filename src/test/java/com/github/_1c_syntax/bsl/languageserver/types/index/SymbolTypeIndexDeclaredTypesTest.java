@@ -75,6 +75,7 @@ class SymbolTypeIndexDeclaredTypesTest {
     when(typeRegistry.intern(TypeKind.USER, "Массив"))
       .thenReturn(new TypeRef(TypeKind.USER, "Массив"));
     when(typeRegistry.getDefaultElementTypes(any())).thenReturn(TypeSet.EMPTY);
+    when(typeRegistry.getOwnElementTypes(any())).thenReturn(TypeSet.EMPTY);
     index = new SymbolTypeIndex(typeRegistry, mock(FormByNameResolver.class));
     documentContext = TestUtils.getDocumentContext(MODULE);
   }

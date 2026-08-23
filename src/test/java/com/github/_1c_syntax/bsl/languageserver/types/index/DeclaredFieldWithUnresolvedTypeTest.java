@@ -76,6 +76,7 @@ class DeclaredFieldWithUnresolvedTypeTest {
     when(typeRegistry.resolve("Структура")).thenReturn(Optional.of(STRUCTURE));
     when(typeRegistry.resolveSet(anyString())).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.getDefaultElementTypes(any())).thenReturn(TypeSet.EMPTY);
+    when(typeRegistry.getOwnElementTypes(any())).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.intern(any(), anyString()))
       .thenAnswer(invocation -> new TypeRef(invocation.getArgument(0), invocation.getArgument(1)));
     index = new SymbolTypeIndex(typeRegistry, mock(FormByNameResolver.class));
