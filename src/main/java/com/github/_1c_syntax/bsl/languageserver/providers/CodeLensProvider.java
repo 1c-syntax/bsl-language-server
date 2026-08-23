@@ -27,12 +27,16 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensCapabilities;
+import org.eclipse.lsp4j.CodeLensResolveSupportCapabilities;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.jspecify.annotations.Nullable;
@@ -64,17 +68,61 @@ public class CodeLensProvider {
   private final JsonMapper jsonMapper;
 
   /**
+   * Клиент заявил поддержку резолва команд линз
+   * ({@code textDocument.codeLens.resolveSupport} со свойством {@code command}, LSP 3.18).
+   */
+  private boolean commandResolveSupport;
+
+  /**
+   * Клиент заявил поддержку запроса {@code workspace/codeLens/refresh}.
+   */
+  private boolean refreshSupport;
+
+  /**
+   * Обработчик события {@link LanguageServerInitializedEvent}.
+   * <p>
+   * Кэширует клиентские capabilities, используемые при обработке запросов.
+   */
+  @EventListener(LanguageServerInitializedEvent.class)
+  public void handleInitializeEvent() {
+    commandResolveSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getCodeLens)
+      .map(CodeLensCapabilities::getResolveSupport)
+      .map(CodeLensResolveSupportCapabilities::getProperties)
+      .map(properties -> properties.contains("command"))
+      .orElse(false);
+    refreshSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getCodeLens)
+      .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
+      .orElse(false);
+  }
+
+  /**
    * Получение списка {@link CodeLens} в документе.
+   * <p>
+   * Если клиент заявил поддержку резолва команд линз
+   * ({@code textDocument.codeLens.resolveSupport} со свойством {@code command}, LSP 3.18),
+   * линзы возвращаются неразрешёнными — команда заполняется позже запросом
+   * {@code codeLens/resolve}. Иначе линзы разрешаются сразу, на месте:
+   * полагаться на резолв для такого клиента нельзя.
    *
    * @param documentContext Контекст документа.
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return enabledCodeLensSuppliersProvider.getObject().stream()
+    var codeLenses = enabledCodeLensSuppliersProvider.getObject().stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+
+    if (!commandResolveSupport) {
+      codeLenses.forEach(codeLens -> resolveEagerly(documentContext, codeLens));
+    }
+
+    return codeLenses;
   }
 
   /**
@@ -98,6 +146,19 @@ public class CodeLensProvider {
     var resolvedCodeLens = codeLensSupplier.resolve(documentContext, unresolved, data);
     resolvedCodeLens.setData(null);
     return resolvedCodeLens;
+  }
+
+  /**
+   * Разрешить линзу на месте — для клиентов без поддержки {@code codeLens/resolve}.
+   * Данные линзы очищаются, как и при обычном резолве: резолвить такую линзу клиент не станет.
+   *
+   * @param documentContext Контекст документа.
+   * @param codeLens        Неразрешённая линза с данными.
+   */
+  private void resolveEagerly(DocumentContext documentContext, CodeLens codeLens) {
+    if (codeLens.getData() instanceof CodeLensData data) {
+      resolveCodeLens(documentContext, codeLens, data);
+    }
   }
 
   /**
@@ -141,13 +202,7 @@ public class CodeLensProvider {
    * Отправить запрос на обновление линз кода.
    */
   public void refreshCodeLenses() {
-    boolean clientSupportsRefreshCodeLenses = clientCapabilitiesHolder.getCapabilities()
-      .map(ClientCapabilities::getWorkspace)
-      .map(WorkspaceClientCapabilities::getCodeLens)
-      .map(CodeLensWorkspaceCapabilities::getRefreshSupport)
-      .orElse(false);
-
-    if (!clientSupportsRefreshCodeLenses) {
+    if (!refreshSupport) {
       return;
     }
 
