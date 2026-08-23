@@ -2654,13 +2654,13 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">codeLens</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>resolveProvider = true</td>
+<td>resolveProvider = true<br />Если клиент не заявил resolveSupport со свойством <code>command</code>, команды линз заполняются сразу</td>
 <td>да</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">codeLens/resolve</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td></td>
+<td>Ленивое дотягивание команд линз при поддержке клиентом resolveSupport со свойством <code>command</code></td>
 <td></td>
 </tr>
 <tr>

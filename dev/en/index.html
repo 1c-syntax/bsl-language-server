@@ -2654,13 +2654,13 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">codeLens</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>resolveProvider = true</td>
+<td>resolveProvider = true<br />If the client does not advertise resolveSupport with the <code>command</code> property, lens commands are resolved eagerly</td>
 <td>yes</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">codeLens/resolve</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td></td>
+<td>Lazy resolution of lens commands when the client advertises resolveSupport with the <code>command</code> property</td>
 <td></td>
 </tr>
 <tr>
