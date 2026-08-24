@@ -83,17 +83,26 @@ class DynamicListTypesRegistrar {
   Map<String, DynamicList> prepareRows(List<FormAttribute> attributes, String suffixRu) {
     var result = LinkedHashMap.<String, DynamicList>newLinkedHashMap(attributes.size());
     for (var attribute : attributes) {
-      if (!(attribute instanceof FormDynamicListAttribute list) || list.getName().isBlank()) {
-        continue;
+      var row = prepareRow(attribute, suffixRu);
+      if (row != null) {
+        result.put(attribute.getName().toLowerCase(Locale.ROOT), row);
       }
-      var sourceRef = dataSourceRef(list);
-      if (sourceRef == null) {
-        continue;
-      }
-      var rowRef = registerRow(list, suffixRu, sourceRef);
-      result.put(list.getName().toLowerCase(Locale.ROOT), new DynamicList(rowRef, sourceRef));
     }
     return Map.copyOf(result);
+  }
+
+  /**
+   * Строка одного реквизита.
+   *
+   * @return строка списка; {@code null}, если реквизит не динамический список, безымянный
+   *   либо источник его данных неизвестен.
+   */
+  private @Nullable DynamicList prepareRow(FormAttribute attribute, String suffixRu) {
+    if (!(attribute instanceof FormDynamicListAttribute list) || list.getName().isBlank()) {
+      return null;
+    }
+    var sourceRef = dataSourceRef(list);
+    return sourceRef == null ? null : new DynamicList(registerRow(list, suffixRu, sourceRef), sourceRef);
   }
 
   /**

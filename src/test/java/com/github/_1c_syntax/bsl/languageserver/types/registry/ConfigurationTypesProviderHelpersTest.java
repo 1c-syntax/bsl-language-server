@@ -330,7 +330,8 @@ class ConfigurationTypesProviderHelpersTest {
       new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), new FormAttributeTypeIndex(),
       formDataTypesRegistrar,
       new FormItemTypesRegistrar(registry, formDataTypesRegistrar,
-        new DynamicListTypesRegistrar(registry, formDataTypesRegistrar), typeFactory), typeFactory,
+        new DynamicListTypesRegistrar(registry, formDataTypesRegistrar),
+        new TableDataMembers(registry, formDataTypesRegistrar), typeFactory), typeFactory,
       new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
         recorderIndex),
       new StructureParameterFieldsRegistrar(registry));
