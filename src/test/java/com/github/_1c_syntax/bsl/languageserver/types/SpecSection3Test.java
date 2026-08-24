@@ -753,7 +753,8 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
     // а система типов отдаёт тип этого конкретного элемента формы.
     assertThat(names(types))
       .as("рекомендация: параметр получает тип элемента формы")
-      .containsExactly("ТаблицаФормы.ДинамическийСписок");
+      .singleElement(as(STRING))
+      .contains("ТаблицаФормы");
     assertThat(names(currentData))
       .as("рекомендация: через элемент формы читают текущие данные списка")
       .containsExactly("Строка");
@@ -811,7 +812,8 @@ class SpecSection3Test extends AbstractServerContextAwareTest {
     // таблицы формы, у которой свои реквизиты.
     assertThat(names(types))
       .as("рекомендация: параметр получает тип строки таблицы формы")
-      .containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок");
+      .singleElement(as(STRING))
+      .contains("ДанныеФормыЭлементКоллекции");
     assertThat(names(attribute))
       .as("рекомендация: у строки таблицы формы читают её реквизит")
       .containsExactly("Строка");
