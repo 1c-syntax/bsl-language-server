@@ -195,6 +195,20 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dimensionTableIsFoundByItsRussianNameToo() {
+    // when
+    // Так её называет запрос: имена видов объектов в нём русские.
+    var fields = resolver.fields(
+      "ВнешнийИсточникДанных.ВнешнийИсточникДанных1.Куб.Куб1.ТаблицаИзмерения.ТаблицаИзмерения1");
+
+    // then
+    assertThat(names(fields))
+      .contains("Поле1", "Ссылка", "Представление")
+      .as("родитель есть только у иерархической таблицы измерения")
+      .doesNotContain("Родитель");
+  }
+
+  @Test
   void hierarchicalDimensionTableHasAParent() {
     // when
     var fields = resolver.fields(
