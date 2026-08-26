@@ -62,6 +62,11 @@ class DynamicListTypesRegistrar {
   private static final String DYNAMIC_LIST_ROW_KEY = "КлючСтрокиДинамическогоСписка";
 
   /**
+   * Поле, которым таблица называет ссылку на свою запись.
+   */
+  private static final String REF_RU = "Ссылка";
+
+  /**
    * Стандартная картинка строки. Полем таблицы она не является — в запросе её не
    * выбрать, — но платформа называет её стандартным реквизитом строки списка
    * наравне со {@code Ссылка}, {@code ЭтоГруппа} и {@code Родитель}
@@ -171,6 +176,12 @@ class DynamicListTypesRegistrar {
    * ({@code Catalog.Номенклатура}), а {@code Справочник.X}/{@code Catalog.X}
    * в реестре ведёт на ссылочный тип: имя резолвится напрямую. У виртуальной
    * таблицы регистра ссылочного типа нет.
+   * <p>
+   * Именем разрешается не всякая таблица: {@code ExternalDataSource.X.Table.Y}
+   * псевдонимом типа не является. Ссылку такой строки называет поле
+   * {@code Ссылка} самой таблицы — его и спрашиваем, но только когда имя не
+   * разрешилось: разбирать таблицу под каждый из тысяч списков конфигурации на
+   * регистрации формы слишком дорого.
    */
   private @Nullable TypeRef mainTableRef(FormDynamicListAttribute list) {
     if (list.isCustomQuery()) {
@@ -179,7 +190,19 @@ class DynamicListTypesRegistrar {
       return null;
     }
     var mainTable = list.getMainTable();
-    return mainTable.isBlank() ? null : typeRegistry.resolve(mainTable).orElse(null);
+    if (mainTable.isBlank()) {
+      return null;
+    }
+    return typeRegistry.resolve(mainTable).orElseGet(() -> refFieldRef(mainTable));
+  }
+
+  /**
+   * Тип поля {@code Ссылка} таблицы. У необъектной таблицы такого поля нет
+   * вовсе — тогда ссылки у строки нет, и адресует её вид ключа.
+   */
+  private @Nullable TypeRef refFieldRef(String tableName) {
+    var types = QueryFieldChain.memberTypes(queryTableResolver.fields(tableName), REF_RU);
+    return types.size() == 1 ? types.refs().iterator().next() : null;
   }
 
   /**

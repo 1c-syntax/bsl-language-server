@@ -494,6 +494,26 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void listOverAnExternalTableIsIdentifiedByItsRef() {
+    // given
+    // Имя таблицы внешнего источника псевдонимом типа не является, поэтому
+    // ссылку строки называет поле Ссылка самой таблицы, а у необъектной
+    // таблицы такого поля нет вовсе.
+    var objectTable = listOver("ObjectTable", "ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица1");
+    var nonobjectTable = listOver("NonobjectTable", "ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица2");
+
+    // when
+    var rows = dynamicListTypes.prepareRows(List.of(objectTable, nonobjectTable), "Тест");
+
+    // then
+    assertThat(qualifiedName(rows, "ObjectTable"))
+      .isEqualTo("ВнешнийИсточникДанныхТаблицаСсылка.ВнешнийИсточникДанных1.Таблица1");
+    assertThat(rows.get("nonobjecttable").rowIdRef())
+      .as("у необъектной таблицы ссылки нет — строку адресует вид ключа")
+      .isNull();
+  }
+
+  @Test
   void unknownTableHasNoFields() {
     assertThat(resolver.fields("1:0d7c2c47-4b5e-4b0e-8d1a-000000000000")).isEmpty();
   }
@@ -553,6 +573,13 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .mainTable("Catalog.Справочник1")
       .keyType(keyType)
       .keyFields(keyFields)
+      .build();
+  }
+
+  private static FormDynamicListAttribute listOver(String name, String mainTable) {
+    return FormDynamicListAttribute.builder()
+      .name(name)
+      .mainTable(mainTable)
       .build();
   }
 
