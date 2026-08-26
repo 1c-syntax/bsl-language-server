@@ -133,6 +133,7 @@ public class QueryTableResolver {
     }
     var segments = tableName.split("\\.", -1);
     MdoReference reference = null;
+    var consumed = 0;
     for (var i = 0; i + 1 < segments.length; i += 2) {
       var mdoType = MDOType.fromValue(segments[i]);
       if (mdoType.isEmpty()) {
@@ -141,8 +142,15 @@ public class QueryTableResolver {
       reference = reference == null
         ? MdoReference.create(mdoType.get(), segments[i + 1])
         : MdoReference.create(reference, mdoType.get(), segments[i + 1]);
+      consumed = i + 2;
     }
-    return reference == null ? null : configuration.findChild(reference).orElse(null);
+    if (reference == null || segments.length - consumed > 1) {
+      // Хвост длиннее одного сегмента — имя не разобрано: одним сегментом
+      // называется виртуальная таблица, а больше одного оставляет только
+      // неопознанная пара, и объект тогда нашёлся бы не тот.
+      return null;
+    }
+    return configuration.findChild(reference).orElse(null);
   }
 
   /**

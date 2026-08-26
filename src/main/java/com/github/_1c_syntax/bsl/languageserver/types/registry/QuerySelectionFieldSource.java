@@ -276,6 +276,13 @@ class QuerySelectionFieldSource implements QueryTableFieldSource {
      * параметра.
      */
     private static String tableNameOf(SDBLParser.DataSourceContext dataSource) {
+      var external = dataSource.externalDataSourceTable();
+      if (external != null) {
+        // Имя такой таблицы разбирается отдельным правилом целиком
+        // ({@code ВнешнийИсточникДанных.X.Таблица.Y}), и собирать его заново
+        // из частей незачем.
+        return external.getText();
+      }
       var virtualTable = dataSource.virtualTable();
       if (virtualTable != null) {
         return virtualTable.mdo() == null || virtualTable.virtualTableName == null

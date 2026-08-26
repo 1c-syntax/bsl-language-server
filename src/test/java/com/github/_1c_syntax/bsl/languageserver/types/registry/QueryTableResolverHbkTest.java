@@ -147,6 +147,24 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void customQueryOverAnExternalTableTypesItsFields() {
+    // given
+    // Источник таблицы внешнего источника пишется четырьмя сегментами.
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Таб.Поле1 КАК Поле1
+      ИЗ
+        ВнешнийИсточникДанных.ВнешнийИсточникДанных1.Таблица.Таблица1 КАК Таб""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields)).containsExactly("Поле1");
+    assertThat(qualifiedNames(field(fields, "Поле1"))).containsExactly("Строка");
+  }
+
+  @Test
   void nonobjectExternalTableHasNeitherRefNorPresentation() {
     // when
     var fields = resolver.fields("ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица2");
