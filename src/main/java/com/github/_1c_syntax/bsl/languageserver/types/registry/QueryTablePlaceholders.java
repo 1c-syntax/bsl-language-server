@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 
 import java.util.List;
-import java.util.stream.IntStream;
 
 /**
  * Что именно платформа называет плейсхолдером в имени поля таблицы запросов.
@@ -49,15 +48,6 @@ final class QueryTablePlaceholders {
   static final String JOURNAL_COLUMN = "Имя графы журнала";
   static final String ADDRESSING_ATTRIBUTE = "Имя реквизита адресации";
   static final String FIELD = "Имя поля";
-  static final String EXT_DIMENSION_NUMBER = "Номер субконто";
-
-  /**
-   * Сколько субконто платформа допускает у плана счетов. Само число — свойство
-   * плана счетов ({@code MaxExtDimensionCount}), но в метаданных его нет;
-   * стандартные реквизиты регистра бухгалтерии mdclasses заполняет из того же
-   * допущения — {@code Субконто1}..{@code Субконто3}.
-   */
-  private static final int EXT_DIMENSION_COUNT = 3;
 
   private QueryTablePlaceholders() {
   }
@@ -83,16 +73,18 @@ final class QueryTablePlaceholders {
 
   /**
    * Имена для подстановки в плейсхолдер внутри имени поля
-   * ({@code <Имя ресурса>Оборот}, {@code Субконто<Номер субконто>}).
+   * ({@code <Имя ресурса>Оборот} → {@code СуммаОборот}).
+   * <p>
+   * Нумерованный плейсхолдер ({@code Субконто<Номер субконто>}) не
+   * разворачивается: сколько субконто у счёта, статически не известно —
+   * в пользовательском режиме их может стать больше, чем объявлено
+   * в конфигурации.
    *
    * @param placeholder имя плейсхолдера без угловых скобок.
    * @param request     запрос полей.
    * @return подставляемые имена в порядке объявления; пусто, если подставлять нечего.
    */
   static List<String> expansionValues(String placeholder, QueryTableRequest request) {
-    if (EXT_DIMENSION_NUMBER.equals(placeholder)) {
-      return IntStream.rangeClosed(1, EXT_DIMENSION_COUNT).mapToObj(String::valueOf).toList();
-    }
     var md = request.mdo();
     if (md == null) {
       return List.of();
