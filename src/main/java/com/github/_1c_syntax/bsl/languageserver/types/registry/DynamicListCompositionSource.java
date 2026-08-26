@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
+import com.github._1c_syntax.bsl.mdo.support.DynamicListFieldKind;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.Order;
@@ -41,8 +42,11 @@ import java.util.List;
  * 18 087), поэтому чаще всего запись даёт только имя, а тип поле получает от
  * следующего источника.
  * <p>
- * Поля со сгруппированным путём ({@code СубконтоДт.СубконтоДт1}) колонкой
- * строки не становятся: обратиться к ним можно только через владельца группы.
+ * Колонками строки становятся только сами поля: вложенный набор данных — это
+ * группа, под которой лежат поля с составным путём ({@code Планы.ЦФО}), а не
+ * колонка, и папка — тоже не колонка. Поля со сгруппированным путём колонкой не
+ * становятся по той же причине: обратиться к ним можно только через владельца
+ * группы.
  */
 @Component
 @WorkspaceScope
@@ -71,6 +75,9 @@ class DynamicListCompositionSource implements QueryTableFieldSource {
   }
 
   private @Nullable MemberDescriptor member(FormDynamicListField field) {
+    if (field.getKind() != DynamicListFieldKind.FIELD) {
+      return null;
+    }
     var name = field.getDataPath().isBlank() ? field.getName() : field.getDataPath();
     if (name.isBlank() || name.contains(".")) {
       return null;

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
+import com.github._1c_syntax.bsl.mdo.support.DynamicListFieldKind;
 import com.github._1c_syntax.bsl.mdo.support.DynamicListKeyType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
@@ -256,6 +257,32 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(fields).isEmpty();
+  }
+
+  @Test
+  void nestedDataSetIsNotAColumn() {
+    // given
+    // Вложенный набор данных — группа, под которой лежат поля с составным
+    // путём; колонкой строки не является ни он сам, ни они.
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .customQuery(true)
+      .queryText("ВЫБРАТЬ Спр.Ссылка КАК Ссылка ИЗ Справочник.Справочник1 КАК Спр")
+      .addFields(FormDynamicListField.builder()
+        .kind(DynamicListFieldKind.NESTED_DATA_SET).dataPath("Планы").name("Планы").build())
+      .addFields(FormDynamicListField.builder()
+        .dataPath("Планы.ЦФО").name("ЦФО").build())
+      .addFields(FormDynamicListField.builder()
+        .kind(DynamicListFieldKind.FOLDER).dataPath("Папка").name("Папка").build())
+      .build();
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields))
+      .containsExactly("Ссылка")
+      .doesNotContain("Планы", "ЦФО", "Папка");
   }
 
   @Test
