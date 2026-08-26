@@ -120,6 +120,77 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void externalDataSourceTableHasItsFieldsAndPlatformOnes() {
+    // when
+    var fields = resolver.fields("ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица1");
+
+    // then
+    assertThat(names(fields))
+      .as("поля таблицы — из метаданных, Ссылка и Представление объявляет платформа")
+      .contains("Поле1", "Ссылка", "Представление");
+    assertThat(qualifiedNames(field(fields, "Ссылка")))
+      .as("ссылка на элемент таблицы внешнего источника")
+      .containsExactly("ВнешнийИсточникДанныхТаблицаСсылка.ВнешнийИсточникДанных1.Таблица1");
+  }
+
+  @Test
+  void externalDataSourceCubeTableHasDimensionsAndResources() {
+    // when
+    var fields = resolver.fields("ExternalDataSource.ВнешнийИсточникДанных1.Cube.Куб1");
+
+    // then
+    assertThat(names(fields))
+      .as("поля таблицы куба — его измерения и ресурсы")
+      .contains("Измерение1")
+      .as("ни ссылки, ни представления у куба нет — таблица не объектная")
+      .doesNotContain("Ссылка", "Представление");
+  }
+
+  @Test
+  void nonobjectExternalTableHasNeitherRefNorPresentation() {
+    // when
+    var fields = resolver.fields("ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица2");
+
+    // then
+    assertThat(names(fields))
+      .as("поля таблицы на месте")
+      .contains("Поле1")
+      .as("ссылку и представление платформа даёт только объектной таблице")
+      .doesNotContain("Ссылка", "Представление");
+  }
+
+  @Test
+  void externalDataSourceDimensionTableIsFoundByItsWholeName() {
+    // when
+    var fields = resolver.fields(
+      "ExternalDataSource.ВнешнийИсточникДанных1.Cube.Куб1.DimensionTable.ТаблицаИзмерения1");
+
+    // then
+    assertThat(names(fields))
+      .as("имя таблицы измерения состоит из трёх пар «вид.имя»")
+      .contains("Поле1", "Ссылка", "Представление")
+      .as("родитель есть только у иерархической таблицы измерения")
+      .doesNotContain("Родитель");
+    assertThat(qualifiedNames(field(fields, "Ссылка")))
+      .containsExactly(
+        "ВнешнийИсточникДанныхКубТаблицаИзмеренияСсылка.ВнешнийИсточникДанных1.Куб1.ТаблицаИзмерения1");
+  }
+
+  @Test
+  void hierarchicalDimensionTableHasAParent() {
+    // when
+    var fields = resolver.fields(
+      "ExternalDataSource.ВнешнийИсточникДанных1.Cube.Куб3.DimensionTable.ТаблицаИзмерения2");
+
+    // then
+    assertThat(names(fields)).contains("Родитель");
+    assertThat(qualifiedNames(field(fields, "Родитель")))
+      .as("родитель — ссылка на элемент той же таблицы")
+      .containsExactly(
+        "ВнешнийИсточникДанныхКубТаблицаИзмеренияСсылка.ВнешнийИсточникДанных1.Куб3.ТаблицаИзмерения2");
+  }
+
+  @Test
   void sliceTableDropsFieldsThatTheSliceHasNot() {
     // when
     var fields = resolver.fields("InformationRegister.РегистрСведений1.SliceLast");

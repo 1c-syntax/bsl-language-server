@@ -136,7 +136,7 @@ class PlatformQueryTables {
         return null;
       }
     }
-    return Map.copyOf(bindings);
+    return QueryTablePlaceholders.withSynonyms(bindings);
   }
 
   /**

@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.context.api.ContextQueryTableField;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTable;
+import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceTable;
+import com.github._1c_syntax.bsl.mdo.support.TableDataType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -33,6 +36,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Поля таблицы, которые объявляет платформа: стандартные реквизиты, псевдополя
@@ -57,6 +61,16 @@ class PlatformTableFieldSource implements QueryTableFieldSource {
 
   static final int ORDER = 40;
 
+  /**
+   * Поля, которые есть только у таблицы с объектными данными.
+   */
+  private static final Set<String> OBJECT_ONLY_FIELDS = Set.of("Ссылка", "Представление");
+
+  /**
+   * Поле, которое есть только у иерархической таблицы измерения.
+   */
+  private static final Set<String> PARENT = Set.of("Родитель");
+
   private final TypeRegistry typeRegistry;
 
   @Override
@@ -67,6 +81,9 @@ class PlatformTableFieldSource implements QueryTableFieldSource {
     }
     var result = new ArrayList<MemberDescriptor>(table.fields().size());
     for (var field : table.fields()) {
+      if (!belongsTo(field, request)) {
+        continue;
+      }
       if (QueryTableFieldSource.isBarePlaceholder(field)) {
         // Такое поле называет вид детей объекта метаданных целиком — его
         // материализуют источники, которые знают их настоящие типы.
@@ -79,6 +96,29 @@ class PlatformTableFieldSource implements QueryTableFieldSource {
       }
     }
     return List.copyOf(result);
+  }
+
+  /**
+   * Есть ли поле у этой конкретной таблицы. Одна страница синтакс-помощника
+   * описывает целое семейство таблиц, и часть полей платформа оговаривает
+   * отдельно: {@code Ссылка} и {@code Представление} — «доступно только для
+   * объектных таблиц», {@code Родитель} таблицы измерения — «существует только
+   * для иерархических таблиц измерений». Объектность и иерархичность объявлены
+   * в метаданных самой таблицы.
+   */
+  private static boolean belongsTo(ContextQueryTableField field, QueryTableRequest request) {
+    var mdo = request.mdo();
+    if (mdo instanceof ExternalDataSourceTable table) {
+      return table.getTableDataType() == TableDataType.OBJECT_DATA || !isNamed(field, OBJECT_ONLY_FIELDS);
+    }
+    if (mdo instanceof ExternalDataSourceCubeDimensionTable dimensionTable) {
+      return dimensionTable.isHierarchical() || !isNamed(field, PARENT);
+    }
+    return true;
+  }
+
+  private static boolean isNamed(ContextQueryTableField field, Set<String> names) {
+    return names.contains(field.name().getName());
   }
 
   /**

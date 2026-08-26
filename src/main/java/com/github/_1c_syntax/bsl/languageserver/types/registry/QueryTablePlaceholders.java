@@ -31,7 +31,9 @@ import com.github._1c_syntax.bsl.mdo.Task;
 import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 /**
@@ -53,7 +55,39 @@ final class QueryTablePlaceholders {
   static final String FIELD = "Имя поля";
   static final String EXT_DIMENSION_NUMBER = "Номер субконто";
 
+  /**
+   * Плейсхолдеры, за которыми стоит одно и то же имя, названные по-разному.
+   * Имя таблицы внешнего источника данных в заголовке самой таблицы названо
+   * {@code <Имя таблицы>}, а в типе её поля {@code Ссылка} —
+   * {@code <Имя таблицы внешнего источника данных>}; подставляется в оба одно
+   * и то же.
+   */
+  private static final List<List<String>> SYNONYMS = List.of(
+    List.of("Имя внешнего источника данных", "Имя внешнего источника"),
+    List.of("External data source name", "External source name"),
+    List.of("Имя таблицы", "Имя таблицы внешнего источника данных", "Имя таблицы измерения"),
+    List.of("Table name", "External data source table name", "Dimension table name"));
+
   private QueryTablePlaceholders() {
+  }
+
+  /**
+   * Дополняет подстановки написаниями-синонимами: имя, подставленное в один
+   * плейсхолдер, подставляется и в те, что называют то же самое.
+   *
+   * @param bindings подстановки {@code имя плейсхолдера → имя}.
+   * @return подстановки вместе с синонимами; уже занятое написание не
+   *   переписывается.
+   */
+  static Map<String, String> withSynonyms(Map<String, String> bindings) {
+    var result = new LinkedHashMap<>(bindings);
+    for (var group : SYNONYMS) {
+      group.stream()
+        .filter(bindings::containsKey)
+        .findFirst()
+        .ifPresent(known -> group.forEach(name -> result.putIfAbsent(name, bindings.get(known))));
+    }
+    return Map.copyOf(result);
   }
 
   /**
@@ -67,7 +101,7 @@ final class QueryTablePlaceholders {
   static List<? extends Attribute> attributesFor(String placeholder, MD md) {
     return switch (placeholder) {
       case ATTRIBUTE -> ownAttributes(md);
-      case DIMENSION -> md instanceof Register register ? register.getDimensions() : List.of();
+      case DIMENSION -> dimensions(md);
       case RESOURCE -> resources(md);
       case JOURNAL_COLUMN, FIELD -> customAttributes(allAttributes(md));
       case ADDRESSING_ATTRIBUTE -> md instanceof Task task ? task.getAddressingAttributes() : List.of();
@@ -137,6 +171,19 @@ final class QueryTablePlaceholders {
    */
   private static List<? extends Attribute> customAttributes(List<? extends Attribute> attributes) {
     return attributes.stream().filter(attribute -> !(attribute instanceof StandardAttribute)).toList();
+  }
+
+  /**
+   * Измерения объекта: они есть и у регистра, и у куба внешнего источника данных.
+   */
+  private static List<? extends Attribute> dimensions(MD md) {
+    if (md instanceof Register register) {
+      return register.getDimensions();
+    }
+    if (md instanceof ExternalDataSourceCube cube) {
+      return cube.getDimensions();
+    }
+    return List.of();
   }
 
   private static List<? extends Attribute> resources(MD md) {

@@ -119,13 +119,11 @@ public class QueryTableResolver {
 
   /**
    * Объект метаданных таблицы. Имя таблицы начинается его ссылкой
-   * ({@code Catalog.Номенклатура}), а у виртуальной таблицы к ней добавлен
-   * сегмент ({@code AccumulationRegister.Продажи.Turnovers}), поэтому объект
-   * ищется по первым двум сегментам.
-   * <p>
-   * Таблица внешнего источника данных ({@code ExternalDataSource.X.Table.Y})
-   * так находится как сам источник, а не как его таблица: полей объекта у неё
-   * поэтому не будет — только платформенные.
+   * ({@code Catalog.Номенклатура}), а у подчинённого объекта ссылка продолжается
+   * такими же парами «вид.имя»
+   * ({@code ExternalDataSource.X.Table.Y}) — поэтому берутся все пары подряд.
+   * Сегмент, который парой не является, ссылку заканчивает: так отделяется
+   * имя виртуальной таблицы ({@code AccumulationRegister.Продажи.Turnovers}).
    *
    * @return объект метаданных; {@code null}, если такого имени в конфигурации нет.
    */
@@ -134,13 +132,17 @@ public class QueryTableResolver {
       return null;
     }
     var segments = tableName.split("\\.", -1);
-    if (segments.length < 2) {
-      return null;
+    MdoReference reference = null;
+    for (var i = 0; i + 1 < segments.length; i += 2) {
+      var mdoType = MDOType.fromValue(segments[i]);
+      if (mdoType.isEmpty()) {
+        break;
+      }
+      reference = reference == null
+        ? MdoReference.create(mdoType.get(), segments[i + 1])
+        : MdoReference.create(reference, mdoType.get(), segments[i + 1]);
     }
-    var mdoType = MDOType.fromValue(segments[0]);
-    return mdoType
-      .flatMap(type -> configuration.findChild(MdoReference.create(type, segments[1])))
-      .orElse(null);
+    return reference == null ? null : configuration.findChild(reference).orElse(null);
   }
 
   /**

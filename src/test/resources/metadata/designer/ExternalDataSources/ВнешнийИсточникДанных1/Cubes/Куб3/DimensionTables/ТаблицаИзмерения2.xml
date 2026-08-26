@@ -27,7 +27,7 @@
 			<PresentationField/>
 			<HierarchyNameInDataSource/>
 			<LevelNumber>0</LevelNumber>
-			<Hierarchical>false</Hierarchical>
+			<Hierarchical>true</Hierarchical>
 			<UnfilledParentValue xsi:nil="true"/>
 			<UseStandardCommands>false</UseStandardCommands>
 			<QuickChoice>false</QuickChoice>
