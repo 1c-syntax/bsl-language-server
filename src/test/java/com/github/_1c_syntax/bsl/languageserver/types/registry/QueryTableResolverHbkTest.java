@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -137,6 +139,120 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void customQueryFieldsComeFromItsSelection() {
+    // given
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Спр.Ссылка КАК Ссылка,
+        Спр.Реквизит1,
+        Спр.Наименование КАК Имя,
+        ВЫБОР КОГДА Спр.ПометкаУдаления ТОГДА 1 ИНАЧЕ 0 КОНЕЦ КАК Пометка,
+        ВЫБОР КОГДА Спр.ПометкаУдаления ТОГДА 1 ИНАЧЕ 0 КОНЕЦ
+      ИЗ
+        Справочник.Справочник1 КАК Спр""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields))
+      .as("имя поля — из алиаса, а без него из имени колонки")
+      .containsExactly("Ссылка", "Реквизит1", "Имя", "Пометка");
+    assertThat(qualifiedNames(field(fields, "Ссылка")))
+      .as("тип поля — у таблицы из ИЗ")
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(field(fields, "Пометка").returnTypes().isEmpty())
+      .as("у вычисляемого поля типа нет")
+      .isTrue();
+  }
+
+  @Test
+  void asteriskSelectsAllFieldsOfItsTable() {
+    // given
+    var list = customQuery("ВЫБРАТЬ Спр.* ИЗ Справочник.Справочник1 КАК Спр");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields))
+      .contains("Ссылка", "Код", "Наименование", "Реквизит1", "Представление");
+  }
+
+  @Test
+  void queryOverAJoinTypesFieldsOfBothSources() {
+    // given
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Спр.Ссылка КАК Ссылка,
+        Док.Дата КАК Дата
+      ИЗ
+        Справочник.Справочник1 КАК Спр
+        ЛЕВОЕ СОЕДИНЕНИЕ Документ.Документ1 КАК Док
+        ПО Спр.Ссылка = Док.Ссылка""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields)).containsExactly("Ссылка", "Дата");
+    assertThat(qualifiedNames(field(fields, "Ссылка"))).containsExactly("СправочникСсылка.Справочник1");
+    assertThat(qualifiedNames(field(fields, "Дата"))).containsExactly("Дата");
+  }
+
+  @Test
+  void dataCompositionBracesDoNotBreakTheSelection() {
+    // given
+    // Запросы динамических списков набиты блоками компоновки в фигурных скобках.
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Спр.Ссылка КАК Ссылка,
+        Спр.Наименование КАК Наименование
+      ИЗ
+        Справочник.Справочник1 КАК Спр
+      {ГДЕ
+        Спр.Наименование КАК Наименование}""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields)).containsExactly("Ссылка", "Наименование");
+  }
+
+  @Test
+  void fieldCompositionKeepsItsNameAndTakesTypeFromTheQuery() {
+    // given
+    // Состав полей называет поле, но тип у записи состава есть редко —
+    // тип приходит от следующего источника, разобравшего запрос.
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .customQuery(true)
+      .queryText("ВЫБРАТЬ Спр.Ссылка КАК Ссылка ИЗ Справочник.Справочник1 КАК Спр")
+      .addFields(FormDynamicListField.builder().dataPath("Ссылка").name("Ссылка").build())
+      .build();
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields)).containsExactly("Ссылка");
+    assertThat(qualifiedNames(field(fields, "Ссылка"))).containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  @Test
+  void unparsableQueryGivesNoFields() {
+    // given
+    var list = customQuery("ВЫБРАТЬ ИЗ ГДЕ");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(fields).isEmpty();
+  }
+
+  @Test
   void unknownTableHasNoFields() {
     assertThat(resolver.fields("1:0d7c2c47-4b5e-4b0e-8d1a-000000000000")).isEmpty();
   }
@@ -167,6 +283,14 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .contains("Ссылка", "Код", "Наименование", "Реквизит1")
       .as("псевдополя таблицы — то, чего у ссылочного типа справочника нет")
       .contains("Представление", "ВерсияДанных");
+  }
+
+  private static FormDynamicListAttribute customQuery(String queryText) {
+    return FormDynamicListAttribute.builder()
+      .name("Список")
+      .customQuery(true)
+      .queryText(queryText)
+      .build();
   }
 
   private static List<String> names(Collection<MemberDescriptor> members) {

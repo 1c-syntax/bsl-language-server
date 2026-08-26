@@ -82,13 +82,33 @@ class DynamicListTypesRegistrarTest {
   }
 
   @Test
-  void listWithACustomQueryAndNoFieldCompositionHasNoRow() {
+  void listWithACustomQueryAndNoQueryTextHasNoRow() {
     // Поля такого списка — поля выборки его запроса, а не поля основной таблицы:
-    // та у него задаёт только динамическое чтение. Пока запрос не разбирается,
-    // называть их нечем.
+    // та у него задаёт только динамическое чтение. Без текста запроса называть
+    // их нечем.
     var rows = registrar.prepareRows(List.of(dynamicList("Catalog.Справочник1", true)), FORM_SUFFIX);
 
     assertThat(rows).isEmpty();
+  }
+
+  @Test
+  void listWithACustomQueryTextGetsARow() {
+    // given
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .mainTable("Catalog.Справочник1")
+      .customQuery(true)
+      .queryText("ВЫБРАТЬ Спр.Ссылка ИЗ Справочник.Справочник1 КАК Спр")
+      .build();
+
+    // when
+    var rows = registrar.prepareRows(List.of(list), FORM_SUFFIX);
+
+    // then
+    assertThat(rows).containsOnlyKeys("список");
+    assertThat(rows.get("список").rowIdRef())
+      .as("строку списка с произвольным запросом основная таблица не адресует")
+      .isNull();
   }
 
   @Test
