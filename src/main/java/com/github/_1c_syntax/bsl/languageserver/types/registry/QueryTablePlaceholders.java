@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.mdo.AccountingRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
+import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.Register;
 import com.github._1c_syntax.bsl.mdo.Task;
@@ -30,6 +32,7 @@ import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * Что именно платформа называет плейсхолдером в имени поля таблицы запросов.
@@ -48,6 +51,7 @@ final class QueryTablePlaceholders {
   static final String JOURNAL_COLUMN = "Имя графы журнала";
   static final String ADDRESSING_ATTRIBUTE = "Имя реквизита адресации";
   static final String FIELD = "Имя поля";
+  static final String EXT_DIMENSION_NUMBER = "Номер субконто";
 
   private QueryTablePlaceholders() {
   }
@@ -73,18 +77,17 @@ final class QueryTablePlaceholders {
 
   /**
    * Имена для подстановки в плейсхолдер внутри имени поля
-   * ({@code <Имя ресурса>Оборот} → {@code СуммаОборот}).
-   * <p>
-   * Нумерованный плейсхолдер ({@code Субконто<Номер субконто>}) не
-   * разворачивается: сколько субконто у счёта, статически не известно —
-   * в пользовательском режиме их может стать больше, чем объявлено
-   * в конфигурации.
+   * ({@code <Имя ресурса>Оборот} → {@code СуммаОборот},
+   * {@code Субконто<Номер субконто>} → {@code Субконто1}).
    *
    * @param placeholder имя плейсхолдера без угловых скобок.
    * @param request     запрос полей.
    * @return подставляемые имена в порядке объявления; пусто, если подставлять нечего.
    */
   static List<String> expansionValues(String placeholder, QueryTableRequest request) {
+    if (EXT_DIMENSION_NUMBER.equals(placeholder)) {
+      return extDimensionNumbers(request);
+    }
     var md = request.mdo();
     if (md == null) {
       return List.of();
@@ -93,6 +96,28 @@ final class QueryTablePlaceholders {
       .map(Attribute::getName)
       .filter(name -> !name.isBlank())
       .toList();
+  }
+
+  /**
+   * Номера субконто: от единицы до максимального количества субконто у счёта.
+   * Число задаёт план счетов, на котором стоит регистр бухгалтерии, — этим же
+   * пределом ограничен и пользовательский режим.
+   *
+   * @param request запрос полей.
+   * @return номера строками; пусто, если регистр не бухгалтерский, план счетов
+   *   не найден либо субконто у счетов нет.
+   */
+  private static List<String> extDimensionNumbers(QueryTableRequest request) {
+    var configuration = request.configuration();
+    if (configuration == null || !(request.mdo() instanceof AccountingRegister register)) {
+      return List.of();
+    }
+    var count = configuration.findChild(register.getChartOfAccounts())
+      .filter(ChartOfAccounts.class::isInstance)
+      .map(ChartOfAccounts.class::cast)
+      .map(ChartOfAccounts::getMaxExtDimensionCount)
+      .orElse(0);
+    return IntStream.rangeClosed(1, count).mapToObj(String::valueOf).toList();
   }
 
   /**
