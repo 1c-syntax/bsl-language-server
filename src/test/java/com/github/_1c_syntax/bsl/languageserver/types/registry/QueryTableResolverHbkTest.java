@@ -174,6 +174,32 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void fieldTypeIsResolvedThroughTheWholeChain() {
+    // given
+    // Каждое звено после источника — свойство типа предыдущего.
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Спр.Ссылка КАК Ссылка,
+        Спр.Ссылка.Код КАК КодПоСсылке,
+        Спр.Ссылка.НетТакогоПоля КАК Ерунда
+      ИЗ
+        Справочник.Справочник1 КАК Спр""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(qualifiedNames(field(fields, "Ссылка")))
+      .containsExactly("СправочникСсылка.Справочник1");
+    assertThat(qualifiedNames(field(fields, "КодПоСсылке")))
+      .as("код берётся у типа предыдущего звена, а не у таблицы источника")
+      .containsExactly("Строка");
+    assertThat(field(fields, "Ерунда").returnTypes().isEmpty())
+      .as("несуществующее звено обрывает цепочку")
+      .isTrue();
+  }
+
+  @Test
   void asteriskSelectsAllFieldsOfItsTable() {
     // given
     var list = customQuery("ВЫБРАТЬ Спр.* ИЗ Справочник.Справочник1 КАК Спр");

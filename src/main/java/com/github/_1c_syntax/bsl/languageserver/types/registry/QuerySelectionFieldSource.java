@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
@@ -35,6 +37,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -67,6 +70,7 @@ class QuerySelectionFieldSource implements QueryTableFieldSource {
    * внедрение напрямую замкнуло бы бины друг на друга.
    */
   private final ObjectProvider<QueryTableResolver> resolverProvider;
+  private final TypeRegistry typeRegistry;
 
   @Override
   public List<MemberDescriptor> fields(QueryTableRequest request) {
@@ -157,23 +161,46 @@ class QuerySelectionFieldSource implements QueryTableFieldSource {
   }
 
   /**
-   * Типы колонки — у поля её таблицы. Берутся, только если колонка обращается
-   * к источнику напрямую ({@code Спр.Наименование}): у пути вглубь
-   * ({@code Спр.Владелец.Код}) тип поля определяется цепочкой, а не таблицей.
+   * Типы колонки. Первый сегмент после источника — поле его таблицы, каждый
+   * следующий — свойство типа предыдущего: {@code Спр.Владелец.Код} это поле
+   * {@code Владелец} таблицы справочника, а затем {@code Код} у типа владельца.
+   * Если тип какого-то звена неизвестен, неизвестен и тип всей колонки.
    */
   private TypeSet columnTypes(SDBLParser.@Nullable ColumnContext column, QuerySources sources) {
-    if (column == null || column.mdoName == null || column.columnNames.size() != 1) {
+    if (column == null || column.mdoName == null || column.columnNames.isEmpty()) {
       return TypeSet.EMPTY;
     }
     var tableName = sources.tableOf(column.mdoName.getText());
     if (tableName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return resolverProvider.getObject().fields(tableName).stream()
-      .filter(member -> member.matches(lastColumnName(column)))
+    var types = memberTypes(resolverProvider.getObject().fields(tableName),
+      column.columnNames.get(0).getText());
+    for (var i = 1; i < column.columnNames.size() && !types.isEmpty(); i++) {
+      types = dereference(types, column.columnNames.get(i).getText());
+    }
+    return types;
+  }
+
+  /** Типы одноимённого члена среди набора. */
+  private static TypeSet memberTypes(Collection<MemberDescriptor> members, String name) {
+    return members.stream()
+      .filter(member -> member.matches(name))
       .findFirst()
       .map(MemberDescriptor::returnTypes)
       .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Типы свойства у каждого из типов-получателей. Получателей бывает несколько
+   * (составной тип поля), и тогда типы свойства объединяются.
+   */
+  private TypeSet dereference(TypeSet receivers, String memberName) {
+    var result = new ArrayList<TypeRef>();
+    for (var receiver : receivers.refs()) {
+      result.addAll(memberTypes(typeRegistry.getMembers(receiver, FileType.BSL), memberName).refs());
+    }
+    return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
   }
 
   /**
