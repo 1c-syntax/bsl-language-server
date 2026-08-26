@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,21 @@ import java.util.Map;
 @WorkspaceScope
 @RequiredArgsConstructor
 class DynamicListTypesRegistrar {
+
+  /** Платформенный тип ключа строки — им список адресует строку при виде ключа «КлючСтроки». */
+  private static final String DYNAMIC_LIST_ROW_KEY = "КлючСтрокиДинамическогоСписка";
+
+  /**
+   * Стандартная картинка строки. Полем таблицы она не является — в запросе её не
+   * выбрать, — но платформа называет её стандартным реквизитом строки списка
+   * наравне со {@code Ссылка}, {@code ЭтоГруппа} и {@code Родитель}
+   * (синтакс-помощник, {@code СтрокаДинамическогоСписка.Данные}), и именно на неё
+   * ссылается оформление строк у 2077 таблиц разобранной конфигурации
+   * ({@code <RowPictureDataPath>Список.DefaultPicture</RowPictureDataPath>}).
+   * Типа помощник ей не объявляет, поэтому колонка отдаётся без типа.
+   */
+  private static final BilingualString DEFAULT_PICTURE =
+    BilingualString.of("СтандартнаяКартинка", "DefaultPicture");
 
   private final TypeRegistry typeRegistry;
   private final FormDataTypesRegistrar formDataTypes;
@@ -126,17 +142,37 @@ class DynamicListTypesRegistrar {
   }
 
   /**
-   * Тип идентификатора строки: строку списка над ссылочной таблицей платформа
-   * адресует ссылкой, и её же отдаёт {@code ТекущаяСтрока}.
-   * <p>
-   * Имя основной таблицы — это mdoRef объекта ({@code Catalog.Номенклатура}), а
-   * {@code Справочник.X}/{@code Catalog.X} в реестре ведёт на ссылочный тип: имя
-   * резолвится напрямую, разбирать его на части не нужно. У виртуальной таблицы
-   * регистра ссылочного типа нет, и идентификатор строки остаётся неизвестным.
+   * Тип идентификатора строки — того, что отдают {@code ТекущаяСтрока},
+   * {@code ТекущийРодитель} и элементы {@code ВыделенныеСтроки}. Чем список
+   * адресует строку, задаёт его вид ключа:
+   * <ul>
+   *   <li>{@code Авто} — ссылкой основной таблицы;</li>
+   *   <li>{@code ЗначениеПоля} — значением поля ключа;</li>
+   *   <li>{@code КлючСтроки} — {@code КлючСтрокиДинамическогоСписка};</li>
+   *   <li>{@code НомерСтроки} — числом.</li>
+   * </ul>
+   * Считается на регистрации формы, а не в источнике членов: под
+   * {@code ВыделенныеСтроки} регистрируется специализация массива, а регистрация
+   * изнутри {@code getMembers} сбивала бы epoch кэша членов.
    *
-   * @return ссылочный тип основной таблицы; {@code null}, если его нет.
+   * @return тип идентификатора строки; {@code null}, если он неизвестен.
    */
   private @Nullable TypeRef rowIdRef(FormDynamicListAttribute list) {
+    return switch (list.getKeyType()) {
+      case ROW_NUMBER -> typeRegistry.resolve(FormPlatformTypes.NUMBER_RU).orElse(null);
+      case ROW_KEY -> typeRegistry.resolve(DYNAMIC_LIST_ROW_KEY).orElse(null);
+      case FIELD_VALUE -> keyFieldRef(list);
+      default -> mainTableRef(list);
+    };
+  }
+
+  /**
+   * Ссылочный тип основной таблицы. Имя основной таблицы — это mdoRef объекта
+   * ({@code Catalog.Номенклатура}), а {@code Справочник.X}/{@code Catalog.X}
+   * в реестре ведёт на ссылочный тип: имя резолвится напрямую. У виртуальной
+   * таблицы регистра ссылочного типа нет.
+   */
+  private @Nullable TypeRef mainTableRef(FormDynamicListAttribute list) {
     if (list.isCustomQuery()) {
       // У списка с произвольным запросом основная таблица задаёт лишь
       // динамическое чтение, а строку идентифицируют поля выборки запроса.
@@ -144,6 +180,26 @@ class DynamicListTypesRegistrar {
     }
     var mainTable = list.getMainTable();
     return mainTable.isBlank() ? null : typeRegistry.resolve(mainTable).orElse(null);
+  }
+
+  /**
+   * Тип поля ключа. Берётся, только если поле ключа одно и тип у него один:
+   * чем платформа адресует строку по нескольким полям, в синтакс-помощнике не
+   * сказано, а правдоподобная догадка тут хуже незнания.
+   */
+  private @Nullable TypeRef keyFieldRef(FormDynamicListAttribute list) {
+    if (list.getKeyFields().size() != 1) {
+      return null;
+    }
+    var keyField = list.getKeyFields().get(0);
+    var tableName = list.isCustomQuery() ? "" : list.getMainTable();
+    return queryTableResolver.fields(tableName, list).stream()
+      .filter(member -> member.matches(keyField))
+      .findFirst()
+      .map(MemberDescriptor::returnTypes)
+      .filter(types -> types.size() == 1)
+      .map(types -> types.refs().iterator().next())
+      .orElse(null);
   }
 
   /**
@@ -189,6 +245,7 @@ class DynamicListTypesRegistrar {
     }
     var tableName = list.isCustomQuery() ? "" : list.getMainTable();
     members.addAll(queryTableResolver.fields(tableName, list));
+    members.add(MdoMemberFactory.property(DEFAULT_PICTURE, TypeSet.EMPTY).withStandardLibrary(true));
     return List.copyOf(members);
   }
 }

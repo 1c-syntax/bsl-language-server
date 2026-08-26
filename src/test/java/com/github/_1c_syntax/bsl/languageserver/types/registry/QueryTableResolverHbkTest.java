@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
+import com.github._1c_syntax.bsl.mdo.support.DynamicListKeyType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,8 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +64,9 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeRegistry typeRegistry;
+
+  @Autowired
+  private DynamicListTypesRegistrar dynamicListTypes;
 
   @BeforeEach
   void setUp() {
@@ -253,6 +259,34 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void rowIsIdentifiedByTheDeclaredKey() {
+    // given
+    // Чем список адресует строку, задаёт вид ключа; по умолчанию это ссылка
+    // основной таблицы.
+    var byRowNumber = listWithKey(DynamicListKeyType.ROW_NUMBER, List.of());
+    var byRowKey = listWithKey(DynamicListKeyType.ROW_KEY, List.of("Ссылка", "Код"));
+    var byFieldValue = listWithKey(DynamicListKeyType.FIELD_VALUE, List.of("Код"));
+    var byTwoFields = listWithKey(DynamicListKeyType.FIELD_VALUE, List.of("Код", "Наименование"));
+    var byDefault = listWithKey(DynamicListKeyType.AUTO, List.of());
+
+    // when
+    var rows = dynamicListTypes.prepareRows(
+      List.of(byRowNumber, byRowKey, byFieldValue, byTwoFields, byDefault), "Тест");
+
+    // then
+    assertThat(rows).hasSize(5);
+    assertThat(qualifiedName(rows, "поНомеруСтроки")).isEqualTo("Число");
+    assertThat(qualifiedName(rows, "поКлючуСтроки")).isEqualTo("КлючСтрокиДинамическогоСписка");
+    assertThat(qualifiedName(rows, "поЗначениюПоля"))
+      .as("тип поля ключа — тот же, что у одноимённой колонки")
+      .isEqualTo("Строка");
+    assertThat(rows.get("подвумполям").rowIdRef())
+      .as("чем платформа адресует строку по нескольким полям, не объявлено")
+      .isNull();
+    assertThat(qualifiedName(rows, "поумолчанию")).isEqualTo("СправочникСсылка.Справочник1");
+  }
+
+  @Test
   void unknownTableHasNoFields() {
     assertThat(resolver.fields("1:0d7c2c47-4b5e-4b0e-8d1a-000000000000")).isEmpty();
   }
@@ -282,7 +316,32 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
     assertThat(names(typeRegistry.getMembers(rowRef, FileType.BSL)))
       .contains("Ссылка", "Код", "Наименование", "Реквизит1")
       .as("псевдополя таблицы — то, чего у ссылочного типа справочника нет")
-      .contains("Представление", "ВерсияДанных");
+      .contains("Представление", "ВерсияДанных")
+      .as("стандартный реквизит строки списка — картинка, на неё ссылается оформление строк")
+      .contains("СтандартнаяКартинка");
+    assertThat(typeRegistry.getMembers(rowRef, FileType.BSL))
+      .as("картинка строки находится и по английскому написанию — им её пишет форма")
+      .anyMatch(member -> member.matches("DefaultPicture"));
+  }
+
+  private static FormDynamicListAttribute listWithKey(DynamicListKeyType keyType, List<String> keyFields) {
+    var names = Map.of(
+      DynamicListKeyType.ROW_NUMBER, "ПоНомеруСтроки",
+      DynamicListKeyType.ROW_KEY, "ПоКлючуСтроки",
+      DynamicListKeyType.FIELD_VALUE, keyFields.size() == 1 ? "ПоЗначениюПоля" : "ПоДвумПолям",
+      DynamicListKeyType.AUTO, "ПоУмолчанию");
+    return FormDynamicListAttribute.builder()
+      .name(names.get(keyType))
+      .mainTable("Catalog.Справочник1")
+      .keyType(keyType)
+      .keyFields(keyFields)
+      .build();
+  }
+
+  private static String qualifiedName(Map<String, DynamicListTypesRegistrar.DynamicList> rows, String listName) {
+    var rowIdRef = rows.get(listName.toLowerCase(Locale.ROOT)).rowIdRef();
+    assertThat(rowIdRef).as("идентификатор строки списка %s", listName).isNotNull();
+    return rowIdRef.qualifiedName();
   }
 
   private static FormDynamicListAttribute customQuery(String queryText) {
