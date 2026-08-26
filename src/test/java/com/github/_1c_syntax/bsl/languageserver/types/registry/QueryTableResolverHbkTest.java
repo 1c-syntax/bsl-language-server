@@ -375,6 +375,17 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
     assertThat(typeRegistry.getMembers(rowRef, FileType.BSL))
       .as("картинка строки находится и по английскому написанию — им её пишет форма")
       .anyMatch(member -> member.matches("DefaultPicture"));
+
+    // Обращение через точку (`ТекущиеДанные.Ссылка.Код`, элемент формы с путём
+    // `Список.Ссылка.Код`) состава полей не требует: оно идёт по типу колонки.
+    var refColumn = typeRegistry.getMembers(rowRef, FileType.BSL).stream()
+      .filter(member -> member.matches("Ссылка"))
+      .findFirst()
+      .orElseThrow();
+    var refType = refColumn.returnTypes().refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(refType, FileType.BSL)))
+      .as("у типа колонки есть свои члены, поэтому путь вглубь разрешается")
+      .contains("Код", "Наименование");
   }
 
   private static FormDynamicListAttribute listWithKey(DynamicListKeyType keyType, List<String> keyFields) {
