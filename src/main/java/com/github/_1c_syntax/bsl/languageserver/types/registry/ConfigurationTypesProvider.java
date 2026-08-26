@@ -580,7 +580,8 @@ public class ConfigurationTypesProvider {
    * Атрибуты, специфичные для отдельных MDOType, которые не приходят через
    * {@link AttributeOwner#getAllAttributes()}: для {@link ChartOfAccounts} —
    * признаки учёта и флаги учёта субконто. Все три типа реализуют {@link Attribute},
-   * поэтому используются через {@link #buildAttributeMembers(List)} как property-члены.
+   * поэтому используются через {@link MdoMemberFactory#attributeMembers(List)}
+   * как property-члены.
    */
   private void registerMdoSpecificAttributeMembers(MD md, TypeRef objectRef, TypeRef refRef) {
     if (!(md instanceof ChartOfAccounts coa)) {
@@ -641,7 +642,7 @@ public class ConfigurationTypesProvider {
       var collRef = registerWithAlias(collRu, collEn);
 
       var tsAttributes = ts.getAttributes();
-      // Аналогично основным реквизитам: лямбда вызывает buildAttributeMembers
+      // Аналогично основным реквизитам: лямбда вызывает attributeMembers
       // на каждый getMembers, поэтому язык читается per-call и подхватывает
       // workspace/didChangeConfiguration.
       MemberSource columnSource = () -> mdoMembers.attributeMembers(tsAttributes);
@@ -852,7 +853,8 @@ public class ConfigurationTypesProvider {
    * Графы журнала документов как property-члены на типе журнала
    * ({@code ЖурналДокументов.<имя>}). Источник имён и типов — mdclasses
    * ({@link DocumentJournal#getColumns()}); все колонки реализуют
-   * {@link Attribute}, поэтому материализуются через {@link #buildAttributeMembers(List)}.
+   * {@link Attribute}, поэтому материализуются через
+   * {@link MdoMemberFactory#attributeMembers(List)}.
    */
   private void registerDocumentJournalColumnMembers(DocumentJournal journal, String familyCore, String name) {
     var columns = journal.getColumns();
