@@ -24,10 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
 import com.github._1c_syntax.bsl.mdo.support.DynamicListFieldKind;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -58,6 +60,12 @@ class DynamicListCompositionSource implements QueryTableFieldSource {
 
   private final TypeRegistry typeRegistry;
 
+  /**
+   * Резолвер спрашивается лениво: он же и владеет этим источником, а внедрение
+   * напрямую замкнуло бы бины друг на друга.
+   */
+  private final ObjectProvider<QueryTableResolver> resolverProvider;
+
   @Override
   public List<MemberDescriptor> fields(QueryTableRequest request) {
     var list = request.list();
@@ -66,7 +74,7 @@ class DynamicListCompositionSource implements QueryTableFieldSource {
     }
     var result = new ArrayList<MemberDescriptor>(list.getFields().size());
     for (var field : list.getFields()) {
-      var member = member(field);
+      var member = member(field, request);
       if (member != null) {
         result.add(member);
       }
@@ -74,19 +82,48 @@ class DynamicListCompositionSource implements QueryTableFieldSource {
     return List.copyOf(result);
   }
 
-  private @Nullable MemberDescriptor member(FormDynamicListField field) {
+  private @Nullable MemberDescriptor member(FormDynamicListField field, QueryTableRequest request) {
     if (field.getKind() != DynamicListFieldKind.FIELD) {
       return null;
     }
-    var name = field.getDataPath().isBlank() ? field.getName() : field.getDataPath();
-    if (name.isBlank() || name.contains(".")) {
+    var name = columnName(field);
+    if (name.isEmpty()) {
       return null;
     }
-    if (field.getValueType().isEmpty()) {
-      // Тип не объявлен — имя всё равно нужно: без него поля не будет вовсе.
-      return MemberDescriptor.property(name);
+    return MdoMemberFactory.property(BilingualString.of(name), types(field, request));
+  }
+
+  /**
+   * Имя колонки — имя поля набора данных, и только оно: путь к данным именем не
+   * распоряжается. Поле внутри папки состава названо путём
+   * ({@code СубконтоДт.СубконтоДт1}), а колонкой становится под своим именем
+   * ({@code СубконтоДт1}).
+   * <p>
+   * Если и имя записано путём (так названы члены вложенного набора данных),
+   * колонки из него не выходит — к такому полю обращаются через владельца пути.
+   *
+   * @return имя колонки; пусто, если колонки у поля нет.
+   */
+  private static String columnName(FormDynamicListField field) {
+    var name = field.getName();
+    return name.isBlank() || name.contains(".") ? "" : name;
+  }
+
+  /**
+   * Тип колонки: объявленный записью состава, а если его нет — тип поля, на
+   * которое указывает путь к данным. Путь бывает вглубь ({@code Контрагент.ИНН}),
+   * и тогда тип берётся у последнего звена.
+   */
+  private TypeSet types(FormDynamicListField field, QueryTableRequest request) {
+    if (!field.getValueType().isEmpty()) {
+      return ValueTypes.resolve(typeRegistry, field.getValueType());
     }
-    return MdoMemberFactory.property(BilingualString.of(name),
-      ValueTypes.resolve(typeRegistry, field.getValueType()));
+    var dataPath = field.getDataPath();
+    if (dataPath.isBlank() || request.tableName().isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    return QueryFieldChain.types(typeRegistry,
+      resolverProvider.getObject().fields(request.tableName()),
+      List.of(dataPath.split("\\.", -1)));
   }
 }

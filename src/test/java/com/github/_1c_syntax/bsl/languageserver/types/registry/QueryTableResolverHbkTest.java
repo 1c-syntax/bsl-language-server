@@ -200,6 +200,63 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void chainWithoutAnAliasIsNamedByItsSegments() {
+    // given
+    // Псевдоним в полях выборки не обязателен: путь вглубь платформа называет
+    // склейкой звеньев — Ссылка.Код становится колонкой СсылкаКод (RefCode).
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Спр.Наименование,
+        Спр.Ссылка.Код
+      ИЗ
+        Справочник.Справочник1 КАК Спр""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields)).containsExactly("Наименование", "СсылкаКод");
+    assertThat(field(fields, "СсылкаКод").bilingualName().en())
+      .as("склейка двуязычна: у обоих звеньев есть английские имена")
+      .isEqualTo("RefCode");
+    assertThat(qualifiedNames(field(fields, "СсылкаКод")))
+      .as("тип — у последнего звена")
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void columnWithoutASourceBelongsToTheOnlyOneOfTheQuery() {
+    // given
+    var list = customQuery("ВЫБРАТЬ Ссылка, Наименование ИЗ Справочник.Справочник1");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(names(fields)).containsExactly("Ссылка", "Наименование");
+    assertThat(qualifiedNames(field(fields, "Ссылка")))
+      .as("источник у запроса один, и колонка принадлежит ему")
+      .containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  @Test
+  void sourceWithoutAnAliasIsAddressedByItsOwnName() {
+    // given
+    var list = customQuery("""
+      ВЫБРАТЬ
+        Справочник.Справочник1.Ссылка КАК Ссылка
+      ИЗ
+        Справочник.Справочник1""");
+
+    // when
+    var fields = resolver.fields("", list);
+
+    // then
+    assertThat(qualifiedNames(field(fields, "Ссылка")))
+      .containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  @Test
   void asteriskSelectsAllFieldsOfItsTable() {
     // given
     var list = customQuery("ВЫБРАТЬ Спр.* ИЗ Справочник.Справочник1 КАК Спр");
@@ -286,6 +343,32 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void pathFieldWithAFlatNameBecomesAColumnTypedByItsPath() {
+    // given
+    // Колонка называется именем поля состава. Если имя плоское, а путь ведёт
+    // вглубь, тип берётся у последнего звена пути; если имя само записано
+    // путём, плоской колонки нет — к такому полю обращаются через владельца.
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .mainTable("Catalog.Справочник1")
+      .addFields(FormDynamicListField.builder()
+        .dataPath("Ссылка.Код").name("КодПоСсылке").build())
+      .addFields(FormDynamicListField.builder()
+        .dataPath("Ссылка.Наименование").name("Ссылка.Наименование").build())
+      .build();
+
+    // when
+    var fields = resolver.fields("Catalog.Справочник1", list);
+
+    // then
+    assertThat(names(fields))
+      .as("колонка называется именем поля; имя-путь плоской колонкой не становится")
+      .contains("КодПоСсылке")
+      .doesNotContain("Ссылка.Наименование");
+    assertThat(qualifiedNames(field(fields, "КодПоСсылке"))).containsExactly("Строка");
+  }
+
+  @Test
   void nestedDataSetIsNotAColumn() {
     // given
     // Вложенный набор данных — группа, под которой лежат поля с составным
@@ -297,7 +380,7 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .addFields(FormDynamicListField.builder()
         .kind(DynamicListFieldKind.NESTED_DATA_SET).dataPath("Планы").name("Планы").build())
       .addFields(FormDynamicListField.builder()
-        .dataPath("Планы.ЦФО").name("ЦФО").build())
+        .dataPath("Планы.ЦФО").name("Планы.ЦФО").build())
       .addFields(FormDynamicListField.builder()
         .kind(DynamicListFieldKind.FOLDER).dataPath("Папка").name("Папка").build())
       .build();

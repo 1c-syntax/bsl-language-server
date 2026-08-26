@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
+import org.antlr.v4.runtime.tree.ParseTree;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -53,8 +54,10 @@ import java.util.Objects;
  * тот же {@link QueryTableResolver} (рекурсии не возникает: таблицу он
  * спрашивает без списка, и этот источник для неё молчит).
  * <p>
- * Вычисляемое поле ({@code ВЫБОР…КОНЕЦ}, {@code ВЫРАЗИТЬ}) остаётся колонкой без
- * типа — имя у него есть только с алиасом, без алиаса такое поле пропускается.
+ * Алиас обязателен не всякому полю. Без него колонка называет себя сама: поле
+ * — своим именем, путь вглубь — склейкой звеньев ({@code Спр.Ссылка.Код} даёт
+ * колонку {@code СсылкаКод (RefCode)}). Своего имени нет только у вычисляемого
+ * поля ({@code ВЫБОР…КОНЕЦ}, {@code ВЫРАЗИТЬ}) — без алиаса оно пропускается.
  */
 @Slf4j
 @Component
@@ -130,15 +133,19 @@ class QuerySelectionFieldSource implements QueryTableFieldSource {
     }
     var column = singleColumn(field);
     var alias = field.alias() == null ? "" : field.alias().name.getText();
-    if (alias.isBlank() && column == null) {
-      // Вычисляемое поле без алиаса имени не имеет — колонки из него не выйдет.
+    if (column == null) {
+      // Вычисляемое поле имени не имеет: как его назвать, говорит только алиас.
+      if (!alias.isBlank()) {
+        sink.add(MdoMemberFactory.property(BilingualString.of(alias), TypeSet.EMPTY));
+      }
       return;
     }
-    var name = alias.isBlank() ? lastColumnName(column) : alias;
-    if (name.isBlank()) {
+    var chain = chain(column, sources);
+    var name = alias.isBlank() ? chain.name() : BilingualString.of(alias);
+    if (name.isEmpty()) {
       return;
     }
-    sink.add(MdoMemberFactory.property(BilingualString.of(name), columnTypes(column, sources)));
+    sink.add(MdoMemberFactory.property(name, chain.types()));
   }
 
   /**
@@ -153,54 +160,64 @@ class QuerySelectionFieldSource implements QueryTableFieldSource {
     return expression.expression().column();
   }
 
-  private static String lastColumnName(SDBLParser.@Nullable ColumnContext column) {
-    if (column == null || column.columnNames == null || column.columnNames.isEmpty()) {
-      return "";
-    }
-    return column.columnNames.get(column.columnNames.size() - 1).getText();
+  /**
+   * Имя и типы колонки. Первый сегмент после источника — поле его таблицы,
+   * каждый следующий — свойство типа предыдущего: {@code Спр.Владелец.Код} это
+   * поле {@code Владелец} таблицы справочника, а затем {@code Код} у типа
+   * владельца. Если тип какого-то звена неизвестен, неизвестен и тип всей
+   * колонки.
+   */
+  private QueryFieldChain.Chain chain(SDBLParser.ColumnContext column, QuerySources sources) {
+    var segments = column.columnNames.stream().map(ParseTree::getText).toList();
+    var source = sourceOf(column, segments, sources);
+    List<MemberDescriptor> tableFields = source.tableName().isBlank()
+      ? List.of()
+      : resolverProvider.getObject().fields(source.tableName());
+    return QueryFieldChain.walk(typeRegistry, tableFields, segments.subList(source.consumed(), segments.size()));
   }
 
   /**
-   * Типы колонки. Первый сегмент после источника — поле его таблицы, каждый
-   * следующий — свойство типа предыдущего: {@code Спр.Владелец.Код} это поле
-   * {@code Владелец} таблицы справочника, а затем {@code Код} у типа владельца.
-   * Если тип какого-то звена неизвестен, неизвестен и тип всей колонки.
+   * Источник колонки и число звеньев, которые ушли на его имя.
+   *
+   * @param tableName имя таблицы источника; пусто, если источник не опознан.
+   * @param consumed  сколько первых звеньев колонки заняло имя источника.
    */
-  private TypeSet columnTypes(SDBLParser.@Nullable ColumnContext column, QuerySources sources) {
-    if (column == null || column.mdoName == null || column.columnNames.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var tableName = sources.tableOf(column.mdoName.getText());
-    if (tableName.isBlank()) {
-      return TypeSet.EMPTY;
-    }
-    var types = memberTypes(resolverProvider.getObject().fields(tableName),
-      column.columnNames.get(0).getText());
-    for (var i = 1; i < column.columnNames.size() && !types.isEmpty(); i++) {
-      types = dereference(types, column.columnNames.get(i).getText());
-    }
-    return types;
-  }
+  private record ColumnSource(String tableName, int consumed) {
 
-  /** Типы одноимённого члена среди набора. */
-  private static TypeSet memberTypes(Collection<MemberDescriptor> members, String name) {
-    return members.stream()
-      .filter(member -> member.matches(name))
-      .findFirst()
-      .map(MemberDescriptor::returnTypes)
-      .orElse(TypeSet.EMPTY);
+    private static final ColumnSource NONE = new ColumnSource("", 0);
   }
 
   /**
-   * Типы свойства у каждого из типов-получателей. Получателей бывает несколько
-   * (составной тип поля), и тогда типы свойства объединяются.
+   * Источник, которому принадлежит колонка. Назван он либо алиасом
+   * ({@code Спр.Наименование}), либо, когда алиаса у него нет, собственным
+   * именем — а оно многосоставное, и его продолжение разбирается звеньями
+   * колонки ({@code Справочник.Справочник1.Ссылка}). Колонка без источника
+   * ({@code ВЫБРАТЬ Наименование ИЗ …}) принадлежит единственному источнику
+   * запроса, а при нескольких неоднозначна — и тогда источника нет.
    */
-  private TypeSet dereference(TypeSet receivers, String memberName) {
-    var result = new ArrayList<TypeRef>();
-    for (var receiver : receivers.refs()) {
-      result.addAll(memberTypes(typeRegistry.getMembers(receiver, FileType.BSL), memberName).refs());
+  private static ColumnSource sourceOf(SDBLParser.ColumnContext column,
+                                       List<String> segments,
+                                       QuerySources sources) {
+    if (column.mdoName == null) {
+      var tables = sources.allTables();
+      return tables.size() == 1 ? new ColumnSource(tables.get(0), 0) : ColumnSource.NONE;
     }
-    return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
+    var name = new StringBuilder(column.mdoName.getText());
+    var byAlias = sources.tableOf(name.toString());
+    if (!byAlias.isBlank()) {
+      return new ColumnSource(byAlias, 0);
+    }
+    // Имя таблицы бывает и трёхсоставным (РегистрНакопления.Продажи.Остатки),
+    // поэтому под него отдаётся столько звеньев, сколько понадобится, — но не
+    // последнее: им названа сама колонка.
+    for (var consumed = 1; consumed < segments.size(); consumed++) {
+      name.append('.').append(segments.get(consumed - 1));
+      var tableName = sources.tableOf(name.toString());
+      if (!tableName.isBlank()) {
+        return new ColumnSource(tableName, consumed);
+      }
+    }
+    return ColumnSource.NONE;
   }
 
   /**
