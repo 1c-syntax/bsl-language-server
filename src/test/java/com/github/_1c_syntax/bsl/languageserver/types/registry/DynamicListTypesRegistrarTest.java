@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormSimpleAttribute;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,8 +44,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 /**
  * Разбор источника данных динамического списка
  * ({@link DynamicListTypesRegistrar#prepareRows}) — без Spring и синтакс-помощника.
- * Проверяется, за каким списком строка заводится, а за каким нет: колонки строки
- * берутся у основной таблицы, и без неё их взять неоткуда.
+ * Проверяется, за каким списком строка заводится, а за каким нет, и чем платформа
+ * адресует его строку.
  */
 class DynamicListTypesRegistrarTest {
 
@@ -62,7 +63,8 @@ class DynamicListTypesRegistrarTest {
       .thenReturn(Optional.of(new TypeRef(TypeKind.CONFIGURATION, CATALOG_REF)));
     lenient().when(typeRegistry.registerConfigurationType(anyString()))
       .thenAnswer(invocation -> new TypeRef(TypeKind.CONFIGURATION, invocation.getArgument(0)));
-    registrar = new DynamicListTypesRegistrar(typeRegistry, new FormDataTypesRegistrar(typeRegistry));
+    registrar = new DynamicListTypesRegistrar(typeRegistry, new FormDataTypesRegistrar(typeRegistry),
+      mock(QueryTableResolver.class));
   }
 
   @Test
@@ -80,12 +82,33 @@ class DynamicListTypesRegistrarTest {
   }
 
   @Test
-  void listWithACustomQueryHasNoRow() {
+  void listWithACustomQueryAndNoFieldCompositionHasNoRow() {
     // Поля такого списка — поля выборки его запроса, а не поля основной таблицы:
-    // та у него задаёт только динамическое чтение.
+    // та у него задаёт только динамическое чтение. Пока запрос не разбирается,
+    // называть их нечем.
     var rows = registrar.prepareRows(List.of(dynamicList("Catalog.Справочник1", true)), FORM_SUFFIX);
 
     assertThat(rows).isEmpty();
+  }
+
+  @Test
+  void listWithACustomQueryAndAFieldCompositionGetsARow() {
+    // given
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .mainTable("Catalog.Справочник1")
+      .customQuery(true)
+      .addFields(FormDynamicListField.builder().dataPath("Ссылка").name("Ссылка").build())
+      .build();
+
+    // when
+    var rows = registrar.prepareRows(List.of(list), FORM_SUFFIX);
+
+    // then
+    assertThat(rows).containsOnlyKeys("список");
+    assertThat(rows.get("список").rowIdRef())
+      .as("строку списка с произвольным запросом основная таблица не адресует")
+      .isNull();
   }
 
   @Test
@@ -96,13 +119,17 @@ class DynamicListTypesRegistrarTest {
   }
 
   @Test
-  void listOverAnUnknownTableHasNoRow() {
-    // Виртуальные таблицы регистров своего имени в реестре не имеют — колонки
-    // такого списка остаются неизвестными, как и до появления источника.
+  void listOverAVirtualTableGetsARowWithoutARowIdentifier() {
+    // given
+    // when
+    // Виртуальная таблица регистра ссылочного типа не имеет, поэтому строку
+    // ей не адресовать — но поля у такой таблицы есть, и строка нужна.
     var rows = registrar.prepareRows(
       List.of(dynamicList("AccumulationRegister.Остатки.Turnovers", false)), FORM_SUFFIX);
 
-    assertThat(rows).isEmpty();
+    // then
+    assertThat(rows).containsOnlyKeys("список");
+    assertThat(rows.get("список").rowIdRef()).isNull();
   }
 
   @Test

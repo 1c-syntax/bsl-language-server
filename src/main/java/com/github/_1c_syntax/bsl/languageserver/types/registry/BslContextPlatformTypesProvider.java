@@ -272,8 +272,9 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
       case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
       // GLOBAL_CONTEXT и LANGUAGE_KEYWORD типами не являются — обрабатываются
-      // отдельно (GlobalScopeProvider).
-      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> null;
+      // отдельно (GlobalScopeProvider), QUERY_TABLE — таблица языка запросов,
+      // а не тип встроенного языка.
+      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD, QUERY_TABLE -> null;
     };
   }
 
@@ -601,7 +602,14 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     );
   }
 
-  private static TypeSet typeSet(List<Context> contexts) {
+  /**
+   * Набор типов из контекстов синтакс-помощника. Имя generic-контекста остаётся
+   * с плейсхолдером — подставляет его потребитель.
+   *
+   * @param contexts контексты-типы.
+   * @return набор типов; {@link TypeSet#EMPTY}, если контекстов нет.
+   */
+  static TypeSet typeSet(List<Context> contexts) {
     if (contexts.isEmpty()) {
       return TypeSet.EMPTY;
     }
@@ -616,7 +624,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return switch (context.kind()) {
       case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
       case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
-      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> TypeKind.UNKNOWN;
+      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD, QUERY_TABLE -> TypeKind.UNKNOWN;
     };
   }
 }

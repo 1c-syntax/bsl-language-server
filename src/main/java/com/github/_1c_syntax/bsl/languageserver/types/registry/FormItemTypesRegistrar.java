@@ -352,9 +352,10 @@ class FormItemTypesRegistrar {
   private List<MemberDescriptor> tableMembers(TypeRef rowRef,
                                               DynamicListTypesRegistrar.@Nullable DynamicList dynamicList) {
     var currentData = tableDataMembers.currentData(rowRef);
-    return dynamicList == null
-      ? currentData
-      : FormPlatformTypes.concat(currentData, tableDataMembers.rowIdentifier(dynamicList.rowIdRef()));
+    if (dynamicList == null || dynamicList.rowIdRef() == null) {
+      return currentData;
+    }
+    return FormPlatformTypes.concat(currentData, tableDataMembers.rowIdentifier(dynamicList.rowIdRef()));
   }
 
   /**

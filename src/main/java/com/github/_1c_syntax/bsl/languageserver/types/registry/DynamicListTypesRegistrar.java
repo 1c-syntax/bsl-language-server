@@ -59,6 +59,7 @@ class DynamicListTypesRegistrar {
 
   private final TypeRegistry typeRegistry;
   private final FormDataTypesRegistrar formDataTypes;
+  private final QueryTableResolver queryTableResolver;
 
   /**
    * Строка динамического списка и идентификатор её строки.
@@ -66,9 +67,10 @@ class DynamicListTypesRegistrar {
    * @param rowRef   тип строки с колонками основной таблицы: его отдают
    *                 {@code ТекущиеДанные} и {@code ДанныеСтроки}.
    * @param rowIdRef тип идентификатора строки — то, что лежит в {@code ТекущаяСтрока},
-   *                 {@code ТекущийРодитель} и в элементах {@code ВыделенныеСтроки}.
+   *                 {@code ТекущийРодитель} и в элементах {@code ВыделенныеСтроки};
+   *                 {@code null}, если основная таблица не ссылочная.
    */
-  record DynamicList(TypeRef rowRef, TypeRef rowIdRef) {
+  record DynamicList(TypeRef rowRef, @Nullable TypeRef rowIdRef) {
   }
 
   /**
@@ -101,35 +103,47 @@ class DynamicListTypesRegistrar {
     if (!(attribute instanceof FormDynamicListAttribute list) || list.getName().isBlank()) {
       return null;
     }
-    var sourceRef = dataSourceRef(list);
-    return sourceRef == null ? null : new DynamicList(registerRow(list, suffixRu, sourceRef), sourceRef);
+    if (!hasKnownSource(list)) {
+      return null;
+    }
+    return new DynamicList(registerRow(list, suffixRu), rowIdRef(list));
   }
 
   /**
-   * Тип, за которым стоят поля основной таблицы списка. Он же — тип идентификатора
-   * строки: строку списка над ссылочной таблицей платформа адресует ссылкой, и её же
-   * отдаёт {@code ТекущаяСтрока}.
+   * Есть ли у списка источник, из которого возьмутся колонки строки. Спрашивать
+   * об этом сам источник нельзя: на регистрации формы это стоило бы разбора всех
+   * таблиц под каждый из тысяч списков конфигурации.
+   * <p>
+   * У списка с произвольным запросом основная таблица колонок не даёт — она
+   * задаёт лишь динамическое чтение, — поэтому колонки у него берутся из
+   * объявленного состава полей, пока не разбирается текст запроса.
+   */
+  private static boolean hasKnownSource(FormDynamicListAttribute list) {
+    if (!list.getFields().isEmpty()) {
+      return true;
+    }
+    return !list.isCustomQuery() && !list.getMainTable().isBlank();
+  }
+
+  /**
+   * Тип идентификатора строки: строку списка над ссылочной таблицей платформа
+   * адресует ссылкой, и её же отдаёт {@code ТекущаяСтрока}.
    * <p>
    * Имя основной таблицы — это mdoRef объекта ({@code Catalog.Номенклатура}), а
    * {@code Справочник.X}/{@code Catalog.X} в реестре ведёт на ссылочный тип: имя
-   * резолвится напрямую, разбирать его на части не нужно.
+   * резолвится напрямую, разбирать его на части не нужно. У виртуальной таблицы
+   * регистра ссылочного типа нет, и идентификатор строки остаётся неизвестным.
    *
-   * @return тип основной таблицы; {@code null}, если источник неизвестен.
+   * @return ссылочный тип основной таблицы; {@code null}, если его нет.
    */
-  private @Nullable TypeRef dataSourceRef(FormDynamicListAttribute list) {
+  private @Nullable TypeRef rowIdRef(FormDynamicListAttribute list) {
     if (list.isCustomQuery()) {
-      // Поля списка с произвольным запросом — это поля выборки его запроса, а не
-      // поля основной таблицы: та у такого списка задаёт лишь динамическое чтение.
-      // Разбор текста запроса (list.getQueryText()) — отдельная задача.
+      // У списка с произвольным запросом основная таблица задаёт лишь
+      // динамическое чтение, а строку идентифицируют поля выборки запроса.
       return null;
     }
     var mainTable = list.getMainTable();
-    if (mainTable.isBlank()) {
-      return null;
-    }
-    // Виртуальные таблицы регистров (`AccumulationRegister.X.Turnovers`) и сами
-    // регистры своего имени в реестре не имеют — такой список останется без колонок.
-    return typeRegistry.resolve(mainTable).orElse(null);
+    return mainTable.isBlank() ? null : typeRegistry.resolve(mainTable).orElse(null);
   }
 
   /**
@@ -141,7 +155,7 @@ class DynamicListTypesRegistrar {
    * — «Расширение данных строки для динамического списка» — объявлена там и нужна
    * всякой строке списка, независимо от его таблицы.
    */
-  private TypeRef registerRow(FormDynamicListAttribute list, String suffixRu, TypeRef sourceRef) {
+  private TypeRef registerRow(FormDynamicListAttribute list, String suffixRu) {
     var kindRowName = FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU + "." + TableDataKind.DYNAMIC_LIST.suffix();
     var baseRef = typeRegistry.resolve(kindRowName)
       .or(() -> typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU))
@@ -156,27 +170,25 @@ class DynamicListTypesRegistrar {
     typeRegistry.registerDisplayName(rowRef, BilingualString.of(
       FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN));
     var columns = list.getColumns();
-    typeRegistry.registerMemberSource(rowRef, () -> columnMembers(sourceRef, columns), FileType.BSL);
+    typeRegistry.registerMemberSource(rowRef, () -> columnMembers(list, columns), FileType.BSL);
     return rowRef;
   }
 
   /**
    * Колонки строки списка: объявленные в самом реквизите — впереди, за ними поля
-   * основной таблицы. Порядок задаёт исход дедупа в {@code getMembers}: объявление
+   * его таблицы. Порядок задаёт исход дедупа в {@code getMembers}: объявление
    * формы точнее, чем поле таблицы под тем же именем.
    * <p>
-   * Методы и события таблицы в строку не переносятся: в списке видны только данные.
+   * Поля считаются лениво: на регистрации формы обращение к членам сбивало бы
+   * epoch кэша членов.
    */
-  private List<MemberDescriptor> columnMembers(TypeRef sourceRef, List<FormAttribute> columns) {
+  private List<MemberDescriptor> columnMembers(FormDynamicListAttribute list, List<FormAttribute> columns) {
     var members = new ArrayList<MemberDescriptor>();
     if (!columns.isEmpty()) {
       members.addAll(formDataTypes.buildAttributeMembers(columns, formDataTypes.declaredAttributeTypes(columns)));
     }
-    for (var member : typeRegistry.getMembers(sourceRef, FileType.BSL)) {
-      if (member.kind() == MemberKind.PROPERTY && !member.generic()) {
-        members.add(member);
-      }
-    }
+    var tableName = list.isCustomQuery() ? "" : list.getMainTable();
+    members.addAll(queryTableResolver.fields(tableName, list));
     return List.copyOf(members);
   }
 }
