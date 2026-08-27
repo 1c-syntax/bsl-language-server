@@ -665,7 +665,7 @@ public class GlobalScopeProvider {
     var kind = switch (first.kind()) {
       case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
       case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
-      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD, QUERY_TABLE -> TypeKind.UNKNOWN;
+      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> TypeKind.UNKNOWN;
     };
     return new TypeRef(kind, first.name().getName());
   }

@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.PlatformContextGrabber;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.context.api.QueryContextProvider;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -61,13 +63,24 @@ public class PlatformContextProviderFactory {
   private boolean platformContextEnabled;
 
   /**
-   * Создаёт новый {@link ContextProvider}, прочитав HBK-файлы платформы.
+   * Контексты одного разбора справки.
    *
-   * @return полностью инициализированный провайдер, либо {@link Optional#empty()},
+   * @param provider      контекст встроенного языка: типы, коллекции, глобальный контекст.
+   * @param queryProvider контекст языка запросов: таблицы и элементы языка.
+   *                      Внутри текста запроса действует только он, поэтому и
+   *                      держится отдельно; {@code null}, если справка его не дала.
+   */
+  public record PlatformContexts(ContextProvider provider, @Nullable QueryContextProvider queryProvider) {
+  }
+
+  /**
+   * Создаёт новые контексты, прочитав HBK-файлы платформы.
+   *
+   * @return полностью инициализированные контексты, либо {@link Optional#empty()},
    *   если платформа не найдена / HBK не открылся
    * @throws IOException если парсинг упал на IO-ошибке (для логирования в caller'е)
    */
-  public Optional<ContextProvider> create() throws IOException {
+  public Optional<PlatformContexts> create() throws IOException {
     if (!platformContextEnabled) {
       LOGGER.debug("Platform context loader is disabled via app.platform-context.enabled=false");
       return Optional.empty();
@@ -88,6 +101,6 @@ public class PlatformContextProviderFactory {
     }
     LOGGER.info("Loaded {} platform contexts from 1C syntax helper",
       provider.getContexts().size());
-    return Optional.of(provider);
+    return Optional.of(new PlatformContexts(provider, grabber.getQueryProvider()));
   }
 }

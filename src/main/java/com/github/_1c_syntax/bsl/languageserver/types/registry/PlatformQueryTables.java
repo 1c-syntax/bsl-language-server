@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.context.api.ContextKind;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.ContextQueryTable;
+import com.github._1c_syntax.bsl.context.api.QueryContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.RequiredArgsConstructor;
@@ -152,11 +152,8 @@ class PlatformQueryTables {
   }
 
   private List<ContextQueryTable> loadTables() {
-    return contextHolder.get()
-      .map(provider -> provider.getContexts().stream()
-        .filter(context -> context.kind() == ContextKind.QUERY_TABLE)
-        .map(ContextQueryTable.class::cast)
-        .toList())
+    return contextHolder.getQueryProvider()
+      .map(QueryContextProvider::getTables)
       .orElseGet(List::of);
   }
 }

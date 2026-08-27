@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.PlatformContextGrabber;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.context.api.QueryContextProvider;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ class PlatformContextProviderFactoryTest {
     var factory = new PlatformContextProviderFactory(configuration);
     ReflectionTestUtils.setField(factory, ENABLED_FIELD, false);
 
-    Optional<ContextProvider> result = factory.create();
+    var result = factory.create();
 
     assertThat(result).isEmpty();
     verify(configuration, never()).getV8PlatformOptions();
@@ -82,7 +83,7 @@ class PlatformContextProviderFactoryTest {
       var factory = new PlatformContextProviderFactory(configuration);
       ReflectionTestUtils.setField(factory, ENABLED_FIELD, true);
 
-      Optional<ContextProvider> result = factory.create();
+      var result = factory.create();
 
       assertThat(result).isEmpty();
       verify(options, times(1)).isEnabled();
@@ -102,7 +103,9 @@ class PlatformContextProviderFactoryTest {
 
     var grabber = mock(PlatformContextGrabber.class);
     var provider = mock(ContextProvider.class);
+    var queryProvider = mock(QueryContextProvider.class);
     when(grabber.getProvider()).thenReturn(provider);
+    when(grabber.getQueryProvider()).thenReturn(queryProvider);
     when(provider.getContexts()).thenReturn((List) Collections.<Context>emptyList());
 
     try (MockedStatic<PlatformContextGrabber> grabbers = mockStatic(PlatformContextGrabber.class)) {
@@ -111,9 +114,12 @@ class PlatformContextProviderFactoryTest {
       var factory = new PlatformContextProviderFactory(configuration);
       ReflectionTestUtils.setField(factory, ENABLED_FIELD, true);
 
-      Optional<ContextProvider> result = factory.create();
+      var result = factory.create();
 
-      assertThat(result).contains(provider);
+      assertThat(result.map(PlatformContextProviderFactory.PlatformContexts::provider)).contains(provider);
+      assertThat(result.map(PlatformContextProviderFactory.PlatformContexts::queryProvider))
+        .as("контекст языка запросов читается тем же разбором справки")
+        .contains(queryProvider);
       grabbers.verify(PlatformContextGrabber::autoDetect, times(1));
       verify(grabber, times(1)).parse();
       verify(grabber, times(1)).getProvider();
@@ -141,9 +147,9 @@ class PlatformContextProviderFactoryTest {
       var factory = new PlatformContextProviderFactory(configuration);
       ReflectionTestUtils.setField(factory, ENABLED_FIELD, true);
 
-      Optional<ContextProvider> result = factory.create();
+      var result = factory.create();
 
-      assertThat(result).contains(provider);
+      assertThat(result.map(PlatformContextProviderFactory.PlatformContexts::provider)).contains(provider);
       grabbers.verify(() -> PlatformContextGrabber.fromPlatformBin(eq(binPath)), times(1));
       grabbers.verify(PlatformContextGrabber::autoDetect, never());
       verify(grabber, times(1)).parse();
@@ -167,7 +173,7 @@ class PlatformContextProviderFactoryTest {
       var factory = new PlatformContextProviderFactory(configuration);
       ReflectionTestUtils.setField(factory, ENABLED_FIELD, true);
 
-      Optional<ContextProvider> result = factory.create();
+      var result = factory.create();
 
       assertThat(result).isEmpty();
       verify(grabber, times(1)).parse();
