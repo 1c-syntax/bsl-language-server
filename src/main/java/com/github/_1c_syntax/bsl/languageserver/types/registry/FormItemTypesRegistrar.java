@@ -293,7 +293,7 @@ class FormItemTypesRegistrar {
       return Map.of();
     }
     var declaredTypes = attributeTypesByName(data.getAttributes());
-    var dynamicLists = dynamicListTypes.prepareRows(data.getAttributes(), suffixRu);
+    var dynamicLists = dynamicListTypes.prepareRows(data, suffixRu);
     var result = new HashMap<String, TypeRef>();
     for (var element : data.getPlainElements()) {
       if (!(element instanceof FormTable) || element.getName().isBlank()) {

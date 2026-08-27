@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.mdo.storage.FormData;
+import com.github._1c_syntax.bsl.mdo.storage.ManagedFormData;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
@@ -69,7 +71,7 @@ class DynamicListTypesRegistrarTest {
 
   @Test
   void listOverAMainTableGetsARowIdentifiedByThatTable() {
-    var rows = registrar.prepareRows(List.of(dynamicList("Catalog.Справочник1", false)), FORM_SUFFIX);
+    var rows = registrar.prepareRows(form(dynamicList("Catalog.Справочник1", false)), FORM_SUFFIX);
 
     assertThat(rows).containsOnlyKeys("список");
     assertThat(rows.get("список").rowRef().qualifiedName())
@@ -86,7 +88,7 @@ class DynamicListTypesRegistrarTest {
     // Поля такого списка — поля выборки его запроса, а не поля основной таблицы:
     // та у него задаёт только динамическое чтение. Без текста запроса называть
     // их нечем.
-    var rows = registrar.prepareRows(List.of(dynamicList("Catalog.Справочник1", true)), FORM_SUFFIX);
+    var rows = registrar.prepareRows(form(dynamicList("Catalog.Справочник1", true)), FORM_SUFFIX);
 
     assertThat(rows).isEmpty();
   }
@@ -102,7 +104,7 @@ class DynamicListTypesRegistrarTest {
       .build();
 
     // when
-    var rows = registrar.prepareRows(List.of(list), FORM_SUFFIX);
+    var rows = registrar.prepareRows(form(list), FORM_SUFFIX);
 
     // then
     assertThat(rows).containsOnlyKeys("список");
@@ -122,7 +124,7 @@ class DynamicListTypesRegistrarTest {
       .build();
 
     // when
-    var rows = registrar.prepareRows(List.of(list), FORM_SUFFIX);
+    var rows = registrar.prepareRows(form(list), FORM_SUFFIX);
 
     // then
     assertThat(rows).containsOnlyKeys("список");
@@ -133,7 +135,7 @@ class DynamicListTypesRegistrarTest {
 
   @Test
   void listWithoutAMainTableHasNoRow() {
-    var rows = registrar.prepareRows(List.of(dynamicList("", false)), FORM_SUFFIX);
+    var rows = registrar.prepareRows(form(dynamicList("", false)), FORM_SUFFIX);
 
     assertThat(rows).isEmpty();
   }
@@ -145,7 +147,7 @@ class DynamicListTypesRegistrarTest {
     // Виртуальная таблица регистра ссылочного типа не имеет, поэтому строку
     // ей не адресовать — но поля у такой таблицы есть, и строка нужна.
     var rows = registrar.prepareRows(
-      List.of(dynamicList("AccumulationRegister.Остатки.Turnovers", false)), FORM_SUFFIX);
+      form(dynamicList("AccumulationRegister.Остатки.Turnovers", false)), FORM_SUFFIX);
 
     // then
     assertThat(rows).containsOnlyKeys("список");
@@ -154,11 +156,19 @@ class DynamicListTypesRegistrarTest {
 
   @Test
   void plainAttributeIsNotAList() {
-    var rows = registrar.prepareRows(List.of(FormSimpleAttribute.builder().name("Реквизит1").build()),
+    var rows = registrar.prepareRows(form(FormSimpleAttribute.builder().name("Реквизит1").build()),
       FORM_SUFFIX);
 
     assertThat(rows).isEmpty();
     verifyNoInteractions(typeRegistry);
+  }
+
+  /**
+   * Форма из одних реквизитов: элементов и оформления у неё нет, поэтому полей
+   * своего списка она не читает — проверяется всё, кроме состава строки.
+   */
+  private static FormData form(FormAttribute attribute) {
+    return ManagedFormData.builder().addAttributes(attribute).build();
   }
 
   private static FormAttribute dynamicList(String mainTable, boolean customQuery) {

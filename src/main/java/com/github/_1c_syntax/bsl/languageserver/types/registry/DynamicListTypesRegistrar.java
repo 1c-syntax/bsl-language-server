@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.mdo.storage.FormData;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import lombok.RequiredArgsConstructor;
@@ -103,10 +104,12 @@ class DynamicListTypesRegistrar {
    * @param suffixRu   суффикс имени типов этой формы.
    * @return строки списков; пусто, если динамических списков с известным источником нет.
    */
-  Map<String, DynamicList> prepareRows(List<FormAttribute> attributes, String suffixRu) {
+  Map<String, DynamicList> prepareRows(FormData data, String suffixRu) {
+    var attributes = data.getAttributes();
+    var usedFields = DynamicListUsedFields.collect(data);
     var result = LinkedHashMap.<String, DynamicList>newLinkedHashMap(attributes.size());
     for (var attribute : attributes) {
-      var row = prepareRow(attribute, suffixRu);
+      var row = prepareRow(attribute, DynamicListUsedFields.of(usedFields, attribute), suffixRu);
       if (row != null) {
         result.put(attribute.getName().toLowerCase(Locale.ROOT), row);
       }
@@ -120,14 +123,14 @@ class DynamicListTypesRegistrar {
    * @return строка списка; {@code null}, если реквизит не динамический список, безымянный
    *   либо источник его данных неизвестен.
    */
-  private @Nullable DynamicList prepareRow(FormAttribute attribute, String suffixRu) {
+  private @Nullable DynamicList prepareRow(FormAttribute attribute, List<String> usedFields, String suffixRu) {
     if (!(attribute instanceof FormDynamicListAttribute list) || list.getName().isBlank()) {
       return null;
     }
     if (!hasKnownSource(list)) {
       return null;
     }
-    return new DynamicList(registerRow(list, suffixRu), rowIdRef(list));
+    return new DynamicList(registerRow(list, usedFields, suffixRu), rowIdRef(list));
   }
 
   /**
@@ -234,7 +237,7 @@ class DynamicListTypesRegistrar {
    * — «Расширение данных строки для динамического списка» — объявлена там и нужна
    * всякой строке списка, независимо от его таблицы.
    */
-  private TypeRef registerRow(FormDynamicListAttribute list, String suffixRu) {
+  private TypeRef registerRow(FormDynamicListAttribute list, List<String> usedFields, String suffixRu) {
     var kindRowName = FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU + "." + TableDataKind.DYNAMIC_LIST.suffix();
     var baseRef = typeRegistry.resolve(kindRowName)
       .or(() -> typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU))
@@ -249,7 +252,7 @@ class DynamicListTypesRegistrar {
     typeRegistry.registerDisplayName(rowRef, BilingualString.of(
       FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN));
     var columns = list.getColumns();
-    typeRegistry.registerMemberSource(rowRef, () -> columnMembers(list, columns), FileType.BSL);
+    typeRegistry.registerMemberSource(rowRef, () -> columnMembers(list, columns, usedFields), FileType.BSL);
     return rowRef;
   }
 
@@ -258,17 +261,44 @@ class DynamicListTypesRegistrar {
    * его таблицы. Порядок задаёт исход дедупа в {@code getMembers}: объявление
    * формы точнее, чем поле таблицы под тем же именем.
    * <p>
+   * Полей у таблицы больше, чем в строке: платформа читает только те, которые
+   * форма где-то называет, — поэтому поля таблицы отбираются по этому набору.
+   * Стандартная картинка строки — такое же поле: она есть, только если форма
+   * на неё ссылается.
+   * <p>
+   * Поле, которое форма называет, а источник не знает, колонкой всё равно
+   * становится — но без типа: взять его неоткуда. Так выглядит битое свойство.
+   * <p>
    * Поля считаются лениво: на регистрации формы обращение к членам сбивало бы
    * epoch кэша членов.
    */
-  private List<MemberDescriptor> columnMembers(FormDynamicListAttribute list, List<FormAttribute> columns) {
+  private List<MemberDescriptor> columnMembers(FormDynamicListAttribute list,
+                                               List<FormAttribute> columns,
+                                               List<String> usedFields) {
     var members = new ArrayList<MemberDescriptor>();
     if (!columns.isEmpty()) {
       members.addAll(formDataTypes.buildAttributeMembers(columns, formDataTypes.declaredAttributeTypes(columns)));
     }
     var tableName = list.isCustomQuery() ? "" : list.getMainTable();
-    members.addAll(queryTableResolver.fields(tableName, list));
-    members.add(MdoMemberFactory.property(DEFAULT_PICTURE, TypeSet.EMPTY).withStandardLibrary(true));
+    queryTableResolver.fields(tableName, list).stream()
+      .filter(field -> isUsed(field, usedFields))
+      .forEach(members::add);
+    var picture = MdoMemberFactory.property(DEFAULT_PICTURE, TypeSet.EMPTY).withStandardLibrary(true);
+    if (isUsed(picture, usedFields)) {
+      members.add(picture);
+    }
+    usedFields.stream()
+      .filter(name -> members.stream().noneMatch(member -> member.matches(name)))
+      .map(name -> MdoMemberFactory.property(BilingualString.of(name), TypeSet.EMPTY))
+      .forEach(members::add);
     return List.copyOf(members);
+  }
+
+  /**
+   * Называет ли форма это поле. Имя стандартного реквизита форма пишет
+   * по-английски, а код — по-русски, поэтому сверяются оба написания члена.
+   */
+  private static boolean isUsed(MemberDescriptor member, List<String> usedFields) {
+    return usedFields.stream().anyMatch(member::matches);
   }
 }

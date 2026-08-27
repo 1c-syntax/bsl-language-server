@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.mdo.storage.FormData;
+import com.github._1c_syntax.bsl.mdo.storage.ManagedFormData;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
 import com.github._1c_syntax.bsl.mdo.support.DynamicListFieldKind;
@@ -510,7 +513,7 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
 
     // when
     var rows = dynamicListTypes.prepareRows(
-      List.of(byRowNumber, byRowKey, byFieldValue, byTwoFields, byDefault), "Тест");
+      form(byRowNumber, byRowKey, byFieldValue, byTwoFields, byDefault), "Тест");
 
     // then
     assertThat(rows).hasSize(5);
@@ -526,6 +529,61 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void rowKeepsOnlyTheFieldsTheFormNames() {
+    // given
+    // Колонки у этих полей нет ни одной: их называют пометка «использовать
+    // всегда», настройки самого списка и условное оформление формы.
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .mainTable("Catalog.Справочник1")
+      .addUseAlwaysFields("Список.Реквизит1")
+      .addSettingsFields("Код")
+      .build();
+    var data = ManagedFormData.builder()
+      .addAttributes(list)
+      .addConditionalAppearanceFields("Список.Наименование")
+      .build();
+
+    // when
+    var rows = dynamicListTypes.prepareRows(data, "Тест");
+    var members = List.copyOf(typeRegistry.getMembers(rows.get("список").rowRef(), FileType.BSL));
+
+    // then
+    assertThat(names(members))
+      .contains("Реквизит1", "Код", "Наименование")
+      .as("поле, которого форма не называет нигде, в данные строки не попадает")
+      .doesNotContain("Ссылка", "Представление", "ПометкаУдаления");
+    assertThat(qualifiedNames(field(members, "Код")))
+      .as("тип колонки берётся у поля таблицы, как и раньше")
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void fieldTheSourceDoesNotKnowBecomesAColumnWithoutAType() {
+    // given
+    // Так выглядит битое свойство: форма поле называет, а в таблице его нет.
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .mainTable("Catalog.Справочник1")
+      .addUseAlwaysFields("~Список.НетТакогоПоля")
+      .addUseAlwaysFields("Список.Код")
+      .build();
+
+    // when
+    var rows = dynamicListTypes.prepareRows(ManagedFormData.builder().addAttributes(list).build(), "Тест");
+    var members = List.copyOf(typeRegistry.getMembers(rows.get("список").rowRef(), FileType.BSL));
+
+    // then
+    assertThat(names(members)).contains("НетТакогоПоля", "Код");
+    assertThat(field(members, "НетТакогоПоля").returnTypes().isEmpty())
+      .as("колонка есть, а тип брать неоткуда")
+      .isTrue();
+    assertThat(qualifiedNames(field(members, "Код")))
+      .as("поле, которое таблица знает, типизируется как обычно")
+      .containsExactly("Строка");
+  }
+
+  @Test
   void listOverAnExternalTableIsIdentifiedByItsRef() {
     // given
     // Имя таблицы внешнего источника псевдонимом типа не является, поэтому
@@ -535,7 +593,7 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
     var nonobjectTable = listOver("NonobjectTable", "ExternalDataSource.ВнешнийИсточникДанных1.Table.Таблица2");
 
     // when
-    var rows = dynamicListTypes.prepareRows(List.of(objectTable, nonobjectTable), "Тест");
+    var rows = dynamicListTypes.prepareRows(form(objectTable, nonobjectTable), "Тест");
 
     // then
     assertThat(qualifiedName(rows, "ObjectTable"))
@@ -573,11 +631,17 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(names(typeRegistry.getMembers(rowRef, FileType.BSL)))
-      .contains("Ссылка", "Код", "Наименование", "Реквизит1")
-      .as("псевдополя таблицы — то, чего у ссылочного типа справочника нет")
-      .contains("Представление", "ВерсияДанных")
-      .as("стандартный реквизит строки списка — картинка, на неё ссылается оформление строк")
-      .contains("СтандартнаяКартинка");
+      .as("колонками стали поля, которые называет форма: элементы формы стоят "
+        + "на Список.Ref, Список.Code, Список.Реквизит1 и прочих")
+      .contains("Ссылка", "Код", "Наименование", "Реквизит1", "ПометкаУдаления", "Предопределенный")
+      .as("картинку строки форма называет отдельным свойством таблицы, колонки у неё нет")
+      .contains("СтандартнаяКартинка")
+      .as("а поля, которых форма не называет нигде, платформа в данные строки не читает")
+      .doesNotContain("Представление", "ВерсияДанных");
+    assertThat(names(resolver.fields("Catalog.Справочник1")))
+      .as("у самой таблицы эти поля есть — в строку они не попали именно потому, "
+        + "что форма их не использует")
+      .contains("Представление", "ВерсияДанных");
     assertThat(typeRegistry.getMembers(rowRef, FileType.BSL))
       .as("картинка строки находится и по английскому написанию — им её пишет форма")
       .anyMatch(member -> member.matches("DefaultPicture"));
@@ -606,6 +670,15 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .keyType(keyType)
       .keyFields(keyFields)
       .build();
+  }
+
+  /**
+   * Форма из одних реквизитов: полей своего списка она не читает, поэтому
+   * состав строки в таких проверках пуст, а идентификатор строки от него
+   * не зависит.
+   */
+  private static FormData form(FormAttribute... attributes) {
+    return ManagedFormData.builder().attributes(List.of(attributes)).build();
   }
 
   private static FormDynamicListAttribute listOver(String name, String mainTable) {
