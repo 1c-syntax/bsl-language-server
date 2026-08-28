@@ -46,6 +46,9 @@ import java.util.Set;
  *   <li>отбор, порядок и условное оформление самого списка;</li>
  *   <li>условное оформление формы.</li>
  * </ul>
+ * Путь вглубь называет две колонки сразу: звено-ссылку и разыменованное поле
+ * с составным именем — у элемента на {@code Список.Организация.ИНН} в данных
+ * строки лежат и {@code Организация}, и {@code Организация.ИНН}.
  * Всё остальное, что объявляет запрос или таблица, в данные строки не попадает.
  * <p>
  * Тильдой форма помечает битое свойство — путь ведёт туда, чего в источнике
@@ -107,12 +110,26 @@ final class DynamicListUsedFields {
     addField(fields, path.substring(separator + 1));
   }
 
+  /**
+   * Поле, названное путём внутри списка. Путь вглубь даёт две колонки: само
+   * звено-ссылку и разыменованное поле, у которого имя составное —
+   * {@code Организация.ИНН} лежит в данных строки под этим самым именем,
+   * рядом с {@code Организация}.
+   */
   private static void addField(Set<String> fields, String field) {
     var name = withoutBrokenMarker(field);
+    if (name.isBlank()) {
+      return;
+    }
     var separator = name.indexOf('.');
-    var head = separator < 0 ? name : name.substring(0, separator);
+    if (separator < 0) {
+      fields.add(name);
+      return;
+    }
+    var head = name.substring(0, separator);
     if (!head.isBlank()) {
       fields.add(head);
+      fields.add(name);
     }
   }
 

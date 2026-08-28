@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.mdo.storage.ManagedFormData;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormField;
 import com.github._1c_syntax.bsl.mdo.support.DynamicListFieldKind;
 import com.github._1c_syntax.bsl.mdo.support.DynamicListKeyType;
 import com.github._1c_syntax.utils.Absolute;
@@ -545,7 +546,7 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .build();
 
     // when
-    var rows = dynamicListTypes.prepareRows(data, "Тест");
+    var rows = dynamicListTypes.prepareRows(data, "ФормаСостава");
     var members = List.copyOf(typeRegistry.getMembers(rows.get("список").rowRef(), FileType.BSL));
 
     // then
@@ -556,6 +557,33 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
     assertThat(qualifiedNames(field(members, "Код")))
       .as("тип колонки берётся у поля таблицы, как и раньше")
       .containsExactly("Строка");
+  }
+
+  @Test
+  void elementBoundThroughARefGetsBothTheLinkAndTheDereferencedColumn() {
+    // given
+    // Элемент стоит на Список.Ссылка.Дата: в данных строки платформа держит
+    // и саму ссылку, и разыменованное поле под составным именем.
+    var list = FormDynamicListAttribute.builder()
+      .name("Список")
+      .mainTable("Document.Документ1")
+      .build();
+    var data = ManagedFormData.builder()
+      .addAttributes(list)
+      .addElements(FormField.builder().name("СсылкаДата").dataPath("Список.Ссылка.Дата").build())
+      .build();
+
+    // when
+    var rows = dynamicListTypes.prepareRows(data, "ФормаРазыменования");
+    var members = List.copyOf(typeRegistry.getMembers(rows.get("список").rowRef(), FileType.BSL));
+
+    // then
+    assertThat(names(members)).contains("Ссылка", "Ссылка.Дата");
+    assertThat(qualifiedNames(field(members, "Ссылка")))
+      .containsExactly("ДокументСсылка.Документ1");
+    assertThat(qualifiedNames(field(members, "Ссылка.Дата")))
+      .as("тип разыменованной колонки — у последнего звена")
+      .containsExactly("Дата");
   }
 
   @Test
@@ -570,7 +598,8 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .build();
 
     // when
-    var rows = dynamicListTypes.prepareRows(ManagedFormData.builder().addAttributes(list).build(), "Тест");
+    var rows = dynamicListTypes.prepareRows(
+      ManagedFormData.builder().addAttributes(list).build(), "ФормаБитогоСвойства");
     var members = List.copyOf(typeRegistry.getMembers(rows.get("список").rowRef(), FileType.BSL));
 
     // then
@@ -636,6 +665,8 @@ class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
       .contains("Ссылка", "Код", "Наименование", "Реквизит1", "ПометкаУдаления", "Предопределенный")
       .as("картинку строки форма называет отдельным свойством таблицы, колонки у неё нет")
       .contains("СтандартнаяКартинка")
+      .as("элемент на Список.Ссылка.Код даёт и саму ссылку, и разыменованную колонку")
+      .contains("Ссылка.Код")
       .as("а поля, которых форма не называет нигде, платформа в данные строки не читает")
       .doesNotContain("Представление", "ВерсияДанных");
     assertThat(names(resolver.fields("Catalog.Справочник1")))

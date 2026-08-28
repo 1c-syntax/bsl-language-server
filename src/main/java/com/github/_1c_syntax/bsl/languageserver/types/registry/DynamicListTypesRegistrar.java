@@ -36,6 +36,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -280,7 +281,8 @@ class DynamicListTypesRegistrar {
       members.addAll(formDataTypes.buildAttributeMembers(columns, formDataTypes.declaredAttributeTypes(columns)));
     }
     var tableName = list.isCustomQuery() ? "" : list.getMainTable();
-    queryTableResolver.fields(tableName, list).stream()
+    var tableFields = queryTableResolver.fields(tableName, list);
+    tableFields.stream()
       .filter(field -> isUsed(field, usedFields))
       .forEach(members::add);
     var picture = MdoMemberFactory.property(DEFAULT_PICTURE, TypeSet.EMPTY).withStandardLibrary(true);
@@ -289,9 +291,19 @@ class DynamicListTypesRegistrar {
     }
     usedFields.stream()
       .filter(name -> members.stream().noneMatch(member -> member.matches(name)))
-      .map(name -> MdoMemberFactory.property(BilingualString.of(name), TypeSet.EMPTY))
+      .map(name -> MdoMemberFactory.property(BilingualString.of(name), chainTypes(name, tableFields)))
       .forEach(members::add);
     return List.copyOf(members);
+  }
+
+  /**
+   * Типы колонки, которой поля таблицы не нашлось. У разыменованного поля имя
+   * составное ({@code Организация.ИНН}), и тип берётся у последнего звена;
+   * у остальных типа нет — так выглядит битое свойство.
+   */
+  private TypeSet chainTypes(String name, Collection<MemberDescriptor> tableFields) {
+    var segments = List.of(name.split("\\.", -1));
+    return segments.size() < 2 ? TypeSet.EMPTY : QueryFieldChain.types(typeRegistry, tableFields, segments);
   }
 
   /**

@@ -50,10 +50,10 @@ class DynamicListUsedFieldsTest {
   }
 
   @Test
-  void pathIntoTheFieldTypeNamesOnlyItsFirstLink() {
+  void pathIntoTheFieldTypeNamesBothLinkAndDereferencedField() {
     // given
-    // Элемент на `Список.Контрагент.ИНН` требует колонки Контрагент: ИНН —
-    // уже свойство её типа.
+    // У элемента на `Список.Контрагент.ИНН` в данных строки лежат оба:
+    // сама ссылка и разыменованное поле под составным именем.
     var data = ManagedFormData.builder()
       .addAttributes(list().build())
       .addElements(FormField.builder().name("ИНН").dataPath("Список.Контрагент.ИНН").build())
@@ -63,7 +63,7 @@ class DynamicListUsedFieldsTest {
     var fields = DynamicListUsedFields.collect(data);
 
     // then
-    assertThat(fields.get("список")).containsExactly("Контрагент");
+    assertThat(fields.get("список")).containsExactlyInAnyOrder("Контрагент", "Контрагент.ИНН");
   }
 
   @Test
@@ -136,7 +136,8 @@ class DynamicListUsedFieldsTest {
     var fields = DynamicListUsedFields.collect(data);
 
     // then
-    assertThat(fields.get("список")).containsExactlyInAnyOrder("ПометкаУдаления", "Контрагент");
+    assertThat(fields.get("список"))
+      .containsExactlyInAnyOrder("ПометкаУдаления", "Контрагент", "Контрагент.ИНН");
   }
 
   @Test
