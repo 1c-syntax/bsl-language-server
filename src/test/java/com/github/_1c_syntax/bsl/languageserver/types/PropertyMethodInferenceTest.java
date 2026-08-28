@@ -48,6 +48,8 @@ class PropertyMethodInferenceTest extends AbstractServerContextAwareTest {
   private static final String MODULE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String DOCUMENT_FORM_MODULE =
     "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl";
+  private static final String LIST_FORM_MODULE =
+    "Catalogs/Справочник1/Forms/ФормаСписка/Ext/Form/Module.bsl";
 
   @Autowired
   private TypeService typeService;
@@ -389,6 +391,26 @@ class PropertyMethodInferenceTest extends AbstractServerContextAwareTest {
 
     assertThat(typesOf(documentContext, "Итог"))
       .as("тип реквизита документа, объявленный в метаданных")
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void dynamicListRowGivesDereferencedColumnByItsCompositeKey() {
+    // Разыменованную колонку строки списка через точку не прочитать — имя у неё
+    // составное. Читают её строковым ключом, и тип он даёт такой же.
+    var documentContext = documentWith(LIST_FORM_MODULE, """
+      &НаКлиенте
+      Процедура Тест()
+        Значение = Неопределено;
+        ТекущиеДанные = Элементы.Список.ТекущиеДанные;
+        Если ТекущиеДанные.Свойство("Ссылка.Код", Значение) Тогда
+          Итог = Значение;
+        КонецЕсли;
+      КонецПроцедуры
+      """);
+
+    assertThat(typesOf(documentContext, "Итог"))
+      .as("тип последнего звена разыменования")
       .containsExactly("Строка");
   }
 
