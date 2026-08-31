@@ -112,7 +112,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   private void enableMarkdownDocumentation(boolean enabled) {
     var itemCaps = new CompletionItemCapabilities();
-    itemCaps.setDocumentationFormat(enabled ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
+    itemCaps.setDocumentationFormat(List.of(enabled ? MarkupKind.MARKDOWN : MarkupKind.PLAINTEXT));
     var completionCaps = new CompletionCapabilities();
     completionCaps.setCompletionItem(itemCaps);
     var textDocumentCaps = new TextDocumentClientCapabilities();
@@ -2529,7 +2529,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   private void enableDocumentationResolveSupport(boolean markdown) {
     var itemCaps = new CompletionItemCapabilities();
-    itemCaps.setDocumentationFormat(markdown ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
+    itemCaps.setDocumentationFormat(List.of(markdown ? MarkupKind.MARKDOWN : MarkupKind.PLAINTEXT));
     itemCaps.setResolveSupport(new CompletionItemResolveSupportCapabilities(List.of("documentation")));
     var completionCaps = new CompletionCapabilities();
     completionCaps.setCompletionItem(itemCaps);

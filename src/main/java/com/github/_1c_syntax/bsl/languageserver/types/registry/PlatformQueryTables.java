@@ -118,25 +118,38 @@ class PlatformQueryTables {
       return null;
     }
     var bindings = new LinkedHashMap<String, String>();
-    for (int i = 0; i < templateSegments.length; i++) {
-      var placeholders = ContextNames.placeholders(templateSegments[i]);
-      if (placeholders.isEmpty()) {
-        if (!segmentMatches(templateSegments[i], segments[i])) {
-          return null;
-        }
-      } else if (placeholders.size() == 1 && placeholders.get(0).start() == 0
-        && placeholders.get(0).end() == templateSegments[i].length()) {
-        if (segments[i].isBlank()) {
-          return null;
-        }
-        bindings.put(placeholders.get(0).name(), segments[i]);
-      } else {
-        // Сегмент с плейсхолдером внутри у имён таблиц не встречается; такой
-        // шаблон сопоставить нечем.
+    for (var i = 0; i < templateSegments.length; i++) {
+      if (!matchSegment(templateSegments[i], segments[i], bindings)) {
         return null;
       }
     }
     return QueryTablePlaceholders.withSynonyms(bindings);
+  }
+
+  /**
+   * Сопоставляет один сегмент шаблона с сегментом конкретного имени. Сегмент
+   * без плейсхолдера должен совпасть буквально, сегмент-плейсхолдер принимает
+   * любое непустое имя и запоминает его подстановкой.
+   *
+   * @param templateSegment сегмент шаблона ({@code <Имя справочника>}).
+   * @param segment         сегмент конкретного имени.
+   * @param bindings        подстановки, куда кладётся значение плейсхолдера.
+   * @return {@code true}, если сегменты совпали.
+   */
+  private static boolean matchSegment(String templateSegment, String segment, Map<String, String> bindings) {
+    var placeholders = ContextNames.placeholders(templateSegment);
+    if (placeholders.isEmpty()) {
+      return segmentMatches(templateSegment, segment);
+    }
+    var placeholder = placeholders.get(0);
+    if (placeholders.size() != 1 || placeholder.start() != 0
+      || placeholder.end() != templateSegment.length() || segment.isBlank()) {
+      // Сегмент с плейсхолдером внутри у имён таблиц не встречается; такой
+      // шаблон сопоставить нечем.
+      return false;
+    }
+    bindings.put(placeholder.name(), segment);
+    return true;
   }
 
   /**

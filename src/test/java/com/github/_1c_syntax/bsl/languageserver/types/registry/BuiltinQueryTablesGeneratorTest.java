@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * расхождение пака с живой справкой ловит {@code BuiltinQueryTablesHbkTest}.
  */
 @Disabled("Разовый генератор: переписывает ресурс по установленной платформе")
-class GenerateBuiltinQueryTables {
+class BuiltinQueryTablesGeneratorTest {
 
   private static final Path RESOURCE = Path.of(
     "src/main/resources/com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-query-tables.json");
@@ -77,7 +76,7 @@ class GenerateBuiltinQueryTables {
       head.add("\"nameEn\": " + quote(table.name().getAlias()));
     }
     table.correspondence().ifPresent(value -> head.add("\"correspondence\": " + value));
-    var fields = table.fields().stream().map(GenerateBuiltinQueryTables::field).toList();
+    var fields = table.fields().stream().map(BuiltinQueryTablesGeneratorTest::field).toList();
     return "  {\n    " + String.join(",\n    ", head)
       + ",\n    \"fields\": [\n" + String.join(",\n", fields) + "\n    ]\n  }";
   }

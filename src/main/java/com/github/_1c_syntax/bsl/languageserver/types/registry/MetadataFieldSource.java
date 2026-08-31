@@ -60,6 +60,9 @@ class MetadataFieldSource implements QueryTableFieldSource {
 
   static final int ORDER = 20;
 
+  /** Написаний у имени поля два — русское и английское. */
+  private static final int NAME_SPELLINGS = 2;
+
   private final MdoMemberFactory mdoMembers;
 
   @Override
@@ -120,12 +123,12 @@ class MetadataFieldSource implements QueryTableFieldSource {
   private static boolean matchesFieldName(Attribute attribute, Set<String> fieldNames) {
     var name = MdoMemberFactory.attributeBilingualName(attribute);
     return fieldNames.contains(name.primary().toLowerCase(Locale.ROOT))
-      || !name.en().isBlank() && fieldNames.contains(name.en().toLowerCase(Locale.ROOT));
+      || (!name.en().isBlank() && fieldNames.contains(name.en().toLowerCase(Locale.ROOT)));
   }
 
   /** Имена полей таблицы без плейсхолдеров — оба написания, в нижнем регистре. */
   private static Set<String> concreteFieldNames(ContextQueryTable table) {
-    var result = HashSet.<String>newHashSet(table.fields().size() * 2);
+    var result = HashSet.<String>newHashSet(table.fields().size() * NAME_SPELLINGS);
     for (var field : table.fields()) {
       if (!QueryTableFieldSource.placeholderNames(field).isEmpty()) {
         continue;

@@ -41,7 +41,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -294,7 +293,7 @@ class FormItemTypesRegistrar {
     }
     var declaredTypes = attributeTypesByName(data.getAttributes());
     var dynamicLists = dynamicListTypes.prepareRows(data, suffixRu);
-    var result = new HashMap<String, TypeRef>();
+    var result = new LinkedHashMap<String, TypeRef>();
     for (var element : data.getPlainElements()) {
       if (!(element instanceof FormTable) || element.getName().isBlank()) {
         continue;
@@ -352,10 +351,11 @@ class FormItemTypesRegistrar {
   private List<MemberDescriptor> tableMembers(TypeRef rowRef,
                                               DynamicListTypesRegistrar.@Nullable DynamicList dynamicList) {
     var currentData = tableDataMembers.currentData(rowRef);
-    if (dynamicList == null || dynamicList.rowIdRef() == null) {
+    var rowIdRef = dynamicList == null ? null : dynamicList.rowIdRef();
+    if (rowIdRef == null) {
       return currentData;
     }
-    return FormPlatformTypes.concat(currentData, tableDataMembers.rowIdentifier(dynamicList.rowIdRef()));
+    return FormPlatformTypes.concat(currentData, tableDataMembers.rowIdentifier(rowIdRef));
   }
 
   /**

@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Пак подменяет синтакс-помощник, когда 1С не установлена, — и разойтись с ним
  * не должен. Тест требует установленной платформы: он и есть то место, где
  * расхождение обнаружится, а остальные тесты идут по паку и платформы не
- * требуют. Разошёлся — перегенерировать {@code GenerateBuiltinQueryTables}.
+ * требуют. Разошёлся — перегенерировать {@code BuiltinQueryTablesGeneratorTest}.
  */
 @EnabledIfEnvironmentVariable(named = "BSL_LANGUAGE_SERVER_RUN_HBK_TESTS",
   matches = "true",

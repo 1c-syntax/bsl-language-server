@@ -38,12 +38,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Поля выборки произвольного запроса динамического списка.
@@ -237,77 +232,4 @@ class QuerySelectionFieldSource implements QueryTableFieldSource {
     return result;
   }
 
-  /**
-   * Источники запроса: {@code алиас (lower) → имя таблицы}. Таблица без алиаса
-   * адресуется собственным именем, поэтому лежит и под ним.
-   */
-  private static final class QuerySources {
-
-    private final Map<String, String> tablesByAlias = new LinkedHashMap<>();
-
-    private QuerySources(SDBLParser.@Nullable DataSourcesContext dataSources) {
-      if (dataSources != null && dataSources.tables != null) {
-        dataSources.tables.forEach(this::collect);
-      }
-    }
-
-    private void collect(SDBLParser.DataSourceContext dataSource) {
-      var nested = dataSource.dataSource();
-      if (nested != null) {
-        collect(nested);
-      }
-      var tableName = tableNameOf(dataSource);
-      if (!tableName.isBlank()) {
-        var alias = dataSource.alias() == null ? tableName : dataSource.alias().name.getText();
-        tablesByAlias.putIfAbsent(alias.toLowerCase(Locale.ROOT), tableName);
-      }
-      if (dataSource.joins != null) {
-        dataSource.joins.stream()
-          .map(SDBLParser.JoinPartContext::dataSource)
-          .filter(Objects::nonNull)
-          .forEach(this::collect);
-      }
-    }
-
-    /**
-     * Имя таблицы источника так, как его пишет запрос
-     * ({@code Справочник.Номенклатура}, {@code РегистрНакопления.Продажи.Остатки}).
-     * Пусто у источника, за которым таблицы нет: подзапроса, временной таблицы,
-     * параметра.
-     */
-    private static String tableNameOf(SDBLParser.DataSourceContext dataSource) {
-      var external = dataSource.externalDataSourceTable();
-      if (external != null) {
-        // Имя такой таблицы разбирается отдельным правилом целиком
-        // ({@code ВнешнийИсточникДанных.X.Таблица.Y}), и собирать его заново
-        // из частей незачем.
-        return external.getText();
-      }
-      var virtualTable = dataSource.virtualTable();
-      if (virtualTable != null) {
-        return virtualTable.mdo() == null || virtualTable.virtualTableName == null
-          ? ""
-          : mdoName(virtualTable.mdo()) + "." + virtualTable.virtualTableName.getText();
-      }
-      var table = dataSource.table();
-      if (table == null || table.mdo() == null) {
-        return "";
-      }
-      return table.objectTableName == null
-        ? mdoName(table.mdo())
-        : mdoName(table.mdo()) + "." + table.objectTableName.getText();
-    }
-
-    private static String mdoName(SDBLParser.MdoContext mdo) {
-      return mdo.type.getText() + "." + mdo.tableName.getText();
-    }
-
-    private String tableOf(String alias) {
-      return tablesByAlias.getOrDefault(alias.toLowerCase(Locale.ROOT), "");
-    }
-
-    private List<String> allTables() {
-      return List.copyOf(tablesByAlias.values());
-    }
-  }
 }

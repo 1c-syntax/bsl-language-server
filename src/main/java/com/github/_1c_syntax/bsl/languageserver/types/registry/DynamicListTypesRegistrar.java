@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.storage.FormData;
@@ -62,6 +61,9 @@ class DynamicListTypesRegistrar {
 
   /** Платформенный тип ключа строки — им список адресует строку при виде ключа «КлючСтроки». */
   private static final String DYNAMIC_LIST_ROW_KEY = "КлючСтрокиДинамическогоСписка";
+
+  /** Звеньев в имени разыменованной колонки — звено-ссылка и поле за ним. */
+  private static final int DEREFERENCE_SEGMENTS = 2;
 
   /**
    * Поле, которым таблица называет ссылку на свою запись.
@@ -282,17 +284,17 @@ class DynamicListTypesRegistrar {
     }
     var tableName = list.isCustomQuery() ? "" : list.getMainTable();
     var tableFields = queryTableResolver.fields(tableName, list);
-    tableFields.stream()
+    members.addAll(tableFields.stream()
       .filter(field -> isUsed(field, usedFields))
-      .forEach(members::add);
+      .toList());
     var picture = MdoMemberFactory.property(DEFAULT_PICTURE, TypeSet.EMPTY).withStandardLibrary(true);
     if (isUsed(picture, usedFields)) {
       members.add(picture);
     }
-    usedFields.stream()
+    members.addAll(usedFields.stream()
       .filter(name -> members.stream().noneMatch(member -> member.matches(name)))
       .map(name -> MdoMemberFactory.property(BilingualString.of(name), chainTypes(name, tableFields)))
-      .forEach(members::add);
+      .toList());
     return List.copyOf(members);
   }
 
@@ -303,7 +305,9 @@ class DynamicListTypesRegistrar {
    */
   private TypeSet chainTypes(String name, Collection<MemberDescriptor> tableFields) {
     var segments = List.of(name.split("\\.", -1));
-    return segments.size() < 2 ? TypeSet.EMPTY : QueryFieldChain.types(typeRegistry, tableFields, segments);
+    return segments.size() < DEREFERENCE_SEGMENTS
+      ? TypeSet.EMPTY
+      : QueryFieldChain.types(typeRegistry, tableFields, segments);
   }
 
   /**

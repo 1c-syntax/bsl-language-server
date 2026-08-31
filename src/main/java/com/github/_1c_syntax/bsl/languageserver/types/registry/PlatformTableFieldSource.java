@@ -82,12 +82,9 @@ class PlatformTableFieldSource implements QueryTableFieldSource {
     }
     var result = new ArrayList<MemberDescriptor>(table.fields().size());
     for (var field : table.fields()) {
-      if (!belongsTo(field, request)) {
-        continue;
-      }
-      if (QueryTableFieldSource.isBarePlaceholder(field)) {
-        // Такое поле называет вид детей объекта метаданных целиком — его
-        // материализуют источники, которые знают их настоящие типы.
+      // Голый плейсхолдер называет вид детей объекта метаданных целиком — такое
+      // поле материализуют источники, которые знают их настоящие типы.
+      if (!belongsTo(field, request) || QueryTableFieldSource.isBarePlaceholder(field)) {
         continue;
       }
       if (QueryTableFieldSource.placeholderNames(field).isEmpty()) {

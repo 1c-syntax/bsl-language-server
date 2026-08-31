@@ -39,7 +39,7 @@ import java.util.Optional;
  * Встроенный пак таблиц языка запросов — то, чем подменяется синтакс-помощник,
  * когда 1С не установлена.
  * <p>
- * Пак снят с самой справки генератором {@code GenerateBuiltinQueryTables} и
+ * Пак снят с самой справки генератором {@code BuiltinQueryTablesGeneratorTest} и
  * несёт то, из чего складываются колонки: имена таблиц и полей в обоих
  * написаниях, типы значений и признак корреспонденции. Описаний в нём нет —
  * они занимают больше самих данных, а подсказке без установленной 1С хватает
@@ -69,32 +69,35 @@ final class BuiltinQueryTables {
    */
   static synchronized List<ContextQueryTable> load() {
     if (cache == null) {
-      cache = read();
+      cache = List.copyOf(read());
     }
     return cache;
   }
 
-  @SuppressWarnings("unchecked")
   private static List<ContextQueryTable> read() {
     try (var stream = BuiltinQueryTables.class.getClassLoader().getResourceAsStream(RESOURCE_PATH)) {
       if (stream == null) {
         LOGGER.warn("Встроенный пак таблиц языка запросов не найден: {}", RESOURCE_PATH);
         return List.of();
       }
-      var raw = (List<Map<String, Object>>) JsonMapper.builder().build().readValue(stream, List.class);
-      return raw.stream().map(BuiltinQueryTables::table).toList();
+      List<?> raw = JsonMapper.builder().build().readValue(stream, List.class);
+      return raw.stream()
+        .filter(Map.class::isInstance)
+        .map(rawTable -> table((Map<?, ?>) rawTable))
+        .toList();
     } catch (IOException | RuntimeException e) {
       LOGGER.warn("Не удалось прочитать встроенный пак таблиц языка запросов", e);
       return List.of();
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private static ContextQueryTable table(Map<String, Object> raw) {
+  private static ContextQueryTable table(Map<?, ?> raw) {
     var fields = new ArrayList<ContextQueryTableField>();
     if (raw.get("fields") instanceof List<?> rawFields) {
       for (var rawField : rawFields) {
-        fields.add(field((Map<String, Object>) rawField));
+        if (rawField instanceof Map<?, ?> rawFieldEntries) {
+          fields.add(field(rawFieldEntries));
+        }
       }
     }
     var correspondence = raw.get("correspondence") instanceof Boolean value
@@ -103,7 +106,7 @@ final class BuiltinQueryTables {
     return new PackTable(name(raw), List.copyOf(fields), correspondence);
   }
 
-  private static ContextQueryTableField field(Map<String, Object> raw) {
+  private static ContextQueryTableField field(Map<?, ?> raw) {
     var types = new ArrayList<Context>();
     if (raw.get("types") instanceof List<?> rawTypes) {
       for (var rawType : rawTypes) {
@@ -115,11 +118,11 @@ final class BuiltinQueryTables {
     return new PackField(name(raw), List.copyOf(types));
   }
 
-  private static ContextName name(Map<String, Object> raw) {
+  private static ContextName name(Map<?, ?> raw) {
     return new ContextName(string(raw, NAME_KEY), string(raw, NAME_EN_KEY));
   }
 
-  private static String string(Map<String, Object> raw, String key) {
+  private static String string(Map<?, ?> raw, String key) {
     return raw.get(key) instanceof String value ? value : "";
   }
 

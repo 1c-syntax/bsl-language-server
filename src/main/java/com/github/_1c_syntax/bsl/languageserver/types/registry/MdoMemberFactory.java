@@ -75,20 +75,17 @@ class MdoMemberFactory {
     var result = new ArrayList<MemberDescriptor>(attributes.size());
     for (var attribute : attributes) {
       var bilingualName = attributeBilingualName(attribute);
-      if (bilingualName.isEmpty()) {
+      var returnTypes = attributeReturnTypes(attribute);
+      // Стандартный реквизит платформа объявляет сама — с типом, описанием и мета.
+      // mdclasses про его тип знает не всегда (у `Владелец` типа нет вовсе), и
+      // бестиповый дубль отсюда только перекрыл бы объявление платформы.
+      if (bilingualName.isEmpty() || (returnTypes.isEmpty() && attribute instanceof StandardAttribute)) {
         continue;
       }
       // По ru-имени матчим описания/мета платформы — словарь HBK именован по-русски.
       var lc = bilingualName.primary().toLowerCase(Locale.ROOT);
       var description = platformDescriptions.getOrDefault(lc, BilingualString.EMPTY);
       var meta = platformMetadata.getOrDefault(lc, PlatformMetadata.EMPTY);
-      var returnTypes = attributeReturnTypes(attribute);
-      if (returnTypes.isEmpty() && attribute instanceof StandardAttribute) {
-        // Стандартный реквизит платформа объявляет сама — с типом, описанием и мета.
-        // mdclasses про его тип знает не всегда (у `Владелец` типа нет вовсе), и
-        // бестиповый дубль отсюда только перекрыл бы объявление платформы.
-        continue;
-      }
       var descriptor = property(bilingualName, returnTypes);
       if (!description.isEmpty()) {
         descriptor = descriptor.withBilingualDescription(description);
@@ -170,11 +167,8 @@ class MdoMemberFactory {
     }
     var result = new HashMap<String, PlatformMetadata>();
     for (var member : typeRegistry.getMembers(generic, FileType.BSL)) {
-      if (member.generic()) {
-        continue;
-      }
       var meta = member.metadata();
-      if (meta.isEmpty()) {
+      if (member.generic() || meta.isEmpty()) {
         continue;
       }
       result.putIfAbsent(member.name().toLowerCase(Locale.ROOT), meta);
@@ -273,11 +267,8 @@ class MdoMemberFactory {
       return;
     }
     for (var member : typeRegistry.getMembers(generic, FileType.BSL)) {
-      if (member.generic()) {
-        continue;
-      }
       var description = member.bilingualDescription();
-      if (description.isEmpty()) {
+      if (member.generic() || description.isEmpty()) {
         continue;
       }
       sink.putIfAbsent(member.name().toLowerCase(Locale.ROOT), description);

@@ -54,6 +54,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class QueryTableResolver {
 
+  /** Сегментов в одной паре «вид.имя» ссылки объекта метаданных. */
+  private static final int PAIR_SEGMENTS = 2;
+
   private final List<QueryTableFieldSource> sources;
   private final PlatformQueryTables platformTables;
   private final ServerContextProvider serverContextProvider;
@@ -107,12 +110,8 @@ public class QueryTableResolver {
    */
   private static void merge(Map<String, MemberDescriptor> byName, MemberDescriptor member) {
     var key = member.name().toLowerCase(Locale.ROOT);
-    var existing = byName.get(key);
-    if (existing == null) {
-      byName.put(key, member);
-      return;
-    }
-    if (existing.returnTypes().isEmpty() && !member.returnTypes().isEmpty()) {
+    var existing = byName.putIfAbsent(key, member);
+    if (existing != null && existing.returnTypes().isEmpty() && !member.returnTypes().isEmpty()) {
       byName.put(key, existing.withReturnTypes(member.returnTypes()));
     }
   }
@@ -134,7 +133,7 @@ public class QueryTableResolver {
     var segments = tableName.split("\\.", -1);
     MdoReference reference = null;
     var consumed = 0;
-    for (var i = 0; i + 1 < segments.length; i += 2) {
+    for (var i = 0; i + 1 < segments.length; i += PAIR_SEGMENTS) {
       var mdoType = MDOType.fromValue(segments[i]);
       if (mdoType.isEmpty()) {
         break;
@@ -142,7 +141,7 @@ public class QueryTableResolver {
       reference = reference == null
         ? MdoReference.create(mdoType.get(), segments[i + 1])
         : MdoReference.create(reference, mdoType.get(), segments[i + 1]);
-      consumed = i + 2;
+      consumed = i + PAIR_SEGMENTS;
     }
     if (reference == null || segments.length - consumed > 1) {
       // Хвост длиннее одного сегмента — имя не разобрано: одним сегментом

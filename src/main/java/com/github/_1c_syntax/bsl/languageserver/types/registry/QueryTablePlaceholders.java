@@ -98,8 +98,8 @@ final class QueryTablePlaceholders {
    * @return реквизиты; пусто, если таких у объекта нет либо плейсхолдер
    *   заполняется не из реквизитов объекта.
    */
-  static List<? extends Attribute> attributesFor(String placeholder, MD md) {
-    return switch (placeholder) {
+  static List<Attribute> attributesFor(String placeholder, MD md) {
+    List<? extends Attribute> attributes = switch (placeholder) {
       case ATTRIBUTE -> ownAttributes(md);
       case DIMENSION -> dimensions(md);
       case RESOURCE -> resources(md);
@@ -107,6 +107,7 @@ final class QueryTablePlaceholders {
       case ADDRESSING_ATTRIBUTE -> md instanceof Task task ? task.getAddressingAttributes() : List.of();
       default -> List.of();
     };
+    return List.copyOf(attributes);
   }
 
   /**
