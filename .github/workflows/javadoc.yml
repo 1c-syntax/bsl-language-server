@@ -47,5 +47,12 @@ jobs:
         java-version: 25
         distribution: 'corretto'
         cache: gradle
+    # javadoc скачивает element-list с каждого сайта из -link (в том числе с javadoc.io,
+    # который периодически недоступен). Если сборка со ссылками упала, повторяем без них:
+    # проверки doclint работают как обычно, теряются только перекрёстные ссылки.
     - name: Check javadoc build
-      run: ./gradlew javadoc --stacktrace
+      run: |
+        ./gradlew javadoc --stacktrace || {
+          echo "::warning::Сборка javadoc со внешними ссылками не удалась, повторяем без них"
+          ./gradlew javadoc --stacktrace -PjavadocLinks=false
+        }
