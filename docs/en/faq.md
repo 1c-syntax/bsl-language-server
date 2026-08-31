@@ -35,3 +35,33 @@ Also through direct import `BSL Language Server` work:
 
 * plugin for [1C: Enterprise development tools](https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator) (own implementation, without LSP);
 * plugin for [SonarQube](https://github.com/1c-syntax/sonar-bsl-plugin-community);
+
+## Why does PairingBrokenTransaction flag `RollbackTransaction()` in the `Except` block?
+
+The diagnostic does not follow `If` / `Return` control flow. Inside a method it matches calls on two independent stacks:
+
+* `BeginTransaction` / `CommitTransaction`
+* `BeginTransaction` / `RollbackTransaction`
+
+Two rollbacks and one begin produce a hit on the second rollback.
+
+Typical fragment:
+
+```bsl
+BeginTransaction();
+Try
+    If ShouldExit Then
+        RollbackTransaction();
+        Return;
+    EndIf;
+    CommitTransaction();
+Except
+    RollbackTransaction();
+EndTry;
+```
+
+The early `RollbackTransaction()` inside `Try` consumes the pair for `BeginTransaction()`. The call in `Except` is left unpaired, so the message is "Missing paired call of "BeginTransaction" for method "RollbackTransaction"". That is expected.
+
+The [1C standard](https://its.1c.ru/db/v8std/content/783/hdoc/_top/) requires begin, commit, and rollback in the same method, with rollback in `Except`. Do not call `RollbackTransaction()` and then `Return` inside `Try`. If you need to stop before commit, raise an exception and roll back only in `Except`.
+
+See the [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) page for examples.
