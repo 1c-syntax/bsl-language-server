@@ -37,9 +37,7 @@ import com.github._1c_syntax.bsl.mdo.support.DynamicListKeyType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,15 +49,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Поля таблиц языка запросов складываются из двух половин: платформенную
- * ({@code Представление}, {@code МоментВремени}, поля виртуальных таблиц) знает
- * только синтакс-помощник, поэтому тест требует установленной 1С.
+ * ({@code Представление}, {@code МоментВремени}, поля виртуальных таблиц) даёт
+ * синтакс-помощник, а без установленной 1С — встроенный пак, снятый с той же
+ * справки. Тест идёт по паку, поэтому установленной платформы не требует.
  */
 @CleanupContextBeforeClassAndAfterClass
-@TestPropertySource(properties = "app.platform-context.enabled=true")
-@EnabledIfEnvironmentVariable(named = "BSL_LANGUAGE_SERVER_RUN_HBK_TESTS",
-  matches = "true",
-  disabledReason = "Требует HBK 1С (платформенные поля таблиц берутся из bsl-context)")
-class QueryTableResolverHbkTest extends AbstractServerContextAwareTest {
+class QueryTableResolverTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ConfigurationTypesProvider provider;

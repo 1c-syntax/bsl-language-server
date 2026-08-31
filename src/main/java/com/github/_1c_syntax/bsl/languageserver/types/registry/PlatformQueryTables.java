@@ -151,9 +151,14 @@ class PlatformQueryTables {
     return renamed != null && renamed.equalsIgnoreCase(templateSegment);
   }
 
+  /**
+   * Таблицы платформы: из синтакс-помощника установленной 1С, а без неё — из
+   * встроенного пака, снятого с той же справки. Состав полей и типы в паке те
+   * же, нет только описаний.
+   */
   private List<ContextQueryTable> loadTables() {
     return contextHolder.getQueryProvider()
       .map(QueryContextProvider::getTables)
-      .orElseGet(List::of);
+      .orElseGet(BuiltinQueryTables::load);
   }
 }

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.context.api.ContextQueryTableField;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTable;
 import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceTable;
 import com.github._1c_syntax.bsl.mdo.support.TableDataType;
@@ -169,8 +170,7 @@ class PlatformTableFieldSource implements QueryTableFieldSource {
    */
   private MemberDescriptor member(ContextQueryTableField field, Map<String, String> nameBindings) {
     var name = BilingualString.of(field.name().getName(), field.name().getAlias());
-    var types = BslContextPlatformTypesProvider.typeSet(field.types());
-    var descriptor = MdoMemberFactory.property(name, types).withStandardLibrary(true);
+    var descriptor = MdoMemberFactory.property(name, canonicalTypes(field)).withStandardLibrary(true);
     if (!field.description().isBlank()) {
       descriptor = descriptor.withBilingualDescription(BilingualString.of(field.description()));
     }
@@ -178,5 +178,18 @@ class PlatformTableFieldSource implements QueryTableFieldSource {
       return descriptor;
     }
     return descriptor.specialize(nameBindings, typeRegistry::canonicalRef);
+  }
+
+  /**
+   * Типы поля, приведённые к каноническим. Вид типа приходит извне — из
+   * справки либо из встроенного пака, — а какой он на самом деле, знает
+   * реестр: имя там уже зарегистрировано.
+   */
+  private TypeSet canonicalTypes(ContextQueryTableField field) {
+    var types = BslContextPlatformTypesProvider.typeSet(field.types());
+    if (types.isEmpty()) {
+      return types;
+    }
+    return TypeSet.of(types.refs().stream().map(typeRegistry::canonicalRef).toList());
   }
 }
