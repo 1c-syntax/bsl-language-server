@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Profile;
@@ -31,15 +30,19 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 
 /**
- * Выбор workspace для MCP-инструментов, у которых нет явной привязки к конкретному
+ * Выбор рабочей папки для MCP-инструментов, у которых нет явной привязки к конкретному
  * файлу (например, {@code type_info}, {@code global_member_info}). Клиент обязан явно
- * указать {@code root} (одно из значений объявленных им MCP-roots), потому что ответ
- * может различаться между несколькими открытыми пространствами (конфигурации, OneScript-
- * проекты, библиотеки).
+ * указать {@code workspaceFolder} (одно из значений, которые вернул
+ * {@code list_workspace_folders}), потому что ответ может различаться между зарегистрированными
+ * папками (конфигурации, OneScript-проекты, библиотеки).
  * <p>
- * Сравнение URI ведётся через {@link Absolute#uri(String)} — чтобы клиентское представление
- * ({@code file://D:/repo} / {@code file:///D:/repo/} / разный regex-эскейпинг) сходилось с
- * тем URI, под которым workspace зарегистрирован.
+ * Сравнение URI ведётся через {@link McpWorkspaceFolders#toWorkspaceFolderUri(String)} — чтобы
+ * клиентское представление ({@code file://D:/repo} / {@code file:///D:/repo/} / голый путь
+ * {@code D:\repo}) сходилось с тем URI, под которым папка зарегистрирована.
+ * <p>
+ * Инвариант ошибки: если корень не передан или не совпал ни с одной рабочей папкой,
+ * сообщение перечисляет зарегистрированные корни и называет инструмент их регистрации
+ * (см. {@link McpWorkspaceFolders#registrationHint}).
  */
 @Component
 @Profile("mcp")
@@ -49,23 +52,27 @@ public class McpWorkspaceResolver {
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Выбрать workspace для tool-запроса.
+   * Выбрать рабочую папку для tool-запроса.
    *
-   * @param requestedRoot URI workspace-root'а, на который ссылается запрос.
-   * @return URI зарегистрированного workspace.
-   * @throws IllegalArgumentException если {@code requestedRoot} пуст/отсутствует, либо не
-   *   совпадает ни с одним зарегистрированным workspace.
+   * @param requestedFolder URI рабочей папки (либо путь к ней), на которую ссылается запрос.
+   * @return URI зарегистрированной рабочей папки.
+   * @throws IllegalArgumentException если {@code requestedFolder} пуст/отсутствует, либо не
+   *   совпадает ни с одной зарегистрированной рабочей папкой. Сообщение содержит список
+   *   зарегистрированных папок и указание на {@code register_workspace_folder}.
    */
-  public URI resolveWorkspaceUri(@Nullable String requestedRoot) {
-    if (requestedRoot == null || requestedRoot.isBlank()) {
+  public URI resolveWorkspaceFolderUri(@Nullable String requestedFolder) {
+    var registeredFolders = serverContextProvider.getAllContexts().keySet();
+    if (requestedFolder == null || requestedFolder.isBlank()) {
       throw new IllegalArgumentException(
-        "Workspace root is required. Pass one of the roots the client declared via MCP roots.");
+        "Workspace folder is required: every folder-scoped BSL tool must say which workspace "
+          + "folder to answer for. " + McpWorkspaceFolders.registrationHint(registeredFolders));
     }
-    var normalized = Absolute.uri(requestedRoot);
-    return serverContextProvider.getAllContexts().keySet().stream()
+    var normalized = McpWorkspaceFolders.toWorkspaceFolderUri(requestedFolder);
+    return registeredFolders.stream()
       .filter(uri -> uri.equals(normalized))
       .findFirst()
       .orElseThrow(() -> new IllegalArgumentException(
-        "No registered workspace matches root: " + requestedRoot));
+        "No registered workspace folder matches: " + requestedFolder + ". "
+          + McpWorkspaceFolders.registrationHint(registeredFolders)));
   }
 }

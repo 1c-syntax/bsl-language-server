@@ -27,19 +27,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-import java.nio.file.Path;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * Юнит-тесты синхронизации рабочих пространств с MCP roots, включая ветки обработки ошибок.
+ * Юнит-тесты разбора корней MCP: что доходит до синхронизации набора рабочих папок,
+ * а что отбрасывается. Само владение папками проверяется в {@link McpWorkspaceBootstrapTest}.
  */
 class McpRootsChangeConsumerTest {
 
@@ -51,30 +46,25 @@ class McpRootsChangeConsumerTest {
   }
 
   @Test
-  void addsThenRemovesWorkspaceFromRoots() {
+  void declaredRootsAreHandedOverAsWorkspaceFolders() {
     consumer.accept(null, List.of(root("src/test/resources/cli")));
-    verify(bootstrap).index(any(Path.class));
 
+    verify(bootstrap).syncRoots(List.of(Absolute.path("src/test/resources/cli")));
+  }
+
+  @Test
+  void emptyRootListIsHandedOverAsIs() {
     consumer.accept(null, List.of());
-    verify(bootstrap).remove(any(Path.class));
+
+    // Пустой список — это «корней больше нет», а не «нечего делать»: синхронизация обязана состояться.
+    verify(bootstrap).syncRoots(List.of());
   }
 
   @Test
   void unsupportedRootUriIsSkipped() {
     consumer.accept(null, List.of(new Root("https://example.com/not-a-file", "bad")));
 
-    verify(bootstrap, never()).index(any());
-  }
-
-  @Test
-  void indexFailureIsSwallowedAndRootStaysUnregistered() {
-    doThrow(new RuntimeException("boom")).when(bootstrap).index(any(Path.class));
-
-    consumer.accept(null, List.of(root("src/test/resources/cli")));
-    // Индексация упала -> корень не зарегистрирован, повторная синхронизация пробует снова.
-    consumer.accept(null, List.of(root("src/test/resources/cli")));
-
-    verify(bootstrap, times(2)).index(any(Path.class));
+    verify(bootstrap).syncRoots(List.of());
   }
 
   @Test
@@ -85,7 +75,7 @@ class McpRootsChangeConsumerTest {
     // нормализуем до RFC 8089 file:///D:/path до передачи в Absolute. Соответствие пути
     // Windows-стилю выводится из реального filesystem-роута тестового каталога, поэтому
     // end-to-end ассерт ограничен Windows; кросс-платформенно само нормализаторное правило
-    // покрыто чистыми string-тестами normalizeWindowsFileUri* ниже.
+    // покрыто string-тестами в McpWorkspaceFoldersTest — оно живёт там, где общая нормализация.
     var path = Absolute.path("src/test/resources/cli");
     var driveLetter = path.getRoot().toString().substring(0, 2); // "D:"
     var withoutRoot = path.subpath(0, path.getNameCount()).toString(); // backslashes на Windows
@@ -93,37 +83,7 @@ class McpRootsChangeConsumerTest {
 
     consumer.accept(null, List.of(new Root(brokenUri, "broken")));
 
-    verify(bootstrap).index(path);
+    verify(bootstrap).syncRoots(List.of(path));
   }
 
-  @Test
-  void normalizeWindowsFileUriRewritesDriveLetterAsHost() {
-    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("file://D:\\git\\1C\\upp\\src\\cf"))
-      .isEqualTo("file:///D:/git/1C/upp/src/cf");
-  }
-
-  @Test
-  void normalizeWindowsFileUriKeepsRfcCompliantValueUntouched() {
-    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("file:///D:/git/1C/upp/src/cf"))
-      .isEqualTo("file:///D:/git/1C/upp/src/cf");
-  }
-
-  @Test
-  void normalizeWindowsFileUriIgnoresNonFileSchemes() {
-    assertThat(McpRootsChangeConsumer.normalizeWindowsFileUri("https://example.com/path"))
-      .isEqualTo("https://example.com/path");
-  }
-
-  @Test
-  void removeFailureStillClearsRegistration() {
-    var root = root("src/test/resources/cli");
-    consumer.accept(null, List.of(root));
-
-    doThrow(new RuntimeException("boom")).when(bootstrap).remove(any(Path.class));
-    consumer.accept(null, List.of());
-
-    // Несмотря на ошибку удаления, отметка снята -> корень добавляется заново.
-    consumer.accept(null, List.of(root));
-    verify(bootstrap, times(2)).index(any(Path.class));
-  }
 }
