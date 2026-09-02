@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788373741688,
+  "lastUpdate": 1788375190798,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43152,6 +43152,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.3541701537838136",
             "extra": "mean: 103.79159688949585 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6be3af5cf03044a23b077955c356f69048f908fd",
+          "message": "Merge pull request #4462 from 1c-syntax/claude/mcp-roots-alternatives-xy04ff\n\nfeat(mcp): регистрация рабочих папок инструментами вместо MCP roots",
+          "timestamp": "2026-09-02T20:32:04+02:00",
+          "tree_id": "e5156904ea4b4a3ca0a4728ea00679b0f1d3cdac",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6be3af5cf03044a23b077955c356f69048f908fd"
+        },
+        "date": 1788375177500,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.8387401898702,
+            "unit": "sec",
+            "range": "stddev: 3.2520862544909486",
+            "extra": "mean: 104.8387401898702 sec\nrounds: 3"
           }
         ]
       }
