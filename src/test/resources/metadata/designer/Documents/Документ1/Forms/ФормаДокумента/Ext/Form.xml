@@ -160,6 +160,9 @@
 				</Column>
 			</Columns>
 		</Attribute>
+		<Attribute name="РеквизитПроизвольный" id="10">
+			<Type/>
+		</Attribute>
 	</Attributes>
 	<Commands>
 		<Command name="ЗаполнитьПоОснованию" id="1">
