@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787522884812,
+  "lastUpdate": 1788373741688,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43121,6 +43121,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.4540529437167873",
             "extra": "mean: 104.79406785964966 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ff7ee077790eaa506656b743608ceabf36a07a7e",
+          "message": "Merge pull request #4493 from 1c-syntax/feat/dynamic-list-query-table-fields\n\nfeat(types): колонки динамического списка — по полям его таблицы запроса",
+          "timestamp": "2026-09-02T20:16:30+02:00",
+          "tree_id": "787c2b73ed6019807fd144948802c83cb3d35989",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ff7ee077790eaa506656b743608ceabf36a07a7e"
+        },
+        "date": 1788373725923,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 103.79159688949585,
+            "unit": "sec",
+            "range": "stddev: 3.3541701537838136",
+            "extra": "mean: 103.79159688949585 sec\nrounds: 3"
           }
         ]
       }
