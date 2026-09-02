@@ -27,8 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
@@ -43,7 +41,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -67,21 +64,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 class FormItemTypesRegistrar {
 
-  /** Коллекция выделенных строк таблицы формы. */
-  private static final BilingualString SELECTED_ROWS =
-    BilingualString.of("ВыделенныеСтроки", "SelectedRows");
-
-  private static final String ARRAY_RU = "Массив";
-  private static final String ARRAY_EN = "Array";
-
-  /** Свойства таблицы, тип которых зависит от вида отображаемых данных. */
-  private static final BilingualString CURRENT_ROW = BilingualString.of("ТекущаяСтрока", "CurrentRow");
-  private static final BilingualString CURRENT_PARENT =
-    BilingualString.of("ТекущийРодитель", "CurrentParent");
-  private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
-
   private final TypeRegistry typeRegistry;
   private final FormDataTypesRegistrar formDataTypes;
+  private final DynamicListTypesRegistrar dynamicListTypes;
+  private final TableDataMembers tableDataMembers;
   private final FormTypeFactory typeFactory;
 
   /**
@@ -234,24 +220,11 @@ class FormItemTypesRegistrar {
     var members = new ArrayList<MemberDescriptor>();
     var rowIdRef = resolveOrNull(dataKind.rowIdTypeName());
     if (rowIdRef != null) {
-      members.add(FormPlatformTypes.platformProperty(CURRENT_ROW, rowIdRef, BilingualString.EMPTY));
-      members.add(FormPlatformTypes.platformProperty(CURRENT_PARENT, rowIdRef, BilingualString.EMPTY));
-      var selectedRowsRef = registerIdentifierArray(rowIdRef);
-      if (selectedRowsRef != null) {
-        members.add(FormPlatformTypes.platformProperty(SELECTED_ROWS, selectedRowsRef, BilingualString.EMPTY));
-      }
+      members.addAll(tableDataMembers.rowIdentifier(rowIdRef));
     }
     var currentDataRef = resolveOrNull(dataKind.currentDataTypeName());
     if (currentDataRef != null) {
-      members.add(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        currentDataRef, BilingualString.EMPTY));
-      members.add(MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
-          List.of(new SignatureDescriptor(
-            List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
-              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
-            TypeSet.of(currentDataRef), BilingualString.EMPTY)))
-        .withBilingualName(ROW_DATA_METHOD));
+      members.addAll(tableDataMembers.currentData(currentDataRef));
     }
     if (!members.isEmpty()) {
       typeRegistry.registerMemberOverride(tableRef, () -> members, FileType.BSL);
@@ -263,26 +236,6 @@ class FormItemTypesRegistrar {
   }
 
   /**
-   * Массив идентификаторов строк — то, что лежит в {@code ВыделенныеСтроки}. Платформа
-   * объявляет там обычный {@code Массив}, а описание расширения говорит, чем он заполнен;
-   * без специализации обход {@code Для Каждого Идентификатор Из ВыделенныеСтроки} терял
-   * тип элемента.
-   *
-   * @param elementRef тип элемента массива.
-   * @return специализация массива; {@code null}, если самого {@code Массив} в реестре нет.
-   */
-  private @Nullable TypeRef registerIdentifierArray(TypeRef elementRef) {
-    var arrayBase = typeRegistry.resolve(ARRAY_RU).orElse(null);
-    if (arrayBase == null) {
-      return null;
-    }
-    var arrayRef = formDataTypes.registerFormDataMirror(ARRAY_RU, ARRAY_EN, elementRef.qualifiedName(), "", arrayBase);
-    typeRegistry.registerDefaultElementTypes(arrayRef, List.of(elementRef));
-    typeRegistry.inheritCollectionTraits(arrayRef, arrayBase, FileType.BSL);
-    return arrayRef;
-  }
-
-  /**
    * Тип строки данных таблицы формы, если платформа даёт для него расширение. Пока
    * такое расширение одно — у динамического списка («когда в списке задано условное
    * оформление»), и на управляемой форме динамический список — единственный источник
@@ -290,8 +243,9 @@ class FormItemTypesRegistrar {
    * <p>
    * Тип заводится и тогда, когда расширение пустое: он нужен как якорь для
    * {@code ТекущиеДанные} — вместо обобщённого {@code ДанныеФормыЭлементКоллекции}
-   * там оказывается строка именно этого вида данных. Колонки строки лягут на него же,
-   * когда mdclasses начнёт отдавать источник данных списка (mdclasses#671).
+   * там оказывается строка именно этого вида данных. Колонки на нём не лежат: они
+   * зависят от основной таблицы конкретного списка и лежат на его специализации
+   * (см. {@link DynamicListTypesRegistrar}), которая этот тип и расширяет.
    */
   private void registerRowDataKindType(TableDataKind dataKind, TypeRef tableRef) {
     var extensionName = FormPlatformTypes.rowDataExtensionName(dataKind);
@@ -338,12 +292,16 @@ class FormItemTypesRegistrar {
       return Map.of();
     }
     var declaredTypes = attributeTypesByName(data.getAttributes());
-    var result = new HashMap<String, TypeRef>();
+    var dynamicLists = dynamicListTypes.prepareRows(data, suffixRu);
+    var result = new LinkedHashMap<String, TypeRef>();
     for (var element : data.getPlainElements()) {
       if (!(element instanceof FormTable) || element.getName().isBlank()) {
         continue;
       }
-      var rowRef = rowOf(element, attributeTypes, declaredTypes);
+      var dynamicList = dynamicListOf(element, dynamicLists);
+      var rowRef = dynamicList == null
+        ? rowOf(element, attributeTypes, declaredTypes)
+        : dynamicList.rowRef();
       var kindRef = tableTypeRef(element, declaredTypes);
       if (rowRef == null || kindRef == null) {
         continue;
@@ -354,10 +312,50 @@ class FormItemTypesRegistrar {
       typeRegistry.registerDisplayName(tableRef, BilingualString.of(
         typeRegistry.displayName(kindRef, Language.RU),
         typeRegistry.displayName(kindRef, Language.EN)));
-      typeRegistry.registerMemberOverride(tableRef, () -> currentDataMembers(rowRef), FileType.BSL);
+      // Типы идентификатора строки считаются здесь, а не в источнике членов: под
+      // `ВыделенныеСтроки` регистрируется специализация массива, а регистрация изнутри
+      // `getMembers` сбивала бы epoch кэша членов во время его же пересчёта.
+      var members = tableMembers(rowRef, dynamicList);
+      typeRegistry.registerMemberOverride(tableRef, () -> members, FileType.BSL);
       result.put(element.getName().toLowerCase(Locale.ROOT), tableRef);
     }
     return Map.copyOf(result);
+  }
+
+  /**
+   * Динамический список, на который смотрит таблица: {@code ПутьКДанным} у неё — имя
+   * реквизита-списка целиком, вглубь списка таблица не смотрит.
+   *
+   * @return разобранный список; {@code null}, если таблица показывает не список либо
+   *   источник данных списка неизвестен.
+   */
+  private static DynamicListTypesRegistrar.@Nullable DynamicList dynamicListOf(
+    FormElement element, Map<String, DynamicListTypesRegistrar.DynamicList> dynamicLists) {
+    if (dynamicLists.isEmpty()) {
+      return null;
+    }
+    var dataPath = element instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
+    if (dataPath.isBlank() || dataPath.indexOf('.') >= 0) {
+      return null;
+    }
+    return dynamicLists.get(dataPath.toLowerCase(Locale.ROOT));
+  }
+
+  /**
+   * Члены конкретной таблицы формы: строка её данных, а у динамического списка ещё и
+   * идентификатор строки. Строку списка платформа адресует ключевым полем его основной
+   * таблицы — для ссылочной таблицы это ссылка, — а у прочих видов данных тип
+   * идентификатора от конкретной таблицы не зависит и стоит на типе вида данных
+   * (см. {@link #registerTableDataRules}).
+   */
+  private List<MemberDescriptor> tableMembers(TypeRef rowRef,
+                                              DynamicListTypesRegistrar.@Nullable DynamicList dynamicList) {
+    var currentData = tableDataMembers.currentData(rowRef);
+    var rowIdRef = dynamicList == null ? null : dynamicList.rowIdRef();
+    if (rowIdRef == null) {
+      return currentData;
+    }
+    return FormPlatformTypes.concat(currentData, tableDataMembers.rowIdentifier(rowIdRef));
   }
 
   /**
@@ -393,26 +391,6 @@ class FormItemTypesRegistrar {
     // Путь идёт по прикладным типам, а строка данных формы живёт у зеркала табличной части.
     var mirror = current == null ? null : formDataTypes.mirrorOfTabularSection(current);
     return mirror == null ? null : formDataTypes.rowOfCollection(mirror);
-  }
-
-  /**
-   * {@code ТекущиеДанные} и {@code ДанныеСтроки} конкретной таблицы — строка её
-   * коллекции. Описание расширения называет это «структурой, заполненной копией
-   * данных», но проверка на платформе даёт
-   * {@code ТипЗнч(…ТекущиеДанные) = ДанныеФормыЭлементКоллекции}: «структура» там —
-   * про устройство значения, а не про тип.
-   */
-  private static List<MemberDescriptor> currentDataMembers(TypeRef rowRef) {
-    return List.of(
-      FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        rowRef, BilingualString.EMPTY),
-      MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
-          List.of(new SignatureDescriptor(
-            List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
-              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
-            TypeSet.of(rowRef), BilingualString.EMPTY)))
-        .withBilingualName(ROW_DATA_METHOD));
   }
 
   /**

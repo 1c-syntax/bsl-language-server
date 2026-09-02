@@ -35,9 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
-import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
@@ -53,7 +51,6 @@ import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.bsl.mdo.PredefinedDataOwner;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.mdo.children.PredefinedValue;
-import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MultiName;
 import com.github._1c_syntax.bsl.types.ValueTypeDescription;
@@ -71,7 +68,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -190,6 +186,7 @@ public class ConfigurationTypesProvider {
   private final FormDataTypesRegistrar formDataTypesRegistrar;
   private final RegisterTypesRegistrar registerTypesRegistrar;
   private final RecorderIndex recorderIndex;
+  private final MdoMemberFactory mdoMembers;
   @Qualifier("platformTypesWarmupExecutor")
   private final AsyncTaskExecutor platformTypesWarmupExecutor;
 
@@ -489,7 +486,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     var attributes = attributeOwner.getAllAttributes();
-    var commonForMd = applicableCommonAttributes(md, commonAttributes);
+    var commonForMd = MdoMemberFactory.applicableCommonAttributes(md, commonAttributes);
 
     // Описания стандартных реквизитов (Дата/Номер/Ссылка/…) в mdclasses пустые,
     // но платформа в HBK ровно их и описывает. Подмешиваем по имени.
@@ -509,10 +506,10 @@ public class ConfigurationTypesProvider {
     // отчёта/обработки): его реквизиты — члены этого типа.
     MemberSource objectSource = () -> {
       var fresh = new ArrayList<MemberDescriptor>();
-      fresh.addAll(buildAttributeMembers(capturedAttributes,
-        collectPlatformMemberDescriptions(capturedFullRu),
-        collectPlatformMemberMetadata(capturedFullRu + "Объект")));
-      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
+      fresh.addAll(mdoMembers.attributeMembers(capturedAttributes,
+        mdoMembers.platformDescriptions(capturedFullRu),
+        mdoMembers.platformMetadata(capturedFullRu + "Объект")));
+      fresh.addAll(mdoMembers.commonAttributeMembers(capturedCommon));
       return fresh;
     };
     typeRegistry.registerMemberSource(objectRef, objectSource, FileType.BSL);
@@ -566,10 +563,10 @@ public class ConfigurationTypesProvider {
 
     MemberSource refSource = () -> {
       var fresh = new ArrayList<MemberDescriptor>();
-      fresh.addAll(buildAttributeMembers(attributes,
-        collectPlatformMemberDescriptions(fullRu),
-        collectPlatformMemberMetadata(fullRu + "Ссылка")));
-      fresh.addAll(buildCommonAttributeMembers(commonAttributes));
+      fresh.addAll(mdoMembers.attributeMembers(attributes,
+        mdoMembers.platformDescriptions(fullRu),
+        mdoMembers.platformMetadata(fullRu + "Ссылка")));
+      fresh.addAll(mdoMembers.commonAttributeMembers(commonAttributes));
       return fresh;
     };
     typeRegistry.registerMemberSource(refRef, refSource, FileType.BSL);
@@ -583,7 +580,8 @@ public class ConfigurationTypesProvider {
    * Атрибуты, специфичные для отдельных MDOType, которые не приходят через
    * {@link AttributeOwner#getAllAttributes()}: для {@link ChartOfAccounts} —
    * признаки учёта и флаги учёта субконто. Все три типа реализуют {@link Attribute},
-   * поэтому используются через {@link #buildAttributeMembers(List)} как property-члены.
+   * поэтому используются через {@link MdoMemberFactory#attributeMembers(List)}
+   * как property-члены.
    */
   private void registerMdoSpecificAttributeMembers(MD md, TypeRef objectRef, TypeRef refRef) {
     if (!(md instanceof ChartOfAccounts coa)) {
@@ -596,7 +594,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     var captured = List.copyOf(extras);
-    MemberSource source = () -> buildAttributeMembers(captured);
+    MemberSource source = () -> mdoMembers.attributeMembers(captured);
     typeRegistry.registerMemberSource(objectRef, source, FileType.BSL);
     if (!refRef.equals(objectRef)) {
       typeRegistry.registerMemberSource(refRef, source, FileType.BSL);
@@ -644,10 +642,10 @@ public class ConfigurationTypesProvider {
       var collRef = registerWithAlias(collRu, collEn);
 
       var tsAttributes = ts.getAttributes();
-      // Аналогично основным реквизитам: лямбда вызывает buildAttributeMembers
+      // Аналогично основным реквизитам: лямбда вызывает attributeMembers
       // на каждый getMembers, поэтому язык читается per-call и подхватывает
       // workspace/didChangeConfiguration.
-      MemberSource columnSource = () -> buildAttributeMembers(tsAttributes);
+      MemberSource columnSource = () -> mdoMembers.attributeMembers(tsAttributes);
       if (!tsAttributes.isEmpty()) {
         // Колонки — только у строки: у самой табличной части их нет, обращение
         // `ТЧ.Цена` в 1С не работает.
@@ -855,7 +853,8 @@ public class ConfigurationTypesProvider {
    * Графы журнала документов как property-члены на типе журнала
    * ({@code ЖурналДокументов.<имя>}). Источник имён и типов — mdclasses
    * ({@link DocumentJournal#getColumns()}); все колонки реализуют
-   * {@link Attribute}, поэтому материализуются через {@link #buildAttributeMembers(List)}.
+   * {@link Attribute}, поэтому материализуются через
+   * {@link MdoMemberFactory#attributeMembers(List)}.
    */
   private void registerDocumentJournalColumnMembers(DocumentJournal journal, String familyCore, String name) {
     var columns = journal.getColumns();
@@ -868,7 +867,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     var captured = List.copyOf(columns);
-    typeRegistry.registerMemberSource(specRef, () -> buildAttributeMembers(captured), FileType.BSL);
+    typeRegistry.registerMemberSource(specRef, () -> mdoMembers.attributeMembers(captured), FileType.BSL);
   }
 
   /**
@@ -920,210 +919,4 @@ public class ConfigurationTypesProvider {
     return ref;
   }
 
-  private List<MemberDescriptor> buildAttributeMembers(List<? extends Attribute> attributes,
-                                                       Map<String, BilingualString> platformDescriptions,
-                                                       Map<String, PlatformMetadata> platformMetadata) {
-    if (attributes.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<MemberDescriptor>(attributes.size());
-    for (var attribute : attributes) {
-      var bilingualName = attributeBilingualName(attribute);
-      if (bilingualName.isEmpty()) {
-        continue;
-      }
-      // По ru-имени матчим описания/мета платформы — словарь HBK именован по-русски.
-      var lc = bilingualName.primary().toLowerCase(Locale.ROOT);
-      var description = platformDescriptions.getOrDefault(lc, BilingualString.EMPTY);
-      var meta = platformMetadata.getOrDefault(lc, PlatformMetadata.EMPTY);
-      var returnTypes = resolveAttributeReturnTypes(attribute);
-      if (returnTypes.isEmpty() && attribute instanceof StandardAttribute) {
-        // Стандартный реквизит платформа объявляет сама — с типом, описанием и мета.
-        // mdclasses про его тип знает не всегда (у `Владелец` типа нет вовсе), и
-        // бестиповый дубль отсюда только перекрыл бы объявление платформы.
-        continue;
-      }
-      var primaryName = bilingualName.primary();
-      MemberDescriptor descriptor;
-      if (returnTypes.isEmpty()) {
-        descriptor = MemberDescriptor.property(primaryName);
-      } else if (returnTypes.size() == 1) {
-        descriptor = MemberDescriptor.property(primaryName, returnTypes.refs().iterator().next(), "");
-      } else {
-        descriptor = MemberDescriptor.property(primaryName, returnTypes, "");
-      }
-      descriptor = descriptor.withBilingualName(bilingualName);
-      if (!description.isEmpty()) {
-        descriptor = descriptor.withBilingualDescription(description);
-      }
-      if (!meta.isEmpty()) {
-        descriptor = descriptor.withMetadata(meta);
-      }
-      // Стандартные реквизиты (Наименование/Код/Ссылка/…) — часть платформенной
-      // объектной модели; собственные реквизиты конфигурации — нет.
-      if (attribute instanceof StandardAttribute) {
-        descriptor = descriptor.withStandardLibrary(true);
-      }
-      result.add(descriptor);
-    }
-    return result;
-  }
-
-  /** Overload без подмеса описаний/метаданных — для случаев без контекста MD (табчасти). */
-  private List<MemberDescriptor> buildAttributeMembers(List<? extends Attribute> attributes) {
-    return buildAttributeMembers(attributes, Map.of(), Map.of());
-  }
-
-  /**
-   * Собирает {@code name(lower) → }{@link BilingualString} (ru + en описание)
-   * для платформенных generic-типов {@code <fullRu>Ссылка.<...>} и
-   * {@code <fullRu>Объект.<...>} — это HBK-описания, подходящие к стандартным
-   * реквизитам соответствующего MD. Двуязычность нужна, чтобы hover на
-   * стандартном реквизите (Дата/Ссылка/...) показывал описание в текущей
-   * локали, а не всегда ru-вариант.
-   */
-  private Map<String, BilingualString> collectPlatformMemberDescriptions(String fullRu) {
-    var result = new HashMap<String, BilingualString>();
-    addPlatformDescriptionsTo(result, fullRu + "Ссылка");
-    addPlatformDescriptionsTo(result, fullRu + "Объект");
-    return result;
-  }
-
-  private void addPlatformDescriptionsTo(Map<String, BilingualString> sink, String familyPrefix) {
-    var generic = typeRegistry.resolveGenericByPrefix(familyPrefix).orElse(null);
-    if (generic == null) {
-      return;
-    }
-    for (var m : typeRegistry.getMembers(generic, FileType.BSL)) {
-      if (m.generic()) {
-        continue;
-      }
-      var desc = m.bilingualDescription();
-      if (desc.isEmpty()) {
-        continue;
-      }
-      sink.putIfAbsent(m.name().toLowerCase(Locale.ROOT), desc);
-    }
-  }
-
-  /**
-   * Собирает {@code name(lower) → }{@link PlatformMetadata} для конкретного
-   * generic-семейства (например, {@code "СправочникСсылка"} или
-   * {@code "ДокументОбъект"}) — это метаданные стандартных реквизитов
-   * (accessMode/sinceVersion/availabilities и т.п.), которые иначе теряются
-   * при сборке member'а из mdclasses через {@link #buildAttributeMembers}.
-   * <p>
-   * Раздельный сбор для Ссылки и Объекта принципиален: у одного и того же
-   * стандартного реквизита (например, {@code Дата} документа) разные
-   * {@code accessMode} в этих семействах (на Объекте мутабельно, на Ссылке —
-   * только чтение).
-   */
-  private Map<String, PlatformMetadata> collectPlatformMemberMetadata(String familyPrefix) {
-    var result = new HashMap<String, PlatformMetadata>();
-    var generic = typeRegistry.resolveGenericByPrefix(familyPrefix).orElse(null);
-    if (generic == null) {
-      return result;
-    }
-    for (var m : typeRegistry.getMembers(generic, FileType.BSL)) {
-      if (m.generic()) {
-        continue;
-      }
-      var meta = m.metadata();
-      if (meta.isEmpty()) {
-        continue;
-      }
-      result.putIfAbsent(m.name().toLowerCase(Locale.ROOT), meta);
-    }
-    return result;
-  }
-
-  /**
-   * Общие реквизиты, применимые к конкретному MDObject. Если MD явно присутствует в
-   * составе общего реквизита, используется его персональный режим; иначе откатываемся
-   * к {@link CommonAttribute#getAutoUse()}. Включаются режимы USE/USE_WITH_WARNINGS.
-   */
-  private static List<CommonAttribute> applicableCommonAttributes(MD md, List<CommonAttribute> all) {
-    if (all.isEmpty()) {
-      return List.of();
-    }
-    var mdoRef = md.getMdoReference();
-    var result = new ArrayList<CommonAttribute>();
-    for (var ca : all) {
-      var effective = ca.contains(mdoRef) ? ca.useMode(mdoRef) : ca.getAutoUse();
-      if (effective == com.github._1c_syntax.bsl.mdo.support.UseMode.USE
-        || effective == com.github._1c_syntax.bsl.mdo.support.UseMode.USE_WITH_WARNINGS) {
-        result.add(ca);
-      }
-    }
-    return result;
-  }
-
-  private List<MemberDescriptor> buildCommonAttributeMembers(List<CommonAttribute> commonAttributes) {
-    if (commonAttributes.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<MemberDescriptor>(commonAttributes.size());
-    for (var ca : commonAttributes) {
-      var attrName = ca.getName();
-      if (attrName.isBlank()) {
-        continue;
-      }
-      var returnTypes = resolveCommonAttributeReturnTypes(ca);
-      if (returnTypes.isEmpty()) {
-        result.add(MemberDescriptor.property(attrName));
-      } else if (returnTypes.size() == 1) {
-        result.add(MemberDescriptor.property(attrName, returnTypes.refs().iterator().next()));
-      } else {
-        result.add(MemberDescriptor.property(attrName, returnTypes, ""));
-      }
-    }
-    return result;
-  }
-
-  private TypeSet resolveCommonAttributeReturnTypes(CommonAttribute ca) {
-    return ValueTypes.resolve(typeRegistry, ca.getValueType());
-  }
-
-  /**
-   * Двуязычное имя реквизита. Стандартные реквизиты (Дата/Номер/Ссылка/...)
-   * хранят оба написания в {@link MultiName} —
-   * собираем {@link BilingualString} ровно из этой пары, чтобы:
-   * <ul>
-   *   <li>{@code MemberDescriptor.matches(name)} находил член по любому
-   *       написанию (hover, диагностика {@code AssignToReadOnly}, и т.п.);</li>
-   *   <li>completion выдавал имя в нужной локали через
-   *       {@code displayName(scriptVariant)}, без необходимости держать два
-   *       параллельных дескриптора на одном члене.</li>
-   * </ul>
-   * Кастомные реквизиты ({@link com.github._1c_syntax.bsl.mdo.children.ObjectAttribute})
-   * имеют только одно имя — возвращаем моноязычный {@link BilingualString#of(String)}.
-   */
-  private static BilingualString attributeBilingualName(Attribute attribute) {
-    if (attribute instanceof StandardAttribute std) {
-      var fullName = std.getFullName();
-      if (!fullName.isEmpty()) {
-        var ru = fullName.get("ru");
-        var en = fullName.get("en");
-        if (!ru.isBlank() && !en.isBlank()) {
-          return BilingualString.of(ru, en);
-        }
-        if (!ru.isBlank()) {
-          return BilingualString.of(ru);
-        }
-        if (!en.isBlank()) {
-          return BilingualString.of("", en);
-        }
-      }
-    }
-    var name = attribute.getName();
-    return name.isBlank() ? BilingualString.EMPTY : BilingualString.of(name);
-  }
-
-  /**
-   * Получить набор {@link TypeRef} типов значения реквизита (union для
-   * composite-типа из нескольких {@code v8:Type}).
-   */
-  private TypeSet resolveAttributeReturnTypes(Attribute attribute) {
-    return ValueTypes.resolve(typeRegistry, attribute.getValueType());
-  }
 }

@@ -329,7 +329,9 @@ class ConfigurationTypesProviderHelpersTest {
     var formTypesProvider = new FormTypesProvider(registry, formParametersResolver, recorderIndex,
       new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), new FormAttributeTypeIndex(),
       formDataTypesRegistrar,
-      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
+      new FormItemTypesRegistrar(registry, formDataTypesRegistrar,
+        new DynamicListTypesRegistrar(registry, formDataTypesRegistrar, mock(QueryTableResolver.class)),
+        new TableDataMembers(registry, formDataTypesRegistrar), typeFactory), typeFactory,
       new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
         recorderIndex),
       new StructureParameterFieldsRegistrar(registry));
@@ -339,6 +341,7 @@ class ConfigurationTypesProviderHelpersTest {
       formTypesProvider, mock(ConfigurationModuleMembersProvider.class),
       new XdtoTypesProvider(registry), formDataTypesRegistrar,
       new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
+      new MdoMemberFactory(registry),
       new SimpleAsyncTaskExecutor());
   }
 

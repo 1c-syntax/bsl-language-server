@@ -483,6 +483,49 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dynamicListRowGetsColumnsOfItsMainTable() {
+    // Колонки списка в форме не объявлены: за ним стоит основная таблица
+    // (`Catalog.Справочник1`), и колонками служат её поля.
+    var currentData = member(dynamicListTable(), MemberKind.PROPERTY, "ТекущиеДанные");
+
+    assertThat(currentData).isNotNull();
+    var rowType = currentData.returnTypes().refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(rowType, FileType.BSL)))
+      .as("поля основной таблицы — стандартные реквизиты справочника и его собственные")
+      .contains("Ссылка", "Код", "Наименование", "ПометкаУдаления", "Реквизит1");
+    assertThat(typeService.displayName(rowType, Language.RU))
+      .as("синтетическое имя наружу не течёт")
+      .isEqualTo("ДанныеФормыЭлементКоллекции");
+  }
+
+  @Test
+  void dynamicListRowIsIdentifiedByTheKeyFieldOfItsMainTable() {
+    // Строку списка над ссылочной таблицей платформа адресует ссылкой — её и отдают
+    // ТекущаяСтрока с ТекущийРодитель, а ВыделенныеСтроки набраны из тех же ссылок.
+    var currentRow = member(dynamicListTable(), MemberKind.PROPERTY, "ТекущаяСтрока");
+    assertThat(currentRow).isNotNull();
+    assertThat(qualifiedNames(currentRow)).containsExactly("СправочникСсылка.Справочник1");
+
+    var selectedRows = member(dynamicListTable(), MemberKind.PROPERTY, "ВыделенныеСтроки");
+    assertThat(selectedRows).isNotNull();
+    assertThat(qualifiedNames(selectedRows))
+      .as("массив идентификаторов — сам массив остаётся Массивом")
+      .containsExactly("Массив.СправочникСсылка.Справочник1");
+    assertThat(typeRegistry.getDefaultElementTypes(selectedRows.returnTypes().refs().iterator().next()).refs())
+      .extracting(TypeRef::qualifiedName)
+      .as("а его элементы — ссылки основной таблицы")
+      .containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  /**
+   * Тип таблицы формы над динамическим списком формы списка справочника — у неё свои
+   * колонки, поэтому тип заводится на конкретную таблицу, а не на вид данных.
+   */
+  private String dynamicListTable() {
+    return itemMemberType("Справочник.Справочник1.Форма.ФормаСписка", "Список").qualifiedName();
+  }
+
+  @Test
   void rowTypeIsRegisteredOnlyForDataKindsThatHaveARowExtension() {
     // У прочих видов данных своей специфики у строки нет — расширения тоже, поэтому
     // свой тип строки им не заводится.
@@ -514,9 +557,12 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
       .toList();
 
     assertThat(withoutExtension)
-      .as("у кнопок расширения по виду нет — вся специфика в самой КнопкаФормы")
+      .as("у кнопок расширения по виду нет — вся специфика в самой КнопкаФормы; "
+        + "у контекстного меню и расширенной подсказки — потому что это не вид, а часть "
+        + "чужого элемента: обычные группа и декорация")
       .containsExactlyInAnyOrder("ОбычнаяКнопка", "Гиперссылка",
-        "КнопкаКоманднойПанели", "ГиперссылкаКоманднойПанели");
+        "КнопкаКоманднойПанели", "ГиперссылкаКоманднойПанели",
+        "КонтекстноеМеню", "РасширеннаяПодсказка");
   }
 
   @Test

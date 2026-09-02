@@ -98,10 +98,10 @@ dependencies {
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.39.0")
     api("io.github.1c-syntax:utils:0.10.1")
-    api("io.github.1c-syntax:mdclasses:0.19.0.82-SNAPSHOT")
+    api("io.github.1c-syntax:mdclasses:0.19.0.117-SNAPSHOT")
     api("io.github.1c-syntax:bsl-common-library:0.12.5")
     api("io.github.1c-syntax:supportconf:0.17.1")
-    api("io.github.1c-syntax:bsl-context:0.9.2")
+    api("io.github.1c-syntax:bsl-context:0.10.0")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.1")

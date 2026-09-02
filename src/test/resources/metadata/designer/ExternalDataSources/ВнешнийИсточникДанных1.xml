@@ -23,6 +23,7 @@
 		</Properties>
 		<ChildObjects>
 			<Table>Таблица1</Table>
+			<Table>Таблица2</Table>
             <Cube>Куб1</Cube>
             <Cube>Куб3</Cube>
 		</ChildObjects>
