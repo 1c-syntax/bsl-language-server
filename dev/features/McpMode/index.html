@@ -2259,10 +2259,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#Рабочие-пространства-MCP-roots" class="md-nav__link">
+  <a href="#Рабочие-папки" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Рабочие пространства (MCP roots)
+        Рабочие папки
       
     </span>
   </a>
@@ -2340,7 +2340,7 @@
 
 <h1 id="Запуск-в-режиме-MCP">Запуск в режиме MCP<a class="headerlink" href="#Запуск-в-режиме-MCP" title="Permanent link">&para;</a></h1>
 <p>BSL Language Server умеет работать как сервер <a href="https://modelcontextprotocol.io/">Model Context Protocol (MCP)</a> — открывать возможности анализа кода 1С (BSL) и OneScript AI-агентам и инструментам, которые поддерживают MCP.</p>
-<p>Инструменты MCP работают поверх того же движка, что и LSP-режим: тот же разбор, те же провайдеры. Рабочие пространства задаются через <a href="https://modelcontextprotocol.io/docs/concepts/roots">MCP roots</a> — прямой аналог workspace folders в LSP.</p>
+<p>Инструменты MCP работают поверх того же движка, что и LSP-режим: тот же разбор, те же провайдеры. Рабочие папки регистрируются инструментами <code>register_workspace_folder</code>/<code>list_workspace_folders</code> — см. раздел «Рабочие папки» ниже.</p>
 <div class="admonition warning">
 <p class="admonition-title">Экспериментальная возможность</p>
 <p>Режим MCP основан на Spring AI 2.0 (на момент написания — milestone-версия). API и поведение могут меняться.</p>
@@ -2368,8 +2368,25 @@
 <p>LSP по websocket и MCP по Streamable HTTP на одном веб-сервере:</p>
 <div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>websocket<span class="w"> </span>--mcp<span class="w"> </span>--server.port<span class="o">=</span><span class="m">8080</span>
 </code></pre></div>
-<h2 id="Рабочие-пространства-MCP-roots">Рабочие пространства (MCP roots)<a class="headerlink" href="#Рабочие-пространства-MCP-roots" title="Permanent link">&para;</a></h2>
-<p>Каталоги исходников задаёт клиент через MCP roots — так же, как LSP-клиент передаёт workspace folders. Сервер индексирует объявленные корни в общий контекст и пересинхронизирует их при изменении (<code>roots/list_changed</code>). В комбинированных режимах (<code>lsp --mcp</code>, <code>websocket --mcp</code>) рабочие пространства дают как LSP-клиент (workspace folders), так и MCP-клиент (roots) — в один общий контекст.</p>
+<h2 id="Рабочие-папки">Рабочие папки<a class="headerlink" href="#Рабочие-папки" title="Permanent link">&para;</a></h2>
+<p>Терминология — из LSP: <strong>рабочая папка</strong> (workspace folder) — это один корневой каталог проекта, а множество зарегистрированных папок и составляет <strong>рабочую область</strong> (workspace), которую обслуживает сервер. Регистрируется и передаётся в инструменты именно папка.</p>
+<p>Все инструменты анализа работают только внутри зарегистрированной рабочей папки — 1С-конфигурации или OneScript-проекта, исходники которого проиндексированы. Файл вне всех зарегистрированных папок не анализируется, а инструменты без привязки к файлу (<code>type_info</code>, <code>global_member_info</code>, <code>global_member_search</code>) требуют явного параметра <code>workspaceFolder</code>.</p>
+<p>Порядок работы клиента:</p>
+<ol>
+<li><code>list_workspace_folders</code> — узнать, что уже зарегистрировано, и получить значения <code>uri</code>.</li>
+<li><code>register_workspace_folder</code> с каталогом проекта — если нужного проекта в списке нет. Передавать нужно корень рабочей папки: тот каталог, который открывают в IDE и который LSP-клиент присылает как workspace folder, а не подкаталог с исходниками. Внутри него лежат исходники (<code>src/cf</code> конфигурации, исходники OneScript) и, если он есть, <a href="../ConfigurationFile/">конфигурационный файл</a> <code>.bsl-language-server.json</code> — он читается только из корня папки. Инструмент индексирует исходники и возвращает <code>uri</code> папки; повторная регистрация того же каталога переиндексацию не запускает.</li>
+<li><code>unregister_workspace_folder</code> — освободить индекс, когда проект больше не нужен. Инструмент удаляет только те папки, которые были зарегистрированы через MCP: папку, пришедшую от LSP-клиента, он не забирает — это рабочая папка редактора, и вернуть её клиент не сможет. Папку, которую сверх регистрации объявил корнем сам клиент (см. MCP roots ниже), сервер оставит проиндексированной и сообщит об этом признаком <code>stillDeclaredByRoots</code>: папка уходит, когда её отпустит последний источник.</li>
+</ol>
+<p>Сообщения об ошибках самодостаточны: при неизвестном или отсутствующем <code>workspaceFolder</code> сервер перечисляет зарегистрированные папки и указывает, каким инструментом зарегистрировать недостающую, — агент может исправиться без участия человека.</p>
+<p>Дополнительные источники рабочих папок:</p>
+<ul>
+<li><strong>LSP.</strong> В комбинированных режимах (<code>lsp --mcp</code>, <code>websocket --mcp</code>) рабочие папки приходят от LSP-клиента (workspace folders) в тот же общий контекст — регистрировать их через MCP не нужно, они сразу видны в <code>list_workspace_folders</code>.</li>
+<li><strong>MCP roots.</strong> Корни, объявленные клиентом через <a href="https://modelcontextprotocol.io/docs/concepts/roots">MCP roots</a>, по-прежнему индексируются автоматически, включая пересинхронизацию по <code>notifications/roots/list_changed</code>. Это работает, пока сервер говорит по ревизии протокола <code>2025-11-25</code> — той, что реализует используемый MCP SDK, — где roots ещё активны.</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">MCP roots объявлены устаревшими</p>
+<p>В ревизии спецификации <a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">2026-07-28</a> механизм roots (вместе с sampling и logging) помечен как deprecated, а уведомление <code>notifications/roots/list_changed</code> из протокола удалено. В качестве замены спецификация предлагает передавать каталоги через параметры инструментов и конфигурацию сервера — это и делают <code>register_workspace_folder</code>/<code>list_workspace_folders</code>. Поддержка roots сохраняется как совместимость со старыми клиентами; по политике жизненного цикла возможностей MCP удалить их могут не раньше чем через 12 месяцев после этой ревизии, а в сервере они уйдут вместе с переходом на неё.</p>
+</div>
 <h2 id="Доступные-инструменты">Доступные инструменты<a class="headerlink" href="#Доступные-инструменты" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2379,6 +2396,18 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>list_workspace_folders</code></td>
+<td>Зарегистрированные рабочие папки: <code>uri</code> для остальных инструментов и имя</td>
+</tr>
+<tr>
+<td><code>register_workspace_folder</code></td>
+<td>Регистрация каталога проекта как рабочей папки с индексацией исходников; имя можно задать явно, иначе берётся имя каталога</td>
+</tr>
+<tr>
+<td><code>unregister_workspace_folder</code></td>
+<td>Удаление рабочей папки и освобождение её индекса</td>
+</tr>
 <tr>
 <td><code>analyze_file</code></td>
 <td>Диагностики по файлу</td>
@@ -2422,6 +2451,7 @@
 </tbody>
 </table>
 <p>Позиции (<code>line</code>, <code>character</code>) нумеруются с нуля, как в LSP.</p>
+<p>Ни один инструмент не меняет файлы на диске. Инструменты анализа помечены как read-only (<code>readOnlyHint</code>) — клиент не должен спрашивать подтверждение на каждый вызов. Инструменты управления рабочими папками меняют состояние сервера, поэтому read-only не помечены; <code>unregister_workspace_folder</code> дополнительно помечен разрушающим (<code>destructiveHint</code>), так как выбрасывает собранный индекс, — на него клиент вправе запросить подтверждение.</p>
 <h2 id="Параметры-запуска">Параметры запуска<a class="headerlink" href="#Параметры-запуска" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

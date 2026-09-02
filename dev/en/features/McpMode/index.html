@@ -2259,10 +2259,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#Workspaces-MCP-roots" class="md-nav__link">
+  <a href="#Workspace-folders" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Workspaces (MCP roots)
+        Workspace folders
       
     </span>
   </a>
@@ -2340,7 +2340,7 @@
 
 <h1 id="Run-in-MCP-mode">Run in MCP mode<a class="headerlink" href="#Run-in-MCP-mode" title="Permanent link">&para;</a></h1>
 <p>BSL Language Server can act as a <a href="https://modelcontextprotocol.io/">Model Context Protocol (MCP)</a> server — exposing 1C (BSL) and OneScript code analysis to AI agents and tools that support MCP.</p>
-<p>MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspaces are provided through <a href="https://modelcontextprotocol.io/docs/concepts/roots">MCP roots</a> — the direct analog of LSP workspace folders.</p>
+<p>MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspace folders are registered with the <code>register_workspace_folder</code>/<code>list_workspace_folders</code> tools — see the "Workspace folders" section below.</p>
 <div class="admonition warning">
 <p class="admonition-title">Experimental feature</p>
 <p>The MCP mode is built on Spring AI 2.0 (a milestone version at the time of writing). The API and behavior may change.</p>
@@ -2368,8 +2368,25 @@
 <p>LSP over websocket and MCP over Streamable HTTP on the same web server:</p>
 <div class="highlight"><pre><span></span><code>java<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>websocket<span class="w"> </span>--mcp<span class="w"> </span>--server.port<span class="o">=</span><span class="m">8080</span>
 </code></pre></div>
-<h2 id="Workspaces-MCP-roots">Workspaces (MCP roots)<a class="headerlink" href="#Workspaces-MCP-roots" title="Permanent link">&para;</a></h2>
-<p>Source directories are provided by the client through MCP roots — just like an LSP client sends workspace folders. The server indexes the declared roots into the shared context and re-syncs them on change (<code>roots/list_changed</code>). In the combined modes (<code>lsp --mcp</code>, <code>websocket --mcp</code>) workspaces come from both the LSP client (workspace folders) and the MCP client (roots) into one shared context.</p>
+<h2 id="Workspace-folders">Workspace folders<a class="headerlink" href="#Workspace-folders" title="Permanent link">&para;</a></h2>
+<p>The terminology is LSP's: a <strong>workspace folder</strong> is a single project root directory, and the set of registered folders makes up the <strong>workspace</strong> this server serves. What gets registered and passed to the tools is a folder.</p>
+<p>Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (<code>type_info</code>, <code>global_member_info</code>, <code>global_member_search</code>) require an explicit <code>workspaceFolder</code> argument.</p>
+<p>The client workflow:</p>
+<ol>
+<li><code>list_workspace_folders</code> — see what is already registered and get the <code>uri</code> values.</li>
+<li><code>register_workspace_folder</code> with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (<code>src/cf</code> of a configuration, the OneScript sources) and, when present, the <a href="../ConfigurationFile/">configuration file</a> <code>.bsl-language-server.json</code>, which is only read from the folder root. The tool indexes the sources and returns the folder's <code>uri</code>; registering an already registered directory does not re-index it.</li>
+<li><code>unregister_workspace_folder</code> — release the index when the project is no longer needed. Only folders registered over MCP can be removed: a folder that came from the LSP client is the editor's workspace folder and is left alone, because the client cannot get it back. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as <code>stillDeclaredByRoots</code>: the folder goes away once the last source releases it.</li>
+</ol>
+<p>The error messages are self-contained: for an unknown or missing <code>workspaceFolder</code> the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.</p>
+<p>Additional sources of workspace folders:</p>
+<ul>
+<li><strong>LSP.</strong> In the combined modes (<code>lsp --mcp</code>, <code>websocket --mcp</code>) workspace folders come from the LSP client into the same shared context — there is no need to register them over MCP, they show up in <code>list_workspace_folders</code> right away.</li>
+<li><strong>MCP roots.</strong> Roots declared by the client through <a href="https://modelcontextprotocol.io/docs/concepts/roots">MCP roots</a> are still indexed automatically, including re-sync on <code>notifications/roots/list_changed</code>. This works as long as the server speaks the <code>2025-11-25</code> revision of the protocol — the one implemented by the MCP SDK it is built on — where roots are still active.</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">MCP roots are deprecated</p>
+<p>In the <a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">2026-07-28</a> revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the <code>notifications/roots/list_changed</code> notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what <code>register_workspace_folder</code>/<code>list_workspace_folders</code> do. Roots support is kept for compatibility with older clients; under the MCP feature lifecycle policy it cannot be removed earlier than twelve months after that revision, and this server will drop it when it moves to the new revision.</p>
+</div>
 <h2 id="Available-tools">Available tools<a class="headerlink" href="#Available-tools" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2379,6 +2396,18 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>list_workspace_folders</code></td>
+<td>Registered workspace folders: the <code>uri</code> for the other tools and the name</td>
+</tr>
+<tr>
+<td><code>register_workspace_folder</code></td>
+<td>Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used</td>
+</tr>
+<tr>
+<td><code>unregister_workspace_folder</code></td>
+<td>Remove a workspace folder and release its index</td>
+</tr>
 <tr>
 <td><code>analyze_file</code></td>
 <td>Diagnostics for a file</td>
@@ -2422,6 +2451,7 @@
 </tbody>
 </table>
 <p>Positions (<code>line</code>, <code>character</code>) are zero-based, as in LSP.</p>
+<p>No tool modifies files on disk. The analysis tools are marked read-only (<code>readOnlyHint</code>), so a client should not ask for confirmation on every call. The workspace-folder management tools change server state and are therefore not read-only; <code>unregister_workspace_folder</code> is additionally marked destructive (<code>destructiveHint</code>) because it throws away the index that was built, so a client may reasonably ask for confirmation on that one.</p>
 <h2 id="Launch-options">Launch options<a class="headerlink" href="#Launch-options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
