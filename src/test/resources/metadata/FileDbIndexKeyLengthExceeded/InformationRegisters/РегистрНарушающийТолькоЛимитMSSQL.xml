@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.11">
+    <InformationRegister uuid="33333333-3333-3333-3333-333333333333">
+        <Properties>
+            <Name>РегистрНарушающийТолькоЛимитMSSQL</Name>
+        </Properties>
+        <ChildObjects>
+            <Dimension uuid="44444444-4444-4444-4444-444444444444">
+                <Properties>
+                    <Name>СреднееИзмерение</Name>
+                    <Type>
+                        <v8:Type>xs:string</v8:Type>
+                        <v8:StringQualifiers>
+                            <v8:Length>400</v8:Length>
+                            <v8:AllowedLength>Variable</v8:AllowedLength>
+                        </v8:StringQualifiers>
+                    </Type>
+                </Properties>
+            </Dimension>
+        </ChildObjects>
+    </InformationRegister>
+</MetaDataObject>
