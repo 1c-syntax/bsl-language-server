@@ -235,6 +235,7 @@ Run analysis and get diagnostic info
 
 To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder. 
 To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
+If the `--outputDir` directory does not exist, it is created before analysis starts.
 
 Command line example to run analysis:
 
