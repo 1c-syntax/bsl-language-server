@@ -43,6 +43,8 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -63,7 +65,8 @@ import static picocli.CommandLine.Option;
  * то анализ выполняется в текущем каталоге запуска.
  * -o, (--outputDir) &lt;arg&gt; -     Путь к каталогу размещения отчетов - результатов анализа.
  * Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- * то файлы отчета будут сохранены в текущем каталоге запуска.
+ * то файлы отчета будут сохранены в текущем каталоге запуска. Если каталог не существует,
+ * он создаётся до начала анализа.
  * -w, (--workspaceDir) &lt;arg&gt; -  Путь к каталогу проекта, относительно которого располагаются исходные файлы.
  * Возможно указывать как в абсолютном, так и в относительном виде. Если параметр опущен,
  * то пути к исходным файлам будут указываться относительно текущего каталога запуска.
@@ -164,6 +167,14 @@ public class AnalyzeCommand implements Callable<Integer> {
       return 1;
     }
 
+    var outputDir = Absolute.path(outputDirOption).normalize();
+    try {
+      Files.createDirectories(outputDir);
+    } catch (IOException e) {
+      LOGGER.error("Can't create output dir `{}`: {}", outputDir, e.getMessage());
+      return 1;
+    }
+
     var configurationFile = new File(configurationOption);
 
     // Update global configuration
@@ -192,7 +203,6 @@ public class AnalyzeCommand implements Callable<Integer> {
       var metricCalculationRequired = aggregator.isMetricCalculationRequired();
 
       var context = new ReportContext(LocalDateTime.now(), srcDir.toString());
-      var outputDir = Absolute.path(outputDirOption);
 
       // Результаты передаются репортёрам по одному сразу после разбора файла и больше нигде не
       // удерживаются: пик памяти не зависит от размера конфигурации (см. issue #4412).
