@@ -88,4 +88,13 @@ class ReportFileTest {
 
     assertThat(nested.resolve("report.json")).exists();
   }
+
+  @Test
+  void createResolvesFileNameWithoutDotSegment() throws Exception {
+    var reportFile = ReportFile.create(outputDir, "bsl-json.json");
+    reportFile.stream().write("x".getBytes(StandardCharsets.UTF_8));
+    reportFile.commit();
+
+    assertThat(reportFile.path()).isEqualTo(outputDir.resolve("bsl-json.json"));
+  }
 }
