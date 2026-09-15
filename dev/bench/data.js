@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788375190798,
+  "lastUpdate": 1789485231990,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43183,6 +43183,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.2520862544909486",
             "extra": "mean: 104.8387401898702 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fee95cde2dfbdd80774a6434a258b3bf02d59781",
+          "message": "Merge pull request #4521 from johnnyshut/fix/4512-create-analyze-output-dir\n\nfix(cli): создали отсутствующий --outputDir до анализа",
+          "timestamp": "2026-09-15T17:02:30+02:00",
+          "tree_id": "5689071959ca02d4941ba41087cbd90c0663441d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fee95cde2dfbdd80774a6434a258b3bf02d59781"
+        },
+        "date": 1789485226877,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.99638263384502,
+            "unit": "sec",
+            "range": "stddev: 0.23073112396495377",
+            "extra": "mean: 105.99638263384502 sec\nrounds: 3"
           }
         ]
       }
