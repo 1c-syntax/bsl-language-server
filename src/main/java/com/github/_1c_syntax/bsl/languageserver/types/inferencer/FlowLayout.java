@@ -139,7 +139,15 @@ final class FlowLayout {
         // Граница заголовка — выражение верхней границы, дальше начинается тело.
         var header = loop.getLoopHeader();
         var bounds = header.expression();
-        addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
+        if (bounds.isEmpty()) {
+          // Недоразобранный «Для Х Из Коллекция» (без «Каждого»): границ нет.
+          // «Цикл» в такой узел часто не входит — тогда конец узла и есть конец заголовка.
+          // Если «Цикл» всё же есть, режем по нему, чтобы не захватить тело.
+          var doKeyword = header.DO_KEYWORD();
+          addSlot(slots, byStatement, header, doKeyword == null ? header.getStop() : doKeyword.getSymbol(), vertex);
+        } else {
+          addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
+        }
       } else if (vertex instanceof ConditionalVertex conditional) {
         // Само условие «Если …» отдельным оператором в граф не попадает, а обращения к
         // переменным в нём — самое частое место, где спрашивают тип. Регистрируем выражение
