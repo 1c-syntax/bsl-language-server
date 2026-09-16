@@ -140,11 +140,8 @@ final class FlowLayout {
         var header = loop.getLoopHeader();
         var bounds = header.expression();
         if (bounds.isEmpty()) {
-          // Недоразобранный «Для Х Из Коллекция» (без «Каждого»): границ нет.
-          // «Цикл» в такой узел часто не входит — тогда конец узла и есть конец заголовка.
-          // Если «Цикл» всё же есть, режем по нему, чтобы не захватить тело.
-          var doKeyword = header.DO_KEYWORD();
-          addSlot(slots, byStatement, header, doKeyword == null ? header.getStop() : doKeyword.getSymbol(), vertex);
+          // Без «Каждого» разбор относит заголовок к счётному циклу, границ (= … По …) нет.
+          addSlot(slots, byStatement, header, header.getStop(), vertex);
         } else {
           addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
         }
