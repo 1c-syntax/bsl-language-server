@@ -28,8 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -122,6 +125,7 @@ public final class DiagnosticHelper {
     types.add(Boolean.class);
     types.add(Float.class);
     types.add(String.class);
+    types.add(List.class);
 
     diagnostic.getInfo().getParameters().stream()
       .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())
@@ -130,12 +134,37 @@ public final class DiagnosticHelper {
         try {
           var field = diagnostic.getClass().getDeclaredField(diagnosticParameterInfo.getName());
           if (field.trySetAccessible()) {
-            field.set(diagnostic, configuration.get(field.getName()));
+            field.set(diagnostic, castParameterValue(field, configuration.get(field.getName())));
           }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
           LOGGER.error("Can't set param.", e);
         }
       });
+  }
+
+  /**
+   * Приводит значение параметра из конфигурации к типу целевого поля диагностики.
+   * <p>
+   * Для полей типа {@link List} значение может прийти как строка (элементы через запятую —
+   * например, из SonarQube UI) либо как JSON-массив (десериализуется Jackson в {@link List}).
+   * В обоих случаях возвращается {@code List<String>}. Для остальных полей значение
+   * возвращается без изменений.
+   *
+   * @param field Целевое поле диагностики
+   * @param value Значение из конфигурации ({@code String}, {@code List} и т.п.)
+   * @return Значение, пригодное для присвоения полю
+   */
+  private static @Nullable Object castParameterValue(Field field, @Nullable Object value) {
+    if (value == null) {
+      return null;
+    }
+    if (List.class.isAssignableFrom(field.getType())) {
+      if (value instanceof List<?> list) {
+        return list.stream().map(String::valueOf).toList();
+      }
+      return asStringList(value.toString());
+    }
+    return value;
   }
 
   /**
@@ -156,6 +185,23 @@ public final class DiagnosticHelper {
     }
 
     configureDiagnostic(diagnostic, newConfiguration);
+  }
+
+  /**
+   * Разбирает строку с элементами через запятую в список строк.
+   * <p>
+   * Используется как для значения параметра-списка из конфигурации в строковой форме
+   * (SonarQube UI, «старые» конфиги), так и для инициализации поля значением по умолчанию.
+   * Элементы обрезаются по краям от пробелов; пустые элементы отбрасываются.
+   *
+   * @param value Строка с элементами через запятую
+   * @return Список строк без пустых элементов
+   */
+  public static List<String> asStringList(String value) {
+    return Arrays.stream(value.split(","))
+      .map(String::trim)
+      .filter(element -> !element.isEmpty())
+      .toList();
   }
 
   /**
