@@ -80,7 +80,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine:caffeine:3.2.4")
+    api("com.github.ben-manes.caffeine:caffeine:3.3.0")
     api("org.ehcache:ehcache:3.12.0")
 
     // lsp4j core
