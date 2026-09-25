@@ -762,6 +762,30 @@
             "title": "No NULL checks for fields from joined tables",
             "$id": "#/definitions/FieldsFromJoinsWithoutIsNull"
         },
+        "FileDbIndexKeyLengthExceeded": {
+            "description": "Index key length limit exceeded",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Index key length limit exceeded",
+            "properties": {
+                "checkMode": {
+                    "description": "Limit check mode (FILE, MSSQL, ALL)",
+                    "default": "ALL",
+                    "type": "string",
+                    "title": "Limit check mode (FILE, MSSQL, ALL)"
+                },
+                "maxIndexKeyLengthBytes": {
+                    "description": "Maximum index key length (in bytes) for File DB",
+                    "default": 1920,
+                    "type": "integer",
+                    "title": "Maximum index key length (in bytes) for File DB"
+                }
+            },
+            "$id": "#/definitions/FileDbIndexKeyLengthExceeded"
+        },
         "FileSystemAccess": {
             "description": "File system access",
             "default": false,
