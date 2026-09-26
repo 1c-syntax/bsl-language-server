@@ -344,8 +344,8 @@ public class OpenDataObjectInference {
     if (methodCall == null) {
       return false;
     }
-    return insertReceiverName(call) != null && isInsertMethod(methodCall)
-      || columnsAddReceiverName(call) != null && isAddMethod(methodCall);
+    return (insertReceiverName(call) != null && isInsertMethod(methodCall))
+      || (columnsAddReceiverName(call) != null && isAddMethod(methodCall));
   }
 
   /**
