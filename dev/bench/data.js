@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790429758557,
+  "lastUpdate": 1790430950805,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43617,6 +43617,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3303364128318025",
             "extra": "mean: 104.47809465726216 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c7a8eaee8b3ccd765a4feadfe49ba0eda4626b72",
+          "message": "Merge pull request #4543 from 1c-syntax/fix/configuration-before-parallel-populate\n\nfix(context): конфигурация читается до параллельного заполнения рабочей области",
+          "timestamp": "2026-09-26T10:26:28+02:00",
+          "tree_id": "9aa310ea4a835d7dea2e87b8f712232f6273f629",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c7a8eaee8b3ccd765a4feadfe49ba0eda4626b72"
+        },
+        "date": 1790430937602,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.8686436812083,
+            "unit": "sec",
+            "range": "stddev: 2.611380436002452",
+            "extra": "mean: 106.8686436812083 sec\nrounds: 3"
           }
         ]
       }
