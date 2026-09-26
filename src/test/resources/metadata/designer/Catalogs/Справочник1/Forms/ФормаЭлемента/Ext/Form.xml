@@ -25,6 +25,17 @@
 			<ContextMenu name="НесуществующийРеквизитКонтекстноеМеню" id="5"/>
 			<ExtendedTooltip name="НесуществующийРеквизитРасширеннаяПодсказка" id="6"/>
 		</InputField>
+		<Table name="ТабличнаяЧасть1" id="10">
+			<DataPath>Объект.ТабличнаяЧасть1</DataPath>
+			<ChildItems>
+				<InputField name="ТабличнаяЧасть1Реквизит1" id="11">
+					<DataPath>Объект.ТабличнаяЧасть1.Реквизит1</DataPath>
+				</InputField>
+				<CheckBoxField name="ТабличнаяЧасть1ДопКолонкаФормы" id="12">
+					<DataPath>Объект.ТабличнаяЧасть1.ДопКолонкаФормы</DataPath>
+				</CheckBoxField>
+			</ChildItems>
+		</Table>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">
@@ -33,6 +44,15 @@
 			</Type>
 			<MainAttribute>true</MainAttribute>
 			<SavedData>true</SavedData>
+			<Columns>
+				<AdditionalColumns table="Объект.ТабличнаяЧасть1">
+					<Column name="ДопКолонкаФормы" id="13">
+						<Type>
+							<v8:Type>xs:boolean</v8:Type>
+						</Type>
+					</Column>
+				</AdditionalColumns>
+			</Columns>
 		</Attribute>
 	</Attributes>
 </Form>

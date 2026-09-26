@@ -195,6 +195,41 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void columnsAddedByTheFormAreSeenOnItsOwnCollection() {
+    // У формы элемента справочника объявлен блок <AdditionalColumns table="Объект.ТабличнаяЧасть1">:
+    // такой колонки в самом справочнике нет, она существует только в данных этой формы,
+    // поэтому и коллекция, и строка у формы свои — общее зеркало табличной части их не
+    // знает и знать не должно.
+    var objectType = member(CATALOG_ITEM_FORM, MemberKind.PROPERTY, "Объект")
+      .returnTypes().refs().iterator().next();
+    assertThat(objectType.qualifiedName())
+      .isEqualTo("ДанныеФормыСтруктура.Справочник.Справочник1.Форма.ФормаЭлемента.Объект");
+
+    var collectionType = typeRegistry.getMembers(objectType, FileType.BSL).stream()
+      .filter(member -> member.matches("ТабличнаяЧасть1"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    assertThat(collectionType.qualifiedName())
+      .isEqualTo("ДанныеФормыКоллекция.Справочник.Справочник1.Форма.ФормаЭлемента.Объект.ТабличнаяЧасть1");
+    assertThat(typeService.displayName(collectionType, Language.RU))
+      .as("показывать пользователю надо реальный тип значения")
+      .isEqualTo("ДанныеФормыКоллекция");
+
+    var rowType = typeRegistry.getDefaultElementTypes(collectionType).refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(rowType, FileType.BSL)))
+      .as("у строки видны и колонки табличной части, и добавленные формой")
+      .contains("Реквизит1", "Реквизит2", "ДопКолонкаФормы");
+
+    assertThat(names(typeRegistry.getMembers(
+      typeRegistry.resolve("ДанныеФормыЭлементКоллекции.СправочникТабличнаяЧасть.Справочник1.ТабличнаяЧасть1")
+        .orElseThrow(), FileType.BSL)))
+      .as("общее зеркало табличной части о колонках формы не знает")
+      .contains("Реквизит1")
+      .doesNotContain("ДопКолонкаФормы");
+  }
+
+  @Test
   void formDataCollectionIteratesOverRowsWithColumns() {
     var objectAttribute = member(DOCUMENT_FORM, MemberKind.PROPERTY, "Объект");
     assertThat(objectAttribute).isNotNull();

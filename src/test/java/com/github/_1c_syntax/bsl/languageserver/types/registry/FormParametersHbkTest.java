@@ -213,6 +213,32 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void tableOverTabularSectionSeesColumnsAddedByTheForm() {
+    // Расширения таблицы формы под табличную часть в JSON-фолбэке нет, поэтому свой
+    // тип у такой таблицы появляется только с синтакс-помощником. Он и приводит к
+    // строке коллекции — у формы элемента справочника собственной, с добавленной ею
+    // колонкой (блок <AdditionalColumns table="Объект.ТабличнаяЧасть1">).
+    var itemsType = typeRegistry
+      .resolve("ВсеЭлементыФормы.Справочник.Справочник1.Форма.ФормаЭлемента")
+      .orElseThrow();
+    var tableType = typeRegistry.getMembers(itemsType, FileType.BSL).stream()
+      .filter(m -> m.matches("ТабличнаяЧасть1"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+
+    var currentData = typeRegistry.getMembers(tableType, FileType.BSL).stream()
+      .filter(m -> m.matches("ТекущиеДанные"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+
+    assertThat(names(typeRegistry.getMembers(currentData, FileType.BSL)))
+      .as("ТекущиеДанные таблицы — строка коллекции этой формы, с её колонками")
+      .contains("Реквизит1", "ДопКолонкаФормы");
+  }
+
+  @Test
   void formItemsCarryKindSpecificExtensionMembers() {
     // ЦветФона объявлен не в ГруппаФормы, а в «Расширение группы формы для обычной
     // группы»; без подмешивания расширения по виду элемента свойство не резолвится.

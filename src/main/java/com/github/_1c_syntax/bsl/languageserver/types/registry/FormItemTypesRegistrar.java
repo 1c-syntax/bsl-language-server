@@ -300,7 +300,7 @@ class FormItemTypesRegistrar {
       }
       var dynamicList = dynamicListOf(element, dynamicLists);
       var rowRef = dynamicList == null
-        ? rowOf(element, attributeTypes, declaredTypes)
+        ? rowOf(element, attributeTypes, declaredTypes, suffixRu)
         : dynamicList.rowRef();
       var kindRef = tableTypeRef(element, declaredTypes);
       if (rowRef == null || kindRef == null) {
@@ -365,7 +365,7 @@ class FormItemTypesRegistrar {
    * @return тип строки; {@code null}, если у данных таблицы колонок нет.
    */
   private @Nullable TypeRef rowOf(FormElement element, Map<String, TypeSet> attributeTypes,
-                                  Map<String, String> declaredTypes) {
+                                  Map<String, String> declaredTypes, String suffixRu) {
     var dataPath = element instanceof FormDataPathOwner owner ? owner.getDataPath() : "";
     if (dataPath.isBlank()) {
       return null;
@@ -388,8 +388,9 @@ class FormItemTypesRegistrar {
       }
       current = propertyTypeRef(current, segment);
     }
-    // Путь идёт по прикладным типам, а строка данных формы живёт у зеркала табличной части.
-    var mirror = current == null ? null : formDataTypes.mirrorOfTabularSection(current);
+    // Путь идёт по прикладным типам, а строка данных формы живёт у зеркала табличной
+    // части — у этой формы своего, если она добавила табличной части свои колонки.
+    var mirror = current == null ? null : formDataTypes.mirrorOfTabularSection(current, suffixRu);
     return mirror == null ? null : formDataTypes.rowOfCollection(mirror);
   }
 
