@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.mdo.BasedOnOwner;
 import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Form;
@@ -233,10 +232,10 @@ class FormParametersRegistrar {
    *   не вводится — тогда передавать в параметр нечего.
    */
   private TypeSet basisTypes(@Nullable MD owner) {
-    if (!(owner instanceof BasedOnOwner basedOnOwner)) {
+    if (owner == null) {
       return UNDEFINED;
     }
-    var refs = basedOnOwner.getBasedOn().stream()
+    var refs = MdoPropertyAccessors.basedOn(owner).stream()
       .map(basis -> FormPlatformTypes.typeNameWithSuffix(basis.getMdoRefRu(), REF_SUFFIX))
       .map(typeRegistry::resolve)
       .flatMap(Optional::stream)

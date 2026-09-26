@@ -21,19 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.mdo.AdditionalIndexOwner;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
-import com.github._1c_syntax.bsl.mdo.BasedOnOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.CommandOwner;
-import com.github._1c_syntax.bsl.mdo.DataLockFieldsOwner;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
 import com.github._1c_syntax.bsl.mdo.FormOwner;
-import com.github._1c_syntax.bsl.mdo.InputByStringOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
@@ -176,17 +172,17 @@ final class MetadataChildrenExtractor {
 
   /** Типы, на основании которых вводится объект ({@code ВводитсяНаОсновании}). */
   static List<ChildName> basedOnFor(MD md) {
-    return md instanceof BasedOnOwner owner ? mdoReferenceNames(owner.getBasedOn()) : List.of();
+    return mdoReferenceNames(MdoPropertyAccessors.basedOn(md));
   }
 
   /** Поля, по которым доступен ввод по строке ({@code ВводПоСтроке}). */
   static List<ChildName> inputByStringFor(MD md) {
-    return md instanceof InputByStringOwner owner ? fieldNames(owner.getInputByString()) : List.of();
+    return fieldNames(MdoPropertyAccessors.inputByString(md));
   }
 
   /** Поля блокировки данных ({@code ПоляБлокировкиДанных}). */
   static List<ChildName> dataLockFieldsFor(MD md) {
-    return md instanceof DataLockFieldsOwner owner ? fieldNames(owner.getDataLockFields()) : List.of();
+    return fieldNames(MdoPropertyAccessors.dataLockFields(md));
   }
 
   /**
@@ -223,10 +219,7 @@ final class MetadataChildrenExtractor {
    * прочих коллекций здесь у элемента собственное имя, а не имя объекта метаданных.
    */
   static List<ChildName> additionalIndexesFor(MD md) {
-    if (!(md instanceof AdditionalIndexOwner owner)) {
-      return List.of();
-    }
-    var indexes = owner.getAdditionalIndexes();
+    var indexes = MdoPropertyAccessors.additionalIndexes(md);
     var result = new ArrayList<ChildName>(indexes.size());
     for (var index : indexes) {
       var entry = ChildName.of(index.getName());
