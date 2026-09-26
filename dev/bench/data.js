@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790419729977,
+  "lastUpdate": 1790420897706,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43369,6 +43369,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.905900804491375",
             "extra": "mean: 105.89943703015645 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06b330448195b7218d8f4fbb4d7f0ee7fd815d79",
+          "message": "Merge pull request #4540 from 1c-syntax/feat/types-form-additional-columns\n\nfeat(types): колонки, добавленные формой к табличной части, видны в её данных",
+          "timestamp": "2026-09-26T09:28:34+02:00",
+          "tree_id": "d9b70e8c9b16e0f348fddb81b30b36c015d2b036",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/06b330448195b7218d8f4fbb4d7f0ee7fd815d79"
+        },
+        "date": 1790420884616,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.60272121429443,
+            "unit": "sec",
+            "range": "stddev: 2.115669235058133",
+            "extra": "mean: 106.60272121429443 sec\nrounds: 3"
           }
         ]
       }
