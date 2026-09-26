@@ -418,7 +418,10 @@ public class ReferenceIndexFiller {
     }
 
     private Optional<ConstructorSymbol> libraryClassConstructor(URI libUri) {
-      return Optional.ofNullable(documentContext.getServerContext().getDocument(libUri))
+      // Без ожидания блокировки: индекс заполняется под записью своего документа, и два
+      // документа, ссылающихся друг на друга, встали бы каждый на блокировке другого.
+      // Нужно лишь дерево символов — у него своя блокировка внутри документа.
+      return Optional.ofNullable(documentContext.getServerContext().getDocumentNoLock(libUri))
         .map(DocumentContext::getSymbolTree)
         .flatMap(SymbolTree::getConstructor);
     }
@@ -466,7 +469,8 @@ public class ReferenceIndexFiller {
      * тип из роли регистрации.
      */
     private ModuleType actualLibraryModuleType(java.net.URI libUri, ModuleType fallback) {
-      var dc = documentContext.getServerContext().getDocument(libUri);
+      // Без ожидания блокировки — по той же причине, что в libraryClassConstructor.
+      var dc = documentContext.getServerContext().getDocumentNoLock(libUri);
       return dc != null ? dc.getModuleType() : fallback;
     }
 
