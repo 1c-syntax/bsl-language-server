@@ -134,6 +134,27 @@ class RecursiveReturnTypeTest extends AbstractServerContextAwareTest {
       .isEqualTo(first);
   }
 
+  @Test
+  void recursionThroughBodyComputedForModuleVariableCellsIsCut() {
+    // given: `Узел` меняет переменную модуля, поэтому его тело считают круги по ячейкам
+    // ещё до того, как кто-то спросил значение `Узел`. Изнутри этого расчёта цепочка
+    // `Ветка` → `Узел` приходит за значением `Узел` — тело которого ещё не досчитано.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/RecursionThroughModuleVariableCells.bsl");
+    var method = documentContext.getSymbolTree().getMethodSymbol("Корень").orElseThrow();
+
+    // when
+    var types = inferencer.computeReturnTypes(method).types();
+
+    // then: повторный вход оборван как рекурсия, а не посчитан по недосчитанному телу.
+    // Иначе значение `Узел` выходило пустым, оседало в индексе окончательным, и пустым
+    // оставался уже `Корень`.
+    assertThat(types.refs())
+      .as("значение функции, вызвавшей рекурсию через тело из кругов по ячейкам")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+  }
+
   /** Позиция первого вхождения текста в документе — на его первом символе. */
   private static Position positionOf(DocumentContext documentContext, String text) {
     var content = documentContext.getContent();
