@@ -211,7 +211,7 @@ public class ExpressionTypeInferencer {
       };
       // Результат, полученный с обрывом цикла, зависит от точки входа в него и
       // потому не годится в кэш: вход с другой стороны цикла даст другой набор.
-      if (cacheKey != null && !ctx.cycleCut) {
+      if (cacheKey != null && !ctx.cycleCut && !ctx.bodyInFlowCut) {
         inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies);
       }
       return result;
@@ -824,10 +824,19 @@ public class ExpressionTypeInferencer {
    * тип нельзя подменять self-свойством того же имени.
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
-    if (bodyInFlow(method, ctx) || !ctx.visited.add(method)) {
+    if (ctx.visited.contains(method)) {
       ctx.cycleCut = true;
       return recursiveKnot(method, ctx);
     }
+    if (bodyInFlow(method, ctx)) {
+      // Тело считается не ради значения метода, поэтому приближения значения ни у кого
+      // нет, и отвечать ребру нечем. Уточняющий проход тут не поможет: он подставляет
+      // приближение методу из visited, а вызывающих пересчитывал бы в свежем контексте —
+      // заново проходя те же круги по ячейкам. Это дорого и в замечаниях ничего не меняло.
+      ctx.bodyInFlowCut = true;
+      return TypeSet.EMPTY;
+    }
+    ctx.visited.add(method);
     var owner = method.getOwner();
     ctx.consulted.add(method);
     try {
@@ -1693,6 +1702,12 @@ public class ExpressionTypeInferencer {
     final Set<MethodSymbol> consulted = new HashSet<>();
     /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
     boolean cycleCut;
+    /**
+     * Расчёт упёрся в метод, тело которого уже считается не ради его значения, и оборвал
+     * вход. Как и обрыв цикла, делает результат зависимым от точки входа, но уточняющего
+     * прохода не требует.
+     */
+    boolean bodyInFlowCut;
     /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
     boolean refining;
     /** Расчёт читал значение метода, которое ещё не посчитано. */
