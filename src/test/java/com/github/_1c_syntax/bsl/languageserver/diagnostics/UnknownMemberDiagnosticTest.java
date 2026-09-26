@@ -53,7 +53,7 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
     var messages = diagnostics.stream()
       .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
       .toList();
-    org.assertj.core.api.Assertions.assertThat(messages)
+    assertThat(messages)
       // У типа "Массив" нет метода или свойства "Добвить" — подставлено имя
       // типа ресивера в сообщение (отдельный memberMessage от глобального).
       .anyMatch(m -> m.contains("Добвить") && m.contains("Массив"))
@@ -85,7 +85,7 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
       .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
       .toList();
 
-    org.assertj.core.api.Assertions.assertThat(messages)
+    assertThat(messages)
       .containsExactly("У типа \"Массив, Структура\" нет метода или свойства \"НетТакогоЧлена\"");
   }
 }
