@@ -203,7 +203,11 @@
 			<Language>Русский</Language>
 			<InformationRegister>РегистрСведений1</InformationRegister>
 			<Document>Документ1</Document>
+			<Document>ПланСчетов1</Document>
+			<ChartOfAccounts>ПланСчетов1</ChartOfAccounts>
+			<ChartOfCalculationTypes>ПланВидовРасчета1</ChartOfCalculationTypes>
 			<AccountingRegister>РегистрБухгалтерии1</AccountingRegister>
+			<CalculationRegister>РегистрРасчета1</CalculationRegister>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

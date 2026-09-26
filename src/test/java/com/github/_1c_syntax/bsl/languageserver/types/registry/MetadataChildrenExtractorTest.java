@@ -115,15 +115,15 @@ class MetadataChildrenExtractorTest {
     assertThat(MetadataChildrenExtractor.registerRecordsFor(NON_OWNER)).isEmpty();
   }
 
-  // === свойства, у которых в mdclasses нет интерфейса-владельца (mdclasses#677) ===
+  // === массовые свойства объектов метаданных ===
 
   private static final MdoReference DOCUMENT_REF = MdoReference.create("Document.Документ1");
   private static final MdoReference FIELD_REF = MdoReference.create("Catalog.Справочник1.Attribute.Реквизит1");
 
   /**
-   * Виды объектов перечисляются в коде поимённо, потому что интерфейса-владельца у
-   * свойства нет. Такое перечисление легко разъезжается с моделью — поэтому проверяется
-   * каждая ветка, а не одна показательная.
+   * Свойство читается через интерфейс-владельца ({@code BasedOnOwner} и родственные,
+   * mdclasses#677), а он у каждого вида свой. Состав видов задан не у нас, поэтому
+   * проверяется каждый — иначе вид, потерявший интерфейс в mdclasses, замолчит.
    */
   @Test
   void basedOnIsReadFromEveryKindThatHasIt() {

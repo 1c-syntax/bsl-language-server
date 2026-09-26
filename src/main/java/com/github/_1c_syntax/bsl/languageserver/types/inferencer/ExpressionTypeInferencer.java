@@ -211,7 +211,7 @@ public class ExpressionTypeInferencer {
       };
       // Результат, полученный с обрывом цикла, зависит от точки входа в него и
       // потому не годится в кэш: вход с другой стороны цикла даст другой набор.
-      if (cacheKey != null && !ctx.cycleCut) {
+      if (cacheKey != null && !ctx.cycleCut && !ctx.bodyInFlowCut) {
         inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies);
       }
       return result;
@@ -824,10 +824,19 @@ public class ExpressionTypeInferencer {
    * тип нельзя подменять self-свойством того же имени.
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
-    if (!ctx.visited.add(method)) {
+    if (ctx.visited.contains(method)) {
       ctx.cycleCut = true;
       return recursiveKnot(method, ctx);
     }
+    if (bodyInFlow(method, ctx)) {
+      // Тело считается не ради значения метода, поэтому приближения значения ни у кого
+      // нет, и отвечать ребру нечем. Уточняющий проход тут не поможет: он подставляет
+      // приближение методу из visited, а вызывающих пересчитывал бы в свежем контексте —
+      // заново проходя те же круги по ячейкам. Это дорого и в замечаниях ничего не меняло.
+      ctx.bodyInFlowCut = true;
+      return TypeSet.EMPTY;
+    }
+    ctx.visited.add(method);
     var owner = method.getOwner();
     ctx.consulted.add(method);
     try {
@@ -849,6 +858,29 @@ public class ExpressionTypeInferencer {
     } finally {
       ctx.visited.remove(method);
     }
+  }
+
+  /**
+   * Считается ли прямо сейчас тело метода в этом же выводе типов.
+   * <p>
+   * В расчёт тело попадает не только ради значения своего метода: круги по ячейкам
+   * переменных модуля считают каждое тело, где такая переменная меняется, и метода в
+   * {@link InferenceContext#visited} при этом нет. Спросить его значение изнутри такого
+   * расчёта — тот же повторный вход, что и через {@code visited}: выражения возврата
+   * читали бы окружение тела, до которого расчёт ещё не дошёл.
+   *
+   * @param method вызванный метод.
+   * @param ctx    контекст текущего инференса.
+   * @return {@code true}, если расчёт по телу метода начат и не завершён.
+   */
+  private static boolean bodyInFlow(MethodSymbol method, InferenceContext ctx) {
+    // Расчёт по потоку идёт только по телам документа, для которого ведётся вывод, — чужие
+    // тела в нём не считаются. Документы сравниваются по ссылке, как и везде здесь.
+    if (method.getOwner() != ctx.documentContext || !ctx.flowSession.computing()) {
+      return false;
+    }
+    var body = VariableFlowAnalyzer.bodyAt(ctx.documentContext, method.getSubNameRange().getStart());
+    return body != null && ctx.flowSession.computing(body);
   }
 
   /**
@@ -1670,6 +1702,12 @@ public class ExpressionTypeInferencer {
     final Set<MethodSymbol> consulted = new HashSet<>();
     /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
     boolean cycleCut;
+    /**
+     * Расчёт упёрся в метод, тело которого уже считается не ради его значения, и оборвал
+     * вход. Как и обрыв цикла, делает результат зависимым от точки входа, но уточняющего
+     * прохода не требует.
+     */
+    boolean bodyInFlowCut;
     /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
     boolean refining;
     /** Расчёт читал значение метода, которое ещё не посчитано. */

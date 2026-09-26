@@ -86,6 +86,19 @@ class OrdinaryFormBasisHbkTest extends AbstractServerContextAwareTest {
       .containsExactly("Неопределено");
   }
 
+  @Test
+  void commonFormAssignedByTheConfigurationRootGetsItsExtension() {
+    // Роль формы констант задана не у объекта метаданных, а у корня конфигурации
+    // (<DefaultConstantsForm>, mdclasses#673): без неё общая форма ничем не отличалась
+    // бы от любой другой и осталась без расширения.
+    var formRef = typeRegistry.resolve("Форма.ОбщаяФорма.ФормаКонстант").orElseThrow();
+    var members = typeRegistry.getMembers(formRef, FileType.BSL);
+
+    assertThat(members.stream().map(MemberDescriptor::name))
+      .as("метод «Расширения формы констант» виден на самой форме")
+      .contains("ЗаписатьВФорме");
+  }
+
   private List<String> typeNames(String formTypeName, String parameterName) {
     var formRef = typeRegistry.resolve(formTypeName).orElseThrow();
     var member = typeRegistry.getMembers(formRef, FileType.BSL).stream()

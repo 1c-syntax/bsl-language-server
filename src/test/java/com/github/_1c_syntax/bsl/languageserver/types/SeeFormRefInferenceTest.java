@@ -101,8 +101,11 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
     var value = at(documentContext, "ЗначениеРеквизита = Объект.Реквизит1",
       "ЗначениеРеквизита = Объект.".length());
 
-    // then: тот же тип, что и у «Форма.Объект», с реквизитами объекта.
-    assertThat(names(attribute)).containsExactly("ДанныеФормыСтруктура.СправочникОбъект.Справочник1");
+    // then: тот же тип, что и у «Форма.Объект», с реквизитами объекта. Он у этой формы
+    // свой: она добавляет табличной части свои колонки (<AdditionalColumns>), и общими
+    // данными прикладного типа такую форму уже не описать.
+    assertThat(names(attribute))
+      .containsExactly("ДанныеФормыСтруктура.Справочник.Справочник1.Форма.ФормаЭлемента.Объект");
     assertThat(names(value)).containsExactly("Строка");
   }
 
