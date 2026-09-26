@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790425092287,
+  "lastUpdate": 1790426301305,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43493,6 +43493,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6301335524187672",
             "extra": "mean: 106.3824401696523 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43f3d76018e2d119db4a7aa271046a9d5dc34e96",
+          "message": "Merge pull request #4537 from 1c-syntax/refactor/types-mdo-owner-interfaces\n\nrefactor(types): массовые свойства объектов читаются через интерфейсы владельцев",
+          "timestamp": "2026-09-26T09:21:37+02:00",
+          "tree_id": "2ae4dcf4bf65f56d9f30e1ad3c270830fe9fabd3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/43f3d76018e2d119db4a7aa271046a9d5dc34e96"
+        },
+        "date": 1790426276856,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.9490426381429,
+            "unit": "sec",
+            "range": "stddev: 1.8639686371388726",
+            "extra": "mean: 105.9490426381429 sec\nrounds: 3"
           }
         ]
       }
