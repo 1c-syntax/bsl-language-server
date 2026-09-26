@@ -346,6 +346,64 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dynamicListIsTypedByItsMainTable() {
+    // Основная таблица списка (<MainTable>Document.Документ1</MainTable>) отвечает
+    // сразу на два вопроса: какие поля видны в строке и чем адресуется строка.
+    var items = typeRegistry.getMembers(typeRegistry
+      .resolve("ВсеЭлементыФормы.Документ.Документ1.Форма.ФормаСписка").orElseThrow(), FileType.BSL);
+    var tableType = find(items, MemberKind.PROPERTY, "Список").returnTypes().refs().iterator().next();
+    assertThat(tableType.qualifiedName())
+      .as("у списка с известной основной таблицей тип свой, а не общий для вида данных")
+      .isEqualTo("ТаблицаФормы.Документ.Документ1.Форма.ФормаСписка.Список");
+
+    var tableMembers = typeRegistry.getMembers(tableType, FileType.BSL);
+    var currentData = find(tableMembers, MemberKind.PROPERTY, "ТекущиеДанные")
+      .returnTypes().refs().iterator().next();
+    assertThat(currentData.qualifiedName())
+      .isEqualTo("ДанныеФормыЭлементКоллекции.ДинамическийСписок.Документ.Документ1.Форма.ФормаСписка.Список");
+    assertThat(names(typeRegistry.getMembers(currentData, FileType.BSL)))
+      .as("в строке списка видны поля основной таблицы")
+      .contains("Ссылка", "Номер", "Дата", "Реквизит1")
+      .as("методы ссылки в строку не переносятся — там прочитанные значения полей")
+      .doesNotContain("ПолучитьОбъект");
+
+    assertThat(qualifiedNames(find(tableMembers, MemberKind.PROPERTY, "ТекущаяСтрока")))
+      .as("строку списка адресует значение ключевого поля — ссылка основной таблицы")
+      .containsExactly("ДокументСсылка.Документ1");
+    var selectedRows = find(tableMembers, MemberKind.PROPERTY, "ВыделенныеСтроки")
+      .returnTypes().refs().iterator().next();
+    assertThat(typeService.displayName(selectedRows, Language.RU)).isEqualTo("Массив");
+    assertThat(typeRegistry.getDefaultElementTypes(selectedRows).refs()).extracting(TypeRef::qualifiedName)
+      .as("обход ВыделенныхСтрок даёт ссылки, а не нетипизированные идентификаторы")
+      .containsExactly("ДокументСсылка.Документ1");
+  }
+
+  @Test
+  void contextMenusAndTooltipsAreTypedAsPlatformDeclaresThem() {
+    // Контекстное меню и расширенная подсказка объявлены внутри своего элемента
+    // (<ContextMenu>, <ExtendedTooltip>), но в коллекции лежат наравне с прочими.
+    // Своих типов у них нет: платформа называет их у свойств-хозяев —
+    // `ПолеФормы.КонтекстноеМеню` это `ГруппаФормы`, `РасширеннаяПодсказка` —
+    // `ДекорацияФормы`.
+    var itemsType = typeRegistry
+      .resolve("ВсеЭлементыФормы.Документ.Документ1.Форма.ФормаДокумента")
+      .orElseThrow();
+    var items = typeRegistry.getMembers(itemsType, FileType.BSL);
+
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY, "НомерКонтекстноеМеню")))
+      .containsExactly("ГруппаФормы");
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY, "НомерРасширеннаяПодсказка")))
+      .containsExactly("ДекорацияФормы");
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY, "ТабличнаяЧасть1КонтекстноеМеню")))
+      .as("контекстное меню таблицы читается так же, как у поля")
+      .containsExactly("ГруппаФормы");
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY,
+      "ТабличнаяЧасть1СтрокаПоискаРасширеннаяПодсказка")))
+      .as("подсказка дополнения элемента — тоже элемент коллекции")
+      .containsExactly("ДекорацияФормы");
+  }
+
+  @Test
   void selfPropertiesPointToTheFormItself() {
     var formRef = typeRegistry.resolve(DOCUMENT_FORM).orElseThrow();
 
