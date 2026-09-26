@@ -79,8 +79,8 @@ class RegisterChartTypesHbkTest extends AbstractServerContextAwareTest {
 
   @Test
   void recorderStaysTypedByItsDocumentsAlongsideTheChart() {
-    // Имена подставляются одним списком, а разбираются по плейсхолдерам сами:
-    // подстановка плана счетов в `<Имя документа>` существующего типа не даёт.
+    // План счетов подставляется только в свой плейсхолдер, регистраторы — только в
+    // `<Имя документа>`: имена у них могут совпадать (см. RegisterRecorderTypesTest).
     assertThat(memberTypes("РегистрБухгалтерииЗапись.РегистрБухгалтерии1", "Регистратор"))
       .containsExactly("ДокументСсылка.Документ1");
   }
