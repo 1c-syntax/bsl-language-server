@@ -30,11 +30,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.time.Duration;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * Ленивая сборка индексов «ОСени» не ждёт блокировок документов.
@@ -59,7 +58,7 @@ class AutumnIndexBuildLockTest extends AbstractServerContextAwareTest {
   private ExecutorService executor;
 
   @Test
-  void buildDoesNotWaitForLockOfDocumentHeldByWaiter() {
+  void buildDoesNotWaitForLockOfDocumentHeldByWaiter() throws Exception {
     // given: индекс ещё не собран, а блокировку класса библиотеки на запись держит
     // поток, который ждёт сборку. Сборка идёт на другом потоке: владелец записи сам
     // получил бы и чтение, и ожидание бы не проявилось.
@@ -69,10 +68,8 @@ class AutumnIndexBuildLockTest extends AbstractServerContextAwareTest {
     var lock = context.getDocumentLock(logger.getUri()).writeLock();
     lock.lock();
     try {
-      // when: задача ставится из этого потока — он несёт рабочую область, а ожидание с
-      // таймаутом идёт в отдельном потоке, у которого её нет.
-      var build = executor.submit(() -> beanIndex.resolve("Логгер"));
-      var types = assertTimeoutPreemptively(Duration.ofSeconds(30), () -> build.get());
+      // when: вставшая сборка обрывается таймаутом ожидания, а не вешает весь прогон.
+      var types = executor.submit(() -> beanIndex.resolve("Логгер")).get(30, TimeUnit.SECONDS);
 
       // then: сборка не только не встала, но и дошла до класса под блокировкой.
       assertThat(types.refs()).extracting(TypeRef::qualifiedName).containsExactly("Логгер");
