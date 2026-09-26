@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790428550830,
+  "lastUpdate": 1790429758557,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43586,6 +43586,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.722325838351751",
             "extra": "mean: 105.20452396074931 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2e7f456ea46d09e51c285ef9f912bb6b5eaf784d",
+          "message": "Merge pull request #4545 from 1c-syntax/style/types-sonar-after-4538-4539\n\nstyle(types): замечания SonarCloud к #4538 и #4539",
+          "timestamp": "2026-09-26T10:55:40+02:00",
+          "tree_id": "988db568e24542cc3d6e8bf2aec8072021911caf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2e7f456ea46d09e51c285ef9f912bb6b5eaf784d"
+        },
+        "date": 1790429732695,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.47809465726216,
+            "unit": "sec",
+            "range": "stddev: 1.3303364128318025",
+            "extra": "mean: 104.47809465726216 sec\nrounds: 3"
           }
         ]
       }
