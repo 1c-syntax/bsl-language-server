@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790423692709,
+  "lastUpdate": 1790425092287,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43462,6 +43462,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.654344501477798",
             "extra": "mean: 105.0103456179301 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b6ef74af63c2d327bc30a5ce0f07cbb7e72b0ea",
+          "message": "Merge pull request #4546 from 1c-syntax/fix/unknown-member-message-type-order\n\nfix(diagnostics): типы получателя в тексте UnknownMember перечисляются по алфавиту",
+          "timestamp": "2026-09-26T11:17:13+02:00",
+          "tree_id": "1716f9f065a7db4eb95f8a1baeaaae535cf952a1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5b6ef74af63c2d327bc30a5ce0f07cbb7e72b0ea"
+        },
+        "date": 1790425078700,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.3824401696523,
+            "unit": "sec",
+            "range": "stddev: 0.6301335524187672",
+            "extra": "mean: 106.3824401696523 sec\nrounds: 3"
           }
         ]
       }
