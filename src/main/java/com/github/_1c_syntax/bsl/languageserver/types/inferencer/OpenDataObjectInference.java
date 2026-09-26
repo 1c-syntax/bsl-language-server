@@ -319,10 +319,33 @@ public class OpenDataObjectInference {
       return Map.of();
     }
     Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
+    // Индекс отдаёт все вызовы у получателя с этим именем, а состав меняют только два вида.
+    // Остальные изменением не считаются: иначе тело с `Лог.Отладка(…)` выглядело бы
+    // меняющим переменную модуля `Лог`, и расчёт её ячейки проходил бы по нему наравне
+    // с телами, где она правда меняется.
     for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      calls.put(Ranges.create(call).getStart(), call);
+      if (isMutatorCall(call)) {
+        calls.put(Ranges.create(call).getStart(), call);
+      }
     }
     return calls;
+  }
+
+  /**
+   * Может ли оператор менять состав полей своего получателя: это {@code Х.Вставить(…)} и
+   * {@code Х.Колонки.Добавить(…)}. Прочие вызовы у переменной ({@code Лог.Отладка(…)},
+   * {@code Стр.Поле.Вставить(…)}) состав её полей не меняют.
+   *
+   * @param call оператор вызова.
+   * @return {@code true}, если оператор по форме — изменение состава полей.
+   */
+  static boolean isMutatorCall(BSLParser.CallStatementContext call) {
+    var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
+    if (methodCall == null) {
+      return false;
+    }
+    return (insertReceiverName(call) != null && isInsertMethod(methodCall))
+      || (columnsAddReceiverName(call) != null && isAddMethod(methodCall));
   }
 
   /**
