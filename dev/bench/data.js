@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790427432311,
+  "lastUpdate": 1790428550830,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43555,6 +43555,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7915150445578976",
             "extra": "mean: 106.17683299382527 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a1ef7d7119a3f70102a1b02cd61ed909727ef3da",
+          "message": "Merge pull request #4541 from 1c-syntax/docs/types-dynamic-list-context-menu\n\ndocs(types): динамический список и контекстное меню описаны и покрыты тестами",
+          "timestamp": "2026-09-26T09:29:10+02:00",
+          "tree_id": "f78acaa0700f6b3d15f376749de7e93204602730",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a1ef7d7119a3f70102a1b02cd61ed909727ef3da"
+        },
+        "date": 1790428527833,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.20452396074931,
+            "unit": "sec",
+            "range": "stddev: 1.722325838351751",
+            "extra": "mean: 105.20452396074931 sec\nrounds: 3"
           }
         ]
       }
