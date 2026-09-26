@@ -53,6 +53,7 @@ import org.mockito.quality.Strictness;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -119,7 +120,7 @@ class AutumnBeanIndexTest {
     var uri = registerEntry("БезДокумента");
     var serverContext = mock(ServerContext.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(null);
+    when(serverContext.getDocuments()).thenReturn(Map.of());
     init();
 
     // when / then
@@ -330,7 +331,7 @@ class AutumnBeanIndexTest {
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocuments()).thenReturn(Map.of(uri, document));
     when(document.getSymbolTree()).thenReturn(symbolTree);
     var beanType = new TypeRef(TypeKind.USER, "ТипЖелудя");
     when(typeRegistry.resolve("ТипЖелудя")).thenReturn(Optional.of(beanType));
@@ -546,7 +547,7 @@ class AutumnBeanIndexTest {
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocuments()).thenReturn(Map.of(uri, document));
     when(document.getSymbolTree()).thenReturn(symbolTree);
     when(symbolTree.getConstructor()).thenReturn(Optional.ofNullable(constructor));
     var allMethods = new ArrayList<MethodSymbol>();

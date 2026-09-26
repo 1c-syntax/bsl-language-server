@@ -54,6 +54,7 @@ import org.mockito.quality.Strictness;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -248,7 +249,7 @@ class AutumnCollectionIndexTest {
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocuments()).thenReturn(Map.of(uri, document));
     when(document.getSymbolTree()).thenReturn(symbolTree);
 
     var fixedArray = new TypeRef(TypeKind.PLATFORM, "ФиксированныйМассив");
@@ -321,7 +322,7 @@ class AutumnCollectionIndexTest {
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocuments()).thenReturn(Map.of(uri, document));
     when(document.getSymbolTree()).thenReturn(symbolTree);
     when(symbolTree.getConstructor()).thenReturn(Optional.ofNullable(ctor));
     var allMethods = new ArrayList<MethodSymbol>();
