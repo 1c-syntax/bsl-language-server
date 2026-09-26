@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TableDataKind;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.CommonForm;
 import com.github._1c_syntax.bsl.mdo.Document;
@@ -167,6 +168,12 @@ public class FormTypesProvider {
   /** Уже обработанные формы — защита от повторной регистрации источников. */
   private final Set<TypeRef> registeredForms = new HashSet<>();
 
+  /**
+   * Корень конфигурации, чьи формы регистрируются. Нужен только на регистрации —
+   * узнать, назначена ли общая форма основной формой самой конфигурации.
+   */
+  private @Nullable CF configuration;
+
   /** Тип на вид элемента формы: база + расширение вида (см. {@link #registerItemKindTypes}). */
 
   /**
@@ -186,12 +193,15 @@ public class FormTypesProvider {
    * Регистрирует типы всех форм конфигурации: общих ({@link CommonForm}) и
    * подчинённых объектам ({@link FormOwner#getForms()}).
    *
+   * @param configuration   корень конфигурации — источник ролей общих форм,
+   *                        назначенных основными формами самой конфигурации.
    * @param children        объекты метаданных конфигурации.
    * @param projectLanguage язык исходников проекта — на нём платформа заполняет то,
    *                        что зависит от варианта встроенного языка
    *                        (см. {@link com.github._1c_syntax.bsl.languageserver.context.ServerContext#getScriptVariantLanguage()}).
    */
-  public void register(Iterable<MD> children, Language projectLanguage) {
+  public void register(CF configuration, Iterable<MD> children, Language projectLanguage) {
+    this.configuration = configuration;
     formItemTypes.registerItemKindTypes();
     // Раньше самих форм: правка ложится на типы-расширения, а формы разбирают их
     // контракты событий уже готовыми.
@@ -621,7 +631,38 @@ public class FormTypesProvider {
       .map(typeRegistry::resolve)
       .flatMap(Optional::stream)
       .findFirst()
-      .orElse(null);
+      // Общая форма основной реквизит объявляет не всегда: у формы констант его нет
+      // вовсе. Тогда остаётся роль у корня конфигурации.
+      .orElseGet(() -> resolveConfigurationExtension(form, kind));
+  }
+
+  /**
+   * Тип-расширение общей формы по её роли у <b>корня конфигурации</b>: форма,
+   * назначенная основной формой констант, и есть форма констант.
+   * <p>
+   * Роли объекта тут мало: часть основных форм задаётся не у объекта метаданных, а у
+   * самой конфигурации ({@code DefaultConstantsForm} и родственные), и общая форма,
+   * назначенная такой, ничем не отличается от любой другой общей формы — кроме этой
+   * записи в корне.
+   *
+   * @return расширение; {@code null}, если форма ничем не назначена, для её роли
+   *   расширения нет либо самого типа нет в реестре.
+   */
+  private @Nullable TypeRef resolveConfigurationExtension(Form form, FormKind kind) {
+    if (configuration == null) {
+      return null;
+    }
+    var formRef = form.getMdoReference();
+    for (var entry : configuration.getDefaultFormMap().entrySet()) {
+      if (!entry.getValue().equals(formRef)) {
+        continue;
+      }
+      var name = FormPlatformTypes.configurationExtensionTypeName(entry.getKey(), kind);
+      if (name != null) {
+        return typeRegistry.resolve(name).orElse(null);
+      }
+    }
+    return null;
   }
 
   /**
@@ -637,7 +678,8 @@ public class FormTypesProvider {
    */
   private @Nullable TypeRef resolveOrdinaryExtension(Form form, @Nullable MD owner) {
     if (!(owner instanceof FormOwner formOwner)) {
-      return null;
+      // Общая форма объекту не подчинена: назначить её основной может только корень.
+      return resolveConfigurationExtension(form, FormKind.ORDINARY);
     }
     var formRef = form.getMdoReference();
     for (var entry : formOwner.getDefaultFormMap().entrySet()) {
