@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790430950805,
+  "lastUpdate": 1790446793198,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43648,6 +43648,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.611380436002452",
             "extra": "mean: 106.8686436812083 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d7b03703870514951f62c3c22a75cb22160fcfb",
+          "message": "Merge pull request #4398 from pravets/feat/new-diagnostic-suspicious-change-and-validate\n\nfeat: new diagnostic SuspiciousChangeAndValidate",
+          "timestamp": "2026-09-26T20:01:35+02:00",
+          "tree_id": "743b67f4ced39847fe6ed73536952eacf5c5d02e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9d7b03703870514951f62c3c22a75cb22160fcfb"
+        },
+        "date": 1790446780065,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.83539668718974,
+            "unit": "sec",
+            "range": "stddev: 0.3687537647058596",
+            "extra": "mean: 105.83539668718974 sec\nrounds: 3"
           }
         ]
       }
