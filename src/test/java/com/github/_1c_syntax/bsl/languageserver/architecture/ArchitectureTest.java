@@ -327,8 +327,11 @@ class ArchitectureTest {
       "Client", "Configuration", "DiagnosticsMetadata", "Infrastructure", "Utils")
     .whereLayer("References").mayOnlyAccessLayers(
       "Configuration", "Context", "Infrastructure", "Types", "Utils")
+    // Client — ради индикатора хода работы: доразрешение типов возврата после наполнения
+    // рабочей области идёт минутами и обязано показывать прогресс, как и само наполнение.
     .whereLayer("Types").mayOnlyAccessLayers(
-      "Cfg", "Configuration", "Context", "Events", "Index", "Infrastructure", "References", "Utils")
+      "Cfg", "Client", "Configuration", "Context", "Events", "Index", "Infrastructure",
+      "References", "Utils")
     // Кэш графов знает о документе, чей разбор кэширует, и о базе индексов — она задаёт
     // сброс по жизненному циклу документа.
     .whereLayer("Cfg").mayOnlyAccessLayers("Context", "Index", "Infrastructure", "Utils")

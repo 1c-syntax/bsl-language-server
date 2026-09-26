@@ -21,37 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.mdo.AccountingRegister;
-import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
-import com.github._1c_syntax.bsl.mdo.BusinessProcess;
-import com.github._1c_syntax.bsl.mdo.CalculationRegister;
-import com.github._1c_syntax.bsl.mdo.Catalog;
-import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
-import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
-import com.github._1c_syntax.bsl.mdo.ChartOfCharacteristicTypes;
-import com.github._1c_syntax.bsl.mdo.Document;
-import com.github._1c_syntax.bsl.mdo.DocumentJournal;
-import com.github._1c_syntax.bsl.mdo.ExchangePlan;
-import com.github._1c_syntax.bsl.mdo.InformationRegister;
+import com.github._1c_syntax.bsl.mdo.AdditionalIndexOwner;
+import com.github._1c_syntax.bsl.mdo.BasedOnOwner;
+import com.github._1c_syntax.bsl.mdo.DataLockFieldsOwner;
+import com.github._1c_syntax.bsl.mdo.InputByStringOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.Sequence;
-import com.github._1c_syntax.bsl.mdo.Task;
 import com.github._1c_syntax.bsl.mdo.storage.AdditionalIndex;
 import com.github._1c_syntax.bsl.types.MdoReference;
 
 import java.util.List;
 
 /**
- * Свойства объектов метаданных, у которых в mdclasses нет интерфейса-владельца.
+ * Массовые свойства объектов метаданных: `ВводитсяНаОсновании`, `ВводПоСтроке`,
+ * `ПоляБлокировкиДанных`, `ДополнительныеИндексы`.
  * <p>
- * `ВводитсяНаОсновании`, `ВводПоСтроке`, `ПоляБлокировкиДанных` объявлены полем в восьми
- * классах, `ДополнительныеИндексы` — в четырнадцати, и общего интерфейса вроде
- * {@code AttributeOwner} у них нет (mdclasses#677). Поэтому виды объектов приходится
- * перечислять — и это перечисление собрано здесь, чтобы не тащить полтора десятка
- * MD-классов в тех, кто просто хочет прочитать свойство.
- * <p>
- * Как только интерфейсы появятся, весь класс схлопывается в четыре
- * {@code instanceof}-проверки.
+ * Каждое объявлено в mdclasses своим интерфейсом-владельцем (mdclasses#677), и у каждого
+ * вида объекта набор этих интерфейсов свой. Здесь они собраны вместе, чтобы читающему
+ * свойство хватало одной зависимости вместо пяти.
  */
 final class MdoPropertyAccessors {
 
@@ -61,84 +47,21 @@ final class MdoPropertyAccessors {
 
   /** Типы, на основании которых вводится объект; пусто — свойства у вида нет. */
   static List<MdoReference> basedOn(MD md) {
-    return switch (md) {
-      case Catalog o -> o.getBasedOn();
-      case Document o -> o.getBasedOn();
-      case BusinessProcess o -> o.getBasedOn();
-      case Task o -> o.getBasedOn();
-      case ChartOfAccounts o -> o.getBasedOn();
-      case ChartOfCharacteristicTypes o -> o.getBasedOn();
-      case ChartOfCalculationTypes o -> o.getBasedOn();
-      case ExchangePlan o -> o.getBasedOn();
-      default -> List.of();
-    };
+    return md instanceof BasedOnOwner owner ? owner.getBasedOn() : List.of();
   }
 
   /** Поля, по которым доступен ввод по строке; пусто — свойства у вида нет. */
   static List<MdoReference> inputByString(MD md) {
-    return switch (md) {
-      case Catalog o -> o.getInputByString();
-      case Document o -> o.getInputByString();
-      case BusinessProcess o -> o.getInputByString();
-      case Task o -> o.getInputByString();
-      case ChartOfAccounts o -> o.getInputByString();
-      case ChartOfCharacteristicTypes o -> o.getInputByString();
-      case ChartOfCalculationTypes o -> o.getInputByString();
-      case ExchangePlan o -> o.getInputByString();
-      default -> List.of();
-    };
+    return md instanceof InputByStringOwner owner ? owner.getInputByString() : List.of();
   }
 
   /** Поля блокировки данных; пусто — свойства у вида нет. */
   static List<MdoReference> dataLockFields(MD md) {
-    return switch (md) {
-      case Catalog o -> o.getDataLockFields();
-      case Document o -> o.getDataLockFields();
-      case BusinessProcess o -> o.getDataLockFields();
-      case Task o -> o.getDataLockFields();
-      case ChartOfAccounts o -> o.getDataLockFields();
-      case ChartOfCharacteristicTypes o -> o.getDataLockFields();
-      case ChartOfCalculationTypes o -> o.getDataLockFields();
-      case ExchangePlan o -> o.getDataLockFields();
-      default -> List.of();
-    };
+    return md instanceof DataLockFieldsOwner owner ? owner.getDataLockFields() : List.of();
   }
 
-  /**
-   * Дополнительные индексы; пусто — свойства у вида нет.
-   * <p>
-   * Видов четырнадцать, поэтому перебор разделён на две половины: одним switch'ем
-   * он перевалил бы порог цикломатической сложности, а дробить его по-другому нечем —
-   * ветки различаются только типом.
-   */
+  /** Дополнительные индексы; пусто — свойства у вида нет. */
   static List<AdditionalIndex> additionalIndexes(MD md) {
-    var ofObject = additionalIndexesOfObject(md);
-    return ofObject.isEmpty() ? additionalIndexesOfRegister(md) : ofObject;
-  }
-
-  private static List<AdditionalIndex> additionalIndexesOfObject(MD md) {
-    return switch (md) {
-      case Catalog o -> o.getAdditionalIndexes();
-      case Document o -> o.getAdditionalIndexes();
-      case DocumentJournal o -> o.getAdditionalIndexes();
-      case BusinessProcess o -> o.getAdditionalIndexes();
-      case Task o -> o.getAdditionalIndexes();
-      case ChartOfAccounts o -> o.getAdditionalIndexes();
-      case ChartOfCharacteristicTypes o -> o.getAdditionalIndexes();
-      case ChartOfCalculationTypes o -> o.getAdditionalIndexes();
-      case ExchangePlan o -> o.getAdditionalIndexes();
-      default -> List.of();
-    };
-  }
-
-  private static List<AdditionalIndex> additionalIndexesOfRegister(MD md) {
-    return switch (md) {
-      case InformationRegister o -> o.getAdditionalIndexes();
-      case AccumulationRegister o -> o.getAdditionalIndexes();
-      case AccountingRegister o -> o.getAdditionalIndexes();
-      case CalculationRegister o -> o.getAdditionalIndexes();
-      case Sequence o -> o.getAdditionalIndexes();
-      default -> List.of();
-    };
+    return md instanceof AdditionalIndexOwner owner ? owner.getAdditionalIndexes() : List.of();
   }
 }

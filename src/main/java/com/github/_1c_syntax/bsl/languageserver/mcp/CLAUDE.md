@@ -22,18 +22,49 @@
    `spring.ai.mcp.server.streamable-http.mcp-endpoint`). Профили: `mcp` + `lsp-mcp` (LSP по stdio,
    stdout занят каналом LSP) либо `mcp` + `websocket-mcp` (рядом с LSP-WebSocket, тот же порт).
 
-Workspaces приходят от клиента через **MCP roots** (`McpRootsChangeConsumer`) — аналог LSP workspace
-folders; при `--mcp` оба источника (LSP folders + MCP roots) питают общий `ServerContextProvider`.
+**Терминология — из LSP:** регистрируется *рабочая папка* (workspace folder) — один корень проекта;
+множество папок и есть *рабочая область* (workspace). В текстах для клиента и в javadoc пиши
+«рабочая папка», не «рабочее пространство» — иначе термины разъезжаются с протоколом.
+
+Папки клиент регистрирует **сам, инструментами** `register_workspace_folder`/`list_workspace_folders`/
+`unregister_workspace_folder` — это основной путь. Дополнительные источники: LSP workspace folders (при
+`--mcp` оба источника питают общий `ServerContextProvider`) и **MCP roots** (`McpRootsChangeConsumer`).
+Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_changed` оттуда уже удалён) —
+поддерживаются как совместимость, новую функциональность на них не завязывай.
 Методы-инструменты помечены `@McpTool`.
 
+Владение папками считает **только** `McpWorkspaceBootstrap`: у папки может быть несколько источников
+(явная регистрация инструментом, MCP roots), и она живёт, пока её держит хотя бы один. Своих копий
+этого состояния в других бинах заводить нельзя — разойдутся с фактическим набором папок.
+Удалять MCP вправе **только папки, созданные им самим**: workspace folder LSP-клиента забирать нельзя,
+иначе снесёшь рабочий контекст редактора без возможности восстановления.
+Идентичность папки — **URI из реестра**, а не путь: `Path.toUri()` даёт завершающий слэш только пока
+каталог существует, поэтому у удалённого каталога тот же `Path` превращается в другой URI. Тем же
+свойством обладает `Absolute.uri`, а `ServerContextProvider.removeWorkspace` прогоняет URI через него
+ещё раз — поэтому папку с уже удалённым каталогом адресовать для удаления нельзя: `remove` проверяет
+результат и честно падает, вместо того чтобы отчитаться об успехе и утечь контекстом.
+**Нормализацию значения от клиента делай только через `McpWorkspaceFolders.toWorkspaceFolderUri`** —
+там же живёт `normalizeWindowsFileUri` (windows-патология `file://D:/repo`, у которой `Absolute.uri`
+иначе съедает двоеточие); свой разбор мимо неё разъедется с путём roots.
+`Absolute.path`/`Absolute.uri` канонизируют путь через `getCanonicalFile()` и прокидывают
+**необъявленный `IOException`** — вокруг них ловится `Exception`, а не `RuntimeException`.
+
 Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
-`McpWorkspaceBootstrap`/`McpWorkspaceResolver` (MCP roots → workspace), `McpRootsBootstrapper`/
-`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`), `McpDocumentReader` (единый доступ к
-документу: `read()` — из кэша, `analyze()` — свежий AST + диагностики).
+`McpWorkspaceBootstrap` (регистрация + индексация каталога, владение папками), `McpWorkspaceResolver`
+(`workspaceFolder` → рабочая папка), `McpWorkspaceFolders` (нормализация `workspaceFolder`: URI или
+путь; общий текст подсказки о регистрации),
+`McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
+`McpDocumentReader` (единый доступ к документу: `read()` — из кэша, `analyze()` — свежий AST +
+диагностики).
+
+**Ошибки — часть API для агента.** Сообщение о незарегистрированной рабочей папке обязано перечислять
+доступные корни и называть инструмент регистрации: агент исправляется сам, без человека. Единый
+текст — `McpWorkspaceFolders.registrationHint`, не пиши свой.
 
 ## Инструменты (`@McpTool`)
 
-`AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
+`ListWorkspaceFoldersTool`/`RegisterWorkspaceFolderTool`/`UnregisterWorkspaceFolderTool` (управление
+рабочими папками) · `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` · `TypeInfoTool` (тип по имени:
 члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
 `TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
 `FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`
@@ -43,7 +74,7 @@ folders; при `--mcp` оба источника (LSP folders + MCP roots) пи
 
 - Новый инструмент = метод `@McpTool`, делегирующий в существующий провайдер/подсистему через
   `McpDocumentReader`/`McpWorkspaceResolver`; бизнес-логику в `mcp/` не дублируй.
-- Инструментам, которым нужен workspace, его выдаёт `McpWorkspaceResolver` — не полагайся на
-  «текущий» неявно.
+- Инструментам, которым нужна рабочая папка, её выдаёт `McpWorkspaceResolver` — не полагайся на
+  «текущую» неявно.
 - Транспорт/профили задаёт `MainApplication` по аргументам — при добавлении транспорта правь и
   выбор профиля там, и соответствующий `application-*-mcp.properties`.

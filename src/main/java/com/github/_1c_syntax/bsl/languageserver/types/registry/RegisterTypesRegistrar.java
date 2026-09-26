@@ -34,11 +34,13 @@ import com.github._1c_syntax.bsl.mdo.CalculationRegister;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,13 +57,21 @@ import java.util.Map;
  *   <li>набор записей — коллекция <b>своих</b> записей: обход и индексатор дают запись
  *       этого регистра, а {@code Выгрузить()} — таблицу с его колонками;</li>
  *   <li>члены, у которых после подстановки имени регистра остался плейсхолдер, —
- *       {@code Регистратор} и ссылки на чужое семейство регистров.</li>
+ *       {@code Регистратор}, счета и вид расчёта записи, ссылки на чужое семейство
+ *       регистров.</li>
  * </ul>
  */
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
 public class RegisterTypesRegistrar {
+
+  /** Плейсхолдер регистратора: {@code ДокументСсылка.<Имя документа>}. */
+  private static final String DOCUMENT_NAME = "Имя документа";
+  /** Плейсхолдер счетов записи: {@code ПланСчетовСсылка.<Имя плана счетов>}. */
+  private static final String CHART_OF_ACCOUNTS_NAME = "Имя плана счетов";
+  /** Плейсхолдер вида расчёта записи: {@code ПланВидовРасчетаСсылка.<Имя плана видов расчета>}. */
+  private static final String CHART_OF_CALCULATION_TYPES_NAME = "Имя плана видов расчета";
 
   private final TypeRegistry typeRegistry;
   private final RecorderIndex recorderIndex;
@@ -196,10 +206,14 @@ public class RegisterTypesRegistrar {
    *   <li>{@code Регистратор} объявлен как {@code ДокументСсылка.<Имя документа>}:
    *       имя регистра к документу отношения не имеет, подставляются
    *       документы-регистраторы (см. {@link RecorderIndex});</li>
+   *   <li>{@code Счет}/{@code СчетДт}/{@code СчетКт} записи регистра бухгалтерии
+   *       объявлены как {@code ПланСчетовСсылка.<Имя плана счетов>}, а {@code ВидРасчета}
+   *       записи регистра расчёта — как {@code ПланВидовРасчетаСсылка.<Имя плана видов
+   *       расчета>}: план указан у самого регистра, а не выводится из его имени;</li>
    *   <li>член ссылается на <b>чужое</b> семейство регистров — ошибка синтакс-помощника,
    *       семейство заменяется на своё (см. {@link RegisterFamilies}).</li>
    * </ul>
-   * Обе правки принимаются, только если получившийся тип есть в реестре.
+   * Все правки принимаются, только если получившийся тип есть в реестре.
    *
    * @param md         MD-объект регистра.
    * @param familyCore ru-часть имени семейства ({@code "РегистрБухгалтерии"} и т.п.).
@@ -209,20 +223,55 @@ public class RegisterTypesRegistrar {
     if (!RegisterFamilies.isRegisterFamily(familyCore)) {
       return;
     }
-    // TODO mdclasses#670: так же типизировать Счет/СчетДт/СчетКт записи регистра
-    //  бухгалтерии (объявлены как ПланСчетовСсылка.<Имя плана счетов>) и ВидРасчета
-    //  записи регистра расчёта. План указан у регистра в метаданных (<ChartOfAccounts>,
-    //  <ChartOfCalculationTypes>), но mdclasses 0.20.0 его не разбирает. Как появится —
-    //  добавить имя плана вторым набором подстановки рядом с recorders: подходящий
-    //  выберется по тому же признаку «тип есть в реестре».
-    var recorders = recorderIndex.recordersOf(md.getMdoReference().getMdoRefRu());
+    var substitutions = substitutionsOf(md);
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
-      registerFixupsOn(generic, familyCore, mdName, recorders);
+      registerFixupsOn(generic, familyCore, mdName, substitutions);
+    }
+  }
+
+  /**
+   * Имена для подстановки в плейсхолдеры членов регистра — у каждого плейсхолдера свои:
+   * документы-регистраторы в {@code <Имя документа>}, план регистра — в плейсхолдер
+   * своего вида плана.
+   * <p>
+   * Одним списком на все плейсхолдеры их подставлять нельзя: объекты разных видов
+   * метаданных могут называться одинаково, и существование получившегося типа их не
+   * различит — документ, названный как план счетов, попал бы в {@code Регистратор}.
+   *
+   * @return плейсхолдер → имена объектов метаданных.
+   */
+  private Map<String, List<String>> substitutionsOf(MD md) {
+    var substitutions = new HashMap<String, List<String>>();
+    substitutions.put(DOCUMENT_NAME, recorderIndex.recordersOf(md.getMdoReference().getMdoRefRu()));
+    switch (md) {
+      case AccountingRegister register ->
+        putChartName(substitutions, CHART_OF_ACCOUNTS_NAME, register.getChartOfAccounts());
+      case CalculationRegister register ->
+        putChartName(substitutions, CHART_OF_CALCULATION_TYPES_NAME, register.getChartOfCalculationTypes());
+      default -> {
+        // План указывается только у регистров бухгалтерии и расчёта.
+      }
+    }
+    return Map.copyOf(substitutions);
+  }
+
+  /** Кладёт имя плана под его плейсхолдер; план не указан — не кладёт ничего. */
+  private static void putChartName(Map<String, List<String>> substitutions, String placeholder,
+                                   MdoReference chart) {
+    if (chart.isEmpty()) {
+      return;
+    }
+    var mdoRef = chart.getMdoRefRu();
+    var dot = mdoRef.lastIndexOf('.');
+    var name = dot < 0 ? mdoRef : mdoRef.substring(dot + 1);
+    if (!name.isBlank()) {
+      substitutions.put(placeholder, List.of(name));
     }
   }
 
   /** Регистрирует достроенные члены на специализации одного generic'а семейства. */
-  private void registerFixupsOn(TypeRef generic, String familyCore, String mdName, List<String> recorders) {
+  private void registerFixupsOn(TypeRef generic, String familyCore, String mdName,
+                                Map<String, List<String>> substitutions) {
     var parameters = typeRegistry.getTypeParameters(generic);
     if (parameters.size() != 1) {
       return;
@@ -234,7 +283,7 @@ public class RegisterTypesRegistrar {
       return;
     }
     typeRegistry.registerMemberOverride(specialized,
-      () -> fixedUpRegisterMembers(generic, familyCore, bindings, mdName, recorders), FileType.BSL);
+      () -> fixedUpRegisterMembers(generic, familyCore, bindings, mdName, substitutions), FileType.BSL);
   }
 
   /**
@@ -247,7 +296,7 @@ public class RegisterTypesRegistrar {
    */
   private List<MemberDescriptor> fixedUpRegisterMembers(TypeRef generic, String familyCore,
                                                         Map<String, String> bindings, String mdName,
-                                                        List<String> recorders) {
+                                                        Map<String, List<String>> substitutions) {
     var result = new ArrayList<MemberDescriptor>();
     for (var member : typeRegistry.getMembers(generic, FileType.BSL)) {
       if (member.generic()) {
@@ -255,8 +304,10 @@ public class RegisterTypesRegistrar {
       }
       var specialized = member.specialize(bindings, typeRegistry::canonicalRef);
       var fixed = RegisterFamilies.ownFamilyMember(typeRegistry, specialized, familyCore, mdName);
-      if (fixed == null) {
-        fixed = PlaceholderBinder.bind(typeRegistry, specialized, recorders);
+      var placeholder = PlaceholderBinder.singlePlaceholder(specialized);
+      if (fixed == null && placeholder != null) {
+        fixed = PlaceholderBinder.bind(typeRegistry, specialized,
+          substitutions.getOrDefault(placeholder, List.of()));
       }
       if (fixed != null) {
         result.add(fixed);

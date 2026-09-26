@@ -236,9 +236,9 @@ public class OpenDataObjectInference {
       var valueTypes = valueArgIndex < args.size()
         ? types.of(args.get(valueArgIndex))
         : UNDEFINED;
-      if (!valueTypes.isEmpty()) {
-        fields.merge(keyName, LocalField.of(valueTypes), LocalField::merge);
-      }
+      // Ключ записывается и с пустым типом значения — по той же причине, что и у Вставить:
+      // имя ключа известно из самого конструктора, а тип значения может быть невыводим.
+      fields.merge(keyName, LocalField.of(valueTypes), LocalField::merge);
     }
     return base.withFields(base.refs().iterator().next(), fields);
   }
@@ -319,10 +319,33 @@ public class OpenDataObjectInference {
       return Map.of();
     }
     Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
+    // Индекс отдаёт все вызовы у получателя с этим именем, а состав меняют только два вида.
+    // Остальные изменением не считаются: иначе тело с `Лог.Отладка(…)` выглядело бы
+    // меняющим переменную модуля `Лог`, и расчёт её ячейки проходил бы по нему наравне
+    // с телами, где она правда меняется.
     for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      calls.put(Ranges.create(call).getStart(), call);
+      if (isMutatorCall(call)) {
+        calls.put(Ranges.create(call).getStart(), call);
+      }
     }
     return calls;
+  }
+
+  /**
+   * Может ли оператор менять состав полей своего получателя: это {@code Х.Вставить(…)} и
+   * {@code Х.Колонки.Добавить(…)}. Прочие вызовы у переменной ({@code Лог.Отладка(…)},
+   * {@code Стр.Поле.Вставить(…)}) состав её полей не меняют.
+   *
+   * @param call оператор вызова.
+   * @return {@code true}, если оператор по форме — изменение состава полей.
+   */
+  static boolean isMutatorCall(BSLParser.CallStatementContext call) {
+    var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
+    if (methodCall == null) {
+      return false;
+    }
+    return (insertReceiverName(call) != null && isInsertMethod(methodCall))
+      || (columnsAddReceiverName(call) != null && isAddMethod(methodCall));
   }
 
   /**
@@ -358,7 +381,10 @@ public class OpenDataObjectInference {
     var structureRef = headRefOf(incoming, OpenDataObjectInference::isStructureOrMapLike);
     if (structureRef != null) {
       var field = insertedField(call, variableName, scopeRange, types);
-      if (field != null && !field.types().isEmpty()) {
+      if (field != null) {
+        // Поле записывается и с пустым типом значения: знать, что ключ есть, — это не то же
+        // самое, что знать его тип. Без имени обращение к ключу выглядит обращением к
+        // несуществующему свойству, а тип значения ниоткуда взяться и не мог.
         return incoming.withField(structureRef, field.name(), field.types());
       }
     }

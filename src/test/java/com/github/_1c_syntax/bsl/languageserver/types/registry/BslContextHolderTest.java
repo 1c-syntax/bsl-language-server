@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.context.api.QueryContextProvider;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -42,11 +44,13 @@ class BslContextHolderTest {
   private PlatformContextProviderFactory factory;
   @Mock
   private ContextProvider provider;
+  @Mock
+  private QueryContextProvider queryProvider;
 
   @Test
   void getCachesProviderAndCallsFactoryOnce() throws IOException {
     // given
-    when(factory.create()).thenReturn(Optional.of(provider));
+    when(factory.create()).thenReturn(Optional.of(contexts(provider, queryProvider)));
     var holder = new BslContextHolder(factory);
 
     // when
@@ -57,6 +61,38 @@ class BslContextHolderTest {
     assertThat(first).contains(provider);
     assertThat(second).contains(provider);
     verify(factory, times(1)).create();
+  }
+
+  @Test
+  void queryProviderComesFromTheSameRead() throws IOException {
+    // given
+    when(factory.create()).thenReturn(Optional.of(contexts(provider, queryProvider)));
+    var holder = new BslContextHolder(factory);
+
+    // when
+    var first = holder.getQueryProvider();
+    var second = holder.get();
+
+    // then
+    assertThat(first).contains(queryProvider);
+    assertThat(second).contains(provider);
+    verify(factory, times(1)).create();
+  }
+
+  @Test
+  void queryProviderIsEmptyWhenTheHelpDidNotGiveIt() throws IOException {
+    // given
+    when(factory.create()).thenReturn(Optional.of(contexts(provider, null)));
+    var holder = new BslContextHolder(factory);
+
+    // when / then
+    assertThat(holder.getQueryProvider()).isEmpty();
+    assertThat(holder.get()).contains(provider);
+  }
+
+  private static PlatformContextProviderFactory.PlatformContexts contexts(
+    ContextProvider provider, @Nullable QueryContextProvider queryProvider) {
+    return new PlatformContextProviderFactory.PlatformContexts(provider, queryProvider);
   }
 
   @Test

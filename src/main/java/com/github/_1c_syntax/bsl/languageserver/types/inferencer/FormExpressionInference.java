@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvid
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Знания о формах, нужные при выводе типа выражения.
@@ -105,6 +107,7 @@ public class FormExpressionInference {
   private final FormAttributeTypeIndex formAttributeTypeIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final AssignmentByReceiverIndex assignmentByReceiverIndex;
+  private final TableCollectionInference tableCollectionInference;
 
   /**
    * Тип формы, открываемой по имени: {@code ОткрытьФорму("Справочник.Контрагенты.ФормаОбъекта")}
@@ -150,10 +153,12 @@ public class FormExpressionInference {
    * @param receiver        типы получателя.
    * @param memberName      имя вызываемого метода.
    * @param call            узел вызова.
+   * @param inferrer        вывод типов выражения — им берутся типы преобразуемых данных.
    * @return уточнённый тип; {@code null}, если правило неприменимо.
    */
   public @Nullable TypeSet refinedCallTypes(DocumentContext documentContext, TypeSet receiver,
-                                            String memberName, MethodCallNode call) {
+                                            String memberName, MethodCallNode call,
+                                            Function<BslExpression, TypeSet> inferrer) {
     var managerForm = formByNameResolver.resolveManagerForm(documentContext, receiver, memberName,
       firstStringLiteral(call), documentContext.getFileType());
     if (managerForm.isPresent()) {
@@ -162,7 +167,7 @@ public class FormExpressionInference {
     if (isFindByName(memberName)) {
       return memberByLiteralName(documentContext, receiver, firstStringLiteral(call));
     }
-    return convertedValueType(documentContext, memberName, call, receiver);
+    return convertedValueType(documentContext, memberName, call, receiver, inferrer);
   }
 
   /**
@@ -175,9 +180,14 @@ public class FormExpressionInference {
    *       задан вторым параметром, он обязателен;</li>
    *   <li>{@code РеквизитФормыВЗначение("Объект")} — тип берётся из объявления реквизита
    *       в {@code Form.xml}: это {@code ДокументОбъект.Заказ}, а не
-   *       {@code ДанныеФормыСтруктура}, которой реквизит выглядит на форме. Второй
-   *       параметр, если он есть, тип задаёт и здесь.</li>
+   *       {@code ДанныеФормыСтруктура}, которой реквизит выглядит на форме. У
+   *       реквизита-таблицы (дерева) значений оттуда же приходят колонки. Второй
+   *       параметр, если он есть, называет тип и здесь.</li>
    * </ul>
+   * Названный тип берётся голым, поэтому колонки к нему приходится приписывать
+   * отдельно: у {@code ТаблицаЗначений} состав колонок в имени типа не выражен, а
+   * потерять его — значит вернуть на сервер таблицу, к которой не обратиться.
+   * <p>
    * Тип, собранный в переменной ({@code РеквизитФормыВЗначение(ИмяРеквизита)}), статически
    * неизвестен — тогда работает объявленный возврат платформенной функции.
    *
@@ -185,21 +195,76 @@ public class FormExpressionInference {
    * @param methodName      имя вызываемой функции.
    * @param call            узел вызова.
    * @param receiver        типы получателя; {@code null} — вызов без квалификации.
+   * @param inferrer        вывод типов выражения — им берутся типы преобразуемых данных.
    * @return тип результата; {@code null}, если это не обратное преобразование либо
    *     статически определить тип нечем.
    */
   public @Nullable TypeSet convertedValueType(DocumentContext documentContext, String methodName,
-                                              MethodCallNode call, @Nullable TypeSet receiver) {
+                                              MethodCallNode call, @Nullable TypeSet receiver,
+                                              Function<BslExpression, TypeSet> inferrer) {
     var name = methodName.toLowerCase(Locale.ROOT);
     var attributeToValue = ATTRIBUTE_TO_VALUE_FUNCTIONS.contains(name);
     if (!attributeToValue && !DATA_TO_VALUE_FUNCTIONS.contains(name)) {
       return null;
     }
     var explicitType = typeArgument(call, documentContext);
-    if (explicitType != null) {
+    TypeSet refined = null;
+    if (attributeToValue) {
+      refined = declaredAttributeType(documentContext, call, receiver);
+    } else if (explicitType != null && TableCollectionInference.carriesColumns(explicitType)) {
+      // Колонки преобразуемых данных только дополняют названный тип: без второго
+      // параметра преобразование неполно, и выдумывать коллекцию не из чего.
+      refined = columnsOfConvertedData(documentContext, call, explicitType, inferrer);
+    }
+    if (refined == null) {
       return explicitType;
     }
-    return attributeToValue ? declaredAttributeType(documentContext, call, receiver) : null;
+    return explicitType == null ? refined : narrowedToExplicit(refined, explicitType);
+  }
+
+  /**
+   * Названный вторым параметром тип — с уточнениями из объявления реквизита либо из самих
+   * преобразуемых данных.
+   * <p>
+   * У {@code РеквизитФормыВЗначение("Таблица", Тип("ТаблицаЗначений"))} второй параметр
+   * называет тот же тип, что объявлен в форме, но колонки известны только из объявления:
+   * взять голый {@code ТаблицаЗначений} значило бы их потерять.
+   *
+   * @param declared     набор с уточнениями.
+   * @param explicitType тип, названный вторым параметром.
+   * @return уточнённый набор, суженный до названного типа; сам названный тип, если
+   *     уточнений про него нет — тогда это преобразование к другому типу.
+   */
+  private static TypeSet narrowedToExplicit(TypeSet declared, TypeSet explicitType) {
+    var result = TypeSet.EMPTY;
+    for (var ref : explicitType.refs()) {
+      result = result.union(declared.retaining(ref));
+    }
+    return result.isEmpty() ? explicitType : result;
+  }
+
+  /**
+   * Названный тип с колонками преобразуемых данных формы:
+   * {@code ДанныеФормыВЗначение(Объект.Товары, Тип("ТаблицаЗначений"))} даёт ту же
+   * таблицу, что лежала на форме, а колонки объявлены только там. Дерево значений —
+   * тем же путём: колонки у него лежат так же, полями строки.
+   * <p>
+   * Имя типа во втором параметре про состав колонок не говорит ничего, поэтому берутся
+   * они у первого — у самих данных.
+   *
+   * @return коллекция с колонками; {@code null}, если первый аргумент — не табличная
+   *     коллекция либо колонок у него не выведено.
+   */
+  private @Nullable TypeSet columnsOfConvertedData(DocumentContext documentContext, MethodCallNode call,
+                                                   TypeSet explicitType,
+                                                   Function<BslExpression, TypeSet> inferrer) {
+    var arguments = call.arguments();
+    if (arguments.isEmpty()) {
+      return null;
+    }
+    var data = inferrer.apply(arguments.get(0));
+    return tableCollectionInference.withColumns(
+      explicitType, tableCollectionInference.columnsOf(data, documentContext.getFileType()));
   }
 
   /**

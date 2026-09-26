@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -54,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -68,6 +70,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 class CompletionProviderTest extends AbstractServerContextAwareTest {
+
+  private static final String LIST_FORM_MODULE =
+    "Catalogs/Справочник1/Forms/ФормаСписка/Ext/Form/Module.bsl";
 
   @Autowired
   private CompletionProvider completionProvider;
@@ -107,7 +112,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   private void enableMarkdownDocumentation(boolean enabled) {
     var itemCaps = new CompletionItemCapabilities();
-    itemCaps.setDocumentationFormat(enabled ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
+    itemCaps.setDocumentationFormat(List.of(enabled ? MarkupKind.MARKDOWN : MarkupKind.PLAINTEXT));
     var completionCaps = new CompletionCapabilities();
     completionCaps.setCompletionItem(itemCaps);
     var textDocumentCaps = new TextDocumentClientCapabilities();
@@ -2524,7 +2529,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   private void enableDocumentationResolveSupport(boolean markdown) {
     var itemCaps = new CompletionItemCapabilities();
-    itemCaps.setDocumentationFormat(markdown ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
+    itemCaps.setDocumentationFormat(List.of(markdown ? MarkupKind.MARKDOWN : MarkupKind.PLAINTEXT));
     itemCaps.setResolveSupport(new CompletionItemResolveSupportCapabilities(List.of("documentation")));
     var completionCaps = new CompletionCapabilities();
     completionCaps.setCompletionItem(itemCaps);
@@ -3008,5 +3013,40 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(items).noneMatch(item -> "ПриЗаписи".equals(item.getLabel()));
+  }
+
+  @Test
+  void dotCompletionOnDynamicListRowSkipsDereferencedColumns() {
+    // Элемент формы стоит на `Список.Ссылка.Код`, поэтому в данных строки
+    // лежат обе колонки: `Ссылка` и разыменованная `Ссылка.Код`. Написать
+    // вторую после точки нельзя — `ТекущиеДанные.Ссылка.Код` разберётся как
+    // разыменование ссылки, — поэтому предлагать её не нужно.
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Absolute.uri(new File(PATH_TO_METADATA, LIST_FORM_MODULE));
+    var documentContext = context.addDocument(uri);
+    context.rebuildDocument(documentContext, """
+      &НаКлиенте
+      Процедура Тест()
+      \tЭлементы.Список.ТекущиеДанные.
+      КонецПроцедуры
+      """, 1);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `\tЭлементы.Список.ТекущиеДанные.` — позиция сразу после последней точки
+    params.setPosition(new Position(2, 31));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .as("колонки строки предлагаются")
+      .contains("Ссылка", "Код")
+      .as("а составное имя идентификатором не является")
+      .doesNotContain("Ссылка.Код");
   }
 }

@@ -329,15 +329,19 @@ class ConfigurationTypesProviderHelpersTest {
     var formTypesProvider = new FormTypesProvider(registry, formParametersResolver, recorderIndex,
       new FormHandlerRoleIndex(mock(EventHandlerResolver.class)), new FormAttributeTypeIndex(),
       formDataTypesRegistrar,
-      new FormItemTypesRegistrar(registry, formDataTypesRegistrar, typeFactory), typeFactory,
+      new FormItemTypesRegistrar(registry, formDataTypesRegistrar,
+        new DynamicListTypesRegistrar(registry, formDataTypesRegistrar, mock(QueryTableResolver.class)),
+        new TableDataMembers(registry, formDataTypesRegistrar), typeFactory), typeFactory,
       new FormParametersRegistrar(registry, formParametersResolver, formDataTypesRegistrar, typeFactory,
         recorderIndex),
       new StructureParameterFieldsRegistrar(registry));
     return new ConfigurationTypesProvider(registry, serverProvider, globalScope, lsConfig, mcs,
       new ConfigurationGenericExpander(registry, serverProvider), new CatalogOwnerTypesRegistrar(registry),
       new ServiceModuleEventRegistrar(registry),
-      formTypesProvider, new XdtoTypesProvider(registry), formDataTypesRegistrar,
+      formTypesProvider, mock(ConfigurationModuleMembersProvider.class),
+      new XdtoTypesProvider(registry), formDataTypesRegistrar,
       new RegisterTypesRegistrar(registry, recorderIndex), recorderIndex,
+      new MdoMemberFactory(registry),
       new SimpleAsyncTaskExecutor());
   }
 
@@ -697,7 +701,7 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.Map.of(http.getMdoReference(), (MD) http),
       (registry, p) -> {
         p.tryRegister();
-        var typeRef = registry.resolve("Модуль HTTP-сервиса").orElseThrow();
+        var typeRef = registry.resolve("Модуль HTTP-сервиса.HTTPСервис1").orElseThrow();
         var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("URLTemplate1GET");
       });
@@ -771,7 +775,9 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.Map.of(web.getMdoReference(), (MD) web),
       (registry, p) -> {
         p.tryRegister();
-        var typeRef = registry.resolve("Модуль Web-сервиса").orElseThrow();
+        // Обработчики висят на типе своего сервиса: у разных сервисов операции сплошь
+        // и рядом называются одинаково, а параметры у них разные.
+        var typeRef = registry.resolve("Модуль Web-сервиса.WebСервис1").orElseThrow();
         var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("Операция1");
       });
@@ -804,7 +810,7 @@ class ConfigurationTypesProviderHelpersTest {
       java.util.Map.of(isvc.getMdoReference(), (MD) isvc),
       (registry, p) -> {
         p.tryRegister();
-        var typeRef = registry.resolve("Модуль сервиса интеграции").orElseThrow();
+        var typeRef = registry.resolve("Модуль сервиса интеграции.Сервис1").orElseThrow();
         var names = registry.getMembers(typeRef, FileType.BSL).stream().map(MemberDescriptor::name).toList();
         assertThat(names).contains("ОбработчикСообщения");
       });

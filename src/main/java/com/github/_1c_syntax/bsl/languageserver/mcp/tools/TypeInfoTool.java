@@ -48,7 +48,8 @@ import java.util.Optional;
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
  * методы, свойства, события, конструкторы — из системы типов {@link TypeService}.
  * <p>
- * Тип ищется в реестре workspace'а, указанного клиентом через обязательный параметр {@code root}.
+ * Тип ищется в реестре рабочей папки, указанной клиентом через обязательный параметр
+ * {@code workspaceFolder}.
  * Имена и описания — по запрошенной локали (по умолчанию русский).
  */
 @Component
@@ -112,13 +113,14 @@ public class TypeInfoTool {
     String typeName,
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
-    @McpToolParam(required = true, description = McpToolParams.ROOT)
-    String root,
+    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_FOLDER)
+    String workspaceFolder,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
     @Nullable Language language
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
-    try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
+    try (var ignored = WorkspaceContextHolder.forUri(
+      workspaceResolver.resolveWorkspaceFolderUri(workspaceFolder))) {
       var typeRef = typeService.resolve(typeName, fileType)
         .orElseThrow(() -> new IllegalArgumentException("Type is not found: " + typeName));
 

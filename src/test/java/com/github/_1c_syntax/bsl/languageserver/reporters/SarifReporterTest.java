@@ -112,7 +112,7 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), SOURCE_DIR);
 
     // when
-    reporter.report(analysisInfo, Path.of("."));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of("."));
 
     // then
     var mapper = new JsonMapper();

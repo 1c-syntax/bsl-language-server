@@ -50,7 +50,6 @@ import lombok.Locked;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -61,10 +60,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -98,6 +101,22 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Nullable
   private String content;
+
+  /**
+   * Отпечаток последнего разобранного содержимого; {@code null}, пока документ не
+   * разбирался ни разу. В отличие от самого содержимого переживает освобождение
+   * вторичных данных: по нему повторный разбор отличает перечитывание того же текста
+   * от настоящей правки.
+   */
+  @Nullable
+  private byte[] contentFingerprint;
+
+  /**
+   * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
+   * с которым он был разобран до этого. У документа, разбираемого впервые, — {@code true}.
+   */
+  @Getter
+  private boolean contentChangedOnLastRebuild = true;
 
   @Getter
   private int version;
@@ -335,14 +354,25 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
     try {
 
+      var fingerprint = contentFingerprint(content);
+      var contentChanged = !Arrays.equals(fingerprint, contentFingerprint);
+
       boolean versionMatches = version == this.version && version != 0;
 
       if (versionMatches && (this.content != null)) {
+        // Содержимое не применяется — дерево остаётся прежним. Значит и отпечаток обязан
+        // описывать его, а не то, что пришло: иначе следующий разбор того же текста счёл бы
+        // документ неизменившимся, и записи, построенные по прежнему дереву, остались бы жить.
+        contentChangedOnLastRebuild = false;
         clearDependantData();
         return;
       }
 
-      if (!isComputedDataFrozen) {
+      // Заморозка — политика («этот документ не редактируют, его вторичные данные держим»),
+      // а изменение содержимого — факт. Факт сильнее: замороженным остаётся документ, который
+      // после наполнения области перечитали из-за правки файла на диске, и его прежние
+      // диагностики с метриками посчитаны уже по другому тексту.
+      if (!isComputedDataFrozen || contentChanged) {
         clearSecondaryData();
       }
 
@@ -355,17 +385,44 @@ public class DocumentContext implements Comparable<DocumentContext> {
       this.version = version;
       symbolTree = computeSymbolTree();
 
+      // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
+      // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
+      // текст прежним и работу не переделает.
+      contentFingerprint = fingerprint;
+      contentChangedOnLastRebuild = contentChanged;
+
     } finally {
       releaseLocks();
     }
 
   }
 
+  /**
+   * Отпечаток содержимого — криптографическая свёртка текста.
+   * <p>
+   * Разрядность здесь важна: по совпадению отпечатков документ считается неизменившимся
+   * и сохраняет посчитанные по нему записи. У {@code String.hashCode()} всего 32 бита, и
+   * совпадения у него не редкость, а конструируемое свойство — {@code "Aa"} и {@code "BB"}
+   * равны по нему при равной длине. Ошибка в эту сторону тихая: правку не заметят, и
+   * записи останутся от прежнего текста.
+   *
+   * @param content содержимое документа.
+   * @return отпечаток.
+   */
+  private static byte[] contentFingerprint(String content) {
+    try {
+      return MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8));
+    } catch (NoSuchAlgorithmException e) {
+      // SHA-256 обязателен для любой реализации Java, поэтому сюда попасть нельзя.
+      throw new IllegalStateException(e);
+    }
+  }
+
   protected void rebuildFromFileSystem() {
     try {
-      var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+      var newContent = Files.readString(Path.of(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
-    } catch (IOException e) {
+    } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
     }
   }

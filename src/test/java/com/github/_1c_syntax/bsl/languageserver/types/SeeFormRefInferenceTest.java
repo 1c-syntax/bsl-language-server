@@ -101,8 +101,11 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
     var value = at(documentContext, "ЗначениеРеквизита = Объект.Реквизит1",
       "ЗначениеРеквизита = Объект.".length());
 
-    // then: тот же тип, что и у «Форма.Объект», с реквизитами объекта.
-    assertThat(names(attribute)).containsExactly("ДанныеФормыСтруктура.СправочникОбъект.Справочник1");
+    // then: тот же тип, что и у «Форма.Объект», с реквизитами объекта. Он у этой формы
+    // свой: она добавляет табличной части свои колонки (<AdditionalColumns>), и общими
+    // данными прикладного типа такую форму уже не описать.
+    assertThat(names(attribute))
+      .containsExactly("ДанныеФормыСтруктура.Справочник.Справочник1.Форма.ФормаЭлемента.Объект");
     assertThat(names(value)).containsExactly("Строка");
   }
 
@@ -143,7 +146,10 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
     var row = at(documentContext, "ТипСтроки = СтрокаТаблицы", "ТипСтроки = ".length());
 
     // then: строка таблицы, а не сама таблица — такую же строку даёт «Список.ТекущиеДанные».
-    assertThat(names(row)).containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок");
+    // Тип строки — этого конкретного списка: колонки у него из его основной таблицы.
+    assertThat(names(row))
+      .containsExactly("ДанныеФормыСтруктура.ДинамическийСписок"
+        + ".Справочник.Справочник1.Форма.ФормаСписка.Список");
   }
 
   private DocumentContext documentWithFormReference() {

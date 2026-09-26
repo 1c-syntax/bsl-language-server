@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -44,6 +45,7 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -105,12 +107,88 @@ public class SymbolTypeIndex {
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
 
+  /**
+   * Типы возвращаемого значения, выведенные по телу метода. Пишет их
+   * {@code MethodReturnTypeIndexer}; сюда они складываются, чтобы ответ на вопрос
+   * «что возвращает метод» был один и тот же у всех потребителей.
+   */
+  private final Map<MethodSymbol, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
+
+  /**
+   * Методы документа, у которых есть выведенное значение, — по ним запись стирается вместе
+   * с документом. Набор, а не список: значение метода пересчитывается многократно (разбор,
+   * доразрешение, разнос по потребителям), и список копил бы один и тот же метод при каждом
+   * пересчёте.
+   */
+  private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Значение метода, соединённое из описания и вывода по телу, вместе с источниками, из
+   * которых оно посчитано.
+   * <p>
+   * Соединение спрашивают на каждом разрешении вызова, а стоит оно копии карты полей — у
+   * метода с сотней ключей это заметно даже при одном обращении. Поэтому запоминается;
+   * годность проверяется сравнением источников по ссылке, поэтому отдельного сброса при
+   * записи не нужно и гонки между записью и чтением тоже нет.
+   */
+  private final Map<MethodSymbol, CombinedReturnTypes> combinedReturnTypes = new ConcurrentHashMap<>();
+
+  // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
+  // а здесь записи документа сначала стираются. Без явного порядка слушатель без
+  // аннотации идёт последним и стёр бы только что записанное.
+  @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
+    if (!event.isContentChanged()) {
+      // Тот же самый текст перечитан заново: записи по нему остаются верными. Символы из
+      // построенного заново дерева равны прежним (имя, документ, позиция имени), поэтому
+      // находятся по старым записям. Снести и собрать их заново означало бы оставить окно,
+      // в котором чужой поток не находит типов уже посчитанного метода.
+      return;
+    }
     var documentContext = event.getSource();
+    clear(documentContext.getUri());
+    reindexDeclared(documentContext);
+  }
+
+  /**
+   * Пересобирает объявленные типы возвращаемых значений по всей рабочей области.
+   * <p>
+   * Имя типа в описании метода разрешается в момент разбора его документа, а до части
+   * модулей области очередь тогда ещё не дошла: такое имя никуда не ведёт, и объявленный
+   * тип выходит беднее написанного. Кому не повезло — решает порядок обхода файлов, то
+   * есть без пересборки результат от него и зависит. Теперь область наполнена, и все имена
+   * разрешаются одинаково.
+   * <p>
+   * Разбор документов для этого не нужен: объявленные типы читаются по дереву символов,
+   * которое переживает освобождение вторичных данных.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  // Раньше MethodReturnTypeIndexer: расчёт типов по телу читает объявленные типы вызванных
+  // методов, поэтому пересобрать их надо до него.
+  @Order(100)
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    event.getSource().getDocuments().values().forEach(this::reindexDeclared);
+  }
+
+  /**
+   * Пересобирает объявленные типы возвращаемых значений методов документа, стирая прежние.
+   * Выведенные по телу значения не трогает.
+   * <p>
+   * Работает по дереву символов, поэтому разбор документа для этого не нужен.
+   *
+   * @param documentContext документ.
+   */
+  public void reindexDeclared(DocumentContext documentContext) {
     var uri = documentContext.getUri();
 
-    clear(uri);
+    var previous = indexedByUri.remove(uri);
+    if (previous != null) {
+      previous.forEach(declaredReturnTypes::remove);
+      previous.forEach(combinedReturnTypes::remove);
+    }
 
     var collected = new ArrayList<MethodSymbol>();
     indexMethodsRecursive(documentContext.getSymbolTree().getModule(), collected);
@@ -122,6 +200,99 @@ public class SymbolTypeIndex {
    */
   public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
     return declaredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
+   * Типы возвращаемого значения метода: объявленные в документирующем комментарии вместе
+   * с рассчитанными по телу.
+   * <p>
+   * По общим типам верим описанию: у {@code Массив из Число} из комментария состав
+   * элементов точнее, чем у того же {@code Массив}, собранного по телу.
+   *
+   * @param method метод.
+   * @return типы возвращаемого значения; {@link TypeSet#EMPTY}, если ни один источник
+   *     ничего не дал.
+   */
+  public TypeSet getReturnTypes(MethodSymbol method) {
+    var inferred = inferredReturnTypes.get(method);
+    var declared = getDeclaredReturnTypes(method);
+    if (inferred == null || inferred.isEmpty()) {
+      return declared;
+    }
+    // Запомненное годится, только если посчитано из тех же самых источников. Сравнение по
+    // ссылке, а не по равенству: наборы неизменяемы, запись кладёт новый объект, и этого
+    // достаточно. Так запись и чтение могут идти одновременно: запись, случившаяся между
+    // взятием источников и укладыванием результата, обесценит его сама — следующее чтение
+    // увидит другие источники и посчитает заново.
+    var remembered = combinedReturnTypes.get(method);
+    if (remembered != null && remembered.declared() == declared && remembered.inferred() == inferred) {
+      return remembered.value();
+    }
+    var value = combine(declared, inferred);
+    combinedReturnTypes.put(method, new CombinedReturnTypes(declared, inferred, value));
+    return value;
+  }
+
+  /**
+   * Соединяет объявленное описанием значение с выведенным по телу.
+   * <p>
+   * За описанием остаётся состав элементов: у {@code Массив из Число} из комментария он
+   * точнее собранного по телу, — поэтому названный в описании тип вычитается из
+   * выведенного. Но вычитание уносит ссылку со всеми её декорациями, включая поля, а их
+   * описание перечисляет редко: у функции с описанием «Структура» состав ключей, собранный
+   * из {@code Вставить}, пропадал целиком. Поля возвращаются — и жадные, и ленивые.
+   *
+   * @param declared объявленное в описании метода.
+   * @param inferred выведенное по телу.
+   * @return значение метода.
+   */
+  private static TypeSet combine(TypeSet declared, TypeSet inferred) {
+    var extra = inferred;
+    for (var ref : declared.refs()) {
+      extra = extra.without(ref);
+    }
+    var result = declared.union(extra);
+    for (var ref : declared.refs()) {
+      // Карта берётся сырой. getLocalFields склеил бы её с ленивыми полями, а склейка их
+      // форсирует: у рекурсивных и `см.`-типов источник ведёт обратно сюда же, и разворот
+      // пошёл бы вглубь на ровном месте.
+      var eager = inferred.localFields().get(ref);
+      if (eager != null && !eager.isEmpty()) {
+        result = result.withFields(ref, eager);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Запомнить типы возвращаемого значения, выведенные по телу метода.
+   *
+   * @param method метод.
+   * @param types  выведенные типы; пустой набор стирает прежнюю запись.
+   */
+  public void putReturnTypes(MethodSymbol method, TypeSet types) {
+    // Обе карты меняются под одним замком — по ключу документа. Иначе расчёт по запросу,
+    // идущий вне событий жизненного цикла, мог бы вклиниться в сброс между снятием набора
+    // и обходом, и значение осталось бы в карте типов без ссылки из карты по документам —
+    // то есть недостижимым для следующего сброса.
+    // Запомненное соединение здесь не снимается: его годность проверяется сравнением
+    // источников по ссылке, и запись обесценит его сама. Снятие тут ничего бы не
+    // гарантировало — читатель, взявший источники до него, всё равно уложил бы результат
+    // после.
+    inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
+      if (types.isEmpty()) {
+        inferredReturnTypes.remove(method);
+        if (methods == null) {
+          return null;
+        }
+        methods.remove(method);
+        return methods.isEmpty() ? null : methods;
+      }
+      inferredReturnTypes.put(method, types);
+      var target = methods == null ? ConcurrentHashMap.<MethodSymbol>newKeySet() : methods;
+      target.add(method);
+      return target;
+    });
   }
 
   /**
@@ -294,12 +465,22 @@ public class SymbolTypeIndex {
    * Очистить записи, относящиеся к данному URI.
    */
   public void clear(URI uri) {
+    // Снятие набора и удаление значений — под тем же замком по ключу документа, что и запись
+    // (см. putReturnTypes): иначе параллельная запись осталась бы в карте типов навсегда.
+    inferredByUri.compute(uri, (key, methods) -> {
+      if (methods != null) {
+        methods.forEach(inferredReturnTypes::remove);
+        methods.forEach(combinedReturnTypes::remove);
+      }
+      return null;
+    });
     var methods = indexedByUri.remove(uri);
     if (methods == null) {
       return;
     }
     for (var m : methods) {
       declaredReturnTypes.remove(m);
+      combinedReturnTypes.remove(m);
     }
   }
 
@@ -620,7 +801,7 @@ public class SymbolTypeIndex {
         || types.lazyElements().containsKey(ref)) {
         continue;
       }
-      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      var defaults = typeRegistry.getOwnElementTypes(ref);
       if (!defaults.isEmpty()) {
         result = result.withElement(ref, defaults);
       }
@@ -697,16 +878,23 @@ public class SymbolTypeIndex {
     var result = elementRef == null ? base : TypeSet.of(elementRef);
     for (var field : fields) {
       var eager = TypeSet.EMPTY;
+      var lazy = false;
       for (var fieldType : field.types()) {
         var localFunction = localFunctionSeeRef(fieldType, context);
         if (localFunction != null) {
           result = result.withLazyField(fieldsRef, field.name(),
             lazyReturnTypes(localFunction), fieldDescription(field));
+          lazy = true;
         } else {
           eager = eager.union(resolveTypes(List.of(fieldType), context));
         }
       }
-      if (!eager.isEmpty()) {
+      // Поле объявлено — значит, оно есть, даже если написанный у него тип сейчас никуда
+      // не ведёт: ссылка в модуль, до которого очередь ещё не дошла, не разрешается ни во
+      // что. Выбросить поле вместе с именем значило бы превратить «тип неизвестен» в
+      // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
+      // разный от запуска к запуску.
+      if (!eager.isEmpty() || !lazy) {
         result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
       }
     }
@@ -875,5 +1063,19 @@ public class SymbolTypeIndex {
     return byName.isEmpty()
       ? resolveOne(name).map(TypeSet::of).orElse(TypeSet.EMPTY)
       : byName;
+  }
+
+  /**
+   * Соединённое значение метода вместе с источниками, из которых оно посчитано.
+   * <p>
+   * Источники хранятся ради проверки годности: наборы неизменяемы, поэтому запись любого
+   * из них кладёт другой объект, и сравнения по ссылке достаточно, чтобы отличить
+   * посчитанное по нынешнему состоянию от посчитанного по прежнему.
+   *
+   * @param declared объявленное в описании метода на момент расчёта.
+   * @param inferred выведенное по телу на момент расчёта.
+   * @param value    соединение того и другого.
+   */
+  private record CombinedReturnTypes(TypeSet declared, TypeSet inferred, TypeSet value) {
   }
 }

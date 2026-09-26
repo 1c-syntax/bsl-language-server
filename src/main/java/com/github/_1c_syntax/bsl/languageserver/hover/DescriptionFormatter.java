@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -55,6 +58,7 @@ public class DescriptionFormatter {
   private static final String VARIABLE_KEY = "var";
   private static final String PARAMETERS_KEY = "parameters";
   private static final String RETURNED_VALUE_KEY = "returnedValue";
+  private static final String INFERRED_RETURNED_VALUE_KEY = "inferredReturnedValue";
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
   private static final String DEPRECATED_FLAG_KEY = "deprecatedFlag";
@@ -137,6 +141,81 @@ public class DescriptionFormatter {
     }
 
     return returnedValue;
+  }
+
+  /**
+   * Секция «Возвращаемое значение» по выведенным типам — для метода, у которого автор
+   * ничего не написал.
+   *
+   * @param returnTypes типы возвращаемого значения.
+   * @return размеченная секция; пустая строка, если типов нет.
+   */
+  public String getInferredReturnedValueSection(TypeSet returnTypes) {
+    if (returnTypes.isEmpty()) {
+      return "";
+    }
+    return "**" + getResourceString(RETURNED_VALUE_KEY) + ":**\n\n" + typeNames(returnTypes);
+  }
+
+  /**
+   * Приписка о типах, которые метод возвращает по коду, но которых нет в описании.
+   * <p>
+   * Расхождение важно видеть: описание может устареть или быть неполным, а работать код
+   * будет по тому, что возвращает на самом деле.
+   *
+   * @param methodSymbol метод.
+   * @param returnTypes  типы возвращаемого значения.
+   * @return размеченная приписка; пустая строка, если описание ничего не упускает.
+   */
+  public String getInferredReturnedValueNote(MethodSymbol methodSymbol, TypeSet returnTypes) {
+    var describedNames = methodSymbol.getDescription()
+      .map(MethodDescription::getReturnedValue)
+      .orElseGet(List::of)
+      .stream()
+      // Автор вправе перечислить типы через запятую одной строкой — тогда это несколько
+      // объявленных имён, а не одно.
+      .flatMap(type -> Stream.of(type.name().split(",")))
+      .map(DescriptionFormatter::headName)
+      .filter(name -> !name.isEmpty())
+      .collect(Collectors.toSet());
+    var undescribed = returnTypes.refs().stream()
+      .map(TypeRef::qualifiedName)
+      .filter(name -> !describedNames.contains(name.toLowerCase(Locale.ROOT)))
+      .distinct()
+      .collect(Collectors.joining(", "));
+    if (undescribed.isEmpty()) {
+      return "";
+    }
+    return "**" + getResourceString(INFERRED_RETURNED_VALUE_KEY) + ":** " + undescribed;
+  }
+
+  /**
+   * Имя типа из описания без пояснения за ним: «Массив из Строка» — это «массив».
+   *
+   * @param name имя типа из описания.
+   * @return имя в нижнем регистре для сравнения.
+   */
+  private static String headName(String name) {
+    var trimmed = name.trim();
+    var end = 0;
+    while (end < trimmed.length() && !Character.isWhitespace(trimmed.charAt(end))
+      && trimmed.charAt(end) != '<' && trimmed.charAt(end) != '[') {
+      end++;
+    }
+    return trimmed.substring(0, end).toLowerCase(Locale.ROOT);
+  }
+
+  /**
+   * Перечень имён типов через запятую.
+   *
+   * @param types типы.
+   * @return имена типов.
+   */
+  private static String typeNames(TypeSet types) {
+    return types.refs().stream()
+      .map(TypeRef::qualifiedName)
+      .distinct()
+      .collect(Collectors.joining(", "));
   }
 
   public String getExamplesSection(MethodSymbol methodSymbol) {

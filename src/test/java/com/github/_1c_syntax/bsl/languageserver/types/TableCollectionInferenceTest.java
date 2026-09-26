@@ -212,8 +212,8 @@ class TableCollectionInferenceTest extends AbstractServerContextAwareTest {
       """);
 
     assertThat(typesOf(documentContext, "Значения").getElementTypes().refs())
-      .as("имя собрано в переменной — уточнять нечем, остаётся платформенный «Произвольный»")
-      .containsExactly(TypeRef.ANY);
+      .as("имя собрано в переменной — уточнять нечем, тип элемента остаётся неизвестным")
+      .isEmpty();
   }
 
   /** Тип колонки «Реквизит1» — берём из строки табличной части, чтобы не хардкодить. */

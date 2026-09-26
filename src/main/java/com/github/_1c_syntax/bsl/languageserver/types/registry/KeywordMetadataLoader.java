@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,7 +71,7 @@ final class KeywordMetadataLoader {
   static KeywordMetadata load(String resourcePath,
                               Predicate<String> includeInCompletion) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       var root = mapper.readValue(stream, ROOT_TYPE);
       var builder = new KeywordMetadataBuilder(includeInCompletion);
       for (var entry : keywordEntries(root)) {

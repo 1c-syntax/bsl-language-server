@@ -1,0 +1,956 @@
+[
+  {
+    "name": "ВнешнийИсточникДанных.<Имя внешнего источника данных>.Куб.<Имя куба>",
+    "nameEn": "ExternalDataSource.<Имя внешнего источника данных>.Cube.<Имя куба>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["ВнешнийИсточникДанныхКубТаблицаИзмеренияСсылка.<Имя внешнего источника>.<Имя куба>.<Имя таблицы измерения>"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Произвольный"]}
+    ]
+  },
+  {
+    "name": "ВнешнийИсточникДанных.<Имя внешнего источника данных>.Таблица.<Имя таблицы>",
+    "nameEn": "ExternalDataSource.<Имя внешнего источника данных>.Table.<Имя таблицы>",
+    "fields": [
+      {"name": "<Имя поля>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ВнешнийИсточникДанныхТаблицаСсылка.<Имя внешнего источника>.<Имя таблицы внешнего источника данных>"]}
+    ]
+  },
+  {
+    "name": "Последовательность.<Имя последовательности>.Границы",
+    "nameEn": "Sequence.<Имя последовательности>.Boundaries",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "Последовательность.<Имя последовательности>",
+    "nameEn": "Sequence.<Имя последовательности>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "Задача.<Имя задачи>.ЗадачиПоИсполнителю",
+    "nameEn": "Task.<Имя задачи>.TasksByPerformer",
+    "fields": [
+      {"name": "<Имя реквизита адресации>", "nameEn": "<Addressing attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "БизнесПроцесс", "nameEn": "BusinessProcess"},
+      {"name": "Выполнена", "nameEn": "Executed", "types": ["Булево"]},
+      {"name": "Дата", "nameEn": "Date", "types": ["Дата"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "Номер", "nameEn": "Number", "types": ["Число", "Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ЗадачаСсылка.<Имя задачи>"]},
+      {"name": "ТочкаМаршрута", "nameEn": "RoutePoint"}
+    ]
+  },
+  {
+    "name": "Задача.<Имя задачи>",
+    "nameEn": "Task.<Имя задачи>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита адресации>", "nameEn": "<Addressing attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "БизнесПроцесс", "nameEn": "BusinessProcess"},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion"},
+      {"name": "Выполнена", "nameEn": "Executed", "types": ["Булево"]},
+      {"name": "Дата", "nameEn": "Date", "types": ["Дата"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "Номер", "nameEn": "Number", "types": ["Число", "Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ЗадачаСсылка.<Имя задачи>"]},
+      {"name": "ТочкаМаршрута", "nameEn": "RoutePoint"}
+    ]
+  },
+  {
+    "name": "Справочник.<Имя справочника>",
+    "nameEn": "Catalog.<Имя справочника>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion", "types": ["Строка"]},
+      {"name": "Владелец", "nameEn": "Owner", "types": ["СправочникСсылка.<Имя справочника>", "ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>", "ПланСчетовСсылка.<Имя плана счетов>", "ПланВидовРасчетаСсылка.<Имя плана видов расчета>", "ПланОбменаСсылка.<Имя плана обмена>"]},
+      {"name": "ИмяПредопределенныхДанных", "nameEn": "PredefinedDataName", "types": ["Строка"]},
+      {"name": "Код", "nameEn": "Code", "types": ["Число", "Строка"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Предопределенный", "nameEn": "Predefined", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Родитель", "nameEn": "Parent", "types": ["СправочникСсылка.<Имя справочника>"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["СправочникСсылка.<Имя справочника>"]},
+      {"name": "ЭтоГруппа", "nameEn": "IsFolder", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "БизнесПроцесс.<Имя бизнес-процесса>.Точки",
+    "nameEn": "BusinessProcess.<Имя бизнес-процесса>.Points",
+    "fields": [
+      {"name": "Порядок", "nameEn": "Order", "types": ["Число"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ТочкаМаршрутаБизнесПроцессаСсылка.<Имя бизнес-процесса>"]}
+    ]
+  },
+  {
+    "name": "ПланСчетов.<Имя плана счетов>",
+    "nameEn": "ChartOfAccounts.<Имя плана счетов>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя признака учета>", "nameEn": "<Accounting flag name>", "types": ["Булево"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion"},
+      {"name": "Вид", "nameEn": "Type", "types": ["ВидСчета"]},
+      {"name": "ВидыСубконто", "nameEn": "ExtDimensionTypes", "types": ["РезультатЗапроса"]},
+      {"name": "Забалансовый", "nameEn": "OffBalance", "types": ["Булево"]},
+      {"name": "ИмяПредопределенныхДанных", "nameEn": "PredefinedDataName", "types": ["Строка"]},
+      {"name": "Код", "nameEn": "Code", "types": ["Строка"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Порядок", "nameEn": "Order", "types": ["Строка"]},
+      {"name": "Предопределенный", "nameEn": "Predefined", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Родитель", "nameEn": "Parent", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>.ФактическийПериодДействия",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>.AdjustedEffectivePeriod",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "БазовыйПериодКонец", "nameEn": "EndOfBasePeriod", "types": ["Дата"]},
+      {"name": "БазовыйПериодНачало", "nameEn": "BegOfBasePeriod", "types": ["Дата"]},
+      {"name": "ВидРасчета", "nameEn": "CalculationType", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "ПериодДействия", "nameEn": "ActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияКонец", "nameEn": "EndOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияНачало", "nameEn": "BegOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодРегистрации", "nameEn": "RegistrationPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Сторно", "nameEn": "ReversingEntry", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>.База<Имя базового регистра расчета>",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>.Base<Имя базового регистра расчета>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя разреза базового регистра>Разрез", "nameEn": "<Имя разреза базового регистра>Dimension", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса базового регистра>База", "nameEn": "<Имя ресурса базового регистра>Base", "types": ["Число"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "БазовыйПериодКонец", "nameEn": "EndOfBasePeriod", "types": ["Дата"]},
+      {"name": "БазовыйПериодНачало", "nameEn": "BegOfBasePeriod", "types": ["Дата"]},
+      {"name": "ВидРасчета", "nameEn": "CalculationType", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "ПериодДействия", "nameEn": "ActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияКонец", "nameEn": "EndOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияНачало", "nameEn": "ActualActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодРегистрации", "nameEn": "RegistrationPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Сторно", "nameEn": "ReversingEntry", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>.ДанныеГрафика",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>.ScheduleData",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса графика>БазовыйПериод", "nameEn": "<Имя ресурса графика>BasePeriod", "types": ["Число"]},
+      {"name": "<Имя ресурса графика>ПериодДействия", "nameEn": "<Имя ресурса графика>ActivePeriod", "types": ["Число"]},
+      {"name": "<Имя ресурса графика>ПериодРегистрации", "nameEn": "<Имя ресурса графика>RegistrationPeriod", "types": ["Число"]},
+      {"name": "<Имя ресурса графика>ФактическийПериодДействия", "nameEn": "<Имя ресурса графика>ActualActionPeriod", "types": ["Число"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "БазовыйПериодКонец", "nameEn": "EndOfBasePeriod", "types": ["Дата"]},
+      {"name": "БазовыйПериодНачало", "nameEn": "BegOfBasePeriod", "types": ["Дата"]},
+      {"name": "ВидРасчета", "nameEn": "CalculationType", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "ПериодДействия", "nameEn": "ActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияКонец", "nameEn": "EndOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияНачало", "nameEn": "BegOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодРегистрации", "nameEn": "RegistrationPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Сторно", "nameEn": "ReversingEntry", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>.<Имя перерасчета>",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>.<Имя перерасчета>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "ВидРасчета", "nameEn": "CalculationType", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]},
+      {"name": "ОбъектПерерасчета", "nameEn": "RecalculationObject", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "БазовыйПериодКонец", "nameEn": "EndOfBasePeriod", "types": ["Дата"]},
+      {"name": "БазовыйПериодНачало", "nameEn": "BegOfBasePeriod", "types": ["Дата"]},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion"},
+      {"name": "ВидРасчета", "nameEn": "CalculationType", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "ПериодДействия", "nameEn": "ActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияКонец", "nameEn": "EndOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодДействияНачало", "nameEn": "BegOfActionPeriod", "types": ["Дата"]},
+      {"name": "ПериодРегистрации", "nameEn": "RegistrationPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Сторно", "nameEn": "ReversingEntry", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Изменения",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "ПланВидовРасчета.<Имя плана вида расчета>.Изменения",
+    "nameEn": "ChartOfCalculationTypes.<Имя плана вида расчета>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "ПланСчетов.<Имя плана счетов>.Изменения",
+    "nameEn": "ChartOfAccounts.<Имя плана счетов>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "БизнесПроцесс.<Имя бизнес-процесса>.Изменения",
+    "nameEn": "BusinessProcess.<Имя бизнес-процесса>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["БизнесПроцессСсылка.<Имя бизнес-процесса>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "Задача.<Имя задачи>.Изменения",
+    "nameEn": "Task.<Имя задачи>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ЗадачаСсылка.<Имя задачи>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>.<Имя перерасчета>.Изменения",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>.<Имя перерасчета>.Changes",
+    "fields": [
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "ОбъектПерерасчета", "nameEn": "RecalculationObject", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "РегистрРасчета.<Имя регистра расчета>.Изменения",
+    "nameEn": "CalculationRegister.<Имя регистра расчета>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "ПланВидовХарактеристик.<Имя плана видов характеристик>.Изменения",
+    "nameEn": "ChartOfCharacteristicTypes.<Имя плана видов характеристик>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "Последовательность.<Имя последовательности>.Изменения",
+    "nameEn": "Sequence.<Имя последовательности>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "РегистрСведений.<Имя регистра сведений>.Изменения",
+    "nameEn": "InformationRegister.<Имя регистра сведений>.Changes",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "РегистрНакопления.<Имя регистра накопления>.Изменения",
+    "nameEn": "AccumulationRegister.<Имя регистра накопления>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "Справочник.<Имя справочника>.Изменения",
+    "nameEn": "Catalog.<Имя справочника>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["СправочникСсылка.<Имя справочника>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "Документ.<Имя документа>.Изменения",
+    "nameEn": "Document.<Имя документа>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "Константа.<Имя константы>.Изменения",
+    "nameEn": "Constant.<Имя константы>.Changes",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "НомерСообщения", "nameEn": "MessageNo", "types": ["Число", "Null"]},
+      {"name": "Узел", "nameEn": "Node", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]}
+    ]
+  },
+  {
+    "name": "РегистрСведений.<Имя регистра сведений>.СрезПоследних",
+    "nameEn": "InformationRegister.<Имя регистра сведений>.SliceLast",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Произвольный"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрСведений.<Имя регистра сведений>.СрезПервых",
+    "nameEn": "InformationRegister.<Имя регистра сведений>.SliceFirst",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Произвольный"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрСведений.<Имя регистра сведений>",
+    "nameEn": "InformationRegister.<Имя регистра сведений>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Произвольный"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Обороты",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.Turnovers",
+    "correspondence": true,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Кор", "nameEn": "<Имя измерения>Balanced", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>КорОборот", "nameEn": "<Имя ресурса>BalancedTurnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>КорОборотДт", "nameEn": "<Имя ресурса>BalancedTurnoverDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КорОборотКт", "nameEn": "<Имя ресурса>BalancedTurnoverCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотДт", "nameEn": "<Имя ресурса>TurnoverDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотКт", "nameEn": "<Имя ресурса>TurnoverCr", "types": ["Число"]},
+      {"name": "КорСубконто<Номер субконто>", "nameEn": "BalancedExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "КорСчет", "nameEn": "BalancedAccount", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Остатки",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.Balance",
+    "correspondence": true,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>Остаток", "nameEn": "<Имя ресурса>Balance", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОстатокДт", "nameEn": "<Имя ресурса>BalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОстатокКт", "nameEn": "<Имя ресурса>BalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>РазвернутыйОстатокДт", "nameEn": "<Имя ресурса>SplittedBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>РазвернутыйОстатокКт", "nameEn": "<Имя ресурса>SplittedBalanceCr", "types": ["Число"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.ОборотыДтКт",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.DrCrTurnovers",
+    "correspondence": true,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Дт", "nameEn": "<Имя измерения>Dr", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Кт", "nameEn": "<Имя измерения>Cr", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотДт", "nameEn": "<Имя ресурса>TurnoverDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотКт", "nameEn": "<Имя ресурса>TurnoverCr", "types": ["Число"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "СубконтоДт<Номер субконто>", "nameEn": "ExtDimensionDr<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "СубконтоКт<Номер субконто>", "nameEn": "ExtDimensionCr<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "СчетДт", "nameEn": "AccountDr", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "СчетКт", "nameEn": "AccountCr", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.ОстаткиИОбороты",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.BalanceAndTurnovers",
+    "correspondence": true,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>КонечныйОстаток", "nameEn": "<Имя ресурса>ClosingBalance", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйОстатокДт", "nameEn": "<Имя ресурса>ClosingBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйОстатокКт", "nameEn": "<Имя ресурса>ClosingBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйРазвернутыйОстатокДт", "nameEn": "<Имя ресурса>ClosingSplittedBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйРазвернутыйОстатокКт", "nameEn": "<Имя ресурса>ClosingSplittedBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстаток", "nameEn": "<Имя ресурса>OpeningBalance", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстатокДт", "nameEn": "<Имя ресурса>OpeningBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстатокКт", "nameEn": "<Имя ресурса>OpeningBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйРазвернутыйОстатокДт", "nameEn": "<Имя ресурса>OpeningSplittedBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйРазвернутыйОстатокКт", "nameEn": "<Имя ресурса>OpeningSplittedBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотДт", "nameEn": "<Имя ресурса>TurnoverDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотКт", "nameEn": "<Имя ресурса>TurnoverCr", "types": ["Число"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Субконто",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.ExtDimensions",
+    "correspondence": true,
+    "fields": [
+      {"name": "Вид", "nameEn": "Type", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "ВидДвижения", "nameEn": "RecordType", "types": ["ВидДвиженияБухгалтерии"]},
+      {"name": "Значение", "nameEn": "Value", "types": ["Произвольный"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.ДвиженияССубконто",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.RecordsWithExtDimensions",
+    "correspondence": true,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Дт", "nameEn": "<Имя измерения>Dr", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Кт", "nameEn": "<Имя измерения>Cr", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "<Имя ресурса>Дт", "nameEn": "<Имя ресурса>Dr", "types": ["Число"]},
+      {"name": "<Имя ресурса>Кт", "nameEn": "<Имя ресурса>Cr", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "ВидСубконтоДт<Номер субконто>", "nameEn": "ExtDimensionTypeDr<Номер субконто>", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "ВидСубконтоКт<Номер субконто>", "nameEn": "ExtDimensionTypeCr<Номер субконто>", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "СубконтоДт<Номер субконто>", "nameEn": "ExtDimensionDr<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "СубконтоКт<Номер субконто>", "nameEn": "ExtDimensionCr<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "СчетДт", "nameEn": "AccountDr", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "СчетКт", "nameEn": "AccountCr", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>",
+    "correspondence": true,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Дт", "nameEn": "<Имя измерения>Dr", "types": ["Произвольный"]},
+      {"name": "<Имя измерения>Кт", "nameEn": "<Имя измерения>Cr", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "<Имя ресурса>Дт", "nameEn": "<Имя ресурса>Dr", "types": ["Число"]},
+      {"name": "<Имя ресурса>Кт", "nameEn": "<Имя ресурса>Cr", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "СчетДт", "nameEn": "AccountDr", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "СчетКт", "nameEn": "AccountCr", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрНакопления.<Имя регистра накопления>.Остатки",
+    "nameEn": "AccumulationRegister.<Имя регистра накопления>.Balance",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>Остаток", "nameEn": "<Имя ресурса>Balance", "types": ["Число"]}
+    ]
+  },
+  {
+    "name": "РегистрНакопления.<Имя регистра накопления>.ОстаткиИОбороты",
+    "nameEn": "AccumulationRegister.<Имя регистра накопления>.BalanceAndTurnovers",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>КонечныйОстаток", "nameEn": "<Имя ресурса>ClosingBalance", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстаток", "nameEn": "<Имя ресурса>OpeningBalance", "types": ["Число"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>Приход", "nameEn": "<Имя ресурса>Receipt", "types": ["Число"]},
+      {"name": "<Имя ресурса>Расход", "nameEn": "<Имя ресурса>Expense", "types": ["Число"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрНакопления.<Имя регистра накопления>.Обороты",
+    "nameEn": "AccumulationRegister.<Имя регистра накопления>.Turnovers",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>Приход", "nameEn": "<Имя ресурса>Receipt", "types": ["Число"]},
+      {"name": "<Имя ресурса>Расход", "nameEn": "<Имя ресурса>Expense", "types": ["Число"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрНакопления.<Имя регистра накопления>",
+    "nameEn": "AccumulationRegister.<Имя регистра накопления>",
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "ВидДвижения", "nameEn": "RecordType", "types": ["ВидДвиженияНакопления"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Остатки",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.Balance",
+    "correspondence": false,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>Остаток", "nameEn": "<Имя ресурса>Balance", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОстатокДт", "nameEn": "<Имя ресурса>BalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОстатокКт", "nameEn": "<Имя ресурса>BalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>РазвернутыйОстатокДт", "nameEn": "<Имя ресурса>SplittedBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>РазвернутыйОстатокКт", "nameEn": "<Имя ресурса>SplittedBalanceCr", "types": ["Число"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.ОстаткиИОбороты",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.BalanceAndTurnovers",
+    "correspondence": false,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>КонечныйОстаток", "nameEn": "<Имя ресурса>ClosingBalance", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйОстатокДт", "nameEn": "<Имя ресурса>ClosingBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйОстатокКт", "nameEn": "<Имя ресурса>ClosingBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйРазвернутыйОстатокДт", "nameEn": "<Имя ресурса>ClosingSplittedBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>КонечныйРазвернутыйОстатокКт", "nameEn": "<Имя ресурса>ClosingSplittedBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстаток", "nameEn": "<Имя ресурса>OpeningBalance", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстатокДт", "nameEn": "<Имя ресурса>OpeningBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйОстатокКт", "nameEn": "<Имя ресурса>OpeningBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйРазвернутыйОстатокДт", "nameEn": "<Имя ресурса>OpeningSplittedBalanceDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>НачальныйРазвернутыйОстатокКт", "nameEn": "<Имя ресурса>OpeningSplittedBalanceCr", "types": ["Число"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотДт", "nameEn": "<Имя ресурса>TurnoverDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотКт", "nameEn": "<Имя ресурса>TurnoverCr", "types": ["Число"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment"}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Обороты",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.Turnovers",
+    "correspondence": false,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>Оборот", "nameEn": "<Имя ресурса>Turnover", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотДт", "nameEn": "<Имя ресурса>TurnoverDr", "types": ["Число"]},
+      {"name": "<Имя ресурса>ОборотКт", "nameEn": "<Имя ресурса>TurnoverCr", "types": ["Число"]},
+      {"name": "КорСубконто<Номер субконто>", "nameEn": "BalancedExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "КорСчет", "nameEn": "BalancedAccount", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "ПериодГод", "nameEn": "YearPeriod", "types": ["Дата"]},
+      {"name": "ПериодДекада", "nameEn": "TenDaysPeriod", "types": ["Дата"]},
+      {"name": "ПериодДень", "nameEn": "DayPeriod", "types": ["Дата"]},
+      {"name": "ПериодКвартал", "nameEn": "QuarterPeriod", "types": ["Дата"]},
+      {"name": "ПериодМесяц", "nameEn": "MonthPeriod", "types": ["Дата"]},
+      {"name": "ПериодМинута", "nameEn": "MinutePeriod", "types": ["Дата"]},
+      {"name": "ПериодНеделя", "nameEn": "WeekPeriod", "types": ["Дата"]},
+      {"name": "ПериодПолугодие", "nameEn": "HalfYearPeriod", "types": ["Дата"]},
+      {"name": "ПериодСекунда", "nameEn": "SecondPeriod", "types": ["Дата"]},
+      {"name": "ПериодЧас", "nameEn": "HourPeriod", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment"}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.Субконто",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.ExtDimensions",
+    "correspondence": false,
+    "fields": [
+      {"name": "Вид", "nameEn": "Type", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "Значение", "nameEn": "Value", "types": ["Произвольный"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment"}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>.ДвиженияССубконто",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>.RecordsWithExtDimensions",
+    "correspondence": false,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "ВидСубконто<Номер субконто>", "nameEn": "ExtDimensionType<Номер субконто>", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Субконто<Номер субконто>", "nameEn": "ExtDimension<Номер субконто>", "types": ["Произвольный"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment"}
+    ]
+  },
+  {
+    "name": "РегистрБухгалтерии.<Имя регистра бухгалтерии>",
+    "nameEn": "AccountingRegister.<Имя регистра бухгалтерии>",
+    "correspondence": false,
+    "fields": [
+      {"name": "<Имя измерения>", "nameEn": "<Dimension name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя ресурса>", "nameEn": "<Resource name>", "types": ["Число"]},
+      {"name": "Активность", "nameEn": "Active", "types": ["Булево"]},
+      {"name": "ВидДвижения", "nameEn": "RecordType", "types": ["ВидДвиженияБухгалтерии"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "НомерСтроки", "nameEn": "LineNumber", "types": ["Число"]},
+      {"name": "Период", "nameEn": "Period", "types": ["Дата"]},
+      {"name": "Регистратор", "nameEn": "Recorder", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Счет", "nameEn": "Account", "types": ["ПланСчетовСсылка.<Имя плана счетов>"]},
+      {"name": "УточнениеПериода", "nameEn": "PeriodAdjustment"}
+    ]
+  },
+  {
+    "name": "КритерийОтбора.<Имя критерия отбора>",
+    "nameEn": "FilterCriterion.<Имя критерия отбора>",
+    "fields": [
+      {"name": "Ссылка", "nameEn": "Ref"}
+    ]
+  },
+  {
+    "name": "Перечисление.<Имя перечисления>",
+    "nameEn": "Enum.<Имя перечисления>",
+    "fields": [
+      {"name": "Порядок", "nameEn": "Order", "types": ["Число"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПеречислениеСсылка.<Имя перечисления>"]}
+    ]
+  },
+  {
+    "name": "Константа.<Имя константы>",
+    "nameEn": "Constant.<Const name>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "Значение", "nameEn": "Value", "types": ["Произвольный"]}
+    ]
+  },
+  {
+    "name": "ПланВидовХарактеристик.<Имя плана видов характеристик>",
+    "nameEn": "ChartOfCharacteristicTypes.<Имя плана видов характеристик>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion"},
+      {"name": "ИмяПредопределенныхДанных", "nameEn": "PredefinedDataName", "types": ["Строка"]},
+      {"name": "Код", "nameEn": "Code", "types": ["Строка"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Предопределенный", "nameEn": "Predefined", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Родитель", "nameEn": "Parent", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланВидовХарактеристикСсылка.<Имя плана видов характеристик>"]},
+      {"name": "ТипЗначения", "nameEn": "ValueType", "types": ["ОписаниеТипов"]},
+      {"name": "ЭтоГруппа", "nameEn": "IsFolder", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "ПланОбмена.<Имя плана обмена>",
+    "nameEn": "ExchangePlan.<Имя плана обмена>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "ДатаОбмена", "nameEn": "ExchangeDate", "types": ["Дата"]},
+      {"name": "Код", "nameEn": "Code", "types": ["Строка"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "НомерОтправленного", "nameEn": "SentNo", "types": ["Число"]},
+      {"name": "НомерПринятого", "nameEn": "ReceivedNo", "types": ["Число"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланОбменаСсылка.<Имя плана обмена>"]},
+      {"name": "ЭтотУзел", "nameEn": "ThisNode", "types": ["Булево"]}
+    ]
+  },
+  {
+    "name": "ПланВидовРасчета.<Имя плана видов расчета>",
+    "nameEn": "ChartOfCalculationTypes.<Имя плана видов расчета>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "БазовыеВидыРасчета", "nameEn": "BaseCalculationTypes", "types": ["РезультатЗапроса"]},
+      {"name": "ВедущиеВидыРасчета", "nameEn": "LeadingCalculationTypes", "types": ["РезультатЗапроса"]},
+      {"name": "ВытесняющиеВидыРасчета", "nameEn": "DisplacingCalculationTypes", "types": ["РезультатЗапроса"]},
+      {"name": "ИмяПредопределенныхДанных", "nameEn": "PredefinedDataName", "types": ["Строка"]},
+      {"name": "Код", "nameEn": "Code", "types": ["Число", "Строка"]},
+      {"name": "Наименование", "nameEn": "Description", "types": ["Строка"]},
+      {"name": "ПериодДействияБазовый", "nameEn": "ActionPeriodIsBasic", "types": ["Булево"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Предопределенный", "nameEn": "Predefined", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ПланВидовРасчетаСсылка.<Имя плана видов расчета>"]}
+    ]
+  },
+  {
+    "name": "ЖурналДокументов.<Имя журнала документов>",
+    "nameEn": "DocumentJournal.<Имя журнала документов>",
+    "fields": [
+      {"name": "<Имя графы журнала>", "nameEn": "<Log graph name>", "types": ["Произвольный"]},
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "Дата", "nameEn": "Date", "types": ["Дата"]},
+      {"name": "Номер", "nameEn": "Number", "types": ["Число", "Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Проведен", "nameEn": "Posted", "types": ["Булево"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ДокументСсылка.<Имя документа>"]},
+      {"name": "Тип", "nameEn": "Type", "types": ["Тип"]}
+    ]
+  },
+  {
+    "name": "Константы",
+    "nameEn": "Constants",
+    "fields": [
+      {"name": "<Имя константы>", "nameEn": "<Constant name>", "types": ["Произвольный"]}
+    ]
+  },
+  {
+    "name": "ВнешнийИсточникДанных.<Имя внешнего источника данных>.Куб.<Имя куба>.ТаблицаИзмерения.<Имя таблицы>",
+    "nameEn": "ExternalDataSource.<Имя внешнего источника данных>.Cube.<Имя куба>.DimensionTable.<Имя таблицы>",
+    "fields": [
+      {"name": "<Имя поля>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Родитель", "nameEn": "Parent", "types": ["ВнешнийИсточникДанныхКубТаблицаИзмеренияСсылка.<Имя внешнего источника>.<Имя куба>.<Имя таблицы измерения>"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ВнешнийИсточникДанныхКубТаблицаИзмеренияСсылка.<Имя внешнего источника>.<Имя куба>.<Имя таблицы измерения>"]}
+    ]
+  },
+  {
+    "name": "Документ.<Имя документа>",
+    "nameEn": "Document.<Имя документа>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion"},
+      {"name": "Дата", "nameEn": "Date", "types": ["Дата"]},
+      {"name": "МоментВремени", "nameEn": "PointInTime", "types": ["МоментВремени"]},
+      {"name": "Номер", "nameEn": "Number", "types": ["Число", "Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Проведен", "nameEn": "Posted", "types": ["Булево"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["ДокументСсылка.<Имя документа>"]}
+    ]
+  },
+  {
+    "name": "БизнесПроцесс.<Имя бизнес-процесса>",
+    "nameEn": "BusinessProcess.<Имя бизнес-процесса>",
+    "fields": [
+      {"name": "<Имя общего реквизита>", "nameEn": "<Common attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя реквизита>", "nameEn": "<Attribute name>", "types": ["Произвольный"]},
+      {"name": "<Имя табличной части>", "nameEn": "<Tabular section name>", "types": ["РезультатЗапроса"]},
+      {"name": "ВедущаяЗадача", "nameEn": "HeadTask"},
+      {"name": "ВерсияДанных", "nameEn": "DataVersion"},
+      {"name": "Дата", "nameEn": "Date", "types": ["Дата"]},
+      {"name": "Завершен", "nameEn": "Completed", "types": ["Булево"]},
+      {"name": "Номер", "nameEn": "Number", "types": ["Число", "Строка"]},
+      {"name": "ПометкаУдаления", "nameEn": "DeletionMark", "types": ["Булево"]},
+      {"name": "Представление", "nameEn": "Presentation", "types": ["Строка"]},
+      {"name": "Ссылка", "nameEn": "Ref", "types": ["БизнесПроцессСсылка.<Имя бизнес-процесса>"]},
+      {"name": "Стартован", "nameEn": "Started", "types": ["Булево"]}
+    ]
+  }
+]

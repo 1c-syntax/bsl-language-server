@@ -92,6 +92,50 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void rereadOfSameContentKeepsEntries() {
+    // given: документ проиндексирован.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Перечитанная()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
+
+    // when: тот же самый текст разобран заново — записи переиндексировать незачем.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("Перечитанная"));
+  }
+
+  @Test
+  void rereadOfSameContentIndexesAgainWhenEntriesAreGone() {
+    // given: документ проиндексирован, но записи по нему сняты — так поступает закрытие
+    // документа, унаследованным обработчиком.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Забытая()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
+    index.clear(documentContext.getUri());
+    assertThat(index.search("Забытая", NO_CANCEL)).isEmpty();
+
+    // when: тот же самый текст разобран заново.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then: пропуск разрешён только когда записи на месте, иначе поиск по символам остался
+    // бы пустым до следующей правки файла.
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("Забытая"));
+  }
+
+  @Test
   void indexedEntryHasEventKindForEventHandlerMethod() {
     // given — резолвер стабится ДО создания документа: MethodSymbolComputer опрашивает
     // классификатор синхронно при обходе AST, то есть уже во время TestUtils.getDocumentContext(...).

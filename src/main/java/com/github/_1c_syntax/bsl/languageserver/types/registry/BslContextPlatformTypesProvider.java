@@ -601,7 +601,14 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     );
   }
 
-  private static TypeSet typeSet(List<Context> contexts) {
+  /**
+   * Набор типов из контекстов синтакс-помощника. Имя generic-контекста остаётся
+   * с плейсхолдером — подставляет его потребитель.
+   *
+   * @param contexts контексты-типы.
+   * @return набор типов; {@link TypeSet#EMPTY}, если контекстов нет.
+   */
+  static TypeSet typeSet(List<Context> contexts) {
     if (contexts.isEmpty()) {
       return TypeSet.EMPTY;
     }

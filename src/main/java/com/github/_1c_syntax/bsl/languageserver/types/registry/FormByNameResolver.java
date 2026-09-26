@@ -89,6 +89,12 @@ public class FormByNameResolver {
 
   private static final List<String> MANAGER_SUFFIXES = List.of("Менеджер", "Manager");
 
+  /**
+   * Виды основных форм, вычисленные один раз: {@link DefaultFormKind#values()} клонирует
+   * внутренний массив на каждый вызов, а виды перебираются на каждом резолве имени формы.
+   */
+  private static final DefaultFormKind[] DEFAULT_FORM_KINDS = DefaultFormKind.values();
+
   private final TypeRegistry typeRegistry;
 
   /**
@@ -139,7 +145,7 @@ public class FormByNameResolver {
       return Optional.empty();
     }
     var kindName = formName.substring(separator + 1);
-    for (var kind : DefaultFormKind.values()) {
+    for (var kind : DEFAULT_FORM_KINDS) {
       if (!matchesKind(kind, kindName)) {
         continue;
       }

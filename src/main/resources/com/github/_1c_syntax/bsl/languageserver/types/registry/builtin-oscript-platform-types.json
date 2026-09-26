@@ -19492,5 +19492,55 @@
         "kind": "PROPERTY"
       }
     ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Строка",
+    "aliases": [
+      "String"
+    ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Число",
+    "aliases": [
+      "Number"
+    ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Дата",
+    "aliases": [
+      "Date"
+    ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Булево",
+    "aliases": [
+      "Boolean"
+    ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Неопределено",
+    "aliases": [
+      "Undefined"
+    ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Null",
+    "aliases": [
+      "null"
+    ]
+  },
+  {
+    "kind": "PRIMITIVE_TYPE",
+    "name": "Тип",
+    "aliases": [
+      "Type"
+    ],
+    "description": "Значения данного типа используются для идентификации типов значений. Это необходимо для определения и сравнения типов. Данный тип не имеет литералов и возвращается функциями встроенного языка ТипЗнч и Тип."
   }
 ]

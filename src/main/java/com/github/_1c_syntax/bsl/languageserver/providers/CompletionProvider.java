@@ -515,6 +515,10 @@ public final class CompletionProvider {
       // UnavailableMemberCall. Устаревшие при этом остаются (показываются
       // зачёркнутыми).
       .filter(m -> !PlatformMemberVersions.isUnavailable(m.metadata(), target))
+      // Имя с точкой после точки не напишешь: `ТекущиеДанные.Организация.ИНН`
+      // разберётся как разыменование ссылки, а не как обращение к полю
+      // «Организация.ИНН». Такое поле читается только по строковому ключу.
+      .filter(m -> !isDotted(m.displayName(scriptVariant)))
       .toList();
     var items = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
     for (int i = 0; i < filtered.size(); i++) {
@@ -523,6 +527,15 @@ public final class CompletionProvider {
       applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
     }
     return items;
+  }
+
+  /**
+   * Составное ли имя у члена. Такое имя бывает у разыменованного поля строки
+   * динамического списка ({@code Организация.ИНН}): в данных оно есть, а
+   * идентификатором не является.
+   */
+  private static boolean isDotted(String name) {
+    return name.indexOf('.') >= 0;
   }
 
   /**

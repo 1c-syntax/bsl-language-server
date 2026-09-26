@@ -195,6 +195,75 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void columnsAddedByTheFormAreSeenOnItsOwnCollection() {
+    // У формы элемента справочника объявлен блок <AdditionalColumns table="Объект.ТабличнаяЧасть1">:
+    // такой колонки в самом справочнике нет, она существует только в данных этой формы,
+    // поэтому и коллекция, и строка у формы свои — общее зеркало табличной части их не
+    // знает и знать не должно.
+    var objectType = member(CATALOG_ITEM_FORM, MemberKind.PROPERTY, "Объект")
+      .returnTypes().refs().iterator().next();
+    assertThat(objectType.qualifiedName())
+      .isEqualTo("ДанныеФормыСтруктура.Справочник.Справочник1.Форма.ФормаЭлемента.Объект");
+
+    var collectionType = typeRegistry.getMembers(objectType, FileType.BSL).stream()
+      .filter(member -> member.matches("ТабличнаяЧасть1"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    assertThat(collectionType.qualifiedName())
+      .isEqualTo("ДанныеФормыКоллекция.Справочник.Справочник1.Форма.ФормаЭлемента.Объект.ТабличнаяЧасть1");
+    assertThat(typeService.displayName(collectionType, Language.RU))
+      .as("показывать пользователю надо реальный тип значения")
+      .isEqualTo("ДанныеФормыКоллекция");
+
+    var rowType = typeRegistry.getDefaultElementTypes(collectionType).refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(rowType, FileType.BSL)))
+      .as("у строки видны и колонки табличной части, и добавленные формой")
+      .contains("Реквизит1", "Реквизит2", "ДопКолонкаФормы");
+
+    assertThat(names(typeRegistry.getMembers(
+      typeRegistry.resolve("ДанныеФормыЭлементКоллекции.СправочникТабличнаяЧасть.Справочник1.ТабличнаяЧасть1")
+        .orElseThrow(), FileType.BSL)))
+      .as("общее зеркало табличной части о колонках формы не знает")
+      .contains("Реквизит1")
+      .doesNotContain("ДопКолонкаФормы");
+
+    var unloadedRow = typeRegistry.getMembers(collectionType, FileType.BSL).stream()
+      .filter(member -> member.matches("Выгрузить"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().getElementTypes();
+    assertThat(unloadedRow.getLocalFields(unloadedRow.refs().iterator().next()))
+      .as("выгруженная таблица значений несёт и колонки объекта, и добавленные формой")
+      .containsKeys("Реквизит1", "ДопКолонкаФормы");
+  }
+
+  @Test
+  void columnsAddedToTheSameTabularSectionByTwoAttributesStayApart() {
+    // Реквизит ДругойОбъект того же вида, что Объект, добавляет той же табличной части
+    // свою колонку. Коллекции у реквизитов разные, и колонка одного в другом не видна.
+    assertThat(names(rowOfTabularSection("ДругойОбъект")))
+      .contains("Реквизит1", "ДопКолонкаДругогоОбъекта")
+      .doesNotContain("ДопКолонкаФормы");
+    assertThat(names(rowOfTabularSection("Объект")))
+      .contains("ДопКолонкаФормы")
+      .doesNotContain("ДопКолонкаДругогоОбъекта");
+  }
+
+  /** Члены строки коллекции {@code ТабличнаяЧасть1} у реквизита формы элемента справочника. */
+  private Collection<MemberDescriptor> rowOfTabularSection(String attributeName) {
+    var dataType = member(CATALOG_ITEM_FORM, MemberKind.PROPERTY, attributeName)
+      .returnTypes().refs().iterator().next();
+    var collectionType = typeRegistry.getMembers(dataType, FileType.BSL).stream()
+      .filter(member -> member.matches("ТабличнаяЧасть1"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    var rowType = typeRegistry.getDefaultElementTypes(collectionType).refs().iterator().next();
+    return typeRegistry.getMembers(rowType, FileType.BSL);
+  }
+
+  @Test
   void formDataCollectionIteratesOverRowsWithColumns() {
     var objectAttribute = member(DOCUMENT_FORM, MemberKind.PROPERTY, "Объект");
     assertThat(objectAttribute).isNotNull();
@@ -346,6 +415,64 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dynamicListIsTypedByItsMainTable() {
+    // Основная таблица списка (<MainTable>Document.Документ1</MainTable>) отвечает
+    // сразу на два вопроса: какие поля видны в строке и чем адресуется строка.
+    var items = typeRegistry.getMembers(typeRegistry
+      .resolve("ВсеЭлементыФормы.Документ.Документ1.Форма.ФормаСписка").orElseThrow(), FileType.BSL);
+    var tableType = find(items, MemberKind.PROPERTY, "Список").returnTypes().refs().iterator().next();
+    assertThat(tableType.qualifiedName())
+      .as("у списка с известной основной таблицей тип свой, а не общий для вида данных")
+      .isEqualTo("ТаблицаФормы.Документ.Документ1.Форма.ФормаСписка.Список");
+
+    var tableMembers = typeRegistry.getMembers(tableType, FileType.BSL);
+    var currentData = find(tableMembers, MemberKind.PROPERTY, "ТекущиеДанные")
+      .returnTypes().refs().iterator().next();
+    assertThat(currentData.qualifiedName())
+      .isEqualTo("ДанныеФормыСтруктура.ДинамическийСписок.Документ.Документ1.Форма.ФормаСписка.Список");
+    assertThat(names(typeRegistry.getMembers(currentData, FileType.BSL)))
+      .as("в строке списка видны поля основной таблицы")
+      .contains("Ссылка", "Номер", "Дата", "Реквизит1")
+      .as("методы ссылки в строку не переносятся — там прочитанные значения полей")
+      .doesNotContain("ПолучитьОбъект");
+
+    assertThat(qualifiedNames(find(tableMembers, MemberKind.PROPERTY, "ТекущаяСтрока")))
+      .as("строку списка адресует значение ключевого поля — ссылка основной таблицы")
+      .containsExactly("ДокументСсылка.Документ1");
+    var selectedRows = find(tableMembers, MemberKind.PROPERTY, "ВыделенныеСтроки")
+      .returnTypes().refs().iterator().next();
+    assertThat(typeService.displayName(selectedRows, Language.RU)).isEqualTo("Массив");
+    assertThat(typeRegistry.getDefaultElementTypes(selectedRows).refs()).extracting(TypeRef::qualifiedName)
+      .as("обход ВыделенныхСтрок даёт ссылки, а не нетипизированные идентификаторы")
+      .containsExactly("ДокументСсылка.Документ1");
+  }
+
+  @Test
+  void contextMenusAndTooltipsAreTypedAsPlatformDeclaresThem() {
+    // Контекстное меню и расширенная подсказка объявлены внутри своего элемента
+    // (<ContextMenu>, <ExtendedTooltip>), но в коллекции лежат наравне с прочими.
+    // Своих типов у них нет: платформа называет их у свойств-хозяев —
+    // `ПолеФормы.КонтекстноеМеню` это `ГруппаФормы`, `РасширеннаяПодсказка` —
+    // `ДекорацияФормы`.
+    var itemsType = typeRegistry
+      .resolve("ВсеЭлементыФормы.Документ.Документ1.Форма.ФормаДокумента")
+      .orElseThrow();
+    var items = typeRegistry.getMembers(itemsType, FileType.BSL);
+
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY, "НомерКонтекстноеМеню")))
+      .containsExactly("ГруппаФормы");
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY, "НомерРасширеннаяПодсказка")))
+      .containsExactly("ДекорацияФормы");
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY, "ТабличнаяЧасть1КонтекстноеМеню")))
+      .as("контекстное меню таблицы читается так же, как у поля")
+      .containsExactly("ГруппаФормы");
+    assertThat(qualifiedNames(find(items, MemberKind.PROPERTY,
+      "ТабличнаяЧасть1СтрокаПоискаРасширеннаяПодсказка")))
+      .as("подсказка дополнения элемента — тоже элемент коллекции")
+      .containsExactly("ДекорацияФормы");
+  }
+
+  @Test
   void selfPropertiesPointToTheFormItself() {
     var formRef = typeRegistry.resolve(DOCUMENT_FORM).orElseThrow();
 
@@ -469,24 +596,68 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   @Test
   void dynamicListTableHasItsOwnRowType() {
     // Строка динамического списка — единственная, у которой платформа даёт расширение
-    // («Расширение данных строки для динамического списка»), поэтому у неё свой тип,
-    // а не обобщённый ДанныеФормыЭлементКоллекции.
+    // («Расширение данных строки для динамического списка»), поэтому у неё свой тип.
+    // Платформенный тип под ним — ДанныеФормыСтруктура: так строку списка отдают
+    // ТекущиеДанные (синтакс-помощник и отладчик), а не элементом коллекции.
     var currentData = member("ТаблицаФормы.ДинамическийСписок", MemberKind.PROPERTY, "ТекущиеДанные");
 
     assertThat(currentData).isNotNull();
     assertThat(qualifiedNames(currentData))
-      .containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок");
+      .containsExactly("ДанныеФормыСтруктура.ДинамическийСписок");
     assertThat(typeService.displayName(
       currentData.returnTypes().refs().iterator().next(), Language.RU))
       .as("синтетическое имя наружу не течёт")
-      .isEqualTo("ДанныеФормыЭлементКоллекции");
+      .isEqualTo("ДанныеФормыСтруктура");
+  }
+
+  @Test
+  void dynamicListRowGetsColumnsOfItsMainTable() {
+    // Колонки списка в форме не объявлены: за ним стоит основная таблица
+    // (`Catalog.Справочник1`), и колонками служат её поля.
+    var currentData = member(dynamicListTable(), MemberKind.PROPERTY, "ТекущиеДанные");
+
+    assertThat(currentData).isNotNull();
+    var rowType = currentData.returnTypes().refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(rowType, FileType.BSL)))
+      .as("поля основной таблицы — стандартные реквизиты справочника и его собственные")
+      .contains("Ссылка", "Код", "Наименование", "ПометкаУдаления", "Реквизит1");
+    assertThat(typeService.displayName(rowType, Language.RU))
+      .as("синтетическое имя наружу не течёт")
+      .isEqualTo("ДанныеФормыСтруктура");
+  }
+
+  @Test
+  void dynamicListRowIsIdentifiedByTheKeyFieldOfItsMainTable() {
+    // Строку списка над ссылочной таблицей платформа адресует ссылкой — её и отдают
+    // ТекущаяСтрока с ТекущийРодитель, а ВыделенныеСтроки набраны из тех же ссылок.
+    var currentRow = member(dynamicListTable(), MemberKind.PROPERTY, "ТекущаяСтрока");
+    assertThat(currentRow).isNotNull();
+    assertThat(qualifiedNames(currentRow)).containsExactly("СправочникСсылка.Справочник1");
+
+    var selectedRows = member(dynamicListTable(), MemberKind.PROPERTY, "ВыделенныеСтроки");
+    assertThat(selectedRows).isNotNull();
+    assertThat(qualifiedNames(selectedRows))
+      .as("массив идентификаторов — сам массив остаётся Массивом")
+      .containsExactly("Массив.СправочникСсылка.Справочник1");
+    assertThat(typeRegistry.getDefaultElementTypes(selectedRows.returnTypes().refs().iterator().next()).refs())
+      .extracting(TypeRef::qualifiedName)
+      .as("а его элементы — ссылки основной таблицы")
+      .containsExactly("СправочникСсылка.Справочник1");
+  }
+
+  /**
+   * Тип таблицы формы над динамическим списком формы списка справочника — у неё свои
+   * колонки, поэтому тип заводится на конкретную таблицу, а не на вид данных.
+   */
+  private String dynamicListTable() {
+    return itemMemberType("Справочник.Справочник1.Форма.ФормаСписка", "Список").qualifiedName();
   }
 
   @Test
   void rowTypeIsRegisteredOnlyForDataKindsThatHaveARowExtension() {
     // У прочих видов данных своей специфики у строки нет — расширения тоже, поэтому
     // свой тип строки им не заводится.
-    assertThat(typeRegistry.resolve("ДанныеФормыЭлементКоллекции.ДинамическийСписок")).isPresent();
+    assertThat(typeRegistry.resolve("ДанныеФормыСтруктура.ДинамическийСписок")).isPresent();
     assertThat(typeRegistry.resolve("ДанныеФормыЭлементКоллекции.ТаблицаЗначений")).isEmpty();
   }
 
@@ -514,9 +685,12 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
       .toList();
 
     assertThat(withoutExtension)
-      .as("у кнопок расширения по виду нет — вся специфика в самой КнопкаФормы")
+      .as("у кнопок расширения по виду нет — вся специфика в самой КнопкаФормы; "
+        + "у контекстного меню и расширенной подсказки — потому что это не вид, а часть "
+        + "чужого элемента: обычные группа и декорация")
       .containsExactlyInAnyOrder("ОбычнаяКнопка", "Гиперссылка",
-        "КнопкаКоманднойПанели", "ГиперссылкаКоманднойПанели");
+        "КнопкаКоманднойПанели", "ГиперссылкаКоманднойПанели",
+        "КонтекстноеМеню", "РасширеннаяПодсказка");
   }
 
   @Test

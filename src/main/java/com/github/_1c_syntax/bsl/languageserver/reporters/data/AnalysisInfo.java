@@ -32,11 +32,16 @@ import java.util.List;
 
 public record AnalysisInfo(
   @JsonFormat(
-    pattern = "yyyy-MM-dd HH:mm:ss",
+    pattern = AnalysisInfo.DATE_PATTERN,
     shape = JsonFormat.Shape.STRING)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   LocalDateTime date,
   List<FileInfo> fileinfos,
   String sourceDir) {
+
+  /**
+   * Формат даты анализа в отчёте {@code bsl-json.json}.
+   */
+  public static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
 }

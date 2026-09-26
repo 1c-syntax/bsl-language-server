@@ -215,6 +215,53 @@ class EventHandlerResolverTest {
   }
 
   @Test
+  void webServiceModuleTakesContractOfItsOwnService() {
+    // given: у сервиса свой тип модуля, и контракт операции объявлен в нём.
+    var serviceRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса.Обмен");
+    when(typeRegistry.resolve("Модуль Web-сервиса.Обмен")).thenReturn(Optional.of(serviceRef));
+    when(typeRegistry.getMembers(eq(serviceRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Загрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+    // Общий тип вида объявляет операцию другого сервиса — брать её нельзя.
+    var genericRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса");
+    when(typeRegistry.resolve("Модуль Web-сервиса")).thenReturn(Optional.of(genericRef));
+    when(typeRegistry.getMembers(eq(genericRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Выгрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+
+    var doc = webServiceModuleDoc("Обмен");
+
+    // when, then
+    assertThat(resolver.lookupContract(doc, "Загрузить")).isPresent();
+    assertThat(resolver.lookupContract(doc, "Выгрузить")).isEmpty();
+  }
+
+  @Test
+  void webServiceModuleFallsBackToSharedTypeWhenServiceTypeIsAbsent() {
+    // given: типа сервиса нет — например, метаданные сервиса не прочитались.
+    var genericRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса");
+    when(typeRegistry.resolve("Модуль Web-сервиса.Обмен")).thenReturn(Optional.empty());
+    when(typeRegistry.resolve("Модуль Web-сервиса")).thenReturn(Optional.of(genericRef));
+    when(typeRegistry.getMembers(eq(genericRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Загрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+
+    var doc = webServiceModuleDoc("Обмен");
+
+    // when, then
+    assertThat(resolver.lookupContract(doc, "Загрузить")).isPresent();
+  }
+
+  private static DocumentContext webServiceModuleDoc(String serviceName) {
+    var service = com.github._1c_syntax.bsl.mdo.WebService.builder().name(serviceName).build();
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.WEBServiceModule);
+    when(doc.getMdObject()).thenReturn(Optional.of(service));
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+    return doc;
+  }
+
+  @Test
   void ownerTypeEventResolvesByEnglishAliasNotJustRuPrimaryName() {
     var objectRef = new TypeRef(TypeKind.CONFIGURATION, "ДокументОбъект.Заказ");
     when(typeRegistry.resolve("ДокументОбъект.Заказ")).thenReturn(Optional.of(objectRef));

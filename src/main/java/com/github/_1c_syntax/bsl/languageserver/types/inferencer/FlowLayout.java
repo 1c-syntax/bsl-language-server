@@ -139,7 +139,12 @@ final class FlowLayout {
         // Граница заголовка — выражение верхней границы, дальше начинается тело.
         var header = loop.getLoopHeader();
         var bounds = header.expression();
-        addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
+        if (bounds.isEmpty()) {
+          // Без «Каждого» разбор относит заголовок к счётному циклу, границ (= … По …) нет.
+          addSlot(slots, byStatement, header, header.getStop(), vertex);
+        } else {
+          addSlot(slots, byStatement, header, bounds.get(bounds.size() - 1).getStop(), vertex);
+        }
       } else if (vertex instanceof ConditionalVertex conditional) {
         // Само условие «Если …» отдельным оператором в граф не попадает, а обращения к
         // переменным в нём — самое частое место, где спрашивают тип. Регистрируем выражение

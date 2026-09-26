@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -42,8 +42,17 @@ public class ConsoleReporter implements DiagnosticReporter {
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    LOGGER.info("Analysis date: {}", analysisInfo.date());
-    LOGGER.info("File info:\n{}", analysisInfo.fileinfos());
+  public void beginReport(ReportContext context, Path outputDir) {
+    LOGGER.info("Analysis date: {}", context.date());
+  }
+
+  @Override
+  public void accept(FileInfo fileInfo) {
+    LOGGER.info("{}", fileInfo);
+  }
+
+  @Override
+  public void endReport() {
+    // вывод уже отправлен в лог по мере анализа
   }
 }

@@ -47,7 +47,7 @@ class MapElementFieldsInferenceTest extends AbstractServerContextAwareTest {
   @Test
   void mapElementCarriesDeclaredFields() {
     // Тип элемента Соответствия (КлючИЗначение) должен нести поля Ключ/Значение.
-    var declared = typeService.getDeclaredReturnTypes(method("Тело"));
+    var declared = typeService.getReturnTypes(method("Тело"));
     var mapRef = declared.refs().iterator().next();
     var element = declared.getElementTypes(mapRef);
 

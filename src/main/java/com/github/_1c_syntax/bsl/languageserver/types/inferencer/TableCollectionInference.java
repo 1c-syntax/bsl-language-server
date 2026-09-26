@@ -70,6 +70,15 @@ class TableCollectionInference {
   private static final String VALUE_TABLE = "ТаблицаЗначений";
   /** Строка таблицы значений — общая для всего пакета: её же резолвит {@link ExpressionTypeInferencer}. */
   static final String VALUE_TABLE_ROW = "СтрокаТаблицыЗначений";
+
+  /**
+   * Коллекции, у которых колонки лежат полями строки: {@code коллекция → её строка}.
+   * Только у них есть состав колонок, который можно перенести на другое значение.
+   */
+  private static final Map<String, String> COLLECTION_ROWS = Map.of(
+    VALUE_TABLE, VALUE_TABLE_ROW,
+    "ДеревоЗначений", "СтрокаДереваЗначений");
+
   private static final String COLUMNS_COLLECTION = "КоллекцияКолонокТаблицыЗначений";
   private static final String COLUMN = "КолонкаТаблицыЗначений";
   private static final String ARRAY = "Массив";
@@ -119,10 +128,10 @@ class TableCollectionInference {
       return unloadColumn(columnsOf(receiver, fileType), call);
     }
     if (member.matches(UNLOAD)) {
-      return unloaded(selected(columnsOf(receiver, fileType), call, UNLOAD_COLUMNS_ARG));
+      return valueTableWith(selected(columnsOf(receiver, fileType), call, UNLOAD_COLUMNS_ARG));
     }
     if (member.matches(UNLOAD_COLUMNS)) {
-      return unloaded(selected(columnsOf(receiver, fileType), call, FIRST_ARG));
+      return valueTableWith(selected(columnsOf(receiver, fileType), call, FIRST_ARG));
     }
     return null;
   }
@@ -151,8 +160,12 @@ class TableCollectionInference {
    * Колонки табличной коллекции: {@code имя → типы значения}. Собираются и из уточнений,
    * накопленных на месте, и из свойств зарегистрированного типа строки. Generic-слот
    * ({@code <Имя колонки>}) колонкой не считается — это заготовка, а не колонка.
+   *
+   * @param receiver типы табличной коллекции.
+   * @param fileType язык файла-потребителя.
+   * @return колонки по именам; пусто, если получатель их не несёт.
    */
-  private Map<String, TypeSet> columnsOf(TypeSet receiver, FileType fileType) {
+  Map<String, TypeSet> columnsOf(TypeSet receiver, FileType fileType) {
     var columns = new LinkedHashMap<String, TypeSet>();
     for (var ref : receiver.refs()) {
       var elements = receiver.getElementTypes(ref);
@@ -212,18 +225,61 @@ class TableCollectionInference {
 
   /** {@code ТаблицаЗначений}, строка которой несёт указанные колонки. */
   @Nullable
-  private TypeSet unloaded(Map<String, TypeSet> columns) {
-    var tableRef = resolve(VALUE_TABLE);
-    var rowRef = resolve(VALUE_TABLE_ROW);
-    if (columns.isEmpty() || tableRef == null || rowRef == null) {
+  private TypeSet valueTableWith(Map<String, TypeSet> columns) {
+    return withColumns(resolve(VALUE_TABLE), VALUE_TABLE_ROW, columns);
+  }
+
+  /**
+   * Лежат ли у этого типа колонки полями строки — то есть можно ли перенести на него
+   * состав колонок другого значения. Так устроены таблица и дерево значений.
+   *
+   * @param types типы значения.
+   * @return {@code true}, если это таблица либо дерево значений.
+   */
+  static boolean carriesColumns(TypeSet types) {
+    return types.refs().stream().anyMatch(ref -> COLLECTION_ROWS.containsKey(ref.qualifiedName()));
+  }
+
+  /**
+   * Табличная коллекция названного типа, строка которой несёт указанные колонки.
+   * <p>
+   * Нужно обратному преобразованию данных формы: {@code ДанныеФормыВЗначение} называет
+   * тип вторым параметром, а состав колонок в имени типа не выражен.
+   *
+   * @param target  тип, в который преобразуют.
+   * @param columns колонки по именам.
+   * @return коллекция с колонками; {@code null}, если это не таблица и не дерево
+   *     значений, колонок нет либо самих типов в реестре не нашлось.
+   */
+  @Nullable
+  TypeSet withColumns(TypeSet target, Map<String, TypeSet> columns) {
+    for (var ref : target.refs()) {
+      var rowName = COLLECTION_ROWS.get(ref.qualifiedName());
+      if (rowName != null) {
+        return withColumns(ref, rowName, columns);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Коллекция с колонками, разложенными полями её строки.
+   *
+   * @return коллекция с колонками; {@code null}, если колонок нет либо самой коллекции
+   *     или её строки в реестре не нашлось.
+   */
+  @Nullable
+  private TypeSet withColumns(@Nullable TypeRef collectionRef, String rowName, Map<String, TypeSet> columns) {
+    var rowRef = resolve(rowName);
+    if (columns.isEmpty() || collectionRef == null || rowRef == null) {
       return null;
     }
-    var fields = new LinkedHashMap<String, LocalField>();
+    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(columns.size());
     for (var column : columns.entrySet()) {
       fields.put(column.getKey(), new LocalField(column.getValue(), ""));
     }
     var row = TypeSet.of(rowRef).withFields(rowRef, fields);
-    return TypeSet.of(tableRef).withElement(tableRef, row);
+    return TypeSet.of(collectionRef).withElement(collectionRef, row);
   }
 
   /** {@code Массив} значений одной колонки — с типом элемента этой колонки. */

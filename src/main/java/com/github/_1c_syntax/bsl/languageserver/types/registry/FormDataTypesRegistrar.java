@@ -25,11 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormAdditionalColumnsAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -59,6 +61,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 class FormDataTypesRegistrar {
 
+  /**
+   * Строка табличной коллекции: {@code коллекция → её строка}. Колонки такой коллекции
+   * ложатся полями строки, а не самой коллекции, — то же представление, в котором их
+   * видит таблица значений, собранная в коде.
+   */
+  private static final Map<String, String> COLLECTION_ROWS = Map.of(
+    "ТаблицаЗначений", CollectionReturnsSpecializer.VALUE_TABLE_ROW,
+    "ДеревоЗначений", "СтрокаДереваЗначений");
+
+  /** Хвосты имён типов одного семейства: {@code ДокументОбъект} / {@code ДокументТабличнаяЧасть}. */
+  private static final String OBJECT_SUFFIX_RU = "Объект";
+  private static final String TABULAR_SECTION_SUFFIX_RU = "ТабличнаяЧасть";
+
   private final TypeRegistry typeRegistry;
 
   /**
@@ -80,6 +95,26 @@ class FormDataTypesRegistrar {
    * {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы над этой коллекцией.
    */
   private final Map<TypeRef, TypeRef> rowByCollection = new ConcurrentHashMap<>();
+
+  /**
+   * Колонки зеркала табличной части: {@code ДанныеФормыКоллекция.… → источник колонок}.
+   * Нужны, когда форма достраивает табличной части свои колонки: у её коллекции колонки
+   * складываются из колонок объекта и добавленных формой.
+   */
+  private final Map<TypeRef, MemberSource> columnsByCollection = new ConcurrentHashMap<>();
+
+  /**
+   * Табличные части, которым конкретная форма добавила свои колонки:
+   * {@code реквизит формы → (табличная часть объекта → коллекция этого реквизита)}
+   * (ключ — {@link #ownSectionsKey}).
+   * <p>
+   * Общего зеркала здесь мало: дополнительные колонки объявлены в одной форме и
+   * существуют только в её данных, поэтому у такой табличной части своя коллекция
+   * и своя строка на каждый реквизит формы, к которому колонки добавлены. Ключ именно
+   * реквизит, а не форма: два реквизита одного вида могут добавить одной и той же
+   * табличной части разные колонки.
+   */
+  private final Map<String, Map<TypeRef, TypeRef>> formTabularSectionData = new ConcurrentHashMap<>();
 
   /**
    * Реквизиты формы как свойства её типа. Тип — результат преобразования объявленного
@@ -153,11 +188,58 @@ class FormDataTypesRegistrar {
     for (var attribute : attributes) {
       var name = attribute.getName();
       if (!name.isBlank()) {
-        byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
-          ValueTypes.resolve(typeRegistry, attribute.getValueType()));
+        byName.putIfAbsent(name.toLowerCase(Locale.ROOT), declaredAttributeType(attribute));
       }
     }
     return Map.copyOf(byName);
+  }
+
+  /**
+   * Объявленный тип одного реквизита — вместе с колонками, если это таблица или дерево
+   * значений. Колонки такого реквизита объявлены в самой форме, и обратное
+   * преобразование возвращает коллекцию с ними: без этого на сервере получалась бы
+   * таблица значений без единой колонки.
+   */
+  private TypeSet declaredAttributeType(FormAttribute attribute) {
+    return withColumns(ValueTypes.resolve(typeRegistry, attribute.getValueType()), attribute.getColumns());
+  }
+
+  /**
+   * Тип табличной коллекции с колонками, приписанными её строке.
+   * <p>
+   * Представление то же, что у таблицы значений, собранной в коде ({@code Новый
+   * ТаблицаЗначений} + {@code Колонки.Добавить}): колонки — поля строки, строка — тип
+   * элемента коллекции. Его и читают обход коллекции, {@code Колонки},
+   * {@code Выгрузить} и {@code ВыгрузитьКолонку}.
+   *
+   * @param declared объявленный тип реквизита.
+   * @param columns  колонки, объявленные в форме.
+   * @return тип с колонками; исходный, если колонок нет либо тип не табличная коллекция.
+   */
+  private TypeSet withColumns(TypeSet declared, List<FormAttribute> columns) {
+    if (columns.isEmpty() || declared.isEmpty()) {
+      return declared;
+    }
+    var result = declared;
+    for (var collectionRef : declared.refs()) {
+      var rowName = COLLECTION_ROWS.get(collectionRef.qualifiedName());
+      var rowRef = rowName == null ? null : typeRegistry.resolve(rowName).orElse(null);
+      if (rowRef != null) {
+        result = result.withElement(collectionRef, rowWithColumns(rowRef, columns));
+      }
+    }
+    return result;
+  }
+
+  /** Строка коллекции, несущая её колонки полями. */
+  private TypeSet rowWithColumns(TypeRef rowRef, List<FormAttribute> columns) {
+    var fields = LinkedHashMap.<String, LocalField>newLinkedHashMap(columns.size());
+    // Через членов, а не по самим колонкам: имя, описание и дедуп одноимённых у колонки
+    // ровно те же, что у реквизита, — правило одно и живёт в одном месте.
+    for (var column : buildAttributeMembers(columns, declaredAttributeTypes(columns))) {
+      fields.put(column.name(), new LocalField(column.returnTypes(), column.description()));
+    }
+    return TypeSet.of(rowRef).withFields(rowRef, fields);
   }
 
   /** Объявленные типы реквизита, переведённые в типы данных формы. */
@@ -191,6 +273,10 @@ class FormDataTypesRegistrar {
     }
     if (!dataKind.specializable()) {
       return typeRegistry.resolve(dataKind.baseTypeRu()).orElse(null);
+    }
+    var extended = registerAdditionalColumns(declaredRef, attribute, suffixRu);
+    if (!extended.isEmpty()) {
+      return registerFormData(declaredRef, dataKind, suffixRu + "." + attribute.getName(), extended);
     }
     return formDataTypes.computeIfAbsent(declaredRef, ref -> registerFormData(ref, dataKind));
   }
@@ -251,15 +337,198 @@ class FormDataTypesRegistrar {
    * имя нужно реестру, а пользователю показывать надо реальный тип значения.
    */
   private TypeRef registerFormData(TypeRef declaredRef, FormDataKind dataKind) {
+    return registerFormData(declaredRef, dataKind, null, Map.of());
+  }
+
+  /**
+   * Регистрирует тип данных формы, при необходимости — свой у конкретной формы.
+   *
+   * @param suffixRu    суффикс имени типа; {@code null} — тип общий на прикладной тип
+   *                    и назван по нему.
+   * @param ownSections коллекции табличных частей, заведённые под эту форму
+   *                    ({@code табличная часть объекта → коллекция формы}).
+   */
+  private TypeRef registerFormData(TypeRef declaredRef, FormDataKind dataKind,
+                                   @Nullable String suffixRu, Map<TypeRef, TypeRef> ownSections) {
     var baseRef = typeRegistry.resolve(dataKind.baseTypeRu()).orElse(null);
-    var dataRef = registerFormDataMirror(dataKind.baseTypeRu(), dataKind.baseTypeEn(),
-      typeRegistry.displayName(declaredRef, Language.RU),
-      typeRegistry.displayName(declaredRef, Language.EN), baseRef);
+    // Общий тип назван по прикладному типу (и потому двуязычен), тип конкретной формы —
+    // по самой форме: её суффикс уже уникален, второго написания у него нет.
+    var mirrorRu = suffixRu == null ? typeRegistry.displayName(declaredRef, Language.RU) : suffixRu;
+    var mirrorEn = suffixRu == null ? typeRegistry.displayName(declaredRef, Language.EN) : "";
+    var dataRef = registerFormDataMirror(
+      dataKind.baseTypeRu(), dataKind.baseTypeEn(), mirrorRu, mirrorEn, baseRef);
+    if (dataKind == FormDataKind.STRUCTURE_WITH_COLLECTION && baseRef != null) {
+      registerRecordSetRows(declaredRef, dataRef, baseRef);
+    }
     if (baseRef != null) {
       typeRegistry.inheritCollectionTraits(dataRef, baseRef, FileType.BSL);
     }
-    typeRegistry.registerMemberSource(dataRef, () -> dataProperties(declaredRef), FileType.BSL);
+    typeRegistry.registerMemberSource(dataRef, () -> dataProperties(declaredRef, ownSections), FileType.BSL);
     return dataRef;
+  }
+
+  /**
+   * Заводит коллекции табличных частей, которым форма добавила свои колонки
+   * (блок {@code <AdditionalColumns table="Объект.Товары">} среди колонок реквизита).
+   * Таких колонок нет в самом объекте — они существуют только в данных этой формы,
+   * поэтому общего зеркала табличной части здесь недостаточно.
+   *
+   * @param declaredRef объявленный тип реквизита ({@code ДокументОбъект.Документ1}).
+   * @param attribute   реквизит формы.
+   * @param suffixRu    суффикс имени типов этой формы.
+   * @return {@code табличная часть объекта → коллекция этой формы}; пусто, если
+   *   дополнительных колонок нет либо ни одну табличную часть не удалось опознать.
+   */
+  private Map<TypeRef, TypeRef> registerAdditionalColumns(TypeRef declaredRef, FormAttribute attribute,
+                                                          String suffixRu) {
+    var byTabularSection = new LinkedHashMap<TypeRef, TypeRef>();
+    var attributeSuffix = suffixRu + "." + attribute.getName();
+    for (var column : attribute.getColumns()) {
+      if (column instanceof FormAdditionalColumnsAttribute additional && !additional.getColumns().isEmpty()) {
+        registerAdditionalColumnsOf(declaredRef, additional, attributeSuffix, byTabularSection);
+      }
+    }
+    if (!byTabularSection.isEmpty()) {
+      formTabularSectionData.put(ownSectionsKey(suffixRu, attribute.getName()), Map.copyOf(byTabularSection));
+    }
+    return byTabularSection;
+  }
+
+  /**
+   * Заводит коллекцию под одну табличную часть, к которой добавлены колонки, и кладёт её
+   * в {@code sink}; табличную часть, которую не удалось опознать, пропускает.
+   */
+  private void registerAdditionalColumnsOf(TypeRef declaredRef, FormAdditionalColumnsAttribute additional,
+                                           String attributeSuffix, Map<TypeRef, TypeRef> sink) {
+    var sectionName = shortName(additional.getName());
+    var sectionRef = tabularSectionRefOf(declaredRef, sectionName);
+    if (sectionRef == null) {
+      return;
+    }
+    var collectionRef = registerExtendedTabularSection(sectionRef,
+      attributeSuffix + "." + sectionName, additional.getColumns());
+    if (collectionRef != null) {
+      sink.put(sectionRef, collectionRef);
+    }
+  }
+
+  /** Ключ собственных коллекций реквизита формы: имя реквизита — без учёта регистра. */
+  private static String ownSectionsKey(String formSuffixRu, String attributeName) {
+    return formSuffixRu + "." + attributeName.toLowerCase(Locale.ROOT);
+  }
+
+  /**
+   * Коллекция данных формы под табличную часть, к колонкам которой форма добавила свои.
+   * Строка наследует колонки объекта от строки общего зеркала, а добавленные ложатся
+   * на неё сверху — так же, как ложатся колонки самой табличной части.
+   *
+   * @return коллекция этой формы; {@code null}, если общего зеркала табличной части
+   *   нет (без него неоткуда взять колонки объекта) либо базовых типов данных формы
+   *   нет в реестре.
+   */
+  private @Nullable TypeRef registerExtendedTabularSection(TypeRef sectionRef, String suffix,
+                                                           List<FormAttribute> extraColumns) {
+    var mirrorRef = tabularSectionData.get(sectionRef);
+    var mirrorRow = mirrorRef == null ? null : rowByCollection.get(mirrorRef);
+    var mirrorColumns = mirrorRef == null ? null : columnsByCollection.get(mirrorRef);
+    var collectionBase = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_RU).orElse(null);
+    var itemBase = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU).orElse(null);
+    if (mirrorRow == null || mirrorColumns == null || collectionBase == null || itemBase == null) {
+      return null;
+    }
+    var itemRef = registerFormDataMirror(
+      FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN,
+      suffix, "", mirrorRow);
+    MemberSource extraMembers = () -> buildAttributeMembers(extraColumns, declaredAttributeTypes(extraColumns));
+    typeRegistry.registerMemberSource(itemRef, extraMembers, FileType.BSL);
+
+    var collectionRef = registerFormDataMirror(
+      FormPlatformTypes.FORM_DATA_COLLECTION_RU, FormPlatformTypes.FORM_DATA_COLLECTION_EN,
+      suffix, "", collectionBase);
+    typeRegistry.registerDefaultElementTypes(collectionRef, List.of(itemRef));
+    typeRegistry.inheritCollectionTraits(collectionRef, collectionBase, FileType.BSL);
+    MemberSource allColumns = () -> {
+      var columns = new ArrayList<>(mirrorColumns.getMembers());
+      columns.addAll(extraMembers.getMembers());
+      return columns;
+    };
+    specializeCollectionReturns(collectionRef, collectionBase, itemBase, itemRef, allColumns);
+    rowByCollection.put(collectionRef, itemRef);
+    columnsByCollection.put(collectionRef, allColumns);
+    return collectionRef;
+  }
+
+  /**
+   * Тип табличной части объекта по её имени. Имена типов регулярны и собираются из
+   * имени объектного типа ({@code ДокументОбъект.Документ1} →
+   * {@code ДокументТабличнаяЧасть.Документ1.Товары}), поэтому читать члены объектного
+   * типа на регистрации формы не приходится.
+   *
+   * @return тип табличной части; {@code null}, если объектный тип назван не по схеме
+   *   либо такой табличной части нет.
+   */
+  private @Nullable TypeRef tabularSectionRefOf(TypeRef declaredRef, String sectionName) {
+    var qualifiedName = declaredRef.qualifiedName();
+    var dot = qualifiedName.indexOf('.');
+    if (dot < 0 || sectionName.isBlank()) {
+      return null;
+    }
+    var family = qualifiedName.substring(0, dot);
+    if (!family.endsWith(OBJECT_SUFFIX_RU)) {
+      return null;
+    }
+    var sectionType = family.substring(0, family.length() - OBJECT_SUFFIX_RU.length())
+      + TABULAR_SECTION_SUFFIX_RU + qualifiedName.substring(dot) + "." + sectionName;
+    return typeRegistry.resolve(sectionType).orElse(null);
+  }
+
+  /** Последний сегмент имени-пути ({@code Объект.Товары} → {@code Товары}). */
+  private static String shortName(String path) {
+    return path.substring(path.lastIndexOf('.') + 1);
+  }
+
+  /**
+   * Строки набора записей в данных формы: {@code ДанныеФормыСтруктураСКоллекцией} —
+   * коллекция {@code ДанныеФормыЭлементКоллекции}, и колонки у строки те же, что у записи
+   * регистра. Их отдают обход набора, его методы ({@code Добавить}, {@code Выгрузить} …)
+   * и {@code ТекущиеДанные} таблицы над ним.
+   * <p>
+   * Колонки читаются лениво — у записи, которую реестр знает элементом прикладного
+   * набора (см. {@link RegisterTypesRegistrar#registerRecordSetCollectionMembers}):
+   * на регистрации формы обращение к членам сбивало бы epoch кэша членов.
+   *
+   * @param recordSetRef прикладной тип набора ({@code РегистрСведенийНаборЗаписей.Курсы}).
+   * @param dataRef      его данные формы; вызывается до наследования коллекционных
+   *                     свойств, иначе выиграла бы унаследованная обобщённая строка.
+   * @param baseRef      {@code ДанныеФормыСтруктураСКоллекцией}.
+   */
+  private void registerRecordSetRows(TypeRef recordSetRef, TypeRef dataRef, TypeRef baseRef) {
+    var itemBase = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU).orElse(null);
+    if (itemBase == null) {
+      return;
+    }
+    var itemRef = registerFormDataMirror(
+      FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN,
+      typeRegistry.displayName(recordSetRef, Language.RU),
+      typeRegistry.displayName(recordSetRef, Language.EN), itemBase);
+    MemberSource columns = () -> recordColumns(recordSetRef);
+    typeRegistry.registerMemberSource(itemRef, columns, FileType.BSL);
+    typeRegistry.registerDefaultElementTypes(dataRef, List.of(itemRef));
+    specializeCollectionReturns(dataRef, baseRef, itemBase, itemRef, columns);
+    rowByCollection.put(dataRef, itemRef);
+  }
+
+  /** Свойства записи регистра — элемента прикладного набора записей. */
+  private List<MemberDescriptor> recordColumns(TypeRef recordSetRef) {
+    var columns = new ArrayList<MemberDescriptor>();
+    for (var recordRef : typeRegistry.getDefaultElementTypes(recordSetRef).refs()) {
+      for (var member : typeRegistry.getMembers(recordRef, FileType.BSL)) {
+        if (member.kind() == MemberKind.PROPERTY && !member.generic()) {
+          columns.add(member);
+        }
+      }
+    }
+    return List.copyOf(columns);
   }
 
   /**
@@ -271,16 +540,14 @@ class FormDataTypesRegistrar {
    * Регистрация идёт при обходе метаданных, а не при регистрации формы: форма узнаёт
    * о табличных частях объекта только из членов его типа, а читать их на регистрации
    * нельзя — это преждевременно материализовало бы тип.
+   * <p>
+   * Зеркало одно на прикладной тип: у всех форм одного документа табличная часть
+   * устроена одинаково. Исключение — форма, добавившая табличной части свои колонки
+   * (см. {@link #registerAdditionalColumns}): у неё коллекция и строка свои.
    *
    * @param tabularSectionRef тип табличной части ({@code ДокументТабличнаяЧасть.X.Y}).
    * @param columns           источник колонок табличной части.
    */
-  // TODO mdclasses#679: форма может добавить табличной части свои колонки
-  //  (`<AdditionalColumns table="Объект.Товары">` у основного реквизита) — в модель
-  //  метаданных они не попадают, и обращение к ним в модуле формы не резолвится.
-  //  Когда появятся: такие колонки пер-форменные, а зеркало здесь одно на прикладной
-  //  тип, поэтому форме с ними понадобится своя специализация — и коллекции, и
-  //  структуры `Объект`.
   public void registerTabularSectionData(TypeRef tabularSectionRef, MemberSource columns) {
     var collectionBase = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_RU).orElse(null);
     var itemBase = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU).orElse(null);
@@ -312,6 +579,7 @@ class FormDataTypesRegistrar {
     specializeCollectionReturns(collectionRef, collectionBase, itemBase, itemRef, columns);
     tabularSectionData.put(tabularSectionRef, collectionRef);
     rowByCollection.put(collectionRef, itemRef);
+    columnsByCollection.put(collectionRef, columns);
   }
 
   /**
@@ -366,8 +634,12 @@ class FormDataTypesRegistrar {
    * {@link FormPlatformTypes#isTransferredToFormData}. Табличные части перецепляются на
    * свои зеркала: на форме за ними стоит {@code ДанныеФормыКоллекция}, а не табличная
    * часть объекта.
+   *
+   * @param ownSections коллекции табличных частей, заведённые под конкретную форму
+   *                    (у неё к ним добавлены свои колонки); для них зеркало берётся
+   *                    не общее, а её собственное.
    */
-  private List<MemberDescriptor> dataProperties(TypeRef declaredRef) {
+  private List<MemberDescriptor> dataProperties(TypeRef declaredRef, Map<TypeRef, TypeRef> ownSections) {
     var members = typeRegistry.getMembers(declaredRef, FileType.BSL);
     var properties = new ArrayList<MemberDescriptor>(members.size());
     for (var member : members) {
@@ -375,13 +647,13 @@ class FormDataTypesRegistrar {
         || !FormPlatformTypes.isTransferredToFormData(member)) {
         continue;
       }
-      properties.add(withTabularSectionData(member));
+      properties.add(withTabularSectionData(member, ownSections));
     }
     return List.copyOf(properties);
   }
 
   /** Свойство с типами табличных частей, заменёнными на их зеркала в данных формы. */
-  private MemberDescriptor withTabularSectionData(MemberDescriptor property) {
+  private MemberDescriptor withTabularSectionData(MemberDescriptor property, Map<TypeRef, TypeRef> ownSections) {
     if (tabularSectionData.isEmpty()) {
       return property;
     }
@@ -389,7 +661,7 @@ class FormDataTypesRegistrar {
     var converted = new ArrayList<TypeRef>(refs.size());
     var changed = false;
     for (var ref : refs) {
-      var dataRef = tabularSectionData.get(ref);
+      var dataRef = ownSections.getOrDefault(ref, tabularSectionData.get(ref));
       changed |= dataRef != null;
       converted.add(dataRef == null ? ref : dataRef);
     }
@@ -408,12 +680,18 @@ class FormDataTypesRegistrar {
   }
 
   /**
-   * Зеркало табличной части объекта в данных формы.
+   * Зеркало табличной части объекта в данных реквизита конкретной формы: собственное,
+   * если форма добавила этой табличной части реквизита свои колонки, иначе — общее.
    *
    * @param tabularSectionRef тип табличной части ({@code ДокументТабличнаяЧасть.X.Y}).
+   * @param formSuffixRu      суффикс имени типов формы.
+   * @param attributeName     имя реквизита формы, через который путь данных ведёт к
+   *                          табличной части ({@code Объект} у {@code Объект.Товары}).
    * @return тип коллекции данных формы; {@code null}, если зеркала нет.
    */
-  @Nullable TypeRef mirrorOfTabularSection(TypeRef tabularSectionRef) {
-    return tabularSectionData.get(tabularSectionRef);
+  @Nullable TypeRef mirrorOfTabularSection(TypeRef tabularSectionRef, String formSuffixRu, String attributeName) {
+    var own = formTabularSectionData.get(ownSectionsKey(formSuffixRu, attributeName));
+    var ownRef = own == null ? null : own.get(tabularSectionRef);
+    return ownRef == null ? tabularSectionData.get(tabularSectionRef) : ownRef;
   }
 }

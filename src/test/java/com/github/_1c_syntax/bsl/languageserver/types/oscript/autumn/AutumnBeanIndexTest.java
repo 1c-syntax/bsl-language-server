@@ -119,7 +119,7 @@ class AutumnBeanIndexTest {
     var uri = registerEntry("БезДокумента");
     var serverContext = mock(ServerContext.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(null);
+    when(serverContext.getDocumentNoLock(uri)).thenReturn(null);
     init();
 
     // when / then
@@ -330,7 +330,7 @@ class AutumnBeanIndexTest {
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocumentNoLock(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
     var beanType = new TypeRef(TypeKind.USER, "ТипЖелудя");
     when(typeRegistry.resolve("ТипЖелудя")).thenReturn(Optional.of(beanType));
@@ -546,7 +546,7 @@ class AutumnBeanIndexTest {
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocumentNoLock(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
     when(symbolTree.getConstructor()).thenReturn(Optional.ofNullable(constructor));
     var allMethods = new ArrayList<MethodSymbol>();

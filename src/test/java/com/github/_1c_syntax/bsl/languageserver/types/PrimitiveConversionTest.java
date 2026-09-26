@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,6 +89,28 @@ class PrimitiveConversionTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void typeFunctionReturnsValueType() {
+    // given — платформа не установлена, типы берутся из json-фоллбэка
+
+    // when
+    var t = at("Т1 = Тип(\"Число\")", "Т1 = ".length());
+
+    // then — результат Тип() — сам «Тип», а не строка-аргумент и не неизвестный тип
+    assertThat(typeNames(t)).containsExactly("Тип");
+  }
+
+  @Test
+  void typeOfValueReturnsValueType() {
+    // given — платформа не установлена, типы берутся из json-фоллбэка
+
+    // when
+    var t = at("ТЗ = ТипЗнч(100)", "ТЗ = ".length());
+
+    // then — результат ТипЗнч() — «Тип», а не тип самого значения
+    assertThat(typeNames(t)).containsExactly("Тип");
+  }
+
+  @Test
   void formatDoesNotCrash() {
     var t = at("Форм = Формат(100, \"ЧЦ=10; ЧДЦ=2\")", "Форм = ".length());
     assertThat(t).isNotNull();
@@ -113,6 +138,10 @@ class PrimitiveConversionTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
     return typeService.expressionTypesAt(dc, new Position(line, charInLine + 1));
+  }
+
+  private static List<String> typeNames(TypeSet types) {
+    return types.refs().stream().map(TypeRef::qualifiedName).toList();
   }
 
   private DocumentContext doc() {

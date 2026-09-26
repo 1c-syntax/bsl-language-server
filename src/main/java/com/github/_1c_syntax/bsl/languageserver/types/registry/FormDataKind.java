@@ -43,7 +43,7 @@ enum FormDataKind {
     true, null, null),
   COLLECTION(FormPlatformTypes.FORM_DATA_COLLECTION_RU, FormPlatformTypes.FORM_DATA_COLLECTION_EN, false,
     FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN),
-  TREE("ДанныеФормыДерево", "FormDataTree", false, "ДанныеФормыЭлементДерева", "FormDataTreeItem");
+  TREE("ДанныеФормыДерево", "FormDataTree", false, FormPlatformTypes.FORM_DATA_TREE_ITEM_RU, "FormDataTreeItem");
 
   private final String baseTypeRu;
   private final String baseTypeEn;

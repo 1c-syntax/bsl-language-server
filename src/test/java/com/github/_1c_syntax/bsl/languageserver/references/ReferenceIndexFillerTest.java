@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
@@ -77,6 +78,45 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     assertThat(referencedSymbol).get()
       .extracting(Reference::selectionRange)
       .isEqualTo(Ranges.create(4, 0, 4, 9));
+  }
+
+  @Test
+  void rereadOfSameContentKeepsReferences() {
+    // given: документ проиндексирован.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0)))
+      .as("вхождения собраны первым разбором")
+      .isPresent();
+
+    // when: тот же самый текст разобран заново — обходить дерево незачем.
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isPresent();
+  }
+
+  @Test
+  void rereadOfSameContentIndexesAgainAfterDocumentWasRemoved() {
+    // given: документ проиндексирован, а затем удалён из рабочей области — вместе со
+    // вхождениями снят и признак «индексация дошла до конца».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0)))
+      .as("вхождения собраны первым разбором")
+      .isPresent();
+    referenceIndexFiller.handleEvent(
+      new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isEmpty();
+
+    // when: тот же самый текст разобран заново.
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then: пропуск разрешён только когда вхождения уже собраны, иначе индекс остался бы
+    // пустым до следующей правки файла.
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isPresent();
   }
 
   @Test

@@ -226,7 +226,14 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   @EventListener
   @Override
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
-    index(event.getSource());
+    var documentContext = event.getSource();
+    if (!event.isContentChanged() && indexedByUri.containsKey(documentContext.getUri())) {
+      // Тот же самый текст разобран заново, а записи по нему на месте: снимки автономны,
+      // и переиндексация дала бы ровно их же. Наличие записей проверяется отдельно —
+      // закрытие документа их убирает, и тогда перечитывание обязано наполнить индекс.
+      return;
+    }
+    index(documentContext);
   }
 
   /**

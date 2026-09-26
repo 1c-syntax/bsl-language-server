@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
@@ -84,5 +86,48 @@ class CommonModuleCallInferenceTest extends AbstractServerContextAwareTest {
       .as("ресивер-общий-модуль должен резолвиться в тип модуля, а не пусто")
       .hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualTo("ОбщегоНазначения");
+  }
+
+  @Test
+  void moduleTakenByNameGetsTypeOfThatModule() {
+    // given: модуль получен по имени. Объявленный возврат такого метода обобщённый —
+    // «какой-то модуль», — а имя названо литералом, поэтому тип известен точно.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleByName.bsl");
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext, positionOf(documentContext, "ОбщийМодуль("));
+
+    // then
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("ПервыйОбщийМодуль");
+  }
+
+  @Test
+  void memberOfModuleTakenByNameIsResolved() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleByName.bsl");
+
+    // when: обращение к методу модуля, полученного по имени.
+    var member = typeService.memberAt(documentContext,
+      positionOf(documentContext, "НеУстаревшаяПроцедура"));
+
+    // then: метод именно этого модуля, а не «нет такого члена».
+    assertThat(member).isPresent();
+    assertThat(member.get().descriptor().name()).isEqualTo("НеУстаревшаяПроцедура");
+  }
+
+  /** Позиция первого вхождения текста в документе — на его первом символе. */
+  private static Position positionOf(DocumentContext documentContext, String text) {
+    var content = documentContext.getContent();
+    var index = content.indexOf(text);
+    var line = content.substring(0, index).split("\n").length - 1;
+    var lineStart = content.lastIndexOf('\n', index) + 1;
+    return new Position(line, index - lineStart + 1);
   }
 }

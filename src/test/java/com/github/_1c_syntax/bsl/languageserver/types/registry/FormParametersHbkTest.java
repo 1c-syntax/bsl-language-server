@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.hover.PlatformMemberHoverBuilder;
@@ -38,6 +39,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +59,9 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   private static final String DOCUMENT_FORM = "ФормаКлиентскогоПриложения.Документ.Документ1.Форма.ФормаДокумента";
   private static final String CATALOG_ITEM_FORM =
     "ФормаКлиентскогоПриложения.Справочник.Справочник1.Форма.ФормаЭлемента";
+  private static final String LIST_FORM = "Справочник.Справочник1.Форма.ФормаСписка";
+  private static final String DOCUMENT_FORM_REF = "Документ.Документ1.Форма.ФормаДокумента";
+  private static final String RECORD_SET_FORM = "РегистрСведений.РегистрСведений1.Форма.ФормаНабораЗаписей";
 
   @Autowired
   private ConfigurationTypesProvider provider;
@@ -213,6 +218,49 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void tableOverTabularSectionSeesColumnsAddedByTheForm() {
+    // Расширения таблицы формы под табличную часть в JSON-фолбэке нет, поэтому свой
+    // тип у такой таблицы появляется только с синтакс-помощником. Он и приводит к
+    // строке коллекции — у формы элемента справочника собственной, с добавленной ею
+    // колонкой (блок <AdditionalColumns table="Объект.ТабличнаяЧасть1">).
+    assertThat(names(currentDataOfCatalogItemFormTable("ТабличнаяЧасть1")))
+      .as("ТекущиеДанные таблицы — строка коллекции этой формы, с её колонками")
+      .contains("Реквизит1", "ДопКолонкаФормы");
+  }
+
+  @Test
+  void tablesOverTheSameTabularSectionOfTwoAttributesSeeOwnColumns() {
+    // Реквизиты Объект и ДругойОбъект одного вида добавляют той же табличной части разные
+    // колонки. Таблица находит свою коллекцию по реквизиту из пути данных, а не по одной
+    // лишь табличной части — иначе обе таблицы получили бы строку того реквизита, что
+    // зарегистрирован последним.
+    assertThat(names(currentDataOfCatalogItemFormTable("ДругаяТабличнаяЧасть")))
+      .contains("ДопКолонкаДругогоОбъекта")
+      .doesNotContain("ДопКолонкаФормы");
+    assertThat(names(currentDataOfCatalogItemFormTable("ТабличнаяЧасть1")))
+      .contains("ДопКолонкаФормы")
+      .doesNotContain("ДопКолонкаДругогоОбъекта");
+  }
+
+  /** Члены {@code ТекущиеДанные} таблицы формы элемента справочника. */
+  private Collection<MemberDescriptor> currentDataOfCatalogItemFormTable(String tableName) {
+    var itemsType = typeRegistry
+      .resolve("ВсеЭлементыФормы.Справочник.Справочник1.Форма.ФормаЭлемента")
+      .orElseThrow();
+    var tableType = typeRegistry.getMembers(itemsType, FileType.BSL).stream()
+      .filter(m -> m.matches(tableName))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    var currentData = typeRegistry.getMembers(tableType, FileType.BSL).stream()
+      .filter(m -> m.matches("ТекущиеДанные"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    return typeRegistry.getMembers(currentData, FileType.BSL);
+  }
+
+  @Test
   void formItemsCarryKindSpecificExtensionMembers() {
     // ЦветФона объявлен не в ГруппаФормы, а в «Расширение группы формы для обычной
     // группы»; без подмешивания расширения по виду элемента свойство не резолвится.
@@ -243,9 +291,10 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
       assertThat(typeRegistry.resolve(dataKind.extensionName()))
         .as("расширение %s", dataKind.extensionName())
         .isPresent();
-      if (dataKind == TableDataKind.TABULAR_SECTION) {
-        // Единственный вид, чей суффикс — не имя типа, а семейство: у табличной части
-        // тип свой на каждый объект (`ДокументТабличнаяЧасть.Заказ`).
+      if (dataKind == TableDataKind.TABULAR_SECTION || dataKind == TableDataKind.RECORD_SET) {
+        // Виды, чей суффикс — не имя типа, а семейство: у табличной части и набора
+        // записей тип свой на каждый объект (`ДокументТабличнаяЧасть.Заказ`,
+        // `РегистрСведенийНаборЗаписей.Курсы`).
         continue;
       }
       assertThat(typeRegistry.resolve(dataKind.suffix()))
@@ -374,7 +423,10 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
     // «Список» смотрит на реквизит-динамический список, «ТабличнаяЧасть1» —
     // на табличную часть объекта (путь Объект.ТабличнаяЧасть1).
     var dynamicList = itemMemberType("Документ.Документ1.Форма.ФормаСписка", "Список");
-    assertThat(dynamicList.qualifiedName()).isEqualTo("ТаблицаФормы.ДинамическийСписок");
+    assertThat(typeRegistry.extensionsOf(dynamicList))
+      .as("таблица над динамическим списком получает списочное расширение")
+      .extracting(TypeRef::qualifiedName)
+      .contains("ТаблицаФормы.ДинамическийСписок");
     assertThat(names(typeRegistry.getMembers(dynamicList, FileType.BSL)))
       .as("собственные члены ТаблицаФормы")
       .contains("ТекущиеДанные", "Обновить")
@@ -523,6 +575,88 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   }
 
   /** Параметр члена платформенного типа по имени; падает, если такого нет. */
+  @Test
+  void currentDataTypeFollowsTheDataKindOfTheTable() {
+    // Тип строки задаёт вид данных, а не то, есть ли у строки колонки. Правило — в
+    // синтакс-помощнике (`ТаблицаФормы.ДанныеСтроки`): динамический список —
+    // ДанныеФормыСтруктура, дерево значений — ДанныеФормыЭлементДерева, остальные —
+    // ДанныеФормыЭлементКоллекции. `ДанныеСтроки` отдаёт ту же строку.
+    assertThat(rowDataTypes(LIST_FORM, "Список"))
+      .containsExactly("ДанныеФормыСтруктура", "ДанныеФормыСтруктура");
+    assertThat(rowDataTypes(DOCUMENT_FORM_REF, "ТабличнаяЧасть1"))
+      .containsExactly("ДанныеФормыЭлементКоллекции", "ДанныеФормыЭлементКоллекции");
+    assertThat(rowDataTypes(DOCUMENT_FORM_REF, "ДеревоПодбора"))
+      .containsExactly("ДанныеФормыЭлементДерева", "ДанныеФормыЭлементДерева");
+    assertThat(rowDataTypes(RECORD_SET_FORM, "НаборЗаписей"))
+      .containsExactly("ДанныеФормыЭлементКоллекции", "ДанныеФормыЭлементКоллекции");
+  }
+
+  @Test
+  void rowOfEveryDataKindCarriesMembersOfItsPlatformType() {
+    // Методы строки — от её платформенного типа: у строки динамического списка нет
+    // `ПолучитьИдентификатор`, у строки дерева есть `ПолучитьЭлементы`.
+    assertThat(names(rowMembers(LIST_FORM, "Список")))
+      .contains("Свойство", "Реквизит1")
+      .doesNotContain("ПолучитьИдентификатор", "ИсходныйНомерСтроки");
+    assertThat(names(rowMembers(DOCUMENT_FORM_REF, "ДеревоПодбора")))
+      .contains("ПолучитьЭлементы", "ПолучитьРодителя", "Группа", "Пометка");
+    assertThat(names(rowMembers(RECORD_SET_FORM, "НаборЗаписей")))
+      .as("колонки строки набора — поля записи регистра")
+      .contains("ПолучитьИдентификатор", "Справочник1");
+  }
+
+  @Test
+  void rowsOfCollectionsOnTheFormAreIdentifiedByNumbers() {
+    // Строку дерева значений и набора записей таблица адресует тем же числовым
+    // идентификатором, что и строку табличной части (`ПолучитьИдентификатор`).
+    for (var table : List.of("ДеревоПодбора", "ТабличнаяЧасть1")) {
+      assertThat(selectedRowElements(DOCUMENT_FORM_REF, table)).as(table).containsExactly("Число");
+    }
+    assertThat(selectedRowElements(RECORD_SET_FORM, "НаборЗаписей")).containsExactly("Число");
+  }
+
+  @Test
+  void recordSetOnTheFormIsACollectionOfRowsWithRecordColumns() {
+    // Набор записей на форме — ДанныеФормыСтруктураСКоллекцией: его обход и `Добавить()`
+    // дают строку с полями записи регистра, а не обобщённый ДанныеФормыЭлементКоллекции.
+    var recordSet = member("ФормаКлиентскогоПриложения." + RECORD_SET_FORM, MemberKind.PROPERTY, "НаборЗаписей")
+      .returnTypes().refs().iterator().next();
+    assertThat(typeRegistry.displayName(recordSet, Language.RU)).isEqualTo("ДанныеФормыСтруктураСКоллекцией");
+
+    var row = typeRegistry.getDefaultElementTypes(recordSet).refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(row, FileType.BSL))).contains("Справочник1");
+    var added = typeRegistry.getMembers(recordSet, FileType.BSL).stream()
+      .filter(member -> member.matches("Добавить"))
+      .findFirst()
+      .orElseThrow();
+    assertThat(added.returnTypes().refs()).containsExactly(row);
+  }
+
+  /** Отображаемые типы {@code ТекущиеДанные} и {@code ДанныеСтроки} таблицы формы. */
+  private List<String> rowDataTypes(String formMdoRef, String tableName) {
+    var table = itemMemberType(formMdoRef, tableName).qualifiedName();
+    var currentData = member(table, MemberKind.PROPERTY, "ТекущиеДанные").returnTypes();
+    var rowData = member(table, MemberKind.METHOD, "ДанныеСтроки").signatures().get(0).returnTypes();
+    return Stream.of(currentData, rowData)
+      .flatMap(types -> types.refs().stream())
+      .map(ref -> typeRegistry.displayName(ref, Language.RU))
+      .toList();
+  }
+
+  /** Члены строки, которую отдают {@code ТекущиеДанные} таблицы формы. */
+  private Collection<MemberDescriptor> rowMembers(String formMdoRef, String tableName) {
+    var table = itemMemberType(formMdoRef, tableName).qualifiedName();
+    var row = member(table, MemberKind.PROPERTY, "ТекущиеДанные").returnTypes().refs().iterator().next();
+    return typeRegistry.getMembers(row, FileType.BSL);
+  }
+
+  /** Типы элементов {@code ВыделенныеСтроки} таблицы формы. */
+  private List<String> selectedRowElements(String formMdoRef, String tableName) {
+    var table = itemMemberType(formMdoRef, tableName).qualifiedName();
+    var selectedRows = member(table, MemberKind.PROPERTY, "ВыделенныеСтроки").returnTypes().refs().iterator().next();
+    return typeRegistry.getDefaultElementTypes(selectedRows).refs().stream().map(TypeRef::qualifiedName).toList();
+  }
+
   private ParameterDescriptor parameterOf(String typeName, MemberKind kind, String memberName,
                                           String parameterName) {
     var found = member(typeName, kind, memberName);

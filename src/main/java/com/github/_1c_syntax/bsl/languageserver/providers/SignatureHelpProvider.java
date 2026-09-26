@@ -491,8 +491,8 @@ public final class SignatureHelpProvider {
     var description = method.getDescription()
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
-    var declaredReturn = typeService.getDeclaredReturnTypes(method);
-    var returnRef = declaredReturn.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    var returnTypes = typeService.getReturnTypes(method);
+    var returnRef = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
     var sig = new SignatureDescriptor(params, returnRef, description);
     return MemberDescriptor.method(method.getName(), description, List.of(sig));
   }

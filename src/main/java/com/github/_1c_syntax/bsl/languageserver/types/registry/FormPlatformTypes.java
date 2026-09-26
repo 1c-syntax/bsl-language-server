@@ -137,6 +137,11 @@ final class FormPlatformTypes {
    */
   private static final String MANAGED_EXTENSION_PREFIX = "Расширение формы клиентского приложения для ";
   private static final String OBJECTS = MANAGED_EXTENSION_PREFIX + "объектов";
+  /** Расширения форм отчёта и констант: их получает и форма объекта, и форма с его ролью у корня. */
+  private static final String REPORT_FORM = MANAGED_EXTENSION_PREFIX + "отчета";
+  private static final String CONSTANTS_FORM = MANAGED_EXTENSION_PREFIX + "констант";
+  private static final String ORDINARY_REPORT_FORM = "Расширение формы отчета";
+  private static final String ORDINARY_CONSTANTS_FORM = "Расширение формы констант";
   private static final String RECORD_SET = MANAGED_EXTENSION_PREFIX + "набора записей";
 
   /**
@@ -169,14 +174,14 @@ final class FormPlatformTypes {
     Map.entry("задачаобъект", Extension.object(managed("задачи"))),
     // Отчёт, обработка, константы, наборы записей: у них свой набор событий, ничего
     // общего с объектным, поэтому запасного варианта нет.
-    Map.entry("отчетобъект", Extension.of(managed("отчета"))),
-    Map.entry("внешнийотчетобъект", Extension.of(managed("отчета"))),
+    Map.entry("отчетобъект", Extension.of(REPORT_FORM)),
+    Map.entry("внешнийотчетобъект", Extension.of(REPORT_FORM)),
     Map.entry("обработкаобъект", Extension.of(managed("обработки"))),
     Map.entry("внешняяобработкаобъект",
       Extension.of(managed("обработки"))),
     Map.entry("константаменеджерзначения",
-      Extension.of(managed("констант"))),
-    Map.entry("константынабор", Extension.of(managed("констант"))),
+      Extension.of(CONSTANTS_FORM)),
+    Map.entry("константынабор", Extension.of(CONSTANTS_FORM)),
     Map.entry("регистрсведенийзапись",
       Extension.of(managed("записи регистра сведений"))),
     Map.entry("регистрсведенийнаборзаписей",
@@ -239,6 +244,9 @@ final class FormPlatformTypes {
   /** Строка коллекции данных формы. */
   static final String FORM_DATA_COLLECTION_ITEM_RU = "ДанныеФормыЭлементКоллекции";
   static final String FORM_DATA_COLLECTION_ITEM_EN = "FormDataCollectionItem";
+
+  /** Строка дерева данных формы. */
+  static final String FORM_DATA_TREE_ITEM_RU = "ДанныеФормыЭлементДерева";
 
   /**
    * Семейства типов реквизита, которые на форме становятся {@code ДанныеФормыСтруктура}.
@@ -321,9 +329,9 @@ final class FormPlatformTypes {
       new OrdinaryExtension("Расширение формы списка узлов", "Расширение формы узла")),
     Map.entry(MDOType.ENUM, new OrdinaryExtension("Расширение формы списка перечисления", null)),
     Map.entry(MDOType.FILTER_CRITERION, OrdinaryExtension.of("Расширение формы критерия отбора")),
-    Map.entry(MDOType.REPORT, OrdinaryExtension.of("Расширение формы отчета")),
+    Map.entry(MDOType.REPORT, OrdinaryExtension.of(ORDINARY_REPORT_FORM)),
     Map.entry(MDOType.DATA_PROCESSOR, OrdinaryExtension.of("Расширение формы обработки")),
-    Map.entry(MDOType.CONSTANT, OrdinaryExtension.of("Расширение формы констант")),
+    Map.entry(MDOType.CONSTANT, OrdinaryExtension.of(ORDINARY_CONSTANTS_FORM)),
     Map.entry(MDOType.INFORMATION_REGISTER,
       new OrdinaryExtension("Расширение формы списка записей регистра сведений",
         "Расширение формы записи регистра сведений")),
@@ -333,6 +341,15 @@ final class FormPlatformTypes {
       new OrdinaryExtension("Расширение формы списка записей регистра бухгалтерии", null)),
     Map.entry(MDOType.CALCULATION_REGISTER,
       new OrdinaryExtension("Расширение формы списка записей регистра расчета", null)));
+
+  /** Расширения одной роли корня конфигурации в обоих семействах форм. */
+  private record ConfigurationExtension(String ordinaryForm, String managedForm) {
+  }
+
+  private static final Map<DefaultFormKind, ConfigurationExtension> CONFIGURATION_EXTENSION_BY_ROLE = Map.of(
+    DefaultFormKind.CONSTANTS_FORM, new ConfigurationExtension(ORDINARY_CONSTANTS_FORM, CONSTANTS_FORM),
+    DefaultFormKind.REPORT_FORM, new ConfigurationExtension(ORDINARY_REPORT_FORM, REPORT_FORM),
+    DefaultFormKind.AUX_REPORT_FORM, new ConfigurationExtension(ORDINARY_REPORT_FORM, REPORT_FORM));
 
   /** Имя свойства формы, отдающего структуру параметров. */
   static final String PARAMETERS_PROPERTY_RU = "Параметры";
@@ -532,14 +549,24 @@ final class FormPlatformTypes {
    * на рантайме — один {@code ПолеФормы}: вид поля хранится в его свойстве
    * {@code Вид}, а не в типе. Свойства, специфичные для вида, живут не здесь, а в
    * типе-расширении элемента — см. {@link #itemExtensionTypeName}.
+   * <p>
+   * Контекстное меню и расширенная подсказка — не самостоятельные виды, а части
+   * чужого элемента, и на рантайме это обычные группа и декорация. Своего расширения
+   * у них поэтому нет: специфику им даёт тот вид, которым они на самом деле являются
+   * (командная панель, надпись), а он в {@code Form.xml} не записан.
+   * <p>
+   * Ветка {@code default} отдаёт {@code ПолеФормы} — под неё попадают все виды полей,
+   * которых в перечислении заметно больше прочих. Новый вид элемента, добавленный в
+   * mdclasses, молча станет полем: заводя его, проверь, поле ли это.
    */
   static @Nullable String itemTypeName(FormElementType elementType) {
     return switch (elementType) {
       case SEARCH_STRING_ADDITION, SEARCH_CONTROL_ADDITION, VIEW_STATUS_ADDITION ->
         FORM_ITEM_ADDITION;
-      case BUTTON_GROUP, COLUMN_GROUP, COMMAND_BAR, PAGE, PAGES, POPUP, USUAL_GROUP -> FORM_GROUP;
+      case BUTTON_GROUP, COLUMN_GROUP, COMMAND_BAR, CONTEXT_MENU, PAGE, PAGES, POPUP, USUAL_GROUP ->
+        FORM_GROUP;
       case COMMAND_BAR_BUTTON, COMMAND_BAR_HYPERLINK, HYPERLINK, USUAL_BUTTON -> FORM_BUTTON;
-      case LABEL_DECORATION, PICTURE_DECORATION -> FORM_DECORATION;
+      case EXTENDED_TOOLTIP, LABEL_DECORATION, PICTURE_DECORATION -> FORM_DECORATION;
       case TABLE -> FORM_TABLE;
       case UNKNOWN -> null;
       default -> FORM_FIELD;
@@ -732,6 +759,32 @@ final class FormPlatformTypes {
       return null;
     }
     return isListForm(formKind) ? extension.listForm() : extension.itemForm();
+  }
+
+  /**
+   * Тип-расширение общей формы, назначенной основной формой <b>корня конфигурации</b>.
+   * <p>
+   * Часть ролей задаётся не у объекта метаданных, а у самой конфигурации
+   * ({@code DefaultConstantsForm} и родственные, mdclasses#673): общая форма,
+   * назначенная основной формой констант, и есть форма констант — как форма,
+   * назначенная основной формой элемента справочника, есть форма элемента.
+   * <p>
+   * Ролей у корня восемнадцать, а расширений здесь две: платформа объявляет типы не
+   * под роль, а под то, с чем форма работает. У формы констант и формы отчёта такой
+   * тип есть, а «форма настроек отчёта», «форма поиска» и формы истории данных своих
+   * расширений не имеют вовсе — у управляемой из них расширение выбирается по
+   * основному реквизиту (компоновщик настроек), как у любой другой формы.
+   *
+   * @param formKind роль формы у корня конфигурации.
+   * @param kind     вид формы — управляемая или обычная: семейства расширений разные.
+   * @return qualifiedName расширения; {@code null}, если у роли расширения нет.
+   */
+  static @Nullable String configurationExtensionTypeName(DefaultFormKind formKind, FormKind kind) {
+    var extension = CONFIGURATION_EXTENSION_BY_ROLE.get(formKind);
+    if (extension == null) {
+      return null;
+    }
+    return kind == FormKind.ORDINARY ? extension.ordinaryForm() : extension.managedForm();
   }
 
   /**

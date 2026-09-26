@@ -138,7 +138,9 @@ public class EventPublisherAspect {
 
   @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildCall()")
   public void documentContextRebuild(JoinPoint joinPoint) {
-    publishEvent(new DocumentContextContentChangedEvent((DocumentContext) joinPoint.getThis()));
+    var documentContext = (DocumentContext) joinPoint.getThis();
+    publishEvent(new DocumentContextContentChangedEvent(
+      documentContext, documentContext.isContentChangedOnLastRebuild()));
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")

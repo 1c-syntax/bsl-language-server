@@ -141,6 +141,31 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
     /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
     private boolean cellsComputing;
+
+    /**
+     * Идёт ли прямо сейчас расчёт по какому-нибудь телу.
+     * <p>
+     * Пока он идёт, окружение считается приближениями: до неподвижной точки тип переменной
+     * в точке слияния путей ещё не окончателен. Значит, и <b>тип любого выражения</b>,
+     * посчитанный в это время, — приближение, и запоминать его в кэшах, живущих дольше
+     * расчёта, нельзя: следующий запрос про то же место получил бы промежуточный ответ
+     * вместо посчитанного.
+     *
+     * @return {@code true}, если хотя бы один расчёт не завершён.
+     */
+    public boolean computing() {
+      return !active.isEmpty() || cellsComputing;
+    }
+
+    /**
+     * Идёт ли прямо сейчас расчёт по этому телу — неважно, ради чего он начат.
+     *
+     * @param body тело метода или модуля.
+     * @return {@code true}, если расчёт по телу начат и не завершён.
+     */
+    public boolean computing(BSLParser.CodeBlockContext body) {
+      return active.containsKey(body);
+    }
   }
 
   /**
@@ -988,8 +1013,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      *
      * @param statement оператор, перед которым нужен тип.
      * @param variable  переменная.
-     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл — тогда
-     *     вызывающему отвечает прежний путь с обходом всей области видимости.
+     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл и ответа
+     *     у него нет.
      */
     @Nullable
     private TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {

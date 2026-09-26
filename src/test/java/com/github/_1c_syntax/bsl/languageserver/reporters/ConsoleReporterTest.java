@@ -77,7 +77,7 @@ class ConsoleReporterTest {
     ConsoleReporter reporter = new ConsoleReporter();
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of(sourceDir));
 
     // then
     // FIXME How test logger?

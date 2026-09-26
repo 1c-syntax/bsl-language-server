@@ -79,8 +79,13 @@ abstract class AbstractAutumnLibraryIndex extends AbstractOScriptLazyIndex {
     if (classEntries.isEmpty()) {
       return;
     }
+    // Документ берётся без ожидания его блокировки. Сборку ждёт тот, кому
+    // понадобился индекс, а он может держать блокировку документа на запись — и
+    // ожидание замкнулось бы. Нужно же отсюда только дерево символов: оно переживает
+    // освобождение документа и защищено своей блокировкой. Документ, пойманный посреди
+    // разбора, переиндексируется своим событием изменения содержимого.
     serverContextProvider.getServerContext(uri)
-      .map(serverContext -> serverContext.getDocument(uri))
+      .map(serverContext -> serverContext.getDocumentNoLock(uri))
       // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не предметный класс:
       // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
       .filter(document -> !metaAnnotationResolver.isAnnotationDefinition(document))

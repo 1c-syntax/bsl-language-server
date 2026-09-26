@@ -96,6 +96,12 @@ public class TypeRegistry {
    */
   static final TypeRef GLOBAL_CONTEXT = new TypeRef(TypeKind.PLATFORM, "ГлобальныйКонтекст");
 
+  /**
+   * Языки файлов, вычисленные один раз: {@link FileType#values()} клонирует внутренний
+   * массив на каждый вызов, а перебор языков идёт при каждой точечной инвалидации кэша.
+   */
+  private static final FileType[] FILE_TYPES = FileType.values();
+
   private final List<PlatformTypesProvider> platformProviders;
   /**
    * Индекс метаданных членов (read-only свойства + версионные члены) для
@@ -117,6 +123,12 @@ public class TypeRegistry {
   private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
   /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+
+  /**
+   * Запомненные ответы {@link #resolveGenericByPrefix(String)}, включая промахи.
+   * Сбрасывается при любом изменении {@link #aliasIndex}.
+   */
+  private final Map<String, Optional<TypeRef>> genericByPrefix = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -361,7 +373,21 @@ public class TypeRegistry {
     if (prefix == null || prefix.isEmpty()) {
       return Optional.empty();
     }
-    var needle = prefix.toLowerCase(Locale.ROOT) + ".<";
+    // Ответ зависит только от содержимого индекса имён, а тот меняется лишь при
+    // регистрации типов — поэтому запоминается, включая промахи. Без этого перебор всего
+    // индекса шёл на каждое разрешаемое имя: в профиле analyze по cpm это была вторая
+    // строка сверху.
+    return genericByPrefix.computeIfAbsent(prefix.toLowerCase(Locale.ROOT), this::findGenericByPrefix);
+  }
+
+  /**
+   * Ищет generic-тип перебором индекса имён.
+   *
+   * @param needlePrefix начало имени в нижнем регистре.
+   * @return тип семейства; {@link Optional#empty()}, если такого нет.
+   */
+  private Optional<TypeRef> findGenericByPrefix(String needlePrefix) {
+    var needle = needlePrefix + ".<";
     for (var entry : aliasIndex.entrySet()) {
       if (entry.getKey().startsWith(needle)) {
         return Optional.of(entry.getValue());
@@ -788,7 +814,7 @@ public class TypeRegistry {
    * @param ref тип, memo членов которого нужно пересобрать.
    */
   public void invalidateMembers(TypeRef ref) {
-    for (var fileType : FileType.values()) {
+    for (var fileType : FILE_TYPES) {
       membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
     }
   }
@@ -1407,6 +1433,7 @@ public class TypeRegistry {
     membersEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
+    genericByPrefix.clear();
     collectionTraits.remove(ref);
   }
 
@@ -1515,6 +1542,30 @@ public class TypeRegistry {
    */
   public TypeSet getDefaultElementTypes(TypeRef ref) {
     return collectionTraits.defaultElementTypes(ref, element -> resolve(element.qualifiedName()).orElse(element));
+  }
+
+  /**
+   * Собственный тип элемента коллекции — умолчание реестра без заглушки «элемент любой».
+   * <p>
+   * {@link TypeRef#ANY} в умолчании элемента не называет: так объявлен элемент у
+   * {@code Массив}, и сведений в этом столько же, сколько в отсутствии записи. Набору
+   * такую заглушку не навешивают — иначе объявленный на месте {@code Массив из Строка}
+   * при слиянии с ней превращался бы в {@code Строка, Произвольный} (#4179), и решать
+   * это пришлось бы уже особым правилом слияния. Собственный элемент есть у обёрточных
+   * коллекций ({@code КлючИЗначение} у {@code Соответствие}, {@code ЭлементСпискаЗначений}
+   * у {@code СписокЗначений}) и у табличных ({@code СтрокаТаблицыЗначений}) — он точнее
+   * объявленного и объявленным не перебивается.
+   *
+   * @param ref тип коллекции.
+   * @return типы элемента; {@link TypeSet#EMPTY}, если элемент реестру неизвестен либо
+   *     объявлен заглушкой.
+   */
+  public TypeSet getOwnElementTypes(TypeRef ref) {
+    var elements = getDefaultElementTypes(ref);
+    if (elements.size() == 1 && elements.refs().contains(TypeRef.ANY)) {
+      return TypeSet.EMPTY;
+    }
+    return elements;
   }
 
   /**
@@ -1728,6 +1779,7 @@ public class TypeRegistry {
 
   private void addAlias(String name, TypeRef ref) {
     aliasIndex.put(name.toLowerCase(Locale.ROOT), ref);
+    genericByPrefix.clear();
   }
 
   /**
