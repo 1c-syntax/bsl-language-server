@@ -156,6 +156,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     public boolean computing() {
       return !active.isEmpty() || cellsComputing;
     }
+
+    /**
+     * Идёт ли прямо сейчас расчёт по этому телу — неважно, ради чего он начат.
+     *
+     * @param body тело метода или модуля.
+     * @return {@code true}, если расчёт по телу начат и не завершён.
+     */
+    public boolean computing(BSLParser.CodeBlockContext body) {
+      return active.containsKey(body);
+    }
   }
 
   /**
@@ -1003,8 +1013,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      *
      * @param statement оператор, перед которым нужен тип.
      * @param variable  переменная.
-     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл — тогда
-     *     вызывающему отвечает прежний путь с обходом всей области видимости.
+     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл и ответа
+     *     у него нет.
      */
     @Nullable
     private TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {

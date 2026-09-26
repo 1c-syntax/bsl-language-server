@@ -824,7 +824,7 @@ public class ExpressionTypeInferencer {
    * тип нельзя подменять self-свойством того же имени.
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
-    if (!ctx.visited.add(method)) {
+    if (bodyInFlow(method, ctx) || !ctx.visited.add(method)) {
       ctx.cycleCut = true;
       return recursiveKnot(method, ctx);
     }
@@ -849,6 +849,29 @@ public class ExpressionTypeInferencer {
     } finally {
       ctx.visited.remove(method);
     }
+  }
+
+  /**
+   * Считается ли прямо сейчас тело метода в этом же выводе типов.
+   * <p>
+   * В расчёт тело попадает не только ради значения своего метода: круги по ячейкам
+   * переменных модуля считают каждое тело, где такая переменная меняется, и метода в
+   * {@link InferenceContext#visited} при этом нет. Спросить его значение изнутри такого
+   * расчёта — тот же повторный вход, что и через {@code visited}: выражения возврата
+   * читали бы окружение тела, до которого расчёт ещё не дошёл.
+   *
+   * @param method вызванный метод.
+   * @param ctx    контекст текущего инференса.
+   * @return {@code true}, если расчёт по телу метода начат и не завершён.
+   */
+  private static boolean bodyInFlow(MethodSymbol method, InferenceContext ctx) {
+    // Расчёт по потоку идёт только по телам документа, для которого ведётся вывод, — чужие
+    // тела в нём не считаются. Документы сравниваются по ссылке, как и везде здесь.
+    if (method.getOwner() != ctx.documentContext || !ctx.flowSession.computing()) {
+      return false;
+    }
+    var body = VariableFlowAnalyzer.bodyAt(ctx.documentContext, method.getSubNameRange().getStart());
+    return body != null && ctx.flowSession.computing(body);
   }
 
   /**
