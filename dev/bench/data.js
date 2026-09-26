@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790426301305,
+  "lastUpdate": 1790427432311,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43524,6 +43524,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8639686371388726",
             "extra": "mean: 105.9490426381429 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "79e3f97ab01fd463571de030092a16f66fdac58f",
+          "message": "Merge pull request #4539 from 1c-syntax/feat/types-configuration-root-form-roles\n\nfeat(types): общая форма, назначенная ролью у корня конфигурации, получает её расширение",
+          "timestamp": "2026-09-26T09:24:23+02:00",
+          "tree_id": "5bbb7c9d542848e2d49e52ac0ee2716ffc6e05f2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/79e3f97ab01fd463571de030092a16f66fdac58f"
+        },
+        "date": 1790427408793,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.17683299382527,
+            "unit": "sec",
+            "range": "stddev: 1.7915150445578976",
+            "extra": "mean: 106.17683299382527 sec\nrounds: 3"
           }
         ]
       }
