@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.mdo.CalculationRegister;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -55,7 +56,8 @@ import java.util.Map;
  *   <li>набор записей — коллекция <b>своих</b> записей: обход и индексатор дают запись
  *       этого регистра, а {@code Выгрузить()} — таблицу с его колонками;</li>
  *   <li>члены, у которых после подстановки имени регистра остался плейсхолдер, —
- *       {@code Регистратор} и ссылки на чужое семейство регистров.</li>
+ *       {@code Регистратор}, счета и вид расчёта записи, ссылки на чужое семейство
+ *       регистров.</li>
  * </ul>
  */
 @Component
@@ -196,10 +198,16 @@ public class RegisterTypesRegistrar {
    *   <li>{@code Регистратор} объявлен как {@code ДокументСсылка.<Имя документа>}:
    *       имя регистра к документу отношения не имеет, подставляются
    *       документы-регистраторы (см. {@link RecorderIndex});</li>
+   *   <li>{@code Счет}/{@code СчетДт}/{@code СчетКт} записи регистра бухгалтерии
+   *       объявлены как {@code ПланСчетовСсылка.<Имя плана счетов>}, а {@code ВидРасчета}
+   *       записи регистра расчёта — как {@code ПланВидовРасчетаСсылка.<Имя плана видов
+   *       расчета>}: план указан у самого регистра, а не выводится из его имени;</li>
    *   <li>член ссылается на <b>чужое</b> семейство регистров — ошибка синтакс-помощника,
    *       семейство заменяется на своё (см. {@link RegisterFamilies}).</li>
    * </ul>
-   * Обе правки принимаются, только если получившийся тип есть в реестре.
+   * Все правки принимаются, только если получившийся тип есть в реестре — этим же
+   * признаком имена и разбираются по плейсхолдерам: подстановка имени документа в
+   * {@code <Имя плана счетов>} существующего типа не даёт и отбрасывается.
    *
    * @param md         MD-объект регистра.
    * @param familyCore ru-часть имени семейства ({@code "РегистрБухгалтерии"} и т.п.).
@@ -209,16 +217,37 @@ public class RegisterTypesRegistrar {
     if (!RegisterFamilies.isRegisterFamily(familyCore)) {
       return;
     }
-    // TODO mdclasses#670: так же типизировать Счет/СчетДт/СчетКт записи регистра
-    //  бухгалтерии (объявлены как ПланСчетовСсылка.<Имя плана счетов>) и ВидРасчета
-    //  записи регистра расчёта. План указан у регистра в метаданных (<ChartOfAccounts>,
-    //  <ChartOfCalculationTypes>), но mdclasses 0.20.0 его не разбирает. Как появится —
-    //  добавить имя плана вторым набором подстановки рядом с recorders: подходящий
-    //  выберется по тому же признаку «тип есть в реестре».
-    var recorders = recorderIndex.recordersOf(md.getMdoReference().getMdoRefRu());
-    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
-      registerFixupsOn(generic, familyCore, mdName, recorders);
+    var names = new ArrayList<>(recorderIndex.recordersOf(md.getMdoReference().getMdoRefRu()));
+    var chartName = chartNameOf(md);
+    if (chartName != null) {
+      names.add(chartName);
     }
+    var substitutions = List.copyOf(names);
+    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
+      registerFixupsOn(generic, familyCore, mdName, substitutions);
+    }
+  }
+
+  /**
+   * Имя плана, к которому относится регистр: план счетов у регистра бухгалтерии, план
+   * видов расчёта — у регистра расчёта.
+   *
+   * @return имя объекта метаданных; {@code null}, если у вида регистра плана нет либо
+   *   он не указан.
+   */
+  private static @Nullable String chartNameOf(MD md) {
+    var chart = switch (md) {
+      case AccountingRegister register -> register.getChartOfAccounts();
+      case CalculationRegister register -> register.getChartOfCalculationTypes();
+      default -> MdoReference.EMPTY;
+    };
+    if (chart.isEmpty()) {
+      return null;
+    }
+    var mdoRef = chart.getMdoRefRu();
+    var dot = mdoRef.lastIndexOf('.');
+    var name = dot < 0 ? mdoRef : mdoRef.substring(dot + 1);
+    return name.isBlank() ? null : name;
   }
 
   /** Регистрирует достроенные члены на специализации одного generic'а семейства. */
