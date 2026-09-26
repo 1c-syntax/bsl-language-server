@@ -105,11 +105,14 @@ class FormDataTypesRegistrar {
 
   /**
    * Табличные части, которым конкретная форма добавила свои колонки:
-   * {@code суффикс формы → (табличная часть объекта → коллекция этой формы)}.
+   * {@code реквизит формы → (табличная часть объекта → коллекция этого реквизита)}
+   * (ключ — {@link #ownSectionsKey}).
    * <p>
    * Общего зеркала здесь мало: дополнительные колонки объявлены в одной форме и
    * существуют только в её данных, поэтому у такой табличной части своя коллекция
-   * и своя строка на каждую форму, где колонки добавлены.
+   * и своя строка на каждый реквизит формы, к которому колонки добавлены. Ключ именно
+   * реквизит, а не форма: два реквизита одного вида могут добавить одной и той же
+   * табличной части разные колонки.
    */
   private final Map<String, Map<TypeRef, TypeRef>> formTabularSectionData = new ConcurrentHashMap<>();
 
@@ -376,31 +379,39 @@ class FormDataTypesRegistrar {
   private Map<TypeRef, TypeRef> registerAdditionalColumns(TypeRef declaredRef, FormAttribute attribute,
                                                           String suffixRu) {
     var byTabularSection = new LinkedHashMap<TypeRef, TypeRef>();
+    var attributeSuffix = suffixRu + "." + attribute.getName();
     for (var column : attribute.getColumns()) {
-      if (!(column instanceof FormAdditionalColumnsAttribute additional) || additional.getColumns().isEmpty()) {
-        continue;
-      }
-      var sectionName = shortName(additional.getName());
-      var sectionRef = tabularSectionRefOf(declaredRef, sectionName);
-      if (sectionRef == null) {
-        continue;
-      }
-      var collectionRef = registerExtendedTabularSection(sectionRef,
-        suffixRu + "." + attribute.getName() + "." + sectionName, additional.getColumns());
-      if (collectionRef != null) {
-        byTabularSection.put(sectionRef, collectionRef);
+      if (column instanceof FormAdditionalColumnsAttribute additional && !additional.getColumns().isEmpty()) {
+        registerAdditionalColumnsOf(declaredRef, additional, attributeSuffix, byTabularSection);
       }
     }
     if (!byTabularSection.isEmpty()) {
-      // Дополнить, а не заменить: реквизитов с добавленными колонками на форме может
-      // быть несколько, и карта у формы одна на все её табличные части.
-      formTabularSectionData.merge(suffixRu, Map.copyOf(byTabularSection), (existing, added) -> {
-        var merged = new LinkedHashMap<>(existing);
-        merged.putAll(added);
-        return Map.copyOf(merged);
-      });
+      formTabularSectionData.put(ownSectionsKey(suffixRu, attribute.getName()), Map.copyOf(byTabularSection));
     }
     return byTabularSection;
+  }
+
+  /**
+   * Заводит коллекцию под одну табличную часть, к которой добавлены колонки, и кладёт её
+   * в {@code sink}; табличную часть, которую не удалось опознать, пропускает.
+   */
+  private void registerAdditionalColumnsOf(TypeRef declaredRef, FormAdditionalColumnsAttribute additional,
+                                           String attributeSuffix, Map<TypeRef, TypeRef> sink) {
+    var sectionName = shortName(additional.getName());
+    var sectionRef = tabularSectionRefOf(declaredRef, sectionName);
+    if (sectionRef == null) {
+      return;
+    }
+    var collectionRef = registerExtendedTabularSection(sectionRef,
+      attributeSuffix + "." + sectionName, additional.getColumns());
+    if (collectionRef != null) {
+      sink.put(sectionRef, collectionRef);
+    }
+  }
+
+  /** Ключ собственных коллекций реквизита формы: имя реквизита — без учёта регистра. */
+  private static String ownSectionsKey(String formSuffixRu, String attributeName) {
+    return formSuffixRu + "." + attributeName.toLowerCase(Locale.ROOT);
   }
 
   /**
@@ -622,15 +633,17 @@ class FormDataTypesRegistrar {
   }
 
   /**
-   * Зеркало табличной части объекта в данных конкретной формы: её собственное, если
-   * форма добавила табличной части свои колонки, иначе — общее.
+   * Зеркало табличной части объекта в данных реквизита конкретной формы: собственное,
+   * если форма добавила этой табличной части реквизита свои колонки, иначе — общее.
    *
    * @param tabularSectionRef тип табличной части ({@code ДокументТабличнаяЧасть.X.Y}).
    * @param formSuffixRu      суффикс имени типов формы.
+   * @param attributeName     имя реквизита формы, через который путь данных ведёт к
+   *                          табличной части ({@code Объект} у {@code Объект.Товары}).
    * @return тип коллекции данных формы; {@code null}, если зеркала нет.
    */
-  @Nullable TypeRef mirrorOfTabularSection(TypeRef tabularSectionRef, String formSuffixRu) {
-    var own = formTabularSectionData.get(formSuffixRu);
+  @Nullable TypeRef mirrorOfTabularSection(TypeRef tabularSectionRef, String formSuffixRu, String attributeName) {
+    var own = formTabularSectionData.get(ownSectionsKey(formSuffixRu, attributeName));
     var ownRef = own == null ? null : own.get(tabularSectionRef);
     return ownRef == null ? tabularSectionData.get(tabularSectionRef) : ownRef;
   }

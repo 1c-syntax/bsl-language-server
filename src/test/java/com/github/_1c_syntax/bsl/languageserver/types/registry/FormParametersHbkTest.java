@@ -218,24 +218,41 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
     // тип у такой таблицы появляется только с синтакс-помощником. Он и приводит к
     // строке коллекции — у формы элемента справочника собственной, с добавленной ею
     // колонкой (блок <AdditionalColumns table="Объект.ТабличнаяЧасть1">).
+    assertThat(names(currentDataOfCatalogItemFormTable("ТабличнаяЧасть1")))
+      .as("ТекущиеДанные таблицы — строка коллекции этой формы, с её колонками")
+      .contains("Реквизит1", "ДопКолонкаФормы");
+  }
+
+  @Test
+  void tablesOverTheSameTabularSectionOfTwoAttributesSeeOwnColumns() {
+    // Реквизиты Объект и ДругойОбъект одного вида добавляют той же табличной части разные
+    // колонки. Таблица находит свою коллекцию по реквизиту из пути данных, а не по одной
+    // лишь табличной части — иначе обе таблицы получили бы строку того реквизита, что
+    // зарегистрирован последним.
+    assertThat(names(currentDataOfCatalogItemFormTable("ДругаяТабличнаяЧасть")))
+      .contains("ДопКолонкаДругогоОбъекта")
+      .doesNotContain("ДопКолонкаФормы");
+    assertThat(names(currentDataOfCatalogItemFormTable("ТабличнаяЧасть1")))
+      .contains("ДопКолонкаФормы")
+      .doesNotContain("ДопКолонкаДругогоОбъекта");
+  }
+
+  /** Члены {@code ТекущиеДанные} таблицы формы элемента справочника. */
+  private Collection<MemberDescriptor> currentDataOfCatalogItemFormTable(String tableName) {
     var itemsType = typeRegistry
       .resolve("ВсеЭлементыФормы.Справочник.Справочник1.Форма.ФормаЭлемента")
       .orElseThrow();
     var tableType = typeRegistry.getMembers(itemsType, FileType.BSL).stream()
-      .filter(m -> m.matches("ТабличнаяЧасть1"))
+      .filter(m -> m.matches(tableName))
       .findFirst()
       .orElseThrow()
       .returnTypes().refs().iterator().next();
-
     var currentData = typeRegistry.getMembers(tableType, FileType.BSL).stream()
       .filter(m -> m.matches("ТекущиеДанные"))
       .findFirst()
       .orElseThrow()
       .returnTypes().refs().iterator().next();
-
-    assertThat(names(typeRegistry.getMembers(currentData, FileType.BSL)))
-      .as("ТекущиеДанные таблицы — строка коллекции этой формы, с её колонками")
-      .contains("Реквизит1", "ДопКолонкаФормы");
+    return typeRegistry.getMembers(currentData, FileType.BSL);
   }
 
   @Test

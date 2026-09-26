@@ -36,6 +36,14 @@
 				</CheckBoxField>
 			</ChildItems>
 		</Table>
+		<Table name="ДругаяТабличнаяЧасть" id="20">
+			<DataPath>ДругойОбъект.ТабличнаяЧасть1</DataPath>
+			<ChildItems>
+				<InputField name="ДругаяТабличнаяЧастьДопКолонкаДругогоОбъекта" id="21">
+					<DataPath>ДругойОбъект.ТабличнаяЧасть1.ДопКолонкаДругогоОбъекта</DataPath>
+				</InputField>
+			</ChildItems>
+		</Table>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">
@@ -49,6 +57,20 @@
 					<Column name="ДопКолонкаФормы" id="13">
 						<Type>
 							<v8:Type>xs:boolean</v8:Type>
+						</Type>
+					</Column>
+				</AdditionalColumns>
+			</Columns>
+		</Attribute>
+		<Attribute name="ДругойОбъект" id="2">
+			<Type>
+				<v8:Type>cfg:CatalogObject.Справочник1</v8:Type>
+			</Type>
+			<Columns>
+				<AdditionalColumns table="ДругойОбъект.ТабличнаяЧасть1">
+					<Column name="ДопКолонкаДругогоОбъекта" id="22">
+						<Type>
+							<v8:Type>xs:string</v8:Type>
 						</Type>
 					</Column>
 				</AdditionalColumns>

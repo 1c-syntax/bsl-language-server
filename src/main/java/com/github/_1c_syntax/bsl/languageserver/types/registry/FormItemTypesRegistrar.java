@@ -389,8 +389,8 @@ class FormItemTypesRegistrar {
       current = propertyTypeRef(current, segment);
     }
     // Путь идёт по прикладным типам, а строка данных формы живёт у зеркала табличной
-    // части — у этой формы своего, если она добавила табличной части свои колонки.
-    var mirror = current == null ? null : formDataTypes.mirrorOfTabularSection(current, suffixRu);
+    // части — своего у реквизита, которому форма добавила табличной части колонки.
+    var mirror = current == null ? null : formDataTypes.mirrorOfTabularSection(current, suffixRu, rootName);
     return mirror == null ? null : formDataTypes.rowOfCollection(mirror);
   }
 
