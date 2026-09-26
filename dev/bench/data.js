@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790420897706,
+  "lastUpdate": 1790422120607,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43400,6 +43400,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.115669235058133",
             "extra": "mean: 106.60272121429443 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6106795a6bedfd8e5156a7bac9432cbd108a7fee",
+          "message": "Merge pull request #4542 from 1c-syntax/fix/type-relations-without-document-locks\n\nfix(types): отношения наследования и индекс ссылок не ждут блокировок чужих документов",
+          "timestamp": "2026-09-26T10:20:17+02:00",
+          "tree_id": "19b7b5ee5c9b385b0103ad4e8bfe3bc2456bce35",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6106795a6bedfd8e5156a7bac9432cbd108a7fee"
+        },
+        "date": 1790422096908,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.5587010383606,
+            "unit": "sec",
+            "range": "stddev: 1.8751073131524725",
+            "extra": "mean: 105.5587010383606 sec\nrounds: 3"
           }
         ]
       }
