@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790416253033,
+  "lastUpdate": 1790417377925,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43307,6 +43307,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6535163617026776",
             "extra": "mean: 107.16616082191467 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "faf372f16ac5fe5e85dfbc9046c46297bc5a3894",
+          "message": "Merge pull request #4536 from 1c-syntax/fix/autumn-index-build-without-document-locks\n\nfix(types): сборка индексов «ОСени» не ждёт блокировок документов",
+          "timestamp": "2026-09-26T09:20:25+02:00",
+          "tree_id": "7e7e4d6e35a7c020e1362b92a55a9c4831dc2f15",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/faf372f16ac5fe5e85dfbc9046c46297bc5a3894"
+        },
+        "date": 1790417354713,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.93973318735759,
+            "unit": "sec",
+            "range": "stddev: 3.180035567054262",
+            "extra": "mean: 104.93973318735759 sec\nrounds: 3"
           }
         ]
       }
