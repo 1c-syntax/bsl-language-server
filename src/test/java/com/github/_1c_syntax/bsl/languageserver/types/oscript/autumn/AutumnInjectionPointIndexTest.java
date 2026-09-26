@@ -56,7 +56,6 @@ import org.mockito.quality.Strictness;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -236,7 +235,7 @@ class AutumnInjectionPointIndexTest {
     var symbolTree = mock(SymbolTree.class);
     var constructor = mock(ConstructorSymbol.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocuments()).thenReturn(Map.of(uri, document));
+    when(serverContext.getDocumentNoLock(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
     lenient().when(constructor.getAnnotations()).thenReturn(List.of(constructorAnnotations));
     lenient().when(constructor.getParameters()).thenReturn(parameters);
