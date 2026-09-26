@@ -248,17 +248,17 @@ public class ConfigurationTypesProvider {
     if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
-    var configuration = serverContext.getConfiguration();
-    var children = configuration.getChildrenByMdoRef().values();
+    var cf = serverContext.getConfiguration();
+    var children = cf.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
     platformTypesWarmup.join();
-    register(configuration, children, serverContext.getScriptVariantLanguage());
+    register(cf, children, serverContext.getScriptVariantLanguage());
     serviceModuleEventRegistrar.register(children);
     return serverContext;
   }
 
-  private void register(CF configuration, Iterable<MD> children, Language projectLanguage) {
+  private void register(CF cf, Iterable<MD> children, Language projectLanguage) {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
     var commonAttributes = collectCommonAttributes(children);
@@ -290,7 +290,7 @@ public class ConfigurationTypesProvider {
 
     // Тип на каждую форму: реквизиты, элементы, расширение по основному реквизиту
     // и обработчики событий из Form.xml.
-    formTypesProvider.register(configuration, children, projectLanguage);
+    formTypesProvider.register(cf, children, projectLanguage);
 
     // Тип на каждый объектный тип XDTO-пакета: имя как в ссылке
     // «См. XDTOПакет.<Пакет>.<Тип>», члены — свойства из схемы пакета.

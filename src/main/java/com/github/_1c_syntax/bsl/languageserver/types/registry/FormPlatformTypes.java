@@ -137,6 +137,11 @@ final class FormPlatformTypes {
    */
   private static final String MANAGED_EXTENSION_PREFIX = "Расширение формы клиентского приложения для ";
   private static final String OBJECTS = MANAGED_EXTENSION_PREFIX + "объектов";
+  /** Расширения форм отчёта и констант: их получает и форма объекта, и форма с его ролью у корня. */
+  private static final String REPORT_FORM = MANAGED_EXTENSION_PREFIX + "отчета";
+  private static final String CONSTANTS_FORM = MANAGED_EXTENSION_PREFIX + "констант";
+  private static final String ORDINARY_REPORT_FORM = "Расширение формы отчета";
+  private static final String ORDINARY_CONSTANTS_FORM = "Расширение формы констант";
   private static final String RECORD_SET = MANAGED_EXTENSION_PREFIX + "набора записей";
 
   /**
@@ -169,14 +174,14 @@ final class FormPlatformTypes {
     Map.entry("задачаобъект", Extension.object(managed("задачи"))),
     // Отчёт, обработка, константы, наборы записей: у них свой набор событий, ничего
     // общего с объектным, поэтому запасного варианта нет.
-    Map.entry("отчетобъект", Extension.of(managed("отчета"))),
-    Map.entry("внешнийотчетобъект", Extension.of(managed("отчета"))),
+    Map.entry("отчетобъект", Extension.of(REPORT_FORM)),
+    Map.entry("внешнийотчетобъект", Extension.of(REPORT_FORM)),
     Map.entry("обработкаобъект", Extension.of(managed("обработки"))),
     Map.entry("внешняяобработкаобъект",
       Extension.of(managed("обработки"))),
     Map.entry("константаменеджерзначения",
-      Extension.of(managed("констант"))),
-    Map.entry("константынабор", Extension.of(managed("констант"))),
+      Extension.of(CONSTANTS_FORM)),
+    Map.entry("константынабор", Extension.of(CONSTANTS_FORM)),
     Map.entry("регистрсведенийзапись",
       Extension.of(managed("записи регистра сведений"))),
     Map.entry("регистрсведенийнаборзаписей",
@@ -324,9 +329,9 @@ final class FormPlatformTypes {
       new OrdinaryExtension("Расширение формы списка узлов", "Расширение формы узла")),
     Map.entry(MDOType.ENUM, new OrdinaryExtension("Расширение формы списка перечисления", null)),
     Map.entry(MDOType.FILTER_CRITERION, OrdinaryExtension.of("Расширение формы критерия отбора")),
-    Map.entry(MDOType.REPORT, OrdinaryExtension.of("Расширение формы отчета")),
+    Map.entry(MDOType.REPORT, OrdinaryExtension.of(ORDINARY_REPORT_FORM)),
     Map.entry(MDOType.DATA_PROCESSOR, OrdinaryExtension.of("Расширение формы обработки")),
-    Map.entry(MDOType.CONSTANT, OrdinaryExtension.of("Расширение формы констант")),
+    Map.entry(MDOType.CONSTANT, OrdinaryExtension.of(ORDINARY_CONSTANTS_FORM)),
     Map.entry(MDOType.INFORMATION_REGISTER,
       new OrdinaryExtension("Расширение формы списка записей регистра сведений",
         "Расширение формы записи регистра сведений")),
@@ -336,6 +341,15 @@ final class FormPlatformTypes {
       new OrdinaryExtension("Расширение формы списка записей регистра бухгалтерии", null)),
     Map.entry(MDOType.CALCULATION_REGISTER,
       new OrdinaryExtension("Расширение формы списка записей регистра расчета", null)));
+
+  /** Расширения одной роли корня конфигурации в обоих семействах форм. */
+  private record ConfigurationExtension(String ordinaryForm, String managedForm) {
+  }
+
+  private static final Map<DefaultFormKind, ConfigurationExtension> CONFIGURATION_EXTENSION_BY_ROLE = Map.of(
+    DefaultFormKind.CONSTANTS_FORM, new ConfigurationExtension(ORDINARY_CONSTANTS_FORM, CONSTANTS_FORM),
+    DefaultFormKind.REPORT_FORM, new ConfigurationExtension(ORDINARY_REPORT_FORM, REPORT_FORM),
+    DefaultFormKind.AUX_REPORT_FORM, new ConfigurationExtension(ORDINARY_REPORT_FORM, REPORT_FORM));
 
   /** Имя свойства формы, отдающего структуру параметров. */
   static final String PARAMETERS_PROPERTY_RU = "Параметры";
@@ -772,18 +786,6 @@ final class FormPlatformTypes {
     }
     return kind == FormKind.ORDINARY ? extension.ordinaryForm() : extension.managedForm();
   }
-
-  /** Расширения одной роли корня конфигурации в обоих семействах форм. */
-  private record ConfigurationExtension(String ordinaryForm, String managedForm) {
-  }
-
-  private static final Map<DefaultFormKind, ConfigurationExtension> CONFIGURATION_EXTENSION_BY_ROLE = Map.of(
-    DefaultFormKind.CONSTANTS_FORM,
-    new ConfigurationExtension("Расширение формы констант", managed("констант")),
-    DefaultFormKind.REPORT_FORM,
-    new ConfigurationExtension("Расширение формы отчета", managed("отчета")),
-    DefaultFormKind.AUX_REPORT_FORM,
-    new ConfigurationExtension("Расширение формы отчета", managed("отчета")));
 
   /**
    * Параметры расширения, которых у этой формы не существует вовсе. Платформа

@@ -243,10 +243,14 @@ public class RegisterTypesRegistrar {
   private Map<String, List<String>> substitutionsOf(MD md) {
     var substitutions = new HashMap<String, List<String>>();
     substitutions.put(DOCUMENT_NAME, recorderIndex.recordersOf(md.getMdoReference().getMdoRefRu()));
-    if (md instanceof AccountingRegister register) {
-      putChartName(substitutions, CHART_OF_ACCOUNTS_NAME, register.getChartOfAccounts());
-    } else if (md instanceof CalculationRegister register) {
-      putChartName(substitutions, CHART_OF_CALCULATION_TYPES_NAME, register.getChartOfCalculationTypes());
+    switch (md) {
+      case AccountingRegister register ->
+        putChartName(substitutions, CHART_OF_ACCOUNTS_NAME, register.getChartOfAccounts());
+      case CalculationRegister register ->
+        putChartName(substitutions, CHART_OF_CALCULATION_TYPES_NAME, register.getChartOfCalculationTypes());
+      default -> {
+        // План указывается только у регистров бухгалтерии и расчёта.
+      }
     }
     return Map.copyOf(substitutions);
   }
