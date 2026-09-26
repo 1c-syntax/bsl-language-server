@@ -70,11 +70,11 @@ class RegisterChartTypesHbkTest extends AbstractServerContextAwareTest {
 
   @Test
   void accountsOfAccountingRegisterRecordAreTypedByItsChartOfAccounts() {
-    var record = "РегистрБухгалтерииЗапись.РегистрБухгалтерии1";
+    var recordType = "РегистрБухгалтерииЗапись.РегистрБухгалтерии1";
 
-    assertThat(memberTypes(record, "Счет")).containsExactly("ПланСчетовСсылка.ПланСчетов1");
-    assertThat(memberTypes(record, "СчетДт")).containsExactly("ПланСчетовСсылка.ПланСчетов1");
-    assertThat(memberTypes(record, "СчетКт")).containsExactly("ПланСчетовСсылка.ПланСчетов1");
+    assertThat(memberTypes(recordType, "Счет")).containsExactly("ПланСчетовСсылка.ПланСчетов1");
+    assertThat(memberTypes(recordType, "СчетДт")).containsExactly("ПланСчетовСсылка.ПланСчетов1");
+    assertThat(memberTypes(recordType, "СчетКт")).containsExactly("ПланСчетовСсылка.ПланСчетов1");
   }
 
   @Test
