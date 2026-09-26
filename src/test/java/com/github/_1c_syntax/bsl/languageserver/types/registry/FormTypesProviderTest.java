@@ -195,6 +195,75 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void columnsAddedByTheFormAreSeenOnItsOwnCollection() {
+    // У формы элемента справочника объявлен блок <AdditionalColumns table="Объект.ТабличнаяЧасть1">:
+    // такой колонки в самом справочнике нет, она существует только в данных этой формы,
+    // поэтому и коллекция, и строка у формы свои — общее зеркало табличной части их не
+    // знает и знать не должно.
+    var objectType = member(CATALOG_ITEM_FORM, MemberKind.PROPERTY, "Объект")
+      .returnTypes().refs().iterator().next();
+    assertThat(objectType.qualifiedName())
+      .isEqualTo("ДанныеФормыСтруктура.Справочник.Справочник1.Форма.ФормаЭлемента.Объект");
+
+    var collectionType = typeRegistry.getMembers(objectType, FileType.BSL).stream()
+      .filter(member -> member.matches("ТабличнаяЧасть1"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    assertThat(collectionType.qualifiedName())
+      .isEqualTo("ДанныеФормыКоллекция.Справочник.Справочник1.Форма.ФормаЭлемента.Объект.ТабличнаяЧасть1");
+    assertThat(typeService.displayName(collectionType, Language.RU))
+      .as("показывать пользователю надо реальный тип значения")
+      .isEqualTo("ДанныеФормыКоллекция");
+
+    var rowType = typeRegistry.getDefaultElementTypes(collectionType).refs().iterator().next();
+    assertThat(names(typeRegistry.getMembers(rowType, FileType.BSL)))
+      .as("у строки видны и колонки табличной части, и добавленные формой")
+      .contains("Реквизит1", "Реквизит2", "ДопКолонкаФормы");
+
+    assertThat(names(typeRegistry.getMembers(
+      typeRegistry.resolve("ДанныеФормыЭлементКоллекции.СправочникТабличнаяЧасть.Справочник1.ТабличнаяЧасть1")
+        .orElseThrow(), FileType.BSL)))
+      .as("общее зеркало табличной части о колонках формы не знает")
+      .contains("Реквизит1")
+      .doesNotContain("ДопКолонкаФормы");
+
+    var unloadedRow = typeRegistry.getMembers(collectionType, FileType.BSL).stream()
+      .filter(member -> member.matches("Выгрузить"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().getElementTypes();
+    assertThat(unloadedRow.getLocalFields(unloadedRow.refs().iterator().next()))
+      .as("выгруженная таблица значений несёт и колонки объекта, и добавленные формой")
+      .containsKeys("Реквизит1", "ДопКолонкаФормы");
+  }
+
+  @Test
+  void columnsAddedToTheSameTabularSectionByTwoAttributesStayApart() {
+    // Реквизит ДругойОбъект того же вида, что Объект, добавляет той же табличной части
+    // свою колонку. Коллекции у реквизитов разные, и колонка одного в другом не видна.
+    assertThat(names(rowOfTabularSection("ДругойОбъект")))
+      .contains("Реквизит1", "ДопКолонкаДругогоОбъекта")
+      .doesNotContain("ДопКолонкаФормы");
+    assertThat(names(rowOfTabularSection("Объект")))
+      .contains("ДопКолонкаФормы")
+      .doesNotContain("ДопКолонкаДругогоОбъекта");
+  }
+
+  /** Члены строки коллекции {@code ТабличнаяЧасть1} у реквизита формы элемента справочника. */
+  private Collection<MemberDescriptor> rowOfTabularSection(String attributeName) {
+    var dataType = member(CATALOG_ITEM_FORM, MemberKind.PROPERTY, attributeName)
+      .returnTypes().refs().iterator().next();
+    var collectionType = typeRegistry.getMembers(dataType, FileType.BSL).stream()
+      .filter(member -> member.matches("ТабличнаяЧасть1"))
+      .findFirst()
+      .orElseThrow()
+      .returnTypes().refs().iterator().next();
+    var rowType = typeRegistry.getDefaultElementTypes(collectionType).refs().iterator().next();
+    return typeRegistry.getMembers(rowType, FileType.BSL);
+  }
+
+  @Test
   void formDataCollectionIteratesOverRowsWithColumns() {
     var objectAttribute = member(DOCUMENT_FORM, MemberKind.PROPERTY, "Объект");
     assertThat(objectAttribute).isNotNull();
