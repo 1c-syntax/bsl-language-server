@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790417377925,
+  "lastUpdate": 1790419729977,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43338,6 +43338,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.180035567054262",
             "extra": "mean: 104.93973318735759 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "193cfea3a6711a5e96e269f84e4f90a712a413f8",
+          "message": "Merge pull request #4538 from 1c-syntax/feat/types-register-record-charts\n\nfeat(types): счета и вид расчёта записи регистра типизируются по его плану",
+          "timestamp": "2026-09-26T09:22:51+02:00",
+          "tree_id": "1207ca06667bdfce1b56ca41bebe529add7fcb0b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/193cfea3a6711a5e96e269f84e4f90a712a413f8"
+        },
+        "date": 1790419716350,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.89943703015645,
+            "unit": "sec",
+            "range": "stddev: 0.905900804491375",
+            "extra": "mean: 105.89943703015645 sec\nrounds: 3"
           }
         ]
       }
