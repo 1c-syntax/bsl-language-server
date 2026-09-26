@@ -39,6 +39,11 @@ enum TableDataKind {
   VALUE_TABLE("ТаблицаЗначений", FormPlatformTypes.TABLE_EXTENSION_PREFIX + "таблицы значений"),
   VALUE_TREE("ДеревоЗначений", FormPlatformTypes.TABLE_EXTENSION_PREFIX + "дерева значений"),
   VALUE_LIST("СписокЗначений", FormPlatformTypes.TABLE_EXTENSION_PREFIX + "списка значений"),
+  // Своего расширения у набора записей синтакс-помощник не объявляет. Таблица над ним в
+  // выгрузке формы несёт `<RowFilter>` (`ОтборСтрок`) — единственное свойство расширений
+  // табличных частей и таблицы значений, у которых состав членов совпадает, — поэтому
+  // взято расширение табличных частей: набор записей на форме — та же коллекция строк.
+  RECORD_SET("НаборЗаписей", FormPlatformTypes.TABLE_EXTENSION_PREFIX + "табличных частей"),
   // Части компоновщика настроек. Таблица над ними смотрит не на реквизит, а вглубь:
   // `Отчет.КомпоновщикНастроек.Настройки.Выбор`. Имена типов сверены по
   // синтакс-помощнику (`НастройкиКомпоновкиДанных`), а не выведены из имён расширений:
@@ -109,34 +114,53 @@ enum TableDataKind {
   @Nullable String rowIdTypeName() {
     return switch (this) {
       case GANTT_CHART -> "ИдентификаторЗначенияДиаграммыГанта";
-      case TABULAR_SECTION, VALUE_TABLE, VALUE_TREE -> FormPlatformTypes.NUMBER_RU;
+      case TABULAR_SECTION, VALUE_TABLE, VALUE_TREE, RECORD_SET -> FormPlatformTypes.NUMBER_RU;
       case DYNAMIC_LIST, VALUE_LIST, FILTER -> null;
       default -> "ИдентификаторКомпоновкиДанных";
     };
   }
 
   /**
+   * Платформенный тип строки у видов данных, где строка своя — с колонками, взятыми из
+   * самих данных. Его отдают {@code ТекущиеДанные} и метод {@code ДанныеСтроки}.
+   * <p>
+   * Тип задаёт вид данных, а не то, есть ли у строки колонки. Правило называет
+   * синтакс-помощник в описании {@code ТаблицаФормы.ДанныеСтроки}: для динамического
+   * списка — {@code ДанныеФормыСтруктура}, для дерева значений —
+   * {@code ДанныеФормыЭлементДерева}, для остальных (таблица значений, табличные
+   * части и др.) — {@code ДанныеФормыЭлементКоллекции}. Описание расширения
+   * динамического списка повторяет его и для {@code ТекущиеДанные}.
+   * <p>
+   * Слову «структура» из описаний прочих расширений верить нельзя: тип {@code Структура}
+   * таблица формы не отдаёт нигде — «структура» там про устройство значения. Проверено
+   * на платформе: {@code ТипЗнч(Элементы.ТабличнаяЧасть1.ТекущиеДанные)} даёт
+   * {@code ДанныеФормыЭлементКоллекции}, у динамического списка —
+   * {@code ДанныеФормыСтруктура}.
+   *
+   * @return имя типа; {@code null} — своей строки у вида нет (см.
+   *   {@link #currentDataTypeName}).
+   */
+  @Nullable String rowTypeName() {
+    return switch (this) {
+      case DYNAMIC_LIST -> FormPlatformTypes.FORM_DATA_STRUCTURE_RU;
+      case VALUE_TREE -> FormPlatformTypes.FORM_DATA_TREE_ITEM_RU;
+      case TABULAR_SECTION, VALUE_TABLE, RECORD_SET -> FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU;
+      default -> null;
+    };
+  }
+
+  /**
    * Тип, который отдают {@code ТекущиеДанные} и метод {@code ДанныеСтроки} у видов
    * данных, где своей строки нет: части компоновщика настроек, отбор и диаграмма
-   * Ганта отдают {@code ДанныеФормыСтруктура} со свойствами-колонками.
-   * <p>
-   * Слову «структура» из описания расширения верить нельзя: тип {@code Структура}
-   * таблица формы не отдаёт нигде. Проверено на платформе:
-   * {@code ТипЗнч(Элементы.ТабличнаяЧасть1.ТекущиеДанные)} даёт
-   * {@code ДанныеФормыЭлементКоллекции}, а у таблиц над настройками компоновки
-   * ({@code КомпоновщикНастроек.Настройки} и её {@code Отбор}) —
-   * {@code ДанныеФормыСтруктура}. Оно и логично: таблица формы работает с данными
-   * формы, а не с обычными коллекциями.
+   * Ганта отдают {@code ДанныеФормыСтруктура} со свойствами-колонками. Проверено на
+   * платформе у таблиц над настройками компоновки ({@code КомпоновщикНастроек.Настройки}
+   * и её {@code Отбор}).
    *
-   * @return имя типа; {@code null} — у вида данных строка своя (зеркало табличной
-   *   части, таблицы или дерева значений, строка динамического списка), и тип
-   *   берётся оттуда: там видны колонки.
+   * @return имя типа; {@code null} — у вида данных строка своя (см. {@link #rowTypeName}),
+   *   и тип берётся с неё: там видны колонки.
    */
   @Nullable String currentDataTypeName() {
-    return switch (this) {
-      case DYNAMIC_LIST, TABULAR_SECTION, VALUE_TABLE, VALUE_TREE -> null;
-      default -> FormPlatformTypes.FORM_DATA_STRUCTURE_RU;
-    };
+    return rowTypeName() == null ? FormPlatformTypes.FORM_DATA_STRUCTURE_RU : null;
   }
 
   /**
@@ -149,7 +173,7 @@ enum TableDataKind {
    */
   static @Nullable TableDataKind byTypeName(String typeRu) {
     for (var kind : values()) {
-      if (kind != TABULAR_SECTION && kind.suffix.equalsIgnoreCase(typeRu)) {
+      if (kind != TABULAR_SECTION && kind != RECORD_SET && kind.suffix.equalsIgnoreCase(typeRu)) {
         return kind;
       }
     }
@@ -161,8 +185,15 @@ enum TableDataKind {
     if (byType != null) {
       return byType;
     }
-    // Таблица над частью реквизита — это табличная часть объекта
-    // (`Объект.Товары`): собственного типа у неё нет, опознаём по вложенности пути.
-    return nested ? TABULAR_SECTION : null;
+    if (nested) {
+      // Таблица над частью реквизита — это табличная часть объекта
+      // (`Объект.Товары`): собственного типа у неё нет, опознаём по вложенности пути.
+      return TABULAR_SECTION;
+    }
+    // Набор записей опознаётся по семейству: имя типа несёт вид регистра
+    // (`РегистрСведенийНаборЗаписей.Х`), а суффикс вида у всех регистров общий.
+    return FormPlatformTypes.formDataKindOf(attributeTypeRu) == FormDataKind.STRUCTURE_WITH_COLLECTION
+      ? RECORD_SET
+      : null;
   }
 }

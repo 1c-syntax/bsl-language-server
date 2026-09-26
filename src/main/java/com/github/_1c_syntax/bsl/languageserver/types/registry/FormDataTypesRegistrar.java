@@ -312,11 +312,58 @@ class FormDataTypesRegistrar {
     var dataRef = registerFormDataMirror(dataKind.baseTypeRu(), dataKind.baseTypeEn(),
       typeRegistry.displayName(declaredRef, Language.RU),
       typeRegistry.displayName(declaredRef, Language.EN), baseRef);
+    if (dataKind == FormDataKind.STRUCTURE_WITH_COLLECTION && baseRef != null) {
+      registerRecordSetRows(declaredRef, dataRef, baseRef);
+    }
     if (baseRef != null) {
       typeRegistry.inheritCollectionTraits(dataRef, baseRef, FileType.BSL);
     }
     typeRegistry.registerMemberSource(dataRef, () -> dataProperties(declaredRef), FileType.BSL);
     return dataRef;
+  }
+
+  /**
+   * Строки набора записей в данных формы: {@code ДанныеФормыСтруктураСКоллекцией} —
+   * коллекция {@code ДанныеФормыЭлементКоллекции}, и колонки у строки те же, что у записи
+   * регистра. Их отдают обход набора, его методы ({@code Добавить}, {@code Выгрузить} …)
+   * и {@code ТекущиеДанные} таблицы над ним.
+   * <p>
+   * Колонки читаются лениво — у записи, которую реестр знает элементом прикладного
+   * набора (см. {@link RegisterTypesRegistrar#registerRecordSetCollectionMembers}):
+   * на регистрации формы обращение к членам сбивало бы epoch кэша членов.
+   *
+   * @param recordSetRef прикладной тип набора ({@code РегистрСведенийНаборЗаписей.Курсы}).
+   * @param dataRef      его данные формы; вызывается до наследования коллекционных
+   *                     свойств, иначе выиграла бы унаследованная обобщённая строка.
+   * @param baseRef      {@code ДанныеФормыСтруктураСКоллекцией}.
+   */
+  private void registerRecordSetRows(TypeRef recordSetRef, TypeRef dataRef, TypeRef baseRef) {
+    var itemBase = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU).orElse(null);
+    if (itemBase == null) {
+      return;
+    }
+    var itemRef = registerFormDataMirror(
+      FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN,
+      typeRegistry.displayName(recordSetRef, Language.RU),
+      typeRegistry.displayName(recordSetRef, Language.EN), itemBase);
+    MemberSource columns = () -> recordColumns(recordSetRef);
+    typeRegistry.registerMemberSource(itemRef, columns, FileType.BSL);
+    typeRegistry.registerDefaultElementTypes(dataRef, List.of(itemRef));
+    specializeCollectionReturns(dataRef, baseRef, itemBase, itemRef, columns);
+    rowByCollection.put(dataRef, itemRef);
+  }
+
+  /** Свойства записи регистра — элемента прикладного набора записей. */
+  private List<MemberDescriptor> recordColumns(TypeRef recordSetRef) {
+    var columns = new ArrayList<MemberDescriptor>();
+    for (var recordRef : typeRegistry.getDefaultElementTypes(recordSetRef).refs()) {
+      for (var member : typeRegistry.getMembers(recordRef, FileType.BSL)) {
+        if (member.kind() == MemberKind.PROPERTY && !member.generic()) {
+          columns.add(member);
+        }
+      }
+    }
+    return List.copyOf(columns);
   }
 
   /**
