@@ -741,6 +741,44 @@ final class FormPlatformTypes {
   }
 
   /**
+   * Тип-расширение общей формы, назначенной основной формой <b>корня конфигурации</b>.
+   * <p>
+   * Часть ролей задаётся не у объекта метаданных, а у самой конфигурации
+   * ({@code DefaultConstantsForm} и родственные, mdclasses#673): общая форма,
+   * назначенная основной формой констант, и есть форма констант — как форма,
+   * назначенная основной формой элемента справочника, есть форма элемента.
+   * <p>
+   * Ролей у корня восемнадцать, а расширений здесь две: платформа объявляет типы не
+   * под роль, а под то, с чем форма работает. У формы констант и формы отчёта такой
+   * тип есть, а «форма настроек отчёта», «форма поиска» и формы истории данных своих
+   * расширений не имеют вовсе — у управляемой из них расширение выбирается по
+   * основному реквизиту (компоновщик настроек), как у любой другой формы.
+   *
+   * @param formKind роль формы у корня конфигурации.
+   * @param kind     вид формы — управляемая или обычная: семейства расширений разные.
+   * @return qualifiedName расширения; {@code null}, если у роли расширения нет.
+   */
+  static @Nullable String configurationExtensionTypeName(DefaultFormKind formKind, FormKind kind) {
+    var extension = CONFIGURATION_EXTENSION_BY_ROLE.get(formKind);
+    if (extension == null) {
+      return null;
+    }
+    return kind == FormKind.ORDINARY ? extension.ordinaryForm() : extension.managedForm();
+  }
+
+  /** Расширения одной роли корня конфигурации в обоих семействах форм. */
+  private record ConfigurationExtension(String ordinaryForm, String managedForm) {
+  }
+
+  private static final Map<DefaultFormKind, ConfigurationExtension> CONFIGURATION_EXTENSION_BY_ROLE = Map.of(
+    DefaultFormKind.CONSTANTS_FORM,
+    new ConfigurationExtension("Расширение формы констант", managed("констант")),
+    DefaultFormKind.REPORT_FORM,
+    new ConfigurationExtension("Расширение формы отчета", managed("отчета")),
+    DefaultFormKind.AUX_REPORT_FORM,
+    new ConfigurationExtension("Расширение формы отчета", managed("отчета")));
+
+  /**
    * Параметры расширения, которых у этой формы не существует вовсе. Платформа
    * объявляет их одинаково для всего вида объектов, а есть они не у всех: отбор по
    * владельцу — только у подчинённого справочника, отбор по регистратору — только у

@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
@@ -247,16 +248,17 @@ public class ConfigurationTypesProvider {
     if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
-    var children = serverContext.getConfiguration().getChildrenByMdoRef().values();
+    var configuration = serverContext.getConfiguration();
+    var children = configuration.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
     platformTypesWarmup.join();
-    register(children, serverContext.getScriptVariantLanguage());
+    register(configuration, children, serverContext.getScriptVariantLanguage());
     serviceModuleEventRegistrar.register(children);
     return serverContext;
   }
 
-  private void register(Iterable<MD> children, Language projectLanguage) {
+  private void register(CF configuration, Iterable<MD> children, Language projectLanguage) {
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
     var commonAttributes = collectCommonAttributes(children);
@@ -288,7 +290,7 @@ public class ConfigurationTypesProvider {
 
     // Тип на каждую форму: реквизиты, элементы, расширение по основному реквизиту
     // и обработчики событий из Form.xml.
-    formTypesProvider.register(children, projectLanguage);
+    formTypesProvider.register(configuration, children, projectLanguage);
 
     // Тип на каждый объектный тип XDTO-пакета: имя как в ссылке
     // «См. XDTOПакет.<Пакет>.<Тип>», члены — свойства из схемы пакета.
