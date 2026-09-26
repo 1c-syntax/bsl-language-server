@@ -76,6 +76,9 @@ class FormTableCurrentDataHbkTest extends AbstractServerContextAwareTest {
     var documentContext = formModule(LIST_FORM_MODULE, "Список");
 
     assertThat(rowTypes(documentContext)).containsOnly("ДанныеФормыСтруктура");
+    assertThat(identifierTypes(documentContext))
+      .as("строку списка адресует ссылка его основной таблицы")
+      .containsExactly("СправочникСсылка.Справочник1");
     assertThat(completionAfterCurrentData(documentContext, "Список"))
       .contains("Свойство", "Реквизит1")
       .doesNotContain("ПолучитьИдентификатор");
