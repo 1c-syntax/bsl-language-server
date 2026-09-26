@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789485231990,
+  "lastUpdate": 1790409296874,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43214,6 +43214,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.23073112396495377",
             "extra": "mean: 105.99638263384502 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68219ab783ffe01d3ed8c8c0496a6e5096160909",
+          "message": "Merge pull request #4522 from johnnyshut/fix/4461-flow-layout-empty-for-bounds\n\nfix(types): защитили раскладку потока от пустых границ счётного цикла",
+          "timestamp": "2026-09-26T09:09:01+02:00",
+          "tree_id": "4bed37a52a5d0f475986cb190b3eca2f233d0403",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/68219ab783ffe01d3ed8c8c0496a6e5096160909"
+        },
+        "date": 1790409273660,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.54707956314087,
+            "unit": "sec",
+            "range": "stddev: 1.4978681407291963",
+            "extra": "mean: 104.54707956314087 sec\nrounds: 3"
           }
         ]
       }
