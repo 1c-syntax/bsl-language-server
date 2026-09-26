@@ -429,7 +429,7 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
     var currentData = find(tableMembers, MemberKind.PROPERTY, "ТекущиеДанные")
       .returnTypes().refs().iterator().next();
     assertThat(currentData.qualifiedName())
-      .isEqualTo("ДанныеФормыЭлементКоллекции.ДинамическийСписок.Документ.Документ1.Форма.ФормаСписка.Список");
+      .isEqualTo("ДанныеФормыСтруктура.ДинамическийСписок.Документ.Документ1.Форма.ФормаСписка.Список");
     assertThat(names(typeRegistry.getMembers(currentData, FileType.BSL)))
       .as("в строке списка видны поля основной таблицы")
       .contains("Ссылка", "Номер", "Дата", "Реквизит1")
@@ -596,17 +596,18 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   @Test
   void dynamicListTableHasItsOwnRowType() {
     // Строка динамического списка — единственная, у которой платформа даёт расширение
-    // («Расширение данных строки для динамического списка»), поэтому у неё свой тип,
-    // а не обобщённый ДанныеФормыЭлементКоллекции.
+    // («Расширение данных строки для динамического списка»), поэтому у неё свой тип.
+    // Платформенный тип под ним — ДанныеФормыСтруктура: так строку списка отдают
+    // ТекущиеДанные (синтакс-помощник и отладчик), а не элементом коллекции.
     var currentData = member("ТаблицаФормы.ДинамическийСписок", MemberKind.PROPERTY, "ТекущиеДанные");
 
     assertThat(currentData).isNotNull();
     assertThat(qualifiedNames(currentData))
-      .containsExactly("ДанныеФормыЭлементКоллекции.ДинамическийСписок");
+      .containsExactly("ДанныеФормыСтруктура.ДинамическийСписок");
     assertThat(typeService.displayName(
       currentData.returnTypes().refs().iterator().next(), Language.RU))
       .as("синтетическое имя наружу не течёт")
-      .isEqualTo("ДанныеФормыЭлементКоллекции");
+      .isEqualTo("ДанныеФормыСтруктура");
   }
 
   @Test
@@ -622,7 +623,7 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
       .contains("Ссылка", "Код", "Наименование", "ПометкаУдаления", "Реквизит1");
     assertThat(typeService.displayName(rowType, Language.RU))
       .as("синтетическое имя наружу не течёт")
-      .isEqualTo("ДанныеФормыЭлементКоллекции");
+      .isEqualTo("ДанныеФормыСтруктура");
   }
 
   @Test
@@ -656,7 +657,7 @@ class FormTypesProviderTest extends AbstractServerContextAwareTest {
   void rowTypeIsRegisteredOnlyForDataKindsThatHaveARowExtension() {
     // У прочих видов данных своей специфики у строки нет — расширения тоже, поэтому
     // свой тип строки им не заводится.
-    assertThat(typeRegistry.resolve("ДанныеФормыЭлементКоллекции.ДинамическийСписок")).isPresent();
+    assertThat(typeRegistry.resolve("ДанныеФормыСтруктура.ДинамическийСписок")).isPresent();
     assertThat(typeRegistry.resolve("ДанныеФормыЭлементКоллекции.ТаблицаЗначений")).isEmpty();
   }
 

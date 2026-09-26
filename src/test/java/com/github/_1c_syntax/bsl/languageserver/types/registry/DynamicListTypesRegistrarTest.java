@@ -75,7 +75,7 @@ class DynamicListTypesRegistrarTest {
     assertThat(rows).containsOnlyKeys("список");
     assertThat(rows.get("список").rowRef().qualifiedName())
       .as("строка заводится на конкретный список: колонки у каждого свои")
-      .isEqualTo("ДанныеФормыЭлементКоллекции.ДинамическийСписок." + FORM_SUFFIX + ".Список");
+      .isEqualTo("ДанныеФормыСтруктура.ДинамическийСписок." + FORM_SUFFIX + ".Список");
     assertThat(rows.get("список").rowIdRef().qualifiedName())
       .as("строку списка над ссылочной таблицей платформа адресует ссылкой")
       .isEqualTo(CATALOG_REF);

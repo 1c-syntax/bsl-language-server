@@ -240,6 +240,9 @@ final class FormPlatformTypes {
   static final String FORM_DATA_COLLECTION_ITEM_RU = "ДанныеФормыЭлементКоллекции";
   static final String FORM_DATA_COLLECTION_ITEM_EN = "FormDataCollectionItem";
 
+  /** Строка дерева данных формы. */
+  static final String FORM_DATA_TREE_ITEM_RU = "ДанныеФормыЭлементДерева";
+
   /**
    * Семейства типов реквизита, которые на форме становятся {@code ДанныеФормыСтруктура}.
    * Это «объектные» типы в широком смысле: сам объект, менеджер значения константы,

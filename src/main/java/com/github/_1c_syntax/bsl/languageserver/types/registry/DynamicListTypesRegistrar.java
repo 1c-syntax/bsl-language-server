@@ -232,18 +232,20 @@ class DynamicListTypesRegistrar {
   }
 
   /**
-   * Регистрирует тип строки конкретного списка: {@code ДанныеФормыЭлементКоллекции.
+   * Регистрирует тип строки конкретного списка: {@code ДанныеФормыСтруктура.
    * ДинамическийСписок.<форма>.<реквизит>}.
    * <p>
    * Расширяет он не базовую строку данных формы, а строку вида данных
-   * ({@code ДанныеФормыЭлементКоллекции.ДинамическийСписок}): специфика строки списка
+   * ({@code ДанныеФормыСтруктура.ДинамическийСписок}): специфика строки списка
    * — «Расширение данных строки для динамического списка» — объявлена там и нужна
-   * всякой строке списка, независимо от его таблицы.
+   * всякой строке списка, независимо от его таблицы. Строку списка платформа отдаёт как
+   * {@code ДанныеФормыСтруктура}, а не как элемент коллекции (см.
+   * {@link TableDataKind#rowTypeName}).
    */
   private TypeRef registerRow(FormDynamicListAttribute list, List<String> usedFields, String suffixRu) {
-    var kindRowName = FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU + "." + TableDataKind.DYNAMIC_LIST.suffix();
+    var kindRowName = FormPlatformTypes.FORM_DATA_STRUCTURE_RU + "." + TableDataKind.DYNAMIC_LIST.suffix();
     var baseRef = typeRegistry.resolve(kindRowName)
-      .or(() -> typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU))
+      .or(() -> typeRegistry.resolve(FormPlatformTypes.FORM_DATA_STRUCTURE_RU))
       .orElse(null);
     var rowRef = typeRegistry.registerConfigurationType(
       kindRowName + "." + suffixRu + "." + list.getName());
@@ -253,7 +255,7 @@ class DynamicListTypesRegistrar {
     // Отображаемое имя — платформенное: синтетический суффикс нужен реестру, чтобы
     // различать строки разных списков, а показывать надо реальный тип значения.
     typeRegistry.registerDisplayName(rowRef, BilingualString.of(
-      FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN));
+      FormPlatformTypes.FORM_DATA_STRUCTURE_RU, FormPlatformTypes.FORM_DATA_STRUCTURE_EN));
     var columns = list.getColumns();
     typeRegistry.registerMemberSource(rowRef, () -> columnMembers(list, columns, usedFields), FileType.BSL);
     return rowRef;

@@ -104,6 +104,15 @@
 			<DataPath>Компоновщик.Настройки.Выбор</DataPath>
 			<RowFilter xsi:nil="true"/>
 		</Table>
+		<Table name="ДеревоПодбора" id="41">
+			<Representation>Tree</Representation>
+			<DataPath>ДеревоПодбора</DataPath>
+			<ChildItems>
+				<InputField name="ДеревоПодбораГруппа" id="42">
+					<DataPath>ДеревоПодбора.Группа</DataPath>
+				</InputField>
+			</ChildItems>
+		</Table>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">

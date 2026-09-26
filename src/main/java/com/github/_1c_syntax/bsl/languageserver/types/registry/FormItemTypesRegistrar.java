@@ -242,23 +242,24 @@ class FormItemTypesRegistrar {
    * строк, у которого своя специфика.
    * <p>
    * Тип заводится и тогда, когда расширение пустое: он нужен как якорь для
-   * {@code ТекущиеДанные} — вместо обобщённого {@code ДанныеФормыЭлементКоллекции}
-   * там оказывается строка именно этого вида данных. Колонки на нём не лежат: они
+   * {@code ТекущиеДанные} — вместо обобщённой строки там оказывается строка именно этого
+   * вида данных. Базовый тип строки задаёт вид данных ({@link TableDataKind#rowTypeName}):
+   * у динамического списка это {@code ДанныеФормыСтруктура}. Колонки на нём не лежат: они
    * зависят от основной таблицы конкретного списка и лежат на его специализации
    * (см. {@link DynamicListTypesRegistrar}), которая этот тип и расширяет.
    */
   private void registerRowDataKindType(TableDataKind dataKind, TypeRef tableRef) {
     var extensionName = FormPlatformTypes.rowDataExtensionName(dataKind);
-    if (extensionName == null) {
+    var rowTypeName = dataKind.rowTypeName();
+    if (extensionName == null || rowTypeName == null) {
       return;
     }
-    var rowBaseRef = typeRegistry.resolve(FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU).orElse(null);
+    var rowBaseRef = typeRegistry.resolve(rowTypeName).orElse(null);
     var extensionRef = typeRegistry.resolve(extensionName).orElse(null);
     if (rowBaseRef == null || extensionRef == null) {
       return;
     }
-    var rowRef = typeRegistry.registerConfigurationType(
-      FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU + "." + dataKind.suffix());
+    var rowRef = typeRegistry.registerConfigurationType(rowTypeName + "." + dataKind.suffix());
     typeRegistry.registerExtension(rowRef, rowBaseRef, FileType.BSL);
     typeRegistry.registerExtension(rowRef, extensionRef, FileType.BSL);
     typeRegistry.registerDisplayName(rowRef, BilingualString.of(
