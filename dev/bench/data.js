@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790409296874,
+  "lastUpdate": 1790410658531,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43245,6 +43245,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4978681407291963",
             "extra": "mean: 104.54707956314087 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a39909742d6be78e88557d70f452a9ee55b55cc2",
+          "message": "Merge pull request #4534 from 1c-syntax/fix/types-recursion-through-cell-rounds\n\nfix(types): рекурсия через тело из кругов по ячейкам обрывается как цикл",
+          "timestamp": "2026-09-26T09:14:17+02:00",
+          "tree_id": "3e7bd14d62bf1e44d17c9128c415eae88bc821fe",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a39909742d6be78e88557d70f452a9ee55b55cc2"
+        },
+        "date": 1790410637035,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 103.90054663022359,
+            "unit": "sec",
+            "range": "stddev: 0.36362500987260976",
+            "extra": "mean: 103.90054663022359 sec\nrounds: 3"
           }
         ]
       }
