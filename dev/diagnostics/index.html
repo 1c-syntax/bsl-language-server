@@ -2296,12 +2296,12 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="Список-реализованных-диагностик">Список реализованных диагностик<a class="headerlink" href="#Список-реализованных-диагностик" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>186</strong></p>
+<p>Общее количество: <strong>189</strong></p>
 <ul>
 <li>Потенциальная уязвимость: <strong>8</strong></li>
 <li>Уязвимость: <strong>7</strong></li>
-<li>Ошибка: <strong>61</strong></li>
-<li>Дефект кода: <strong>110</strong></li>
+<li>Ошибка: <strong>62</strong></li>
+<li>Дефект кода: <strong>112</strong></li>
 </ul>
 <table>
 <thead>
@@ -2556,6 +2556,14 @@
 <td><code>clumsy</code><br><code>standard</code><br><code>unpredictable</code></td>
 </tr>
 <tr>
+<td><a href="CompilationDirectiveNotAllowed/">CompilationDirectiveNotAllowed</a></td>
+<td>Директива компиляции недоступна в модуле этого вида</td>
+<td style="text-align: center;">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
+<td><code>error</code><br><code>unpredictable</code></td>
+</tr>
+<tr>
 <td><a href="ConsecutiveEmptyLines/">ConsecutiveEmptyLines</a></td>
 <td>Подряд идущие пустые строки</td>
 <td style="text-align: center;">Да</td>
@@ -2578,6 +2586,14 @@
 <td>Критичный</td>
 <td>Ошибка</td>
 <td><code>performance</code></td>
+</tr>
+<tr>
+<td><a href="CurrentRowAccess/">CurrentRowAccess</a></td>
+<td>Обращение к данным через ТекущаяСтрока динамического списка</td>
+<td style="text-align: center;">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>performance</code><br><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="CyclomaticComplexity/">CyclomaticComplexity</a></td>
@@ -3458,6 +3474,14 @@
 <td>Незначительный</td>
 <td>Ошибка</td>
 <td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="SuspiciousChangeAndValidate/">SuspiciousChangeAndValidate</a></td>
+<td>Подозрительное использование &amp;ИзменениеИКонтроль</td>
+<td style="text-align: center;">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>badpractice</code><br><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="TempFilesDir/">TempFilesDir</a></td>

@@ -2253,6 +2253,12 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.</p>
+<p>The diagnostic does not follow <code>If</code> / <code>Return</code> control flow. Inside a method it matches calls on two independent stacks:</p>
+<ul>
+<li><code>BeginTransaction</code> / <code>CommitTransaction</code></li>
+<li><code>BeginTransaction</code> / <code>RollbackTransaction</code></li>
+</ul>
+<p>Two rollbacks and one begin produce a hit on the second rollback. That is expected.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p><em>Correct</em></p>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">WriteDataToIB</span><span class="p">()</span>
@@ -2291,6 +2297,20 @@
 
 <span class="k">EndProcedure</span>
 </code></pre></div>
+<p><em>Incorrect — early rollback inside <code>Try</code></em></p>
+<div class="highlight"><pre><span></span><code><span class="nb">BeginTransaction</span><span class="p">();</span>
+<span class="k">Try</span>
+    <span class="k">If</span> <span class="nv">ShouldExit</span> <span class="k">Then</span>
+        <span class="nb">RollbackTransaction</span><span class="p">();</span>
+        <span class="k">Return</span><span class="p">;</span>
+    <span class="k">EndIf</span><span class="p">;</span>
+    <span class="nb">CommitTransaction</span><span class="p">();</span>
+<span class="k">Except</span>
+    <span class="nb">RollbackTransaction</span><span class="p">();</span>
+<span class="k">EndTry</span><span class="p">;</span>
+</code></pre></div>
+<p>The early <code>RollbackTransaction()</code> inside <code>Try</code> consumes the pair for <code>BeginTransaction()</code>. The call in <code>Except</code> is left unpaired, so the message is <code>Missing paired call of "BeginTransaction" for method "RollbackTransaction"</code>.</p>
+<p>Do not call <code>RollbackTransaction()</code> and then <code>Return</code> inside <code>Try</code>. If you need to stop before commit, raise an exception and roll back only in <code>Except</code>.</p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std/content/783/hdoc/_top/">Transactions: Rules of Use (RU)</a></li>

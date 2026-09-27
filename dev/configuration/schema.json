@@ -113,6 +113,9 @@
                 "CompilationDirectiveNeedLess": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveNeedLess"
                 },
+                "CompilationDirectiveNotAllowed": {
+                    "$ref": "parameters-schema.json#/definitions/CompilationDirectiveNotAllowed"
+                },
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
                 },

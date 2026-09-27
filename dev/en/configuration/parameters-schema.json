@@ -376,6 +376,16 @@
             "title": "Needless compilation directive",
             "$id": "#/definitions/CompilationDirectiveNeedLess"
         },
+        "CompilationDirectiveNotAllowed": {
+            "description": "Compilation directive is not available in this module type",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Compilation directive is not available in this module type",
+            "$id": "#/definitions/CompilationDirectiveNotAllowed"
+        },
         "ConsecutiveEmptyLines": {
             "description": "Consecutive empty lines",
             "default": true,
