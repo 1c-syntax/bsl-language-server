@@ -80,6 +80,33 @@ class SeeReferenceFieldsTest extends AbstractServerContextAwareTest {
     assertThat(fieldNames(types)).containsExactly("Имя");
   }
 
+  @Test
+  void referenceToProcedureGivesNoValue() {
+    // `см. Источник.ПередДобавлением` — процедура: значения у неё нет, описывать нечего.
+    var types = typeService.expressionTypesAt(consumer,
+      positionOf("ТипПроцедурой = Процедурой", "ТипПроцедурой = ".length()));
+
+    assertThat(types.refs()).isEmpty();
+  }
+
+  @Test
+  void referenceToMissingParameterGivesNoType() {
+    var types = typeService.expressionTypesAt(consumer,
+      positionOf("ТипБезПараметра = БезПараметра", "ТипБезПараметра = ".length()));
+
+    assertThat(types.refs()).isEmpty();
+  }
+
+  @Test
+  void referencesClosedIntoCycleBetweenModulesTerminate() {
+    // `Потребитель.Крайние.ПоКругу` ссылается на `Источник.Цикл.ПоКругу`, а тот — обратно:
+    // описания ходят по кругу, и разворот обрывается, а не уходит в бесконечную рекурсию.
+    var types = typeService.expressionTypesAt(consumer,
+      positionOf("ТипПоКругу = ПоКругу", "ТипПоКругу = ".length()));
+
+    assertThat(types.refs()).isEmpty();
+  }
+
   private static List<String> fieldNames(TypeSet types) {
     var names = new TreeSet<String>();
     for (var ref : types.refs()) {

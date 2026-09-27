@@ -339,14 +339,15 @@ public class SymbolTypeIndex {
       if (chain == null) {
         continue;
       }
-      if (chain.member() == null) {
+      var member = chain.member();
+      if (member == null) {
         return chain.parameterTypes();
       }
-      var described = describedReturnTypes(chain.member(), visited);
+      var described = describedReturnTypes(member, visited);
       if (!described.isEmpty()) {
         return described;
       }
-      var returnType = chain.member().returnType();
+      var returnType = member.returnType();
       if (returnType.kind() != TypeKind.UNKNOWN) {
         return TypeSet.of(returnType);
       }
@@ -384,15 +385,13 @@ public class SymbolTypeIndex {
     }
     try {
       var owner = method.getOwner();
-      for (var parameter : method.getParameters()) {
-        if (parameter.getName().equalsIgnoreCase(parameterName)) {
-          return parameter.getDescription()
-            .map(description -> resolveTypes(description.types(),
-              new ResolutionContext(owner, owner.getFileType(), visited)))
-            .orElse(TypeSet.EMPTY);
-        }
-      }
-      return TypeSet.EMPTY;
+      return method.getParameters().stream()
+        .filter(parameter -> parameter.getName().equalsIgnoreCase(parameterName))
+        .findFirst()
+        .flatMap(ParameterDefinition::getDescription)
+        .map(description -> resolveTypes(description.types(),
+          new ResolutionContext(owner, owner.getFileType(), visited)))
+        .orElse(TypeSet.EMPTY);
     } finally {
       visited.remove(method);
     }
@@ -458,7 +457,7 @@ public class SymbolTypeIndex {
       var member = findMember(current, parts[i], fileType);
       if (member == null) {
         // Модуль.Метод.Параметр: последний сегмент — имя параметра пред. метода.
-        return i == lastIndex ? parameterChain(lastMethod, parts[i], visited) : null;
+        return parameterTail(lastMethod, parts, i, visited);
       }
       if (i == lastIndex) {
         return new MemberChain(member, TypeSet.EMPTY);
@@ -469,11 +468,21 @@ public class SymbolTypeIndex {
         // Спускаться в неизвестный тип возврата некуда (у процедур и
         // недокументированных функций он всегда UNKNOWN), но следующий и
         // последний сегмент ещё может быть именем параметра этого метода.
-        return i == lastIndex - 1 ? parameterChain(lastMethod, parts[i + 1], visited) : null;
+        return parameterTail(lastMethod, parts, i + 1, visited);
       }
       current = next;
     }
     return null;
+  }
+
+  /**
+   * Цепочка для хвоста ссылки, если сегмент {@code index} — последний: он тогда может быть
+   * именем параметра метода {@code method}. Иначе ссылка не разрешается — {@code null}.
+   */
+  @Nullable
+  private MemberChain parameterTail(@Nullable MemberDescriptor method, String[] parts, int index,
+                                    Set<MethodSymbol> visited) {
+    return index == parts.length - 1 ? parameterChain(method, parts[index], visited) : null;
   }
 
   /**
