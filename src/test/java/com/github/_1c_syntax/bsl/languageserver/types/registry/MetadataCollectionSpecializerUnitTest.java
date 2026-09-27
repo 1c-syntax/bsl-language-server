@@ -179,11 +179,15 @@ class MetadataCollectionSpecializerUnitTest {
     registry.registerMemberSource(ownerRef,
       () -> List.of(MemberDescriptor.property("Документы", baseCollectionRef, "")), FileType.BSL);
 
+    // Справочников в конфигурации нет: группа без объектов ничего не подменяет.
     var provider = mockProvider("ОбъектМетаданныхКонфигурация",
       mockProperty("Документы", "Documents",
         List.of(mockContext("КоллекцияОбъектовМетаданных")),
-        List.of(mockContext("ОбъектМетаданных: Документ"))));
-    var holder = Mockito.mock(BslContextHolder.class);
+        List.of(mockContext("ОбъектМетаданных: Документ"))),
+      mockProperty("Справочники", "Catalogs",
+        List.of(mockContext("КоллекцияОбъектовМетаданных")),
+        List.of(mockContext("ОбъектМетаданных: Справочник"))));
+    var holder = mock(BslContextHolder.class);
     when(holder.get()).thenReturn(Optional.of(provider));
     var document = (MD) Document.builder().name("Покупатели").build();
     var serverProvider = serverProviderWith(Map.of(document.getMdoReference(), document));
@@ -571,13 +575,13 @@ class MetadataCollectionSpecializerUnitTest {
   }
 
   private static ServerContextProvider serverProviderWith(Map<MdoReference, MD> children) {
-    var configuration = Mockito.mock(Configuration.class);
+    var configuration = mock(Configuration.class);
     when(configuration.isEmpty()).thenReturn(false);
     when(configuration.getChildrenByMdoRef()).thenReturn(children);
-    var serverContext = Mockito.mock(ServerContext.class);
+    var serverContext = mock(ServerContext.class);
     when(serverContext.getConfiguration())
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
-    var serverProvider = Mockito.mock(ServerContextProvider.class);
+    var serverProvider = mock(ServerContextProvider.class);
     when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
     return serverProvider;
   }

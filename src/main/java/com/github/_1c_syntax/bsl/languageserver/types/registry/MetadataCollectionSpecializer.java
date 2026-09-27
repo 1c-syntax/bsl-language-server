@@ -608,7 +608,8 @@ public class MetadataCollectionSpecializer {
    */
   static List<MemberDescriptor> ownMetadataMembers(Collection<MemberDescriptor> familyMembers,
                                                    TypeRef generalRef, TypeRef ownRef) {
-    UnaryOperator<TypeRef> own = ref -> sameType(ref, generalRef) ? ownRef : ref;
+    var replacements = Map.of(generalRef.qualifiedName(), ownRef);
+    UnaryOperator<TypeRef> own = ref -> replacements.getOrDefault(ref.qualifiedName(), ref);
     var result = new ArrayList<MemberDescriptor>();
     for (var member : familyMembers) {
       if (member.generic() || !returns(member, generalRef)) {
