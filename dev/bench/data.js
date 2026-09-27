@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790478836562,
+  "lastUpdate": 1790491457913,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43710,6 +43710,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 8.789235175795708",
             "extra": "mean: 113.60973381996155 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b77e1620d2ab3e0a4701cc91c06c403d61f670d",
+          "message": "Merge pull request #4549 from 1c-syntax/fix/types-see-reference-before-target-parsed\n\nfix(types): значение функции не зависит от порядка разбора модуля, на который ведёт см.",
+          "timestamp": "2026-09-27T08:25:19+02:00",
+          "tree_id": "52d3c723d4654a18b6ae2ab537ba5e2ab43e65b2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5b77e1620d2ab3e0a4701cc91c06c403d61f670d"
+        },
+        "date": 1790491443982,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 105.39711165428162,
+            "unit": "sec",
+            "range": "stddev: 3.048175612688477",
+            "extra": "mean: 105.39711165428162 sec\nrounds: 3"
           }
         ]
       }
