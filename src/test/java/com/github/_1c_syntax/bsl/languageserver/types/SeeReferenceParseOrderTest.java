@@ -51,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
 
-  private static final Path FIXTURE = Path.of("src/test/resources/types/seeReferenceOrder").toAbsolutePath();
+  private static final Path FIXTURE = Path.of("src/test/resources/metadata/seeReferenceOrder").toAbsolutePath();
 
   @Autowired
   private ConfigurationTypesProvider provider;
