@@ -204,6 +204,7 @@
 			<CommonModule>Переопределяемый</CommonModule>
 			<CommonModule>Поставщик</CommonModule>
 			<CommonModule>Интерфейс</CommonModule>
+			<CommonModule>ПустойМодуль</CommonModule>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationTypesProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -60,6 +62,9 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
   @Autowired
   private TypeService typeService;
 
+  @Autowired
+  private SymbolTypeIndex symbolTypeIndex;
+
   @Test
   void rowIsReturnedWhenTargetOfReferenceIsParsedFirst() {
     assertThat(returnTypes(List.of("Переопределяемый", "Поставщик"), "ДобавитьКоманду"))
@@ -95,6 +100,31 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
     // значение непустое — без пометки о неполноте проход после наполнения её не пересчитал бы.
     assertThat(returnTypes(List.of("Поставщик", "Переопределяемый"), "РезультатЧерезВызов"))
       .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void callerSeesDeclaredValueReferringThroughLocalFunction() {
+    // Объявленное значение ссылается на функцию своего модуля, а уже её описание — на модуль,
+    // до которого очередь ещё не дошла.
+    assertThat(returnTypes(List.of("Поставщик", "Переопределяемый"), "РезультатЧерезЛокальнуюВызов"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void parsedModuleWithoutOwnMembersDoesNotAwaitParsing() {
+    // given: модуль объявлен из метаданных, но его документ ещё не разобран.
+    initServerContext(FIXTURE, false);
+    context.getConfiguration();
+    provider.tryRegister();
+    var before = symbolTypeIndex.awaitsUnparsedModule("ПустойМодуль.НетМетода", FileType.BSL);
+
+    // when: документ разобран, а экспортных методов в нём нет вовсе.
+    context.rebuildDocument(context.addDocument(moduleUri("ПустойМодуль")));
+
+    // then: ссылка в него больше не ждёт разбора — она просто никуда не ведёт. Иначе расчёт,
+    // опирающийся на неё, возвращался бы в очередь на каждой волне прохода после наполнения.
+    assertThat(before).isTrue();
+    assertThat(symbolTypeIndex.awaitsUnparsedModule("ПустойМодуль.НетМетода", FileType.BSL)).isFalse();
   }
 
   /**

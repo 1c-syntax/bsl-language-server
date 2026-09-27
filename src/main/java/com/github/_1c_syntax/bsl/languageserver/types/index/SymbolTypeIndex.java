@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -103,6 +104,7 @@ public class SymbolTypeIndex {
 
   private final TypeRegistry typeRegistry;
   private final FormByNameResolver formByNameResolver;
+  private final GlobalScopeProvider globalScopeProvider;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
@@ -313,8 +315,9 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Ведёт ли какая-нибудь ссылка {@code См.} в описании возвращаемого значения метода, включая
-   * вложенные, в модуль, до разбора которого очередь ещё не дошла.
+   * Ведёт ли какая-нибудь ссылка {@code См.} в описании возвращаемого значения метода в модуль,
+   * до разбора которого очередь ещё не дошла. Смотрятся и вложенные ссылки (элементы
+   * коллекций, поля), и описания функций своего модуля, на которые ссылка ведёт.
    * <p>
    * Объявленные типы возвращаемого значения разворачиваются при разборе документа метода и
    * пересобираются, когда рабочая область наполнена. До этого ссылка в неразобранный модуль
@@ -325,33 +328,42 @@ public class SymbolTypeIndex {
    *     разобранный модуль.
    */
   public boolean returnAwaitsUnparsedModule(MethodSymbol method) {
+    return returnAwaitsUnparsedModule(method, new HashSet<>());
+  }
+
+  private boolean returnAwaitsUnparsedModule(MethodSymbol method, Set<MethodSymbol> visited) {
+    if (!visited.add(method)) {
+      return false;
+    }
+    var owner = method.getOwner();
     return method.getDescription()
-      .map(description -> anyAwaitsUnparsedModule(description.getReturnedValue(), method.getOwner().getFileType()))
+      .map(description -> anyAwaitsUnparsedModule(description.getReturnedValue(), owner, visited))
       .orElse(false);
   }
 
   /**
-   * Ведёт ли какая-нибудь ссылка {@code См.} в описании параметра, включая вложенные, в модуль,
-   * до разбора которого очередь ещё не дошла.
+   * Ведёт ли какая-нибудь ссылка {@code См.} в описании параметра в модуль, до разбора
+   * которого очередь ещё не дошла. Смотрятся и вложенные ссылки, и описания функций своего
+   * модуля, на которые ссылка ведёт.
    * <p>
    * Тип модуля объявлен заранее, а члены приносит разбор его документа. Пока рабочая
    * область наполняется, ссылка в такой модуль не разрешается ни во что, и ответ
    * {@link #getDeclaredParameterTypes} неполон, хотя ничем не отличается от честного.
    *
    * @param parameter параметр.
-   * @param fileType  язык владельца параметра — для резолва имён.
+   * @param owner     документ-владелец метода — для поиска функций своего модуля.
    * @return {@code true}, если описание ссылается на ещё не разобранный модуль.
    */
-  public boolean awaitsUnparsedModule(ParameterDefinition parameter, FileType fileType) {
+  public boolean awaitsUnparsedModule(ParameterDefinition parameter, DocumentContext owner) {
     return parameter.getDescription()
-      .map(description -> anyAwaitsUnparsedModule(description.types(), fileType))
+      .map(description -> anyAwaitsUnparsedModule(description.types(), owner, new HashSet<>()))
       .orElse(false);
   }
 
   /**
    * Ведёт ли ссылка вида {@code Модуль.Метод} либо {@code Модуль.Метод.Параметр} в модуль,
-   * до разбора которого очередь ещё не дошла: голова ссылки — тип модуля, а следующего за
-   * ней члена у него нет, потому что членов из самого модуля у него нет вовсе.
+   * до разбора которого очередь ещё не дошла: голова ссылки — тип модуля без документа, и
+   * следующего за ней члена у него нет.
    *
    * @param link     текст ссылки.
    * @param fileType язык, на котором резолвятся имена.
@@ -373,29 +385,47 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Тип конфигурации без единого члена из самой конфигурации — модуль, чей документ ещё не
-   * разобран. Платформенные члены (у общего модуля это {@code ЭтотОбъект}) приходят из
-   * синтакс-помощника и о разборе ничего не говорят, поэтому не в счёт.
+   * Тип конфигурации, документ которого ещё не разобран. Разбор связывает тип модуля с его
+   * документом ({@link GlobalScopeProvider#uriByModuleTypeRef}) и приносит члены из самого
+   * модуля. Пустой модуль разобран и без членов, а платформенные члены (у общего модуля это
+   * {@code ЭтотОбъект}) о разборе ничего не говорят — поэтому нужны оба признака сразу.
    */
   private boolean isUnparsedModule(TypeRef ref, FileType fileType) {
     return ref.kind() == TypeKind.CONFIGURATION
+      && globalScopeProvider.uriByModuleTypeRef(ref).isEmpty()
       && typeRegistry.getMembers(ref, fileType).stream().allMatch(MemberDescriptor::standardLibrary);
   }
 
   /**
    * Ведёт ли в ещё не разобранный модуль хоть одна ссылка среди описаний типов — на верхнем
-   * уровне, в элементах коллекций и в полях.
+   * уровне, в элементах коллекций, в полях и в описаниях функций своего модуля.
    */
-  private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, FileType fileType) {
-    return types != null && types.stream().anyMatch(type -> awaitsUnparsedModule(type, fileType));
+  private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, DocumentContext owner,
+                                          Set<MethodSymbol> visited) {
+    return types != null && types.stream().anyMatch(type -> awaitsUnparsedModule(type, owner, visited));
   }
 
   /** Ведёт ли в ещё не разобранный модуль ссылка одного описания типа, его элементов или полей. */
-  private boolean awaitsUnparsedModule(TypeDescription type, FileType fileType) {
-    return awaitsUnparsedModule(linkOf(type), fileType)
+  private boolean awaitsUnparsedModule(TypeDescription type, DocumentContext owner, Set<MethodSymbol> visited) {
+    return linkAwaitsUnparsedModule(linkOf(type), owner, visited)
       || (type instanceof CollectionTypeDescription collection
-      && anyAwaitsUnparsedModule(collection.valueTypes(), fileType))
-      || anyFieldAwaitsUnparsedModule(type.fields(), fileType);
+      && anyAwaitsUnparsedModule(collection.valueTypes(), owner, visited))
+      || anyFieldAwaitsUnparsedModule(type.fields(), owner, visited);
+  }
+
+  /**
+   * Ссылка с точкой ведёт в другой модуль; без точки — на функцию своего модуля, и тогда
+   * смотрится её описание: {@link #resolveSeeReference} разворачивает его так же.
+   */
+  private boolean linkAwaitsUnparsedModule(@Nullable String link, DocumentContext owner, Set<MethodSymbol> visited) {
+    if (link == null || link.isBlank()) {
+      return false;
+    }
+    if (link.contains(".")) {
+      return awaitsUnparsedModule(link, owner.getFileType());
+    }
+    var localFunction = findLocalFunction(owner, link);
+    return localFunction != null && returnAwaitsUnparsedModule(localFunction, visited);
   }
 
   /**
@@ -410,8 +440,10 @@ public class SymbolTypeIndex {
     return hyperlink == null ? null : hyperlink.link();
   }
 
-  private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, FileType fileType) {
-    return fields != null && fields.stream().anyMatch(field -> anyAwaitsUnparsedModule(field.types(), fileType));
+  private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, DocumentContext owner,
+                                               Set<MethodSymbol> visited) {
+    return fields != null
+      && fields.stream().anyMatch(field -> anyAwaitsUnparsedModule(field.types(), owner, visited));
   }
 
   /**

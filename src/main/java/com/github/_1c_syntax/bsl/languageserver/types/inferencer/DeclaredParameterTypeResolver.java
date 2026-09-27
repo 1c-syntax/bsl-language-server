@@ -96,7 +96,7 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
     return method.getParameters().stream()
       .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
       .findFirst()
-      .map(parameter -> symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner().getFileType())
+      .map(parameter -> symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner())
         || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name)))
       .orElse(false);
   }
@@ -150,7 +150,7 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
   private boolean parameterAwaitsUnparsedModule(MethodSymbol target, String paramName) {
     for (var targetParam : target.getParameters()) {
       if (targetParam.getName().equalsIgnoreCase(paramName)) {
-        return symbolTypeIndex.awaitsUnparsedModule(targetParam, target.getOwner().getFileType());
+        return symbolTypeIndex.awaitsUnparsedModule(targetParam, target.getOwner());
       }
     }
     return false;
