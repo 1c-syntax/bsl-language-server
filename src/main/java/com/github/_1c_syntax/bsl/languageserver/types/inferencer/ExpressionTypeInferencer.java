@@ -1247,6 +1247,7 @@ public class ExpressionTypeInferencer {
       // проход по рекурсивной функции не кэшируется и сам кэш не читает: иначе он
       // получил бы окружения, посчитанные первым проходом, — то есть свой же вопрос.
       ctx.visited.size() <= 1 && !ctx.refining,
+      () -> ctx.sawMissing,
       body -> variablesOfBody(owner, body),
       target -> target.getKind() == VariableKind.MODULE,
       declaredOf,

@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -418,6 +419,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
    * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
    *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
+   * @param sawMissing          видел ли вывод типов значения, которых ещё нет: пока рабочая
+   *                            область наполняется, так бывает с функциями модулей, до которых
+   *                            очередь не дошла. Посчитанное на них неполно и в кэши, живущие
+   *                            дольше вывода, не попадает: следующий расчёт взял бы оттуда
+   *                            неполное значение, не узнав, что оно неполное.
    * @param variables           переменные тела, за типами которых следит расчёт. Зависят
    *                            только от самого тела: окружение считается на всё тело разом
    *                            и переиспользуется всеми запросами, поэтому набор переменных
@@ -442,6 +448,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   public record FlowInputs(
     FlowSession session,
     boolean cacheable,
+    BooleanSupplier sawMissing,
     Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
     Predicate<VariableSymbol> sharedWithOtherBodies,
     Function<VariableSymbol, TypeSet> declaredFact,
@@ -630,7 +637,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         session.cells.put(variable, inputs.declaredFact().apply(variable));
       }
       grow(documentContext, pending, inputs);
-      if (inputs.cacheable()) {
+      if (inputs.cacheable() && !inputs.sawMissing().getAsBoolean()) {
         var byVariable = cellsByUri.computeIfAbsent(uri, key -> new ConcurrentHashMap<>());
         pending.forEach(variable -> byVariable.putIfAbsent(variable, session.cells.get(variable)));
       }
@@ -829,8 +836,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // самих кругах (см. grow). Сюда такой расчёт попадает изнутри них: тело, меняющее
     // переменную, вызывает функцию того же модуля, и за её значением считается её тело.
     // Запомненное, оно пережило бы круги и отвечало бы приближением всем, в том числе
-    // запросу, с которого круги и начались.
-    if (byBody == null || inputs.session().cellsComputing) {
+    // запросу, с которого круги и начались. Так же не запоминается окружение, посчитанное
+    // на значениях, которых ещё нет: следующий расчёт принял бы его за полное.
+    if (byBody == null || inputs.session().cellsComputing || inputs.sawMissing().getAsBoolean()) {
       return computed;
     }
     var previous = byBody.putIfAbsent(body, computed);
