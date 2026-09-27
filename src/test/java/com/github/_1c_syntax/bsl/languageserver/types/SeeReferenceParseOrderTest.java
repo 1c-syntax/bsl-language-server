@@ -80,6 +80,14 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
       .containsExactlyInAnyOrder("Неопределено", "СтрокаТаблицыЗначений");
   }
 
+  @Test
+  void rowIsReturnedWhenReferencedMethodPointsFurtherToModuleParsedLast() {
+    // Метод-интерфейс разобран, но описание его параметра само ссылается дальше — на модуль,
+    // до которого очередь ещё не дошла.
+    assertThat(returnTypes(List.of("Интерфейс", "Поставщик", "Переопределяемый"), "ДобавитьКомандуЧерезИнтерфейс"))
+      .containsExactlyInAnyOrder("Неопределено", "СтрокаТаблицыЗначений");
+  }
+
   /**
    * Значение функции модуля {@code Поставщик} после разбора модулей в заданном порядке
    * и прохода доразрешения — так, как рабочую область наполняет {@code populateContext}.

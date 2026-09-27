@@ -203,6 +203,7 @@
 			<Language>Русский</Language>
 			<CommonModule>Переопределяемый</CommonModule>
 			<CommonModule>Поставщик</CommonModule>
+			<CommonModule>Интерфейс</CommonModule>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

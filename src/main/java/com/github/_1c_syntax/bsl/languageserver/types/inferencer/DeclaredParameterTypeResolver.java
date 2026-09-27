@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -81,7 +80,8 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
   /**
    * Ведёт ли объявление параметра в модуль, до разбора которого очередь ещё не дошла: ссылкой
    * {@code См.} в описании самого параметра либо, если типа он не объявляет, ссылкой метода
-   * на метод-интерфейс.
+   * на метод-интерфейс — в том числе через описание одноимённого параметра этого
+   * метода-интерфейса.
    *
    * @param variable переменная.
    * @return {@code true}, если объявленный тип параметра сейчас может быть неполным.
@@ -92,11 +92,11 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       || !(variable.getScope() instanceof MethodSymbol method)) {
       return false;
     }
-    var fileType = method.getOwner().getFileType();
+    var name = variable.getName();
     for (var parameter : method.getParameters()) {
-      if (parameter.getName().equalsIgnoreCase(variable.getName())) {
-        return symbolTypeIndex.awaitsUnparsedModule(parameter, fileType)
-          || !declaresTypes(parameter) && linksAwaitUnparsedModule(method, fileType);
+      if (parameter.getName().equalsIgnoreCase(name)) {
+        return symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner().getFileType())
+          || !declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name);
       }
     }
     return false;
@@ -115,18 +115,46 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
   }
 
   /**
-   * Ведёт ли какая-нибудь ссылка {@code // См. …} метода в ещё не разобранный модуль.
+   * Может ли тип, взятый у одноимённого параметра метода по ссылке {@code // См. …}, ещё
+   * пополниться: сама ссылка ведёт в ещё не разобранный модуль либо в такой модуль ведёт
+   * описание параметра метода-цели. Шагов столько же, сколько у {@link #fromReferencedMethod}.
    *
-   * @param method   метод со ссылками.
-   * @param fileType язык владельца метода.
-   * @return {@code true}, если хоть одна ссылка ведёт в модуль, членов которого пока нет.
+   * @param method    метод со ссылками.
+   * @param paramName имя параметра.
+   * @return {@code true}, если тип по ссылке сейчас может быть неполным.
    */
-  private boolean linksAwaitUnparsedModule(MethodSymbol method, FileType fileType) {
+  private boolean referencedMethodAwaitsUnparsedModule(MethodSymbol method, String paramName) {
     var links = method.getDescription().map(MethodDescription::getLinks).orElse(null);
     if (links == null) {
       return false;
     }
-    return links.stream().anyMatch(link -> symbolTypeIndex.awaitsUnparsedModule(link.link(), fileType));
+    var owner = method.getOwner();
+    for (var link : links) {
+      if (symbolTypeIndex.awaitsUnparsedModule(link.link(), owner.getFileType())) {
+        return true;
+      }
+      var target = referencedMethod(owner, link.link());
+      if (target != null && parameterAwaitsUnparsedModule(target, paramName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Ведёт ли описание одноимённого параметра метода в ещё не разобранный модуль.
+   *
+   * @param target    метод-цель ссылки.
+   * @param paramName имя параметра.
+   * @return {@code true}, если описание параметра ссылается на модуль, членов которого пока нет.
+   */
+  private boolean parameterAwaitsUnparsedModule(MethodSymbol target, String paramName) {
+    for (var targetParam : target.getParameters()) {
+      if (targetParam.getName().equalsIgnoreCase(paramName)) {
+        return symbolTypeIndex.awaitsUnparsedModule(targetParam, target.getOwner().getFileType());
+      }
+    }
+    return false;
   }
 
   /**
