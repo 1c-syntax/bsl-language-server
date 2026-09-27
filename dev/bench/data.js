@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790494864756,
+  "lastUpdate": 1790497222178,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43834,6 +43834,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.44307260126807413",
             "extra": "mean: 103.52812393506368 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fc2e5815600bd925f387ba416f1748979b7dbf81",
+          "message": "Merge pull request #4555 from 1c-syntax/test/types-configuration-fixtures-in-metadata\n\ntest(types): фикстуры-конфигурации — в metadata/, а не среди одиночных фикстур",
+          "timestamp": "2026-09-27T09:24:37+02:00",
+          "tree_id": "8849b57894005b14048bc6d5c53772dd1b83d7ae",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fc2e5815600bd925f387ba416f1748979b7dbf81"
+        },
+        "date": 1790497195794,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 104.82292755444844,
+            "unit": "sec",
+            "range": "stddev: 2.8002790727680655",
+            "extra": "mean: 104.82292755444844 sec\nrounds: 3"
           }
         ]
       }
