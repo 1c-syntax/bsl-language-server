@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790491457913,
+  "lastUpdate": 1790492582623,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43741,6 +43741,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.048175612688477",
             "extra": "mean: 105.39711165428162 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9449bf157e7487ac47f10fdca1b91a38918a3550",
+          "message": "Merge pull request #4550 from 1c-syntax/fix/types-local-function-value-mid-flow\n\nfix(types): приближения кругов по ячейкам переменных модуля не переживают круги",
+          "timestamp": "2026-09-27T08:28:48+02:00",
+          "tree_id": "c1e08b9b31b597e84af7b9a46d3330983fb0b266",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9449bf157e7487ac47f10fdca1b91a38918a3550"
+        },
+        "date": 1790492567507,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.42413942019145,
+            "unit": "sec",
+            "range": "stddev: 1.5674311814174462",
+            "extra": "mean: 106.42413942019145 sec\nrounds: 3"
           }
         ]
       }
