@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790446793198,
+  "lastUpdate": 1790478836562,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43679,6 +43679,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.3687537647058596",
             "extra": "mean: 105.83539668718974 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4a39e812d39722cf1e62d6f219f511e029652a57",
+          "message": "Merge pull request #4401 from pravets/feat/new-diagnostic-current-row-access\n\nfeat: new diagnostic CurrentRowAccess",
+          "timestamp": "2026-09-27T04:36:12+02:00",
+          "tree_id": "ab91ba1c2aea99dce5cb3eea925d65dce88d8605",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4a39e812d39722cf1e62d6f219f511e029652a57"
+        },
+        "date": 1790478812642,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 113.60973381996155,
+            "unit": "sec",
+            "range": "stddev: 8.789235175795708",
+            "extra": "mean: 113.60973381996155 sec\nrounds: 3"
           }
         ]
       }
