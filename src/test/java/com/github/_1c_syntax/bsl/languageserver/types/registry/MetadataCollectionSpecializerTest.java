@@ -303,6 +303,30 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void movementOfOwnMetadataIsDescriptionOfRegister() {
+    // given: код обходит движения документа, описание которого получено от его ссылки.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+    var module = TestUtils.getDocumentContext(
+      Path.of(PATH_TO_METADATA, "Catalogs", "Справочник1", "Ext", "ObjectModule.bsl").toUri(),
+      """
+        Для Каждого МетаданныеРегистра Из Документы.Документ1.ПустаяСсылка().Метаданные().Движения Цикл
+          Имя = МетаданныеРегистра.Имя;
+        КонецЦикла;
+        """,
+      context);
+
+    // when
+    var registers = typeService.receiverTypesAt(module, new Position(1, "  Имя = МетаданныеРегистра.".length() + 1));
+
+    // then: элемент движений — описание одного из регистров документа, и у него есть имя.
+    assertThat(registers.refs()).extracting(TypeRef::qualifiedName).contains(
+      "ОбъектМетаданных: РегистрНакопления.РегистрНакопления1",
+      "ОбъектМетаданных: РегистрСведений.РегистрСведений2");
+  }
+
+  @Test
   void tabularSectionGetsRecursivePerSectionType() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

@@ -687,7 +687,8 @@ public class MetadataCollectionSpecializer {
     // Для коллекций, где элементы вообще не адресуются по имени (характеристики,
     // дополнительные индексы, ввод на основании), это единственный способ до них
     // добраться — синтакс-помощник у них так и пишет: обход и обращение по индексу.
-    typeRegistry.registerDefaultElementTypes(perCollRef, List.of(elementRef));
+    typeRegistry.registerDefaultElementTypes(perCollRef,
+      List.copyOf(elementTypesOf(typeRegistry, children, elementRef, ownerSuffix).refs()));
     typeRegistry.inheritCollectionTraits(perCollRef, baseRef, FileType.BSL);
     var capturedBase = baseRef;
     var capturedElement = elementRef;
@@ -762,7 +763,7 @@ public class MetadataCollectionSpecializer {
             childReturnType(typeRegistry, child, elementRef, elementTypeSet, ownerSuffix)));
         }
       } else if (isElementReturningMethod(member)) {
-        result.add(withElementReturnType(member, elementTypeSet));
+        result.add(withElementReturnType(member, elementTypesOf(typeRegistry, children, elementRef, ownerSuffix)));
       } else {
         result.add(member);
       }
@@ -785,6 +786,25 @@ public class MetadataCollectionSpecializer {
       }
     }
     return result;
+  }
+
+  /**
+   * Элемент коллекции конкретного владельца — какой-то из её детей. Если дети названы
+   * конкретными типами ({@code Движения} — регистрами документа, {@code ТабличныеЧасти} —
+   * его табличными частями), элемент — их объединение: общий тип элемента
+   * ({@code ЗначениеСвойстваОбъектаМетаданных}) не несёт ни имени, ни прочих свойств
+   * описания. Дети без своего типа дают общий, как и пустая коллекция.
+   *
+   * @return типы элементов коллекции.
+   */
+  static TypeSet elementTypesOf(TypeRegistry typeRegistry, List<ChildName> children, TypeRef elementRef,
+                                String ownerSuffix) {
+    var defaultSet = TypeSet.of(elementRef);
+    var result = TypeSet.EMPTY;
+    for (var child : children) {
+      result = result.union(childReturnType(typeRegistry, child, elementRef, defaultSet, ownerSuffix));
+    }
+    return result.isEmpty() ? defaultSet : result;
   }
 
   static TypeSet childReturnType(TypeRegistry typeRegistry, ChildName child, TypeRef elementRef,

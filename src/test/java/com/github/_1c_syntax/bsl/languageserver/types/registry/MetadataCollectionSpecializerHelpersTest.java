@@ -323,6 +323,38 @@ class MetadataCollectionSpecializerHelpersTest {
   }
 
   @Test
+  void elementTypesOf_namedChildren_giveTheirTypes() {
+    // given: движения документа — два регистра, каждый назван своим описанием.
+    var registry = new TypeRegistry(java.util.List.of(),
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
+    var balances = registry.registerConfigurationType("ОбъектМетаданных: РегистрНакопления.ОстаткиТоваров");
+    var prices = registry.registerConfigurationType("ОбъектМетаданных: РегистрСведений.Цены");
+    var elementRef = new TypeRef(TypeKind.PLATFORM, "ЗначениеСвойстваОбъектаМетаданных");
+    var children = java.util.List.of(
+      MetadataCollectionSpecializer.ChildName.withReturnType("ОстаткиТоваров",
+        "ОбъектМетаданных: РегистрНакопления.ОстаткиТоваров"),
+      MetadataCollectionSpecializer.ChildName.withReturnType("Цены", "ОбъектМетаданных: РегистрСведений.Цены"));
+
+    // when
+    var result = MetadataCollectionSpecializer.elementTypesOf(registry, children, elementRef, "Покупатели");
+
+    // then: элемент — какой-то из регистров, а не общее значение свойства, у которого нет
+    // ни имени, ни прочих свойств описания.
+    assertThat(result.refs()).containsExactlyInAnyOrder(balances, prices);
+  }
+
+  @Test
+  void elementTypesOf_noChildren_giveGeneralElement() {
+    var registry = new TypeRegistry(java.util.List.of(),
+      mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
+    var elementRef = new TypeRef(TypeKind.PLATFORM, "ЗначениеСвойстваОбъектаМетаданных");
+
+    var result = MetadataCollectionSpecializer.elementTypesOf(registry, java.util.List.of(), elementRef, "Покупатели");
+
+    assertThat(result.refs()).containsExactly(elementRef);
+  }
+
+  @Test
   void childReturnType_noChildAndNoOverride_returnsDefault() {
     var registry = new TypeRegistry(java.util.List.of(),
       mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
