@@ -854,6 +854,12 @@ public class ExpressionTypeInferencer {
           ctx.sawMissing = true;
         }
       }
+      if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
+        // Объявленное значение ссылается на модуль, до которого очередь ещё не дошла, и пока
+        // оно неполно — хотя по самому ответу этого не видно. Объявленное пересобирается,
+        // когда рабочая область наполнена, а расчёт, прочитавший его сейчас, придётся повторить.
+        ctx.sawMissing = true;
+      }
       return symbolTypeIndex.getReturnTypes(method);
     } finally {
       ctx.visited.remove(method);

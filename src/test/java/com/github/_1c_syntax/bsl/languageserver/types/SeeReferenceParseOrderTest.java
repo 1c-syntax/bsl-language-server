@@ -88,6 +88,15 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
       .containsExactlyInAnyOrder("Неопределено", "СтрокаТаблицыЗначений");
   }
 
+  @Test
+  void callerSeesDeclaredValueReferringToModuleParsedLast() {
+    // Значение `Результат` объявлено ссылкой на функцию модуля, до которого очередь ещё не
+    // дошла, а по телу — только `Неопределено`. Вызывающая функция посчитана при разборе, и её
+    // значение непустое — без пометки о неполноте проход после наполнения её не пересчитал бы.
+    assertThat(returnTypes(List.of("Поставщик", "Переопределяемый"), "РезультатЧерезВызов"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
   /**
    * Значение функции модуля {@code Поставщик} после разбора модулей в заданном порядке
    * и прохода доразрешения — так, как рабочую область наполняет {@code populateContext}.
