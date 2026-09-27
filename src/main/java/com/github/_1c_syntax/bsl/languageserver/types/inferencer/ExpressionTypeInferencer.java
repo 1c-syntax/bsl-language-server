@@ -57,6 +57,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
@@ -461,8 +462,22 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
+  /**
+   * Имя типа, названное в конструкторе: идентификатором ({@code Новый Структура}) либо
+   * строковым литералом ({@code Новый("Структура")}).
+   * <p>
+   * Имя, которое вычисляется ({@code Новый("AddIn." + Имя)}, {@code Новый(ИмяТипа)}),
+   * статически неизвестно. Текст такого выражения именем типа не является — у конкатенации
+   * узел представлен знаком операции, и под именем «+» заводился бы несуществующий тип.
+   *
+   * @param constructor вызов конструктора.
+   * @return имя типа; {@code null}, если оно не названо литералом.
+   */
   @Nullable
   private static String extractTypeName(ConstructorCallNode constructor) {
+    if (constructor.getTypeName().getNodeType() != ExpressionNodeType.LITERAL) {
+      return null;
+    }
     var ast = constructor.getTypeName().getRepresentingAst();
     if (ast == null) {
       return null;

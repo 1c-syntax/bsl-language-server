@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -44,20 +45,28 @@ class DynamicConstructorTest extends AbstractServerContextAwareTest {
 
   @Test
   void dynamicConstructorWithVariableTypeName() {
-    // Новый (ИмяТипа) — extractTypeName возвращает текст «ИмяТипа»,
-    // stripQuotes оставляет как есть. Тип не известен → EMPTY.
+    // Новый (ИмяТипа) — имя типа лежит в переменной, статически оно неизвестно. Имя
+    // переменной именем типа не является.
     var types = at("Объект1 = Новый (ИмяТипа)", "Объект1 = ".length());
 
-    assertThat(types).isNotNull();
+    assertThat(types.refs()).isEmpty();
   }
 
   @Test
   void dynamicConstructorWithQuotedTypeName() {
-    // Новый ("Структура") — extractTypeName возвращает «"Структура"»,
-    // stripQuotes снимает кавычки до «Структура», тип резолвится.
+    // Новый ("Структура") — имя названо строковым литералом, кавычки снимаются.
     var types = at("Объект2 = Новый (\"Структура\")", "Объект2 = ".length());
 
-    assertThat(types).isNotNull();
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+  }
+
+  @Test
+  void dynamicConstructorWithConcatenatedTypeName() {
+    // Имя собирается конкатенацией: у такого выражения узел представлен знаком операции,
+    // и под именем «+» заводился несуществующий тип.
+    var types = at("Объект3 = Новый (\"AddIn.\"", "Объект3 = ".length());
+
+    assertThat(types.refs()).isEmpty();
   }
 
   private TypeSet at(String marker, int offsetInMarker) {
