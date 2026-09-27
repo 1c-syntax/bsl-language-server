@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterClass
 class SeeReferenceFieldsTest extends AbstractServerContextAwareTest {
 
-  private static final Path FIXTURE = Path.of("src/test/resources/types/seeReferenceFields").toAbsolutePath();
+  private static final Path FIXTURE = Path.of("src/test/resources/metadata/seeReferenceFields").toAbsolutePath();
 
   @Autowired
   private TypeService typeService;
