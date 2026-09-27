@@ -164,6 +164,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * Для неэкспортных методов заранее ничего не считается: они видны только внутри своего
    * документа, а там дерево разбора под рукой, и расчёт по запросу дешевле, чем расчёт
    * всех функций конфигурации при её разборе.
+   * <p>
+   * Состояние документа здесь не спрашивается: расчёт идёт в контексте вызывающего, а тот
+   * читает дерево этого же документа прямо сейчас. Состояние бы соврало — при первом разборе
+   * оно выставляется уже после события о разборе, по которому и считаются значения, и
+   * вызванная функция своего модуля осталась бы непосчитанной, а вызывающий получил бы одно
+   * её описание.
    *
    * <p>
    * Значение, посчитанное по приближениям, запоминается как предварительное: им отвечают,
@@ -179,7 +185,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    *                    расчёта устареют.
    */
   public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation, boolean approximate) {
-    if (!method.isFunction() || !isReadable(method)) {
+    if (!method.isFunction()) {
       return;
     }
     var known = indexed.contains(method);
