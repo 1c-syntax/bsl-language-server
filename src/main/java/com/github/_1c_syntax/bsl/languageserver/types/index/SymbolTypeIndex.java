@@ -373,17 +373,26 @@ public class SymbolTypeIndex {
       return false;
     }
     for (var type : types) {
-      var hyperlink = type.hyperlink();
-      var link = type.variant() == TypeDescription.Variant.HYPERLINK ? type.name()
-        : hyperlink == null ? null : hyperlink.link();
-      if (awaitsUnparsedModule(link, fileType)
-        || type instanceof CollectionTypeDescription collection
-        && anyAwaitsUnparsedModule(collection.valueTypes(), fileType)
+      if (awaitsUnparsedModule(linkOf(type), fileType)
+        || (type instanceof CollectionTypeDescription collection
+        && anyAwaitsUnparsedModule(collection.valueTypes(), fileType))
         || anyFieldAwaitsUnparsedModule(type.fields(), fileType)) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * Ссылка {@code См.} описания типа: само описание-ссылка либо ссылка, уточняющая простой тип
+   * ({@code СтрокаТабличнойЧасти: См. …}).
+   */
+  private static @Nullable String linkOf(TypeDescription type) {
+    if (type.variant() == TypeDescription.Variant.HYPERLINK) {
+      return type.name();
+    }
+    var hyperlink = type.hyperlink();
+    return hyperlink == null ? null : hyperlink.link();
   }
 
   private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, FileType fileType) {

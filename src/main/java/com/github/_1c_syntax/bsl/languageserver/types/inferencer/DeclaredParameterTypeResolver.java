@@ -96,7 +96,7 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
     for (var parameter : method.getParameters()) {
       if (parameter.getName().equalsIgnoreCase(name)) {
         return symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner().getFileType())
-          || !declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name);
+          || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name));
       }
     }
     return false;
