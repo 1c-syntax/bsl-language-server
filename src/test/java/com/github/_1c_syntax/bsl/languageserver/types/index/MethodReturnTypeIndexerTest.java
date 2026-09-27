@@ -170,6 +170,45 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void provisionalValueServesApproximateRequestsAndIsReplacedByFinalOne() {
+    // given: значение посчитано по приближениям — посреди кругов по ячейкам.
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(), false), true);
+
+    // when: ещё один запрос по приближениям, а за ним — первый окончательный.
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false), true);
+    var approximate = symbolTypeIndex.getReturnTypes(consumerMethod);
+    var finalBefore = indexer.isIndexed(consumerMethod);
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(NUMBER, Set.of(), false));
+
+    // then: пока идут приближения, значение одно и то же — иначе цепочка вызовов
+    // пересчитывалась бы лавинообразно; окончательный запрос считает заново. До него
+    // значение окончательным не считается — опирающийся на него расчёт придётся повторить.
+    assertThat(approximate).isEqualTo(STRING);
+    assertThat(finalBefore).isFalse();
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+  }
+
+  @Test
+  void recomputationOfDocumentMakesProvisionalValueFinal() {
+    // given: экспортная функция посчитана по приближениям раньше, чем до неё дошёл
+    // пересчёт её документа.
+    indexer.computeIfAbsent(sourceMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(), false), true);
+    returns(sourceMethod, NUMBER);
+
+    // when
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+
+    // then
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
+  }
+
+  @Test
   void deferredMethodIsRecomputedAfterWorkspaceIsPopulated() {
     // given: при разборе значение метода вышло неполным — вызванный метод ещё не посчитан.
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);

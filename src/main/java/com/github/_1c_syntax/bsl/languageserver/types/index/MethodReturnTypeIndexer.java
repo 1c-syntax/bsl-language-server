@@ -210,16 +210,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Разбиралось ли уже тело метода.
+   * Посчитано ли значение метода окончательно.
    * <p>
    * Пока рабочая область наполняется, до части модулей очередь ещё не дошла, и пустой
-   * ответ у них означает «неизвестно», а не «ничего не возвращает».
+   * ответ у них означает «неизвестно», а не «ничего не возвращает». Предварительное
+   * значение, посчитанное по приближениям, тоже не окончательное: расчёт, опирающийся на
+   * него, придётся повторить.
    *
    * @param method метод.
-   * @return {@code true}, если типы возврата метода уже выводились.
+   * @return {@code true}, если типы возврата метода уже выводились и не по приближениям.
    */
   public boolean isIndexed(MethodSymbol method) {
-    return indexed.contains(method);
+    return indexed.contains(method) && !provisional.contains(method);
   }
 
   /**
@@ -403,7 +405,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Отметка снимается до расчёта: значение, изменившееся уже во время него, расчёт
     // застать не мог, и вызывающему понадобится ещё один заход.
     var startedAt = clock.incrementAndGet();
-    return store(method, inferencer.computeReturnTypes(method), startedAt);
+    var changed = store(method, inferencer.computeReturnTypes(method), startedAt);
+    // Расчёт со свежего контекста идёт не посреди кругов: значение окончательное.
+    provisional.remove(method);
+    return changed;
   }
 
   /**
