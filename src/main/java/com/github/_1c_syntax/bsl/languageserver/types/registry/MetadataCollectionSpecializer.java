@@ -44,8 +44,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -318,13 +319,15 @@ public class MetadataCollectionSpecializer {
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Уже обработанные per-owner synthetic-типы в рамках одного {@link #specialize()}.
-   * Обход дерева метаданных приходит к одному и тому же synthetic-типу многократно
-   * (общие имена табличных частей, общий element-type), а
-   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации.
-   * Защита гарантирует ровно одну регистрацию источников на тип.
+   * Владельцы, уже обработанные для каждого per-owner synthetic-типа в рамках одного
+   * {@link #specialize()}. Обход дерева метаданных приходит к одному и тому же типу
+   * многократно (общий element-type виден с нескольких видов объектов), а у типа без
+   * владельца — {@code ОбъектМетаданных: ТабличнаяЧасть.Товары} из коллекции общего
+   * описания — владельцев столько, сколько одноимённых табличных частей.
+   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации, поэтому
+   * защита гарантирует ровно одну регистрацию источников на пару «тип — владелец».
    */
-  private final Set<TypeRef> registeredOwners = new HashSet<>();
+  private final Map<TypeRef, Set<MD>> registeredOwners = new HashMap<>();
 
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
@@ -542,18 +545,28 @@ public class MetadataCollectionSpecializer {
    * {@code ОбъектМетаданных: ТабличнаяЧасть.Покупатели.Товары}). На нём навешан
    * override для known-коллекций; базовые members проксируются от общего
    * element-type'а из bsl-context.
+   * <p>
+   * У одноимённых владельцев коллекции сливаются: тип без владельца описывает любой из
+   * них, и колонки табличной части «Товары» берутся у всех табличных частей с этим именем.
+   * Выбрать одну значило бы отдать первую встреченную, а порядок обхода метаданных
+   * от запуска к запуску разный.
    */
   private TypeRef registerPerOwner(TypeRef elementTypeRef, String ownerSuffix, MD owner) {
     var perOwnerName = elementTypeRef.qualifiedName() + "." + ownerSuffix;
     var perOwnerRef = typeRegistry.intern(TypeKind.PLATFORM, perOwnerName);
-    if (!registeredOwners.add(perOwnerRef)) {
+    var owners = registeredOwners.computeIfAbsent(perOwnerRef,
+      key -> Collections.newSetFromMap(new IdentityHashMap<>()));
+    var firstOwner = owners.isEmpty();
+    if (!owners.add(owner)) {
       return perOwnerRef;
     }
     var overrides = buildPerOwnerOverrides(perOwnerName, owner);
-    var capturedElement = elementTypeRef;
-    typeRegistry.registerMemberSource(perOwnerRef,
-      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
-      FileType.BSL);
+    if (firstOwner) {
+      var capturedElement = elementTypeRef;
+      typeRegistry.registerMemberSource(perOwnerRef,
+        () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
+        FileType.BSL);
+    }
     if (!overrides.isEmpty()) {
       typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, FileType.BSL);
     }
