@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -141,6 +142,18 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
     /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
     private boolean cellsComputing;
+
+    /**
+     * Идут ли прямо сейчас круги по ячейкам переменных модуля.
+     * <p>
+     * Пока они идут, вход таких переменных в любое тело — промежуточное приближение, и всё,
+     * что от него посчитано, после кругов устареет.
+     *
+     * @return {@code true}, если круги начаты и не завершены.
+     */
+    public boolean cellsComputing() {
+      return cellsComputing;
+    }
 
     /**
      * Идёт ли прямо сейчас расчёт по какому-нибудь телу.
@@ -668,8 +681,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     List<VariableSymbol> shared,
     FlowInputs inputs
   ) {
-    // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
-    Set<BSLParser.CodeBlockContext> bodies = Collections.newSetFromMap(new IdentityHashMap<>());
+    // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют, —
+    // и идут в порядке, в каком встретились. Порядок кругов на неподвижную точку влиять не
+    // должен, но набор с хешами по идентичности менял бы его от запуска к запуску, и любая
+    // зависимость от порядка превращалась бы в невоспроизводимый результат.
+    Set<BSLParser.CodeBlockContext> bodies = new LinkedHashSet<>();
     for (var variable : shared) {
       var changes = changesOf(documentContext, variable, inputs);
       Stream.concat(changes.definitions().stream(), changes.mutations().stream())
@@ -809,7 +825,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // который может попросить тип переменной другого тела того же документа, — это
     // рекурсивное обновление той же карты, что запрещено.
     var computed = compute(documentContext, body, layout, inputs);
-    if (byBody == null) {
+    // Посреди кругов по ячейкам вход переменных модуля — промежуточное приближение, как и в
+    // самих кругах (см. grow). Сюда такой расчёт попадает изнутри них: тело, меняющее
+    // переменную, вызывает функцию того же модуля, и за её значением считается её тело.
+    // Запомненное, оно пережило бы круги и отвечало бы приближением всем, в том числе
+    // запросу, с которого круги и начались.
+    if (byBody == null || inputs.session().cellsComputing) {
       return computed;
     }
     var previous = byBody.putIfAbsent(body, computed);

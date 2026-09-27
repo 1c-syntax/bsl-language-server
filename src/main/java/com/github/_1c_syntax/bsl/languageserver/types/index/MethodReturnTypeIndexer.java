@@ -135,6 +135,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает». */
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
+  /** Методы, значение которых посчитано по приближениям и ждёт пересчёта (см. computeIfAbsent). */
+  private final Set<MethodSymbol> provisional = ConcurrentHashMap.newKeySet();
+
   /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
    * время, а не системное: сравниваются только порядковые отметки, и брать их надо в том
@@ -162,31 +165,63 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * документа, а там дерево разбора под рукой, и расчёт по запросу дешевле, чем расчёт
    * всех функций конфигурации при её разборе.
    *
+   * <p>
+   * Значение, посчитанное по приближениям, запоминается как предварительное: им отвечают,
+   * пока идёт расчёт, давший приближения, — иначе каждый вызов в нём пересчитывал бы тело
+   * заново, и цепочка вызовов внутри модуля разрасталась бы лавинообразно. Первый же
+   * запрос не по приближениям считает значение заново, и оно становится окончательным.
+   *
    * @param method      метод.
    * @param computation расчёт в контексте вызывающего: у него общая с ним защита от
    *                    циклов и общая глубина, без которых цепочка вызовов внутри модуля
    *                    уходит в рекурсию до переполнения стека.
+   * @param approximate считается ли значение по приближениям, которые после текущего
+   *                    расчёта устареют.
    */
-  public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation) {
-    if (indexed.contains(method) || !method.isFunction() || !isReadable(method)) {
+  public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation, boolean approximate) {
+    if (!method.isFunction() || !isReadable(method)) {
+      return;
+    }
+    var known = indexed.contains(method);
+    if (known && (approximate || !provisional.contains(method))) {
       return;
     }
     var startedAt = clock.incrementAndGet();
     store(method, computation.get(), startedAt);
-    rememberMethodOfUri(method);
+    if (approximate) {
+      provisional.add(method);
+    } else {
+      provisional.remove(method);
+    }
+    if (!known) {
+      rememberMethodOfUri(method);
+    }
   }
 
   /**
-   * Разбиралось ли уже тело метода.
+   * Считает типы возврата метода по телу, если этого ещё не делалось, и запоминает их как
+   * окончательные — см. {@link #computeIfAbsent(MethodSymbol, Supplier, boolean)}.
+   *
+   * @param method      метод.
+   * @param computation расчёт в контексте вызывающего.
+   */
+  public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation) {
+    computeIfAbsent(method, computation, false);
+  }
+
+  /**
+   * Посчитано ли значение метода окончательно.
    * <p>
    * Пока рабочая область наполняется, до части модулей очередь ещё не дошла, и пустой
-   * ответ у них означает «неизвестно», а не «ничего не возвращает».
+   * ответ у них означает «неизвестно», а не «ничего не возвращает». Предварительное
+   * значение, посчитанное по приближениям, тоже не окончательное: расчёт, опирающийся на
+   * него, придётся повторить.
    *
    * @param method метод.
-   * @return {@code true}, если типы возврата метода уже выводились.
+   * @return {@code true}, если типы возврата метода уже выводились и не по приближениям.
    */
   public boolean isIndexed(MethodSymbol method) {
-    return indexed.contains(method);
+    return indexed.contains(method) && !provisional.contains(method);
   }
 
   /**
@@ -296,6 +331,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     if (methods != null) {
       methods.forEach(method -> {
         indexed.remove(method);
+        provisional.remove(method);
         computedAt.remove(method);
       });
     }
@@ -369,7 +405,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Отметка снимается до расчёта: значение, изменившееся уже во время него, расчёт
     // застать не мог, и вызывающему понадобится ещё один заход.
     var startedAt = clock.incrementAndGet();
-    return store(method, inferencer.computeReturnTypes(method), startedAt);
+    var changed = store(method, inferencer.computeReturnTypes(method), startedAt);
+    // Расчёт со свежего контекста идёт не посреди кругов: значение окончательное.
+    provisional.remove(method);
+    return changed;
   }
 
   /**
