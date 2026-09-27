@@ -361,11 +361,13 @@ class MetadataCollectionSpecializerUnitTest {
     registry.registerMemberSource(documentTypeRef,
       () -> List.of(MemberDescriptor.property("ТабличныеЧасти", baseCollectionRef, "")), FileType.BSL);
 
-    var provider = mockProvider("ОбъектМетаданных: Документ",
-      mockProperty("ТабличныеЧасти", "TabularSections",
-        List.of(mockContext("КоллекцияОбъектовМетаданных")),
-        List.of(mockContext("ОбъектМетаданных: ТабличнаяЧасть"))));
-    var holder = Mockito.mock(BslContextHolder.class);
+    // Коллекцию табличных частей объявляют два вида объектов, и к одним и тем же владельцам
+    // обход приходит дважды — повторно они не регистрируются.
+    registry.registerConfigurationType("ОбъектМетаданных: Справочник");
+    var provider = mockProvider(List.of(
+      mockType("ОбъектМетаданных: Документ", tabularSectionsProperty()),
+      mockType("ОбъектМетаданных: Справочник", tabularSectionsProperty())));
+    var holder = mock(BslContextHolder.class);
     when(holder.get()).thenReturn(Optional.of(provider));
 
     var sales = tabularSection("Продажа", "Номенклатура");
@@ -576,6 +578,12 @@ class MetadataCollectionSpecializerUnitTest {
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
     Mockito.verify(serverProvider).getAllContexts();
+  }
+
+  private static ContextProperty tabularSectionsProperty() {
+    return mockProperty("ТабличныеЧасти", "TabularSections",
+      List.of(mockContext("КоллекцияОбъектовМетаданных")),
+      List.of(mockContext("ОбъектМетаданных: ТабличнаяЧасть")));
   }
 
   /** Табличная часть «Товары» документа с одной колонкой. */

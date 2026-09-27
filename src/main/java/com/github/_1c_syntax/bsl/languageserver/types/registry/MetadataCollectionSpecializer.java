@@ -556,17 +556,16 @@ public class MetadataCollectionSpecializer {
     var perOwnerRef = typeRegistry.intern(TypeKind.PLATFORM, perOwnerName);
     var owners = registeredOwners.computeIfAbsent(perOwnerRef,
       key -> Collections.newSetFromMap(new IdentityHashMap<>()));
-    var firstOwner = owners.isEmpty();
     if (!owners.add(owner)) {
       return perOwnerRef;
     }
-    var overrides = buildPerOwnerOverrides(perOwnerName, owner);
-    if (firstOwner) {
+    if (owners.size() == 1) {
       var capturedElement = elementTypeRef;
       typeRegistry.registerMemberSource(perOwnerRef,
         () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
         FileType.BSL);
     }
+    var overrides = buildPerOwnerOverrides(perOwnerName, owner);
     if (!overrides.isEmpty()) {
       typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, FileType.BSL);
     }
