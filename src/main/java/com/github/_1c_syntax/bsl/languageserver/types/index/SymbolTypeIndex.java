@@ -452,27 +452,83 @@ public class SymbolTypeIndex {
    * префикса к короткому; берётся тип возврата последнего члена (или типы
    * параметра для записи {@code …Метод.Параметр}).
    *
-   * @return {@link TypeSet} c одним элементом или {@link TypeSet#EMPTY}.
+   * <p>
+   * Если член объявлен в модуле конфигурации, тип берётся из его описания целиком — вместе
+   * с колонками таблицы, полями структуры и элементами коллекций. Дескриптор члена в реестре
+   * несёт только имена типов, и через него описанное терялось бы.
+   *
+   * @return {@link TypeSet} по ссылке или {@link TypeSet#EMPTY}.
    */
   public TypeSet resolveHyperlink(String link, FileType fileType) {
+    return resolveHyperlink(link, fileType, new HashSet<>());
+  }
+
+  private TypeSet resolveHyperlink(@Nullable String link, FileType fileType, Set<MethodSymbol> visited) {
     if (link == null || link.isBlank()) {
       return TypeSet.EMPTY;
     }
     var parts = link.split("\\.");
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
-      var chain = resolveChain(parts, prefixLen, fileType);
+      var chain = resolveChain(parts, prefixLen, fileType, visited);
       if (chain == null) {
         continue;
       }
-      if (chain.member() == null) {
+      var member = chain.member();
+      if (member == null) {
         return chain.parameterTypes();
       }
-      var returnType = chain.member().returnType();
+      var described = describedReturnTypes(member, visited);
+      if (!described.isEmpty()) {
+        return described;
+      }
+      var returnType = member.returnType();
       if (returnType.kind() != TypeKind.UNKNOWN) {
         return TypeSet.of(returnType);
       }
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Типы возвращаемого значения из описания функции, стоящей за членом.
+   *
+   * @param member  член из реестра.
+   * @param visited уже посещённые функции — защита от закольцованных ссылок.
+   * @return типы из описания; {@link TypeSet#EMPTY}, если за членом нет функции из исходников.
+   */
+  private TypeSet describedReturnTypes(MemberDescriptor member, Set<MethodSymbol> visited) {
+    if (!(member.getSourceSymbol().orElse(null) instanceof MethodSymbol function) || !function.isFunction()) {
+      return TypeSet.EMPTY;
+    }
+    var owner = function.getOwner();
+    return resolveLocalFunctionTypes(function, owner, owner.getFileType(), visited);
+  }
+
+  /**
+   * Типы параметра из описания метода, стоящего за членом.
+   *
+   * @param member        член из реестра.
+   * @param parameterName имя параметра.
+   * @param visited       уже посещённые методы — защита от закольцованных ссылок.
+   * @return типы из описания; {@link TypeSet#EMPTY}, если за членом нет метода из исходников
+   *     либо у него нет такого параметра.
+   */
+  private TypeSet describedParameterTypes(MemberDescriptor member, String parameterName, Set<MethodSymbol> visited) {
+    if (!(member.getSourceSymbol().orElse(null) instanceof MethodSymbol method) || !visited.add(method)) {
+      return TypeSet.EMPTY;
+    }
+    try {
+      var owner = method.getOwner();
+      return method.getParameters().stream()
+        .filter(parameter -> parameter.getName().equalsIgnoreCase(parameterName))
+        .findFirst()
+        .flatMap(ParameterDefinition::getDescription)
+        .map(description -> resolveTypes(description.types(),
+          new ResolutionContext(owner, owner.getFileType(), visited)))
+        .orElse(TypeSet.EMPTY);
+    } finally {
+      visited.remove(method);
+    }
   }
 
   /**
@@ -496,7 +552,7 @@ public class SymbolTypeIndex {
       return Optional.empty();
     }
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
-      var chain = resolveChain(parts, prefixLen, fileType);
+      var chain = resolveChain(parts, prefixLen, fileType, new HashSet<>());
       if (chain != null && chain.member() != null
         && chain.member().getSourceSymbol().orElse(null) instanceof SourceDefinedSymbol target) {
         return Optional.of(target);
@@ -523,7 +579,7 @@ public class SymbolTypeIndex {
    *         не резолвятся (вызывающий пробует более короткий префикс).
    */
   @Nullable
-  private MemberChain resolveChain(String[] parts, int prefixLen, FileType fileType) {
+  private MemberChain resolveChain(String[] parts, int prefixLen, FileType fileType, Set<MethodSymbol> visited) {
     var head = String.join(".", List.of(parts).subList(0, prefixLen));
     var current = typeRegistry.resolve(head, fileType).orElse(null);
     if (current == null) {
@@ -535,7 +591,7 @@ public class SymbolTypeIndex {
       var member = findMember(current, parts[i], fileType);
       if (member == null) {
         // Модуль.Метод.Параметр: последний сегмент — имя параметра пред. метода.
-        return i == lastIndex ? parameterChain(lastMethod, parts[i]) : null;
+        return parameterTail(lastMethod, parts, i, visited);
       }
       if (i == lastIndex) {
         return new MemberChain(member, TypeSet.EMPTY);
@@ -546,7 +602,7 @@ public class SymbolTypeIndex {
         // Спускаться в неизвестный тип возврата некуда (у процедур и
         // недокументированных функций он всегда UNKNOWN), но следующий и
         // последний сегмент ещё может быть именем параметра этого метода.
-        return i == lastIndex - 1 ? parameterChain(lastMethod, parts[i + 1]) : null;
+        return parameterTail(lastMethod, parts, i + 1, visited);
       }
       current = next;
     }
@@ -554,16 +610,29 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Цепочка для записи {@code …Метод.Параметр}: типы параметра {@code parameterName}
-   * метода {@code method}. {@code null}, если метод не задан (предыдущий сегмент — не
-   * метод) или у него нет такого параметра.
+   * Цепочка для хвоста ссылки, если сегмент {@code index} — последний: он тогда может быть
+   * именем параметра метода {@code method}. Иначе ссылка не разрешается — {@code null}.
    */
   @Nullable
-  private static MemberChain parameterChain(@Nullable MemberDescriptor method, String parameterName) {
+  private MemberChain parameterTail(@Nullable MemberDescriptor method, String[] parts, int index,
+                                    Set<MethodSymbol> visited) {
+    return index == parts.length - 1 ? parameterChain(method, parts[index], visited) : null;
+  }
+
+  /**
+   * Цепочка для записи {@code …Метод.Параметр}: типы параметра {@code parameterName}
+   * метода {@code method} — из описания метода в исходниках, а если его нет, из дескриптора.
+   * {@code null}, если метод не задан (предыдущий сегмент — не метод) или у него нет такого
+   * параметра.
+   */
+  @Nullable
+  private MemberChain parameterChain(@Nullable MemberDescriptor method, String parameterName,
+                                     Set<MethodSymbol> visited) {
     if (method == null) {
       return null;
     }
-    var parameterTypes = parameterFromMember(method, parameterName);
+    var described = describedParameterTypes(method, parameterName, visited);
+    var parameterTypes = described.isEmpty() ? parameterFromMember(method, parameterName) : described;
     return parameterTypes != null && !parameterTypes.isEmpty()
       ? new MemberChain(null, parameterTypes)
       : null;
@@ -697,7 +766,7 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     if (link.contains(".")) {
-      var qualifiedTypes = resolveQualifiedLink(link, owner, fileType);
+      var qualifiedTypes = resolveQualifiedLink(link, owner, fileType, visited);
       if (!qualifiedTypes.isEmpty()) {
         return qualifiedTypes;
       }
@@ -723,10 +792,12 @@ public class SymbolTypeIndex {
    * @param link     ссылка целиком.
    * @param owner    документ-владелец — нужен резолверу форм.
    * @param fileType язык, на котором резолвятся имена.
+   * @param visited  уже посещённые методы — защита от закольцованных ссылок.
    * @return тип по ссылке; {@link TypeSet#EMPTY}, если ни один вид не подошёл.
    */
-  private TypeSet resolveQualifiedLink(String link, DocumentContext owner, FileType fileType) {
-    var hyperlinkTypes = resolveHyperlink(link, fileType);
+  private TypeSet resolveQualifiedLink(String link, DocumentContext owner, FileType fileType,
+                                       Set<MethodSymbol> visited) {
+    var hyperlinkTypes = resolveHyperlink(link, fileType, visited);
     if (!hyperlinkTypes.isEmpty()) {
       return hyperlinkTypes;
     }
