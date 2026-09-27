@@ -93,13 +93,12 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       return false;
     }
     var name = variable.getName();
-    for (var parameter : method.getParameters()) {
-      if (parameter.getName().equalsIgnoreCase(name)) {
-        return symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner().getFileType())
-          || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name));
-      }
-    }
-    return false;
+    return method.getParameters().stream()
+      .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
+      .findFirst()
+      .map(parameter -> symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner().getFileType())
+        || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name)))
+      .orElse(false);
   }
 
   /**

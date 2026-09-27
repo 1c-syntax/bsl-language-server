@@ -369,18 +369,15 @@ public class SymbolTypeIndex {
    * уровне, в элементах коллекций и в полях.
    */
   private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, FileType fileType) {
-    if (types == null) {
-      return false;
-    }
-    for (var type : types) {
-      if (awaitsUnparsedModule(linkOf(type), fileType)
-        || (type instanceof CollectionTypeDescription collection
-        && anyAwaitsUnparsedModule(collection.valueTypes(), fileType))
-        || anyFieldAwaitsUnparsedModule(type.fields(), fileType)) {
-        return true;
-      }
-    }
-    return false;
+    return types != null && types.stream().anyMatch(type -> awaitsUnparsedModule(type, fileType));
+  }
+
+  /** Ведёт ли в ещё не разобранный модуль ссылка одного описания типа, его элементов или полей. */
+  private boolean awaitsUnparsedModule(TypeDescription type, FileType fileType) {
+    return awaitsUnparsedModule(linkOf(type), fileType)
+      || (type instanceof CollectionTypeDescription collection
+      && anyAwaitsUnparsedModule(collection.valueTypes(), fileType))
+      || anyFieldAwaitsUnparsedModule(type.fields(), fileType);
   }
 
   /**
