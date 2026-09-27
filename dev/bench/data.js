@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790492582623,
+  "lastUpdate": 1790493733185,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43772,6 +43772,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5674311814174462",
             "extra": "mean: 106.42413942019145 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7b99ae4726789c8a2476573688fd979d1369823e",
+          "message": "Merge pull request #4551 from 1c-syntax/fix/types-dynamic-constructor-type-name\n\nfix(types): конструктор с вычисляемым именем типа не заводит тип по тексту выражения",
+          "timestamp": "2026-09-27T08:29:36+02:00",
+          "tree_id": "4fdf0e13b244b23d1e9c18ba0086cdc42b13ca40",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7b99ae4726789c8a2476573688fd979d1369823e"
+        },
+        "date": 1790493706896,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 106.8374224503835,
+            "unit": "sec",
+            "range": "stddev: 1.0188930177942352",
+            "extra": "mean: 106.8374224503835 sec\nrounds: 3"
           }
         ]
       }
