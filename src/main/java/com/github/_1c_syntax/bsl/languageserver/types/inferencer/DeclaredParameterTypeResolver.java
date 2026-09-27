@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -74,6 +76,57 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       }
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Ведёт ли объявление параметра в модуль, до разбора которого очередь ещё не дошла: ссылкой
+   * {@code См.} в описании самого параметра либо, если типа он не объявляет, ссылкой метода
+   * на метод-интерфейс.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если объявленный тип параметра сейчас может быть неполным.
+   */
+  @Override
+  public boolean isIncomplete(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.PARAMETER
+      || !(variable.getScope() instanceof MethodSymbol method)) {
+      return false;
+    }
+    var fileType = method.getOwner().getFileType();
+    for (var parameter : method.getParameters()) {
+      if (parameter.getName().equalsIgnoreCase(variable.getName())) {
+        return symbolTypeIndex.awaitsUnparsedModule(parameter, fileType)
+          || !declaresTypes(parameter) && linksAwaitUnparsedModule(method, fileType);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Объявлены ли у параметра типы в его собственном описании.
+   *
+   * @param parameter описание параметра.
+   * @return {@code true}, если в описании параметра есть хоть один тип.
+   */
+  private static boolean declaresTypes(ParameterDefinition parameter) {
+    return parameter.getDescription()
+      .map(description -> !description.types().isEmpty())
+      .orElse(false);
+  }
+
+  /**
+   * Ведёт ли какая-нибудь ссылка {@code // См. …} метода в ещё не разобранный модуль.
+   *
+   * @param method   метод со ссылками.
+   * @param fileType язык владельца метода.
+   * @return {@code true}, если хоть одна ссылка ведёт в модуль, членов которого пока нет.
+   */
+  private boolean linksAwaitUnparsedModule(MethodSymbol method, FileType fileType) {
+    var links = method.getDescription().map(MethodDescription::getLinks).orElse(null);
+    if (links == null) {
+      return false;
+    }
+    return links.stream().anyMatch(link -> symbolTypeIndex.awaitsUnparsedModule(link.link(), fileType));
   }
 
   /**

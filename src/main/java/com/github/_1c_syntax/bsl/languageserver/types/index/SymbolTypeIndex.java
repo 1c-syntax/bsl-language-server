@@ -313,6 +313,84 @@ public class SymbolTypeIndex {
   }
 
   /**
+   * Ведёт ли какая-нибудь ссылка {@code См.} в описании параметра, включая вложенные, в модуль,
+   * до разбора которого очередь ещё не дошла.
+   * <p>
+   * Тип модуля объявлен заранее, а члены приносит разбор его документа. Пока рабочая
+   * область наполняется, ссылка в такой модуль не разрешается ни во что, и ответ
+   * {@link #getDeclaredParameterTypes} неполон, хотя ничем не отличается от честного.
+   *
+   * @param parameter параметр.
+   * @param fileType  язык владельца параметра — для резолва имён.
+   * @return {@code true}, если описание ссылается на ещё не разобранный модуль.
+   */
+  public boolean awaitsUnparsedModule(ParameterDefinition parameter, FileType fileType) {
+    return parameter.getDescription()
+      .map(description -> anyAwaitsUnparsedModule(description.types(), fileType))
+      .orElse(false);
+  }
+
+  /**
+   * Ведёт ли ссылка вида {@code Модуль.Метод} либо {@code Модуль.Метод.Параметр} в модуль,
+   * до разбора которого очередь ещё не дошла: голова ссылки — тип модуля, а следующего за
+   * ней члена у него нет, потому что членов из самого модуля у него нет вовсе.
+   *
+   * @param link     текст ссылки.
+   * @param fileType язык, на котором резолвятся имена.
+   * @return {@code true}, если ссылка ведёт в ещё не разобранный модуль.
+   */
+  public boolean awaitsUnparsedModule(@Nullable String link, FileType fileType) {
+    if (link == null || !link.contains(".")) {
+      return false;
+    }
+    var parts = link.split("\\.");
+    for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
+      var head = typeRegistry.resolve(String.join(".", List.of(parts).subList(0, prefixLen)), fileType)
+        .orElse(null);
+      if (head != null) {
+        return isUnparsedModule(head, fileType) && findMember(head, parts[prefixLen], fileType) == null;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Тип конфигурации без единого члена из самой конфигурации — модуль, чей документ ещё не
+   * разобран. Платформенные члены (у общего модуля это {@code ЭтотОбъект}) приходят из
+   * синтакс-помощника и о разборе ничего не говорят, поэтому не в счёт.
+   */
+  private boolean isUnparsedModule(TypeRef ref, FileType fileType) {
+    return ref.kind() == TypeKind.CONFIGURATION
+      && typeRegistry.getMembers(ref, fileType).stream().allMatch(MemberDescriptor::standardLibrary);
+  }
+
+  /**
+   * Ведёт ли в ещё не разобранный модуль хоть одна ссылка среди описаний типов — на верхнем
+   * уровне, в элементах коллекций и в полях.
+   */
+  private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, FileType fileType) {
+    if (types == null) {
+      return false;
+    }
+    for (var type : types) {
+      var hyperlink = type.hyperlink();
+      var link = type.variant() == TypeDescription.Variant.HYPERLINK ? type.name()
+        : hyperlink == null ? null : hyperlink.link();
+      if (awaitsUnparsedModule(link, fileType)
+        || type instanceof CollectionTypeDescription collection
+        && anyAwaitsUnparsedModule(collection.valueTypes(), fileType)
+        || anyFieldAwaitsUnparsedModule(type.fields(), fileType)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, FileType fileType) {
+    return fields != null && fields.stream().anyMatch(field -> anyAwaitsUnparsedModule(field.types(), fileType));
+  }
+
+  /**
    * Развернуть hyperlink-ссылку {@code Модуль.Метод} / {@code Модуль.Метод.Параметр}
    * в тип. Проход по цепочке членов ({@link #resolveChain}) от самого длинного
    * префикса к короткому; берётся тип возврата последнего члена (или типы
