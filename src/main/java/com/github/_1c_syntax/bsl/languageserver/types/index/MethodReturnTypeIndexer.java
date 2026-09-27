@@ -885,19 +885,30 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /**
    * Пересчитывает перечисленные методы одного, уже разобранного документа.
+   * <p>
+   * Пока до метода не дошла очередь, его значение для соседей по документу устарело.
+   * Связей внутри документа индекс не хранит, и порядок пересчёта их не учитывает, поэтому
+   * методы на это время помечаются предварительными: соседка, вызвавшая такой метод раньше,
+   * чем до него дошла очередь, пересчитает его на месте, а не возьмёт прежнее значение
+   * себе навсегда.
    *
    * @param methods методы.
    * @return {@code true}, если хоть у одного набор типов изменился.
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
-    var changed = false;
+    var before = new HashMap<MethodSymbol, TypeSet>();
+    methods.forEach(method -> before.put(method, symbolTypeIndex.getReturnTypes(method)));
+    provisional.addAll(methods);
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
       // ушёл бы в отложенные — очередь не сходилась бы.
-      changed |= recompute(method);
+      recompute(method);
     }
-    return changed;
+    // Изменение считается по значениям до и после: метод мог пересчитаться раньше своей
+    // очереди — по запросу соседки, — и собственный пересчёт тогда уже ничего не меняет.
+    return methods.stream()
+      .anyMatch(method -> !symbolTypeIndex.getReturnTypes(method).equals(before.get(method)));
   }
 
   /**
