@@ -64,6 +64,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 /**
  * Типы возвращаемого значения методов, рассчитанные по их телам.
@@ -896,8 +897,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если хоть у одного набор типов изменился.
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
-    var before = new HashMap<MethodSymbol, TypeSet>();
-    methods.forEach(method -> before.put(method, symbolTypeIndex.getReturnTypes(method)));
+    var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     provisional.addAll(methods);
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
@@ -907,8 +907,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     // Изменение считается по значениям до и после: метод мог пересчитаться раньше своей
     // очереди — по запросу соседки, — и собственный пересчёт тогда уже ничего не меняет.
-    return methods.stream()
-      .anyMatch(method -> !symbolTypeIndex.getReturnTypes(method).equals(before.get(method)));
+    return IntStream.range(0, methods.size())
+      .anyMatch(index -> !symbolTypeIndex.getReturnTypes(methods.get(index)).equals(before.get(index)));
   }
 
   /**
