@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790493733185,
+  "lastUpdate": 1790494864756,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43803,6 +43803,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0188930177942352",
             "extra": "mean: 106.8374224503835 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39cc69eeeac6ecbb0e241c4b9fdaa714ba6ac7a4",
+          "message": "Merge pull request #4552 from 1c-syntax/fix/types-see-reference-keeps-described-fields\n\nfix(types): ссылка см. на член другого модуля приносит описанные колонки и поля",
+          "timestamp": "2026-09-27T08:33:10+02:00",
+          "tree_id": "0005183c3f877d16f88f4a34afa1a5495d342c98",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/39cc69eeeac6ecbb0e241c4b9fdaa714ba6ac7a4"
+        },
+        "date": 1790494839198,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 103.52812393506368,
+            "unit": "sec",
+            "range": "stddev: 0.44307260126807413",
+            "extra": "mean: 103.52812393506368 sec\nrounds: 3"
           }
         ]
       }
