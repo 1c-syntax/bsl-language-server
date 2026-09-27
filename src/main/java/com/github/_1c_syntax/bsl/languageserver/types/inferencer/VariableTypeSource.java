@@ -44,4 +44,16 @@ public interface VariableTypeSource {
    * @return объявленные типы; пустой набор, если источник о переменной ничего не знает.
    */
   TypeSet typesOf(VariableSymbol variable);
+
+  /**
+   * Может ли ответ {@link #typesOf} ещё пополниться: объявление ссылается на то, что пока не
+   * известно. Так бывает, пока рабочая область наполняется: модуль, на который ведёт ссылка,
+   * ещё не разобран, и ссылка не разрешается ни во что — ответ выглядит честным, хотя неполон.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если ответ источника сейчас может быть неполным.
+   */
+  default boolean isIncomplete(VariableSymbol variable) {
+    return false;
+  }
 }

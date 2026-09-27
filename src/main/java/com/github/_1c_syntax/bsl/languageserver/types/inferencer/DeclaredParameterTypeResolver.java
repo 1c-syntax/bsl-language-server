@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -74,6 +75,85 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       }
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Ведёт ли объявление параметра в модуль, до разбора которого очередь ещё не дошла: ссылкой
+   * {@code См.} в описании самого параметра либо, если типа он не объявляет, ссылкой метода
+   * на метод-интерфейс — в том числе через описание одноимённого параметра этого
+   * метода-интерфейса.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если объявленный тип параметра сейчас может быть неполным.
+   */
+  @Override
+  public boolean isIncomplete(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.PARAMETER
+      || !(variable.getScope() instanceof MethodSymbol method)) {
+      return false;
+    }
+    var name = variable.getName();
+    return method.getParameters().stream()
+      .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
+      .findFirst()
+      .map(parameter -> symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner())
+        || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name)))
+      .orElse(false);
+  }
+
+  /**
+   * Объявлены ли у параметра типы в его собственном описании.
+   *
+   * @param parameter описание параметра.
+   * @return {@code true}, если в описании параметра есть хоть один тип.
+   */
+  private static boolean declaresTypes(ParameterDefinition parameter) {
+    return parameter.getDescription()
+      .map(description -> !description.types().isEmpty())
+      .orElse(false);
+  }
+
+  /**
+   * Может ли тип, взятый у одноимённого параметра метода по ссылке {@code // См. …}, ещё
+   * пополниться: сама ссылка ведёт в ещё не разобранный модуль либо в такой модуль ведёт
+   * описание параметра метода-цели. Шагов столько же, сколько у {@link #fromReferencedMethod}.
+   *
+   * @param method    метод со ссылками.
+   * @param paramName имя параметра.
+   * @return {@code true}, если тип по ссылке сейчас может быть неполным.
+   */
+  private boolean referencedMethodAwaitsUnparsedModule(MethodSymbol method, String paramName) {
+    var links = method.getDescription().map(MethodDescription::getLinks).orElse(null);
+    if (links == null) {
+      return false;
+    }
+    var owner = method.getOwner();
+    for (var link : links) {
+      if (symbolTypeIndex.awaitsUnparsedModule(link.link(), owner.getFileType())) {
+        return true;
+      }
+      var target = referencedMethod(owner, link.link());
+      if (target != null && parameterAwaitsUnparsedModule(target, paramName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Ведёт ли описание одноимённого параметра метода в ещё не разобранный модуль.
+   *
+   * @param target    метод-цель ссылки.
+   * @param paramName имя параметра.
+   * @return {@code true}, если описание параметра ссылается на модуль, членов которого пока нет.
+   */
+  private boolean parameterAwaitsUnparsedModule(MethodSymbol target, String paramName) {
+    for (var targetParam : target.getParameters()) {
+      if (targetParam.getName().equalsIgnoreCase(paramName)) {
+        return symbolTypeIndex.awaitsUnparsedModule(targetParam, target.getOwner());
+      }
+    }
+    return false;
   }
 
   /**
