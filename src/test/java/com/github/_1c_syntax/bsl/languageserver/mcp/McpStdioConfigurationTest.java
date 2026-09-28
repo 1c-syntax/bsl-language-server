@@ -21,19 +21,36 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
+import io.modelcontextprotocol.spec.McpSchema;
+import io.modelcontextprotocol.spec.McpServerSession;
+import io.modelcontextprotocol.spec.McpServerTransport;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 /**
- * Тесты stdio-конфигурации MCP: сигнал завершения, обёртка входного потока с сигналом по EOF и бины.
+ * Тесты stdio-конфигурации MCP: сигнал завершения, обёртка входного потока с сигналом по EOF,
+ * одновременная отправка сообщений сессии и бины.
  */
 class McpStdioConfigurationTest {
 
@@ -68,6 +85,58 @@ class McpStdioConfigurationTest {
     }
 
     verify(signal).signal();
+  }
+
+  @Test
+  void concurrentSendsAllReachOutput() throws Exception {
+    // given: сессия stdio-транспорта, которой ответы отдают сразу несколько потоков — как на
+    // параллельные вызовы инструментов.
+    var output = new ByteArrayOutputStream();
+    var stdin = new PipedOutputStream();
+    var jsonMapper = JsonMapper.builder().build();
+    var provider = new McpStdioConfiguration.ConcurrentSendTransportProvider(
+      new JacksonMcpJsonMapper(jsonMapper), new PipedInputStream(stdin), output);
+    var sessionTransport = new AtomicReference<McpServerTransport>();
+    provider.setSessionFactory(transport -> {
+      sessionTransport.set(transport);
+      return mock(McpServerSession.class);
+    });
+
+    var threads = 8;
+    var messagesPerThread = 200;
+    var total = threads * messagesPerThread;
+    var start = new CountDownLatch(1);
+    var failures = new ConcurrentLinkedQueue<Throwable>();
+
+    // when
+    try (var executor = Executors.newFixedThreadPool(threads)) {
+      for (var thread = 0; thread < threads; thread++) {
+        var firstId = thread * messagesPerThread;
+        executor.submit(() -> {
+          start.await();
+          for (var id = firstId; id < firstId + messagesPerThread; id++) {
+            try {
+              sessionTransport.get().sendMessage(new McpSchema.JSONRPCNotification("test", Map.of("id", id))).block();
+            } catch (RuntimeException e) {
+              failures.add(e);
+            }
+          }
+          return null;
+        });
+      }
+      start.countDown();
+    }
+
+    // then: ни одна отправка не получила отказа, и каждое сообщение записано ровно один раз.
+    try (stdin) {
+      assertThat(failures).isEmpty();
+      await().atMost(Duration.ofSeconds(10))
+        .until(() -> output.toString(StandardCharsets.UTF_8).lines().count() >= total);
+      var ids = output.toString(StandardCharsets.UTF_8).lines()
+        .map(line -> jsonMapper.readTree(line).path("params").path("id").asInt())
+        .toList();
+      assertThat(ids).containsExactlyInAnyOrderElementsOf(IntStream.range(0, total).boxed().toList());
+    }
   }
 
   @Test
