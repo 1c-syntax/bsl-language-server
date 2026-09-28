@@ -26,12 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,6 +64,9 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeRegistry typeRegistry;
+
+  @Autowired
+  private TypeService typeService;
 
   @Test
   void topLevelGroupCollectionsAreSpecialized() {
@@ -272,6 +279,51 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     assertThat(names)
       .as("Стандартные реквизиты ТЧ: НомерСтроки и Ссылка")
       .contains("НомерСтроки", "Ссылка");
+  }
+
+  @Test
+  void ownMetadataOfObjectLeadsToItsTabularSectionColumns() {
+    // given: модуль объекта справочника обращается к описанию своей табличной части.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+    var module = TestUtils.getDocumentContext(
+      Path.of(PATH_TO_METADATA, "Catalogs", "Справочник1", "Ext", "ObjectModule.bsl").toUri(),
+      "Колонка = Метаданные().ТабличныеЧасти.ТабличнаяЧасть1.Реквизиты.Реквизит1;\n",
+      context);
+
+    // when
+    var columnsPosition = new Position(0, "Колонка = Метаданные().ТабличныеЧасти.ТабличнаяЧасть1.Реквизиты.".length() + 1);
+    var columns = typeService.receiverTypesAt(module, columnsPosition);
+
+    // then: `Метаданные()` — описание именно этого справочника, а не справочника вообще,
+    // поэтому колонки берутся у его табличной части, а не у одноимённой чужой.
+    assertThat(columns.refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("КоллекцияОбъектовМетаданных.Реквизиты.Справочник1.ТабличнаяЧасть1");
+  }
+
+  @Test
+  void movementOfOwnMetadataIsDescriptionOfRegister() {
+    // given: код обходит движения документа, описание которого получено от его ссылки.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+    var module = TestUtils.getDocumentContext(
+      Path.of(PATH_TO_METADATA, "Catalogs", "Справочник1", "Ext", "ObjectModule.bsl").toUri(),
+      """
+        Для Каждого МетаданныеРегистра Из Документы.Документ1.ПустаяСсылка().Метаданные().Движения Цикл
+          Имя = МетаданныеРегистра.Имя;
+        КонецЦикла;
+        """,
+      context);
+
+    // when
+    var registers = typeService.receiverTypesAt(module, new Position(1, "  Имя = МетаданныеРегистра.".length() + 1));
+
+    // then: элемент движений — описание одного из регистров документа, и у него есть имя.
+    assertThat(registers.refs()).extracting(TypeRef::qualifiedName).contains(
+      "ОбъектМетаданных: РегистрНакопления.РегистрНакопления1",
+      "ОбъектМетаданных: РегистрСведений.РегистрСведений2");
   }
 
   @Test
