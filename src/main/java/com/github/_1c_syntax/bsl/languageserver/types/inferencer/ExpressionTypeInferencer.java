@@ -57,6 +57,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
@@ -461,8 +462,22 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
+  /**
+   * Имя типа, названное в конструкторе: идентификатором ({@code Новый Структура}) либо
+   * строковым литералом ({@code Новый("Структура")}).
+   * <p>
+   * Имя, которое вычисляется ({@code Новый("AddIn." + Имя)}, {@code Новый(ИмяТипа)}),
+   * статически неизвестно. Текст такого выражения именем типа не является — у конкатенации
+   * узел представлен знаком операции, и под именем «+» заводился бы несуществующий тип.
+   *
+   * @param constructor вызов конструктора.
+   * @return имя типа; {@code null}, если оно не названо литералом.
+   */
   @Nullable
   private static String extractTypeName(ConstructorCallNode constructor) {
+    if (constructor.getTypeName().getNodeType() != ExpressionNodeType.LITERAL) {
+      return null;
+    }
     var ast = constructor.getTypeName().getRepresentingAst();
     if (ast == null) {
       return null;
@@ -845,7 +860,11 @@ public class ExpressionTypeInferencer {
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
       // сравнение самих URI нормализует проценты и стоит заметно дороже.
       if (owner == ctx.documentContext) {
-        methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx));
+        // Посреди кругов по ячейкам переменных модуля тело считается по приближениям ячеек:
+        // такое значение годится, пока круги идут, и пересчитывается первым же запросом
+        // после них.
+        methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx),
+          ctx.flowSession.cellsComputing());
       } else {
         ctx.dependencies.add(owner.getUri());
         if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
@@ -853,6 +872,12 @@ public class ExpressionTypeInferencer {
           // наполняется. Расчёт, опирающийся на него, придётся повторить.
           ctx.sawMissing = true;
         }
+      }
+      if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
+        // Объявленное значение ссылается на модуль, до которого очередь ещё не дошла, и пока
+        // оно неполно — хотя по самому ответу этого не видно. Объявленное пересобирается,
+        // когда рабочая область наполнена, а расчёт, прочитавший его сейчас, придётся повторить.
+        ctx.sawMissing = true;
       }
       return symbolTypeIndex.getReturnTypes(method);
     } finally {
@@ -1183,6 +1208,12 @@ public class ExpressionTypeInferencer {
         return cached;
       }
       var computed = declaredTypes(target);
+      if (declarationIncomplete(target)) {
+        // Объявление ведёт туда, что ещё не разобрано, и по самому ответу этого не видно:
+        // значение метода, посчитанное на нём, решил бы порядок наполнения. Такой расчёт
+        // проход после наполнения повторит.
+        ctx.sawMissing = true;
+      }
       declaredByVariable.put(target, computed);
       return computed;
     };
@@ -1403,6 +1434,21 @@ public class ExpressionTypeInferencer {
     // Объявленному типу-коллекции нужен тип её элемента: «Для Каждого» по параметру,
     // чей тип объявлен комментарием, иначе не знает, что за строку он перебирает.
     return attachDefaultElementTypes(entry);
+  }
+
+  /**
+   * Может ли объявленное о переменной ещё пополниться — по мнению хоть одного источника.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если объявление ссылается на то, что пока не известно.
+   */
+  private boolean declarationIncomplete(VariableSymbol variable) {
+    for (var source : variableTypeSources) {
+      if (source.isIncomplete(variable)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -1710,7 +1756,10 @@ public class ExpressionTypeInferencer {
     boolean bodyInFlowCut;
     /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
     boolean refining;
-    /** Расчёт читал значение метода, которое ещё не посчитано. */
+    /**
+     * Расчёт опирался на то, что ещё не посчитано или не разобрано: значение чужого метода,
+     * член либо объявление, ведущие в модуль, до которого очередь ещё не дошла.
+     */
     boolean sawMissing;
     int depth;
 

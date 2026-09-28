@@ -19,7 +19,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.64.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.22.0"
+    id("io.sentry.jvm.gradle") version "6.23.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.26.0"
@@ -176,7 +176,7 @@ dependencies {
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
-    testImplementation("com.tngtech.archunit:archunit-junit6:1.5.0")
+    testImplementation("com.tngtech.archunit:archunit-junit6:1.5.1")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
