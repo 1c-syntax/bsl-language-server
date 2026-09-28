@@ -65,7 +65,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   static final int MAX_POSTPONED_EVENTS = 100;
 
   /** Метка подсказки у события, отправку которого пользователь уже разрешил. */
-  private static final String SEND_PERMITTED_HINT = "bsl-ls.send-permitted";
+  static final String SEND_PERMITTED_HINT = "bsl-ls.send-permitted";
 
   private static final Map<Language, Map<String, SendErrorsMode>> answers = createAnswersMap();
 
@@ -96,7 +96,8 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   @Override
   public @Nullable SentryEvent execute(SentryEvent event, Hint hint) {
     if (Boolean.TRUE.equals(hint.getAs(SEND_PERMITTED_HINT, Boolean.class))) {
-      return event;
+      // Отправку разрешили, но пока пачка ждала своей очереди, её могли запретить.
+      return configuration.getSendErrors() == SendErrorsMode.NEVER ? null : event;
     }
 
     Optional<LanguageClient> clientToAsk;
@@ -140,10 +141,12 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private void onAnswer(@Nullable MessageActionItem answer, @Nullable Throwable error) {
     List<PostponedEvent> permitted;
     synchronized (askLock) {
-      if (error == null) {
-        applyAnswer(answer);
-      } else {
+      if (error != null) {
         LOGGER.warn("Can't execute permission request", error);
+      } else if (configuration.getSendErrors() == SendErrorsMode.ASK) {
+        // Пока вопрос висел, настройку могли сменить — перечитав конфигурацию. Тогда ответ
+        // устарел и новую настройку не перекрывает, а накопленное решается по ней.
+        applyAnswer(answer);
       }
       var currentErrorsMode = configuration.getSendErrors();
       var waiting = postponed;

@@ -168,6 +168,22 @@ class PermissionFilterSentryPipelineTest {
   }
 
   @Test
+  void lateAnswerDoesNotOverrideNewerSetting() {
+    // given: вопрос висит, а настройку тем временем сменили на «не отправлять» — перечитали конфигурацию.
+    var question = new CompletableFuture<MessageActionItem>();
+    connectClientAnswering(question);
+    Sentry.captureException(new IllegalStateException("первая ошибка"));
+    configuration.setSendErrors(SendErrorsMode.NEVER);
+
+    // when
+    question.complete(answer("answer_send"));
+
+    // then: устаревший ответ запрет не снимает, и накопленное не уходит.
+    assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.NEVER);
+    await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(1)).until(allowed::isEmpty);
+  }
+
+  @Test
   void errorAnsweredAtOnceIsSentExactlyOnce() {
     // given: ответ уже на руках к моменту вопроса.
     connectClientAnswering(CompletableFuture.completedFuture(answer("answer_send")));

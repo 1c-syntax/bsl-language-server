@@ -307,6 +307,36 @@ class PermissionFilterBeforeSendCallbackTest {
   }
 
   @Test
+  void permittedReplayIsDroppedIfSendingWasDisabled() {
+
+    // given: событие переотправляется с разрешением, а отправку тем временем запретили.
+    var hint = new Hint();
+    hint.set(PermissionFilterBeforeSendCallback.SEND_PERMITTED_HINT, Boolean.TRUE);
+    configuration.setSendErrors(SendErrorsMode.NEVER);
+
+    // when
+    var filteredEvent = permissionFilter.execute(new SentryEvent(), hint);
+
+    // then
+    assertThat(filteredEvent).isNull();
+  }
+
+  @Test
+  void permittedReplayPassesWhileModeIsAskAgain() {
+
+    // given: после «отправить один раз» режим снова «спрашивать», а пачка ещё уходит.
+    var hint = new Hint();
+    hint.set(PermissionFilterBeforeSendCallback.SEND_PERMITTED_HINT, Boolean.TRUE);
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    // when
+    var filteredEvent = permissionFilter.execute(new SentryEvent(), hint);
+
+    // then
+    assertThat(filteredEvent).isNotNull();
+  }
+
+  @Test
   void askAgainIfQuestionThrew() {
 
     // given: клиент бросил исключение прямо на отправке вопроса.
