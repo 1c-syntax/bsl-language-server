@@ -53,14 +53,29 @@ EndProcedure
 #### Correct:
 ```bsl
 &AtServerNoContext
-Function PrepareData(Product)
+Function ProductData(Product)
+    Return PrepareData(Product);
+EndFunction
+
+&AtServerNoContext
+Function PrepareData(Product) // a method without context is available to a method without context
     ...
 EndFunction
 
 &AtClient
 Procedure Fill(Command)
     FillAtServer();
-    UpdateTitle();
+    UpdateTitle(); // the client method is called on the client, after returning from the server
+EndProcedure
+
+&AtServer
+Procedure FillAtServer()
+    ...
+EndProcedure
+
+&AtClient
+Procedure UpdateTitle()
+    ...
 EndProcedure
 ```
 
