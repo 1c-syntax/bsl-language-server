@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.PreprocessorContexts.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -32,16 +33,9 @@ import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -49,9 +43,8 @@ import java.util.Set;
  * <br/>
  * Клиентский метод недоступен в серверном контексте и внеконтекстным методам, контекстный серверный -
  * внеконтекстным. Модуль с таким вызовом не компилируется. Контексты, в которых компилируется вызов, берутся из
- * директивы вызывающего метода и условий окружающих инструкций препроцессора {@code #Если}: сервер, тонкий,
- * веб- и мобильный клиент. Вызов под условием, которое нельзя вычислить (символ операционной системы или
- * неизвестный), не проверяется. Методы с директивой, недоступной виду модуля, пропускаются - их отмечает
+ * директивы вызывающего метода и условий окружающих инструкций препроцессора {@code #Если}
+ * (см. {@link PreprocessorContexts}). Методы с директивой, недоступной виду модуля, пропускаются - их отмечает
  * {@link CompilationDirectiveNotAllowedDiagnostic}.
  */
 @DiagnosticMetadata(
@@ -68,40 +61,6 @@ import java.util.Set;
   }
 )
 public class CompilationDirectiveIncompatibleCallDiagnostic extends AbstractListenerDiagnostic {
-
-  /**
-   * Контексты компиляции модулей управляемого приложения.
-   */
-  private enum ExecutionContext {
-    SERVER,
-    THIN_CLIENT,
-    WEB_CLIENT,
-    MOBILE_CLIENT
-  }
-
-  private static final Set<ExecutionContext> ALL_CONTEXTS = EnumSet.allOf(ExecutionContext.class);
-  private static final Set<ExecutionContext> SERVER_CONTEXTS = EnumSet.of(ExecutionContext.SERVER);
-  private static final Set<ExecutionContext> CLIENT_CONTEXTS = EnumSet.complementOf(EnumSet.of(ExecutionContext.SERVER));
-  private static final Set<ExecutionContext> NO_CONTEXTS = EnumSet.noneOf(ExecutionContext.class);
-
-  /**
-   * Контексты, в которых символ препроцессора истинен. Символа нет в таблице - условие не вычисляется.
-   */
-  private static final Map<Integer, Set<ExecutionContext>> SYMBOL_CONTEXTS = Map.ofEntries(
-    Map.entry(BSLParser.PREPROC_CLIENT_SYMBOL, CLIENT_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_ATCLIENT_SYMBOL, CLIENT_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_SERVER_SYMBOL, SERVER_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_ATSERVER_SYMBOL, SERVER_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_THINCLIENT_SYMBOL, EnumSet.of(ExecutionContext.THIN_CLIENT)),
-    Map.entry(BSLParser.PREPROC_WEBCLIENT_SYMBOL, EnumSet.of(ExecutionContext.WEB_CLIENT)),
-    Map.entry(BSLParser.PREPROC_MOBILECLIENT_SYMBOL, EnumSet.of(ExecutionContext.MOBILE_CLIENT)),
-    Map.entry(BSLParser.PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL, NO_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL, NO_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_EXTERNALCONNECTION_SYMBOL, NO_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_MOBILEAPPCLIENT_SYMBOL, NO_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL, NO_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_MOBILE_STANDALONE_SERVER, NO_CONTEXTS)
-  );
 
   private static final Set<CompilerDirectiveKind> FORM_MODULE_DIRECTIVES = EnumSet.of(
     CompilerDirectiveKind.AT_CLIENT,
@@ -128,16 +87,13 @@ public class CompilationDirectiveIncompatibleCallDiagnostic extends AbstractList
    */
   private @Nullable CompilerDirectiveKind callerDirective;
 
-  /**
-   * Открытые инструкции {@code #Если}, внутренняя - сверху.
-   */
-  private final Deque<PreprocessorBranch> preprocessorBranches = new ArrayDeque<>();
+  private final PreprocessorContexts preprocessor = new PreprocessorContexts();
 
   @Override
   public void enterFile(BSLParser.FileContext ctx) {
     allowedDirectives = EnumSet.noneOf(CompilerDirectiveKind.class);
     callerDirective = null;
-    preprocessorBranches.clear();
+    preprocessor.clear();
 
     var moduleType = documentContext.getModuleType();
     if (moduleType == ModuleType.FormModule && !isOrdinaryForm()) {
@@ -161,31 +117,22 @@ public class CompilationDirectiveIncompatibleCallDiagnostic extends AbstractList
 
   @Override
   public void enterPreproc_if(BSLParser.Preproc_ifContext ctx) {
-    var parent = preprocessorBranches.peek();
-    var branch = parent == null ? new PreprocessorBranch(ALL_CONTEXTS) : new PreprocessorBranch(parent.active);
-    branch.enter(evaluate(ctx.preproc_expression()));
-    preprocessorBranches.push(branch);
+    preprocessor.enterIf(ctx);
   }
 
   @Override
   public void enterPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
-    var branch = preprocessorBranches.peek();
-    if (branch != null) {
-      branch.enter(evaluate(ctx.preproc_expression()));
-    }
+    preprocessor.enterElsif(ctx);
   }
 
   @Override
   public void enterPreproc_else(BSLParser.Preproc_elseContext ctx) {
-    var branch = preprocessorBranches.peek();
-    if (branch != null) {
-      branch.enterElse();
-    }
+    preprocessor.enterElse();
   }
 
   @Override
   public void enterPreproc_endif(BSLParser.Preproc_endifContext ctx) {
-    preprocessorBranches.poll();
+    preprocessor.enterEndif();
   }
 
   @Override
@@ -194,8 +141,7 @@ public class CompilationDirectiveIncompatibleCallDiagnostic extends AbstractList
     if (caller == null) {
       return;
     }
-    var branch = preprocessorBranches.peek();
-    var activeContexts = branch == null ? ALL_CONTEXTS : branch.active;
+    var activeContexts = preprocessor.active();
     if (activeContexts == null) {
       return;
     }
@@ -230,9 +176,9 @@ public class CompilationDirectiveIncompatibleCallDiagnostic extends AbstractList
 
   private static Set<ExecutionContext> callerContexts(CompilerDirectiveKind caller) {
     return switch (caller) {
-      case AT_CLIENT -> CLIENT_CONTEXTS;
-      case AT_SERVER, AT_SERVER_NO_CONTEXT -> SERVER_CONTEXTS;
-      case AT_CLIENT_AT_SERVER, AT_CLIENT_AT_SERVER_NO_CONTEXT -> ALL_CONTEXTS;
+      case AT_CLIENT -> PreprocessorContexts.CLIENT_CONTEXTS;
+      case AT_SERVER, AT_SERVER_NO_CONTEXT -> PreprocessorContexts.SERVER_CONTEXTS;
+      case AT_CLIENT_AT_SERVER, AT_CLIENT_AT_SERVER_NO_CONTEXT -> PreprocessorContexts.ALL_CONTEXTS;
     };
   }
 
@@ -250,127 +196,5 @@ public class CompilationDirectiveIncompatibleCallDiagnostic extends AbstractList
       case AT_SERVER -> !NO_CONTEXT_DIRECTIVES.contains(caller);
       default -> true;
     };
-  }
-
-  /**
-   * Контексты, в которых истинно условие препроцессора; null - условие не вычисляется.
-   */
-  private static @Nullable Set<ExecutionContext> evaluate(BSLParser.@Nullable Preproc_expressionContext expression) {
-    if (expression == null) {
-      return null;
-    }
-    var tokens = new ArrayList<Integer>();
-    collectTokenTypes(expression, tokens);
-    return new PreprocessorExpressionEvaluator(tokens).evaluate();
-  }
-
-  private static void collectTokenTypes(ParseTree tree, List<Integer> tokens) {
-    if (tree instanceof TerminalNode terminal) {
-      tokens.add(terminal.getSymbol().getType());
-      return;
-    }
-    for (var i = 0; i < tree.getChildCount(); i++) {
-      collectTokenTypes(tree.getChild(i), tokens);
-    }
-  }
-
-  /**
-   * Ветка открытой инструкции {@code #Если}: контексты, где активна текущая ветка, и контексты, где ни одна
-   * из прошлых веток не сработала. null - условие не вычисляется, вызовы под ним не проверяются.
-   */
-  private static final class PreprocessorBranch {
-    private @Nullable Set<ExecutionContext> active;
-    private @Nullable Set<ExecutionContext> remaining;
-
-    private PreprocessorBranch(@Nullable Set<ExecutionContext> parentActive) {
-      remaining = parentActive == null ? null : EnumSet.copyOf(parentActive);
-    }
-
-    private void enter(@Nullable Set<ExecutionContext> condition) {
-      if (remaining == null || condition == null) {
-        active = null;
-        remaining = null;
-        return;
-      }
-      var newActive = EnumSet.copyOf(remaining);
-      newActive.retainAll(condition);
-      remaining.removeAll(newActive);
-      active = newActive;
-    }
-
-    private void enterElse() {
-      active = remaining;
-      remaining = remaining == null ? null : EnumSet.noneOf(ExecutionContext.class);
-    }
-  }
-
-  /**
-   * Вычисление условия препроцессора по типам его лексем: {@code НЕ} сильнее {@code И}, {@code И} сильнее
-   * {@code ИЛИ}.
-   */
-  private static final class PreprocessorExpressionEvaluator {
-    private final List<Integer> tokens;
-    private int position;
-
-    private PreprocessorExpressionEvaluator(List<Integer> tokens) {
-      this.tokens = tokens;
-    }
-
-    private @Nullable Set<ExecutionContext> evaluate() {
-      var result = or();
-      return position == tokens.size() ? result : null;
-    }
-
-    private @Nullable Set<ExecutionContext> or() {
-      var result = and();
-      while (result != null && accept(BSLParser.PREPROC_OR_KEYWORD)) {
-        var right = and();
-        if (right == null) {
-          return null;
-        }
-        result.addAll(right);
-      }
-      return result;
-    }
-
-    private @Nullable Set<ExecutionContext> and() {
-      var result = not();
-      while (result != null && accept(BSLParser.PREPROC_AND_KEYWORD)) {
-        var right = not();
-        if (right == null) {
-          return null;
-        }
-        result.retainAll(right);
-      }
-      return result;
-    }
-
-    private @Nullable Set<ExecutionContext> not() {
-      if (accept(BSLParser.PREPROC_NOT_KEYWORD)) {
-        var operand = not();
-        return operand == null ? null : EnumSet.complementOf(EnumSet.copyOf(operand));
-      }
-      return operand();
-    }
-
-    private @Nullable Set<ExecutionContext> operand() {
-      if (accept(BSLParser.PREPROC_LPAREN)) {
-        var result = or();
-        return accept(BSLParser.PREPROC_RPAREN) ? result : null;
-      }
-      if (position >= tokens.size()) {
-        return null;
-      }
-      var contexts = SYMBOL_CONTEXTS.get(tokens.get(position++));
-      return contexts == null ? null : EnumSet.copyOf(contexts);
-    }
-
-    private boolean accept(int tokenType) {
-      if (position < tokens.size() && tokens.get(position) == tokenType) {
-        position++;
-        return true;
-      }
-      return false;
-    }
   }
 }
