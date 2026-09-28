@@ -697,6 +697,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * Ключ мест изменения и ячеек переменной — её символ, а он у нового текста равен прежнему.
+   *
+   * @return {@code true}.
+   */
+  @Override
+  protected boolean recordsSurviveEdit() {
+    return true;
+  }
+
+  /**
    * Удалить кэши по URI документа.
    *
    * @param uri URI документа.

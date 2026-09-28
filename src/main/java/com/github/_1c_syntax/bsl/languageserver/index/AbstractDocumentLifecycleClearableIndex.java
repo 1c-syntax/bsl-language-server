@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 
@@ -54,6 +56,42 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
    */
   public abstract void clear(URI uri);
 
+  /**
+   * Переживают ли записи индекса правку документа.
+   * <p>
+   * Так бывает, когда ключ записи — не узел дерева разбора, а URI, имя или символ: у нового
+   * текста они те же, а позиции и узлы в записи — прежнего текста.
+   *
+   * @return {@code true}, если записи надо сбросить ещё до пересчёта по новому тексту.
+   */
+  protected boolean recordsSurviveEdit() {
+    return false;
+  }
+
+  /**
+   * Сбросить записи документа до того, как по его новому тексту начнут пересчитывать.
+   * <p>
+   * Действует только для индексов, чьи записи переживают правку ({@link #recordsSurviveEdit()}):
+   * иначе пересчёт по новому тексту получил бы записи прежнего. Поздний сброс
+   * ({@link #handleContentChanged}) при этом остаётся.
+   *
+   * @param event событие изменения содержимого документа.
+   */
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleContentChangedBeforeRecompute(DocumentContextContentChangedEvent event) {
+    if (recordsSurviveEdit()) {
+      clear(event.getSource().getUri());
+    }
+  }
+
+  /**
+   * Сбросить записи документа, содержимое которого изменилось, — после остальных слушателей
+   * события. Убирает и ответы, посчитанные посреди его обработки, пока соседние индексы по
+   * новому тексту ещё не готовы.
+   *
+   * @param event событие изменения содержимого документа.
+   */
   @EventListener
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
     clear(event.getSource().getUri());

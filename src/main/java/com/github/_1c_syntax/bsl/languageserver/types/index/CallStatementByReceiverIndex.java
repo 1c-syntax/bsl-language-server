@@ -98,4 +98,14 @@ public class CallStatementByReceiverIndex extends AbstractDocumentLifecycleClear
   public void clear(URI uri) {
     byUri.remove(uri);
   }
+
+  /**
+   * Ключ записи — URI и имя приёмника, а узлы в ней — прежнего текста.
+   *
+   * @return {@code true}.
+   */
+  @Override
+  protected boolean recordsSurviveEdit() {
+    return true;
+  }
 }
