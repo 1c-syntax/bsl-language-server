@@ -104,30 +104,47 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     synchronized (askLock) {
       var currentErrorsMode = configuration.getSendErrors();
       if (currentErrorsMode != SendErrorsMode.ASK) {
-        if (currentErrorsMode == SendErrorsMode.SEND_ONCE) {
-          configuration.setSendErrors(SendErrorsMode.ASK);
-        }
-        return isSendingAllowed(currentErrorsMode) ? event : null;
+        return decideByMode(currentErrorsMode) ? event : null;
       }
-
-      var client = languageClientHolder.getClient();
-      if (client.isEmpty() || clientCapabilitiesHolder.getCapabilities().isEmpty()) {
-        return null;
-      }
-
-      var waiting = postponed;
-      clientToAsk = waiting == null ? client : Optional.empty();
-      if (waiting == null) {
-        waiting = new ArrayList<>();
-        postponed = waiting;
-      }
-      if (waiting.size() < MAX_POSTPONED_EVENTS) {
-        waiting.add(new PostponedEvent(event, hint));
-      }
+      clientToAsk = postpone(event, hint);
     }
 
     clientToAsk.ifPresent(this::ask);
     return null;
+  }
+
+  /**
+   * Решить по режиму, не спрашивая; «отправить один раз» после этого снова становится
+   * «спрашивать». Вызывается под {@link #askLock}.
+   */
+  private boolean decideByMode(SendErrorsMode errorsMode) {
+    if (errorsMode == SendErrorsMode.SEND_ONCE) {
+      configuration.setSendErrors(SendErrorsMode.ASK);
+    }
+    return errorsMode == SendErrorsMode.SEND || errorsMode == SendErrorsMode.SEND_ONCE;
+  }
+
+  /**
+   * Отложить событие до ответа пользователя. Вызывается под {@link #askLock}.
+   *
+   * @return клиент, которому надо задать вопрос; пусто, если вопрос уже задан или спросить
+   *     некого — тогда и событие не откладывается.
+   */
+  private Optional<LanguageClient> postpone(SentryEvent event, Hint hint) {
+    var client = languageClientHolder.getClient();
+    if (client.isEmpty() || clientCapabilitiesHolder.getCapabilities().isEmpty()) {
+      return Optional.empty();
+    }
+    var waiting = postponed;
+    var clientToAsk = waiting == null ? client : Optional.<LanguageClient>empty();
+    if (waiting == null) {
+      waiting = new ArrayList<>();
+      postponed = waiting;
+    }
+    if (waiting.size() < MAX_POSTPONED_EVENTS) {
+      waiting.add(new PostponedEvent(event, hint));
+    }
+    return clientToAsk;
   }
 
   private void ask(LanguageClient languageClient) {
@@ -141,19 +158,14 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private void onAnswer(@Nullable MessageActionItem answer, @Nullable Throwable error) {
     List<PostponedEvent> permitted;
     synchronized (askLock) {
-      if (error != null) {
-        LOGGER.warn("Can't execute permission request", error);
-      } else if (configuration.getSendErrors() == SendErrorsMode.ASK) {
-        // Пока вопрос висел, настройку могли сменить — перечитав конфигурацию. Тогда ответ
-        // устарел и новую настройку не перекрывает, а накопленное решается по ней.
+      if (error == null) {
         applyAnswer(answer);
+      } else {
+        LOGGER.warn("Can't execute permission request", error);
       }
-      var currentErrorsMode = configuration.getSendErrors();
+      var sendingAllowed = decideByMode(configuration.getSendErrors());
       var waiting = postponed;
-      permitted = isSendingAllowed(currentErrorsMode) && waiting != null ? waiting : List.of();
-      if (currentErrorsMode == SendErrorsMode.SEND_ONCE) {
-        configuration.setSendErrors(SendErrorsMode.ASK);
-      }
+      permitted = sendingAllowed && waiting != null ? waiting : List.of();
       postponed = null;
     }
     // Не в потоке клиента, где пришёл ответ, и не изнутри обработки события самим Sentry:
@@ -161,10 +173,6 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     if (!permitted.isEmpty()) {
       CompletableFuture.runAsync(() -> permitted.forEach(PermissionFilterBeforeSendCallback::sendAgain));
     }
-  }
-
-  private static boolean isSendingAllowed(SendErrorsMode errorsMode) {
-    return errorsMode == SendErrorsMode.SEND || errorsMode == SendErrorsMode.SEND_ONCE;
   }
 
   /**
@@ -185,7 +193,15 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private record PostponedEvent(SentryEvent event, Hint hint) {
   }
 
+  /**
+   * Применить ответ пользователя. Пока вопрос висел, настройку могли сменить — перечитав
+   * конфигурацию; тогда ответ устарел и новую настройку не перекрывает, а накопленное
+   * решается по ней. Вызывается под {@link #askLock}.
+   */
   private void applyAnswer(@Nullable MessageActionItem answer) {
+    if (configuration.getSendErrors() != SendErrorsMode.ASK) {
+      return;
+    }
     Optional.ofNullable(answer)
       .map(MessageActionItem::getTitle)
       .map(title -> answers.get(configuration.getLanguage()).get(title))
