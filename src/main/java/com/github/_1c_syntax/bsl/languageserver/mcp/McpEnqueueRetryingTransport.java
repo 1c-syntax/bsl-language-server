@@ -53,28 +53,15 @@ final class McpEnqueueRetryingTransport implements McpServerTransport {
   @Override
   public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
     var send = delegate.sendMessage(message);
-    return Mono.defer(() -> send.retryWhen(Retry.indefinitely().filter(new EnqueueWindow()::allowsRetry)));
+    return send.onErrorResume(McpEnqueueRetryingTransport::isEnqueueFailure, refusal -> Mono.defer(() -> {
+      var deadline = System.nanoTime() + ENQUEUE_TIMEOUT.toNanos();
+      return send.retryWhen(Retry.indefinitely()
+        .filter(error -> isEnqueueFailure(error) && System.nanoTime() - deadline < 0));
+    }));
   }
 
-  /**
-   * Окно повторов одной отправки: открывается первым отказом и длится {@link #ENQUEUE_TIMEOUT}.
-   */
-  private static final class EnqueueWindow {
-
-    private boolean opened;
-    private long deadline;
-
-    boolean allowsRetry(Throwable error) {
-      if (!ENQUEUE_FAILURE.equals(error.getMessage())) {
-        return false;
-      }
-      var now = System.nanoTime();
-      if (!opened) {
-        opened = true;
-        deadline = now + ENQUEUE_TIMEOUT.toNanos();
-      }
-      return now - deadline < 0;
-    }
+  private static boolean isEnqueueFailure(Throwable error) {
+    return ENQUEUE_FAILURE.equals(error.getMessage());
   }
 
   @Override
