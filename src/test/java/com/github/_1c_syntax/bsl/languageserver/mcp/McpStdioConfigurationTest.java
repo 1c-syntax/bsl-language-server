@@ -34,10 +34,12 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -91,8 +93,9 @@ class McpStdioConfigurationTest {
     // параллельные вызовы инструментов.
     var output = new ByteArrayOutputStream();
     var stdin = new PipedOutputStream();
+    var jsonMapper = JsonMapper.builder().build();
     var provider = new McpStdioConfiguration.ConcurrentSendTransportProvider(
-      new JacksonMcpJsonMapper(JsonMapper.builder().build()), new PipedInputStream(stdin), output);
+      new JacksonMcpJsonMapper(jsonMapper), new PipedInputStream(stdin), output);
     var sessionTransport = new AtomicReference<McpServerTransport>();
     provider.setSessionFactory(transport -> {
       sessionTransport.set(transport);
@@ -101,17 +104,19 @@ class McpStdioConfigurationTest {
 
     var threads = 8;
     var messagesPerThread = 200;
+    var total = threads * messagesPerThread;
     var start = new CountDownLatch(1);
     var failures = new ConcurrentLinkedQueue<Throwable>();
 
     // when
     try (var executor = Executors.newFixedThreadPool(threads)) {
       for (var thread = 0; thread < threads; thread++) {
+        var firstId = thread * messagesPerThread;
         executor.submit(() -> {
           start.await();
-          for (var message = 0; message < messagesPerThread; message++) {
+          for (var id = firstId; id < firstId + messagesPerThread; id++) {
             try {
-              sessionTransport.get().sendMessage(new McpSchema.JSONRPCNotification("test")).block();
+              sessionTransport.get().sendMessage(new McpSchema.JSONRPCNotification("test", Map.of("id", id))).block();
             } catch (RuntimeException e) {
               failures.add(e);
             }
@@ -122,11 +127,15 @@ class McpStdioConfigurationTest {
       start.countDown();
     }
 
-    // then: ни одна отправка не получила отказа, и все сообщения записаны.
+    // then: ни одна отправка не получила отказа, и каждое сообщение записано ровно один раз.
     try (stdin) {
       assertThat(failures).isEmpty();
       await().atMost(Duration.ofSeconds(10))
-        .until(() -> output.toString(StandardCharsets.UTF_8).lines().count() == threads * messagesPerThread);
+        .until(() -> output.toString(StandardCharsets.UTF_8).lines().count() >= total);
+      var ids = output.toString(StandardCharsets.UTF_8).lines()
+        .map(line -> jsonMapper.readTree(line).path("params").path("id").asInt())
+        .toList();
+      assertThat(ids).containsExactlyInAnyOrderElementsOf(IntStream.range(0, total).boxed().toList());
     }
   }
 
