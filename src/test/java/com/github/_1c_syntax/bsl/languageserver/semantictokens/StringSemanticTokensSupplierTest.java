@@ -21,23 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
+@RecordApplicationEvents
 class StringSemanticTokensSupplierTest {
 
   @Autowired
@@ -45,6 +52,9 @@ class StringSemanticTokensSupplierTest {
 
   @Autowired
   private SemanticTokensTestHelper helper;
+
+  @Autowired
+  private ApplicationEvents applicationEvents;
 
   // ==================== Regular String Tests ====================
 
@@ -995,6 +1005,31 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(1, 28, 1, SemanticTokenTypes.Operator, "+"),
       new ExpectedToken(1, 30, 1, SemanticTokenTypes.Number, "1")
     ));
+  }
+
+  @Test
+  void lambdaBodyIsParsedInDocumentsOwnServerContext() {
+    // given
+    var uri = Absolute.path("src/test/resources/empty-workspace/fake-uri.os").toUri();
+    var documentContext = TestUtils.getDocumentContext(uri, """
+      Процедура Тест()
+        Р = "(Элемент) -> Элемент + 1";
+      КонецПроцедуры
+      """);
+
+    // when
+    supplier.getSemanticTokens(documentContext);
+
+    // then: временный документ с телом лямбды разобран в рабочей папке самого документа — с её
+    // конфигурацией, а не в ничейном контексте, где слушателям события нечем определить язык.
+    var lambdaDocuments = applicationEvents.stream(DocumentContextContentChangedEvent.class)
+      .map(DocumentContextContentChangedEvent::getSource)
+      .filter(source -> source.getUri().toString().contains("virtual-lambda"))
+      .toList();
+    assertThat(lambdaDocuments).isNotEmpty().allSatisfy(lambda -> {
+      assertThat(lambda.getServerContext()).isSameAs(documentContext.getServerContext());
+      assertThatCode(lambda::getScriptVariantLanguage).doesNotThrowAnyException();
+    });
   }
 
   @Test
