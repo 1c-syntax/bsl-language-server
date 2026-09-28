@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790606730282,
+  "lastUpdate": 1790610398707,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43958,6 +43958,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1041344888872717",
             "extra": "mean: 110.29283197720845 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "26443d391fc5e29841c1e180dff2dccbb578de9b",
+          "message": "Merge pull request #4560 from 1c-syntax/fix/mcp-stdio-concurrent-send\n\nfix(mcp): ответы на параллельные вызовы по stdio больше не теряются",
+          "timestamp": "2026-09-28T14:55:31+02:00",
+          "tree_id": "d5f2fb4396fc3a39ccaa6c51bae87a9850c5e229",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/26443d391fc5e29841c1e180dff2dccbb578de9b"
+        },
+        "date": 1790610371392,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 107.25040165583293,
+            "unit": "sec",
+            "range": "stddev: 1.3110334931649423",
+            "extra": "mean: 107.25040165583293 sec\nrounds: 3"
           }
         ]
       }
