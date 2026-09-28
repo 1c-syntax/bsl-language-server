@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790603924510,
+  "lastUpdate": 1790606730282,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -43927,6 +43927,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.0143523319945946",
             "extra": "mean: 106.00488050778706 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0079ce0916cf18efdf43e2f1cf640dffa9e02453",
+          "message": "Merge pull request #4558 from 1c-syntax/fix/types-metadata-same-named-children-merged\n\nfix(types): одноимённые дети без владельца сливают свои коллекции",
+          "timestamp": "2026-09-28T14:24:52+02:00",
+          "tree_id": "19ad4a17f647c2089e634bce87cb3106edc040cc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0079ce0916cf18efdf43e2f1cf640dffa9e02453"
+        },
+        "date": 1790606703426,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 110.29283197720845,
+            "unit": "sec",
+            "range": "stddev: 1.1041344888872717",
+            "extra": "mean: 110.29283197720845 sec\nrounds: 3"
           }
         ]
       }
