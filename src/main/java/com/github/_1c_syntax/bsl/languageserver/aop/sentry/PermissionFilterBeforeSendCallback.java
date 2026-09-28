@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import io.sentry.Hint;
+import io.sentry.Sentry;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions.BeforeSendCallback;
 import lombok.RequiredArgsConstructor;
@@ -40,11 +41,12 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -66,58 +68,118 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   private final ServerInfo serverInfo;
 
-  private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
+  /**
+   * Сколько событий копится, пока пользователь не ответил: ошибки часто идут пачкой, но держать
+   * их без предела в памяти нельзя. Сверх этого числа события отбрасываются.
+   */
+  static final int MAX_POSTPONED_EVENTS = 100;
+
+  /** Метка подсказки у события, отправку которого пользователь уже разрешил. */
+  private static final String SEND_PERMITTED_HINT = "bsl-ls.send-permitted";
+
+  private final Object askLock = new Object();
+
+  /**
+   * События, ждущие ответа пользователя; {@code null}, пока вопрос не задан.
+   * Доступ — под {@link #askLock}.
+   */
+  private @Nullable List<PostponedEvent> postponed;
 
   /**
    * Решить, уходит ли событие в Sentry.
    * <p>
    * Ответа пользователя на вопрос о разрешении метод не ждёт: вызывающий поток может держать
-   * блокировку, без которой сервер не прочитает сам ответ клиента. Если ответ уже есть, событие
-   * решается по нему; если ответ придёт позже, он действует на следующие события, а событие,
-   * на котором спросили, не отправляется.
+   * блокировку, без которой сервер не прочитает сам ответ клиента. Пока ответа нет, события
+   * не отправляются, а копятся — и уходят, когда пользователь отправку разрешит. Ответ
+   * «отправить один раз» относится ко всей накопленной пачке.
    */
   @Override
   public @Nullable SentryEvent execute(SentryEvent event, Hint hint) {
-    if (sendToSentry()) {
+    if (Boolean.TRUE.equals(hint.getAs(SEND_PERMITTED_HINT, Boolean.class))) {
       return event;
     }
 
+    Optional<LanguageClient> clientToAsk;
+    synchronized (askLock) {
+      var currentErrorsMode = configuration.getSendErrors();
+      if (currentErrorsMode != SendErrorsMode.ASK) {
+        if (currentErrorsMode == SendErrorsMode.SEND_ONCE) {
+          configuration.setSendErrors(SendErrorsMode.ASK);
+        }
+        return isSendingAllowed(currentErrorsMode) ? event : null;
+      }
+
+      var client = languageClientHolder.getClient();
+      if (client.isEmpty() || clientCapabilitiesHolder.getCapabilities().isEmpty()) {
+        return null;
+      }
+
+      var waiting = postponed;
+      clientToAsk = waiting == null ? client : Optional.empty();
+      if (waiting == null) {
+        waiting = new ArrayList<>();
+        postponed = waiting;
+      }
+      if (waiting.size() < MAX_POSTPONED_EVENTS) {
+        waiting.add(new PostponedEvent(event, hint));
+      }
+    }
+
+    clientToAsk.ifPresent(this::ask);
     return null;
   }
 
-  private boolean sendToSentry() {
-    if (configuration.getSendErrors() == SendErrorsMode.ASK) {
-      if (!languageClientHolder.isConnected() || clientCapabilitiesHolder.getCapabilities().isEmpty()) {
-        return false;
-      }
-
-      // if CAS returns false then question was already sent but no answer has received yet.
-      // Otherwise, set atomic to true and send question.
-      if (!questionWasSend.compareAndSet(false, true)) {
-        return false;
-      }
-
-      // Уже пришедший ответ применяется здесь же, и режим ниже читается с ним; ответ, который
-      // придёт позже, применится в потоке клиента.
-      languageClientHolder.execIfConnected((LanguageClient languageClient) ->
-        askUserForPermission(languageClient).whenComplete((answer, error) -> {
-          if (error == null) {
-            applyAnswer(answer);
-          } else {
-            LOGGER.warn("Can't execute permission request", error);
-          }
-          questionWasSend.set(false);
-        })
-      );
+  private void ask(LanguageClient languageClient) {
+    try {
+      askUserForPermission(languageClient).whenComplete(this::onAnswer);
+    } catch (RuntimeException e) {
+      onAnswer(null, e);
     }
+  }
 
-    var currentErrorsMode = configuration.getSendErrors();
-    var result = currentErrorsMode == SendErrorsMode.SEND || currentErrorsMode == SendErrorsMode.SEND_ONCE;
-    if (currentErrorsMode == SendErrorsMode.SEND_ONCE) {
-      configuration.setSendErrors(SendErrorsMode.ASK);
+  private void onAnswer(@Nullable MessageActionItem answer, @Nullable Throwable error) {
+    List<PostponedEvent> permitted;
+    synchronized (askLock) {
+      if (error == null) {
+        applyAnswer(answer);
+      } else {
+        LOGGER.warn("Can't execute permission request", error);
+      }
+      var currentErrorsMode = configuration.getSendErrors();
+      var waiting = postponed;
+      permitted = isSendingAllowed(currentErrorsMode) && waiting != null ? waiting : List.of();
+      if (currentErrorsMode == SendErrorsMode.SEND_ONCE) {
+        configuration.setSendErrors(SendErrorsMode.ASK);
+      }
+      postponed = null;
     }
+    // Не в потоке клиента, где пришёл ответ, и не изнутри обработки события самим Sentry:
+    // пачка может быть большой, а повторный захват изнутри beforeSend до него не доходит.
+    if (!permitted.isEmpty()) {
+      CompletableFuture.runAsync(() -> permitted.forEach(PermissionFilterBeforeSendCallback::sendAgain));
+    }
+  }
 
-    return result;
+  private static boolean isSendingAllowed(SendErrorsMode errorsMode) {
+    return errorsMode == SendErrorsMode.SEND || errorsMode == SendErrorsMode.SEND_ONCE;
+  }
+
+  /**
+   * Отправить заново событие, отложенное до ответа пользователя.
+   * <p>
+   * Исключение с события снимается: дедупликация Sentry запомнила его ещё на первом проходе
+   * и отбросила бы повтор. В отчёт оно всё равно попадает — разобранное из него описание
+   * исключений у события к этому моменту уже есть.
+   */
+  private static void sendAgain(PostponedEvent postponedEvent) {
+    var event = postponedEvent.event();
+    var hint = postponedEvent.hint();
+    event.setThrowable(null);
+    hint.set(SEND_PERMITTED_HINT, Boolean.TRUE);
+    Sentry.captureEvent(event, hint);
+  }
+
+  private record PostponedEvent(SentryEvent event, Hint hint) {
   }
 
   private void applyAnswer(@Nullable MessageActionItem answer) {

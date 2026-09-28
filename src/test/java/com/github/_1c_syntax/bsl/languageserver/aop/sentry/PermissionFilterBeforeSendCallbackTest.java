@@ -184,9 +184,11 @@ class PermissionFilterBeforeSendCallbackTest {
     // when
     var filteredEvent = permissionFilter.execute(event, mock(Hint.class));
 
-    // then
-    assertThat(filteredEvent).isNotNull();
+    // then: событие, на котором спросили, уходит повторной отправкой после ответа
+    // (см. PermissionFilterSentryPipelineTest), а следующие — сразу.
+    assertThat(filteredEvent).isNull();
     assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.SEND);
+    assertThat(permissionFilter.execute(new SentryEvent(), mock(Hint.class))).isNotNull();
 
   }
 
@@ -242,8 +244,8 @@ class PermissionFilterBeforeSendCallbackTest {
     // when
     var filteredEvent = permissionFilter.execute(event, mock(Hint.class));
 
-    // then
-    assertThat(filteredEvent).isNotNull();
+    // then: разрешение на один раз ушло на отложенное событие, дальше снова спрашиваем.
+    assertThat(filteredEvent).isNull();
     assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.ASK);
   }
 
@@ -301,6 +303,28 @@ class PermissionFilterBeforeSendCallbackTest {
     assertThat(first).isNull();
     assertThat(second).isNull();
     assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.ASK);
+    verify(languageClient, times(2)).showMessageRequest(any());
+  }
+
+  @Test
+  void askAgainIfQuestionThrew() {
+
+    // given: клиент бросил исключение прямо на отправке вопроса.
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    var languageClient = mock(LanguageClient.class);
+    when(languageClient.showMessageRequest(any())).thenThrow(new IllegalStateException("поток закрыт"));
+
+    languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(mock(ClientCapabilities.class));
+
+    // when
+    var first = permissionFilter.execute(new SentryEvent(), mock(Hint.class));
+    var second = permissionFilter.execute(new SentryEvent(), mock(Hint.class));
+
+    // then
+    assertThat(first).isNull();
+    assertThat(second).isNull();
     verify(languageClient, times(2)).showMessageRequest(any());
   }
 
