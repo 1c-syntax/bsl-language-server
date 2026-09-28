@@ -96,6 +96,21 @@ class ModuleVariableCellsParseOrderTest extends AbstractServerContextAwareTest {
     assertThat(rows.getAllFieldNames()).contains("Имя", "ПолноеИмя");
   }
 
+  @Test
+  void valueThroughLocalFunctionHasAllColumns() {
+    // given: первой в модуле стоит функция, берущая переменную через соседку. При разборе
+    // ячейку считает вложенный расчёт — тот, что после защиты от циклов в кэш не идёт.
+    parse("Поставщик");
+    var consumer = parse("Потребитель");
+
+    // when
+    var viaCall = inferencer.computeReturnTypes(method(consumer, "СоставЧерезВызов"));
+
+    // then
+    assertThat(viaCall.incomplete()).isFalse();
+    assertThat(viaCall.types().getElementTypes().getAllFieldNames()).contains("Имя", "ПолноеИмя");
+  }
+
   @BeforeEach
   void registerConfiguration() {
     initServerContext(FIXTURE, false);
