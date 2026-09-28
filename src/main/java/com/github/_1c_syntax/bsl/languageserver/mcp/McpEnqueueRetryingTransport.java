@@ -35,29 +35,32 @@ import java.util.List;
  * Транспорт MCP-сессии, повторяющий отправку, которой исходный транспорт отказал из-за
  * одновременной записи.
  * <p>
- * Такой отказ — ошибка с сообщением {@value #ENQUEUE_FAILURE}. Повтор сразу же заново подписывается
- * на отправку исходного транспорта, пока соседняя запись не закончится, — в пределах
- * {@link #ENQUEUE_TIMEOUT} от первого отказа, как исправление в самом SDK. Окно рассчитано на соседа,
- * вытесненного планировщиком посреди записи; дольше ждать незачем: тем же отказом отвечает и
- * закрытый транспорт. После окна, как и при любой другой ошибке, передаётся исходная ошибка.
- * Остальные методы передаются исходному транспорту как есть.
+ * Такой отказ — ошибка с сообщением {@value #ENQUEUE_FAILURE}. Повтор заново подписывается на
+ * отправку исходного транспорта после паузы, растущей от {@link #FIRST_BACKOFF} до {@link #MAX_BACKOFF}
+ * со случайным разбросом, — не больше {@value #MAX_ENQUEUE_RETRIES} раз, то есть в пределах
+ * примерно секунды. Пауза не даёт повторам крутиться вхолостую, пока соседняя запись, вытесненная
+ * планировщиком, держит приёмник, а число повторов не зависит от того, сколько длится сама попытка.
+ * Дольше ждать незачем: тем же отказом отвечает и закрытый транспорт. После последнего повтора, как
+ * и при любой другой ошибке, передаётся исходная ошибка. Остальные методы передаются исходному
+ * транспорту как есть.
  */
 @RequiredArgsConstructor
 final class McpEnqueueRetryingTransport implements McpServerTransport {
 
   static final String ENQUEUE_FAILURE = "Failed to enqueue message";
-  static final Duration ENQUEUE_TIMEOUT = Duration.ofMillis(100);
+  static final int MAX_ENQUEUE_RETRIES = 20;
+  static final Duration FIRST_BACKOFF = Duration.ofMillis(1);
+  static final Duration MAX_BACKOFF = Duration.ofMillis(50);
 
   private final McpServerTransport delegate;
 
   @Override
   public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
-    var send = delegate.sendMessage(message);
-    return send.onErrorResume(McpEnqueueRetryingTransport::isEnqueueFailure, refusal -> Mono.defer(() -> {
-      var deadline = System.nanoTime() + ENQUEUE_TIMEOUT.toNanos();
-      return send.retryWhen(Retry.indefinitely()
-        .filter(error -> isEnqueueFailure(error) && System.nanoTime() - deadline < 0));
-    }));
+    return delegate.sendMessage(message)
+      .retryWhen(Retry.backoff(MAX_ENQUEUE_RETRIES, FIRST_BACKOFF)
+        .maxBackoff(MAX_BACKOFF)
+        .filter(McpEnqueueRetryingTransport::isEnqueueFailure)
+        .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
   }
 
   private static boolean isEnqueueFailure(Throwable error) {

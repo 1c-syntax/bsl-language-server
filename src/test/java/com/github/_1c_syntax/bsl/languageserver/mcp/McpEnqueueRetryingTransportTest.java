@@ -30,7 +30,6 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -123,22 +122,17 @@ class McpEnqueueRetryingTransportTest {
   void givesUpOnPersistentRefusal() {
     // given: отказывает каждая попытка — так отвечает закрытый транспорт.
     var attempts = new AtomicInteger();
-    var firstRefusal = new AtomicLong();
     var transport = transportSending(Mono.defer(() -> {
-      if (attempts.getAndIncrement() == 0) {
-        firstRefusal.set(System.nanoTime());
-      }
+      attempts.incrementAndGet();
       return Mono.error(new RuntimeException(McpEnqueueRetryingTransport.ENQUEUE_FAILURE));
     }));
 
     // when
     var sent = transport.sendMessage(MESSAGE);
 
-    // then: повторы шли всё окно от первого отказа, после него — исходная ошибка.
+    // then: после последнего повтора — исходная ошибка.
     assertThatThrownBy(sent::block).hasMessage(McpEnqueueRetryingTransport.ENQUEUE_FAILURE);
-    assertThat(Duration.ofNanos(System.nanoTime() - firstRefusal.get()))
-      .isGreaterThanOrEqualTo(McpEnqueueRetryingTransport.ENQUEUE_TIMEOUT);
-    assertThat(attempts).hasValueGreaterThan(1);
+    assertThat(attempts).hasValue(McpEnqueueRetryingTransport.MAX_ENQUEUE_RETRIES + 1);
   }
 
   private static McpServerTransport transportSending(Mono<Void> send) {
