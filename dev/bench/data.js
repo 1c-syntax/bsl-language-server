@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790612932652,
+  "lastUpdate": 1790614249372,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44020,6 +44020,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.2798485236779897",
             "extra": "mean: 109.59894347190857 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7bee672d1cde1afde4c0cd42b5b4bd4c7cc58c87",
+          "message": "Merge pull request #4569 from 1c-syntax/fix/sentry-permission-nonblocking\n\nfix(sentry): вопрос о разрешении отправки ошибок больше не вешает сервер",
+          "timestamp": "2026-09-28T16:40:20+02:00",
+          "tree_id": "eadadf85df7d872259921f5d75b62e7df3a41060",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7bee672d1cde1afde4c0cd42b5b4bd4c7cc58c87"
+        },
+        "date": 1790614221324,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 110.08746973673503,
+            "unit": "sec",
+            "range": "stddev: 1.7397651261824119",
+            "extra": "mean: 110.08746973673503 sec\nrounds: 3"
           }
         ]
       }
