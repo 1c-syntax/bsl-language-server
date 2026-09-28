@@ -71,6 +71,9 @@
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
+                "CommonModuleIncompatibleCall": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleIncompatibleCall"
+                },
                 "CommonModuleInvalidType": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
                 },
