@@ -44,7 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -69,6 +68,14 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
 
+  /**
+   * Решить, уходит ли событие в Sentry.
+   * <p>
+   * Ответа пользователя на вопрос о разрешении метод не ждёт: вызывающий поток может держать
+   * блокировку, без которой сервер не прочитает сам ответ клиента. Если ответ уже есть, событие
+   * решается по нему; если ответ придёт позже, он действует на следующие события, а событие,
+   * на котором спросили, не отправляется.
+   */
   @Override
   public @Nullable SentryEvent execute(SentryEvent event, Hint hint) {
     if (sendToSentry()) {
@@ -90,16 +97,18 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
         return false;
       }
 
-      languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
-        var sendQuestion = askUserForPermission(languageClient);
-        var answerItem = waitForPermission(sendQuestion);
-        Optional.ofNullable(answerItem)
-          .map(MessageActionItem::getTitle)
-          .map(title -> answers.get(configuration.getLanguage()).get(title))
-          .ifPresent(configuration::setSendErrors);
-
-        questionWasSend.set(false);
-      });
+      // Уже пришедший ответ применяется здесь же, и режим ниже читается с ним; ответ, который
+      // придёт позже, применится в потоке клиента.
+      languageClientHolder.execIfConnected((LanguageClient languageClient) ->
+        askUserForPermission(languageClient).whenComplete((answer, error) -> {
+          if (error == null) {
+            applyAnswer(answer);
+          } else {
+            LOGGER.warn("Can't execute permission request", error);
+          }
+          questionWasSend.set(false);
+        })
+      );
     }
 
     var currentErrorsMode = configuration.getSendErrors();
@@ -109,6 +118,13 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     }
 
     return result;
+  }
+
+  private void applyAnswer(@Nullable MessageActionItem answer) {
+    Optional.ofNullable(answer)
+      .map(MessageActionItem::getTitle)
+      .map(title -> answers.get(configuration.getLanguage()).get(title))
+      .ifPresent(configuration::setSendErrors);
   }
 
   private CompletableFuture<MessageActionItem> askUserForPermission(LanguageClient languageClient) {
@@ -129,21 +145,6 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     requestParams.setActions(actions);
 
     return languageClient.showMessageRequest(requestParams);
-  }
-
-  @Nullable private MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> sendQuestion) {
-    try {
-      return sendQuestion.get();
-    } catch (InterruptedException e) {
-      LOGGER.error("Can't wait for permission", e);
-      questionWasSend.set(false);
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException(e);
-    } catch (ExecutionException e) {
-      LOGGER.error("Can't execute permission request", e);
-      questionWasSend.set(false);
-      throw new IllegalStateException(e);
-    }
   }
 
   private static Map<Language, Map<String, SendErrorsMode>> createAnswersMap() {
