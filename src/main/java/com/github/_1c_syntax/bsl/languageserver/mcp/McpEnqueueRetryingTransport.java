@@ -31,6 +31,10 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 import java.util.List;
 
+// TODO: убрать вместе с McpStdioConfiguration.ConcurrentSendTransportProvider, когда выйдет
+//  MCP Java SDK с исправлением одновременной отправки в stdio-транспорте:
+//  https://github.com/modelcontextprotocol/java-sdk/issues/686
+//  (исправлено в main SDK коммитом 2bb1481; в релизах по 2.0.1 включительно его нет).
 /**
  * Транспорт MCP-сессии, повторяющий отправку, которой исходный транспорт отказал из-за
  * одновременной записи.

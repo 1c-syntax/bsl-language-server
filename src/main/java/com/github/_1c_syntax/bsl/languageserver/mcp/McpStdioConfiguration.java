@@ -63,6 +63,9 @@ public class McpStdioConfiguration {
     return new ConcurrentSendTransportProvider(mcpJsonMapper, stdin, System.out);
   }
 
+  // TODO: убрать вместе с McpEnqueueRetryingTransport, когда выйдет MCP Java SDK с исправлением
+  //  одновременной отправки в stdio-транспорте: https://github.com/modelcontextprotocol/java-sdk/issues/686
+  //  (исправлено в main SDK коммитом 2bb1481; в релизах по 2.0.1 включительно его нет).
   /**
    * Stdio-транспорт, сессия которого переносит одновременную отправку сообщений.
    * <p>
