@@ -349,6 +349,46 @@ class MetadataCollectionSpecializerUnitTest {
   }
 
   @Test
+  void specialize_sameNamedChildrenOfUnknownOwner_mergeTheirCollections() {
+    // given: табличная часть «Товары» есть у двух документов, и колонки у них разные.
+    var registry = new TypeRegistry(List.of(), mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
+    var documentTypeRef = registry.registerConfigurationType("ОбъектМетаданных: Документ");
+    registry.registerConfigurationType("ОбъектМетаданных: ТабличнаяЧасть");
+    var baseCollectionRef = registry.registerConfigurationType("КоллекцияОбъектовМетаданных");
+    var slot = MemberDescriptor.genericProperty("<Имя объекта>", documentTypeRef, "")
+      .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
+    registry.registerMemberSource(baseCollectionRef, () -> List.of(slot), FileType.BSL);
+    registry.registerMemberSource(documentTypeRef,
+      () -> List.of(MemberDescriptor.property("ТабличныеЧасти", baseCollectionRef, "")), FileType.BSL);
+
+    // Коллекцию табличных частей объявляют два вида объектов, и к одним и тем же владельцам
+    // обход приходит дважды — повторно они не регистрируются.
+    registry.registerConfigurationType("ОбъектМетаданных: Справочник");
+    var provider = mockProvider(List.of(
+      mockType("ОбъектМетаданных: Документ", tabularSectionsProperty()),
+      mockType("ОбъектМетаданных: Справочник", tabularSectionsProperty())));
+    var holder = mock(BslContextHolder.class);
+    when(holder.get()).thenReturn(Optional.of(provider));
+
+    var sales = tabularSection("Продажа", "Номенклатура");
+    var purchase = tabularSection("Покупка", "Склад");
+    var serverProvider = serverProviderWith(Map.of(
+      sales.getMdoReference(), sales,
+      purchase.getMdoReference(), purchase));
+
+    // when
+    WorkspaceContextHolder.set(TEST_WORKSPACE);
+    new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
+
+    // then: у документа вообще, без владельца, «Товары» — какая угодно из одноимённых,
+    // поэтому колонки есть у каждой. Выбрать одну значило бы отдать первую встреченную, а
+    // порядок обхода метаданных меняется от запуска к запуску.
+    var columnsRef = registry.intern(TypeKind.PLATFORM, "КоллекцияОбъектовМетаданных.Реквизиты.Товары");
+    assertThat(registry.getMembers(columnsRef, FileType.BSL)).extracting(MemberDescriptor::name)
+      .contains("Номенклатура", "Склад");
+  }
+
+  @Test
   void specialize_nestedPropertyWithoutHbkMarker_usesFallbackByPropertyName() {
     var memberIndex = Mockito.mock(MemberMetadataIndex.class);
     var registry = new TypeRegistry(List.of(), memberIndex, mock(DefinedTypesIndex.class));
@@ -538,6 +578,21 @@ class MetadataCollectionSpecializerUnitTest {
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
     Mockito.verify(serverProvider).getAllContexts();
+  }
+
+  private static ContextProperty tabularSectionsProperty() {
+    return mockProperty("ТабличныеЧасти", "TabularSections",
+      List.of(mockContext("КоллекцияОбъектовМетаданных")),
+      List.of(mockContext("ОбъектМетаданных: ТабличнаяЧасть")));
+  }
+
+  /** Табличная часть «Товары» документа с одной колонкой. */
+  private static MD tabularSection(String documentName, String column) {
+    return ObjectTabularSection.builder()
+      .name("Товары")
+      .mdoReference(MdoReference.create(MDOType.TABULAR_SECTION, "Документ." + documentName + ".ТабличнаяЧасть.Товары"))
+      .attribute(ObjectAttribute.builder().name(column).build())
+      .build();
   }
 
   private static ContextProvider mockProvider(String typeName, ContextProperty... properties) {
