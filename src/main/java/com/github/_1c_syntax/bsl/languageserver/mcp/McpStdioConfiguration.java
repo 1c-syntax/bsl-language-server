@@ -21,17 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import io.modelcontextprotocol.json.McpJsonMapper;
+import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
+import io.modelcontextprotocol.spec.McpSchema;
+import io.modelcontextprotocol.spec.McpServerSession;
+import io.modelcontextprotocol.spec.McpServerTransport;
 import io.modelcontextprotocol.spec.McpServerTransportProviderBase;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import reactor.core.publisher.Mono;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Конфигурация stdio-транспорта MCP-сервера для профиля {@code mcp}.
@@ -40,7 +51,8 @@ import java.io.InputStream;
  * (её бин помечен {@code @ConditionalOnMissingBean}), чтобы:
  * <ul>
  *   <li>использовать штатный Jackson 3 {@link JsonMapper} приложения;</li>
- *   <li>отслеживать закрытие входного потока (EOF) и корректно завершать процесс.</li>
+ *   <li>отслеживать закрытие входного потока (EOF) и корректно завершать процесс;</li>
+ *   <li>отправлять сообщения сессии по одному (см. {@link SerialSendTransportProvider}).</li>
  * </ul>
  */
 @Configuration
@@ -56,7 +68,71 @@ public class McpStdioConfiguration {
   public McpServerTransportProviderBase stdioServerTransport(JsonMapper jsonMapper, McpShutdownSignal shutdownSignal) {
     var mcpJsonMapper = new JacksonMcpJsonMapper(jsonMapper);
     var stdin = new EofSignalingInputStream(System.in, shutdownSignal);
-    return new StdioServerTransportProvider(mcpJsonMapper, stdin, System.out);
+    return new SerialSendTransportProvider(mcpJsonMapper, stdin, System.out);
+  }
+
+  /**
+   * Stdio-транспорт, сессия которого отправляет сообщения строго по одному.
+   * <p>
+   * Транспорт SDK кладёт исходящее сообщение в приёмник, не допускающий одновременной записи:
+   * из двух одновременных отправок одна получает отказ. Отказ не только теряет сообщение —
+   * он обрывает обработку входящих сообщений, и сессия больше не отвечает ни на один запрос.
+   */
+  static final class SerialSendTransportProvider extends StdioServerTransportProvider {
+
+    SerialSendTransportProvider(McpJsonMapper jsonMapper, InputStream inputStream, OutputStream outputStream) {
+      super(jsonMapper, inputStream, outputStream);
+    }
+
+    @Override
+    public void setSessionFactory(McpServerSession.Factory sessionFactory) {
+      super.setSessionFactory(transport -> sessionFactory.create(new SerialSendTransport(transport)));
+    }
+  }
+
+  /**
+   * Транспорт сессии, передающий сообщения в исходный транспорт под общей блокировкой.
+   * <p>
+   * Исходный транспорт отправляет сообщение при подписке на результат {@code sendMessage},
+   * поэтому под блокировкой выполняется подписка, а не создание результата.
+   */
+  @RequiredArgsConstructor
+  static final class SerialSendTransport implements McpServerTransport {
+
+    private final McpServerTransport delegate;
+    private final Lock lock = new ReentrantLock();
+
+    @Override
+    public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
+      return Mono.create(sink -> {
+        lock.lock();
+        try {
+          delegate.sendMessage(message).subscribe(null, sink::error, sink::success);
+        } finally {
+          lock.unlock();
+        }
+      });
+    }
+
+    @Override
+    public <T> T unmarshalFrom(Object data, TypeRef<T> typeRef) {
+      return delegate.unmarshalFrom(data, typeRef);
+    }
+
+    @Override
+    public Mono<Void> closeGracefully() {
+      return delegate.closeGracefully();
+    }
+
+    @Override
+    public void close() {
+      delegate.close();
+    }
+
+    @Override
+    public List<String> protocolVersions() {
+      return delegate.protocolVersions();
+    }
   }
 
   /**

@@ -14,7 +14,9 @@
 
 1. **Отдельная подкоманда `mcp`** (`McpCommand`) — транспорт по `--protocol`:
    - `stdio` (по умолчанию) — профили `mcp,mcp-stdio`; `McpStdioConfiguration` (общий `JsonMapper`,
-     `EofSignalingInputStream`); процесс блокируется до EOF stdin через `McpShutdownSignal`.
+     `EofSignalingInputStream`, `SerialSendTransportProvider`); процесс блокируется до EOF stdin через
+     `McpShutdownSignal`. Транспорт SDK не переносит одновременную отправку: одна из двух получает
+     отказ, и сессия умирает — поэтому сообщения сессии уходят под блокировкой, по одному.
    - `sse` — `mcp,mcp-sse` (Server-Sent Events по HTTP); `streamable` — `mcp,mcp-streamable`
      (Streamable HTTP). HTTP-транспорты требуют servlet-контейнера, процесс жив за счёт веб-сервера.
 2. **Флаг `--mcp` к `lsp` (по умолчанию) или `websocket`** — поднимает MCP по **Streamable HTTP**
