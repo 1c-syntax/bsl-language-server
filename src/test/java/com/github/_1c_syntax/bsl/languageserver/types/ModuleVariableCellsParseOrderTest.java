@@ -72,6 +72,13 @@ class ModuleVariableCellsParseOrderTest extends AbstractServerContextAwareTest {
     // решал бы порядок разбора.
     assertThat(whole.incomplete()).isTrue();
     assertThat(copy.incomplete()).isTrue();
+
+    // and: поставщик разобрался — пересчёт в том же контексте берёт уже полное значение, а не
+    // ячейку, посчитанную без него.
+    parse("Поставщик");
+    var recomputed = inferencer.computeReturnTypes(method(consumer, "КопияСостава"));
+    assertThat(recomputed.incomplete()).isFalse();
+    assertThat(recomputed.types().getElementTypes().getAllFieldNames()).contains("Имя", "ПолноеИмя");
   }
 
   @Test
