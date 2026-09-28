@@ -58,6 +58,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
+  /**
+   * Сколько событий копится, пока пользователь не ответил: ошибки часто идут пачкой, но держать
+   * их без предела в памяти нельзя. Сверх этого числа события отбрасываются.
+   */
+  static final int MAX_POSTPONED_EVENTS = 100;
+
+  /** Метка подсказки у события, отправку которого пользователь уже разрешил. */
+  private static final String SEND_PERMITTED_HINT = "bsl-ls.send-permitted";
+
   private static final Map<Language, Map<String, SendErrorsMode>> answers = createAnswersMap();
 
   private final GlobalLanguageServerConfiguration configuration;
@@ -67,15 +76,6 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   private final ServerInfo serverInfo;
-
-  /**
-   * Сколько событий копится, пока пользователь не ответил: ошибки часто идут пачкой, но держать
-   * их без предела в памяти нельзя. Сверх этого числа события отбрасываются.
-   */
-  static final int MAX_POSTPONED_EVENTS = 100;
-
-  /** Метка подсказки у события, отправку которого пользователь уже разрешил. */
-  private static final String SEND_PERMITTED_HINT = "bsl-ls.send-permitted";
 
   private final Object askLock = new Object();
 
