@@ -27,10 +27,13 @@ import io.modelcontextprotocol.spec.McpServerTransport;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -85,6 +88,21 @@ class McpEnqueueRetryingTransportTest {
   }
 
   @Test
+  void waitsWhileSinkIsHeld() {
+    // given: соседняя запись держит приёмник 30 мс — например, её поток вытеснен планировщиком.
+    var releasedAt = System.nanoTime() + Duration.ofMillis(30).toNanos();
+    var transport = transportSending(Mono.defer(() -> System.nanoTime() - releasedAt < 0
+      ? Mono.error(new RuntimeException(McpEnqueueRetryingTransport.ENQUEUE_FAILURE))
+      : Mono.empty()));
+
+    // when
+    var sent = transport.sendMessage(MESSAGE);
+
+    // then: отправка дождалась освобождения, а не сдалась раньше.
+    assertThatCode(sent::block).doesNotThrowAnyException();
+  }
+
+  @Test
   void passesOtherFailureAtOnce() {
     // given
     var attempts = new AtomicInteger();
@@ -105,17 +123,22 @@ class McpEnqueueRetryingTransportTest {
   void givesUpOnPersistentRefusal() {
     // given: отказывает каждая попытка — так отвечает закрытый транспорт.
     var attempts = new AtomicInteger();
+    var firstRefusal = new AtomicLong();
     var transport = transportSending(Mono.defer(() -> {
-      attempts.incrementAndGet();
+      if (attempts.getAndIncrement() == 0) {
+        firstRefusal.set(System.nanoTime());
+      }
       return Mono.error(new RuntimeException(McpEnqueueRetryingTransport.ENQUEUE_FAILURE));
     }));
 
     // when
     var sent = transport.sendMessage(MESSAGE);
 
-    // then: после последнего повтора — исходная ошибка.
+    // then: повторы шли всё окно от первого отказа, после него — исходная ошибка.
     assertThatThrownBy(sent::block).hasMessage(McpEnqueueRetryingTransport.ENQUEUE_FAILURE);
-    assertThat(attempts).hasValue(McpEnqueueRetryingTransport.MAX_ENQUEUE_RETRIES + 1);
+    assertThat(Duration.ofNanos(System.nanoTime() - firstRefusal.get()))
+      .isGreaterThanOrEqualTo(McpEnqueueRetryingTransport.ENQUEUE_TIMEOUT);
+    assertThat(attempts).hasValueGreaterThan(1);
   }
 
   private static McpServerTransport transportSending(Mono<Void> send) {

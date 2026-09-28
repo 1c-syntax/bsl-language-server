@@ -28,32 +28,53 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
  * Транспорт MCP-сессии, повторяющий отправку, которой исходный транспорт отказал из-за
  * одновременной записи.
  * <p>
- * Такой отказ — ошибка с сообщением {@value #ENQUEUE_FAILURE}. Повтор заново подписывается на
- * отправку исходного транспорта, пока соседняя запись не закончится, но не больше
- * {@value #MAX_ENQUEUE_RETRIES} раз: тем же отказом отвечает и закрытый транспорт. После последнего
- * повтора, как и при любой другой ошибке, передаётся исходная ошибка. Остальные методы передаются
- * исходному транспорту как есть.
+ * Такой отказ — ошибка с сообщением {@value #ENQUEUE_FAILURE}. Повтор сразу же заново подписывается
+ * на отправку исходного транспорта, пока соседняя запись не закончится, — в пределах
+ * {@link #ENQUEUE_TIMEOUT} от первого отказа, как исправление в самом SDK. Окно рассчитано на соседа,
+ * вытесненного планировщиком посреди записи; дольше ждать незачем: тем же отказом отвечает и
+ * закрытый транспорт. После окна, как и при любой другой ошибке, передаётся исходная ошибка.
+ * Остальные методы передаются исходному транспорту как есть.
  */
 @RequiredArgsConstructor
 final class McpEnqueueRetryingTransport implements McpServerTransport {
 
   static final String ENQUEUE_FAILURE = "Failed to enqueue message";
-  static final int MAX_ENQUEUE_RETRIES = 1000;
+  static final Duration ENQUEUE_TIMEOUT = Duration.ofMillis(100);
 
   private final McpServerTransport delegate;
 
   @Override
   public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
-    return delegate.sendMessage(message)
-      .retryWhen(Retry.max(MAX_ENQUEUE_RETRIES)
-        .filter(error -> ENQUEUE_FAILURE.equals(error.getMessage()))
-        .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
+    var send = delegate.sendMessage(message);
+    return Mono.defer(() -> send.retryWhen(Retry.indefinitely().filter(new EnqueueWindow()::allowsRetry)));
+  }
+
+  /**
+   * Окно повторов одной отправки: открывается первым отказом и длится {@link #ENQUEUE_TIMEOUT}.
+   */
+  private static final class EnqueueWindow {
+
+    private boolean opened;
+    private long deadline;
+
+    boolean allowsRetry(Throwable error) {
+      if (!ENQUEUE_FAILURE.equals(error.getMessage())) {
+        return false;
+      }
+      var now = System.nanoTime();
+      if (!opened) {
+        opened = true;
+        deadline = now + ENQUEUE_TIMEOUT.toNanos();
+      }
+      return now - deadline < 0;
+    }
   }
 
   @Override
