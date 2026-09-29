@@ -332,6 +332,7 @@ class AutumnBeanIndexTest {
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
     when(serverContext.getDocumentNoLock(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
+    when(document.getSymbolTreeNoLock()).thenReturn(symbolTree);
     var beanType = new TypeRef(TypeKind.USER, "ТипЖелудя");
     when(typeRegistry.resolve("ТипЖелудя")).thenReturn(Optional.of(beanType));
     // класс-дуб: завязи сканируются только внутри него
@@ -375,6 +376,7 @@ class AutumnBeanIndexTest {
     when(definitionTree.getConstructor()).thenReturn(Optional.of(definitionCtor));
     when(definitionDoc.getFileType()).thenReturn(FileType.OS);
     when(definitionDoc.getSymbolTree()).thenReturn(definitionTree);
+    when(definitionDoc.getSymbolTreeNoLock()).thenReturn(definitionTree);
     var event = mock(DocumentContextContentChangedEvent.class);
     when(event.getSource()).thenReturn(definitionDoc);
     beanIndex.handleDocumentChange(event);
@@ -420,6 +422,7 @@ class AutumnBeanIndexTest {
     var symbolTree = mock(SymbolTree.class);
     when(symbolTree.getConstructor()).thenReturn(Optional.empty());
     when(document.getSymbolTree()).thenReturn(symbolTree);
+    when(document.getSymbolTreeNoLock()).thenReturn(symbolTree);
     var event = mock(DocumentContextContentChangedEvent.class);
     when(event.getSource()).thenReturn(document);
     beanIndex.handleDocumentChange(event);
@@ -548,6 +551,7 @@ class AutumnBeanIndexTest {
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
     when(serverContext.getDocumentNoLock(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
+    when(document.getSymbolTreeNoLock()).thenReturn(symbolTree);
     when(symbolTree.getConstructor()).thenReturn(Optional.ofNullable(constructor));
     var allMethods = new ArrayList<MethodSymbol>();
     if (constructor != null) {

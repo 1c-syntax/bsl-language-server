@@ -149,7 +149,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private BSLTokenizer tokenizer;
 
   @Getter(onMethod_ = {@Locked("computeLock")})
-  private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
+  private volatile SymbolTree symbolTree = SymbolTreeComputer.empty(this);
 
   @Getter
   private final FileType fileType;
@@ -187,6 +187,20 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   public ServerContext getServerContext() {
     return context;
+  }
+
+  /**
+   * Дерево символов, не дожидаясь идущего перестроения документа: пока оно идёт, отдаётся
+   * дерево прежнего содержимого.
+   * <p>
+   * Дерево строится под блокировкой документа, поэтому ждать его из вычисления, которое
+   * держит блокировку другого документа, значит рисковать встречным ожиданием: два
+   * документа, перестраиваемые одновременно, будут ждать друг друга бесконечно.
+   *
+   * @return последнее построенное дерево символов.
+   */
+  public SymbolTree getSymbolTreeNoLock() {
+    return symbolTree;
   }
 
   @Locked("computeLock")
