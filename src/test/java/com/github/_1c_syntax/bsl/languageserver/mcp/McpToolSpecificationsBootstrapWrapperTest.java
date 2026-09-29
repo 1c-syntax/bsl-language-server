@@ -155,6 +155,25 @@ class McpToolSpecificationsBootstrapWrapperTest {
   }
 
   @Test
+  void answersWithErrorResultIfToolOverflowsTheStack() {
+    // Reactor пробрасывает StackOverflowError мимо onError — без обёртки ответа не было бы вовсе.
+    var original = toolSpec("hover", (ex, req) -> {
+      throw new StackOverflowError();
+    });
+
+    @SuppressWarnings("unchecked")
+    var wrapped = (List<SyncToolSpecification>)
+      wrapper.postProcessAfterInitialization(List.of(original), "toolSpecs");
+    var result = wrapped.get(0).callHandler().apply(mock(McpSyncServerExchange.class), emptyRequest("hover"));
+
+    assertThat(result.isError()).isTrue();
+    assertThat(result.content()).singleElement()
+      .isInstanceOfSatisfying(TextContent.class, text -> assertThat(text.text())
+        .contains("hover")
+        .contains("StackOverflowError"));
+  }
+
+  @Test
   void emptyToolListProducesEmptyWrappedList() {
     @SuppressWarnings("unchecked")
     var wrapped = (List<SyncToolSpecification>)
