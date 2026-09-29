@@ -73,6 +73,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -148,8 +149,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Nullable
   private BSLTokenizer tokenizer;
 
-  @Getter(onMethod_ = {@Locked("computeLock")})
-  private volatile SymbolTree symbolTree = SymbolTreeComputer.empty(this);
+  private final AtomicReference<SymbolTree> symbolTree = new AtomicReference<>(SymbolTreeComputer.empty(this));
 
   @Getter
   private final FileType fileType;
@@ -189,6 +189,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return context;
   }
 
+  @Locked("computeLock")
+  public SymbolTree getSymbolTree() {
+    return symbolTree.get();
+  }
+
   /**
    * Дерево символов, не дожидаясь идущего перестроения документа: пока оно идёт, отдаётся
    * дерево прежнего содержимого.
@@ -200,7 +205,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * @return последнее построенное дерево символов.
    */
   public SymbolTree getSymbolTreeNoLock() {
-    return symbolTree;
+    return symbolTree.get();
   }
 
   @Locked("computeLock")
@@ -397,7 +402,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
         tokenizer = new BSLTokenizer(content);
       }
       this.version = version;
-      symbolTree = computeSymbolTree();
+      symbolTree.set(computeSymbolTree());
 
       // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
       // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
@@ -536,7 +541,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private MetricStorage computeMetrics() {
     var metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
+    final List<MethodSymbol> methodsUnboxed = symbolTree.get().getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
