@@ -47,7 +47,7 @@ class CompilationDirectiveIncompatibleCallDiagnosticTest
   void testFormModule() {
     List<Diagnostic> diagnostics = getDiagnostics(documentContextOf(getDocumentContext(), ModuleType.FormModule));
 
-    assertThat(diagnostics).hasSize(16);
+    assertThat(diagnostics).hasSize(19);
     assertThat(diagnostics, true)
       .hasMessageOnRange("Метод \"Клиентская\" недоступен в контексте вызывающего метода", 40, 4, 40, 14)
       .hasRange(46, 9, 46, 23)
@@ -64,7 +64,10 @@ class CompilationDirectiveIncompatibleCallDiagnosticTest
       .hasRange(89, 4, 89, 14)
       .hasRange(93, 4, 93, 14)
       .hasRange(110, 4, 110, 14)
-      .hasRange(129, 4, 129, 13);
+      .hasRange(129, 4, 129, 13)
+      .hasRange(138, 4, 138, 14)
+      .hasRange(149, 4, 149, 14)
+      .hasRange(151, 4, 151, 14);
   }
 
   @Test
