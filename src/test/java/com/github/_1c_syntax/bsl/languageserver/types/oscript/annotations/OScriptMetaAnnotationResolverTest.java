@@ -379,6 +379,7 @@ class OScriptMetaAnnotationResolverTest {
       when(constructor.getAnnotations()).thenReturn(annotationDefinition ? List.of(marker("Любая")) : List.of());
       when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
       when(document.getSymbolTree()).thenReturn(symbolTree);
+      when(document.getSymbolTreeNoLock()).thenReturn(symbolTree);
     }
     var event = mock(DocumentContextContentChangedEvent.class);
     when(event.getSource()).thenReturn(document);
