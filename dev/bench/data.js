@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790850763436,
+  "lastUpdate": 1790851948938,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44082,6 +44082,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.988550520360136",
             "extra": "mean: 112.75644954045613 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fd582472ee20a6a6a200f688e02cf950faf80842",
+          "message": "Merge pull request #4573 from 1c-syntax/fix/hover-recursive-see-ref\n\nfix(hover): само-рекурсивная структура в коллекции не роняет hover и не вешает MCP",
+          "timestamp": "2026-10-01T12:13:44+02:00",
+          "tree_id": "de724c816a27a7c3363544ce64d0c96d1180152a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fd582472ee20a6a6a200f688e02cf950faf80842"
+        },
+        "date": 1790851923999,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.48529895146687,
+            "unit": "sec",
+            "range": "stddev: 2.5082420208644844",
+            "extra": "mean: 108.48529895146687 sec\nrounds: 3"
           }
         ]
       }
