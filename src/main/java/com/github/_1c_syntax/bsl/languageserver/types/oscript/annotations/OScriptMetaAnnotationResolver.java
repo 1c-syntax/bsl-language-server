@@ -131,7 +131,9 @@ public class OScriptMetaAnnotationResolver {
    * @return {@code true}, если документ определяет пользовательскую аннотацию
    */
   public boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
+    // Без ожидания перестроения документа: признак читают и из построения дерева другого
+    // документа (члены его self-типа), где ожидание замкнулось бы на встречное.
+    return document.getSymbolTreeNoLock().getConstructor()
       .map(constructor ->
         find(constructor.getAnnotations(), OScriptAnnotations.ANNOTATION_MARKER).isPresent())
       .orElse(false);

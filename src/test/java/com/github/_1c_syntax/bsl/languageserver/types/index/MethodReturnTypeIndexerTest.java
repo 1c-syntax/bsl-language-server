@@ -139,6 +139,40 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void callerReadsSiblingRecomputedInSamePass() {
+    // given: в документе потребителя две функции, и пересчитываются они в порядке, где
+    // вызывающая стоит первой. Порядок этот от связей внутри документа не зависит: на
+    // доразрешении его задаёт набор отложенных методов. Здесь он задан первым разбором, где
+    // вызывающая соседку ещё не спрашивала.
+    var caller = method(consumer, true);
+    var callee = method(consumer, true);
+    when(consumer.getSymbolTree().getMethods()).thenReturn(List.of(caller, callee));
+    returns(caller, STRING);
+    returns(callee, STRING, sourceMethod);
+    returns(sourceMethod, STRING);
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(consumer));
+    // Дальше вызывающая берёт значение у соседки тем же путём, что вывод типов, — через
+    // computeIfAbsent, а соседка — у метода источника.
+    when(inferencer.computeReturnTypes(caller)).thenAnswer(invocation -> {
+      indexer.computeIfAbsent(callee, () -> inferencer.computeReturnTypes(callee));
+      return new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(callee), Set.of(callee), false);
+    });
+    when(inferencer.computeReturnTypes(callee)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
+
+    // when: значение метода источника изменилось, и документ потребителя пересчитывается.
+    returns(sourceMethod, NUMBER);
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+
+    // then: вызывающая прочла соседку уже пересчитанной. Связей внутри документа индекс не
+    // хранит, поэтому порядок пересчёта их не учитывает: без этого вызывающая, стоящая
+    // первой, взяла бы прежнее значение соседки и оставила бы его себе навсегда.
+    assertThat(symbolTypeIndex.getReturnTypes(callee)).isEqualTo(NUMBER);
+    assertThat(symbolTypeIndex.getReturnTypes(caller)).isEqualTo(NUMBER);
+  }
+
+  @Test
   void unchangedDocumentLeavesConsumersAlone() {
     // given: документ-источник разобран, а на его методе построено значение потребителя.
     indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));

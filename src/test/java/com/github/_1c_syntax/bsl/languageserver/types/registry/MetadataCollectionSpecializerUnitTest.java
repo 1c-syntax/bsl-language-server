@@ -32,7 +32,10 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.children.ObjectAttribute;
 import com.github._1c_syntax.bsl.mdo.children.ObjectTabularSection;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -148,6 +151,69 @@ class MetadataCollectionSpecializerUnitTest {
     var getMember = specMembers.stream()
       .filter(m -> m.name().equals("Получить")).findFirst().orElseThrow();
     assertThat(getMember.returnType().qualifiedName())
+      .isEqualTo("ОбъектМетаданных: Документ");
+  }
+
+  @Test
+  void specialize_topLevelObject_ownMetadataReturnsItsDescription() {
+    // given: дженерики семейства документа из синтакс-помощника. `Метаданные()` объявлен
+    // у объекта и у выборки, результат — общее описание документа.
+    var general = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Документ");
+    var metadataMethod = MemberDescriptor.method("Метаданные",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.of(general), BilingualString.EMPTY)));
+    var attributeSlot = MemberDescriptor.genericProperty("<Имя реквизита>", general, "");
+    var registry = registryWithTypes(
+      genericDecl("ДокументОбъект.<Имя документа>", List.of("Имя документа"),
+        metadataMethod, MemberDescriptor.method("Записать"), attributeSlot),
+      genericDecl("ДокументВыборка.<Имя документа>", List.of("Имя документа"), metadataMethod),
+      genericDecl("ДокументМенеджер.<Имя документа>", List.of("Имя документа"),
+        MemberDescriptor.method("СоздатьДокумент")),
+      genericDecl("ДокументТабличнаяЧасть.<Имя документа>.<Имя табличной части>",
+        List.of("Имя документа", "Имя табличной части"), metadataMethod));
+    var objectRef = specialize(registry, "ДокументОбъект", "Покупатели");
+    var managerRef = specialize(registry, "ДокументМенеджер", "Покупатели");
+
+    var ownerRef = registry.registerConfigurationType("ОбъектМетаданныхКонфигурация");
+    var baseCollectionRef = registry.registerConfigurationType("КоллекцияОбъектовМетаданных");
+    registry.registerConfigurationType("ОбъектМетаданных: Документ");
+    registry.registerMemberSource(ownerRef,
+      () -> List.of(MemberDescriptor.property("Документы", baseCollectionRef, "")), FileType.BSL);
+
+    // Справочников в конфигурации нет: группа без объектов ничего не подменяет.
+    var provider = mockProvider("ОбъектМетаданныхКонфигурация",
+      mockProperty("Документы", "Documents",
+        List.of(mockContext("КоллекцияОбъектовМетаданных")),
+        List.of(mockContext("ОбъектМетаданных: Документ"))),
+      mockProperty("Справочники", "Catalogs",
+        List.of(mockContext("КоллекцияОбъектовМетаданных")),
+        List.of(mockContext("ОбъектМетаданных: Справочник"))));
+    var holder = mock(BslContextHolder.class);
+    when(holder.get()).thenReturn(Optional.of(provider));
+    var document = (MD) Document.builder().name("Покупатели").build();
+    var serverProvider = serverProviderWith(Map.of(document.getMdoReference(), document));
+
+    // when
+    WorkspaceContextHolder.set(TEST_WORKSPACE);
+    new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
+
+    // then: объект описан своим описанием, и в результате, и в сигнатуре.
+    var ownMetadata = registry.getMembers(objectRef, FileType.BSL).stream()
+      .filter(member -> member.name().equals("Метаданные")).findFirst().orElseThrow();
+    assertThat(ownMetadata.returnType().qualifiedName())
+      .isEqualTo("ОбъектМетаданных: Документ.Покупатели");
+    assertThat(ownMetadata.signatures()).extracting(sig -> sig.returnType().qualifiedName())
+      .containsExactly("ОбъектМетаданных: Документ.Покупатели");
+    // Прочие члены объекта — те же, что даёт специализация.
+    assertThat(registry.getMembers(objectRef, FileType.BSL)).extracting(MemberDescriptor::name)
+      .containsExactlyInAnyOrder("Метаданные", "Записать");
+    // У менеджера метода нет — и не появляется.
+    assertThat(registry.getMembers(managerRef, FileType.BSL)).extracting(MemberDescriptor::name)
+      .containsExactly("СоздатьДокумент");
+    // Сам дженерик не тронут.
+    var genericRef = registry.resolve("ДокументОбъект.<Имя документа>").orElseThrow();
+    assertThat(registry.getMembers(genericRef, FileType.BSL).stream()
+      .filter(member -> member.name().equals("Метаданные")).findFirst().orElseThrow()
+      .returnType().qualifiedName())
       .isEqualTo("ОбъектМетаданных: Документ");
   }
 
@@ -280,6 +346,46 @@ class MetadataCollectionSpecializerUnitTest {
     assertThat(perMdoNames).contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты");
 
     assertThat(perMdoRef).isNotNull();
+  }
+
+  @Test
+  void specialize_sameNamedChildrenOfUnknownOwner_mergeTheirCollections() {
+    // given: табличная часть «Товары» есть у двух документов, и колонки у них разные.
+    var registry = new TypeRegistry(List.of(), mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
+    var documentTypeRef = registry.registerConfigurationType("ОбъектМетаданных: Документ");
+    registry.registerConfigurationType("ОбъектМетаданных: ТабличнаяЧасть");
+    var baseCollectionRef = registry.registerConfigurationType("КоллекцияОбъектовМетаданных");
+    var slot = MemberDescriptor.genericProperty("<Имя объекта>", documentTypeRef, "")
+      .withBilingualName(BilingualString.of("<Имя объекта>", "<Object name>"));
+    registry.registerMemberSource(baseCollectionRef, () -> List.of(slot), FileType.BSL);
+    registry.registerMemberSource(documentTypeRef,
+      () -> List.of(MemberDescriptor.property("ТабличныеЧасти", baseCollectionRef, "")), FileType.BSL);
+
+    // Коллекцию табличных частей объявляют два вида объектов, и к одним и тем же владельцам
+    // обход приходит дважды — повторно они не регистрируются.
+    registry.registerConfigurationType("ОбъектМетаданных: Справочник");
+    var provider = mockProvider(List.of(
+      mockType("ОбъектМетаданных: Документ", tabularSectionsProperty()),
+      mockType("ОбъектМетаданных: Справочник", tabularSectionsProperty())));
+    var holder = mock(BslContextHolder.class);
+    when(holder.get()).thenReturn(Optional.of(provider));
+
+    var sales = tabularSection("Продажа", "Номенклатура");
+    var purchase = tabularSection("Покупка", "Склад");
+    var serverProvider = serverProviderWith(Map.of(
+      sales.getMdoReference(), sales,
+      purchase.getMdoReference(), purchase));
+
+    // when
+    WorkspaceContextHolder.set(TEST_WORKSPACE);
+    new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
+
+    // then: у документа вообще, без владельца, «Товары» — какая угодно из одноимённых,
+    // поэтому колонки есть у каждой. Выбрать одну значило бы отдать первую встреченную, а
+    // порядок обхода метаданных меняется от запуска к запуску.
+    var columnsRef = registry.intern(TypeKind.PLATFORM, "КоллекцияОбъектовМетаданных.Реквизиты.Товары");
+    assertThat(registry.getMembers(columnsRef, FileType.BSL)).extracting(MemberDescriptor::name)
+      .contains("Номенклатура", "Склад");
   }
 
   @Test
@@ -474,8 +580,65 @@ class MetadataCollectionSpecializerUnitTest {
     Mockito.verify(serverProvider).getAllContexts();
   }
 
+  private static ContextProperty tabularSectionsProperty() {
+    return mockProperty("ТабличныеЧасти", "TabularSections",
+      List.of(mockContext("КоллекцияОбъектовМетаданных")),
+      List.of(mockContext("ОбъектМетаданных: ТабличнаяЧасть")));
+  }
+
+  /** Табличная часть «Товары» документа с одной колонкой. */
+  private static MD tabularSection(String documentName, String column) {
+    return ObjectTabularSection.builder()
+      .name("Товары")
+      .mdoReference(MdoReference.create(MDOType.TABULAR_SECTION, "Документ." + documentName + ".ТабличнаяЧасть.Товары"))
+      .attribute(ObjectAttribute.builder().name(column).build())
+      .build();
+  }
+
   private static ContextProvider mockProvider(String typeName, ContextProperty... properties) {
     return mockProvider(List.of(mockType(typeName, properties)));
+  }
+
+  private static TypeRegistry registryWithTypes(TypePackProvider.TypeDecl... decls) {
+    var types = List.of(decls);
+    PlatformTypesProvider pack = new PlatformTypesProvider() {
+      @Override
+      public List<TypePackProvider.TypeDecl> getTypes() {
+        return types;
+      }
+
+      @Override
+      public FileType getFileType() {
+        return FileType.BSL;
+      }
+    };
+    var registry = new TypeRegistry(List.of(pack), mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
+    registry.bootstrap();
+    return registry;
+  }
+
+  private static TypePackProvider.TypeDecl genericDecl(String name, List<String> parameters,
+                                                       MemberDescriptor... members) {
+    return new TypePackProvider.TypeDecl(TypeKind.PLATFORM, BilingualString.of(name), List.of(members),
+      "", List.of(), List.of(), false, false, "", "", parameters, false);
+  }
+
+  private static TypeRef specialize(TypeRegistry registry, String family, String mdoName) {
+    var generic = registry.resolve(family + ".<Имя документа>").orElseThrow();
+    return registry.registerSpecialization(family + "." + mdoName, generic,
+      Map.of("Имя документа", mdoName), FileType.BSL);
+  }
+
+  private static ServerContextProvider serverProviderWith(Map<MdoReference, MD> children) {
+    var configuration = mock(Configuration.class);
+    when(configuration.isEmpty()).thenReturn(false);
+    when(configuration.getChildrenByMdoRef()).thenReturn(children);
+    var serverContext = mock(ServerContext.class);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+    var serverProvider = mock(ServerContextProvider.class);
+    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    return serverProvider;
   }
 
   private static ContextProvider mockProvider(List<ContextType> types) {

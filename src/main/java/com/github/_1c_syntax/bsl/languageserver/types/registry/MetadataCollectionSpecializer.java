@@ -44,8 +44,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -317,13 +319,15 @@ public class MetadataCollectionSpecializer {
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Уже обработанные per-owner synthetic-типы в рамках одного {@link #specialize()}.
-   * Обход дерева метаданных приходит к одному и тому же synthetic-типу многократно
-   * (общие имена табличных частей, общий element-type), а
-   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации.
-   * Защита гарантирует ровно одну регистрацию источников на тип.
+   * Владельцы, уже обработанные для каждого per-owner synthetic-типа в рамках одного
+   * {@link #specialize()}. Обход дерева метаданных приходит к одному и тому же типу
+   * многократно (общий element-type виден с нескольких видов объектов), а у типа без
+   * владельца — {@code ОбъектМетаданных: ТабличнаяЧасть.Товары} из коллекции общего
+   * описания — владельцев столько, сколько одноимённых табличных частей.
+   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации, поэтому
+   * защита гарантирует ровно одну регистрацию источников на пару «тип — владелец».
    */
-  private final Set<TypeRef> registeredOwners = new HashSet<>();
+  private final Map<TypeRef, Set<MD>> registeredOwners = new HashMap<>();
 
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
@@ -415,6 +419,7 @@ public class MetadataCollectionSpecializer {
     overrides.put(propertyName.toLowerCase(Locale.ROOT),
       buildOverrideProperty(property, specRef));
     if (isMetadataConfiguration(ownerName)) {
+      registerOwnMetadata(mdosForGroup, elementTypeRef);
       counters.topLevel++;
     } else {
       counters.nested++;
@@ -540,22 +545,103 @@ public class MetadataCollectionSpecializer {
    * {@code ОбъектМетаданных: ТабличнаяЧасть.Покупатели.Товары}). На нём навешан
    * override для known-коллекций; базовые members проксируются от общего
    * element-type'а из bsl-context.
+   * <p>
+   * У одноимённых владельцев коллекции сливаются: тип без владельца описывает любой из
+   * них, и колонки табличной части «Товары» берутся у всех табличных частей с этим именем.
+   * Выбрать одну значило бы отдать первую встреченную, а порядок обхода метаданных
+   * от запуска к запуску разный.
    */
   private TypeRef registerPerOwner(TypeRef elementTypeRef, String ownerSuffix, MD owner) {
     var perOwnerName = elementTypeRef.qualifiedName() + "." + ownerSuffix;
     var perOwnerRef = typeRegistry.intern(TypeKind.PLATFORM, perOwnerName);
-    if (!registeredOwners.add(perOwnerRef)) {
+    var owners = registeredOwners.computeIfAbsent(perOwnerRef,
+      key -> Collections.newSetFromMap(new IdentityHashMap<>()));
+    if (!owners.add(owner)) {
       return perOwnerRef;
     }
+    if (owners.size() == 1) {
+      var capturedElement = elementTypeRef;
+      typeRegistry.registerMemberSource(perOwnerRef,
+        () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
+        FileType.BSL);
+    }
     var overrides = buildPerOwnerOverrides(perOwnerName, owner);
-    var capturedElement = elementTypeRef;
-    typeRegistry.registerMemberSource(perOwnerRef,
-      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
-      FileType.BSL);
     if (!overrides.isEmpty()) {
       typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, FileType.BSL);
     }
     return perOwnerRef;
+  }
+
+  /**
+   * {@code Метаданные()} конкретного объекта ({@code ДокументОбъект.Покупатели},
+   * {@code ДокументСсылка.Покупатели}, {@code РегистрСведенийНаборЗаписей.Курсы}, …)
+   * отдаёт его собственное описание — {@code ОбъектМетаданных: Документ.Покупатели}.
+   * <p>
+   * Платформа объявляет метод у дженерика семейства, и подстановка имени объекта не
+   * трогает результат: он остаётся общим {@code ОбъектМетаданных: Документ}. А у общего
+   * описания не известен владелец — его коллекции ({@code ТабличныеЧасти},
+   * {@code Реквизиты}) не знают, чьи в них члены.
+   *
+   * @param mdos           объекты одной группы верхнего уровня (все одного вида).
+   * @param elementTypeRef общее описание объекта этого вида.
+   */
+  private void registerOwnMetadata(List<MD> mdos, TypeRef elementTypeRef) {
+    if (mdos.isEmpty()) {
+      return;
+    }
+    var familyCore = mdos.get(0).getMdoType().fullName().getRu();
+    var generics = typeRegistry.findAllGenericsByFamilyCore(familyCore).stream()
+      .filter(generic -> typeRegistry.getTypeParameters(generic).size() == 1)
+      .filter(generic -> typeRegistry.getMembers(generic, FileType.BSL).stream()
+        .anyMatch(member -> returns(member, elementTypeRef)))
+      .toList();
+    for (var mdo : mdos) {
+      var mdoName = mdo.getName();
+      var ownRef = typeRegistry.intern(TypeKind.PLATFORM, elementTypeRef.qualifiedName() + "." + mdoName);
+      for (var generic : generics) {
+        var parameter = typeRegistry.getTypeParameters(generic).get(0);
+        var specializedName = TypeRef.specialize(generic, Map.of(parameter, mdoName)).qualifiedName();
+        typeRegistry.resolve(specializedName)
+          .ifPresent(specialized -> typeRegistry.registerMemberOverride(specialized,
+            () -> ownMetadataMembers(typeRegistry.getMembers(generic, FileType.BSL), elementTypeRef, ownRef),
+            FileType.BSL));
+      }
+    }
+  }
+
+  /**
+   * Члены семейства, возвращающие общее описание объекта, — с его собственным описанием
+   * вместо общего. Прочие члены не возвращаются: остальное специализация даёт сама.
+   *
+   * @param familyMembers члены дженерика семейства.
+   * @param generalRef    общее описание ({@code ОбъектМетаданных: Документ}).
+   * @param ownRef        описание конкретного объекта ({@code ОбъектМетаданных: Документ.Покупатели}).
+   * @return члены с подменённым результатом.
+   */
+  static List<MemberDescriptor> ownMetadataMembers(Collection<MemberDescriptor> familyMembers,
+                                                   TypeRef generalRef, TypeRef ownRef) {
+    var replacements = Map.of(generalRef.qualifiedName(), ownRef);
+    UnaryOperator<TypeRef> own = ref -> replacements.getOrDefault(ref.qualifiedName(), ref);
+    var result = new ArrayList<MemberDescriptor>();
+    for (var member : familyMembers) {
+      if (member.generic() || !returns(member, generalRef)) {
+        continue;
+      }
+      var signatures = member.signatures().stream()
+        .map(sig -> new SignatureDescriptor(sig.parameters(), sig.returnTypes().mapRefs(own),
+          sig.bilingualDescription(), sig.metadata()))
+        .toList();
+      result.add(member.withReturnTypes(member.returnTypes().mapRefs(own)).withSignatures(signatures));
+    }
+    return result;
+  }
+
+  private static boolean returns(MemberDescriptor member, TypeRef typeRef) {
+    return member.returnTypes().refs().stream().anyMatch(ref -> sameType(ref, typeRef));
+  }
+
+  private static boolean sameType(TypeRef ref, TypeRef other) {
+    return ref.qualifiedName().equals(other.qualifiedName());
   }
 
   /**
@@ -614,7 +700,8 @@ public class MetadataCollectionSpecializer {
     // Для коллекций, где элементы вообще не адресуются по имени (характеристики,
     // дополнительные индексы, ввод на основании), это единственный способ до них
     // добраться — синтакс-помощник у них так и пишет: обход и обращение по индексу.
-    typeRegistry.registerDefaultElementTypes(perCollRef, List.of(elementRef));
+    typeRegistry.registerDefaultElementTypes(perCollRef,
+      List.copyOf(elementTypesOf(typeRegistry, children, elementRef, ownerSuffix).refs()));
     typeRegistry.inheritCollectionTraits(perCollRef, baseRef, FileType.BSL);
     var capturedBase = baseRef;
     var capturedElement = elementRef;
@@ -689,7 +776,7 @@ public class MetadataCollectionSpecializer {
             childReturnType(typeRegistry, child, elementRef, elementTypeSet, ownerSuffix)));
         }
       } else if (isElementReturningMethod(member)) {
-        result.add(withElementReturnType(member, elementTypeSet));
+        result.add(withElementReturnType(member, elementTypesOf(typeRegistry, children, elementRef, ownerSuffix)));
       } else {
         result.add(member);
       }
@@ -712,6 +799,25 @@ public class MetadataCollectionSpecializer {
       }
     }
     return result;
+  }
+
+  /**
+   * Элемент коллекции конкретного владельца — какой-то из её детей. Если дети названы
+   * конкретными типами ({@code Движения} — регистрами документа, {@code ТабличныеЧасти} —
+   * его табличными частями), элемент — их объединение: общий тип элемента
+   * ({@code ЗначениеСвойстваОбъектаМетаданных}) не несёт ни имени, ни прочих свойств
+   * описания. Дети без своего типа дают общий, как и пустая коллекция.
+   *
+   * @return типы элементов коллекции.
+   */
+  static TypeSet elementTypesOf(TypeRegistry typeRegistry, List<ChildName> children, TypeRef elementRef,
+                                String ownerSuffix) {
+    var defaultSet = TypeSet.of(elementRef);
+    var result = TypeSet.EMPTY;
+    for (var child : children) {
+      result = result.union(childReturnType(typeRegistry, child, elementRef, defaultSet, ownerSuffix));
+    }
+    return result.isEmpty() ? defaultSet : result;
   }
 
   static TypeSet childReturnType(TypeRegistry typeRegistry, ChildName child, TypeRef elementRef,

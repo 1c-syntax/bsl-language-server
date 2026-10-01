@@ -102,6 +102,7 @@ class OScriptModuleMembersProviderTest {
     when(documentContext.getUri()).thenReturn(uri);
     var symbolTree = mock(SymbolTree.class);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getSymbolTreeNoLock()).thenReturn(symbolTree);
     when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
 
     var moduleRef = new TypeRef(TypeKind.USER, "dual.Модуль");
@@ -136,6 +137,7 @@ class OScriptModuleMembersProviderTest {
     when(documentContext.getUri()).thenReturn(uri);
     var symbolTree = mock(SymbolTree.class);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getSymbolTreeNoLock()).thenReturn(symbolTree);
     when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
 
     var ref = new TypeRef(TypeKind.USER, "КоллекцияЧисел");
@@ -160,6 +162,7 @@ class OScriptModuleMembersProviderTest {
     when(documentContext.getUri()).thenReturn(uri);
     var symbolTree = mock(SymbolTree.class);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getSymbolTreeNoLock()).thenReturn(symbolTree);
     when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
 
     var ref = new TypeRef(TypeKind.USER, "ОбычныйКласс");
@@ -185,6 +188,7 @@ class OScriptModuleMembersProviderTest {
     when(documentContext.getModuleType()).thenReturn(ModuleType.OScriptClass);
     var symbolTree = mock(SymbolTree.class);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getSymbolTreeNoLock()).thenReturn(symbolTree);
     when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
 
     var ref = new TypeRef(TypeKind.USER, "КлассССобытием");
@@ -223,6 +227,7 @@ class OScriptModuleMembersProviderTest {
     when(documentContext.getModuleType()).thenReturn(ModuleType.OScriptClass);
     var symbolTree = mock(SymbolTree.class);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getSymbolTreeNoLock()).thenReturn(symbolTree);
     when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
 
     var ref = new TypeRef(TypeKind.USER, "КлассБезБиблиотеки");
