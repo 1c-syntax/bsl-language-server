@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790851948938,
+  "lastUpdate": 1790853142714,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44113,6 +44113,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.5082420208644844",
             "extra": "mean: 108.48529895146687 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2083c9648aa283fc55b5dc28fc02b29a32ea9624",
+          "message": "Merge pull request #4571 from 1c-syntax/fix/semantic-tokens-lambda-own-context\n\nfix(semantic-tokens): подсветка лямбды в строке не роняет слушателей события документа",
+          "timestamp": "2026-10-01T12:16:00+02:00",
+          "tree_id": "7954e6264f289c5ff2d24961c6039e688f93e2bc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2083c9648aa283fc55b5dc28fc02b29a32ea9624"
+        },
+        "date": 1790853117014,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.82476647694905,
+            "unit": "sec",
+            "range": "stddev: 0.755807477402206",
+            "extra": "mean: 108.82476647694905 sec\nrounds: 3"
           }
         ]
       }
