@@ -270,7 +270,8 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   /**
    * Функции-источники см.-ссылки, разворот которой даёт вложенные поля ключа
    * {@code key} объекта {@code owner}. Это либо собственная ленивая ссылка поля
-   * (поле {@code owner.lazyFields[key]}), либо — если поле эагерное, но его тип —
+   * (поле {@code owner.lazyFields[key]}, у коллекции — поле типа её элемента),
+   * либо — если поле эагерное, но его тип —
    * коллекция с ленивым элементом — источник этого элемента. Возвращаемые ключи и
    * обнаруживают цикл, и дают имя для метки {@code См. Функция}.
    */
@@ -284,8 +285,28 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     return elementKeys;
   }
 
-  /** Ключ собственной ленивой см.-ссылки поля {@code name} в наборе типов, либо {@code null}. */
+  /**
+   * Ключ собственной ленивой см.-ссылки поля {@code name}, либо {@code null}. Поле ищется
+   * там же, откуда его берёт {@link #collectFields}: у самого набора, а у коллекции без
+   * собственных полей — у типа её элемента.
+   */
   private static @Nullable Object lazyFieldSource(TypeSet owner, String name) {
+    var source = lazyFieldSourceIn(owner, name);
+    if (source != null) {
+      return source;
+    }
+    for (var ref : owner.refs()) {
+      if (owner.getLocalFields(ref).isEmpty()) {
+        var elementSource = lazyFieldSourceIn(owner.getElementTypes(ref), name);
+        if (elementSource != null) {
+          return elementSource;
+        }
+      }
+    }
+    return null;
+  }
+
+  private static @Nullable Object lazyFieldSourceIn(TypeSet owner, String name) {
     for (var byName : owner.lazyFields().values()) {
       for (var entry : byName.entrySet()) {
         if (entry.getKey().equalsIgnoreCase(name)) {

@@ -148,6 +148,26 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void selfRecursiveCollectionHoverTerminates() {
+    // Поля структуры-элемента коллекции разворачиваются из типа элемента; ленивая
+    // ссылка `Дети - см. УзлыСостава` тоже лежит у элемента, а не у самой коллекции.
+    var hover = hoverContent(selfRecursiveCollectionDoc(), "Узлы = ", 0);
+    assertThat(hover)
+      .as("hover коллекции само-рекурсивных структур завершается и показывает поля элемента")
+      .contains("Имя")
+      .containsPattern("\\*\\*Дети\\*\\*: См\\. \\[УзлыСостава]\\(\\S+#L\\d+,\\d+\\)");
+  }
+
+  @Test
+  void selfRecursiveCollectionParameterHoverTerminates() {
+    var hover = hoverContent(selfRecursiveCollectionDoc(), "ОбойтиУзлы(Ветка)", "ОбойтиУзлы(".length());
+    assertThat(hover)
+      .as("hover параметра `см. УзлыСостава` сворачивает цикл по полю элемента")
+      .contains("Имя")
+      .containsPattern("\\*\\*Дети\\*\\*: См\\. \\[УзлыСостава]\\(\\S+#L\\d+,\\d+\\)");
+  }
+
+  @Test
   void mutualRecursionCompletionTerminates() {
     // Автокомплит `Контекст.` для взаимно-рекурсивной структуры тоже не должен
     // уходить в лавину.
@@ -208,6 +228,10 @@ class ReporterScenariosSeeRefTest extends AbstractServerContextAwareTest {
 
   private DocumentContext chainedCompletionDoc() {
     return TestUtils.getDocumentContextFromFile("./src/test/resources/types/ChainedCompletion.bsl");
+  }
+
+  private DocumentContext selfRecursiveCollectionDoc() {
+    return TestUtils.getDocumentContextFromFile("./src/test/resources/types/SelfRecursionCollectionSeeRef.bsl");
   }
 
   private DocumentContext mutualCompletionDoc() {
