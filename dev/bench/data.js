@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790614249372,
+  "lastUpdate": 1790850763436,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44051,6 +44051,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7397651261824119",
             "extra": "mean: 110.08746973673503 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d7c3e9bd4dbf4250d2861805d74c9efe0b4254d",
+          "message": "Merge pull request #4574 from 1c-syntax/fix/oscript-members-without-waiting\n\nfix(types): одноимённые модули OneScript не вешают дорасчёт типов возвращаемых значений",
+          "timestamp": "2026-10-01T12:11:55+02:00",
+          "tree_id": "f9a1d8e0007eb37492076bc31a12395f9ffecd71",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3d7c3e9bd4dbf4250d2861805d74c9efe0b4254d"
+        },
+        "date": 1790850736076,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 112.75644954045613,
+            "unit": "sec",
+            "range": "stddev: 0.988550520360136",
+            "extra": "mean: 112.75644954045613 sec\nrounds: 3"
           }
         ]
       }
