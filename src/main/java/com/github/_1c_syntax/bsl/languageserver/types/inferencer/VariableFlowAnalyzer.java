@@ -30,8 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
+import com.github._1c_syntax.bsl.languageserver.index.SourceBoundRecords;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -105,16 +107,25 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   private final Map<URI, Map<BSLParser.CodeBlockContext, FlowLayout>> layoutsByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<BSLParser.CodeBlockContext, Facts>> factsByUri = new ConcurrentHashMap<>();
-  private final Map<URI, Map<VariableSymbol, TypeSet>> cellsByUri = new ConcurrentHashMap<>();
+  /**
+   * Ячейки переменных, видимых другим телам.
+   * <p>
+   * Ключ — символ переменной, а он у нового текста равен прежнему, пока объявление не
+   * сдвинулось. Поэтому ячейки привязаны к дереву символов документа, по которому
+   * посчитаны: после правки документа прежние не отдаются.
+   */
+  private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, TypeSet>> cellsByUri = new SourceBoundRecords<>();
 
   /**
    * Места изменения переменной, уже спрошенные у вызывающего.
    * <p>
    * За ними стоит обход индекса ссылок, а спрашивают их на каждое тело, где переменная
    * видна: у переменной модуля это все тела документа. Без этой памяти обход индекса
-   * повторялся бы столько раз, сколько в модуле методов.
+   * повторялся бы столько раз, сколько в модуле методов. Привязаны к дереву символов, как
+   * и ячейки: позиции прежнего текста после правки не отдаются.
    */
-  private final Map<URI, Map<VariableSymbol, Changes>> changesByUri = new ConcurrentHashMap<>();
+  private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, Changes>> changesByUri =
+    new SourceBoundRecords<>();
 
   /**
    * Расчёты по телам, идущие прямо сейчас в рамках одного вывода типов.
@@ -573,11 +584,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @return тип на входе в тело.
    */
   private TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
-    var settled = cellsByUri.getOrDefault(documentContext.getUri(), Map.of()).get(variable);
+    var settled = cellsOf(documentContext).get(variable);
     if (settled != null) {
       return settled;
     }
     return inputs.session().cells.getOrDefault(variable, inputs.declaredFact().apply(variable));
+  }
+
+  /** Готовые ячейки документа — посчитанные по его нынешнему дереву символов. */
+  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext) {
+    return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
+      tree -> new ConcurrentHashMap<>());
   }
 
   /**
@@ -613,11 +630,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   private void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
     var session = inputs.session();
-    var uri = documentContext.getUri();
     // Готовые ячейки — общие на весь документ и переживают отдельный вывод типов. Без
     // этой проверки круги гонялись бы заново на каждый запрос типа: своя память о них
-    // заводится на один вывод, а запросов на документ тысячи.
-    var settled = cellsByUri.getOrDefault(uri, Map.of());
+    // заводится на один вывод, а запросов на документ тысячи. Посчитанное кладётся туда
+    // же, откуда прочитано, — к дереву символов, по которому шёл расчёт.
+    var settled = cellsOf(documentContext);
     var pending = new ArrayList<VariableSymbol>(shared.size());
     for (var variable : shared) {
       if (!settled.containsKey(variable) && session.cellsDone.add(variable)) {
@@ -638,8 +655,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       }
       grow(documentContext, pending, inputs);
       if (inputs.cacheable() && !inputs.sawMissing().getAsBoolean()) {
-        var byVariable = cellsByUri.computeIfAbsent(uri, key -> new ConcurrentHashMap<>());
-        pending.forEach(variable -> byVariable.putIfAbsent(variable, session.cells.get(variable)));
+        pending.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
       }
     } finally {
       session.cellsComputing = outerComputing;
@@ -701,16 +717,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         .forEach(bodies::add);
     }
     return List.copyOf(bodies);
-  }
-
-  /**
-   * Ключ мест изменения и ячеек переменной — её символ, а он у нового текста равен прежнему.
-   *
-   * @return {@code true}.
-   */
-  @Override
-  protected boolean recordsSurviveEdit() {
-    return true;
   }
 
   /**
@@ -865,7 +871,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   private Changes changesOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
     return changesByUri
-      .computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
+      .get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(), tree -> new ConcurrentHashMap<>())
       .computeIfAbsent(variable, key -> new Changes(
         inputs.definitionPositions().apply(key),
         inputs.mutationPositions().apply(key)));

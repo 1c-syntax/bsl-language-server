@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
+import com.github._1c_syntax.bsl.languageserver.index.SourceBoundRecords;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Индекс присваиваний документа по базовому идентификатору левой части, разрезанный по URI.
@@ -44,14 +44,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@code Элемент.Вид = ВидГруппыФормы.ОбычнаяГруппа}, и без разбора присваиваний тип
  * остаётся базовым.
  * <p>
- * Индекс держит AST-узлы, поэтому инвалидируется per-URI на событиях жизненного цикла
+ * Индекс держит AST-узлы, поэтому привязан к дереву разбора, по которому построен
+ * ({@link SourceBoundRecords}), и освобождается per-URI на событиях жизненного цикла
  * документа через {@link AbstractDocumentLifecycleClearableIndex}. Строится лениво.
  */
 @Component
 @WorkspaceScope
 public class AssignmentByReceiverIndex extends AbstractDocumentLifecycleClearableIndex {
 
-  private final Map<URI, Map<String, List<BSLParser.AssignmentContext>>> byUri = new ConcurrentHashMap<>();
+  private final SourceBoundRecords<BSLParser.FileContext, Map<String, List<BSLParser.AssignmentContext>>> byUri =
+    new SourceBoundRecords<>();
 
   /**
    * Присваивания документа, базовый идентификатор левой части которых равен
@@ -63,9 +65,8 @@ public class AssignmentByReceiverIndex extends AbstractDocumentLifecycleClearabl
    * @return присваивания с таким ресивером.
    */
   public List<BSLParser.AssignmentContext> byReceiver(URI uri, BSLParser.FileContext ast, String receiverName) {
-    // Гонка clear<->computeIfAbsent осознанно не закрывается — см. CallStatementByReceiverIndex.
-    var index = byUri.computeIfAbsent(uri, k -> build(ast));
-    return index.getOrDefault(receiverName.toLowerCase(Locale.ROOT), List.of());
+    return byUri.get(uri, ast, AssignmentByReceiverIndex::build)
+      .getOrDefault(receiverName.toLowerCase(Locale.ROOT), List.of());
   }
 
   private static Map<String, List<BSLParser.AssignmentContext>> build(BSLParser.FileContext ast) {
@@ -92,15 +93,5 @@ public class AssignmentByReceiverIndex extends AbstractDocumentLifecycleClearabl
   @Override
   public void clear(URI uri) {
     byUri.remove(uri);
-  }
-
-  /**
-   * Ключ записи — URI и имя приёмника, а узлы в ней — прежнего текста.
-   *
-   * @return {@code true}.
-   */
-  @Override
-  protected boolean recordsSurviveEdit() {
-    return true;
   }
 }
