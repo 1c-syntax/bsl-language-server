@@ -106,9 +106,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private int minWordLength = DEFAULT_MIN_WORD_LENGTH;
 
   @DiagnosticParameter(
-    type = String.class
+    type = List.class
   )
-  private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;
+  private List<String> userWordsToIgnore = DiagnosticHelper.asStringList(DEFAULT_USER_WORDS_TO_IGNORE);
 
   /**
    * Готовый список слов для игнорирования
@@ -130,8 +130,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private Set<String> makeWordsToIgnore() {
     var delimiter = ',';
     var exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
-    if (!userWordsToIgnore.isEmpty()) {
-      exceptions += delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
+    var userWords = String.join(String.valueOf(delimiter), userWordsToIgnore);
+    if (!userWords.isEmpty()) {
+      exceptions += delimiter + SPACES_PATTERN.matcher(userWords).replaceAll("");
     }
 
     // добавим к переданным строки в разных регистрах
