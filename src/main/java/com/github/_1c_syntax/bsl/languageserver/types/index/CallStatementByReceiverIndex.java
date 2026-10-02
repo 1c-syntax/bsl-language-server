@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
+import com.github._1c_syntax.bsl.languageserver.index.SourceBoundRecords;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Индекс callStatement'ов документа по базовому идентификатору-ресиверу, разрезанный
@@ -46,8 +46,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * строит карту {@code базовый идентификатор → callStatement'ы} один раз на документ,
  * и поиск становится hash-lookup'ом по имени переменной.
  * <p>
- * Индекс держит AST-узлы, поэтому инвалидируется per-URI на событиях жизненного
- * цикла документа через {@link AbstractDocumentLifecycleClearableIndex} (изменение
+ * Индекс держит AST-узлы, поэтому привязан к дереву разбора, по которому построен
+ * ({@link SourceBoundRecords}): после правки документа узлы прежнего текста не отдаются,
+ * даже если событие о ней до индекса ещё не дошло. Освобождается индекс per-URI на
+ * событиях жизненного цикла документа через {@link AbstractDocumentLifecycleClearableIndex} (изменение
  * содержимого / освобождение вторичных данных / закрытие / удаление). Освобождение
  * вторичных данных особенно важно: так batch-анализ выбрасывает AST после каждого
  * файла, иначе индекс удерживал бы разобранные деревья всех файлов на весь прогон.
@@ -57,7 +59,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @WorkspaceScope
 public class CallStatementByReceiverIndex extends AbstractDocumentLifecycleClearableIndex {
 
-  private final Map<URI, Map<String, List<BSLParser.CallStatementContext>>> byUri = new ConcurrentHashMap<>();
+  private final SourceBoundRecords<BSLParser.FileContext, Map<String, List<BSLParser.CallStatementContext>>> byUri =
+    new SourceBoundRecords<>();
 
   /**
    * callStatement'ы документа, базовый идентификатор которых равен {@code receiverName}
@@ -69,13 +72,8 @@ public class CallStatementByReceiverIndex extends AbstractDocumentLifecycleClear
    * @return callStatement'ы с таким ресивером.
    */
   public List<BSLParser.CallStatementContext> byReceiver(URI uri, BSLParser.FileContext ast, String receiverName) {
-    // Гонка clear<->computeIfAbsent осознанно не закрывается: если документ
-    // инвалидируется ровно между clear и завершением build, в карте может осесть
-    // индекс по предыдущему AST. Следующая инвалидация его уберёт, а инференс читает
-    // свежий AST явно — устаревший индекс лишь продлевает жизнь старым узлам до
-    // следующего события (та же модель «без кросс-документной инвалидации»).
-    var index = byUri.computeIfAbsent(uri, k -> build(ast));
-    return index.getOrDefault(receiverName.toLowerCase(Locale.ROOT), List.of());
+    return byUri.get(uri, ast, CallStatementByReceiverIndex::build)
+      .getOrDefault(receiverName.toLowerCase(Locale.ROOT), List.of());
   }
 
   private static Map<String, List<BSLParser.CallStatementContext>> build(BSLParser.FileContext ast) {

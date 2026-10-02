@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
+import com.github._1c_syntax.bsl.languageserver.index.SourceBoundRecords;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -34,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -49,7 +49,8 @@ import java.util.regex.Pattern;
  * условия ({@code Если Параметры.Свойство("Ключ", Значение) Тогда}) — индекс по операторам
  * такие вызовы не увидел бы вовсе.
  * <p>
- * Индекс держит AST-узлы, поэтому инвалидируется per-URI на событиях жизненного цикла
+ * Индекс держит AST-узлы, поэтому привязан к дереву разбора, по которому построен
+ * ({@link SourceBoundRecords}), и освобождается per-URI на событиях жизненного цикла
  * документа через {@link AbstractDocumentLifecycleClearableIndex}. Строится лениво.
  */
 @Component
@@ -78,7 +79,8 @@ public class PropertyMethodCallIndex extends AbstractDocumentLifecycleClearableI
    */
   private static final Pattern BARE_IDENTIFIER = Pattern.compile("[\\p{L}_][\\p{L}\\p{N}_]*");
 
-  private final Map<URI, Map<String, List<BSLParser.MethodCallContext>>> byUri = new ConcurrentHashMap<>();
+  private final SourceBoundRecords<BSLParser.FileContext, Map<String, List<BSLParser.MethodCallContext>>> byUri =
+    new SourceBoundRecords<>();
 
   /**
    * Вызовы {@code Свойство}, отдавшие переменную с таким именем вторым аргументом
@@ -91,18 +93,8 @@ public class PropertyMethodCallIndex extends AbstractDocumentLifecycleClearableI
    */
   public List<BSLParser.MethodCallContext> byOutParameter(URI uri, BSLParser.FileContext ast,
                                                           String variableName) {
-    // Та же модель гонки clear<->computeIfAbsent, что у соседних индексов: осевший индекс
-    // по прежнему AST уберёт следующая инвалидация.
-    // Построение идёт ВНЕ computeIfAbsent: обход всего AST под замком корзины выстраивал бы
-    // на нём потоки пакетного анализа. Двойная работа при гонке безвредна — индекс зависит
-    // только от AST (так же поступают VariableFlowAnalyzer.layoutOf и GuardConditionNarrowing).
-    var index = byUri.get(uri);
-    if (index == null) {
-      var built = build(ast);
-      var previous = byUri.putIfAbsent(uri, built);
-      index = previous == null ? built : previous;
-    }
-    return index.getOrDefault(variableName.toLowerCase(Locale.ROOT), List.of());
+    return byUri.get(uri, ast, PropertyMethodCallIndex::build)
+      .getOrDefault(variableName.toLowerCase(Locale.ROOT), List.of());
   }
 
   private static Map<String, List<BSLParser.MethodCallContext>> build(BSLParser.FileContext ast) {
