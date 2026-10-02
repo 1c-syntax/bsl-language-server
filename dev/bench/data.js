@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790853142714,
+  "lastUpdate": 1790925240316,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44144,6 +44144,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.755807477402206",
             "extra": "mean: 108.82476647694905 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "52a38118b07d6ef2779d46595f349ebf8fd5e8bc",
+          "message": "Merge pull request #4570 from 1c-syntax/fix/types-clear-caches-before-recompute\n\nfix(types): правка модуля не оставляет его функции с неполным значением",
+          "timestamp": "2026-10-02T08:54:15+02:00",
+          "tree_id": "4d41f1bb82d7be9b028f142df313960101ae9116",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/52a38118b07d6ef2779d46595f349ebf8fd5e8bc"
+        },
+        "date": 1790925214923,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.02508942286174,
+            "unit": "sec",
+            "range": "stddev: 2.620500031674531",
+            "extra": "mean: 108.02508942286174 sec\nrounds: 3"
           }
         ]
       }
