@@ -1042,33 +1042,54 @@ public class SymbolTypeIndex {
     if (headRef == null) {
       return TypeSet.EMPTY;
     }
-    var result = TypeSet.of(headRef);
-    // У некоторых коллекций запись `из` называет не элемент, а его свойство: элемент тогда
-    // свой, из реестра, а объявленный тип ложится на это свойство (см. itemValueProperty).
     var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
-    var itemRef = itemValueProperty == null ? null : firstRef(typeRegistry.getDefaultElementTypes(headRef));
+    if (itemValueProperty != null) {
+      // `СписокЗначений из T` называет не элемент, а его свойство: это то же, что поле
+      // `* Значение - T` элемента. Оно ложится на элемент вместе с описанными полями —
+      // тем же путём, что колонки таблицы значений.
+      var fields = new ArrayList<DescribedField>();
+      fields.add(new DescribedField(itemValueProperty, td.valueTypes(), ""));
+      fields.addAll(describedFields(td));
+      return applyFields(TypeSet.of(headRef), fields, context);
+    }
+    var result = TypeSet.of(headRef);
     for (var valueType : td.valueTypes()) {
       var localFunction = localFunctionSeeRef(valueType, context);
       if (localFunction != null) {
         // Тип элемента задан см.-ссылкой на локальную функцию — возможно
         // самоссылочную (дерево). Храним ленивую ссылку: реальный тип берётся
         // из её возвращаемого значения на чтении, глубина — по выражению курсора.
-        var lazy = lazyReturnTypes(localFunction);
-        result = itemRef == null
-          ? result.withLazyElement(headRef, lazy)
-          : result.withElement(headRef, TypeSet.of(itemRef).withLazyField(itemRef, itemValueProperty, lazy, ""));
+        result = result.withLazyElement(headRef, lazyReturnTypes(localFunction));
       } else {
         // Поля коллекции (`* Ключ - Строка`) относятся к элементу (КлючИЗначение,
         // строке ТЗ и т.п.), поэтому навешиваем их на тип элемента, а не на голову.
         var eager = applyFields(resolveTypes(List.of(valueType), context), td, context);
         if (!eager.isEmpty()) {
-          result = result.withElement(headRef, itemRef == null
-            ? eager
-            : TypeSet.of(itemRef).withField(itemRef, itemValueProperty, eager));
+          result = result.withElement(headRef, eager);
         }
       }
     }
     return result;
+  }
+
+  /**
+   * Поле описания: {@code * Поле - Тип - текст}.
+   *
+   * @param name        имя поля.
+   * @param types       описанные типы поля.
+   * @param description текст описания поля.
+   */
+  private record DescribedField(String name, List<TypeDescription> types, String description) {
+  }
+
+  private static List<DescribedField> describedFields(TypeDescription td) {
+    var fields = td.fields();
+    if (fields == null) {
+      return List.of();
+    }
+    return fields.stream()
+      .map(field -> new DescribedField(field.name(), field.types(), fieldDescription(field)))
+      .toList();
   }
 
   /**
@@ -1079,8 +1100,11 @@ public class SymbolTypeIndex {
    * для поддержки рекурсивных структур.
    */
   private TypeSet applyFields(TypeSet base, TypeDescription td, ResolutionContext context) {
-    var fields = td.fields();
-    if (fields == null || fields.isEmpty() || base.refs().isEmpty()) {
+    return applyFields(base, describedFields(td), context);
+  }
+
+  private TypeSet applyFields(TypeSet base, List<DescribedField> fields, ResolutionContext context) {
+    if (fields.isEmpty() || base.refs().isEmpty()) {
       return base;
     }
     var headRef = base.refs().iterator().next();
@@ -1097,7 +1121,7 @@ public class SymbolTypeIndex {
         var localFunction = localFunctionSeeRef(fieldType, context);
         if (localFunction != null) {
           result = result.withLazyField(fieldsRef, field.name(),
-            lazyReturnTypes(localFunction), fieldDescription(field));
+            lazyReturnTypes(localFunction), field.description());
           lazy = true;
         } else {
           eager = eager.union(resolveTypes(List.of(fieldType), context));
@@ -1109,7 +1133,7 @@ public class SymbolTypeIndex {
       // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
       // разный от запуска к запуску.
       if (!eager.isEmpty() || !lazy) {
-        result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
+        result = result.withField(fieldsRef, field.name(), eager, field.description());
       }
     }
     return elementRef == null ? result : base.withElement(headRef, result);
