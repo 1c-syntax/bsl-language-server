@@ -98,6 +98,16 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
       .as("«Значение» элемента при обходе списка")
       .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
+    // Объявленный тип ложится только на «Значение»: прочие свойства элемента остаются
+    // платформенными, как у строки таблицы значений рядом с описанными колонками.
+    assertThat(inferVar(doc(), "ПредставлениеДобавленного").refs())
+      .as("«Представление» элемента — платформенное")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+    assertThat(inferVar(doc(), "ПометкаДобавленного").refs())
+      .as("«Пометка» элемента — платформенная")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Булево");
   }
 
   @Test
