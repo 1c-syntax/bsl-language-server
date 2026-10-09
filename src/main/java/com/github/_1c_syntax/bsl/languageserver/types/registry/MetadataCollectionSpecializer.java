@@ -514,9 +514,15 @@ public class MetadataCollectionSpecializer {
     }
     var elementTypeSet = TypeSet.of(elementTypeRef);
     var result = new ArrayList<MemberDescriptor>(raw.size() + mdos.size());
+    List<MaterializedChild> children = null;
     for (var member : raw) {
       if (member.generic()) {
-        materializeForMdos(typeRegistry, member, mdos, elementTypeRef, result);
+        if (children == null) {
+          children = materializeForMdos(typeRegistry, mdos, elementTypeRef);
+        }
+        for (var child : children) {
+          result.add(materializeChildMember(member, child.name(), child.returnTypes()));
+        }
       } else if (isElementReturningMethod(member)) {
         result.add(withElementReturnType(member, elementTypeSet));
       } else {
@@ -526,9 +532,12 @@ public class MetadataCollectionSpecializer {
     return result;
   }
 
-  private static void materializeForMdos(TypeRegistry typeRegistry, MemberDescriptor member,
-                                          List<MD> mdos, TypeRef elementTypeRef,
-                                          List<MemberDescriptor> sink) {
+  private record MaterializedChild(BilingualString name, TypeSet returnTypes) {
+  }
+
+  private static List<MaterializedChild> materializeForMdos(TypeRegistry typeRegistry,
+                                                           List<MD> mdos, TypeRef elementTypeRef) {
+    var children = new ArrayList<MaterializedChild>(mdos.size());
     for (var mdo : mdos) {
       var mdoName = mdo.getName();
       if (mdoName.isBlank()) {
@@ -536,8 +545,9 @@ public class MetadataCollectionSpecializer {
       }
       var perMdoRef = typeRegistry.intern(TypeKind.PLATFORM,
         elementTypeRef.qualifiedName() + "." + mdoName);
-      sink.add(materializeChildMember(member, BilingualString.of(mdoName), TypeSet.of(perMdoRef)));
+      children.add(new MaterializedChild(BilingualString.of(mdoName), TypeSet.of(perMdoRef)));
     }
+    return children;
   }
 
   /**
@@ -766,17 +776,24 @@ public class MetadataCollectionSpecializer {
                                                                 String ownerSuffix) {
     var raw = typeRegistry.getMembers(baseRef, FileType.BSL);
     var elementTypeSet = TypeSet.of(elementRef);
+    var materializedChildren = children.stream()
+      .map(child -> new MaterializedChild(child.name(),
+        childReturnType(typeRegistry, child, elementRef, elementTypeSet, ownerSuffix)))
+      .toList();
+    TypeSet methodReturnTypes = null;
     var result = new ArrayList<MemberDescriptor>(raw.size() + children.size());
     var hasGenericTemplate = false;
     for (var member : raw) {
       if (member.generic()) {
         hasGenericTemplate = true;
-        for (var child : children) {
-          result.add(materializeChildMember(member, child.name(),
-            childReturnType(typeRegistry, child, elementRef, elementTypeSet, ownerSuffix)));
+        for (var child : materializedChildren) {
+          result.add(materializeChildMember(member, child.name(), child.returnTypes()));
         }
       } else if (isElementReturningMethod(member)) {
-        result.add(withElementReturnType(member, elementTypesOf(typeRegistry, children, elementRef, ownerSuffix)));
+        if (methodReturnTypes == null) {
+          methodReturnTypes = materializedElementTypes(materializedChildren, elementTypeSet);
+        }
+        result.add(withElementReturnType(member, methodReturnTypes));
       } else {
         result.add(member);
       }
@@ -784,12 +801,12 @@ public class MetadataCollectionSpecializer {
     // Fallback: у некоторых базовых коллекций (например, ОписанияСтандартныхРеквизитов)
     // нет generic-template member'а в HBK — материализуем имена детей напрямую.
     if (!hasGenericTemplate) {
-      for (var child : children) {
+      for (var child : materializedChildren) {
         result.add(new MemberDescriptor(
           child.name(),
           MemberKind.PROPERTY,
           BilingualString.EMPTY,
-          childReturnType(typeRegistry, child, elementRef, elementTypeSet, ownerSuffix),
+          child.returnTypes(),
           List.of(),
           null,
           false,
@@ -799,6 +816,14 @@ public class MetadataCollectionSpecializer {
       }
     }
     return result;
+  }
+
+  private static TypeSet materializedElementTypes(List<MaterializedChild> children, TypeSet defaultSet) {
+    var result = TypeSet.EMPTY;
+    for (var child : children) {
+      result = result.union(child.returnTypes());
+    }
+    return result.isEmpty() ? defaultSet : result;
   }
 
   /**
