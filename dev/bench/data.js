@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791553481361,
+  "lastUpdate": 1791578896829,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44206,6 +44206,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8708532276772248",
             "extra": "mean: 107.48167586326599 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ceb3a8654421994e905e5a4711062876a8a4fb0",
+          "message": "Merge pull request #4591 from 1c-syntax/claude/serene-albattani-7gv9qf\n\nfix(types): «СписокЗначений из T» типизирует значение элемента, а не сам элемент",
+          "timestamp": "2026-10-09T22:28:02+02:00",
+          "tree_id": "776338a573c96e07ac43fdb5bd19e5f024e55fc9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1ceb3a8654421994e905e5a4711062876a8a4fb0"
+        },
+        "date": 1791578869817,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 112.19426759084065,
+            "unit": "sec",
+            "range": "stddev: 0.8433281883756439",
+            "extra": "mean: 112.19426759084065 sec\nrounds: 3"
           }
         ]
       }
