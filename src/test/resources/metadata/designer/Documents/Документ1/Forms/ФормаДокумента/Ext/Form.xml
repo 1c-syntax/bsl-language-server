@@ -113,6 +113,14 @@
 				</InputField>
 			</ChildItems>
 		</Table>
+		<Table name="ТаблицаПодбора" id="43">
+			<DataPath>ТаблицаПодбора</DataPath>
+			<ChildItems>
+				<InputField name="ТаблицаПодбораНоменклатура" id="44">
+					<DataPath>ТаблицаПодбора.Номенклатура</DataPath>
+				</InputField>
+			</ChildItems>
+		</Table>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">
