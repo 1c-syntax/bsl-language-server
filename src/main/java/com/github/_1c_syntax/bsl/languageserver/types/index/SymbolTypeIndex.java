@@ -1044,13 +1044,14 @@ public class SymbolTypeIndex {
     }
     var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
     if (itemValueProperty != null) {
-      // `СписокЗначений из T` называет не элемент, а его свойство: это то же, что поле
-      // `* Значение - T` элемента. Оно ложится на элемент вместе с описанными полями —
-      // тем же путём, что колонки таблицы значений.
-      var fields = new ArrayList<DescribedField>();
-      fields.add(new DescribedField(itemValueProperty, td.valueTypes(), ""));
-      fields.addAll(describedFields(td));
-      return applyFields(TypeSet.of(headRef), fields, context);
+      // `СписокЗначений из T` — то же, что `СписокЗначений:` с полем `* Значение - T`: тип
+      // значения ложится полем на элемент, как колонки таблицы значений — на её строку.
+      var fields = new ArrayList<ParameterDescription>();
+      fields.add(new ParameterDescription(itemValueProperty, td.element(), td.valueTypes()));
+      fields.addAll(td.fields());
+      var asFields = CollectionTypeDescription.create(
+        td.collectionName(), td.element(), td.description(), List.of(), fields);
+      return applyFields(TypeSet.of(headRef), asFields, context);
     }
     var result = TypeSet.of(headRef);
     for (var valueType : td.valueTypes()) {
@@ -1073,22 +1074,6 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Поле описания: {@code * Поле - Тип - текст}.
-   *
-   * @param name        имя поля.
-   * @param types       описанные типы поля.
-   * @param description текст описания поля.
-   */
-  private record DescribedField(String name, List<TypeDescription> types, String description) {
-  }
-
-  private static List<DescribedField> describedFields(TypeDescription td) {
-    return td.fields().stream()
-      .map(field -> new DescribedField(field.name(), field.types(), fieldDescription(field)))
-      .toList();
-  }
-
-  /**
    * Если у описания типа есть {@link TypeDescription#fields() поля}
    * (декларация структуры/ТЗ ключами через {@code * Поле - Тип}),
    * навесить их на головной {@link TypeRef}. Поле, типизированное см.-ссылкой
@@ -1096,11 +1081,8 @@ public class SymbolTypeIndex {
    * для поддержки рекурсивных структур.
    */
   private TypeSet applyFields(TypeSet base, TypeDescription td, ResolutionContext context) {
-    return applyFields(base, describedFields(td), context);
-  }
-
-  private TypeSet applyFields(TypeSet base, List<DescribedField> fields, ResolutionContext context) {
-    if (fields.isEmpty() || base.refs().isEmpty()) {
+    var fields = td.fields();
+    if (fields == null || fields.isEmpty() || base.refs().isEmpty()) {
       return base;
     }
     var headRef = base.refs().iterator().next();
@@ -1111,39 +1093,28 @@ public class SymbolTypeIndex {
     var fieldsRef = elementRef == null ? headRef : elementRef;
     var result = elementRef == null ? base : TypeSet.of(elementRef);
     for (var field : fields) {
-      result = withDescribedField(result, fieldsRef, field, context);
-    }
-    return elementRef == null ? result : base.withElement(headRef, result);
-  }
-
-  /**
-   * Навесить на {@code fieldsRef} одно описанное поле: типы, заданные см.-ссылкой на
-   * локальную функцию, — лениво, остальные — сразу.
-   */
-  private TypeSet withDescribedField(TypeSet target, TypeRef fieldsRef, DescribedField field,
-                                     ResolutionContext context) {
-    var result = target;
-    var eager = TypeSet.EMPTY;
-    var lazy = false;
-    for (var fieldType : field.types()) {
-      var localFunction = localFunctionSeeRef(fieldType, context);
-      if (localFunction != null) {
-        result = result.withLazyField(fieldsRef, field.name(),
-          lazyReturnTypes(localFunction), field.description());
-        lazy = true;
-      } else {
-        eager = eager.union(resolveTypes(List.of(fieldType), context));
+      var eager = TypeSet.EMPTY;
+      var lazy = false;
+      for (var fieldType : field.types()) {
+        var localFunction = localFunctionSeeRef(fieldType, context);
+        if (localFunction != null) {
+          result = result.withLazyField(fieldsRef, field.name(),
+            lazyReturnTypes(localFunction), fieldDescription(field));
+          lazy = true;
+        } else {
+          eager = eager.union(resolveTypes(List.of(fieldType), context));
+        }
+      }
+      // Поле объявлено — значит, оно есть, даже если написанный у него тип сейчас никуда
+      // не ведёт: ссылка в модуль, до которого очередь ещё не дошла, не разрешается ни во
+      // что. Выбросить поле вместе с именем значило бы превратить «тип неизвестен» в
+      // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
+      // разный от запуска к запуску.
+      if (!eager.isEmpty() || !lazy) {
+        result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
       }
     }
-    // Поле объявлено — значит, оно есть, даже если написанный у него тип сейчас никуда
-    // не ведёт: ссылка в модуль, до которого очередь ещё не дошла, не разрешается ни во
-    // что. Выбросить поле вместе с именем значило бы превратить «тип неизвестен» в
-    // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
-    // разный от запуска к запуску.
-    if (!eager.isEmpty() || !lazy) {
-      result = result.withField(fieldsRef, field.name(), eager, field.description());
-    }
-    return result;
+    return elementRef == null ? result : base.withElement(headRef, result);
   }
 
   /**
