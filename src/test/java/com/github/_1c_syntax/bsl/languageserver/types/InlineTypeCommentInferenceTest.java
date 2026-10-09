@@ -155,6 +155,25 @@ class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void valueListTypeFromInlineCommentGoesToItemValue() {
+    // given: «МойСписок = Новый СписокЗначений; // СписокЗначений из Строка -» — запись
+    // называет тип значения элемента, как и в описании метода: элемент остаётся
+    // ЭлементСпискаЗначений, а «Строка» — тип его свойства «Значение».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "ЗМС = ЭлементМоегоСписка.Значение",
+      "ЗМС = ЭлементМоегоСписка.".length());
+
+    // then
+    assertThat(types.refs())
+      .as("«Значение» элемента списка, тип которого задан строчным комментарием")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+  }
+
+  @Test
   void arbitraryAmongDeclaredElementTypesIsKept() {
     // given: «Смешанный = Новый Массив; // Массив из Произвольный, Строка -» —
     // «Произвольный» здесь написан автором, а не подставлен реестром: он говорит, что
