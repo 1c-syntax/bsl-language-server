@@ -48,4 +48,12 @@ class VirtualTableCallWithoutParametersDiagnosticTest extends AbstractDiagnostic
     ;
 
   }
+
+  @Test
+  void testExtDimensionsWithoutParameters() {
+    var diagnostics = getDiagnostics("VirtualTableCallWithoutParametersExtDimensions");
+
+    assertThat(diagnostics).isEmpty();
+  }
+
 }
