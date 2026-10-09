@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.OpenDataObjectInference;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableTypeSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -182,13 +183,14 @@ public class CommentTypeResolver implements VariableTypeSource {
   /**
    * Тип-голова вместе с типами элементов записи {@code Массив из Строка}.
    * <p>
-   * Элементы навешиваются только там, где элемент коллекции сам по себе неизвестен
-   * ({@link TypeRegistry#getOwnElementTypes}): у {@code Массив} реестр не называет
-   * ничего, и объявленный тип занимает пустое место. Если же у коллекции элемент
+   * Элементы навешиваются напрямую только там, где элемент коллекции сам по себе
+   * неизвестен ({@link TypeRegistry#getOwnElementTypes}): у {@code Массив} реестр не
+   * называет ничего, и объявленный тип занимает пустое место. Если же у коллекции элемент
    * собственный — {@code КлючИЗначение} у {@code Соответствие},
    * {@code ЭлементСпискаЗначений} у {@code СписокЗначений} — запись {@code из Строка}
-   * называет не элемент, а значение внутри него, и выразить это одной строкой нельзя.
-   * Реестровый элемент тогда точнее, объявленный отбрасывается.
+   * называет не элемент, а значение внутри него. Там, где известно, какое это свойство
+   * элемента ({@link OpenDataObjectInference#itemValueProperty}), объявленный тип ложится
+   * на него; иначе реестровый элемент точнее, и объявленный отбрасывается.
    *
    * @param headRef  разрешённый тип-голова записи.
    * @param type     описание типа из комментария.
@@ -197,8 +199,7 @@ public class CommentTypeResolver implements VariableTypeSource {
    */
   private TypeSet withElementTypes(TypeRef headRef, TypeDescription type, FileType fileType) {
     var head = TypeSet.of(headRef);
-    if (!(type instanceof CollectionTypeDescription collection)
-      || !typeRegistry.getOwnElementTypes(headRef).isEmpty()) {
+    if (!(type instanceof CollectionTypeDescription collection)) {
       return head;
     }
     var elements = new ArrayList<TypeRef>();
@@ -208,6 +209,16 @@ public class CommentTypeResolver implements VariableTypeSource {
         typeRegistry.resolve(name, fileType).ifPresent(elements::add);
       }
     }
-    return elements.isEmpty() ? head : head.withElement(headRef, TypeSet.of(elements));
+    if (elements.isEmpty()) {
+      return head;
+    }
+    var ownElement = typeRegistry.getOwnElementTypes(headRef).refs().stream().findFirst().orElse(null);
+    if (ownElement == null) {
+      return head.withElement(headRef, TypeSet.of(elements));
+    }
+    var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
+    return itemValueProperty == null
+      ? head
+      : head.withElement(headRef, TypeSet.of(ownElement).withField(ownElement, itemValueProperty, TypeSet.of(elements)));
   }
 }

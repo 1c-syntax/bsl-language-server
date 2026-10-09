@@ -1042,6 +1042,17 @@ public class SymbolTypeIndex {
     if (headRef == null) {
       return TypeSet.EMPTY;
     }
+    var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
+    if (itemValueProperty != null) {
+      // `СписокЗначений из T` — то же, что `СписокЗначений:` с полем `* Значение - T`: тип
+      // значения ложится полем на элемент, как колонки таблицы значений — на её строку.
+      var fields = new ArrayList<ParameterDescription>();
+      fields.add(new ParameterDescription(itemValueProperty, td.element(), td.valueTypes()));
+      fields.addAll(td.fields());
+      var asFields = CollectionTypeDescription.create(
+        td.collectionName(), td.element(), td.description(), List.of(), fields);
+      return applyFields(TypeSet.of(headRef), asFields, context);
+    }
     var result = TypeSet.of(headRef);
     for (var valueType : td.valueTypes()) {
       var localFunction = localFunctionSeeRef(valueType, context);

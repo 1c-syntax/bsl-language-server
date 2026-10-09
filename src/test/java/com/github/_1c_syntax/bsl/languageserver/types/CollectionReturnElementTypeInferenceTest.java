@@ -79,6 +79,48 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
   }
 
   @Test
+  void declaredValueListTypeGoesToItemValue() {
+    // `СписокЗначений из Строка` называет не элемент списка, а значение в нём: элемент
+    // остаётся `ЭлементСпискаЗначений`, а `Строка` — тип его свойства `Значение`.
+    var types = inferVar(doc(), "СписокСтрок");
+    var listRef = types.refs().iterator().next();
+
+    assertThat(listRef.qualifiedName()).isEqualTo("СписокЗначений");
+    assertThat(types.getElementTypes(listRef).refs())
+      .as("элемент списка — ЭлементСпискаЗначений, а не объявленный тип значения")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("ЭлементСпискаЗначений");
+    assertThat(inferVar(doc(), "ЗначениеДобавленного").refs())
+      .as("«Значение» элемента, добавленного в список")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+    assertThat(inferVar(doc(), "ЗначениеОбхода").refs())
+      .as("«Значение» элемента при обходе списка")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+    // Объявленный тип ложится только на «Значение»: прочие свойства элемента остаются
+    // платформенными, как у строки таблицы значений рядом с описанными колонками.
+    assertThat(inferVar(doc(), "ПредставлениеДобавленного").refs())
+      .as("«Представление» элемента — платформенное")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+    assertThat(inferVar(doc(), "ПометкаДобавленного").refs())
+      .as("«Пометка» элемента — платформенная")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Булево");
+  }
+
+  @Test
+  void declaredValueListTypeBySeeReferenceGoesToItemValue() {
+    // `СписокЗначений из см. ЛокальнаяФункция`: тип значения берётся из возврата функции,
+    // но и тогда он относится к свойству «Значение» элемента, а не подменяет сам элемент.
+    assertThat(inferVar(doc(), "ЗначениеПоСсылке").refs())
+      .as("«Значение» элемента списка, тип которого задан см.-ссылкой")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Дата");
+  }
+
+  @Test
   void arrayHasArbitraryDefaultElementTypeInBothLanguages() {
     // Симметрия BSL/OneScript: `Массив` имеет дефолтный тип элемента —
     // универсальный `Произвольный`, канонизированный в TypeRef.ANY (он раньше
