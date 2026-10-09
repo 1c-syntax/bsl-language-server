@@ -107,6 +107,9 @@
                 "CompareWithBoolean": {
                     "$ref": "parameters-schema.json#/definitions/CompareWithBoolean"
                 },
+                "CompilationDirectiveIncompatibleCall": {
+                    "$ref": "parameters-schema.json#/definitions/CompilationDirectiveIncompatibleCall"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
                 },
