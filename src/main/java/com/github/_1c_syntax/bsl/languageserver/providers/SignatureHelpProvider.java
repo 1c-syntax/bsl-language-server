@@ -65,6 +65,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Провайдер для запросов {@code textDocument/signatureHelp}.
@@ -492,8 +493,7 @@ public final class SignatureHelpProvider {
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
     var returnTypes = typeService.getReturnTypes(method);
-    var returnRef = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-    var sig = new SignatureDescriptor(params, returnRef, description);
+    var sig = new SignatureDescriptor(params, returnTypes, description);
     return MemberDescriptor.method(method.getName(), description, List.of(sig));
   }
 
@@ -510,8 +510,13 @@ public final class SignatureHelpProvider {
       paramInfos.add(appendParameter(label, units.get(i), lang));
     }
     label.append(')');
-    if (sig.returnType() != null && sig.returnType() != TypeRef.UNKNOWN) {
-      label.append(": ").append(typeService.displayName(sig.returnType(), lang));
+    var returnTypesLabel = sig.returnTypes().refs().stream()
+      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
+      .map(ref -> typeService.displayName(ref, lang))
+      .sorted()
+      .collect(Collectors.joining(", "));
+    if (!returnTypesLabel.isEmpty()) {
+      label.append(": ").append(returnTypesLabel);
     }
     var info = new SignatureInformation();
     info.setLabel(label.toString());
