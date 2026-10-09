@@ -173,6 +173,25 @@ public class OpenDataObjectInference {
   }
 
   /**
+   * Свойство элемента коллекции, тип которого задаёт запись {@code из} в её описании.
+   * <p>
+   * Обычно запись {@code из} называет сам элемент: {@code Массив из Строка},
+   * {@code Соответствие из КлючИЗначение}. У списка значений — нет: в
+   * {@code СписокЗначений из Строка} элемент остаётся {@code ЭлементСпискаЗначений}, а
+   * {@code Строка} — тип его свойства {@code Значение}.
+   *
+   * @param typeName имя типа коллекции.
+   * @return имя свойства элемента; {@code null}, если запись {@code из} называет сам элемент.
+   */
+  public static @Nullable String itemValueProperty(String typeName) {
+    var lower = typeName.toLowerCase(Locale.ROOT);
+    return switch (lower) {
+      case "списокзначений", "valuelist" -> "Значение";
+      default -> null;
+    };
+  }
+
+  /**
    * Описание типов — объект, чьё содержимое задаётся строкой в конструкторе.
    *
    * @param typeName имя типа.

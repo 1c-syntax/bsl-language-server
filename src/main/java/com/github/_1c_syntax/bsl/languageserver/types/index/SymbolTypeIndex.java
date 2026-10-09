@@ -83,12 +83,6 @@ public class SymbolTypeIndex {
   /** Свойство таблицы формы с типом её строки. */
   private static final String CURRENT_DATA = "ТекущиеДанные";
 
-  /** Список значений: запись «из» в его описании называет тип значения, а не элемента. */
-  private static final String VALUE_LIST = "СписокЗначений";
-
-  /** Свойство элемента списка значений, тип которого задаёт запись «из». */
-  private static final String VALUE_LIST_ITEM_VALUE = "Значение";
-
   /** Наименьшая ссылка на метаданные: вид объекта, его имя и имя подчинённого. */
   private static final int MIN_METADATA_SEGMENTS = 3;
 
@@ -1049,44 +1043,32 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     var result = TypeSet.of(headRef);
-    var valueListItem = valueListItemOf(headRef);
+    // У некоторых коллекций запись `из` называет не элемент, а его свойство: элемент тогда
+    // свой, из реестра, а объявленный тип ложится на это свойство (см. itemValueProperty).
+    var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
+    var itemRef = itemValueProperty == null ? null : firstRef(typeRegistry.getDefaultElementTypes(headRef));
     for (var valueType : td.valueTypes()) {
       var localFunction = localFunctionSeeRef(valueType, context);
       if (localFunction != null) {
         // Тип элемента задан см.-ссылкой на локальную функцию — возможно
         // самоссылочную (дерево). Храним ленивую ссылку: реальный тип берётся
         // из её возвращаемого значения на чтении, глубина — по выражению курсора.
-        result = result.withLazyElement(headRef, lazyReturnTypes(localFunction));
+        var lazy = lazyReturnTypes(localFunction);
+        result = itemRef == null
+          ? result.withLazyElement(headRef, lazy)
+          : result.withElement(headRef, TypeSet.of(itemRef).withLazyField(itemRef, itemValueProperty, lazy, ""));
       } else {
         // Поля коллекции (`* Ключ - Строка`) относятся к элементу (КлючИЗначение,
         // строке ТЗ и т.п.), поэтому навешиваем их на тип элемента, а не на голову.
         var eager = applyFields(resolveTypes(List.of(valueType), context), td, context);
         if (!eager.isEmpty()) {
-          result = result.withElement(headRef, valueListItem == null
+          result = result.withElement(headRef, itemRef == null
             ? eager
-            : TypeSet.of(valueListItem).withField(valueListItem, VALUE_LIST_ITEM_VALUE, eager));
+            : TypeSet.of(itemRef).withField(itemRef, itemValueProperty, eager));
         }
       }
     }
     return result;
-  }
-
-  /**
-   * Элемент списка значений — если коллекция и есть список значений.
-   * <p>
-   * У списка значений элемент свой, {@code ЭлементСпискаЗначений}, а запись
-   * {@code СписокЗначений из Строка} называет тип его свойства {@code Значение}. Объявленный
-   * тип, повешенный элементом напрямую, подменил бы сам элемент: у {@code Строка} нет ни
-   * {@code Значение}, ни {@code Представление}.
-   *
-   * @param headRef тип коллекции.
-   * @return тип элемента; {@code null}, если коллекция — не список значений.
-   */
-  private @Nullable TypeRef valueListItemOf(TypeRef headRef) {
-    if (!VALUE_LIST.equalsIgnoreCase(headRef.qualifiedName())) {
-      return null;
-    }
-    return firstRef(typeRegistry.getOwnElementTypes(headRef));
   }
 
   /**

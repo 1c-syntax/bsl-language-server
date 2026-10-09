@@ -88,16 +88,26 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
     assertThat(listRef.qualifiedName()).isEqualTo("СписокЗначений");
     assertThat(types.getElementTypes(listRef).refs())
       .as("элемент списка — ЭлементСпискаЗначений, а не объявленный тип значения")
-      .extracting(r -> r.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("ЭлементСпискаЗначений");
     assertThat(inferVar(doc(), "ЗначениеДобавленного").refs())
       .as("«Значение» элемента, добавленного в список")
-      .extracting(r -> r.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
     assertThat(inferVar(doc(), "ЗначениеОбхода").refs())
       .as("«Значение» элемента при обходе списка")
-      .extracting(r -> r.qualifiedName())
+      .extracting(TypeRef::qualifiedName)
       .containsExactly("Строка");
+  }
+
+  @Test
+  void declaredValueListTypeBySeeReferenceGoesToItemValue() {
+    // `СписокЗначений из см. ЛокальнаяФункция`: тип значения берётся из возврата функции,
+    // но и тогда он относится к свойству «Значение» элемента, а не подменяет сам элемент.
+    assertThat(inferVar(doc(), "ЗначениеПоСсылке").refs())
+      .as("«Значение» элемента списка, тип которого задан см.-ссылкой")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Дата");
   }
 
   @Test
