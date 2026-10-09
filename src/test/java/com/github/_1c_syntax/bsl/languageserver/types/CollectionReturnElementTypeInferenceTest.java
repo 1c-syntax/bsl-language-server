@@ -79,6 +79,28 @@ class CollectionReturnElementTypeInferenceTest extends AbstractServerContextAwar
   }
 
   @Test
+  void declaredValueListTypeGoesToItemValue() {
+    // `СписокЗначений из Строка` называет не элемент списка, а значение в нём: элемент
+    // остаётся `ЭлементСпискаЗначений`, а `Строка` — тип его свойства `Значение`.
+    var types = inferVar(doc(), "СписокСтрок");
+    var listRef = types.refs().iterator().next();
+
+    assertThat(listRef.qualifiedName()).isEqualTo("СписокЗначений");
+    assertThat(types.getElementTypes(listRef).refs())
+      .as("элемент списка — ЭлементСпискаЗначений, а не объявленный тип значения")
+      .extracting(r -> r.qualifiedName())
+      .containsExactly("ЭлементСпискаЗначений");
+    assertThat(inferVar(doc(), "ЗначениеДобавленного").refs())
+      .as("«Значение» элемента, добавленного в список")
+      .extracting(r -> r.qualifiedName())
+      .containsExactly("Строка");
+    assertThat(inferVar(doc(), "ЗначениеОбхода").refs())
+      .as("«Значение» элемента при обходе списка")
+      .extracting(r -> r.qualifiedName())
+      .containsExactly("Строка");
+  }
+
+  @Test
   void arrayHasArbitraryDefaultElementTypeInBothLanguages() {
     // Симметрия BSL/OneScript: `Массив` имеет дефолтный тип элемента —
     // универсальный `Произвольный`, канонизированный в TypeRef.ANY (он раньше
