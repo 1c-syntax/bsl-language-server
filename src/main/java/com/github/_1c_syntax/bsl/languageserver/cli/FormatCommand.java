@@ -111,12 +111,6 @@ public class FormatCommand implements Callable<Integer> {
 
     String[] filePaths = COMMA_PATTERN.split(srcDirOption);
 
-    List<File> files = findFilesForFormatting(filePaths);
-
-    if (files.isEmpty()) {
-      return 1;
-    }
-
     // Create workspace based on first file path
     var srcDir = Absolute.path(filePaths[0]);
     if (!srcDir.toFile().isDirectory()) {
@@ -125,6 +119,10 @@ public class FormatCommand implements Callable<Integer> {
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
+      List<File> files = findFilesForFormatting(filePaths);
+      if (files.isEmpty()) {
+        return 1;
+      }
 
       if (silentMode) {
         cliExecutor.submit(() ->
