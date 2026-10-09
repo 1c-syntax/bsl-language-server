@@ -123,12 +123,20 @@ src/jmh/             бенчмарки JMH;     docs/ (ru) · docs/en/ (en) · 
 java -jar build/libs/bsl-language-server-*-exec.jar --help    # запуск; подкоманды см. выше
 ```
 
+**Javadoc и внешние ссылки.** `./gradlew javadoc` ходит в сеть: качает `element-list` с каждого
+сайта из `-link`, а плагин `io.freefair.javadoc-links` вдобавок ищет javadoc зависимостей в
+javadoc.io. Когда внешний ресурс недоступен, сборка падает без всякой связи с качеством кода —
+на этот случай есть `./gradlew javadoc -PjavadocLinks=false`: без внешних ссылок и без сети,
+проверки doclint при этом работают как обычно. В CI упавшая со ссылками сборка javadoc
+автоматически повторяется с этим флагом.
+
 ## Тесты и их длительность
 
 ```bash
 ./gradlew test --tests "*SomeDiagnosticTest"   # один класс — используй это при разработке
 ./gradlew test                                  # весь набор (МЕДЛЕННО)
-./gradlew check                                 # то, что гоняет CI: test + jacoco + spotless + javadoc
+./gradlew check                                 # то, что гоняет CI: test + jacoco + spotless
+                                                # (javadoc в `check` не входит — он отдельным workflow)
 ```
 
 - **600+ тестовых классов**, многие перезагружают Spring-контекст (`@DirtiesContext`,
