@@ -152,6 +152,31 @@ class SeeFormRefInferenceTest extends AbstractServerContextAwareTest {
         + ".Справочник.Справочник1.Форма.ФормаСписка.Список");
   }
 
+  @Test
+  void refinedRowRecordGivesRowOfValueTableFormTable() {
+    // given: таблица формы выводит реквизит-таблицу значений, колонки которой объявлены в форме.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  СтрокаТаблицы - ДанныеФормыЭлементКоллекции: См. Документ.Документ1.Форма.ФормаДокумента.Элементы.ТаблицаПодбора
+      Процедура ОбработкаСтроки(СтрокаТаблицы) Экспорт
+
+      	ТипСтроки = СтрокаТаблицы;
+      	ТипКолонки = СтрокаТаблицы.Номенклатура;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var row = at(documentContext, "ТипСтроки = СтрокаТаблицы", "ТипСтроки = ".length());
+    var column = at(documentContext, "ТипКолонки = СтрокаТаблицы.Номенклатура",
+      "ТипКолонки = СтрокаТаблицы.".length());
+
+    // then: строка этого реквизита со своими колонками — та же, что у «ТаблицаПодбора.ТекущиеДанные».
+    assertThat(names(row))
+      .containsExactly("ДанныеФормыЭлементКоллекции.Документ.Документ1.Форма.ФормаДокумента.ТаблицаПодбора");
+    assertThat(names(column)).containsExactly("СправочникСсылка.Справочник1");
+  }
+
   private DocumentContext documentWithFormReference() {
     return TestUtils.getDocumentContext("""
       // Параметры:
