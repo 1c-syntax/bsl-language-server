@@ -1083,11 +1083,7 @@ public class SymbolTypeIndex {
   }
 
   private static List<DescribedField> describedFields(TypeDescription td) {
-    var fields = td.fields();
-    if (fields == null) {
-      return List.of();
-    }
-    return fields.stream()
+    return td.fields().stream()
       .map(field -> new DescribedField(field.name(), field.types(), fieldDescription(field)))
       .toList();
   }
@@ -1115,28 +1111,39 @@ public class SymbolTypeIndex {
     var fieldsRef = elementRef == null ? headRef : elementRef;
     var result = elementRef == null ? base : TypeSet.of(elementRef);
     for (var field : fields) {
-      var eager = TypeSet.EMPTY;
-      var lazy = false;
-      for (var fieldType : field.types()) {
-        var localFunction = localFunctionSeeRef(fieldType, context);
-        if (localFunction != null) {
-          result = result.withLazyField(fieldsRef, field.name(),
-            lazyReturnTypes(localFunction), field.description());
-          lazy = true;
-        } else {
-          eager = eager.union(resolveTypes(List.of(fieldType), context));
-        }
-      }
-      // Поле объявлено — значит, оно есть, даже если написанный у него тип сейчас никуда
-      // не ведёт: ссылка в модуль, до которого очередь ещё не дошла, не разрешается ни во
-      // что. Выбросить поле вместе с именем значило бы превратить «тип неизвестен» в
-      // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
-      // разный от запуска к запуску.
-      if (!eager.isEmpty() || !lazy) {
-        result = result.withField(fieldsRef, field.name(), eager, field.description());
-      }
+      result = withDescribedField(result, fieldsRef, field, context);
     }
     return elementRef == null ? result : base.withElement(headRef, result);
+  }
+
+  /**
+   * Навесить на {@code fieldsRef} одно описанное поле: типы, заданные см.-ссылкой на
+   * локальную функцию, — лениво, остальные — сразу.
+   */
+  private TypeSet withDescribedField(TypeSet target, TypeRef fieldsRef, DescribedField field,
+                                     ResolutionContext context) {
+    var result = target;
+    var eager = TypeSet.EMPTY;
+    var lazy = false;
+    for (var fieldType : field.types()) {
+      var localFunction = localFunctionSeeRef(fieldType, context);
+      if (localFunction != null) {
+        result = result.withLazyField(fieldsRef, field.name(),
+          lazyReturnTypes(localFunction), field.description());
+        lazy = true;
+      } else {
+        eager = eager.union(resolveTypes(List.of(fieldType), context));
+      }
+    }
+    // Поле объявлено — значит, оно есть, даже если написанный у него тип сейчас никуда
+    // не ведёт: ссылка в модуль, до которого очередь ещё не дошла, не разрешается ни во
+    // что. Выбросить поле вместе с именем значило бы превратить «тип неизвестен» в
+    // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
+    // разный от запуска к запуску.
+    if (!eager.isEmpty() || !lazy) {
+      result = result.withField(fieldsRef, field.name(), eager, field.description());
+    }
+    return result;
   }
 
   /**
