@@ -11150,6 +11150,9 @@
     "aliases": [
       "ValueTable"
     ],
+    "elementTypes": [
+      "СтрокаТаблицыЗначений"
+    ],
     "members": [
       {
         "name": "Колонки",
