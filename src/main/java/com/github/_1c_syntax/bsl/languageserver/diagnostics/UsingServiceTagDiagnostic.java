@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 )
 public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
 
+  private static final Pattern NO_TAGS = Pattern.compile("(?!)");
+
   private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки"
     + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
     + "|Вставить\\s*содержимое\\s*обработчика"
@@ -51,12 +53,35 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
     defaultValue = SERVICE_TAGS_DEFAULT
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ""
+  )
+  private String additionalServiceTags = "";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ""
+  )
+  private String excludedServiceTags = "";
+
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
+  private Pattern additionalPattern = NO_TAGS;
+  private Pattern excludedPattern = NO_TAGS;
 
   @Override
   public void configure(Map<String, Object> configuration) {
     serviceTags = (String) configuration.getOrDefault("serviceTags", serviceTags);
+    additionalServiceTags = (String) configuration.getOrDefault("additionalServiceTags", additionalServiceTags);
+    excludedServiceTags = (String) configuration.getOrDefault("excludedServiceTags", excludedServiceTags);
     pattern = getPatternSearch(serviceTags);
+    additionalPattern = getOptionalPatternSearch(additionalServiceTags);
+    excludedPattern = getOptionalPatternSearch(excludedServiceTags);
+  }
+
+  private Pattern getOptionalPatternSearch(String value) {
+    return value.isEmpty() ? NO_TAGS : getPatternSearch(value);
   }
 
   public Pattern getPatternSearch(String value) {
@@ -70,8 +95,15 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
     documentContext.getComments()
       .parallelStream()
       .forEach((Token token) -> {
-        var matcher = pattern.matcher(token.getText());
+        var text = token.getText();
+        var matcher = pattern.matcher(text);
         if (!matcher.find()) {
+          matcher = additionalPattern.matcher(text);
+          if (!matcher.find()) {
+            return;
+          }
+        }
+        if (excludedPattern.matcher(text).region(matcher.start(), text.length()).lookingAt()) {
           return;
         }
         diagnosticStorage.addDiagnostic(
