@@ -144,4 +144,39 @@ class HoverProviderOScriptLibraryTest extends AbstractServerContextAwareTest {
       .as("hover для класса без конструктора — всё равно constructor-стиля")
       .contains("Новый ClassWithoutCtor(");
   }
+
+  @Test
+  void hoverOnUserTypeNameInMethodDescriptionResolves() {
+    // given: имя пользовательского (OneScript) типа в описании метода. Резолвится
+    // тем же DescriptionTypeReferenceFinder, что и платформенные типы — никакой
+    // отдельной обработки для USER-типов нет.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    var content = """
+      #Использовать internal-classes-lib
+      // Возвращаемое значение:
+      //  PublicEntity - результат
+      Функция Тест() Экспорт
+        Возврат Неопределено;
+      КонецФункции
+      """;
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new HoverParams();
+    params.setPosition(new Position(2, 8)); // курсор внутри «PublicEntity» в описании
+
+    // when
+    var hover = hoverProvider.getHover(dc, params);
+
+    // then
+    assertThat(hover)
+      .as("hover по имени пользовательского типа в описании метода должен резолвиться")
+      .isPresent();
+    var text = hover.get().getContents().getRight().getValue();
+    assertThat(text)
+      .contains("PublicEntity")
+      .doesNotContain("Новый");
+  }
 }
