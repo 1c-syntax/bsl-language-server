@@ -49,6 +49,8 @@ import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -300,6 +302,39 @@ class BSLWorkspaceServiceTest {
     var documentContext = ctx.getDocument(uri);
     assertThat(documentContext).isNotNull();
     assertThat(ctx.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  /** Документ не из файловой системы при закрытии остаётся: файла, который мог пропасть, у него нет. */
+  @Test
+  void didCloseKeepsDocumentNotFromFileSystem() {
+    // given
+    var uri = Absolute.uri(URI.create("untitled:///Untitled-1.bsl"));
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(new TextDocumentItem(uri.toString(), "bsl", 1, "")));
+    var ctx = serverContextProvider.resolveContextForDocument(uri);
+
+    // when
+    textDocumentService.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri.toString())));
+
+    // then
+    assertThat(ctx.getDocument(uri)).isNotNull();
+  }
+
+  /**
+   * У file-URI с authority (UNC) путь строится не везде: вне Windows {@code Path.of} его не
+   * принимает. Закрытие такого документа не должно падать. На Windows путь строится, и проверка
+   * недоступной сетевой папки ждёт сетевой таймаут — там тест не гоняется.
+   */
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void didCloseOfDocumentWithUriAuthorityDoesNotThrow() {
+    // given
+    var uri = Absolute.uri(URI.create("file://192.168.113.131/share/does-not-exist.bsl"));
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(new TextDocumentItem(uri.toString(), "bsl", 1, "")));
+
+    // when-then
+    assertThatCode(() ->
+      textDocumentService.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri.toString())))
+    ).doesNotThrowAnyException();
   }
 
   @Test

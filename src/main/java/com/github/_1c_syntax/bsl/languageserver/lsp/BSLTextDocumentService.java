@@ -141,7 +141,6 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -854,7 +853,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     try {
       return Files.notExists(Path.of(uri));
-    } catch (IllegalArgumentException | FileSystemNotFoundException e) {
+    } catch (IllegalArgumentException e) {
+      // Так бывает с file-URI с authority (UNC) вне Windows: путь по нему не строится.
+      LOGGER.debug("Can't check whether file of document exists: {}", uri, e);
       return false;
     }
   }
