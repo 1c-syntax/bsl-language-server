@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791636434883,
+  "lastUpdate": 1791637694881,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44392,6 +44392,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.6831447816538567",
             "extra": "mean: 109.73001559575398 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7ec676c94a6eb78eb5b69e29f2f3e7e1e1d0fab1",
+          "message": "Merge pull request #4594 from DimaShapovaloff/codex/fix-4575-cli-format\n\nfix(cli): активировать workspace до поиска файлов для форматирования",
+          "timestamp": "2026-10-10T12:29:15+02:00",
+          "tree_id": "a752b95670ba56859731be58a018d29097491256",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7ec676c94a6eb78eb5b69e29f2f3e7e1e1d0fab1"
+        },
+        "date": 1791637668017,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 110.21340958277385,
+            "unit": "sec",
+            "range": "stddev: 0.9585813172211568",
+            "extra": "mean: 110.21340958277385 sec\nrounds: 3"
           }
         ]
       }
