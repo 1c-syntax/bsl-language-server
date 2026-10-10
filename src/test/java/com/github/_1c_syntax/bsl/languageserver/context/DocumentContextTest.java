@@ -31,12 +31,16 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -308,6 +312,28 @@ class DocumentContextTest {
     // when-then: нет файла → IOException; на Unix Path.of(file://host/...) → IAE.
     // Оба логируются, populate не рвётся.
     assertThatCode(documentContext::rebuildFromFileSystem).doesNotThrowAnyException();
+  }
+
+  @Test
+  void rebuildFromFileSystemReadsFileWithBytesInvalidForUtf8(@TempDir Path tempDir) throws IOException {
+    // given: модуль сохранён не в UTF-8 — кириллица комментария в windows-1251 даёт байты,
+    // которых в UTF-8 быть не может.
+    var file = tempDir.resolve("Module.bsl");
+    Files.writeString(file, "// Комментарий\nProcedure Test()\nEndProcedure\n", Charset.forName("windows-1251"));
+    var documentContext = TestUtils.getDocumentContext(
+      file.toUri(),
+      "Procedure Previous()\nEndProcedure\n",
+      TestUtils.getRegisteredServerContext()
+    );
+
+    // when
+    documentContext.rebuildFromFileSystem();
+
+    // then: недопустимые байты заменены, а не сорвали чтение — документ разобран по файлу.
+    assertThat(documentContext.getContent()).contains("Procedure Test()");
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .extracting(MethodSymbol::getName)
+      .containsExactly("Test");
   }
 
   @SneakyThrows
