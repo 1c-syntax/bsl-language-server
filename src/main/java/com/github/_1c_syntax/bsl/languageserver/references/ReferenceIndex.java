@@ -439,8 +439,11 @@ public class ReferenceIndex {
       return maybeDocument
         .map(DocumentContext::getSymbolTree)
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
-          .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
-          .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+          // Из метода видны не все переменные модуля: созданная присваиванием в теле модуля
+          // живёт в нём одном.
+          .map(method -> symbolTree.getVariableSymbol(symbolName, method)
+            .or(() -> symbolTree.getModuleVariableVisibleFromMethods(symbolName)))
+          .orElseGet(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
 
     if (symbolEntity.symbolKind() == SymbolKind.Module) {

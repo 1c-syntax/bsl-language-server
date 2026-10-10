@@ -858,15 +858,14 @@ public class ReferenceIndexFiller {
     }
 
     private Optional<VariableSymbol> findVariableSymbol(String variableName) {
-      var variableSymbol = documentContext.getSymbolTree()
-        .getVariableSymbol(variableName, currentScope);
-
-      if (variableSymbol.isPresent()) {
-        return variableSymbol;
+      var symbolTree = documentContext.getSymbolTree();
+      if (currentScope instanceof MethodSymbol method) {
+        var inMethod = symbolTree.getVariableSymbol(variableName, method);
+        // Из метода видны не все переменные модуля: созданная присваиванием в теле модуля
+        // живёт в нём одном.
+        return inMethod.isPresent() ? inMethod : symbolTree.getModuleVariableVisibleFromMethods(variableName);
       }
-
-      return documentContext.getSymbolTree()
-        .getVariableSymbol(variableName, documentContext.getSymbolTree().getModule());
+      return symbolTree.getVariableSymbol(variableName, symbolTree.getModule());
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {

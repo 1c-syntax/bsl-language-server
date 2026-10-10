@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -243,9 +244,10 @@ public class SymbolTree {
   /**
    * Переменная с именем {@code variableName}, видимая в точке узла {@code node}:
    * сперва — в охватывающем методе (по {@code RULE_sub}), иначе — на уровне модуля.
-   * Единый резолв видимости переменной для потребителей, которым нужно отличить
-   * объявленную переменную от одноимённого self-члена (система типов, индексатор
-   * ссылок).
+   * Из метода видны только переменные модуля, объявленные {@code Перем} (см.
+   * {@link #getModuleVariableVisibleFromMethods(String)}). Единый резолв видимости
+   * переменной для потребителей, которым нужно отличить объявленную переменную от
+   * одноимённого self-члена (система типов, индексатор ссылок).
    *
    * @param node         узел, в точке которого проверяется видимость.
    * @param variableName имя переменной (без учёта регистра — как хранит дерево).
@@ -258,8 +260,26 @@ public class SymbolTree {
       if (inMethod.isPresent()) {
         return inMethod;
       }
+      // У метода с ошибками разбора созданные в нём переменные заводятся на уровне модуля —
+      // свои они ему от этого быть не перестают.
+      return getVariableSymbol(variableName, module)
+        .filter(variable -> variable.getKind() != VariableKind.DYNAMIC
+          || Ranges.containsRange(Ranges.create(subContext), variable.getRange()));
     }
     return getVariableSymbol(variableName, module);
+  }
+
+  /**
+   * Переменная уровня модуля, видимая из методов. Такова переменная, объявленная
+   * {@code Перем}; переменная, созданная присваиванием в теле модуля, живёт в одном теле
+   * модуля, и из методов её не видно.
+   *
+   * @param variableName имя переменной (без учёта регистра — как хранит дерево).
+   * @return переменная модуля; empty, если такой нет либо из методов она не видна.
+   */
+  public Optional<VariableSymbol> getModuleVariableVisibleFromMethods(String variableName) {
+    return getVariableSymbol(variableName, module)
+      .filter(variable -> variable.getKind() != VariableKind.DYNAMIC);
   }
 
   /**
