@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791632682028,
+  "lastUpdate": 1791633921940,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44330,6 +44330,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.846887926310138",
             "extra": "mean: 110.37214676539104 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7035db6b63d4d5cd3f9fcaf68dfad0b862eeb5ff",
+          "message": "Merge pull request #4601 from DimaShapovaloff/codex/fix-2784-default-style\n\nИсправлены ложные срабатывания StyleElementConstructors для оформления по умолчанию",
+          "timestamp": "2026-10-10T09:22:55+02:00",
+          "tree_id": "fc42459c71034d56727f12680e6f8deab6718cfc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7035db6b63d4d5cd3f9fcaf68dfad0b862eeb5ff"
+        },
+        "date": 1791633905912,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.29691076278687,
+            "unit": "sec",
+            "range": "stddev: 0.9008656517771096",
+            "extra": "mean: 108.29691076278687 sec\nrounds: 3"
           }
         ]
       }
