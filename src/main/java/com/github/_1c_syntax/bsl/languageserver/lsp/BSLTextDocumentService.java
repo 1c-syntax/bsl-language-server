@@ -1193,11 +1193,15 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     lock.writeLock().lock();
     var writeHeld = true;
     try {
-      if (serverContext.getDocumentNoLock(uri) != documentContext) {
+      // Файла нет — читать нечего; попытка чтения только оставила бы ошибку в журнале.
+      if (serverContext.getDocumentNoLock(uri) != documentContext || isFileDeleted(uri)) {
         throw contentModified(uri);
       }
       serverContext.rebuildDocument(documentContext);
       if (!documentContext.hasContent()) {
+        // Чтение сорвалось, а документ уже помечен прочитанным. Сброс пометки даёт
+        // следующему запросу прочитать файл заново, а не отвечать отказом до события о файле.
+        serverContext.tryClearDocument(documentContext);
         throw contentModified(uri);
       }
       // Понижение блокировки без окна: перечитанный текст не освободят, пока идёт вычисление.

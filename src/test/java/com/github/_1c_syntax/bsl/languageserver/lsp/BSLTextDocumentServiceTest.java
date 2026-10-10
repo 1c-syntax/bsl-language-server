@@ -101,6 +101,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEvent;
@@ -114,6 +115,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -432,6 +435,24 @@ class BSLTextDocumentServiceTest {
       .havingCause()
       .isInstanceOfSatisfying(ResponseErrorException.class, e ->
         assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+  }
+
+  /** Файл закрытого документа пропал и появился снова: запрос после его появления отвечает по файлу. */
+  @Test
+  void requestToClosedDocumentIsServedOnceFileReappears(@TempDir Path tempDir) throws Exception {
+    // given: документ в контексте, файла нет
+    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"));
+    var file = tempDir.resolve("Reappearing.bsl");
+    var uri = Absolute.uri(file.toUri());
+    serverContextProvider.getServerContext(uri).orElseThrow().addDocument(uri);
+    var params = new FoldingRangeRequestParams(new TextDocumentIdentifier(uri.toString()));
+    assertThat(textDocumentService.foldingRange(params)).failsWithin(Duration.ofSeconds(10));
+
+    // when
+    Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
+
+    // then
+    assertThat(textDocumentService.foldingRange(params).get()).hasSize(1);
   }
 
   /** Закрытие документа посреди запроса к нему ждёт запрос, а не освобождает текст у него из-под ног. */
