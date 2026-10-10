@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -131,8 +132,11 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -826,14 +830,22 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // didClose приходит с потока диспетчеризации LSP4J, на котором workspace-контекст
     // не установлен, — выставляем его явно (как в didOpen), чтобы workspace-scoped
     // @EventListener-подписчики ServerContextDocumentClosedEvent корректно резолвились.
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
-      serverContext.closeDocument(documentContext);
-      // Пока документ был открыт, удаление его файла не выгружало документ: им владел
-      // клиент. Теперь владельца нет, и документ без файла остался бы в индексах.
-      if (isFileDeleted(uri)) {
-        serverContext.removeDocument(uri);
-      }
-    });
+    // Текст освобождается под блокировкой записи: запросы, которые уже читают документ,
+    // дорабатывают, а не теряют текст посреди вычисления.
+    var lock = serverContext.getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+        serverContext.closeDocument(documentContext);
+        // Пока документ был открыт, удаление его файла не выгружало документ: им владел
+        // клиент. Теперь владельца нет, и документ без файла остался бы в индексах.
+        if (isFileDeleted(uri)) {
+          serverContext.removeDocument(uri);
+        }
+      });
+    } finally {
+      lock.writeLock().unlock();
+    }
 
     if (!clientSupportsPullDiagnostics) {
       diagnosticProvider.publishEmptyDiagnosticList(documentContext);
@@ -1140,16 +1152,84 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         cancelChecker -> {
           cancelChecker.checkCanceled();
           var serverContext = getContextForDocument(documentContext.getUri().toString());
-          var lock = serverContext.getDocumentLock(documentContext.getUri());
-          lock.readLock().lock();
           try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
-            return supplier.get();
-          } finally {
-            lock.readLock().unlock();
+            return withDocumentContent(serverContext, documentContext, supplier);
           }
         }
       )
     );
+  }
+
+  /**
+   * Вычисление над документом, у которого есть текст.
+   * <p>
+   * Документ с текстом читается как есть под блокировкой чтения. Документ без текста — закрытый,
+   * пока запрос ждал очереди, либо не открывавшийся вовсе — перечитывается с диска на время
+   * вычисления и после него освобождается.
+   *
+   * @param serverContext   контекст сервера документа.
+   * @param documentContext документ.
+   * @param supplier        вычисление.
+   * @param <T>             тип результата.
+   * @return результат вычисления.
+   * @throws ResponseErrorException с кодом {@link ResponseErrorCode#ContentModified}, если текст
+   *                                взять неоткуда: документ убран из контекста либо файл не читается.
+   */
+  private static <T> T withDocumentContent(
+    ServerContext serverContext,
+    DocumentContext documentContext,
+    Supplier<T> supplier
+  ) {
+    var uri = documentContext.getUri();
+    var lock = serverContext.getDocumentLock(uri);
+    lock.readLock().lock();
+    try {
+      if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
+        return supplier.get();
+      }
+    } finally {
+      lock.readLock().unlock();
+    }
+
+    lock.writeLock().lock();
+    var writeHeld = true;
+    try {
+      // Файла нет — читать нечего; попытка чтения только оставила бы ошибку в журнале.
+      if (serverContext.getDocumentNoLock(uri) != documentContext || isFileDeleted(uri)) {
+        throw contentModified(uri);
+      }
+      serverContext.rebuildDocument(documentContext);
+      if (serverContext.getDocumentState(documentContext) != DocumentState.WITH_CONTENT) {
+        throw contentModified(uri);
+      }
+      // Понижение блокировки без окна: перечитанный текст не освободят, пока идёт вычисление.
+      lock.readLock().lock();
+      lock.writeLock().unlock();
+      writeHeld = false;
+      try {
+        return supplier.get();
+      } finally {
+        lock.readLock().unlock();
+        lock.writeLock().lock();
+        try {
+          serverContext.tryClearDocument(documentContext);
+        } finally {
+          lock.writeLock().unlock();
+        }
+      }
+    } finally {
+      if (writeHeld) {
+        lock.writeLock().unlock();
+      }
+    }
+  }
+
+  private static ResponseErrorException contentModified(URI uri) {
+    return new ResponseErrorException(new ResponseError(
+      ResponseErrorCode.ContentModified,
+      "Document content is not available: " + uri,
+      null
+    ));
   }
 
   /**

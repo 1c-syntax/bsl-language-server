@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
@@ -94,10 +95,15 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEvent;
@@ -111,14 +117,21 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -387,6 +400,116 @@ class BSLTextDocumentServiceTest {
     } finally {
       applicationContext.removeApplicationListener(listener);
     }
+  }
+
+  /**
+   * Запрос, поставленный в очередь до закрытия документа, выполняется уже после него: текст
+   * документа к этому времени освобождён. Отвечать надо по тексту с диска, а не падать.
+   */
+  @Test
+  void requestAfterCloseIsServedFromFile() throws Exception {
+    // given
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier()));
+
+    // when
+    var ranges = textDocumentService.foldingRange(new FoldingRangeRequestParams(getTextDocumentIdentifier())).get();
+
+    // then: тело процедуры из файла сворачивается, а перечитанный текст снова освобождён
+    assertThat(ranges).hasSize(1);
+    var uri = Absolute.uri(getTestFile());
+    var serverContext = serverContextProvider.getServerContext(uri).orElseThrow();
+    assertThat(serverContext.getDocumentState(serverContext.getDocument(uri))).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+  /** Документ без текста, файла которого нет, получает ответ «содержимое изменилось», а не NPE. */
+  @Test
+  void requestToClosedDocumentWithoutFileFailsAsContentModified() {
+    // given
+    var uri = Absolute.uri(new File(WORKSPACE_PATH, "Missing.bsl"));
+    serverContextProvider.getServerContext(uri).orElseThrow().addDocument(uri);
+
+    // when
+    var result = textDocumentService.foldingRange(new FoldingRangeRequestParams(new TextDocumentIdentifier(uri.toString())));
+
+    // then
+    assertThat(result)
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isInstanceOfSatisfying(ResponseErrorException.class, e ->
+        assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+  }
+
+  /** Файл закрытого документа пропал и появился снова: запрос после его появления отвечает по файлу. */
+  @Test
+  void requestToClosedDocumentIsServedOnceFileReappears(@TempDir Path tempDir) throws Exception {
+    // given: документ в контексте, файла нет
+    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"));
+    var file = tempDir.resolve("Reappearing.bsl");
+    var uri = Absolute.uri(file.toUri());
+    serverContextProvider.getServerContext(uri).orElseThrow().addDocument(uri);
+    var params = new FoldingRangeRequestParams(new TextDocumentIdentifier(uri.toString()));
+    assertThat(textDocumentService.foldingRange(params)).failsWithin(Duration.ofSeconds(10));
+
+    // when
+    Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
+
+    // then
+    assertThat(textDocumentService.foldingRange(params).get()).hasSize(1);
+  }
+
+  /** Файл закрытого документа есть, но не читается: отказ, а когда файл станет читаемым — ответ по нему. */
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void requestToClosedDocumentIsServedOnceFileBecomesReadable(@TempDir Path tempDir) throws Exception {
+    // given: файл без прав на чтение
+    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"));
+    var file = Files.writeString(tempDir.resolve("Unreadable.bsl"), "Процедура Тест()\nКонецПроцедуры\n");
+    var permissions = Files.getPosixFilePermissions(file);
+    Files.setPosixFilePermissions(file, Set.of());
+    assumeFalse(Files.isReadable(file), "права на файл не действуют: запуск от root");
+    var uri = Absolute.uri(file.toUri());
+    serverContextProvider.getServerContext(uri).orElseThrow().addDocument(uri);
+    var params = new FoldingRangeRequestParams(new TextDocumentIdentifier(uri.toString()));
+    assertThat(textDocumentService.foldingRange(params))
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isInstanceOfSatisfying(ResponseErrorException.class, e ->
+        assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+
+    // when
+    Files.setPosixFilePermissions(file, permissions);
+
+    // then: сорвавшееся чтение не пометило документ прочитанным
+    assertThat(textDocumentService.foldingRange(params).get()).hasSize(1);
+  }
+
+  /** Закрытие документа посреди запроса к нему ждёт запрос, а не освобождает текст у него из-под ног. */
+  @Test
+  void didCloseWaitsForRequestInProgress() throws Exception {
+    // given: запрос к открытому документу выполняется
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      assertThat(release.await(10, TimeUnit.SECONDS)).isTrue();
+      return invocation.callRealMethod();
+    }).when(hoverProvider).getHover(any(), any());
+    var hover = textDocumentService.hover(new HoverParams(getTextDocumentIdentifier(), new Position(0, 12)));
+    assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+
+    // when
+    var closed = CompletableFuture.runAsync(() ->
+      textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier())));
+
+    // then: закрытие стоит, пока запрос не доработает, а запрос дорабатывает по тексту документа
+    await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !closed.isDone());
+    release.countDown();
+    assertThat(hover).succeedsWithin(Duration.ofSeconds(10));
+    assertThat(closed).succeedsWithin(Duration.ofSeconds(10));
   }
 
   @Test
