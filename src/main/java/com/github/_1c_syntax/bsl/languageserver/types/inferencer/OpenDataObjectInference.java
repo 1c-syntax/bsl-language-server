@@ -412,8 +412,11 @@ public class OpenDataObjectInference {
     if (tableRef != null) {
       var column = addedColumn(call, variableName, scopeRange, types);
       if (column != null) {
-        var rowRef = valueTableRowRef(variable.getOwner());
-        return incoming.withElement(tableRef, TypeSet.of(rowRef).withField(rowRef, column.name(), column.types()));
+        // Колонки моделируются полями строки — собственного элемента таблицы.
+        var rowRef = typeRegistry.getOwnElementTypes(tableRef).refs().stream().findFirst().orElse(null);
+        if (rowRef != null) {
+          return incoming.withElement(tableRef, TypeSet.of(rowRef).withField(rowRef, column.name(), column.types()));
+        }
       }
     }
     return incoming;
@@ -469,12 +472,6 @@ public class OpenDataObjectInference {
       }
     }
     return null;
-  }
-
-  /** Тип строки таблицы значений — на нём моделируются колонки. */
-  private TypeRef valueTableRowRef(DocumentContext owner) {
-    return typeRegistry.resolve(TableCollectionInference.VALUE_TABLE_ROW, owner.getFileType())
-      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, TableCollectionInference.VALUE_TABLE_ROW));
   }
 
   /** Поле, добавляемое вызовом {@code Х.Вставить("Ключ", Значение)}. */

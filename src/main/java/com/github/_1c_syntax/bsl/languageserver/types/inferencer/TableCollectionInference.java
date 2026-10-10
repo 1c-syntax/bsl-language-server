@@ -68,8 +68,7 @@ class TableCollectionInference {
   private static final String COLUMNS = "Колонки";
 
   private static final String VALUE_TABLE = "ТаблицаЗначений";
-  /** Строка таблицы значений — общая для всего пакета: её же резолвит {@link ExpressionTypeInferencer}. */
-  static final String VALUE_TABLE_ROW = "СтрокаТаблицыЗначений";
+  private static final String VALUE_TABLE_ROW = "СтрокаТаблицыЗначений";
 
   /**
    * Коллекции, у которых колонки лежат полями строки: {@code коллекция → её строка}.
