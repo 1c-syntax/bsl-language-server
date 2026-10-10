@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791640184426,
+  "lastUpdate": 1791643894894,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44454,6 +44454,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.950026185254521",
             "extra": "mean: 108.93661181131999 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "60e543dc5e26fe939ab16720c5dfe1c13a8973f0",
+          "message": "Merge pull request #4605 from 1c-syntax/fix/lsp-open-document-recreated-on-disk\n\nОткрытый документ больше не ломается, когда его файл удаляют и создают заново",
+          "timestamp": "2026-10-10T14:25:42+02:00",
+          "tree_id": "bf5ac7a8221b5ec7910f7b51ce0a7c04d375c1d5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/60e543dc5e26fe939ab16720c5dfe1c13a8973f0"
+        },
+        "date": 1791643866087,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 107.89688928922017,
+            "unit": "sec",
+            "range": "stddev: 1.1409474587540058",
+            "extra": "mean: 107.89688928922017 sec\nrounds: 3"
           }
         ]
       }
