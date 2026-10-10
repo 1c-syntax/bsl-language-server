@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791633921940,
+  "lastUpdate": 1791636434883,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44361,6 +44361,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9008656517771096",
             "extra": "mean: 108.29691076278687 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "de774863552c2a1ade4f305a64bf9ae8c1131bbc",
+          "message": "Merge pull request #4604 from 1c-syntax/fix/context-read-non-utf8-files\n\nМодули с байтами, недопустимыми в UTF-8, снова загружаются",
+          "timestamp": "2026-10-10T11:54:20+02:00",
+          "tree_id": "3200bf27993582d764580cc86ad3803127b856ee",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/de774863552c2a1ade4f305a64bf9ae8c1131bbc"
+        },
+        "date": 1791636407604,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 109.73001559575398,
+            "unit": "sec",
+            "range": "stddev: 2.6831447816538567",
+            "extra": "mean: 109.73001559575398 sec\nrounds: 3"
           }
         ]
       }
