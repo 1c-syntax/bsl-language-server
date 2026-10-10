@@ -155,8 +155,8 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
     var mdObject = documentContext.getMdObject();
 
     return mdObject.map(CommonModule.class::cast)
-      .filter(commonModule -> !(commonModule.isClientManagedApplication() ||
-                                commonModule.isClientOrdinaryApplication()))
+      // Обычный клиент не поддерживает асинхронные аналоги проверяемых методов.
+      .filter(commonModule -> !commonModule.isClientManagedApplication())
       .isPresent();
   }
 
