@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -29,6 +30,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -46,6 +50,17 @@ public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnost
     "^Получить.*$"
   );
 
+  @DiagnosticParameter(type = String.class)
+  private List<String> prefixes = List.of();
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    prefixes = Arrays.stream(((String) configuration.getOrDefault("prefixes", "")).split(","))
+      .map(String::trim)
+      .filter(prefix -> !prefix.isEmpty())
+      .toList();
+  }
+
   @Override
   public ParseTree visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
 
@@ -55,7 +70,10 @@ public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnost
       return ctx;
     }
 
-    if (get.matcher(subName.getText()).matches()) {
+    var name = subName.getText();
+    if (get.matcher(name).matches() || prefixes.stream().anyMatch(prefix ->
+      name.regionMatches(true, 0, prefix, 0, prefix.length())
+        && get.matcher(name.substring(prefix.length())).matches())) {
       diagnosticStorage.addDiagnostic(subName);
     }
 
