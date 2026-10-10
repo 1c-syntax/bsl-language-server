@@ -4451,6 +4451,77 @@
   },
   {
     "kind": "TYPE",
+    "name": "ОтчетОбъект.<Имя отчета>",
+    "aliases": [
+      "ReportObject.<Report name>"
+    ],
+    "isGeneric": true,
+    "members": [
+      {
+        "name": "<Имя реквизита>",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "<Имя табличной части>",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "СхемаКомпоновкиДанных",
+        "nameRu": "СхемаКомпоновкиДанных",
+        "nameEn": "DataCompositionSchema",
+        "kind": "PROPERTY",
+        "returnType": "СхемаКомпоновкиДанных",
+        "description": "Схема компоновки, на основании которой будет выполняться отчет."
+      },
+      {
+        "name": "КомпоновщикНастроек",
+        "nameRu": "КомпоновщикНастроек",
+        "nameEn": "SettingsComposer",
+        "kind": "PROPERTY",
+        "returnType": "КомпоновщикНастроекКомпоновкиДанных",
+        "accessMode": "READ",
+        "description": "Компоновщик для редактирования настроек отчета."
+      },
+      {
+        "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
+        "kind": "PROPERTY",
+        "returnType": "ОтчетОбъект.<Имя отчета>",
+        "accessMode": "READ",
+        "description": "Содержит данный объект отчета."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ОбработкаОбъект.<Имя обработки>",
+    "aliases": [
+      "DataProcessorObject.<Data processor name>"
+    ],
+    "isGeneric": true,
+    "members": [
+      {
+        "name": "<Имя реквизита>",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "<Имя табличной части>",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ЭтотОбъект",
+        "nameRu": "ЭтотОбъект",
+        "nameEn": "ThisObject",
+        "kind": "PROPERTY",
+        "returnType": "ОбработкаОбъект.<Имя обработки>",
+        "accessMode": "READ",
+        "description": "Содержит данный объект обработки."
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
     "name": "ДокументМенеджер.<Имя документа>",
     "members": [
       {
