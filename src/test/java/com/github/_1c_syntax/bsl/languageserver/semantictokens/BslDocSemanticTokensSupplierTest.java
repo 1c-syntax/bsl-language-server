@@ -401,13 +401,14 @@ class BslDocSemanticTokensSupplierTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void testPlainVariableDescription(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+
     String bsl = """
 
       // Описание переменной.
       // Число - описание
       Перем МояПеременная;
       """;
-    supplier.setMultilineTokenSupport(multilineTokenSupport);
 
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
