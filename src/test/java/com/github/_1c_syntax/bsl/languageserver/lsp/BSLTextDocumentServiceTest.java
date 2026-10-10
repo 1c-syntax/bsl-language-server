@@ -101,6 +101,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -120,6 +122,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -128,6 +131,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -452,6 +456,33 @@ class BSLTextDocumentServiceTest {
     Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
 
     // then
+    assertThat(textDocumentService.foldingRange(params).get()).hasSize(1);
+  }
+
+  /** Файл закрытого документа есть, но не читается: отказ, а когда файл станет читаемым — ответ по нему. */
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void requestToClosedDocumentIsServedOnceFileBecomesReadable(@TempDir Path tempDir) throws Exception {
+    // given: файл без прав на чтение
+    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"));
+    var file = Files.writeString(tempDir.resolve("Unreadable.bsl"), "Процедура Тест()\nКонецПроцедуры\n");
+    var permissions = Files.getPosixFilePermissions(file);
+    Files.setPosixFilePermissions(file, Set.of());
+    assumeFalse(Files.isReadable(file), "права на файл не действуют: запуск от root");
+    var uri = Absolute.uri(file.toUri());
+    serverContextProvider.getServerContext(uri).orElseThrow().addDocument(uri);
+    var params = new FoldingRangeRequestParams(new TextDocumentIdentifier(uri.toString()));
+    assertThat(textDocumentService.foldingRange(params))
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isInstanceOfSatisfying(ResponseErrorException.class, e ->
+        assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+
+    // when
+    Files.setPosixFilePermissions(file, permissions);
+
+    // then: сорвавшееся чтение не пометило документ прочитанным
     assertThat(textDocumentService.foldingRange(params).get()).hasSize(1);
   }
 

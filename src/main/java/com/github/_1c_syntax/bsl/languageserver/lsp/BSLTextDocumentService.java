@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -1183,7 +1184,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var lock = serverContext.getDocumentLock(uri);
     lock.readLock().lock();
     try {
-      if (documentContext.hasContent()) {
+      if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
         return supplier.get();
       }
     } finally {
@@ -1198,10 +1199,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         throw contentModified(uri);
       }
       serverContext.rebuildDocument(documentContext);
-      if (!documentContext.hasContent()) {
-        // Чтение сорвалось, а документ уже помечен прочитанным. Сброс пометки даёт
-        // следующему запросу прочитать файл заново, а не отвечать отказом до события о файле.
-        serverContext.tryClearDocument(documentContext);
+      if (serverContext.getDocumentState(documentContext) != DocumentState.WITH_CONTENT) {
         throw contentModified(uri);
       }
       // Понижение блокировки без окна: перечитанный текст не освободят, пока идёт вычисление.

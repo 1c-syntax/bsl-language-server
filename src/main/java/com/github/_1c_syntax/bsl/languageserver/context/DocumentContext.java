@@ -214,16 +214,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return content;
   }
 
-  /**
-   * Есть ли у документа текст: он разобран и ещё не освобождён.
-   *
-   * @return {@code true}, если текст есть.
-   */
-  @Locked("computeLock")
-  public boolean hasContent() {
-    return content != null;
-  }
-
   @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
@@ -447,14 +437,22 @@ public class DocumentContext implements Comparable<DocumentContext> {
     }
   }
 
-  protected void rebuildFromFileSystem() {
+  /**
+   * Перестроить документ по содержимому его файла.
+   *
+   * @return {@code true}, если файл прочитан; {@code false}, если прочитать его не удалось
+   *     и документ не изменился.
+   */
+  protected boolean rebuildFromFileSystem() {
     try {
       // Не Files.readString: тот бросает на байтах, недопустимых в UTF-8, и модуль в другой
       // кодировке не загрузился бы вовсе. Конструктор строки заменяет их символом-заменителем.
       var newContent = new String(Files.readAllBytes(Path.of(uri)), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
+      return true;
     } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
+      return false;
     }
   }
 
