@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791631418327,
+  "lastUpdate": 1791632682028,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44299,6 +44299,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6732537922898827",
             "extra": "mean: 108.03344591458638 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a2a7c15f8709cc0df1175986b669f7caa01b39d6",
+          "message": "Merge pull request #4600 from DimaShapovaloff/codex/fix-4038-borrowed-server-call\n\nfix(diagnostics): исключить заимствованные модули из CommonModuleNameServerCall",
+          "timestamp": "2026-10-10T09:22:51+02:00",
+          "tree_id": "2f0c1804e903cc848b5ade75345d8de9306a9b04",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a2a7c15f8709cc0df1175986b669f7caa01b39d6"
+        },
+        "date": 1791632650334,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 110.37214676539104,
+            "unit": "sec",
+            "range": "stddev: 2.846887926310138",
+            "extra": "mean: 110.37214676539104 sec\nrounds: 3"
           }
         ]
       }
