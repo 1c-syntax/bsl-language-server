@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.Template;
 import com.github._1c_syntax.bsl.mdo.support.TemplateType;
@@ -83,14 +82,6 @@ public class TemplateByNameResolver {
       .filter(Template.class::isInstance)
       .map(md -> ((Template) md).getTemplateType())
       .filter(VALUE_NAMED_BY_KIND::contains)
-      .map(kind -> valueType(kind.fullName().getRu()));
-  }
-
-  /**
-   * Платформенный тип по имени. Без синтакс-помощника части этих типов в реестре нет —
-   * тогда он заводится по имени, как и прочие типы, названные платформой.
-   */
-  private TypeRef valueType(String name) {
-    return typeRegistry.resolve(name).orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, name));
+      .flatMap(kind -> typeRegistry.resolve(kind.fullName().getRu()));
   }
 }

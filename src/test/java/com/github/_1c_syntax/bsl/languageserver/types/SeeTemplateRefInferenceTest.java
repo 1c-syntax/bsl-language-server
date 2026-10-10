@@ -93,6 +93,25 @@ class SeeTemplateRefInferenceTest extends AbstractServerContextAwareTest {
     assertThat(names(types)).containsExactly("ТабличныйДокумент");
   }
 
+  @Test
+  void seeRefToCommonTemplateGivesTemplateValueType() {
+    // given: общий макет конфигурации — схема компоновки данных.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПолучениеОбщегоМакета() Экспорт
+
+      	Макет = ПолучитьОбщийМакет("Имя"); // см. ОбщийМакет.ДанныеПечатиРегистрСимволов
+      	ТипМакета = Макет;
+
+      КонецПроцедуры
+      """, context);
+
+    // when
+    var types = at(documentContext, "ТипМакета = Макет", "ТипМакета = ".length());
+
+    // then
+    assertThat(names(types)).containsExactly("СхемаКомпоновкиДанных");
+  }
+
   private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     var markerStart = content.indexOf(marker);
