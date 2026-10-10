@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TemplateByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,7 +81,8 @@ class DeclaredFieldWithUnresolvedTypeTest {
     when(typeRegistry.getOwnElementTypes(any())).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.intern(any(), anyString()))
       .thenAnswer(invocation -> new TypeRef(invocation.getArgument(0), invocation.getArgument(1)));
-    index = new SymbolTypeIndex(typeRegistry, mock(FormByNameResolver.class), mock(GlobalScopeProvider.class));
+    index = new SymbolTypeIndex(typeRegistry, mock(FormByNameResolver.class), mock(TemplateByNameResolver.class),
+      mock(GlobalScopeProvider.class));
     documentContext = TestUtils.getDocumentContext(MODULE);
   }
 

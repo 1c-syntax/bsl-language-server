@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TemplateByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
@@ -104,6 +105,7 @@ public class SymbolTypeIndex {
 
   private final TypeRegistry typeRegistry;
   private final FormByNameResolver formByNameResolver;
+  private final TemplateByNameResolver templateByNameResolver;
   private final GlobalScopeProvider globalScopeProvider;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
@@ -723,6 +725,8 @@ public class SymbolTypeIndex {
    *       и его продолжение по членам) — через {@link #resolveMetadataPath};</li>
    *   <li>полное имя формы ({@code Справочник.Товары.Форма.ФормаЭлемента}) — через
    *       {@link FormByNameResolver};</li>
+   *   <li>полное имя макета ({@code Справочник.Товары.Макет.ПечатнаяФорма}) — тип его
+   *       значения через {@link TemplateByNameResolver};</li>
    *   <li>неквалифицированная ссылка на функцию того же модуля — её возвращаемый
    *       тип: сначала из уже проиндексированных типов
    *       ({@link #getDeclaredReturnTypes(MethodSymbol)}, поэтому разворачиваются
@@ -784,13 +788,13 @@ public class SymbolTypeIndex {
   /**
    * Тип по ссылке с точкой: сначала как цепочка членов ({@code Модуль.Метод},
    * {@code Тип.Член}), затем как путь в нотации конфигуратора, затем как имя формы
-   * с путём внутрь неё.
+   * с путём внутрь неё, затем как имя макета.
    * <p>
    * Виды перебираются по очереди: какой из них перед нами, из самой строки не видно —
-   * все три записываются одинаково, через точку.
+   * все они записываются одинаково, через точку.
    *
    * @param link     ссылка целиком.
-   * @param owner    документ-владелец — нужен резолверу форм.
+   * @param owner    документ-владелец — нужен резолверам форм и макетов.
    * @param fileType язык, на котором резолвятся имена.
    * @param visited  уже посещённые методы — защита от закольцованных ссылок.
    * @return тип по ссылке; {@link TypeSet#EMPTY}, если ни один вид не подошёл.
@@ -805,7 +809,11 @@ public class SymbolTypeIndex {
     if (!metadataTypes.isEmpty()) {
       return metadataTypes;
     }
-    return resolveFormPath(link, owner, fileType);
+    var formTypes = resolveFormPath(link, owner, fileType);
+    if (!formTypes.isEmpty()) {
+      return formTypes;
+    }
+    return templateByNameResolver.resolve(owner, link).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**
