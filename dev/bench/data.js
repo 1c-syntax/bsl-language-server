@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791637694881,
+  "lastUpdate": 1791640184426,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44423,6 +44423,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9585813172211568",
             "extra": "mean: 110.21340958277385 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fbd821ae271cad96db07ec461cf6316b9f5ef371",
+          "message": "Merge pull request #4593 from DimaShapovaloff/codex/fix-4588-ext-dimensions\n\nfix(diagnostics): исключить Субконто из VirtualTableCallWithoutParameters",
+          "timestamp": "2026-10-10T12:30:55+02:00",
+          "tree_id": "98ce9b95143fb1fca792cdcb1b822cc731f30ab1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fbd821ae271cad96db07ec461cf6316b9f5ef371"
+        },
+        "date": 1791640158281,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.93661181131999,
+            "unit": "sec",
+            "range": "stddev: 3.950026185254521",
+            "extra": "mean: 108.93661181131999 sec\nrounds: 3"
           }
         ]
       }
