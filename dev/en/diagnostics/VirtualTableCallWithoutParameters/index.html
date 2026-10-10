@@ -2256,6 +2256,7 @@
 <p>When using virtual tables in queries, you should specify all conditions related to it in the table parameters.</p>
 <p>It is not recommended to refer to virtual tables using conditions in the WHERE section, etc.</p>
 <p>Such a query will return the correct (in terms of functionality) result, but it will be much more difficult for the DBMS to choose the optimal plan for its execution. In some cases, this can lead to errors in the DBMS optimizer and a significant slowdown in query performance.</p>
+<p>The <code>AccountingRegister.&lt;RegisterName&gt;.ExtDimensions</code> table (<code>РегистрБухгалтерии.&lt;ИмяРегистра&gt;.Субконто</code>) is not checked because the platform syntax does not provide parameters for it.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>For example, a query uses the <code>WHERE</code> section to filter virtual table data:
