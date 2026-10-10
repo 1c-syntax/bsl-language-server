@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" version="2.10">
+  <CommonModule uuid="5248b3c0-b24f-4a28-9da8-48083f327516">
+    <Properties>
+      <Name>ЗаимствованныйМодуль</Name>
+      <ObjectBelonging>Adopted</ObjectBelonging>
+      <Server>true</Server>
+      <ServerCall>true</ServerCall>
+    </Properties>
+  </CommonModule>
+</MetaDataObject>
