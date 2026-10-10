@@ -214,6 +214,16 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return content;
   }
 
+  /**
+   * Есть ли у документа текст: он разобран и ещё не освобождён.
+   *
+   * @return {@code true}, если текст есть.
+   */
+  @Locked("computeLock")
+  public boolean hasContent() {
+    return content != null;
+  }
+
   @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
