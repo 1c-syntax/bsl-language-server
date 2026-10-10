@@ -10,6 +10,8 @@ Types of style elements:
 * `Font` - type, size and style are set
 * `Border` - the type and width of the borders are set
 
+The parameterless constructors `New Font()` and `New Color()` select the default appearance and are not reported. This also applies to Russian names, omitted parentheses and `New("Font")` / `New("Color")`. Constructors with supplied arguments are still checked.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
