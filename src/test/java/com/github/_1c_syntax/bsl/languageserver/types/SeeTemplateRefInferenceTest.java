@@ -29,10 +29,13 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,63 +56,51 @@ class SeeTemplateRefInferenceTest extends AbstractServerContextAwareTest {
     context.getConfiguration();
   }
 
-  @Test
-  void seeRefInAssignmentGivesTemplateValueType() {
-    // given: макет получен универсальной функцией, а его вид назван ссылкой в строке.
-    // Макет справочника в тестовой конфигурации — табличный документ.
-    var documentContext = TestUtils.getDocumentContext("""
-      Процедура ПолучениеМакета() Экспорт
+  static Stream<Arguments> seeRefGivesTemplateValueType() {
+    return Stream.of(
+      // макет получен универсальной функцией, а его вид назван ссылкой в строке;
+      // макет справочника в тестовой конфигурации — табличный документ
+      Arguments.of("""
+        Процедура ПолучениеМакета() Экспорт
 
-      	Макет = ПолучитьОбщийМакет("Имя"); // см. Справочник.Справочник1.Макет.Макет
-      	ТипМакета = Макет;
+        	Макет = ПолучитьОбщийМакет("Имя"); // см. Справочник.Справочник1.Макет.Макет
+        	ТипМакета = Макет;
 
-      КонецПроцедуры
-      """, context);
+        КонецПроцедуры
+        """, "ТабличныйДокумент"),
+      // параметр типизирован ссылкой на макет
+      Arguments.of("""
+        // Параметры:
+        //  Макет - см. Справочник.Справочник1.Макет.Макет
+        Процедура ВыводМакета(Макет) Экспорт
 
-    // when
-    var types = at(documentContext, "ТипМакета = Макет", "ТипМакета = ".length());
+        	ТипМакета = Макет;
 
-    // then
-    assertThat(names(types)).containsExactly("ТабличныйДокумент");
+        КонецПроцедуры
+        """, "ТабличныйДокумент"),
+      // общий макет конфигурации — схема компоновки данных
+      Arguments.of("""
+        Процедура ПолучениеОбщегоМакета() Экспорт
+
+        	Макет = ПолучитьОбщийМакет("Имя"); // см. ОбщийМакет.ДанныеПечатиРегистрСимволов
+        	ТипМакета = Макет;
+
+        КонецПроцедуры
+        """, "СхемаКомпоновкиДанных")
+    );
   }
 
-  @Test
-  void seeRefInParameterGivesTemplateValueType() {
-    // given: параметр типизирован ссылкой на макет.
-    var documentContext = TestUtils.getDocumentContext("""
-      // Параметры:
-      //  Макет - см. Справочник.Справочник1.Макет.Макет
-      Процедура ВыводМакета(Макет) Экспорт
-
-      	ТипМакета = Макет;
-
-      КонецПроцедуры
-      """, context);
+  @ParameterizedTest
+  @MethodSource
+  void seeRefGivesTemplateValueType(String content, String expectedType) {
+    // given
+    var documentContext = TestUtils.getDocumentContext(content, context);
 
     // when
     var types = at(documentContext, "ТипМакета = Макет", "ТипМакета = ".length());
 
     // then
-    assertThat(names(types)).containsExactly("ТабличныйДокумент");
-  }
-
-  @Test
-  void seeRefToCommonTemplateGivesTemplateValueType() {
-    // given: общий макет конфигурации — схема компоновки данных.
-    var documentContext = TestUtils.getDocumentContext("""
-      Процедура ПолучениеОбщегоМакета() Экспорт
-
-      	Макет = ПолучитьОбщийМакет("Имя"); // см. ОбщийМакет.ДанныеПечатиРегистрСимволов
-      	ТипМакета = Макет;
-
-      КонецПроцедуры
-      """, context);
-
-    // when
-    var types = at(documentContext, "ТипМакета = Макет", "ТипМакета = ".length());
-
-    // then
-    assertThat(names(types)).containsExactly("СхемаКомпоновкиДанных");
+    assertThat(names(types)).containsExactly(expectedType);
   }
 
   private TypeSet at(DocumentContext documentContext, String marker, int offsetInMarker) {
