@@ -141,6 +141,9 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -824,11 +827,35 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // didClose приходит с потока диспетчеризации LSP4J, на котором workspace-контекст
     // не установлен, — выставляем его явно (как в didOpen), чтобы workspace-scoped
     // @EventListener-подписчики ServerContextDocumentClosedEvent корректно резолвились.
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(),
-      () -> serverContext.closeDocument(documentContext));
+    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+      serverContext.closeDocument(documentContext);
+      // Пока документ был открыт, удаление его файла не выгружало документ: им владел
+      // клиент. Теперь владельца нет, и документ без файла остался бы в индексах.
+      if (isFileDeleted(uri)) {
+        serverContext.removeDocument(uri);
+      }
+    });
 
     if (!clientSupportsPullDiagnostics) {
       diagnosticProvider.publishEmptyDiagnosticList(documentContext);
+    }
+  }
+
+  /**
+   * Удалён ли файл документа с диска.
+   *
+   * @param uri URI документа.
+   * @return {@code true}, если файла по URI точно нет; для URI не из файловой системы
+   *     и для пути, который не удалось проверить, — {@code false}.
+   */
+  private static boolean isFileDeleted(URI uri) {
+    if (!"file".equals(uri.getScheme())) {
+      return false;
+    }
+    try {
+      return Files.notExists(Path.of(uri));
+    } catch (IllegalArgumentException | FileSystemNotFoundException e) {
+      return false;
     }
   }
 

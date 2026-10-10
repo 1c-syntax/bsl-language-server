@@ -33,12 +33,17 @@ import org.eclipse.lsp4j.DeleteFilesParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
+import org.eclipse.lsp4j.DidCloseTextDocumentParams;
+import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileCreate;
 import org.eclipse.lsp4j.FileDelete;
 import org.eclipse.lsp4j.FileEvent;
 import org.eclipse.lsp4j.FileRename;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.RenameFilesParams;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -57,6 +62,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -82,6 +88,9 @@ class BSLWorkspaceServiceTest {
 
   @Autowired
   private BSLWorkspaceService workspaceService;
+
+  @Autowired
+  private BSLTextDocumentService textDocumentService;
 
   @Autowired
   private ServerContextProvider serverContextProvider;
@@ -234,6 +243,10 @@ class BSLWorkspaceServiceTest {
     assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
+  /**
+   * Открытым документом владеет клиент: удаление файла его не выгружает, а выгружает
+   * закрытие, если файла к тому времени так и нет.
+   */
   @Test
   void testDidChangeWatchedFiles_Deleted_Opened() throws IOException {
     // given
@@ -245,17 +258,48 @@ class BSLWorkspaceServiceTest {
     var documentContext = ctx.addDocument(uri);
     ctx.openDocument(documentContext, content, 1);
 
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
-
-    var fileEvent = new FileEvent(uri.toString(), FileChangeType.Deleted);
-    var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
+    // Последним событием создаётся посторонний файл: события обрабатываются по порядку,
+    // и его появление в контексте означает, что удаление уже обработано.
+    var marker = createTestFile("test_deleted_opened_marker.bsl");
+    var markerUri = Absolute.uri(marker.toURI());
+    FileUtils.delete(testFile);
 
     // when
-    workspaceService.didChangeWatchedFiles(params);
-    await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) == null);
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(
+      new FileEvent(uri.toString(), FileChangeType.Deleted),
+      new FileEvent(markerUri.toString(), FileChangeType.Created)
+    )));
+    await().until(() -> ctx.getDocument(markerUri) != null);
+
+    // then: документ остался открытым и с содержимым из редактора
+    assertThat(ctx.getDocument(uri)).isSameAs(documentContext);
+    assertThat(ctx.isDocumentOpened(documentContext)).isTrue();
+    assertThat(documentContext.getContent()).isEqualTo(content);
+
+    // when: редактор закрыл документ, файла так и нет
+    textDocumentService.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri.toString())));
 
     // then
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
+    assertThat(ctx.getDocument(uri)).isNull();
+  }
+
+  /** Закрытие открытого документа, чей файл на месте, документ из контекста не убирает. */
+  @Test
+  void didCloseKeepsDocumentWhoseFileExists() throws IOException {
+    // given
+    var testFile = createTestFile("test_closed_existing.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+    var content = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(new TextDocumentItem(uri.toString(), "bsl", 1, content)));
+    var ctx = workspaceServerContext();
+
+    // when
+    textDocumentService.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri.toString())));
+
+    // then
+    var documentContext = ctx.getDocument(uri);
+    assertThat(documentContext).isNotNull();
+    assertThat(ctx.isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test
@@ -314,17 +358,25 @@ class BSLWorkspaceServiceTest {
     assertThat(ctx.getDocument(namesakeModuleUri)).isNotNull();
   }
 
-  /** Открытый в редакторе документ внутри удалённого каталога тоже должен быть закрыт и выгружен. */
+  /**
+   * Открытый в редакторе документ внутри удалённого каталога остаётся до закрытия,
+   * остальные документы каталога выгружаются сразу.
+   */
   @Test
   void testDidChangeWatchedFiles_Deleted_FolderWithOpenedDocument() throws IOException {
     // given
     var openedModule = createTestFile("Catalogs/Products/Ext/ObjectModule.bsl");
     var openedModuleUri = Absolute.uri(openedModule.toURI());
     var content = FileUtils.readFileToString(openedModule, StandardCharsets.UTF_8);
+    var closedModule = createTestFile("Catalogs/Products/Ext/ManagerModule.bsl");
+    var closedModuleUri = Absolute.uri(closedModule.toURI());
 
     var ctx = workspaceServerContext();
     var documentContext = ctx.addDocument(openedModuleUri);
     ctx.openDocument(documentContext, content, 1);
+    var closedDocument = ctx.addDocument(closedModuleUri);
+    ctx.rebuildDocument(closedDocument);
+    ctx.tryClearDocument(closedDocument);
 
     var deletedFolder = tempDir.resolve("Catalogs").resolve("Products").toFile();
     FileUtils.deleteDirectory(deletedFolder);
@@ -335,10 +387,52 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().until(() -> ctx.getDocument(openedModuleUri) == null);
+    await().until(() -> ctx.getDocument(closedModuleUri) == null);
+
+    // then
+    assertThat(ctx.getDocument(openedModuleUri)).isSameAs(documentContext);
+    assertThat(ctx.isDocumentOpened(documentContext)).isTrue();
+
+    // when: редактор закрыл документ
+    textDocumentService.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(openedModuleUri.toString())));
 
     // then
     assertThat(ctx.getDocument(openedModuleUri)).isNull();
+  }
+
+  /**
+   * Файл, открытый в редакторе, пересоздают на диске — удаляют и создают заново (так делают
+   * переключение ветки и атомарная запись файла). Редактор держит документ открытым и
+   * продолжает слать запросы, поэтому сервер должен их обслуживать.
+   */
+  @Test
+  void openedDocumentRecreatedOnDiskStaysServed() throws IOException {
+    // given
+    var file = tempDir.resolve("recreated_opened.bsl");
+    var content = "Процедура Тест()\nКонецПроцедуры\n";
+    Files.writeString(file, content);
+    var uri = Absolute.uri(file.toUri());
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(new TextDocumentItem(uri.toString(), "bsl", 1, content)));
+
+    // Последним событием создаётся посторонний файл: события обрабатываются по порядку,
+    // и его появление в контексте означает, что пересоздание уже обработано.
+    var marker = createTestFile("recreated_marker.bsl");
+    var markerUri = Absolute.uri(marker.toURI());
+    var ctx = workspaceServerContext();
+
+    // when
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(
+      new FileEvent(uri.toString(), FileChangeType.Deleted),
+      new FileEvent(uri.toString(), FileChangeType.Created),
+      new FileEvent(markerUri.toString(), FileChangeType.Created)
+    )));
+    await().until(() -> ctx.getDocument(markerUri) != null);
+
+    // then
+    var ranges = textDocumentService
+      .foldingRange(new FoldingRangeRequestParams(new TextDocumentIdentifier(uri.toString())))
+      .join();
+    assertThat(ranges).hasSize(1);
   }
 
   @Test
