@@ -439,7 +439,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   protected void rebuildFromFileSystem() {
     try {
-      var newContent = Files.readString(Path.of(uri), StandardCharsets.UTF_8);
+      // Не Files.readString: тот бросает на байтах, недопустимых в UTF-8, и модуль в другой
+      // кодировке не загрузился бы вовсе. Конструктор строки заменяет их символом-заменителем.
+      var newContent = new String(Files.readAllBytes(Path.of(uri)), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
     } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
