@@ -260,26 +260,27 @@ public class SymbolTree {
       if (inMethod.isPresent()) {
         return inMethod;
       }
-      // У метода с ошибками разбора созданные в нём переменные заводятся на уровне модуля —
-      // свои они ему от этого быть не перестают.
+      // У метода с ошибками разбора объявленные и созданные в нём переменные заводятся на
+      // уровне модуля — свои они ему от этого быть не перестают.
       return getVariableSymbol(variableName, module)
-        .filter(variable -> variable.getKind() != VariableKind.DYNAMIC
+        .filter(variable -> variable.getKind() == VariableKind.MODULE
           || Ranges.containsRange(Ranges.create(subContext), variable.getRange()));
     }
     return getVariableSymbol(variableName, module);
   }
 
   /**
-   * Переменная уровня модуля, видимая из методов. Такова переменная, объявленная
-   * {@code Перем}; переменная, созданная присваиванием в теле модуля, живёт в одном теле
-   * модуля, и из методов её не видно.
+   * Переменная уровня модуля, видимая из методов. Такова только переменная, объявленная
+   * {@code Перем} на уровне модуля. Переменная, созданная присваиванием в теле модуля, живёт
+   * в одном теле модуля, а переменные и параметры метода с ошибками разбора, оказавшиеся на
+   * уровне модуля, принадлежат своему методу.
    *
    * @param variableName имя переменной (без учёта регистра — как хранит дерево).
    * @return переменная модуля; empty, если такой нет либо из методов она не видна.
    */
   public Optional<VariableSymbol> getModuleVariableVisibleFromMethods(String variableName) {
     return getVariableSymbol(variableName, module)
-      .filter(variable -> variable.getKind() != VariableKind.DYNAMIC);
+      .filter(variable -> variable.getKind() == VariableKind.MODULE);
   }
 
   /**

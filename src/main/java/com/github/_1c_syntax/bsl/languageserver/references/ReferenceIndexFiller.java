@@ -635,21 +635,17 @@ public class ReferenceIndexFiller {
     }
 
     /**
-     * Очищает mappings для локальных переменных, сохраняя модульные.
+     * Очищает mappings при входе в метод, сохраняя только переменные модуля, видимые из
+     * методов: объявленные {@code Перем}. Переменная, созданная присваиванием в теле модуля,
+     * из метода не видна, и одноимённое обращение в методе к её объекту не относится.
      */
     private void clearLocalVariableMappings() {
       var moduleSymbolTree = documentContext.getSymbolTree();
-      var module = moduleSymbolTree.getModule();
-
-      // Оставляем только те mappings, которые соответствуют модульным переменным
-      variableToCommonModuleMap.keySet().removeIf((String variableKey) -> {
-        // Ищем переменную на уровне модуля
-        var moduleVariable = moduleSymbolTree.getVariableSymbol(variableKey, module);
-        // Если переменной нет на уровне модуля - это локальная переменная, удаляем mapping
-        return moduleVariable.isEmpty();
-      });
+      variableToCommonModuleMap.keySet().removeIf((String variableKey) ->
+        moduleSymbolTree.getModuleVariableVisibleFromMethods(variableKey).isEmpty()
+      );
       variableToLibraryClassUriMap.keySet().removeIf((String variableKey) ->
-        moduleSymbolTree.getVariableSymbol(variableKey, module).isEmpty()
+        moduleSymbolTree.getModuleVariableVisibleFromMethods(variableKey).isEmpty()
       );
     }
 
