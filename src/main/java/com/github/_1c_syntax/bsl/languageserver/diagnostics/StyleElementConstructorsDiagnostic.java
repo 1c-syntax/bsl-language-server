@@ -47,12 +47,25 @@ public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnosti
 
   private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(Рамка|Цвет|Шрифт|Color|Border|Font)$");
 
+  private static final Pattern DEFAULT_STYLE_PATTERN = CaseInsensitivePattern.compile("^(Цвет|Шрифт|Color|Font)$");
+
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
     Constructors.typeName(ctx)
       .filter(it -> PATTERN.matcher(it).matches())
+      .filter(it -> !DEFAULT_STYLE_PATTERN.matcher(it).matches() || hasConstructorArguments(ctx))
       .ifPresent(name -> diagnosticStorage.addDiagnostic(ctx, info.getMessage(name)));
 
     return super.visitNewExpression(ctx);
   }
+
+  private static boolean hasConstructorArguments(BSLParser.NewExpressionContext ctx) {
+    if (ctx.doCall() == null || ctx.doCall().callParamList() == null) {
+      return false;
+    }
+    return ctx.doCall().callParamList().callParam().stream()
+      .skip(ctx.typeName() == null ? 1 : 0)
+      .anyMatch(parameter -> parameter.expression() != null);
+  }
+
 }
