@@ -80,6 +80,7 @@ class ModuleBodyImplicitVariableScopeTest extends AbstractServerContextAwareTest
       .isEmpty();
     assertThat(referenceIndex.getReferencesTo(moduleVariable(documentContext, "ВерсияФормы")))
       .extracting(found -> found.selectionRange().getStart().getLine())
+      .isNotEmpty()
       .doesNotContain(use.getLine());
   }
 
