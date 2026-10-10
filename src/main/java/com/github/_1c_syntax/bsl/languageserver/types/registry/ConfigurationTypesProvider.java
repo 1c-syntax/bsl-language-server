@@ -637,11 +637,13 @@ public class ConfigurationTypesProvider {
       var rowEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSectionRow." + name + "." + tsName;
       var rowRef = registerWithAlias(rowRu, rowEn);
+      typeRegistry.registerDisplayName(rowRef, BilingualString.of(tsName + " (строка)", tsName + " (row)"));
 
       var collRu = fullRu + "ТабличнаяЧасть." + name + "." + tsName;
       var collEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSection." + name + "." + tsName;
       var collRef = registerWithAlias(collRu, collEn);
+      typeRegistry.registerDisplayName(collRef, BilingualString.of(tsName, tsName));
 
       var tsAttributes = ts.getAttributes();
       // Аналогично основным реквизитам: лямбда вызывает attributeMembers
