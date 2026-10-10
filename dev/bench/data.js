@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791578896829,
+  "lastUpdate": 1791615427603,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44237,6 +44237,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8433281883756439",
             "extra": "mean: 112.19426759084065 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a8fda90a3de4369dc265d031061a29bf9e6f3f8d",
+          "message": "Merge pull request #4611 from 1c-syntax/fix/types-report-object-fallback-properties\n\nСвойства объекта отчёта и обработки доступны без синтакс-помощника",
+          "timestamp": "2026-10-10T08:14:40+02:00",
+          "tree_id": "485e0260a11dab878b236de7420378775189ea58",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a8fda90a3de4369dc265d031061a29bf9e6f3f8d"
+        },
+        "date": 1791615399548,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 108.30275146166484,
+            "unit": "sec",
+            "range": "stddev: 1.9140112556637932",
+            "extra": "mean: 108.30275146166484 sec\nrounds: 3"
           }
         ]
       }
