@@ -145,12 +145,14 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     // given
     initServerContext(PATH_TO_METADATA, false);
     assertThat(context.getDocuments()).isEmpty();
+    assertThat(context.isPopulated()).isFalse();
 
     // when
     context.populateContext();
 
     // then
     assertThat(context.getDocuments()).hasSizeGreaterThan(0);
+    assertThat(context.isPopulated()).isTrue();
   }
 
   /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */

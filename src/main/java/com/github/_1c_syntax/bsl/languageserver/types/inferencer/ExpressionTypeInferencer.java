@@ -737,6 +737,9 @@ public class ExpressionTypeInferencer {
     }
     TypeSet result = TypeSet.EMPTY;
     var unparsedModule = false;
+    // Когда рабочая область наполнена, разобрано всё, что вообще разбирается. Тип без членов
+    // из кода тогда — тип, у которого кода нет: элементы обычной формы, модуль без исходников.
+    var populating = !ctx.documentContext.getServerContext().isPopulated();
     for (var leftType : leftTypes.refs()) {
       // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
       // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
@@ -751,7 +754,8 @@ public class ExpressionTypeInferencer {
       // standardLibrary. Пока область наполняется, обращение в такой модуль отвечает
       // пустотой, ничем не отличимой от честной; расчёт придётся повторить.
       unparsedModule = unparsedModule
-        || (leftType.kind() == TypeKind.CONFIGURATION
+        || (populating
+        && leftType.kind() == TypeKind.CONFIGURATION
         && members.stream().allMatch(MemberDescriptor::standardLibrary));
       for (var member : members) {
         result = result.union(typesOfMember(member, memberName, expectedKind, elementSet, ctx));
