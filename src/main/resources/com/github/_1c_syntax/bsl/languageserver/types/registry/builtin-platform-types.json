@@ -2514,6 +2514,15 @@
   },
   {
     "kind": "TYPE",
+    "name": "ТабличныйДокумент",
+    "aliases": [
+      "SpreadsheetDocument"
+    ],
+    "description": "Табличный документ.",
+    "members": []
+  },
+  {
+    "kind": "TYPE",
     "name": "СхемаКомпоновкиДанных",
     "aliases": [
       "DataCompositionSchema"
