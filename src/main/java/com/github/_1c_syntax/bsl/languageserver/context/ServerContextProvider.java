@@ -378,10 +378,17 @@ public class ServerContextProvider {
    * То же, что {@link #getDocumentNoLock(URI)}, но с нормализацией.
    * Аналог {@link #getDocumentUnsafe(URI)} для контекстов, где нельзя
    * брать per-document RWLock (см. документацию к {@link #getDocumentNoLock(URI)}).
+   * <p>
+   * URI, под которым документ уже зарегистрирован, нормализован, поэтому сначала документ
+   * ищется по URI как есть, а нормализация выполняется только при промахе: она обращается
+   * к файловой системе за каноническим путём.
    */
   public Optional<DocumentContext> getDocumentUnsafeNoLock(URI uri) {
-    var normalizedUri = Absolute.uri(uri);
-    return getDocumentNoLock(normalizedUri);
+    var document = getDocumentNoLock(uri);
+    if (document.isPresent()) {
+      return document;
+    }
+    return getDocumentNoLock(Absolute.uri(uri));
   }
 
   /**
