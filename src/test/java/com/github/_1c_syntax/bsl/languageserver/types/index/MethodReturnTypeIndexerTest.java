@@ -57,6 +57,7 @@ import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -255,6 +256,23 @@ class MethodReturnTypeIndexerTest {
 
     // then: отложенный метод пересчитан на месте — документ разобран, догружать нечего.
     verify(inferencer).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void passStopsOnceWaveChangesNothing() {
+    // given: расчёт метода неполон каждый раз, а значение у него одно и то же — неполнота
+    // не временная, и пересчёт её не снимет.
+    when(inferencer.computeReturnTypes(consumerMethod))
+      .thenReturn(new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    clearInvocations(inferencer);
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
+
+    // then: волна не изменила ни одного значения, и следующих нет — они посчитали бы то же.
+    verify(inferencer, times(1)).computeReturnTypes(consumerMethod);
   }
 
   @Test
