@@ -1152,8 +1152,18 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         cancelChecker -> {
           cancelChecker.checkCanceled();
           var serverContext = getContextForDocument(documentContext.getUri().toString());
+          var lock = serverContext.getDocumentLock(documentContext.getUri());
+          lock.readLock().lock();
           try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
-            return withDocumentContent(serverContext, documentContext, supplier);
+            return supplier.get();
+          } catch (RuntimeException e) {
+            // Посреди вычисления текст не пропадёт: didClose освобождает его под блокировкой
+            // записи. Но запрос мог начаться уже после закрытия документа. Запросам, которым
+            // текст не нужен (иерархии по закрытым файлам), это не мешает, а упавшему без
+            // текста отвечать нечем.
+            throw toResponseError(serverContext, documentContext, e);
+          } finally {
+            lock.readLock().unlock();
           }
         }
       )
@@ -1161,70 +1171,24 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   /**
-   * Вычисление над документом, у которого есть текст.
-   * <p>
-   * Документ с текстом читается как есть под блокировкой чтения. Документ без текста — закрытый,
-   * пока запрос ждал очереди, либо не открывавшийся вовсе — перечитывается с диска на время
-   * вычисления и после него освобождается.
+   * Ошибка вычисления над документом в виде ответа клиенту.
    *
    * @param serverContext   контекст сервера документа.
    * @param documentContext документ.
-   * @param supplier        вычисление.
-   * @param <T>             тип результата.
-   * @return результат вычисления.
-   * @throws ResponseErrorException с кодом {@link ResponseErrorCode#ContentModified}, если текст
-   *                                взять неоткуда: документ убран из контекста либо файл не читается.
+   * @param e               ошибка вычисления.
+   * @return для документа без текста — {@link ResponseErrorException} с кодом
+   *     {@link ResponseErrorCode#ContentModified}; иначе исходная ошибка.
    */
-  private static <T> T withDocumentContent(
+  private static RuntimeException toResponseError(
     ServerContext serverContext,
     DocumentContext documentContext,
-    Supplier<T> supplier
+    RuntimeException e
   ) {
+    if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
+      return e;
+    }
     var uri = documentContext.getUri();
-    var lock = serverContext.getDocumentLock(uri);
-    lock.readLock().lock();
-    try {
-      if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
-        return supplier.get();
-      }
-    } finally {
-      lock.readLock().unlock();
-    }
-
-    lock.writeLock().lock();
-    var writeHeld = true;
-    try {
-      // Файла нет — читать нечего; попытка чтения только оставила бы ошибку в журнале.
-      if (serverContext.getDocumentNoLock(uri) != documentContext || isFileDeleted(uri)) {
-        throw contentModified(uri);
-      }
-      serverContext.rebuildDocument(documentContext);
-      if (serverContext.getDocumentState(documentContext) != DocumentState.WITH_CONTENT) {
-        throw contentModified(uri);
-      }
-      // Понижение блокировки без окна: перечитанный текст не освободят, пока идёт вычисление.
-      lock.readLock().lock();
-      lock.writeLock().unlock();
-      writeHeld = false;
-      try {
-        return supplier.get();
-      } finally {
-        lock.readLock().unlock();
-        lock.writeLock().lock();
-        try {
-          serverContext.tryClearDocument(documentContext);
-        } finally {
-          lock.writeLock().unlock();
-        }
-      }
-    } finally {
-      if (writeHeld) {
-        lock.writeLock().unlock();
-      }
-    }
-  }
-
-  private static ResponseErrorException contentModified(URI uri) {
+    LOGGER.debug("Request to document without content failed: {}", uri, e);
     return new ResponseErrorException(new ResponseError(
       ResponseErrorCode.ContentModified,
       "Document content is not available: " + uri,
