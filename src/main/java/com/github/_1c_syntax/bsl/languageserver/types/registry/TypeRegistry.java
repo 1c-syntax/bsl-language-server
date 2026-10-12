@@ -169,6 +169,7 @@ public class TypeRegistry {
    * типов-глобальных свойств, их отображаемыми именами и объявлениями.
    */
   private final AtomicLong globalContextEpoch = new AtomicLong();
+  private final Object globalContextLock = new Object();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
   /**
    * Пер-типовые поколения memo членов: точечная инвалидация ({@link #invalidateMembers})
@@ -511,13 +512,39 @@ public class TypeRegistry {
    * каноничный {@link TypeRef}.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
-    var epoch = GLOBAL_CONTEXT.equals(ref) ? globalContextEpoch.get() : membersEpoch.get();
+    var cached = cachedMembers(ref, fileType);
+    if (cached != null) {
+      return cached;
+    }
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      // Членов глобального контекста спрашивает почти каждое выражение, и после сброса
+      // их собирали бы заново все потоки разом: собирает один, остальные ждут его сборку.
+      synchronized (globalContextLock) {
+        cached = cachedMembers(ref, fileType);
+        return cached != null ? cached : computeAndCacheMembers(ref, fileType);
+      }
+    }
+    return computeAndCacheMembers(ref, fileType);
+  }
+
+  private @Nullable Collection<MemberDescriptor> cachedMembers(TypeRef ref, FileType fileType) {
     var key = new MembersKey(ref, fileType);
-    var generation = membersGeneration.getOrDefault(key, 0L);
     var cached = membersCache.get(key);
-    if (cached != null && cached.epoch() == epoch && cached.generation() == generation) {
+    if (cached != null && cached.epoch() == membersEpochOf(ref)
+      && cached.generation() == membersGeneration.getOrDefault(key, 0L)) {
       return cached.members();
     }
+    return null;
+  }
+
+  private long membersEpochOf(TypeRef ref) {
+    return GLOBAL_CONTEXT.equals(ref) ? globalContextEpoch.get() : membersEpoch.get();
+  }
+
+  private Collection<MemberDescriptor> computeAndCacheMembers(TypeRef ref, FileType fileType) {
+    var epoch = membersEpochOf(ref);
+    var key = new MembersKey(ref, fileType);
+    var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет

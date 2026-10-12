@@ -38,7 +38,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -147,6 +154,38 @@ class GlobalContextMembersCacheTest {
 
     // then
     assertThat(globalMember("МойКласс", FileType.OS).getSourceSymbol()).containsSame(reparsed);
+  }
+
+  @Test
+  void concurrentReadersAfterResetShareOneBuild() throws Exception {
+    // given: memo сброшен, и за членами разом пришли несколько потоков
+    typeRegistry.invalidateMembers(TypeRegistry.GLOBAL_CONTEXT);
+    var readers = 16;
+    var start = new CountDownLatch(1);
+    var executor = Executors.newFixedThreadPool(readers);
+    try {
+      var results = new ArrayList<Future<Collection<MemberDescriptor>>>();
+      for (var i = 0; i < readers; i++) {
+        results.add(executor.submit(() -> {
+          try (var ignored = WorkspaceContextHolder.forUri(workspaceUri, "global-context-members-cache")) {
+            start.await();
+            return typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+          }
+        }));
+      }
+
+      // when
+      start.countDown();
+
+      // then: собрал один, остальные взяли его сборку
+      var builds = Collections.newSetFromMap(new IdentityHashMap<Collection<MemberDescriptor>, Boolean>());
+      for (var result : results) {
+        builds.add(result.get());
+      }
+      assertThat(builds).hasSize(1);
+    } finally {
+      executor.shutdownNow();
+    }
   }
 
   private MemberDescriptor globalMember(String name, FileType fileType) {
