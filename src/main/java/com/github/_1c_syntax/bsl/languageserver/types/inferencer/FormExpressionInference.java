@@ -349,6 +349,7 @@ public class FormExpressionInference {
   /**
    * Присваивания вида элементу формы ({@code Элемент.Вид = ВидГруппыФормы.ОбычнаяГруппа})
    * по позиции их начала — то же, чем для полей структуры служат операторы-мутаторы.
+   * Берутся только присваивания из области видимости переменной.
    *
    * @param variable переменная-элемент формы.
    * @return присваивания по позициям, в порядке следования в документе.
@@ -359,10 +360,15 @@ public class FormExpressionInference {
     if (ast == null) {
       return Map.of();
     }
+    // Индекс ищет по имени: без отбора по области видимости одноимённые локальные
+    // переменные разных методов получали бы присваивания друг друга.
+    var scope = variable.getScope();
+    var scopeRange = scope == null ? null : scope.getRange();
     Map<Position, BSLParser.AssignmentContext> assignments = new LinkedHashMap<>();
     for (var assignment : assignmentByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      if (assignedKindName(assignment) != null) {
-        assignments.put(Ranges.create(assignment).getStart(), assignment);
+      var range = Ranges.createWithin(assignment, scopeRange);
+      if (range != null && assignedKindName(assignment) != null) {
+        assignments.put(range.getStart(), assignment);
       }
     }
     return assignments;

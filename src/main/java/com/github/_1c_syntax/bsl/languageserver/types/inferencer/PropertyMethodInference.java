@@ -118,8 +118,8 @@ public class PropertyMethodInference {
     var scopeRange = scope == null ? null : scope.getRange();
     Map<Position, BSLParser.MethodCallContext> calls = new LinkedHashMap<>();
     for (var call : propertyMethodCallIndex.byOutParameter(owner.getUri(), ast, variable.getName())) {
-      var range = Ranges.create(call);
-      if (scopeRange == null || Ranges.containsRange(scopeRange, range)) {
+      var range = Ranges.createWithin(call, scopeRange);
+      if (range != null) {
         calls.put(range.getStart(), call);
       }
     }

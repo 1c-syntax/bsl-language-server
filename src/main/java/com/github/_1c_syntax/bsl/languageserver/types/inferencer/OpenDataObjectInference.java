@@ -327,7 +327,8 @@ public class OpenDataObjectInference {
   }
 
   /**
-   * Операторы, меняющие состав полей переменной на месте, по позиции их начала.
+   * Операторы, меняющие состав полей переменной на месте, по позиции их начала. Берутся
+   * только операторы из области видимости переменной.
    *
    * @param variable переменная-получатель.
    * @return операторы по позициям, в порядке следования в документе.
@@ -338,14 +339,19 @@ public class OpenDataObjectInference {
     if (ast == null) {
       return Map.of();
     }
+    // Индекс ищет по имени, а одноимённые локальные переменные бывают в тысячах методов
+    // модуля: без отбора по области видимости каждая получала бы вызовы всех остальных.
+    var scope = variable.getScope();
+    var scopeRange = scope == null ? null : scope.getRange();
     Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
     // Индекс отдаёт все вызовы у получателя с этим именем, а состав меняют только два вида.
     // Остальные изменением не считаются: иначе тело с `Лог.Отладка(…)` выглядело бы
     // меняющим переменную модуля `Лог`, и расчёт её ячейки проходил бы по нему наравне
     // с телами, где она правда меняется.
     for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      if (isMutatorCall(call)) {
-        calls.put(Ranges.create(call).getStart(), call);
+      var range = Ranges.createWithin(call, scopeRange);
+      if (range != null && isMutatorCall(call)) {
+        calls.put(range.getStart(), call);
       }
     }
     return calls;

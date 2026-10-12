@@ -202,6 +202,28 @@ public final class Ranges {
     return org.eclipse.lsp4j.util.Ranges.containsRange(bigger, smaller);
   }
 
+  /**
+   * Диапазон узла, если узел лежит внутри заданного диапазона.
+   * <p>
+   * Узел, начинающийся на строке за пределами диапазона, отсекается без построения своего
+   * диапазона — то есть без чтения текста его последнего токена.
+   *
+   * @param node   узел дерева разбора.
+   * @param bounds диапазон-ограничение; {@code null} — без ограничения.
+   * @return диапазон узла; {@code null}, если узел не лежит внутри {@code bounds}.
+   */
+  @Nullable
+  public Range createWithin(ParserRuleContext node, @Nullable Range bounds) {
+    if (bounds != null) {
+      var line = node.getStart().getLine() - 1;
+      if (line < bounds.getStart().getLine() || line > bounds.getEnd().getLine()) {
+        return null;
+      }
+    }
+    var range = create(node);
+    return bounds == null || containsRange(bounds, range) ? range : null;
+  }
+
   public boolean containsPosition(Range range, Position position) {
     Preconditions.checkNotNull(range, "range");
     Preconditions.checkNotNull(position, "position");
