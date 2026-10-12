@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791817032110,
+  "lastUpdate": 1791819653397,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44857,6 +44857,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8293090532222733",
             "extra": "mean: 94.89851967493694 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4bfd28cb9eee1c59a2f411e595b7d3240cf3e9de",
+          "message": "Merge pull request #4619 from 1c-syntax/perf/types-registry-shared-strings\n\nРеестр типов и индекс символов не хранят копии одинаковых строк",
+          "timestamp": "2026-10-12T13:29:55+02:00",
+          "tree_id": "1e2077da27248c4296ed0613f726e915a08aa45f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4bfd28cb9eee1c59a2f411e595b7d3240cf3e9de"
+        },
+        "date": 1791819638754,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.58302005132039,
+            "unit": "sec",
+            "range": "stddev: 3.5289798819126723",
+            "extra": "mean: 95.58302005132039 sec\nrounds: 3"
           }
         ]
       }
