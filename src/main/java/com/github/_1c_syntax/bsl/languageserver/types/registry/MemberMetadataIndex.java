@@ -71,7 +71,8 @@ public class MemberMetadataIndex {
     if (name.isEmpty()) {
       return;
     }
-    var lc = name.toLowerCase(Locale.ROOT);
+    // Одни и те же имена (свойства формы и т.п.) попадают в наборы тысяч типов.
+    var lc = name.toLowerCase(Locale.ROOT).intern();
     if (versioned) {
       versionedNames.add(lc);
     }
