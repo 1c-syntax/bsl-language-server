@@ -63,8 +63,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -125,10 +127,12 @@ public class TypeRegistry {
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
 
   /**
-   * Запомненные ответы {@link #resolveGenericByPrefix(String)}, включая промахи.
-   * Сбрасывается при любом изменении {@link #aliasIndex}.
+   * Generic-типы по семейству: часть имени до плейсхолдера ({@code "документссылка"} у
+   * {@code "документссылка.<имя документа>"}) → имена типов семейства с их ссылками.
+   * Ведётся вместе с {@link #aliasIndex}, поэтому {@link #resolveGenericByPrefix(String)}
+   * не перебирает индекс имён.
    */
-  private final Map<String, Optional<TypeRef>> genericByPrefix = new ConcurrentHashMap<>();
+  private final Map<String, ConcurrentSkipListMap<String, TypeRef>> genericsByFamily = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -362,8 +366,9 @@ public class TypeRegistry {
    * Платформа 1С регистрирует обобщённые типы вида
    * {@code "ДокументСсылка.<Имя документа>"}, {@code "СправочникОбъект.<Имя справочника>"}
    * и т.п. — конкретное имя плейсхолдера в угловых скобках различается для каждого
-   * MDOType. Этот метод выбирает первый тип, чьё qualifiedName начинается с
-   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство.
+   * MDOType. Этот метод выбирает тип, чьё qualifiedName начинается с
+   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство; если их несколько,
+   * первый по имени.
    *
    * @param prefix начальная часть qualifiedName до точки-плейсхолдера
    *               (например, {@code "ДокументСсылка"})
@@ -373,27 +378,21 @@ public class TypeRegistry {
     if (prefix == null || prefix.isEmpty()) {
       return Optional.empty();
     }
-    // Ответ зависит только от содержимого индекса имён, а тот меняется лишь при
-    // регистрации типов — поэтому запоминается, включая промахи. Без этого перебор всего
-    // индекса шёл на каждое разрешаемое имя: в профиле analyze по cpm это была вторая
-    // строка сверху.
-    return genericByPrefix.computeIfAbsent(prefix.toLowerCase(Locale.ROOT), this::findGenericByPrefix);
+    var family = genericsByFamily.get(prefix.toLowerCase(Locale.ROOT));
+    var first = family == null ? null : family.firstEntry();
+    return first == null ? Optional.empty() : Optional.of(first.getValue());
   }
 
   /**
-   * Ищет generic-тип перебором индекса имён.
+   * Передаёт семейства, к которым относится имя типа: части имени до каждого плейсхолдера.
    *
-   * @param needlePrefix начало имени в нижнем регистре.
-   * @return тип семейства; {@link Optional#empty()}, если такого нет.
+   * @param key    имя типа в нижнем регистре.
+   * @param action действие над семейством.
    */
-  private Optional<TypeRef> findGenericByPrefix(String needlePrefix) {
-    var needle = needlePrefix + ".<";
-    for (var entry : aliasIndex.entrySet()) {
-      if (entry.getKey().startsWith(needle)) {
-        return Optional.of(entry.getValue());
-      }
+  private static void forEachGenericFamily(String key, Consumer<String> action) {
+    for (var at = key.indexOf(".<"); at > 0; at = key.indexOf(".<", at + 1)) {
+      action.accept(key.substring(0, at));
     }
-    return Optional.empty();
   }
 
   /**
@@ -1432,8 +1431,14 @@ public class TypeRegistry {
     memberSources.values().forEach(byRef -> byRef.remove(ref));
     membersEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
-    aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
-    genericByPrefix.clear();
+    var key = qualifiedName.toLowerCase(Locale.ROOT);
+    aliasIndex.remove(key);
+    forEachGenericFamily(key, (String family) -> {
+      var generics = genericsByFamily.get(family);
+      if (generics != null) {
+        generics.remove(key);
+      }
+    });
     collectionTraits.remove(ref);
   }
 
@@ -1778,8 +1783,10 @@ public class TypeRegistry {
   }
 
   private void addAlias(String name, TypeRef ref) {
-    aliasIndex.put(name.toLowerCase(Locale.ROOT), ref);
-    genericByPrefix.clear();
+    var key = name.toLowerCase(Locale.ROOT);
+    aliasIndex.put(key, ref);
+    forEachGenericFamily(key, (String family) ->
+      genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
   }
 
   /**
