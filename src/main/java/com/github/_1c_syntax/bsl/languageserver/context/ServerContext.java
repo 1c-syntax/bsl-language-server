@@ -135,6 +135,7 @@ public class ServerContext {
 
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
+  private volatile boolean clearing;
 
   /**
    * Подготовка рабочей области, идущая в фоне (см. {@link #prepareInBackground(Runnable)});
@@ -422,21 +423,41 @@ public class ServerContext {
    * {@link #removeDocument(URI)} не падал на guard'е «document is opened».
    * После — финальная очистка карт, не привязанных к конкретному URI
    * ({@code configurationMetadata}).
+   * <p>
+   * На всё время очистки {@link #isClearing()} отвечает {@code true}.
    */
   public void clear() {
-    openedDocuments.clear();
-    for (var uri : new ArrayList<>(documents.keySet())) {
-      removeDocument(uri);
+    clearing = true;
+    try {
+      openedDocuments.clear();
+      for (var uri : new ArrayList<>(documents.keySet())) {
+        removeDocument(uri);
+      }
+      // safety net: если какие-то карты не очистились через removeDocument'ы
+      // (например, документ был оторван от mdoRef'а), убираем что осталось.
+      documents.clear();
+      states.clear();
+      documentsByMDORef.clear();
+      mdoRefs.clear();
+      documentLocks.clear();
+      commonModuleCache.invalidateAll();
+      configurationMetadata.clear();
+    } finally {
+      clearing = false;
     }
-    // safety net: если какие-то карты не очистились через removeDocument'ы
-    // (например, документ был оторван от mdoRef'а), убираем что осталось.
-    documents.clear();
-    states.clear();
-    documentsByMDORef.clear();
-    mdoRefs.clear();
-    documentLocks.clear();
-    commonModuleCache.invalidateAll();
-    configurationMetadata.clear();
+  }
+
+  /**
+   * Очищается ли контекст целиком.
+   * <p>
+   * Пока идёт {@link #clear()}, документы удаляются по одному и о каждом публикуется событие
+   * удаления, но к концу не останется ни одного. Подписчик, которому дорого удалять данные
+   * по документу, может по такому событию снести свои данные по контексту разом.
+   *
+   * @return {@code true}, пока идёт {@link #clear()}.
+   */
+  public boolean isClearing() {
+    return clearing;
   }
 
   /**

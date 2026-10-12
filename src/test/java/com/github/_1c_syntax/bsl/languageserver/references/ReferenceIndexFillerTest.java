@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -46,6 +47,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -552,6 +555,51 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
 
     reference = referenceIndex.getReference(uri, new Position(4, 0));
     assertThat(reference).isEmpty();
+  }
+
+  @Test
+  void removalWhileContextIsClearedDropsReferencesOfAllDocuments() {
+    // given: проиндексированы два документа
+    var first = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    var second = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl");
+    referenceIndexFiller.fill(first);
+    referenceIndexFiller.fill(second);
+    assertThat(referenceIndex.getReference(second.getUri(), new Position(25, 24))).isPresent();
+    var clearing = mock(ServerContext.class);
+    when(clearing.isClearing()).thenReturn(true);
+
+    // when: контекст очищается целиком, и удалён первый документ
+    referenceIndexFiller.handleEvent(new ServerContextDocumentRemovedEvent(clearing, first.getUri()));
+
+    // then: индекс очищен разом — ссылок второго документа в нём тоже нет
+    assertThat(referenceIndex.getReference(first.getUri(), new Position(4, 0))).isEmpty();
+    assertThat(referenceIndex.getReference(second.getUri(), new Position(25, 24))).isEmpty();
+  }
+
+  @Test
+  void clearedContextIndexesDocumentsAgain() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.fill(documentContext);
+    var serverContext = documentContext.getServerContext();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
+
+    // when
+    serverContext.clear();
+
+    // then: ссылок не осталось, а признак очистки снят
+    assertThat(referenceIndex.getReferencesTo(methodSymbol)).isEmpty();
+    assertThat(serverContext.isClearing()).isFalse();
+
+    // when: тот же текст снова в контексте и разобран заново
+    var again = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl", serverContext);
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(again, false));
+
+    // then: очистка сняла и признак «вхождения собраны», поэтому документ проиндексирован
+    assertThat(referenceIndex.getReference(again.getUri(), new Position(4, 0))).isPresent();
   }
 
   @Test

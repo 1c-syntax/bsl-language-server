@@ -65,7 +65,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     // путей (visitAssignment у диагностик, hover, completion). Захват
     // per-document RWLock конкурирует с populateContext'ом, что
     // выливается в парк worker-потоков под fair-RWLock.
-    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+    return serverContextProvider.getDocumentNoLock(uri)
       .flatMap(document -> findReference(document, uri, position));
   }
 
@@ -81,7 +81,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     if (nex == null) {
       return Optional.empty();
     }
-    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+    return serverContextProvider.getDocumentNoLock(uri)
       .flatMap(document -> buildReference(document, uri, nex));
   }
 
