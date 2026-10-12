@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.utils.StringInterner;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -50,6 +51,7 @@ public class MemberMetadataIndex {
   private final Map<TypeRef, Set<String>> readOnlyByType = new ConcurrentHashMap<>();
   private final Set<String> readOnlyNames = ConcurrentHashMap.newKeySet();
   private final Set<String> versionedNames = ConcurrentHashMap.newKeySet();
+  private final StringInterner names = new StringInterner();
 
   public void index(TypeRef ref, MemberDescriptor member) {
     var versioned = member.metadata().hasVersionInfo();
@@ -72,7 +74,7 @@ public class MemberMetadataIndex {
       return;
     }
     // Одни и те же имена (свойства формы и т.п.) попадают в наборы тысяч типов.
-    var lc = name.toLowerCase(Locale.ROOT).intern();
+    var lc = names.intern(name.toLowerCase(Locale.ROOT));
     if (versioned) {
       versionedNames.add(lc);
     }
