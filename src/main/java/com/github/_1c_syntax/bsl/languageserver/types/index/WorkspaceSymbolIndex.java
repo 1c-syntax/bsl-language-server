@@ -316,6 +316,26 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * {@inheritDoc}
+   * <p>
+   * Запись документа удаляется фильтром всей корзины каждого своего ключа, а у ключей вроде
+   * общих префиксов имён в корзине записи тысяч документов — удаление всех по одному квадратично.
+   */
+  @Override
+  protected boolean clearWholeIndex() {
+    lock.writeLock().lock();
+    try {
+      if (!indexedByUri.isEmpty()) {
+        indexedByUri.clear();
+        trie.clear();
+      }
+      return true;
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  /**
    * Найти символы рабочей области по запросу с ранжированием по релевантности.
    * <p>
    * Сопоставление регистронезависимое. Скоринг (меньше — релевантнее): точное совпадение,
