@@ -227,6 +227,29 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITH_CONTENT);
   }
 
+  @Test
+  void documentClearedWhilePreparingDoesNotStayUnderModuleTypeComputedWithoutConfiguration() {
+    // given
+    var finishPreparation = startPreparationInBackground();
+    context.prepareInBackground(() -> {
+      awaitUninterruptibly(finishPreparation);
+      context.getConfiguration();
+    });
+    var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
+    var mdoRefMeanwhile = documentContext.getMdoRef();
+    // Очистка сбрасывает и тип модуля, посчитанный без конфигурации.
+    context.tryClearDocument(documentContext);
+
+    // when
+    finishPreparation.countDown();
+    context.awaitPreparation();
+
+    // then
+    assertThat(context.getDocuments(mdoRefMeanwhile)).doesNotContainKey(ModuleType.UNKNOWN);
+    assertThat(context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule))
+      .contains(documentContext);
+  }
+
   /**
    * Рабочая область с конфигурацией, ещё не прочитанной: чтение достанется подготовке в фоне.
    *

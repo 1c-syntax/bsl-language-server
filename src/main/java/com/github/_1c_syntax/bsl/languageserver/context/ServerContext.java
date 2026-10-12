@@ -734,7 +734,10 @@ public class ServerContext {
     if (mdoRef != null) {
       var documentsGroup = documentsByMDORef.get(mdoRef);
       if (documentsGroup != null) {
-        documentsGroup.remove(documents.get(uri).getModuleType());
+        // По самому документу, а не по типу модуля: документ, заведённый до прочтения
+        // конфигурации, лежит в группе под типом, посчитанным без неё, а тип, посчитанный заново
+        // после очистки вторичных данных, уже другой.
+        documentsGroup.values().remove(documents.get(uri));
         if (documentsGroup.isEmpty()) {
           documentsByMDORef.remove(mdoRef);
         }
