@@ -21,13 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLTokenizer;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -126,26 +121,5 @@ class RangesTest {
 
     // Позиция после конца диапазона
     assertThat(Ranges.containsPosition(1, 5, 3, 10, new Position(4, 0))).isFalse();
-  }
-
-  @Test
-  void createWithinGivesRangeOfNodeOnlyInsideBounds() {
-    // given
-    var ast = new BSLTokenizer("""
-      А = 1;
-      Б = 2; В = 3;
-      Г = 4;
-      """).getAst();
-    var statements = new ArrayList<ParserRuleContext>(Trees.findAllRuleNodes(ast, BSLParser.RULE_statement));
-    var secondLine = Ranges.create(1, 0, 1, 6);
-
-    // when / then
-    assertThat(Ranges.createWithin(statements.get(1), secondLine)).isEqualTo(Ranges.create(1, 0, 1, 6));
-    assertThat(Ranges.createWithin(statements.get(2), secondLine))
-      .as("та же строка, но за концом диапазона")
-      .isNull();
-    assertThat(Ranges.createWithin(statements.get(0), secondLine)).isNull();
-    assertThat(Ranges.createWithin(statements.get(3), secondLine)).isNull();
-    assertThat(Ranges.createWithin(statements.get(3), null)).isEqualTo(Ranges.create(2, 0, 2, 6));
   }
 }

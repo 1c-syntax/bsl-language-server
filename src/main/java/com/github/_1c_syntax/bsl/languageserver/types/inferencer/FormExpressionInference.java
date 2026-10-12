@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.FormAttributeType
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -366,9 +367,10 @@ public class FormExpressionInference {
     var scopeRange = scope == null ? null : scope.getRange();
     Map<Position, BSLParser.AssignmentContext> assignments = new LinkedHashMap<>();
     for (var assignment : assignmentByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      var range = Ranges.createWithin(assignment, scopeRange);
-      if (range != null && assignedKindName(assignment) != null) {
-        assignments.put(range.getStart(), assignment);
+      var start = Positions.create(assignment);
+      if ((scopeRange == null || Ranges.containsPosition(scopeRange, start))
+        && assignedKindName(assignment) != null) {
+        assignments.put(start, assignment);
       }
     }
     return assignments;
