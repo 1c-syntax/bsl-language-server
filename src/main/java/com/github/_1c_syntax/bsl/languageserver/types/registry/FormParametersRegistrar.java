@@ -338,9 +338,10 @@ class FormParametersRegistrar {
       byName.putIfAbsent(action.toLowerCase(Locale.ROOT),
         MemberDescriptor.event(action, "", signatures)
           .withBilingualName(FormPlatformTypes.neutral(action))
+          // Одни и те же команды есть в тысячах форм, а описание собирается заново на каждую.
           .withBilingualDescription(BilingualString.of(
-            "Обработчик команды формы «" + command.getName() + "».",
-            "Handler of the form command \"" + command.getName() + "\".")));
+            ("Обработчик команды формы «" + command.getName() + "».").intern(),
+            ("Handler of the form command \"" + command.getName() + "\".").intern())));
     }
     return List.copyOf(byName.values());
   }

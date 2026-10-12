@@ -798,7 +798,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     return new Entry(
       uri,
       name,
-      name.toLowerCase(Locale.ENGLISH),
+      // Имена символов уже интернированы, и их нижний регистр повторяется так же часто.
+      name.toLowerCase(Locale.ENGLISH).intern(),
       symbol.getSymbolKind(),
       symbol.getRange(),
       List.copyOf(symbol.getTags()),

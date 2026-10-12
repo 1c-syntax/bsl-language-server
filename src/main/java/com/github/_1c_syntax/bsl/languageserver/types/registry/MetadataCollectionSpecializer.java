@@ -674,13 +674,16 @@ public class MetadataCollectionSpecializer {
    */
   private List<MemberDescriptor> buildPerOwnerOverrides(String ownerQualifiedName, MD owner) {
     var overrides = new ArrayList<MemberDescriptor>();
+    // Суффикс один на объект: его держат источники членов всех коллекций объекта, а на
+    // большой конфигурации это миллионы ссылок — копия на каждую стоила бы сотни мегабайт.
+    var ownerSuffix = suffixFor(ownerQualifiedName);
     for (var spec : COLLECTIONS) {
-      processOwnerSpec(spec, owner, ownerQualifiedName, overrides);
+      processOwnerSpec(spec, owner, ownerSuffix, overrides);
     }
     return overrides;
   }
 
-  private void processOwnerSpec(CollectionSpec spec, MD owner, String ownerQualifiedName,
+  private void processOwnerSpec(CollectionSpec spec, MD owner, String ownerSuffix,
                                 List<MemberDescriptor> overrides) {
     if (!spec.appliesTo().test(owner)) {
       return;
@@ -692,7 +695,6 @@ public class MetadataCollectionSpecializer {
     var children = spec.childExtractor().apply(owner);
     var elementRef = typeRegistry.resolve(spec.elementTypeName())
       .orElseGet(() -> new TypeRef(TypeKind.PLATFORM, spec.elementTypeName()));
-    var ownerSuffix = suffixFor(ownerQualifiedName);
     var perCollName = spec.baseCollectionName() + "." + spec.ru() + "." + ownerSuffix;
     var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollName);
     registerSubChildOwners(children, elementRef, ownerSuffix);
