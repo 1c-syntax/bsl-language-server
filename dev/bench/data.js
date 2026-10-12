@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791816158272,
+  "lastUpdate": 1791817032110,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44826,6 +44826,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0348679884262288",
             "extra": "mean: 95.56617824236552 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00067759ff3aa2899dfc3ce87e5cdb80332b04ce",
+          "message": "Merge pull request #4626 from 1c-syntax/build/deps-bsl-context-0.10.2\n\nСправка платформы читается без «token recognition error» в логе и не оставляет временных файлов",
+          "timestamp": "2026-10-12T13:10:29+02:00",
+          "tree_id": "3e2371970b8c00b498f48bf0be96d8fa8d80495b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/00067759ff3aa2899dfc3ce87e5cdb80332b04ce"
+        },
+        "date": 1791817003859,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.89851967493694,
+            "unit": "sec",
+            "range": "stddev: 0.8293090532222733",
+            "extra": "mean: 94.89851967493694 sec\nrounds: 3"
           }
         ]
       }
