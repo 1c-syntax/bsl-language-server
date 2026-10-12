@@ -124,12 +124,6 @@ public class ServerContext {
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
-  /**
-   * Наполнение рабочей области завершено: каждый её файл разобран хотя бы раз.
-   */
-  @Getter
-  private volatile boolean populated;
-
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -154,7 +148,6 @@ public class ServerContext {
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
-    populated = false;
 
     // Конфигурацию спрашивает каждый создаваемый документ — из неё берётся его mdoRef, — и
     // спрашивает под блокировкой своих вычислений. Лениво из задачи заполнения её читать
@@ -191,7 +184,6 @@ public class ServerContext {
       throw new IllegalStateException("Interrupted while populating context", e);
     }
 
-    populated = true;
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
   }

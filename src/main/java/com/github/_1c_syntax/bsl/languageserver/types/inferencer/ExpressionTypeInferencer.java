@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -71,6 +72,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -153,6 +157,25 @@ public class ExpressionTypeInferencer {
    * новый вид объявления — новый бин, а не правка этого класса.
    */
   private final List<VariableTypeSource> variableTypeSources;
+
+  /**
+   * Рабочая область наполнена: каждый её файл разобран хотя бы раз. Бин живёт по экземпляру на
+   * рабочую область, поэтому и признак — её собственный.
+   */
+  private volatile boolean workspacePopulated;
+
+  /**
+   * Запоминает, что рабочая область наполнена.
+   *
+   * @param event событие окончания наполнения рабочей области.
+   */
+  // Раньше всех слушателей: по этому же событию считаются типы, и расчёт должен видеть
+  // область уже наполненной.
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    workspacePopulated = true;
+  }
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -739,7 +762,7 @@ public class ExpressionTypeInferencer {
     var unparsedModule = false;
     // Когда рабочая область наполнена, разобрано всё, что вообще разбирается. Тип без членов
     // из кода тогда — тип, у которого кода нет: элементы обычной формы, модуль без исходников.
-    var populating = !ctx.documentContext.getServerContext().isPopulated();
+    var populating = !workspacePopulated;
     for (var leftType : leftTypes.refs()) {
       // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
       // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
