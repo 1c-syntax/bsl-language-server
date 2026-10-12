@@ -45,6 +45,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -182,6 +183,22 @@ class DocumentContextTest {
     // then
     final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
     assertThat(tokenizer).isNull();
+  }
+
+  @Test
+  void documentWithoutContentReportsItsUri() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when
+    documentContext.clearSecondaryData();
+
+    // then
+    assertThatThrownBy(documentContext::getAst)
+      .isInstanceOfSatisfying(DocumentContentUnavailableException.class,
+        e -> assertThat(e.getUri()).isEqualTo(documentContext.getUri()));
+    assertThatThrownBy(documentContext::getTokens).isInstanceOf(DocumentContentUnavailableException.class);
+    assertThatThrownBy(documentContext::getContent).isInstanceOf(DocumentContentUnavailableException.class);
   }
 
   @Test

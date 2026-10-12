@@ -77,7 +77,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 /**
@@ -208,27 +207,51 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return symbolTree.get();
   }
 
+  /**
+   * Текст документа.
+   *
+   * @return текст документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String getContent() {
-    requireNonNull(content);
+    if (content == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
     return content;
   }
 
+  /**
+   * Строки текста документа.
+   *
+   * @return строки текста документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  /**
+   * Дерево разбора документа.
+   *
+   * @return дерево разбора документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(tokenizer);
-    return tokenizer.getAst();
+    return requireTokenizer().getAst();
   }
 
+  /**
+   * Токены документа.
+   *
+   * @return токены документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(tokenizer);
-    return tokenizer.getTokens();
+    return requireTokenizer().getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
@@ -508,6 +531,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private String[] computeContentList() {
     return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
+  }
+
+  private BSLTokenizer requireTokenizer() {
+    if (tokenizer == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
+    return tokenizer;
   }
 
   private SymbolTree computeSymbolTree() {

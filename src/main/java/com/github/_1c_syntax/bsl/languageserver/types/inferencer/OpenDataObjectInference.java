@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -645,7 +646,7 @@ public class OpenDataObjectInference {
   private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext owner) {
     try {
       return owner.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return null;
     }
   }
