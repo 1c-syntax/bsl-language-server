@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -259,6 +260,31 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(context.getDocuments(mdoRefMeanwhile)).doesNotContainKey(ModuleType.UNKNOWN);
     assertThat(context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule))
       .contains(documentContext);
+  }
+
+  /** Сорвавшееся чтение файла не помечает документ прочитанным: следующая попытка читает файл снова. */
+  @Test
+  void rebuildDocumentFromUnreadableFileLeavesDocumentWithoutContent(@TempDir Path tempDir) throws IOException {
+    // given: на месте файла каталог — существует, но прочитать нельзя
+    initServerContext();
+    var file = tempDir.resolve("Unreadable.bsl");
+    var documentContext = context.addDocument(Absolute.uri(file.toUri()));
+    Files.createDirectory(file);
+
+    // when
+    context.rebuildDocument(documentContext);
+
+    // then
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+
+    // when: файл стал читаемым
+    Files.delete(file);
+    Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
+    context.rebuildDocument(documentContext);
+
+    // then
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITH_CONTENT);
+    assertThat(documentContext.getContent()).contains("Процедура Тест()");
   }
 
   /**
