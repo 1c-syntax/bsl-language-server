@@ -22,13 +22,20 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import lombok.experimental.UtilityClass;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.jspecify.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -54,8 +61,52 @@ public class BSLFiles {
    */
   public static Collection<File> listBslFiles(Path srcDir, @Nullable List<String> excludePaths) {
     var exclusions = PathExclusionUtils.filters(excludePaths);
-    var fileFilter = BSL_FILE_FILTER.and(exclusions.fileFilter());
+    var files = new ArrayList<File>();
+    try {
+      // Атрибуты файла приходят из самого обхода. Фильтр FileUtils.listFiles спрашивал их
+      // у файловой системы заново, на каждый файл и до проверки расширения, — а в выгрузке
+      // конфигурации модулей лишь малая часть файлов.
+      Files.walkFileTree(srcDir, new SimpleFileVisitor<>() {
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
+          if (!dir.equals(srcDir) && !accepts(exclusions.directoryFilter(), dir, attributes)) {
+            return FileVisitResult.SKIP_SUBTREE;
+          }
+          return FileVisitResult.CONTINUE;
+        }
 
-    return FileUtils.listFiles(srcDir.toFile(), fileFilter, exclusions.directoryFilter());
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+          if (accepts(BSL_FILE_FILTER, file, attributes)
+            && isRegularFile(file, attributes)
+            && accepts(exclusions.fileFilter(), file, attributes)) {
+            files.add(file.toFile());
+          }
+          return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          // Корня нет либо файл удалён посреди обхода — искать там нечего.
+          if (exc instanceof NoSuchFileException) {
+            return FileVisitResult.CONTINUE;
+          }
+          throw exc;
+        }
+      });
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    return files;
+  }
+
+  private static boolean accepts(IOFileFilter filter, Path path, BasicFileAttributes attributes) {
+    return filter.accept(path, attributes) == FileVisitResult.CONTINUE;
+  }
+
+  private static boolean isRegularFile(Path file, BasicFileAttributes attributes) {
+    // Обход по ссылкам не идёт, и атрибуты ссылки — её собственные; на что она указывает,
+    // приходится спросить отдельно.
+    return attributes.isRegularFile() || attributes.isSymbolicLink() && Files.isRegularFile(file);
   }
 }

@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /** Интеграционные тесты {@link BSLFiles#listBslFiles} на временной файловой системе. */
 class BSLFilesTest {
@@ -96,6 +97,50 @@ class BSLFilesTest {
 
     // then
     assertThat(found).containsExactly(bsl.toFile());
+  }
+
+  /** Несуществующий корень — пустой результат, а не ошибка. */
+  @Test
+  void listBslFilesReturnsNothingForMissingRoot(@TempDir Path projectRoot) {
+    // when
+    var found = BSLFiles.listBslFiles(projectRoot.resolve("missing"), null);
+
+    // then
+    assertThat(found).isEmpty();
+  }
+
+  /** Каталог с расширением модуля в имени — не модуль. */
+  @Test
+  void listBslFilesIgnoresDirectoriesNamedLikeModules(@TempDir Path projectRoot) throws IOException {
+    // given
+    Path bsl = createBslFile(projectRoot, SRC_MODULE_BSL);
+    Files.createDirectories(projectRoot.resolve("src/Каталог.bsl"));
+
+    // when
+    var found = BSLFiles.listBslFiles(projectRoot, null);
+
+    // then
+    assertThat(found).containsExactly(bsl.toFile());
+  }
+
+  /** Символическая ссылка на модуль находится, как и сам модуль. */
+  @Test
+  void listBslFilesFindsSymbolicLinkToModule(@TempDir Path projectRoot) throws IOException {
+    // given
+    Path bsl = createBslFile(projectRoot, SRC_MODULE_BSL);
+    Path link = projectRoot.resolve("src/Link.bsl");
+    try {
+      Files.createSymbolicLink(link, bsl);
+    } catch (IOException | UnsupportedOperationException e) {
+      // На Windows без прав разработчика ссылку создать нельзя.
+      assumeTrue(false, "символические ссылки недоступны: " + e.getMessage());
+    }
+
+    // when
+    var found = BSLFiles.listBslFiles(projectRoot, null);
+
+    // then
+    assertThat(found).containsExactlyInAnyOrder(bsl.toFile(), link.toFile());
   }
 
   /** Создаёт пустой BSL-файл по относительному пути в корне теста. */
