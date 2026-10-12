@@ -342,8 +342,7 @@ public class OpenDataObjectInference {
     }
     // Индекс ищет по имени, а одноимённые локальные переменные бывают в тысячах методов
     // модуля: без отбора по области видимости каждая получала бы вызовы всех остальных.
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
+    var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
     // Индекс отдаёт все вызовы у получателя с этим именем, а состав меняют только два вида.
     // Остальные изменением не считаются: иначе тело с `Лог.Отладка(…)` выглядело бы
@@ -351,7 +350,7 @@ public class OpenDataObjectInference {
     // с телами, где она правда меняется.
     for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
       var start = Positions.create(call);
-      if ((scopeRange == null || Ranges.containsPosition(scopeRange, start)) && isMutatorCall(call)) {
+      if (Ranges.containsPosition(scopeRange, start) && isMutatorCall(call)) {
         calls.put(start, call);
       }
     }
@@ -401,8 +400,7 @@ public class OpenDataObjectInference {
     if (call == null || incoming.isEmpty()) {
       return incoming;
     }
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
+    var scopeRange = variable.getScope().getRange();
     var variableName = variable.getName();
 
     var structureRef = headRefOf(incoming, OpenDataObjectInference::isStructureOrMapLike);
@@ -486,7 +484,7 @@ public class OpenDataObjectInference {
   private KeyedTypes insertedField(
     BSLParser.CallStatementContext call,
     String variableName,
-    @Nullable Range scopeRange,
+    Range scopeRange,
     ExpressionTypes types
   ) {
     var params = mutatorParams(
@@ -513,7 +511,7 @@ public class OpenDataObjectInference {
   private KeyedTypes addedColumn(
     BSLParser.CallStatementContext call,
     String variableName,
-    @Nullable Range scopeRange,
+    Range scopeRange,
     ExpressionTypes types
   ) {
     var params = mutatorParams(
@@ -569,14 +567,14 @@ public class OpenDataObjectInference {
   private static List<? extends BSLParser.CallParamContext> mutatorParams(
     BSLParser.CallStatementContext call,
     String receiverName,
-    @Nullable Range scopeRange,
+    Range scopeRange,
     @Nullable String actualReceiver,
     Predicate<BSLParser.MethodCallContext> methodMatches
   ) {
     if (actualReceiver == null || !actualReceiver.equalsIgnoreCase(receiverName)) {
       return null;
     }
-    if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
+    if (!Ranges.containsRange(scopeRange, Ranges.create(call))) {
       return null;
     }
     var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();

@@ -363,13 +363,11 @@ public class FormExpressionInference {
     }
     // Индекс ищет по имени: без отбора по области видимости одноимённые локальные
     // переменные разных методов получали бы присваивания друг друга.
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
+    var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.AssignmentContext> assignments = new LinkedHashMap<>();
     for (var assignment : assignmentByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
       var start = Positions.create(assignment);
-      if ((scopeRange == null || Ranges.containsPosition(scopeRange, start))
-        && assignedKindName(assignment) != null) {
+      if (Ranges.containsPosition(scopeRange, start) && assignedKindName(assignment) != null) {
         assignments.put(start, assignment);
       }
     }

@@ -115,12 +115,11 @@ public class PropertyMethodInference {
     // рядом. Отбор по области видимости оставляет только свои вызовы — так же поступает
     // `OpenDataObjectInference` с операторами-мутаторами. У переменной модуля область —
     // весь модуль, и туда попадают вызовы из всех его тел, как и должно быть.
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
+    var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.MethodCallContext> calls = new LinkedHashMap<>();
     for (var call : propertyMethodCallIndex.byOutParameter(owner.getUri(), ast, variable.getName())) {
       var start = Positions.create(call);
-      if (scopeRange == null || Ranges.containsPosition(scopeRange, start)) {
+      if (Ranges.containsPosition(scopeRange, start)) {
         calls.put(start, call);
       }
     }
