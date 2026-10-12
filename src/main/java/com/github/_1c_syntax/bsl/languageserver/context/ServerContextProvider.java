@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
@@ -33,6 +34,8 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -63,6 +66,12 @@ public class ServerContextProvider {
    */
   public static final URI DEFAULT_WORKSPACE_URI = URI.create("bsl-language-server:/default-workspace");
   private static final String DEFAULT_WORKSPACE_NAME = "default";
+
+  /**
+   * Добавляется ли на этом потоке workspace, подготовка которого идёт в фоне
+   * (см. {@link #addWorkspaceInBackground(WorkspaceFolder)}).
+   */
+  private static final ThreadLocal<Boolean> PREPARING_IN_BACKGROUND = ThreadLocal.withInitial(() -> false);
 
   private final ObjectProvider<ServerContext> serverContextObjectProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
@@ -100,6 +109,35 @@ public class ServerContextProvider {
   public ServerContext addWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
     return addWorkspace(uri, workspaceFolder.getName());
+  }
+
+  /**
+   * Добавить workspace folder, а его подготовку — обработку
+   * {@link com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent}, то есть
+   * чтение метаданных конфигурации и регистрацию её типов, — выполнить в фоне.
+   * <p>
+   * Контекст сервера заведён и доступен сразу. Подготовка, идущая в фоне, запоминается в нём
+   * ({@link ServerContext#awaitPreparation()}).
+   *
+   * @param workspaceFolder информация о workspace folder
+   * @return созданный контекст сервера
+   */
+  public ServerContext addWorkspaceInBackground(WorkspaceFolder workspaceFolder) {
+    PREPARING_IN_BACKGROUND.set(true);
+    try {
+      return addWorkspace(workspaceFolder);
+    } finally {
+      PREPARING_IN_BACKGROUND.remove();
+    }
+  }
+
+  /**
+   * Добавляется ли на текущем потоке workspace, подготовку которого надо выполнить в фоне.
+   *
+   * @return {@code true} внутри {@link #addWorkspaceInBackground(WorkspaceFolder)}.
+   */
+  public static boolean isPreparingInBackground() {
+    return PREPARING_IN_BACKGROUND.get();
   }
 
   /**
@@ -421,6 +459,19 @@ public class ServerContextProvider {
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     documentIndex.remove(event.getUri());
+  }
+
+  /**
+   * Обработчик события регистрации типов конфигурации: пересчитывает документы, заведённые,
+   * пока рабочая область готовилась в фоне.
+   * <p>
+   * Идёт первым: остальные слушатели обновляют посчитанное по открытым документам, и
+   * документы к этому моменту должны быть разобраны с типами конфигурации.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void onConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    event.getSource().refreshDocumentsCreatedWhilePreparing();
   }
 
   /**

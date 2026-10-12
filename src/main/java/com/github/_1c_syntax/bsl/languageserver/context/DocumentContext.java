@@ -163,9 +163,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   // MD-объект и mdoRef документа зависят только от его URI и конфигурации (не от содержимого),
-  // а конфигурация инвариантна на всё время жизни DocumentContext (её перезагрузка в
-  // ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ сбрасываются в
-  // clearSecondaryData — считаются один раз на жизнь документа.
+  // а конфигурация после прочтения инвариантна на всё время жизни DocumentContext (её
+  // перезагрузка в ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ
+  // сбрасываются в clearSecondaryData. Пересчитываются, только если документ заведён до
+  // прочтения конфигурации (clearConfigurationDependentData).
   private final Lazy<Optional<MD>> mdObject = new Lazy<>(this::computeMdObject, computeLock);
   private final Lazy<String> mdoRef = new Lazy<>(this::computeMdoRef, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
@@ -466,6 +467,24 @@ public class DocumentContext implements Comparable<DocumentContext> {
         metrics.clear();
         diagnosticIgnoranceData.clear();
       }
+    } finally {
+      releaseLocks();
+    }
+  }
+
+  /**
+   * Забыть посчитанное по метаданным конфигурации — тип модуля, объект метаданных и ссылку на
+   * него, — а заодно отпечаток разобранного текста: следующий разбор даже того же текста
+   * считается правкой, и всё, что посчитано по документу, считается заново.
+   */
+  protected void clearConfigurationDependentData() {
+    acquireLocks();
+
+    try {
+      moduleType.clear();
+      mdObject.clear();
+      mdoRef.clear();
+      contentFingerprint = null;
     } finally {
       releaseLocks();
     }

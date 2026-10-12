@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -55,11 +56,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -78,6 +82,13 @@ public class ServerContext {
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
     .skipDataCompositionSchema(true)
     .build();
+
+  /** Поток подготовки рабочей области в фоне — по одному на подготовку. */
+  private static final Executor PREPARATION_EXECUTOR = (Runnable command) ->
+    Thread.ofPlatform().name("workspace-preparation").daemon().start(command);
+
+  /** Контекст, который готовит текущий поток (см. {@link #prepareInBackground(Runnable)}). */
+  private static final ThreadLocal<@Nullable ServerContext> PREPARING = new ThreadLocal<>();
 
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
@@ -124,6 +135,81 @@ public class ServerContext {
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
+  /**
+   * Подготовка рабочей области, идущая в фоне (см. {@link #prepareInBackground(Runnable)});
+   * завершена, если подготовка шла синхронно.
+   */
+  private volatile CompletableFuture<?> preparation = CompletableFuture.completedFuture(null);
+
+  /** Документы, заведённые, пока шла подготовка рабочей области в фоне. */
+  private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
+
+  /**
+   * Подготовить рабочую область в фоне.
+   * <p>
+   * Пока метаданные конфигурации читаются, {@link #getConfiguration()} ждёт их только на потоке
+   * подготовки, а прочим отвечает пустой конфигурацией. Документы, заведённые до конца
+   * подготовки, пересчитываются по прочитанной конфигурации и зарегистрированным типам
+   * ({@link #refreshDocumentsCreatedWhilePreparing()}). Наполнение начинается не раньше, чем
+   * подготовка закончится.
+   *
+   * @param preparationWork подготовка: чтение метаданных, регистрация типов конфигурации.
+   */
+  public void prepareInBackground(Runnable preparationWork) {
+    var future = new CompletableFuture<@Nullable Void>();
+    // Запоминается до запуска: иначе поток, спросивший конфигурацию в самом начале, не узнал
+    // бы, что её читают в фоне, и встал бы ждать чтения.
+    preparation = future;
+    PREPARATION_EXECUTOR.execute(() -> {
+      PREPARING.set(this);
+      try {
+        preparationWork.run();
+        refreshDocumentsCreatedWhilePreparing();
+      } catch (RuntimeException e) {
+        LOGGER.error("Workspace preparation failed: {}", workspaceUri, e);
+      } finally {
+        PREPARING.remove();
+        future.complete(null);
+      }
+    });
+  }
+
+  /**
+   * Дождаться подготовки рабочей области: метаданные конфигурации прочитаны, её типы
+   * зарегистрированы.
+   */
+  public void awaitPreparation() {
+    preparation.join();
+  }
+
+  /**
+   * Пересчитать документы, заведённые, пока шла подготовка рабочей области в фоне: их ссылка
+   * на объект метаданных и тип модуля могли быть посчитаны без конфигурации, а открытые к тому
+   * же разобраны без её типов. Документы, пересчитанные раньше, повторно не трогаются.
+   * <p>
+   * Берёт блокировки документов по одной, поэтому вызывающий поток не должен держать
+   * блокировку какого-либо документа.
+   */
+  public void refreshDocumentsCreatedWhilePreparing() {
+    if (createdWhilePreparing.isEmpty()) {
+      return;
+    }
+    // Разбор обращается к бинам рабочей области, а поток подготовки её не знает.
+    WorkspaceContextHolder.run(workspaceUri, () -> {
+      for (var documentContext : List.copyOf(createdWhilePreparing)) {
+        var lock = getDocumentLock(documentContext.getUri());
+        lock.writeLock().lock();
+        try {
+          if (createdWhilePreparing.remove(documentContext)) {
+            refreshDocument(documentContext);
+            reparseOpenedDocument(documentContext);
+          }
+        } finally {
+          lock.writeLock().unlock();
+        }
+      }
+    });
+  }
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -141,6 +227,12 @@ public class ServerContext {
   }
 
   public void populateContext(Collection<File> files) {
+    // Деревья символов опираются на типы конфигурации и запоминают посчитанное, поэтому
+    // документы разбираются только после того, как типы зарегистрированы.
+    awaitPreparation();
+    // Пересчитывает то, что не успела пересчитать подготовка, если она упала.
+    refreshDocumentsCreatedWhilePreparing();
+
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
       files.size(),
       getMessage("populateFilesPostfix")
@@ -462,6 +554,23 @@ public class ServerContext {
   }
 
   /**
+   * Разобрать открытый документ заново по его текущему тексту и версии: изменилось не
+   * содержимое, а то, на что опирается разбор. Документ, не открытый в редакторе либо без
+   * текста, не трогается. Блокировка документа на запись должна быть взята.
+   */
+  private void reparseOpenedDocument(DocumentContext documentContext) {
+    if (!isDocumentOpened(documentContext) || getDocumentState(documentContext) != DocumentState.WITH_CONTENT) {
+      return;
+    }
+    var content = documentContext.getContent();
+    var version = documentContext.getVersion();
+    // Разбор того же текста той же версии документ пропускает, поэтому сначала текст
+    // освобождается.
+    documentContext.clearSecondaryData();
+    rebuildDocument(documentContext, content, version);
+  }
+
+  /**
    * Закрыть документ и очистить его содержимое.
    *
    * @param documentContext документ, который необходимо закрыть.
@@ -472,7 +581,21 @@ public class ServerContext {
     documentContext.clearSecondaryData();
   }
 
+  /**
+   * Метаданные конфигурации рабочей области; читаются при первом обращении.
+   * <p>
+   * Пока их читает подготовка, идущая в фоне ({@link #prepareInBackground(Runnable)}), всем,
+   * кроме неё самой, отвечает пустой конфигурацией, не дожидаясь чтения.
+   *
+   * @return метаданные конфигурации; пустые, если конфигурации нет или она ещё читается.
+   */
   public Solution getConfiguration() {
+    if (!configurationMetadata.isPresent() && isPreparing() && PREPARING.get() != this) {
+      // На большой конфигурации чтение занимает десятки секунд. До его конца рабочая область
+      // выглядит как каталог без конфигурации, а документы, заведённые за это время,
+      // подготовка пересчитает сама.
+      return Solution.EMPTY;
+    }
     return configurationMetadata.getOrCompute();
   }
 
@@ -520,16 +643,48 @@ public class ServerContext {
    * @return общий модуль или {@link Optional#empty()}, если такого нет
    */
   public Optional<CommonModule> findCommonModule(String name) {
+    if (!configurationMetadata.isPresent()) {
+      // Ответ по ещё не прочитанной конфигурации запоминать нельзя: промах остался бы в кэше.
+      return getConfiguration().findCommonModule(name);
+    }
     return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
   }
 
   private DocumentContext createDocumentContext(URI uri) {
+    var whilePreparing = isPreparing();
     var documentContext = documentContextProvider.getObject(uri, this);
 
     documents.put(uri, documentContext);
     addMdoRefByUri(uri, documentContext);
 
+    if (whilePreparing) {
+      createdWhilePreparing.add(documentContext);
+      // Подготовка могла закончиться, пока документ заводился, и пересчитать его уже некому.
+      // Блокировка этого документа у вызывающего уже взята, а текста у нового документа нет.
+      if (!isPreparing() && createdWhilePreparing.remove(documentContext)) {
+        refreshDocument(documentContext);
+      }
+    }
+
     return documentContext;
+  }
+
+  /**
+   * Пересчитать ссылку на объект метаданных и тип модуля документа по текущей конфигурации.
+   * Блокировка документа на запись должна быть взята.
+   */
+  private void refreshDocument(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    if (documents.get(uri) != documentContext) {
+      return;
+    }
+    removeDocumentMdoRefByUri(uri);
+    documentContext.clearConfigurationDependentData();
+    addMdoRefByUri(uri, documentContext);
+  }
+
+  private boolean isPreparing() {
+    return !preparation.isDone();
   }
 
   private Solution computeConfigurationMetadata() {

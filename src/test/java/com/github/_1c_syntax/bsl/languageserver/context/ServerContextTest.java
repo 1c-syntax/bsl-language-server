@@ -30,9 +30,13 @@ import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -172,6 +176,76 @@ class ServerContextTest extends AbstractServerContextAwareTest {
       .filter(p -> p.contains("CommonModules"))
       .toList();
     assertThat(commonModuleUris).isEmpty();
+  }
+
+  @Test
+  void configurationReadInBackgroundIsNotAwaited() {
+    // given
+    var finishPreparation = startPreparationInBackground();
+    var seenByPreparation = new AtomicReference<ConfigurationSource>();
+    context.prepareInBackground(() -> {
+      awaitUninterruptibly(finishPreparation);
+      seenByPreparation.set(context.getConfiguration().getConfigurationSource());
+    });
+
+    // when
+    var seenMeanwhile = context.getConfiguration().getConfigurationSource();
+    var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
+    var moduleTypeMeanwhile = documentContext.getModuleType();
+    finishPreparation.countDown();
+    context.awaitPreparation();
+
+    // then
+    assertThat(seenMeanwhile).isEqualTo(ConfigurationSource.EMPTY);
+    assertThat(moduleTypeMeanwhile).isEqualTo(ModuleType.UNKNOWN);
+    assertThat(seenByPreparation.get()).isEqualTo(ConfigurationSource.DESIGNER);
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
+    assertThat(context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule))
+      .contains(documentContext);
+  }
+
+  @Test
+  void documentOpenedWhilePreparingIsReparsedAfterPreparation() throws IOException {
+    // given
+    var finishPreparation = startPreparationInBackground();
+    context.prepareInBackground(() -> {
+      awaitUninterruptibly(finishPreparation);
+      context.getConfiguration();
+    });
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var documentContext = context.addDocument(Absolute.uri(file));
+    context.openDocument(documentContext, Files.readString(file.toPath()), 1);
+    var symbolTreeMeanwhile = documentContext.getSymbolTree();
+
+    // when
+    finishPreparation.countDown();
+    context.awaitPreparation();
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTreeMeanwhile);
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITH_CONTENT);
+  }
+
+  /**
+   * Рабочая область с конфигурацией, ещё не прочитанной: чтение достанется подготовке в фоне.
+   *
+   * @return защёлка, по которой подготовка в тесте заканчивается.
+   */
+  private CountDownLatch startPreparationInBackground() {
+    initServerContext(PATH_TO_METADATA, false);
+    // Добавление рабочей области уже прочитало конфигурацию — забываем её.
+    context.clear();
+    return new CountDownLatch(1);
+  }
+
+  private static void awaitUninterruptibly(CountDownLatch latch) {
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) {
