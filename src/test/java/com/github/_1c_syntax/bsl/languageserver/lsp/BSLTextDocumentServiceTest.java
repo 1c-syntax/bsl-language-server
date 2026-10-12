@@ -132,6 +132,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -418,6 +419,26 @@ class BSLTextDocumentServiceTest {
       .havingCause()
       .isInstanceOfSatisfying(ResponseErrorException.class, e ->
         assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+  }
+
+  /** Ошибка провайдера, не связанная с текстом, и на закрытом документе доходит до клиента как есть. */
+  @Test
+  void providerFailureOnClosedDocumentIsNotReportedAsContentModified() throws Exception {
+    // given
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier()));
+    var failure = new IllegalArgumentException("Сбой провайдера");
+    doThrow(failure).when(hoverProvider).getHover(any(), any());
+
+    // when
+    var result = textDocumentService.hover(new HoverParams(getTextDocumentIdentifier(), new Position(0, 0)));
+
+    // then
+    assertThat(result)
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isSameAs(failure);
   }
 
   /** Запросу, которому текст не нужен, закрытый документ не мешает, и файл ради него не перечитывается. */

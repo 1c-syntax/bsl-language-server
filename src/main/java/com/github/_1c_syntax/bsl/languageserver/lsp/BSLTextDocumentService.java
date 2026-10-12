@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -1156,11 +1157,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           lock.readLock().lock();
           try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
             return supplier.get();
-          } catch (RuntimeException e) {
+          } catch (DocumentContentUnavailableException e) {
             // Посреди вычисления текст не пропадёт: didClose освобождает его под блокировкой
-            // записи. Но запрос мог начаться уже после закрытия документа. Запросам, которым
-            // текст не нужен (иерархии по закрытым файлам), это не мешает, а упавшему без
-            // текста отвечать нечем.
+            // записи. Но запрос мог начаться уже после закрытия документа, а ему нужен текст.
+            // Запросам, которым текст не нужен (иерархии по закрытым файлам), это не мешает.
             throw toResponseError(serverContext, documentContext, e);
           } finally {
             lock.readLock().unlock();
@@ -1171,27 +1171,28 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   /**
-   * Ошибка вычисления над документом в виде ответа клиенту.
+   * Ответ клиенту на запрос, которому понадобился текст документа, а текста нет.
    *
    * @param serverContext   контекст сервера документа.
-   * @param documentContext документ.
-   * @param e               ошибка вычисления.
-   * @return для документа без текста — {@link ResponseErrorException} с кодом
-   *     {@link ResponseErrorCode#ContentModified}; иначе исходная ошибка.
+   * @param documentContext документ запроса.
+   * @param e               обращение к тексту документа без текста.
+   * @return {@link ResponseErrorException} с кодом {@link ResponseErrorCode#ContentModified}, если
+   *     текста нет у документа запроса и тот закрыт или не открывался; иначе исходная ошибка —
+   *     текста нет у другого документа либо документ числится с текстом.
    */
   private static RuntimeException toResponseError(
     ServerContext serverContext,
     DocumentContext documentContext,
-    RuntimeException e
+    DocumentContentUnavailableException e
   ) {
-    if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
+    if (!e.getUri().equals(documentContext.getUri())
+      || serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
       return e;
     }
-    var uri = documentContext.getUri();
-    LOGGER.debug("Request to document without content failed: {}", uri, e);
+    LOGGER.debug("Request to document without content: {}", e.getUri());
     return new ResponseErrorException(new ResponseError(
       ResponseErrorCode.ContentModified,
-      "Document content is not available: " + uri,
+      e.getMessage(),
       null
     ));
   }
