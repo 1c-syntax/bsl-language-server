@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791821999020,
+  "lastUpdate": 1791830029608,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44950,6 +44950,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3855560874606307",
             "extra": "mean: 95.33902661005656 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bee2f9a4a13b26392c673dcd91e6ffd1d82da6e7",
+          "message": "Merge pull request #4633 from 1c-syntax/fix/context-failed-file-read-restore\n\nДокумент, файл которого не прочитался, снова не считается прочитанным (правка #4625 потерялась при мерже #4606)",
+          "timestamp": "2026-10-12T20:14:19+02:00",
+          "tree_id": "fe9d1246f6fc4d636ace1bf5b029aab0bde3e0f4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bee2f9a4a13b26392c673dcd91e6ffd1d82da6e7"
+        },
+        "date": 1791830002116,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 97.13092017173767,
+            "unit": "sec",
+            "range": "stddev: 1.393770977158116",
+            "extra": "mean: 97.13092017173767 sec\nrounds: 3"
           }
         ]
       }
