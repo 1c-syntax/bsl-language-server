@@ -28,9 +28,12 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -172,6 +175,31 @@ class ServerContextTest extends AbstractServerContextAwareTest {
       .filter(p -> p.contains("CommonModules"))
       .toList();
     assertThat(commonModuleUris).isEmpty();
+  }
+
+  /** Сорвавшееся чтение файла не помечает документ прочитанным: следующая попытка читает файл снова. */
+  @Test
+  void rebuildDocumentFromUnreadableFileLeavesDocumentWithoutContent(@TempDir Path tempDir) throws IOException {
+    // given: на месте файла каталог — существует, но прочитать нельзя
+    initServerContext();
+    var file = tempDir.resolve("Unreadable.bsl");
+    var documentContext = context.addDocument(Absolute.uri(file.toUri()));
+    Files.createDirectory(file);
+
+    // when
+    context.rebuildDocument(documentContext);
+
+    // then
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+
+    // when: файл стал читаемым
+    Files.delete(file);
+    Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
+    context.rebuildDocument(documentContext);
+
+    // then
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITH_CONTENT);
+    assertThat(documentContext.getContent()).contains("Процедура Тест()");
   }
 
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) {
