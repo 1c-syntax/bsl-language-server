@@ -109,8 +109,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * вторичных данных: по нему повторный разбор отличает перечитывание того же текста
    * от настоящей правки.
    */
-  @Nullable
-  private byte[] contentFingerprint;
+  private byte @Nullable [] contentFingerprint;
 
   /**
    * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
