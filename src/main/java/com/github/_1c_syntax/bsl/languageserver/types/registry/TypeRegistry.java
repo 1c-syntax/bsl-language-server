@@ -160,6 +160,15 @@ public class TypeRegistry {
    * запроса, без регистраций) memo стабилен.
    */
   private final AtomicLong membersEpoch = new AtomicLong();
+  /**
+   * Эпоха memo членов {@link #GLOBAL_CONTEXT} — вместо {@link #membersEpoch}. Источники
+   * глобального контекста (объявления платформы и {@link #globalPropertyMembers}) членов
+   * других типов не читают, поэтому регистрация источника у другого типа — а при наполнении
+   * она идёт на каждый модуль — memo глобального контекста не устаревает. Сдвигается тем,
+   * от чего его члены зависят: собственными источниками и подавлениями, набором
+   * типов-глобальных свойств, их отображаемыми именами и объявлениями.
+   */
+  private final AtomicLong globalContextEpoch = new AtomicLong();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
   /**
    * Пер-типовые поколения memo членов: точечная инвалидация ({@link #invalidateMembers})
@@ -502,7 +511,7 @@ public class TypeRegistry {
    * каноничный {@link TypeRef}.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
-    var epoch = membersEpoch.get();
+    var epoch = GLOBAL_CONTEXT.equals(ref) ? globalContextEpoch.get() : membersEpoch.get();
     var key = new MembersKey(ref, fileType);
     var generation = membersGeneration.getOrDefault(key, 0L);
     var cached = membersCache.get(key);
@@ -583,6 +592,7 @@ public class TypeRegistry {
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
     if (globalPropertyTypes.get(fileType).add(ref)) {
       membersEpoch.incrementAndGet();
+      globalContextEpoch.incrementAndGet();
     }
   }
 
@@ -595,13 +605,16 @@ public class TypeRegistry {
    * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+    var previous = globalPropertySymbols.put(ref, new WeakReference<>(declaration));
     if (globalPropertyTypes.get(fileType).add(ref)) {
       membersEpoch.incrementAndGet();
+      globalContextEpoch.incrementAndGet();
+    } else if (previous == null || previous.get() != declaration) {
+      // Тип уже был глобальным свойством (объявлен по метаданным до разбора файла либо
+      // помечен прошлой редакцией модуля) — сменился только символ-источник, а он входит
+      // в член глобального контекста.
+      globalContextEpoch.incrementAndGet();
     }
-    // Повторная пометка (правка уже зарегистрированного модуля) обновляет только
-    // symbol-источник; инвалидацию memo GLOBAL_CONTEXT-члена и name-индекса, куда
-    // символ уже вошёл, выполняет вызывающий провайдер точечно.
   }
 
   /**
@@ -614,6 +627,7 @@ public class TypeRegistry {
     globalPropertyTypes.get(fileType).remove(ref);
     globalPropertySymbols.remove(ref);
     membersEpoch.incrementAndGet();
+    globalContextEpoch.incrementAndGet();
   }
 
   /**
@@ -829,7 +843,15 @@ public class TypeRegistry {
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
+    membersChanged(ref);
+  }
+
+  /** Сдвинуть эпоху memo членов после мутации источников или подавлений типа {@code ref}. */
+  private void membersChanged(TypeRef ref) {
     membersEpoch.incrementAndGet();
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
   }
 
   /**
@@ -856,7 +878,7 @@ public class TypeRegistry {
     memberSuppressions.get(fileType)
       .computeIfAbsent(ref, key -> ConcurrentHashMap.newKeySet())
       .addAll(memberNames);
-    membersEpoch.incrementAndGet();
+    membersChanged(ref);
   }
 
   /**
@@ -871,7 +893,7 @@ public class TypeRegistry {
    */
   public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::prependSource);
-    membersEpoch.incrementAndGet();
+    membersChanged(ref);
   }
 
   /**
@@ -1226,8 +1248,7 @@ public class TypeRegistry {
       enBindings.put(enPlaceholders.get(i).name(), value);
     }
     var en = TypeRef.specialize(enRef, enBindings).qualifiedName();
-    displayNames.putIfAbsent(specializedRef,
-      BilingualString.of(specializedRef.qualifiedName(), en));
+    putDisplayName(specializedRef, BilingualString.of(specializedRef.qualifiedName(), en));
   }
 
   /**
@@ -1242,6 +1263,8 @@ public class TypeRegistry {
   public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration, FileType fileType) {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.put(ref, new UserType(ref, declaration));
+    // Объявление пользовательского типа — символ-источник его члена в глобальном контексте.
+    globalContextEpoch.incrementAndGet();
     addAlias(qualifiedName, ref);
     registerFileType(ref, fileType);
     return ref;
@@ -1299,7 +1322,27 @@ public class TypeRegistry {
     if (name.isEmpty()) {
       return;
     }
-    displayNames.putIfAbsent(ref, name);
+    putDisplayName(ref, name);
+  }
+
+  /**
+   * Запомнить отображаемое имя типа, если его ещё нет. Имя типа-глобального свойства —
+   * имя его члена в глобальном контексте, поэтому новое имя такого типа сбрасывает memo
+   * членов {@link #GLOBAL_CONTEXT}.
+   */
+  private void putDisplayName(TypeRef ref, BilingualString name) {
+    if (displayNames.putIfAbsent(ref, name) == null && isGlobalPropertyType(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
+  }
+
+  private boolean isGlobalPropertyType(TypeRef ref) {
+    for (var refs : globalPropertyTypes.values()) {
+      if (refs.contains(ref)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -1430,6 +1473,7 @@ public class TypeRegistry {
     types.remove(ref);
     memberSources.values().forEach(byRef -> byRef.remove(ref));
     membersEpoch.incrementAndGet();
+    globalContextEpoch.incrementAndGet();
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     var key = qualifiedName.toLowerCase(Locale.ROOT);
     aliasIndex.remove(key);
@@ -1455,7 +1499,7 @@ public class TypeRegistry {
     collectionTraits.registerPack(decl, ref, fileType);
     registerPackTypeParameters(decl, ref);
     if (!decl.name().isEmpty()) {
-      displayNames.putIfAbsent(ref, decl.name());
+      putDisplayName(ref, decl.name());
     }
     registerFileType(ref, fileType);
   }
