@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791820838975,
+  "lastUpdate": 1791821999020,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44919,6 +44919,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.25036057076678675",
             "extra": "mean: 95.23421017328899 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "804298187cb436774ec3189da800b14b7a43f4d0",
+          "message": "Merge pull request #4618 from 1c-syntax/perf/types-mutators-within-variable-scope\n\nИзменения на месте берутся только из области видимости переменной: наполнение ERP больше не падает по памяти",
+          "timestamp": "2026-10-12T16:11:04+02:00",
+          "tree_id": "f33f4bdbbe2d47b96cc8702845f52238d00e8392",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/804298187cb436774ec3189da800b14b7a43f4d0"
+        },
+        "date": 1791821978905,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.33902661005656,
+            "unit": "sec",
+            "range": "stddev: 1.3855560874606307",
+            "extra": "mean: 95.33902661005656 sec\nrounds: 3"
           }
         ]
       }
