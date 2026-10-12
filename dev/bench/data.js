@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791803988443,
+  "lastUpdate": 1791807547800,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44671,6 +44671,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0999996153379585",
             "extra": "mean: 96.25095303853352 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "93d62e725f5964ca3b5f3709b8b66c4456f96164",
+          "message": "Merge pull request #4623 from 1c-syntax/build/deps-mdclasses-0.19.0.138\n\nОбработчики событий декораций и групп формы не считаются неиспользуемыми",
+          "timestamp": "2026-10-12T12:04:29+02:00",
+          "tree_id": "1631de69f6c327330175257809624c5f0c203f5a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/93d62e725f5964ca3b5f3709b8b66c4456f96164"
+        },
+        "date": 1791807522650,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.795663356781,
+            "unit": "sec",
+            "range": "stddev: 1.6091910163019116",
+            "extra": "mean: 95.795663356781 sec\nrounds: 3"
           }
         ]
       }
