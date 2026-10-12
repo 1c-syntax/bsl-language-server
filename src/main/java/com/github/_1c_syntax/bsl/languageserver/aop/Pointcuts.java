@@ -214,6 +214,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода addWorkspaceInBackground.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* addWorkspaceInBackground(..))")
+  public void isAddWorkspaceInBackgroundCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода removeWorkspace.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* removeWorkspace(..))")

@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,10 +37,13 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doAnswer;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest extends AbstractServerContextAwareTest {
@@ -47,6 +52,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
+
+  @MockitoSpyBean(name = "computeConfigurationExecutor")
+  private ExecutorService computeConfigurationExecutor;
 
   @Test
   void scriptVariantLanguageFollowsTheConfiguration() {
@@ -181,18 +189,15 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void configurationReadInBackgroundIsNotAwaited() {
     // given
-    var finishPreparation = startPreparationInBackground();
+    var finishReading = startPreparationInBackground();
     var seenByPreparation = new AtomicReference<ConfigurationSource>();
-    context.prepareInBackground(() -> {
-      awaitUninterruptibly(finishPreparation);
-      seenByPreparation.set(context.getConfiguration().getConfigurationSource());
-    });
+    context.prepareInBackground(() -> seenByPreparation.set(context.getConfiguration().getConfigurationSource()));
 
     // when
     var seenMeanwhile = context.getConfiguration().getConfigurationSource();
     var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
     var moduleTypeMeanwhile = documentContext.getModuleType();
-    finishPreparation.countDown();
+    finishReading.countDown();
     context.awaitPreparation();
 
     // then
@@ -207,18 +212,15 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void documentOpenedWhilePreparingIsReparsedAfterPreparation() throws IOException {
     // given
-    var finishPreparation = startPreparationInBackground();
-    context.prepareInBackground(() -> {
-      awaitUninterruptibly(finishPreparation);
-      context.getConfiguration();
-    });
+    var finishReading = startPreparationInBackground();
+    context.prepareInBackground(context::getConfiguration);
     var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
     var documentContext = context.addDocument(Absolute.uri(file));
     context.openDocument(documentContext, Files.readString(file.toPath()), 1);
     var symbolTreeMeanwhile = documentContext.getSymbolTree();
 
     // when
-    finishPreparation.countDown();
+    finishReading.countDown();
     context.awaitPreparation();
 
     // then
@@ -230,18 +232,15 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void documentClearedWhilePreparingDoesNotStayUnderModuleTypeComputedWithoutConfiguration() {
     // given
-    var finishPreparation = startPreparationInBackground();
-    context.prepareInBackground(() -> {
-      awaitUninterruptibly(finishPreparation);
-      context.getConfiguration();
-    });
+    var finishReading = startPreparationInBackground();
+    context.prepareInBackground(context::getConfiguration);
     var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
     var mdoRefMeanwhile = documentContext.getMdoRef();
     // Очистка сбрасывает и тип модуля, посчитанный без конфигурации.
     context.tryClearDocument(documentContext);
 
     // when
-    finishPreparation.countDown();
+    finishReading.countDown();
     context.awaitPreparation();
 
     // then
@@ -251,15 +250,21 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   }
 
   /**
-   * Рабочая область с конфигурацией, ещё не прочитанной: чтение достанется подготовке в фоне.
+   * Рабочая область с конфигурацией, ещё не прочитанной: чтение достанется подготовке в фоне и
+   * не закончится, пока не отпущена защёлка.
    *
-   * @return защёлка, по которой подготовка в тесте заканчивается.
+   * @return защёлка, по которой заканчивается чтение метаданных.
    */
   private CountDownLatch startPreparationInBackground() {
     initServerContext(PATH_TO_METADATA, false);
     // Добавление рабочей области уже прочитало конфигурацию — забываем её.
     context.clear();
-    return new CountDownLatch(1);
+    var finishReading = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      awaitUninterruptibly(finishReading);
+      return invocation.callRealMethod();
+    }).when(computeConfigurationExecutor).submit(ArgumentMatchers.<Callable<Object>>any());
+    return finishReading;
   }
 
   private static void awaitUninterruptibly(CountDownLatch latch) {

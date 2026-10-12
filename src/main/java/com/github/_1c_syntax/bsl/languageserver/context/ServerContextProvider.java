@@ -67,12 +67,6 @@ public class ServerContextProvider {
   public static final URI DEFAULT_WORKSPACE_URI = URI.create("bsl-language-server:/default-workspace");
   private static final String DEFAULT_WORKSPACE_NAME = "default";
 
-  /**
-   * Добавляется ли на этом потоке workspace, подготовка которого идёт в фоне
-   * (см. {@link #addWorkspaceInBackground(WorkspaceFolder)}).
-   */
-  private static final ThreadLocal<Boolean> PREPARING_IN_BACKGROUND = ThreadLocal.withInitial(() -> false);
-
   private final ObjectProvider<ServerContext> serverContextObjectProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
   private final WorkspaceBeanScope workspaceScope;
@@ -123,29 +117,7 @@ public class ServerContextProvider {
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspaceInBackground(WorkspaceFolder workspaceFolder) {
-    PREPARING_IN_BACKGROUND.set(true);
-    try {
-      return addWorkspace(workspaceFolder);
-    } finally {
-      PREPARING_IN_BACKGROUND.remove();
-    }
-  }
-
-  /**
-   * Выполнить подготовку workspace: в фоне ({@link ServerContext#prepareInBackground(Runnable)}),
-   * если он добавляется на этом потоке через {@link #addWorkspaceInBackground(WorkspaceFolder)},
-   * иначе сразу на этом потоке.
-   *
-   * @param workspaceUri    нормализованный через {@link Absolute#uri(URI)} URI корня workspace
-   * @param preparationWork подготовка: чтение метаданных, регистрация типов конфигурации.
-   */
-  public void prepareWorkspace(URI workspaceUri, Runnable preparationWork) {
-    var serverContext = PREPARING_IN_BACKGROUND.get() ? contexts.get(workspaceUri) : null;
-    if (serverContext == null) {
-      preparationWork.run();
-      return;
-    }
-    serverContext.prepareInBackground(preparationWork);
+    return createServerContext(Absolute.uri(workspaceFolder.getUri()), workspaceFolder.getName());
   }
 
   /**
@@ -172,7 +144,10 @@ public class ServerContextProvider {
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
+    return createServerContext(workspaceUri, workspaceName);
+  }
 
+  private ServerContext createServerContext(URI workspaceUri, @Nullable String workspaceName) {
     if (contexts.containsKey(workspaceUri)) {
       LOGGER.debug("Workspace {} already exists", workspaceUri);
       return contexts.get(workspaceUri);

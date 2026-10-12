@@ -88,9 +88,6 @@ public class ServerContext {
   private static final Executor PREPARATION_EXECUTOR = (Runnable command) ->
     Thread.ofPlatform().name("workspace-preparation").daemon().start(command);
 
-  /** Контекст, который готовит текущий поток (см. {@link #prepareInBackground(Runnable)}). */
-  private static final ThreadLocal<@Nullable ServerContext> PREPARING = new ThreadLocal<>();
-
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
@@ -148,15 +145,15 @@ public class ServerContext {
   private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
 
   /**
-   * Подготовить рабочую область в фоне.
+   * Подготовить рабочую область в фоне: прочитать метаданные конфигурации, затем выполнить
+   * {@code preparationWork}.
    * <p>
-   * Пока метаданные конфигурации читаются, {@link #getConfiguration()} ждёт их только на потоке
-   * подготовки, а прочим отвечает пустой конфигурацией. Документы, заведённые до конца
-   * подготовки, пересчитываются по прочитанной конфигурации и зарегистрированным типам
-   * ({@link #refreshDocumentsCreatedWhilePreparing()}). Наполнение начинается не раньше, чем
-   * подготовка закончится.
+   * Пока метаданные читаются, {@link #getConfiguration()} отвечает пустой конфигурацией, не
+   * дожидаясь чтения. Документы, заведённые до конца подготовки, пересчитываются по прочитанной
+   * конфигурации и зарегистрированным типам ({@link #refreshDocumentsCreatedWhilePreparing()}).
+   * Наполнение начинается не раньше, чем подготовка закончится.
    *
-   * @param preparationWork подготовка: чтение метаданных, регистрация типов конфигурации.
+   * @param preparationWork работа подготовки после чтения метаданных: регистрация типов конфигурации.
    */
   public void prepareInBackground(Runnable preparationWork) {
     var future = new CompletableFuture<@Nullable Void>();
@@ -164,14 +161,15 @@ public class ServerContext {
     // бы, что её читают в фоне, и встал бы ждать чтения.
     preparation.set(future);
     PREPARATION_EXECUTOR.execute(() -> {
-      PREPARING.set(this);
       try {
+        // Метаданные читаются здесь, до работы подготовки: та берёт конфигурацию через
+        // getConfiguration(), а он, пока метаданных нет, отвечает пустой конфигурацией.
+        configurationMetadata.getOrCompute();
         preparationWork.run();
         refreshDocumentsCreatedWhilePreparing();
       } catch (RuntimeException e) {
         LOGGER.error("Workspace preparation failed: {}", workspaceUri, e);
       } finally {
-        PREPARING.remove();
         future.complete(null);
       }
     });
@@ -607,13 +605,13 @@ public class ServerContext {
   /**
    * Метаданные конфигурации рабочей области; читаются при первом обращении.
    * <p>
-   * Пока их читает подготовка, идущая в фоне ({@link #prepareInBackground(Runnable)}), всем,
-   * кроме неё самой, отвечает пустой конфигурацией, не дожидаясь чтения.
+   * Пока их читает подготовка, идущая в фоне ({@link #prepareInBackground(Runnable)}), отвечает
+   * пустой конфигурацией, не дожидаясь чтения.
    *
    * @return метаданные конфигурации; пустые, если конфигурации нет или она ещё читается.
    */
   public Solution getConfiguration() {
-    if (!configurationMetadata.isPresent() && isPreparing() && PREPARING.get() != this) {
+    if (!configurationMetadata.isPresent() && isPreparing()) {
       // На большой конфигурации чтение занимает десятки секунд. До его конца рабочая область
       // выглядит как каталог без конфигурации, а документы, заведённые за это время,
       // подготовка пересчитает сама.
