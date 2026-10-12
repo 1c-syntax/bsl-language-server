@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791794462035,
+  "lastUpdate": 1791800689107,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44609,6 +44609,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9304437840604938",
             "extra": "mean: 94.10076308250427 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d0c98724d9b3e0ece49a70f0be40112982d2b35b",
+          "message": "Merge pull request #4614 from 1c-syntax/fix/types-unparsed-module-only-while-populating\n\nТип без кода после наполнения рабочей области не делает расчёт неполным",
+          "timestamp": "2026-10-12T11:45:52+02:00",
+          "tree_id": "1cbe181f39213d7c09bdf3db971272a82456dfd5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d0c98724d9b3e0ece49a70f0be40112982d2b35b"
+        },
+        "date": 1791800673753,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.89601906140645,
+            "unit": "sec",
+            "range": "stddev: 0.9605399290072176",
+            "extra": "mean: 93.89601906140645 sec\nrounds: 3"
           }
         ]
       }
