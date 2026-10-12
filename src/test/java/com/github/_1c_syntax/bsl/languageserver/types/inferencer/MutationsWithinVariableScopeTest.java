@@ -50,6 +50,9 @@ class MutationsWithinVariableScopeTest extends AbstractServerContextAwareTest {
   @Autowired
   private FormExpressionInference formExpressionInference;
 
+  @Autowired
+  private PropertyMethodInference propertyMethodInference;
+
   @Test
   void mutatorsOfLocalVariableComeOnlyFromItsMethod() {
     // given
@@ -119,6 +122,30 @@ class MutationsWithinVariableScopeTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(ofFirst.keySet()).containsExactly(new Position(2, 2));
+  }
+
+  @Test
+  void outParameterCallsOfLocalVariableComeOnlyFromItsMethod() {
+    // given
+    var documentContext = moduleWith("""
+      Процедура Первая()
+        Значение = Неопределено;
+        Параметры = Новый Структура;
+        Параметры.Свойство("А", Значение);
+      КонецПроцедуры
+
+      Процедура Вторая()
+        Значение = Неопределено;
+        Параметры = Новый Структура;
+        Параметры.Свойство("Б", Значение);
+      КонецПроцедуры
+      """);
+
+    // when
+    var ofFirst = propertyMethodInference.outParameterCallsOf(localVariable(documentContext, "Первая", "Значение"));
+
+    // then
+    assertThat(ofFirst.keySet()).containsExactly(new Position(3, 12));
   }
 
   private DocumentContext moduleWith(String content) {
