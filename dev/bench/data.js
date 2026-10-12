@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791814992799,
+  "lastUpdate": 1791816158272,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44795,6 +44795,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.104237651870504",
             "extra": "mean: 95.20252235730489 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a06f7832dbafcf2ddfd282440a20d572e5d29de9",
+          "message": "Merge pull request #4606 from 1c-syntax/fix/lsp-requests-to-closed-document\n\nЗапрос к закрытому документу больше не падает NPE",
+          "timestamp": "2026-10-12T13:10:06+02:00",
+          "tree_id": "69fc2e15594dbeda36419eebef8e5a99acab414f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a06f7832dbafcf2ddfd282440a20d572e5d29de9"
+        },
+        "date": 1791816143420,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.56617824236552,
+            "unit": "sec",
+            "range": "stddev: 1.0348679884262288",
+            "extra": "mean: 95.56617824236552 sec\nrounds: 3"
           }
         ]
       }
