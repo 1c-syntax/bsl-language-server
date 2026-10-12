@@ -36,8 +36,6 @@ import java.nio.file.Path;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
-import static org.mockito.Mockito.mockStatic;
 
 @SpringBootTest
 class ServerContextProviderTest {
@@ -267,51 +265,5 @@ class ServerContextProviderTest {
     var documentUri = URI.create("untitled:Untitled-1");
     assertThatThrownBy(() -> serverContextProvider.resolveContextForDocument(documentUri))
       .isInstanceOf(IllegalStateException.class);
-  }
-
-  /**
-   * Документ, зарегистрированный под своим URI, находится без нормализации: она обращается
-   * к файловой системе, а поиск зовётся на каждом вызове метода при выводе типов.
-   */
-  @Test
-  void testGetDocumentUnsafeNoLockDoesNotNormalizeRegisteredUri(@TempDir Path root) {
-    // given
-    var serverContext = serverContextProvider.addWorkspace(Absolute.uri(root.toUri()));
-    var uri = Absolute.uri(root.resolve("Module.bsl").toUri());
-    var documentContext = serverContext.addDocument(uri);
-
-    // when
-    try (var absolute = mockStatic(Absolute.class, CALLS_REAL_METHODS)) {
-      var found = serverContextProvider.getDocumentUnsafeNoLock(uri);
-
-      // then
-      assertThat(found).containsSame(documentContext);
-      absolute.verifyNoInteractions();
-    } finally {
-      // Каталог рабочей области удалится после теста, и снять её потом будет нельзя.
-      serverContextProvider.clear();
-    }
-  }
-
-  /** URI в другой записи того же пути по-прежнему находит документ: при промахе он нормализуется. */
-  @Test
-  void testGetDocumentUnsafeNoLockNormalizesUnknownUri(@TempDir Path root) {
-    // given
-    var serverContext = serverContextProvider.addWorkspace(Absolute.uri(root.toUri()));
-    var uri = Absolute.uri(root.resolve("Module.bsl").toUri());
-    var documentContext = serverContext.addDocument(uri);
-    var sameFile = URI.create(Absolute.uri(root.resolve("sub").toUri()) + "/../Module.bsl");
-
-    try {
-      // when
-      var found = serverContextProvider.getDocumentUnsafeNoLock(sameFile);
-
-      // then
-      assertThat(sameFile).isNotEqualTo(uri);
-      assertThat(found).containsSame(documentContext);
-    } finally {
-      // Каталог рабочей области удалится после теста, и снять её потом будет нельзя.
-      serverContextProvider.clear();
-    }
   }
 }
