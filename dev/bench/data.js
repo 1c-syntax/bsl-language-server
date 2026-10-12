@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791819653397,
+  "lastUpdate": 1791820838975,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44888,6 +44888,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.5289798819126723",
             "extra": "mean: 95.58302005132039 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "23689778a9cd1b289aa82e323076caa091f036bc",
+          "message": "Merge pull request #4622 from 1c-syntax/perf/types-common-attribute-fields-by-owner\n\nРегистрация типов не перебирает все объекты конфигурации на каждую таблицу динамического списка",
+          "timestamp": "2026-10-12T13:31:14+02:00",
+          "tree_id": "a0b88b66e069e93eb29ca24d06ea74496514e4ef",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/23689778a9cd1b289aa82e323076caa091f036bc"
+        },
+        "date": 1791820811004,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.23421017328899,
+            "unit": "sec",
+            "range": "stddev: 0.25036057076678675",
+            "extra": "mean: 95.23421017328899 sec\nrounds: 3"
           }
         ]
       }
