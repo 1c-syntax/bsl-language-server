@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -89,7 +90,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     BSLParser.FileContext ast;
     try {
       ast = document.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return Optional.empty();
     }
     var nex = findInnermostNewExpression(ast, position);

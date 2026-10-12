@@ -440,9 +440,6 @@ public class ServerContext {
   /**
    * Перестроить документ. В качестве содержимого будут использоваться данные,
    * прочитанные из файла, с которым связан документ.
-   * <p>
-   * Если файл прочитать не удалось, состояние документа не меняется: документ без текста
-   * остаётся {@link DocumentState#WITHOUT_CONTENT}, и следующий вызов прочитает файл снова.
    *
    * @param documentContext документ, который необходимо перестроить.
    */
@@ -451,9 +448,8 @@ public class ServerContext {
       return;
     }
 
-    if (documentContext.rebuildFromFileSystem()) {
-      states.put(documentContext, DocumentState.WITH_CONTENT);
-    }
+    documentContext.rebuildFromFileSystem();
+    states.put(documentContext, DocumentState.WITH_CONTENT);
   }
 
   /**

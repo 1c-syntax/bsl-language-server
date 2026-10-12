@@ -77,7 +77,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 /**
@@ -208,27 +207,51 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return symbolTree.get();
   }
 
+  /**
+   * Текст документа.
+   *
+   * @return текст документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String getContent() {
-    requireNonNull(content);
+    if (content == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
     return content;
   }
 
+  /**
+   * Строки текста документа.
+   *
+   * @return строки текста документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  /**
+   * Дерево разбора документа.
+   *
+   * @return дерево разбора документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(tokenizer);
-    return tokenizer.getAst();
+    return requireTokenizer().getAst();
   }
 
+  /**
+   * Токены документа.
+   *
+   * @return токены документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(tokenizer);
-    return tokenizer.getTokens();
+    return requireTokenizer().getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
@@ -437,22 +460,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
     }
   }
 
-  /**
-   * Перестроить документ по содержимому его файла.
-   *
-   * @return {@code true}, если файл прочитан; {@code false}, если прочитать его не удалось
-   *     и документ не изменился.
-   */
-  protected boolean rebuildFromFileSystem() {
+  protected void rebuildFromFileSystem() {
     try {
       // Не Files.readString: тот бросает на байтах, недопустимых в UTF-8, и модуль в другой
       // кодировке не загрузился бы вовсе. Конструктор строки заменяет их символом-заменителем.
       var newContent = new String(Files.readAllBytes(Path.of(uri)), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
-      return true;
     } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
-      return false;
     }
   }
 
@@ -516,6 +531,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private String[] computeContentList() {
     return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
+  }
+
+  private BSLTokenizer requireTokenizer() {
+    if (tokenizer == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
+    return tokenizer;
   }
 
   private SymbolTree computeSymbolTree() {
