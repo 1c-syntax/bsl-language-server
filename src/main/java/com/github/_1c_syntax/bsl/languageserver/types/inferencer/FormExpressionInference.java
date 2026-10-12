@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.FormAttributeType
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -349,6 +350,7 @@ public class FormExpressionInference {
   /**
    * Присваивания вида элементу формы ({@code Элемент.Вид = ВидГруппыФормы.ОбычнаяГруппа})
    * по позиции их начала — то же, чем для полей структуры служат операторы-мутаторы.
+   * Берутся только присваивания из области видимости переменной.
    *
    * @param variable переменная-элемент формы.
    * @return присваивания по позициям, в порядке следования в документе.
@@ -359,10 +361,14 @@ public class FormExpressionInference {
     if (ast == null) {
       return Map.of();
     }
+    // Индекс ищет по имени: без отбора по области видимости одноимённые локальные
+    // переменные разных методов получали бы присваивания друг друга.
+    var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.AssignmentContext> assignments = new LinkedHashMap<>();
     for (var assignment : assignmentByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      if (assignedKindName(assignment) != null) {
-        assignments.put(Ranges.create(assignment).getStart(), assignment);
+      var start = Positions.create(assignment);
+      if (Ranges.containsPosition(scopeRange, start) && assignedKindName(assignment) != null) {
+        assignments.put(start, assignment);
       }
     }
     return assignments;
