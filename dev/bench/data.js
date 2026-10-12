@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791790951453,
+  "lastUpdate": 1791792132019,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44547,6 +44547,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4700495560234017",
             "extra": "mean: 93.93473513921101 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8753c47b5909885ac80e3bb0cc28efc6681a9d83",
+          "message": "Merge pull request #4616 from 1c-syntax/perf/bsl-files-listing-without-extra-syscalls\n\nПоиск модулей при наполнении не запрашивает атрибуты каждого файла",
+          "timestamp": "2026-10-12T09:34:28+02:00",
+          "tree_id": "f7b77521ac99dcaf3eab9f43f7023237360ddc9a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8753c47b5909885ac80e3bb0cc28efc6681a9d83"
+        },
+        "date": 1791792106658,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.89291501045227,
+            "unit": "sec",
+            "range": "stddev: 1.977484465169341",
+            "extra": "mean: 94.89291501045227 sec\nrounds: 3"
           }
         ]
       }
