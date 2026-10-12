@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -150,6 +151,16 @@ public class SymbolTypeIndex {
       // в котором чужой поток не находит типов уже посчитанного метода.
       return;
     }
+    var documentContext = event.getSource();
+    clear(documentContext.getUri());
+    reindexDeclared(documentContext);
+  }
+
+  // Символы документа построены заново, а методы нового дерева не равны прежним, если сменился
+  // их вид, — по старым записям их уже не найти. Порядок тот же, что у правки.
+  @Order(200)
+  @EventListener
+  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     reindexDeclared(documentContext);

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
@@ -55,6 +57,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @MockitoSpyBean(name = "computeConfigurationExecutor")
   private ExecutorService computeConfigurationExecutor;
+
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
 
   @Test
   void scriptVariantLanguageFollowsTheConfiguration() {
@@ -210,7 +215,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void documentOpenedWhilePreparingIsReparsedAfterPreparation() throws IOException {
+  void documentOpenedWhilePreparingIsReboundWithoutReparsing() throws IOException {
     // given
     var finishReading = startPreparationInBackground();
     context.prepareInBackground(context::getConfiguration);
@@ -218,15 +223,22 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     var documentContext = context.addDocument(Absolute.uri(file));
     context.openDocument(documentContext, Files.readString(file.toPath()), 1);
     var symbolTreeMeanwhile = documentContext.getSymbolTree();
+    var astMeanwhile = documentContext.getAst();
+    var moduleTypeRefMeanwhile = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
 
     // when
     finishReading.countDown();
     context.awaitPreparation();
 
     // then
+    assertThat(documentContext.getAst()).as("текст заново не разбирается").isSameAs(astMeanwhile);
     assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTreeMeanwhile);
+    assertThat(documentContext.getSymbolTree().getModule().getName()).isEqualTo("CommonModule.ПервыйОбщийМодуль");
     assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
     assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITH_CONTENT);
+    // Модуль зарегистрирован слушателем изменения привязки: правки текста не было.
+    assertThat(moduleTypeRefMeanwhile).isEmpty();
+    assertThat(globalScopeProvider.moduleTypeRefByUri(documentContext.getUri())).isPresent();
   }
 
   @Test

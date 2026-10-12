@@ -184,9 +184,10 @@ public class ServerContext {
   }
 
   /**
-   * Пересчитать документы, заведённые, пока шла подготовка рабочей области в фоне: их ссылка
-   * на объект метаданных и тип модуля могли быть посчитаны без конфигурации, а открытые к тому
-   * же разобраны без её типов. Документы, пересчитанные раньше, повторно не трогаются.
+   * Пересчитать привязку к метаданным конфигурации у документов, заведённых, пока шла
+   * подготовка рабочей области в фоне: их тип модуля и ссылка на объект метаданных могли быть
+   * посчитаны без конфигурации ({@link #rebindDocument(DocumentContext)}). Документы,
+   * пересчитанные раньше, повторно не трогаются.
    * <p>
    * Берёт блокировки документов по одной, поэтому вызывающий поток не должен держать
    * блокировку какого-либо документа.
@@ -195,15 +196,15 @@ public class ServerContext {
     if (createdWhilePreparing.isEmpty()) {
       return;
     }
-    // Разбор обращается к бинам рабочей области, а поток подготовки её не знает.
+    // Пересчёт и слушатели изменения привязки обращаются к бинам рабочей области, а поток
+    // подготовки её не знает.
     WorkspaceContextHolder.run(workspaceUri, () -> {
       for (var documentContext : List.copyOf(createdWhilePreparing)) {
         var lock = getDocumentLock(documentContext.getUri());
         lock.writeLock().lock();
         try {
           if (createdWhilePreparing.remove(documentContext)) {
-            refreshDocument(documentContext);
-            reparseOpenedDocument(documentContext);
+            rebindDocument(documentContext);
           }
         } finally {
           lock.writeLock().unlock();
@@ -574,22 +575,6 @@ public class ServerContext {
     return true;
   }
 
-  /**
-   * Разобрать открытый документ заново по его текущему тексту и версии: изменилось не
-   * содержимое, а то, на что опирается разбор. Документ, не открытый в редакторе либо без
-   * текста, не трогается. Блокировка документа на запись должна быть взята.
-   */
-  private void reparseOpenedDocument(DocumentContext documentContext) {
-    if (!isDocumentOpened(documentContext) || getDocumentState(documentContext) != DocumentState.WITH_CONTENT) {
-      return;
-    }
-    var content = documentContext.getContent();
-    var version = documentContext.getVersion();
-    // Разбор того же текста той же версии документ пропускает, поэтому сначала текст
-    // освобождается.
-    documentContext.clearSecondaryData();
-    rebuildDocument(documentContext, content, version);
-  }
 
   /**
    * Закрыть документ и очистить его содержимое.
@@ -683,7 +668,7 @@ public class ServerContext {
       // Подготовка могла закончиться, пока документ заводился, и пересчитать его уже некому.
       // Блокировка этого документа у вызывающего уже взята, а текста у нового документа нет.
       if (!isPreparing() && createdWhilePreparing.remove(documentContext)) {
-        refreshDocument(documentContext);
+        rebindDocument(documentContext);
       }
     }
 
@@ -691,17 +676,25 @@ public class ServerContext {
   }
 
   /**
-   * Пересчитать ссылку на объект метаданных и тип модуля документа по текущей конфигурации.
+   * Пересчитать привязку документа к метаданным текущей конфигурации — тип модуля, объект
+   * метаданных и ссылку на него ({@link DocumentContext#rebindToConfiguration()}) — и
+   * переложить документ в индексе по ссылке на объект метаданных.
+   * <p>
    * Блокировка документа на запись должна быть взята.
+   *
+   * @param documentContext документ.
+   * @return {@code true}, если дерево символов документа построено заново; {@code false}, если
+   *     документ уже снят с рабочей области или у него нет текста.
    */
-  private void refreshDocument(DocumentContext documentContext) {
+  boolean rebindDocument(DocumentContext documentContext) {
     var uri = documentContext.getUri();
     if (documents.get(uri) != documentContext) {
-      return;
+      return false;
     }
     removeDocumentMdoRefByUri(uri);
-    documentContext.clearConfigurationDependentData();
+    var rebuilt = documentContext.rebindToConfiguration();
     addMdoRefByUri(uri, documentContext);
+    return rebuilt;
   }
 
   private boolean isPreparing() {

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
@@ -118,6 +119,15 @@ public class ReferenceIndexFiller {
       return;
     }
     fill(documentContext);
+  }
+
+  // Вхождения документа записаны под его ссылкой на объект метаданных и типом модуля, а
+  // разрешение обращений опирается на них же. Порядок тот же, что у правки: после
+  // регистрации членов модуля.
+  @Order(200)
+  @EventListener
+  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+    fill(event.getSource());
   }
 
   /**

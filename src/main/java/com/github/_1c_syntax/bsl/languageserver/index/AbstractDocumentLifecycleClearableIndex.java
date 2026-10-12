@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -36,6 +37,8 @@ import java.net.URI;
  * Содержит общие {@code @EventListener}-обработчики, сбрасывающие индекс по URI на:
  * <ul>
  *   <li>изменение содержимого — {@link DocumentContextContentChangedEvent};</li>
+ *   <li>изменение привязки к метаданным конфигурации (дерево символов построено заново) —
+ *       {@link DocumentContextConfigurationBindingChangedEvent};</li>
  *   <li>освобождение вторичных данных (batch-анализ выбрасывает AST после каждого
  *       файла) — {@link ServerContextDocumentClearedEvent};</li>
  *   <li>закрытие документа — {@link ServerContextDocumentClosedEvent};</li>
@@ -56,6 +59,11 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
 
   @EventListener
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
+    clear(event.getSource().getUri());
+  }
+
+  @EventListener
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
     clear(event.getSource().getUri());
   }
 
