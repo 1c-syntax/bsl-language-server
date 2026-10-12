@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791746510512,
+  "lastUpdate": 1791790951453,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44516,6 +44516,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7292504956074493",
             "extra": "mean: 108.91057840983073 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5c11d99069e2fd6f5cb9efdedc4c59f5820a00fb",
+          "message": "Merge pull request #4612 from 1c-syntax/perf/document-lookup-without-canonicalization\n\nВывод типов не обращается к файловой системе при поиске документа",
+          "timestamp": "2026-10-12T08:26:22+02:00",
+          "tree_id": "600a0d217062ccf956ad4e6ea5a4ed89bcfc98b4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5c11d99069e2fd6f5cb9efdedc4c59f5820a00fb"
+        },
+        "date": 1791790922095,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.93473513921101,
+            "unit": "sec",
+            "range": "stddev: 1.4700495560234017",
+            "extra": "mean: 93.93473513921101 sec\nrounds: 3"
           }
         ]
       }
