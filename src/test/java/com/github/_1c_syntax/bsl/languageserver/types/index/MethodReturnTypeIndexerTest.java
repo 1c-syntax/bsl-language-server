@@ -276,6 +276,34 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void consumerOutdatedWhilePopulatingIsRecomputedAfterWaveThatChangesNothing() {
+    // given: потребитель посчитан на источнике, и документ его отпущен.
+    var other = document("file:///other.bsl");
+    var otherMethod = method(other, false);
+    when(other.getSymbolTree().getMethods()).thenReturn(List.of(otherMethod));
+    var serverContext = serverContextOf(source, consumer, other);
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), false));
+    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
+
+    // given: значение источника поменялось после — разнос до отпущенного потребителя не дошёл.
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), false));
+
+    // given: отложен посторонний метод, и его пересчёт ничего не меняет.
+    when(inferencer.computeReturnTypes(otherMethod)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+    indexer.computeIfAbsent(otherMethod, () -> new ComputedReturnTypes(STRING, Set.of(), true));
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: первая волна не изменила ни одного значения, но потребитель устарел ещё до неё и
+    // пересчитан по новому значению источника.
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
   void emptyValuedFunctionIsRecomputedAfterWorkspaceIsPopulated() {
     // given: при разборе значение функции вышло пустым, и неполным расчёт себя не считает:
     // вызов вёл в модуль, ещё не зарегистрированный в рабочей области, поэтому не разрешился

@@ -584,18 +584,23 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       progressReporter.setSize(planned);
       var changesBefore = valueChanges.get();
       resolveAll(serverContext, roots, progressReporter);
-      if (valueChanges.get() == changesBefore) {
-        // Волна не изменила ни одного значения: состояние индекса то же, что на её начало,
-        // и следующая посчитала бы те же методы с тем же итогом. Отложенные снова остаются
-        // с тем, что посчитано.
-        LOGGER.debug("Волна {}: пересчитано методов {}, ни одно значение не изменилось — проход окончен",
-          pass + 1, roots.size());
-        pending.clear();
-        break;
-      }
       // План волны строится по связям, известным на её начало, а вскрываются они её же
       // расчётом: метод, чья зависимость обогатилась после него, отложить было некому.
       var outdated = outdated();
+      if (valueChanges.get() == changesBefore) {
+        // Волна не изменила ни одного значения: её методы следующая посчитала бы с тем же
+        // итогом, и снова отложенные среди них остаются с тем, что посчитано. Устаревшим при
+        // этом может оказаться метод вне волны: зависимость поменялась после его расчёта ещё
+        // при наполнении, а разнос его не пересчитал — документ был отпущен, — и до первой
+        // волны устаревших никто не искал.
+        roots.forEach(outdated::remove);
+        pending.clear();
+        if (outdated.isEmpty()) {
+          LOGGER.debug("Волна {}: пересчитано методов {}, ни одно значение не изменилось — проход окончен",
+            pass + 1, roots.size());
+          break;
+        }
+      }
       pending.addAll(outdated);
       LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}, из них устаревших {}",
         pass + 1, roots.size(), pending.size(), outdated.size());
