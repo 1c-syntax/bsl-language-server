@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791792132019,
+  "lastUpdate": 1791794462035,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44578,6 +44578,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.977484465169341",
             "extra": "mean: 94.89291501045227 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d7f1889622c5862b0ca00360b628022cc9ebc556",
+          "message": "Merge pull request #4615 from 1c-syntax/perf/types-generic-family-index\n\nПоиск generic-типа по семейству не перебирает все имена типов",
+          "timestamp": "2026-10-12T09:35:58+02:00",
+          "tree_id": "a27ac3985b485abe4386a88488627947a3589e28",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d7f1889622c5862b0ca00360b628022cc9ebc556"
+        },
+        "date": 1791794435352,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.10076308250427,
+            "unit": "sec",
+            "range": "stddev: 1.9304437840604938",
+            "extra": "mean: 94.10076308250427 sec\nrounds: 3"
           }
         ]
       }
