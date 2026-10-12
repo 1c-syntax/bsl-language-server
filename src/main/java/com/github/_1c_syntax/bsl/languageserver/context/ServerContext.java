@@ -65,6 +65,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -139,7 +140,8 @@ public class ServerContext {
    * Подготовка рабочей области, идущая в фоне (см. {@link #prepareInBackground(Runnable)});
    * завершена, если подготовка шла синхронно.
    */
-  private volatile CompletableFuture<?> preparation = CompletableFuture.completedFuture(null);
+  private final AtomicReference<CompletableFuture<?>> preparation
+    = new AtomicReference<>(CompletableFuture.completedFuture(null));
 
   /** Документы, заведённые, пока шла подготовка рабочей области в фоне. */
   private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
@@ -159,7 +161,7 @@ public class ServerContext {
     var future = new CompletableFuture<@Nullable Void>();
     // Запоминается до запуска: иначе поток, спросивший конфигурацию в самом начале, не узнал
     // бы, что её читают в фоне, и встал бы ждать чтения.
-    preparation = future;
+    preparation.set(future);
     PREPARATION_EXECUTOR.execute(() -> {
       PREPARING.set(this);
       try {
@@ -179,7 +181,7 @@ public class ServerContext {
    * зарегистрированы.
    */
   public void awaitPreparation() {
-    preparation.join();
+    preparation.get().join();
   }
 
   /**
@@ -684,7 +686,7 @@ public class ServerContext {
   }
 
   private boolean isPreparing() {
-    return !preparation.isDone();
+    return !preparation.get().isDone();
   }
 
   private Solution computeConfigurationMetadata() {

@@ -199,24 +199,16 @@ public class EventPublisherAspect {
     "Pointcuts.isServerContextProvider() && Pointcuts.isAddWorkspaceCall() && args(workspaceUri, *)"
   )
   public void workspaceAdded(JoinPoint joinPoint, URI workspaceUri) {
-    var source = joinPoint.getThis();
+    var serverContextProvider = (ServerContextProvider) joinPoint.getThis();
     // Устанавливаем workspace-контекст перед публикацией события, чтобы все слушатели
     // WorkspaceAddedEvent автоматически получили корректный WorkspaceContextHolder.
     // К моменту вызова этого advice try-with-resources внутри addWorkspace() уже закрыт
     // и ThreadLocal сброшен — поэтому явно оборачиваем здесь, а не полагаемся на вызывающий код.
-    Runnable publication = () -> WorkspaceContextHolder.run(workspaceUri, () ->
-      publishEvent(new WorkspaceAddedEvent(source, workspaceUri))
-    );
-    var serverContext = ServerContextProvider.isPreparingInBackground()
-      ? ((ServerContextProvider) source).getAllContexts().get(workspaceUri)
-      : null;
-    if (serverContext == null) {
-      publication.run();
-      return;
-    }
     // Слушатели читают метаданные конфигурации и регистрируют её типы — на большой
-    // конфигурации это десятки секунд, и вызывающий поток всё это время стоял бы.
-    serverContext.prepareInBackground(publication);
+    // конфигурации это десятки секунд; ждать ли их вызывающему потоку, решает провайдер.
+    serverContextProvider.prepareWorkspace(workspaceUri, () -> WorkspaceContextHolder.run(workspaceUri, () ->
+      publishEvent(new WorkspaceAddedEvent(serverContextProvider, workspaceUri))
+    ));
   }
 
   @Before("Pointcuts.isServerContextProvider() && Pointcuts.isRemoveWorkspaceCall() && args(workspaceFolder)")

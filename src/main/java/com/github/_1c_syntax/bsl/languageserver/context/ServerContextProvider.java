@@ -132,12 +132,20 @@ public class ServerContextProvider {
   }
 
   /**
-   * Добавляется ли на текущем потоке workspace, подготовку которого надо выполнить в фоне.
+   * Выполнить подготовку workspace: в фоне ({@link ServerContext#prepareInBackground(Runnable)}),
+   * если он добавляется на этом потоке через {@link #addWorkspaceInBackground(WorkspaceFolder)},
+   * иначе сразу на этом потоке.
    *
-   * @return {@code true} внутри {@link #addWorkspaceInBackground(WorkspaceFolder)}.
+   * @param workspaceUri    нормализованный через {@link Absolute#uri(URI)} URI корня workspace
+   * @param preparationWork подготовка: чтение метаданных, регистрация типов конфигурации.
    */
-  public static boolean isPreparingInBackground() {
-    return PREPARING_IN_BACKGROUND.get();
+  public void prepareWorkspace(URI workspaceUri, Runnable preparationWork) {
+    var serverContext = PREPARING_IN_BACKGROUND.get() ? contexts.get(workspaceUri) : null;
+    if (serverContext == null) {
+      preparationWork.run();
+      return;
+    }
+    serverContext.prepareInBackground(preparationWork);
   }
 
   /**
