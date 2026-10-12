@@ -152,6 +152,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Отметка часов на момент, когда в документе в последний раз менялось чьё-то значение. */
   private final Map<URI, Long> changedAt = new ConcurrentHashMap<>();
 
+  /** Сколько раз менялось чьё-либо значение: волна, не изменившая ничего, повторилась бы дословно. */
+  private final AtomicLong valueChanges = new AtomicLong();
+
   /** Сколько раз пришлось перечитать документ за общий проход — для отладочного счёта. */
   private final AtomicInteger rebuilt = new AtomicInteger();
 
@@ -470,6 +473,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // делать нельзя — лишние пересчёты вскрывают немонотонность самого пересчёта, и
       // воспроизводимость падает вместо того, чтобы вырасти (замеры в #4480).
       changedAt.merge(method.getOwner().getUri(), startedAt, Math::max);
+      valueChanges.incrementAndGet();
     }
     return valueChanged;
   }
@@ -578,10 +582,25 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // по чему идёт отсчёт, — документы, иначе числитель убегает за знаменатель.
       planned += documentsOf(roots);
       progressReporter.setSize(planned);
+      var changesBefore = valueChanges.get();
       resolveAll(serverContext, roots, progressReporter);
       // План волны строится по связям, известным на её начало, а вскрываются они её же
       // расчётом: метод, чья зависимость обогатилась после него, отложить было некому.
       var outdated = outdated();
+      if (valueChanges.get() == changesBefore) {
+        // Волна не изменила ни одного значения: её методы следующая посчитала бы с тем же
+        // итогом, и снова отложенные среди них остаются с тем, что посчитано. Устаревшим при
+        // этом может оказаться метод вне волны: зависимость поменялась после его расчёта ещё
+        // при наполнении, а разнос его не пересчитал — документ был отпущен, — и до первой
+        // волны устаревших никто не искал.
+        roots.forEach(outdated::remove);
+        pending.clear();
+        if (outdated.isEmpty()) {
+          LOGGER.debug("Волна {}: пересчитано методов {}, ни одно значение не изменилось — проход окончен",
+            pass + 1, roots.size());
+          break;
+        }
+      }
       pending.addAll(outdated);
       LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}, из них устаревших {}",
         pass + 1, roots.size(), pending.size(), outdated.size());

@@ -57,6 +57,7 @@ import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -255,6 +256,51 @@ class MethodReturnTypeIndexerTest {
 
     // then: отложенный метод пересчитан на месте — документ разобран, догружать нечего.
     verify(inferencer).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void passStopsOnceWaveChangesNothing() {
+    // given: расчёт метода неполон каждый раз, а значение у него одно и то же — неполнота
+    // не временная, и пересчёт её не снимет.
+    when(inferencer.computeReturnTypes(consumerMethod))
+      .thenReturn(new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    clearInvocations(inferencer);
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
+
+    // then: волна не изменила ни одного значения, и следующих нет — они посчитали бы то же.
+    verify(inferencer, times(1)).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void consumerOutdatedWhilePopulatingIsRecomputedAfterWaveThatChangesNothing() {
+    // given: потребитель посчитан на источнике, и документ его отпущен.
+    var other = document("file:///other.bsl");
+    var otherMethod = method(other, false);
+    when(other.getSymbolTree().getMethods()).thenReturn(List.of(otherMethod));
+    var serverContext = serverContextOf(source, consumer, other);
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), false));
+    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
+
+    // given: значение источника поменялось после — разнос до отпущенного потребителя не дошёл.
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), false));
+
+    // given: отложен посторонний метод, и его пересчёт ничего не меняет.
+    when(inferencer.computeReturnTypes(otherMethod)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+    indexer.computeIfAbsent(otherMethod, () -> new ComputedReturnTypes(STRING, Set.of(), true));
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: первая волна не изменила ни одного значения, но потребитель устарел ещё до неё и
+    // пересчитан по новому значению источника.
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
   }
 
   @Test
