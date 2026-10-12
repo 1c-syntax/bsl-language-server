@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791812599998,
+  "lastUpdate": 1791813792439,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44733,6 +44733,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6054921928165466",
             "extra": "mean: 95.873783826828 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "65983624b17b008b5e7995692f5fad76aef40a69",
+          "message": "Merge pull request #4620 from 1c-syntax/perf/types-global-context-members-cache\n\nНаполнение контекста не пересобирает члены глобального контекста на каждый модуль",
+          "timestamp": "2026-10-12T12:26:06+02:00",
+          "tree_id": "e9016d84f735f9de88a6b4990d8f9445399f26d1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/65983624b17b008b5e7995692f5fad76aef40a69"
+        },
+        "date": 1791813766957,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.58521699905396,
+            "unit": "sec",
+            "range": "stddev: 1.9462611962140082",
+            "extra": "mean: 95.58521699905396 sec\nrounds: 3"
           }
         ]
       }
