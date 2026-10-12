@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791813792439,
+  "lastUpdate": 1791814992799,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -44764,6 +44764,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9462611962140082",
             "extra": "mean: 95.58521699905396 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a97b7178e4d5bcd7784bce0bd76e9c49ba9aa280",
+          "message": "Merge pull request #4625 from 1c-syntax/fix/context-failed-file-read-keeps-document-without-content\n\nДокумент, файл которого не прочитался, не считается прочитанным и читается снова при следующем обращении",
+          "timestamp": "2026-10-12T13:07:18+02:00",
+          "tree_id": "b742a675cbcdbeca00c8f92534774a8f8ef6d8be",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a97b7178e4d5bcd7784bce0bd76e9c49ba9aa280"
+        },
+        "date": 1791814966209,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.20252235730489,
+            "unit": "sec",
+            "range": "stddev: 2.104237651870504",
+            "extra": "mean: 95.20252235730489 sec\nrounds: 3"
           }
         ]
       }
