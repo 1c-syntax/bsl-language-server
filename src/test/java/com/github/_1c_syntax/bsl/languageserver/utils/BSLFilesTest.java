@@ -22,14 +22,19 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /** Интеграционные тесты {@link BSLFiles#listBslFiles} на временной файловой системе. */
@@ -107,6 +112,31 @@ class BSLFilesTest {
 
     // then
     assertThat(found).isEmpty();
+  }
+
+  /** Нечитаемый каталог пропускается, а модули рядом с ним находятся. */
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void listBslFilesSkipsUnreadableDirectory(@TempDir Path projectRoot) throws IOException {
+    // given
+    Path before = createBslFile(projectRoot, "a/Module.bsl");
+    Path after = createBslFile(projectRoot, "z/Module.bsl");
+    createBslFile(projectRoot, "locked/Hidden.bsl");
+    var locked = projectRoot.resolve("locked");
+    Files.setPosixFilePermissions(locked, Set.of());
+    try {
+      // root читает каталог и без прав — тогда проверять нечего
+      assumeFalse(Files.isReadable(locked), "каталог читается и без прав");
+
+      // when
+      var found = BSLFiles.listBslFiles(projectRoot, null);
+
+      // then
+      assertThat(found).containsExactlyInAnyOrder(before.toFile(), after.toFile());
+    } finally {
+      // иначе @TempDir не сможет удалить каталог
+      Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("rwx------"));
+    }
   }
 
   /** Каталог с расширением модуля в имени — не модуль. */

@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -60,44 +59,56 @@ public class BSLFiles {
    * @return найденные файлы; пустая коллекция, если ничего не найдено
    */
   public static Collection<File> listBslFiles(Path srcDir, @Nullable List<String> excludePaths) {
-    var exclusions = PathExclusionUtils.filters(excludePaths);
-    var files = new ArrayList<File>();
+    var collector = new BslFileCollector(srcDir, PathExclusionUtils.filters(excludePaths));
     try {
       // Атрибуты файла приходят из самого обхода. Фильтр FileUtils.listFiles спрашивал их
       // у файловой системы заново, на каждый файл и до проверки расширения, — а в выгрузке
       // конфигурации модулей лишь малая часть файлов.
-      Files.walkFileTree(srcDir, new SimpleFileVisitor<>() {
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
-          if (!dir.equals(srcDir) && !accepts(exclusions.directoryFilter(), dir, attributes)) {
-            return FileVisitResult.SKIP_SUBTREE;
-          }
-          return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
-          if (accepts(BSL_FILE_FILTER, file, attributes)
-            && isRegularFile(file, attributes)
-            && accepts(exclusions.fileFilter(), file, attributes)) {
-            files.add(file.toFile());
-          }
-          return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-          // Корня нет либо файл удалён посреди обхода — искать там нечего.
-          if (exc instanceof NoSuchFileException) {
-            return FileVisitResult.CONTINUE;
-          }
-          throw exc;
-        }
-      });
+      Files.walkFileTree(srcDir, collector);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return files;
+    return collector.files;
+  }
+
+  /**
+   * Обход каталога, собирающий BSL/OS файлы и не заходящий в исключённые каталоги.
+   */
+  private static final class BslFileCollector extends SimpleFileVisitor<Path> {
+
+    private final Path root;
+    private final PathExclusionUtils.ExclusionFilters exclusions;
+    private final List<File> files = new ArrayList<>();
+
+    private BslFileCollector(Path root, PathExclusionUtils.ExclusionFilters exclusions) {
+      this.root = root;
+      this.exclusions = exclusions;
+    }
+
+    @Override
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
+      if (!dir.equals(root) && !accepts(exclusions.directoryFilter(), dir, attributes)) {
+        return FileVisitResult.SKIP_SUBTREE;
+      }
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+      if (accepts(BSL_FILE_FILTER, file, attributes)
+        && isRegularFile(file, attributes)
+        && accepts(exclusions.fileFilter(), file, attributes)) {
+        files.add(file.toFile());
+      }
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFileFailed(Path file, IOException exc) {
+      // Корня нет, файл удалён посреди обхода либо каталог не читается — модулей там не
+      // найти, а остальные искать надо. Так же поступал и FileUtils.listFiles.
+      return FileVisitResult.CONTINUE;
+    }
   }
 
   private static boolean accepts(IOFileFilter filter, Path path, BasicFileAttributes attributes) {
@@ -107,6 +118,6 @@ public class BSLFiles {
   private static boolean isRegularFile(Path file, BasicFileAttributes attributes) {
     // Обход по ссылкам не идёт, и атрибуты ссылки — её собственные; на что она указывает,
     // приходится спросить отдельно.
-    return attributes.isRegularFile() || attributes.isSymbolicLink() && Files.isRegularFile(file);
+    return attributes.isRegularFile() || (attributes.isSymbolicLink() && Files.isRegularFile(file));
   }
 }
