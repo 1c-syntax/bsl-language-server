@@ -1290,8 +1290,11 @@ public class TypeRegistry {
   public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration, FileType fileType) {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.put(ref, new UserType(ref, declaration));
-    // Объявление пользовательского типа — символ-источник его члена в глобальном контексте.
-    globalContextEpoch.incrementAndGet();
+    // Объявление пользовательского типа — символ-источник его члена в глобальном контексте, если
+    // тип — глобальное свойство. Пометка глобальным свойством сбрасывает memo сама.
+    if (isGlobalPropertyType(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
     addAlias(qualifiedName, ref);
     registerFileType(ref, fileType);
     return ref;
@@ -1500,7 +1503,9 @@ public class TypeRegistry {
     types.remove(ref);
     memberSources.values().forEach(byRef -> byRef.remove(ref));
     membersEpoch.incrementAndGet();
-    globalContextEpoch.incrementAndGet();
+    if (isGlobalPropertyType(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
     visibleTypes.values().forEach(typed -> typed.remove(ref));
     var key = qualifiedName.toLowerCase(Locale.ROOT);
     aliasIndex.remove(key);

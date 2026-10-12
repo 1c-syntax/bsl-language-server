@@ -157,6 +157,19 @@ class GlobalContextMembersCacheTest {
   }
 
   @Test
+  void userTypeThatIsNotGlobalPropertyDoesNotResetGlobalContextMembers() {
+    // given
+    var before = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.OS);
+
+    // when: класс OneScript, видимый только через «Новый»
+    typeRegistry.registerUserType("МойКласс", mock(SourceDefinedSymbol.class), FileType.OS);
+    typeRegistry.unregisterUserType("МойКласс");
+
+    // then
+    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.OS)).isSameAs(before);
+  }
+
+  @Test
   void concurrentReadersAfterResetShareOneBuild() throws Exception {
     // given: memo сброшен, и за членами разом пришли несколько потоков
     typeRegistry.invalidateMembers(TypeRegistry.GLOBAL_CONTEXT);
