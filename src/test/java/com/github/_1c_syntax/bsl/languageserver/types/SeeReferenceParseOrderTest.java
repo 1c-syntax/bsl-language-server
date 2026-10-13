@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -35,9 +37,12 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Значение функции, параметр которой описан ссылкой {@code см.} на параметр метода чужого
@@ -107,6 +112,44 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
     // Объявленное значение ссылается на функцию своего модуля, а уже её описание — на модуль,
     // до которого очередь ещё не дошла.
     assertThat(returnTypes(List.of("Поставщик", "Переопределяемый"), "РезультатЧерезЛокальнуюВызов"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void declaredValueRebuiltAfterPopulationDoesNotDependOnRebuildOrder() {
+    // given: при наполнении интерфейс и поставщик разобраны раньше переопределяемого модуля,
+    // и объявленное значение функции интерфейса посчитано без него: в поле — одно
+    // `Неопределено`.
+    initServerContext(FIXTURE, false);
+    context.getConfiguration();
+    provider.tryRegister();
+    for (var module : List.of("Интерфейс", "Поставщик", "Переопределяемый")) {
+      var documentContext = context.addDocument(moduleUri(module));
+      context.rebuildDocument(documentContext);
+      context.tryClearDocument(documentContext);
+    }
+
+    // when: пересборка после наполнения доходит до поставщика раньше, чем до интерфейса, на
+    // функцию которого он ссылается.
+    var rebuildOrder = new LinkedHashMap<URI, DocumentContext>();
+    for (var module : List.of("Поставщик", "Интерфейс", "Переопределяемый")) {
+      rebuildOrder.put(moduleUri(module), context.getDocument(moduleUri(module)));
+    }
+    var populated = mock(ServerContext.class);
+    when(populated.getDocuments()).thenReturn(rebuildOrder);
+    symbolTypeIndex.handleServerContextPopulated(new ServerContextPopulatedEvent(populated));
+
+    // then: поле развёрнуто до конца. Возьми поставщик значение интерфейса, оставшееся с
+    // наполнения, — итог решал бы порядок обхода документов.
+    var method = context.getDocument(moduleUri("Поставщик")).getSymbolTree()
+      .getMethodSymbol("ДанныеЧерезИнтерфейс").orElseThrow();
+    var declared = symbolTypeIndex.getDeclaredReturnTypes(method);
+    var structure = declared.refs().stream()
+      .filter(ref -> "Структура".equals(ref.qualifiedName()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(declared.getLocalFields(structure).get("Результат").types().refs())
+      .extracting(TypeRef::qualifiedName)
       .containsExactlyInAnyOrder("Неопределено", "Структура");
   }
 

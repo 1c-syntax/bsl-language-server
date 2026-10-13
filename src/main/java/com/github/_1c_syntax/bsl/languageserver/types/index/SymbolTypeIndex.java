@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс декларативных типов символов.
@@ -110,6 +111,12 @@ public class SymbolTypeIndex {
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Документы, объявленные типы которых пересобраны идущей сейчас пересборкой после наполнения;
+   * {@code null}, когда пересборки нет. У остальных запомненное значение ещё с наполнения.
+   */
+  private final AtomicReference<@Nullable Set<URI>> rebuiltAfterPopulation = new AtomicReference<>();
 
   /**
    * Типы возвращаемого значения, выведенные по телу метода. Пишет их
@@ -166,6 +173,16 @@ public class SymbolTypeIndex {
    * <p>
    * Разбор документов для этого не нужен: объявленные типы читаются по дереву символов,
    * которое переживает освобождение вторичных данных.
+   * <p>
+   * Ссылка {@code см.} на функцию разворачивается через запомненное значение цели, а у
+   * документа, до которого пересборка ещё не дошла, оно с наполнения — и могло посчитаться,
+   * пока не был разобран модуль, на который ссылается уже сама цель. Взять такое значение —
+   * снова поставить итог в зависимость от порядка, теперь от порядка обхода. Поэтому, пока
+   * идёт пересборка, запомненным пользуются только у пересобранных документов, а цель в
+   * остальных разворачивается из описания заново.
+   * <p>
+   * Пересборки идут по одной: отметка пересобранных у индекса одна, и пересборка, закончившая
+   * раньше, сняла бы её посреди чужой — та дальше брала бы значения, оставшиеся с наполнения.
    *
    * @param event событие наполнения рабочей области.
    */
@@ -173,8 +190,31 @@ public class SymbolTypeIndex {
   // методов, поэтому пересобрать их надо до него.
   @Order(100)
   @EventListener
-  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
-    event.getSource().getDocuments().values().forEach(this::reindexDeclared);
+  public synchronized void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    Set<URI> rebuilt = ConcurrentHashMap.newKeySet();
+    rebuiltAfterPopulation.set(rebuilt);
+    try {
+      event.getSource().getDocuments().values().forEach((DocumentContext documentContext) -> {
+        // Отметка до пересборки: она первым делом стирает прежние записи документа, и всё,
+        // что потом окажется в запомненном у его методов, уже свежее.
+        rebuilt.add(documentContext.getUri());
+        reindexDeclared(documentContext);
+      });
+    } finally {
+      rebuiltAfterPopulation.set(null);
+    }
+  }
+
+  /**
+   * Можно ли развернуть ссылку на функцию через её запомненное объявленное значение.
+   *
+   * @param function функция-цель ссылки.
+   * @return {@code false}, если идёт пересборка после наполнения, а документ функции ещё не
+   *     пересобран.
+   */
+  private boolean isDeclaredUpToDate(MethodSymbol function) {
+    var rebuilt = rebuiltAfterPopulation.get();
+    return rebuilt == null || rebuilt.contains(function.getOwner().getUri());
   }
 
   /**
@@ -929,14 +969,15 @@ public class SymbolTypeIndex {
    * Возвращаемый тип локальной функции, на которую указывает {@code см.}-ссылка.
    * <p>
    * Предпочитаем уже проиндексированный тип (в т.ч. с раскрытыми цепочками см.);
-   * если цель ещё не проиндексирована (вызов из самой индексации) — резолвим
+   * если цель ещё не проиндексирована (вызов из самой индексации) либо её значение
+   * осталось с наполнения, а пересборка до неё ещё не дошла, — резолвим
    * напрямую из описания. {@code visited} скоупится на текущий путь обхода:
    * после возврата из ветки функция убирается, иначе вторая (нециклическая)
    * ссылка на неё из соседнего поля/элемента ложно считалась бы циклом.
    */
   private TypeSet resolveLocalFunctionTypes(MethodSymbol localFunction, DocumentContext owner,
                                             FileType fileType, Set<MethodSymbol> visited) {
-    var cached = getDeclaredReturnTypes(localFunction);
+    var cached = isDeclaredUpToDate(localFunction) ? getDeclaredReturnTypes(localFunction) : TypeSet.EMPTY;
     if (!cached.isEmpty()) {
       return cached;
     }
