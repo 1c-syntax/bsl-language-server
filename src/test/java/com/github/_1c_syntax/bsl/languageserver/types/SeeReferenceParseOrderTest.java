@@ -154,6 +154,16 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void callerSeesFieldOfDeclaredValueReferringThroughParsedModule() {
+    // Объявленное значение ссылается на функцию модуля, который уже разобран, а в описании
+    // той функции поле ссылается дальше — на модуль, до которого очередь ещё не дошла. Сама
+    // ссылка разбора не ждёт, и без спуска в описание цели вызывающая функция осталась бы с
+    // одним `Неопределено` в поле — а что из двух выйдет, решал бы порядок наполнения.
+    assertThat(returnTypes(List.of("Интерфейс", "Поставщик", "Переопределяемый"), "РезультатИзДанныхЧерезИнтерфейс"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
   void parsedModuleWithoutOwnMembersDoesNotAwaitParsing() {
     // given: модуль объявлен из метаданных, но его документ ещё не разобран.
     initServerContext(FIXTURE, false);
