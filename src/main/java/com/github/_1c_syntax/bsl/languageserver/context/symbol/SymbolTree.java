@@ -33,17 +33,13 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель -&gt; дети
@@ -68,8 +64,13 @@ public class SymbolTree {
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
 
-  @Getter(lazy = true)
-  Map<String, MethodSymbol> methodsByName = createMethodsByName();
+  /**
+   * Методы, упорядоченные по имени без учёта регистра; из одноимённых — первый объявленный.
+   * Массив, а не дерево поиска: деревьев символов на большой конфигурации десятки тысяч,
+   * и узел на каждый метод обходился бы в десятки мегабайт.
+   */
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  MethodSymbol[] methodsByName = createMethodsByName();
 
   /**
    * Конструктор OneScript-класса ({@code ПриСозданииОбъекта} / {@code OnObjectCreate}),
@@ -84,23 +85,42 @@ public class SymbolTree {
   @Getter(lazy = true)
   List<VariableSymbol> variables = createVariables();
 
-  // TODO: value = AccessLevel.PRIVATE после окончания тестирования производительности
-  @Getter(lazy = true)
-  Map<SourceDefinedSymbol, Map<String, VariableSymbol>> variablesByName = createVariablesByName();
+  /**
+   * Переменные по области объявления: в каждой области упорядочены по имени без учёта
+   * регистра, из одноимённых — первая объявленная.
+   */
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  Map<SourceDefinedSymbol, VariableSymbol[]> variablesByScope = createVariablesByScope();
 
   /**
    * Индекс символов по строке их {@code selectionRange} (диапазона имени в
    * объявлении) для быстрого поиска «символ, чьё имя стоит в позиции».
    * Заменяет линейный скан {@link #getChildrenFlat()} в
-   * {@code SourceDefinedSymbolDeclarationReferenceFinder} на O(1)-lookup по
+   * {@code SourceDefinedSymbolDeclarationReferenceFinder} на двоичный поиск по
    * строке. На одной строке может быть несколько объявлений (разные колонки) —
-   * поэтому значение это список, разводимый по колонкам через
-   * {@link Ranges#containsPosition}. Порядок в бакете — как в
+   * их разводит {@link Ranges#containsPosition}. Внутри строки порядок — как в
    * {@code getChildrenFlat()} (pre-order DFS), чтобы сохранить tie-break
    * {@code findFirst} прежнего скана.
    */
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
-  Map<Integer, List<SourceDefinedSymbol>> symbolsBySelectionLine = createSymbolsBySelectionLine();
+  SelectionLines symbolsBySelectionLine = createSymbolsBySelectionLine();
+
+  /**
+   * Символы, упорядоченные по строке {@code selectionRange}: {@code symbols[i]} объявлен на
+   * строке {@code lines[i]}. Два массива вместо карты «строка → список»: на большой
+   * конфигурации у деревьев миллионы символов, а карта платила за каждый узлом, ключом и списком.
+   */
+  private static final class SelectionLines {
+    /** Строки, по возрастанию. */
+    private final int[] lines;
+    /** Символы тех же позиций. */
+    private final SourceDefinedSymbol[] symbols;
+
+    private SelectionLines(int[] lines, SourceDefinedSymbol[] symbols) {
+      this.lines = lines;
+      this.symbols = symbols;
+    }
+  }
 
   /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
@@ -186,7 +206,7 @@ public class SymbolTree {
    * @return MethodSymbol, если он был найден в дереве символов.
    */
   public Optional<MethodSymbol> getMethodSymbol(String methodName) {
-    return Optional.ofNullable(getMethodsByName().get(methodName));
+    return findByName(getMethodsByName(), methodName);
   }
 
   /**
@@ -214,7 +234,7 @@ public class SymbolTree {
     Range variableNameRange = Ranges.create(varNameNode);
 
     // variableNameRange == selectionRange переменной, поэтому ищем через
-    // O(1)-индекс селекшн-рейнджей, а не линейным сканом getVariables() с
+    // индекс селекшн-рейнджей, а не линейным сканом getVariables() с
     // Range.equals на каждом.
     // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
     // объявления, а произвольный/ошибочный контекст, старт которого может
@@ -235,9 +255,20 @@ public class SymbolTree {
    * @return VariableSymbol, если он был найден в дереве символов.
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
-    return Optional.ofNullable(
-      getVariablesByName().getOrDefault(scopeSymbol, Collections.emptyMap()).get(variableName)
-    );
+    var inScope = getVariablesByScope().get(scopeSymbol);
+    return inScope == null ? Optional.empty() : findByName(inScope, variableName);
+  }
+
+  /**
+   * Переменные, объявленные в области {@code scopeSymbol}: по одной на имя без учёта регистра
+   * (первая объявленная), упорядочены по имени.
+   *
+   * @param scopeSymbol область объявления — {@link ModuleSymbol} или {@link MethodSymbol}.
+   * @return неизменяемый список переменных; пустой, если в области их нет.
+   */
+  public List<VariableSymbol> getVariablesOfScope(SourceDefinedSymbol scopeSymbol) {
+    var inScope = getVariablesByScope().get(scopeSymbol);
+    return inScope == null ? List.of() : Collections.unmodifiableList(Arrays.asList(inScope));
   }
 
   /**
@@ -276,7 +307,7 @@ public class SymbolTree {
 
   /**
    * Символ, чьё имя ({@code selectionRange}) накрывает позицию — то есть позиция
-   * стоит на объявлении символа. O(1)-lookup по строке через
+   * стоит на объявлении символа. Двоичный поиск по строке через
    * {@link #getSymbolsBySelectionLine()}; при нескольких объявлениях на строке
    * возвращает первый по порядку {@code getChildrenFlat()} накрывающий символ.
    *
@@ -284,13 +315,46 @@ public class SymbolTree {
    * @return символ, на объявлении которого стоит позиция, либо empty.
    */
   public Optional<SourceDefinedSymbol> findSymbolBySelectionRange(Position position) {
-    var bucket = getSymbolsBySelectionLine().get(position.getLine());
-    if (bucket == null) {
-      return Optional.empty();
-    }
-    for (var symbol : bucket) {
+    var index = getSymbolsBySelectionLine();
+    var lines = index.lines;
+    var line = position.getLine();
+    for (var i = firstAtOrAfter(lines, line); i < lines.length && lines[i] == line; i++) {
+      var symbol = index.symbols[i];
       if (Ranges.containsPosition(symbol.getSelectionRange(), position)) {
         return Optional.of(symbol);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /** Первая позиция в упорядоченном {@code lines}, где строка не меньше {@code line}. */
+  private static int firstAtOrAfter(int[] lines, int line) {
+    var low = 0;
+    var high = lines.length;
+    while (low < high) {
+      var mid = (low + high) >>> 1;
+      if (lines[mid] < line) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return low;
+  }
+
+  /** Символ с именем {@code name} без учёта регистра в массиве, упорядоченном по имени. */
+  private static <T extends Symbol> Optional<T> findByName(T[] sortedByName, String name) {
+    var low = 0;
+    var high = sortedByName.length - 1;
+    while (low <= high) {
+      var mid = (low + high) >>> 1;
+      var comparison = String.CASE_INSENSITIVE_ORDER.compare(sortedByName[mid].getName(), name);
+      if (comparison < 0) {
+        low = mid + 1;
+      } else if (comparison > 0) {
+        high = mid - 1;
+      } else {
+        return Optional.of(sortedByName[mid]);
       }
     }
     return Optional.empty();
@@ -332,54 +396,71 @@ public class SymbolTree {
     return getChildrenFlat(VariableSymbol.class);
   }
 
-  private Map<SourceDefinedSymbol, Map<String, VariableSymbol>> createVariablesByName() {
-    return getVariables().stream()
-      .collect(
-        groupingBy(
-          VariableSymbol::getScope,
-          toMap(
-            VariableSymbol::getName,
-            Function.identity(),
-            (existing, replacement) -> existing,
-            () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
-          )
-        )
-      );
+  private Map<SourceDefinedSymbol, VariableSymbol[]> createVariablesByScope() {
+    Map<SourceDefinedSymbol, List<VariableSymbol>> byScope = new HashMap<>();
+    for (var variable : getVariables()) {
+      byScope.computeIfAbsent(variable.getScope(), scope -> new ArrayList<>()).add(variable);
+    }
+    Map<SourceDefinedSymbol, VariableSymbol[]> result = HashMap.newHashMap(byScope.size());
+    byScope.forEach((scope, inScope) -> result.put(scope, sortedUniqueByName(inScope, new VariableSymbol[0])));
+    return result;
   }
 
-  private Map<String, MethodSymbol> createMethodsByName() {
-    return getMethods().stream()
-      .collect(
-        toMap(
-          MethodSymbol::getName,
-          Function.identity(),
-          (existing, replacement) -> existing,
-          () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
-        )
-      );
+  private MethodSymbol[] createMethodsByName() {
+    return sortedUniqueByName(getMethods(), new MethodSymbol[0]);
   }
 
-  private Map<Integer, List<SourceDefinedSymbol>> createSymbolsBySelectionLine() {
-    Map<Integer, List<SourceDefinedSymbol>> byLine = new HashMap<>();
-    for (var symbol : getChildrenFlat()) {
+  /**
+   * Символы, упорядоченные по имени без учёта регистра, по одному на имя: сортировка
+   * устойчивая, поэтому из одноимённых остаётся первый по порядку {@code symbols}.
+   */
+  private static <T extends Symbol> T[] sortedUniqueByName(List<T> symbols, T[] empty) {
+    var sorted = symbols.toArray(empty);
+    Arrays.sort(sorted, (left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getName(), right.getName()));
+    var unique = 0;
+    for (var symbol : sorted) {
+      if (unique == 0 || String.CASE_INSENSITIVE_ORDER.compare(sorted[unique - 1].getName(), symbol.getName()) != 0) {
+        sorted[unique] = symbol;
+        unique++;
+      }
+    }
+    return unique == sorted.length ? sorted : Arrays.copyOf(sorted, unique);
+  }
+
+  private SelectionLines createSymbolsBySelectionLine() {
+    var flat = getChildrenFlat();
+    // selectionRange имени обычно однострочен, но индексируем по всем строкам,
+    // которые он покрывает, — чтобы поиск оставался точной заменой линейного
+    // скана даже для (редкого) многострочного диапазона.
+    var count = 0;
+    for (var symbol : flat) {
       var selectionRange = symbol.getSelectionRange();
+      if (selectionRange != null) {
+        count += selectionRange.getEnd().getLine() - selectionRange.getStart().getLine() + 1;
+      }
+    }
+    // Ключ — строка в старших 32 битах и место в getChildrenFlat() в младших: сортировка
+    // ключей упорядочивает по строке, а внутри строки сохраняет порядок обхода.
+    var keys = new long[count];
+    var next = 0;
+    for (var i = 0; i < flat.size(); i++) {
+      var selectionRange = flat.get(i).getSelectionRange();
       if (selectionRange == null) {
         continue;
       }
-      // selectionRange имени обычно однострочен, но индексируем по всем строкам,
-      // которые он покрывает, — чтобы поиск оставался точной заменой линейного
-      // скана даже для (редкого) многострочного диапазона.
-      var startLine = selectionRange.getStart().getLine();
-      var endLine = selectionRange.getEnd().getLine();
-      for (var line = startLine; line <= endLine; line++) {
-        byLine.computeIfAbsent(line, k -> new ArrayList<>()).add(symbol);
+      for (var line = selectionRange.getStart().getLine(); line <= selectionRange.getEnd().getLine(); line++) {
+        keys[next] = ((long) line << Integer.SIZE) | i;
+        next++;
       }
     }
-    // Списки строятся один раз и больше не растут — освобождаем лишнюю ёмкость.
-    for (var bucket : byLine.values()) {
-      ((ArrayList<SourceDefinedSymbol>) bucket).trimToSize();
+    Arrays.sort(keys);
+    var lines = new int[count];
+    var symbols = new SourceDefinedSymbol[count];
+    for (var k = 0; k < count; k++) {
+      lines[k] = (int) (keys[k] >>> Integer.SIZE);
+      symbols[k] = flat.get((int) keys[k]);
     }
-    return byLine;
+    return new SelectionLines(lines, symbols);
   }
 
   private static void flatten(SourceDefinedSymbol symbol, List<SourceDefinedSymbol> symbols) {
