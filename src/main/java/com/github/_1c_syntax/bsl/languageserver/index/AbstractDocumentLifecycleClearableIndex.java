@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 
@@ -62,7 +64,20 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
     clear(event.getSource().getUri());
   }
 
+  /**
+   * Сбрасывает записи документа, привязка которого к конфигурации пересчитана.
+   * <p>
+   * Раньше всех остальных слушателей: дерево символов построено заново, а дерево разбора
+   * прежнее, и запись, найденная по его узлу, — раскладка расчёта по потоку, тип выражения —
+   * ссылается на символы прежнего дерева. Слушатели, которые по этому событию пересчитывают
+   * документ (ссылки, объявленные типы, типы возвращаемых значений), прочли бы её раньше, чем
+   * она сброшена. При правке текста порядок не важен: дерево разбора новое, и прежние записи
+   * по его узлам не находятся.
+   *
+   * @param event событие изменения привязки документа.
+   */
   @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
   public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
     clear(event.getSource().getUri());
   }

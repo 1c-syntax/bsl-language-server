@@ -22,15 +22,23 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentMatchers;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
@@ -61,6 +69,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private GlobalScopeProvider globalScopeProvider;
+
+  @Autowired
+  private TypeService typeService;
 
   @Test
   void scriptVariantLanguageFollowsTheConfiguration() {
@@ -240,6 +251,48 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     // Модуль зарегистрирован слушателем изменения привязки: правки текста не было.
     assertThat(moduleTypeRefMeanwhile).isEmpty();
     assertThat(globalScopeProvider.moduleTypeRefByUri(documentContext.getUri())).isPresent();
+  }
+
+  @Test
+  void documentOpenedWhilePreparingIsRecomputedOnItsNewSymbols() {
+    // given: документ открыт, пока читаются метаданные, — значения его функций посчитаны по
+    // дереву символов без конфигурации, и раскладка расчёта по потоку осела по узлам дерева
+    // разбора, которое перепривязка оставит прежним.
+    var finishReading = startPreparationInBackground();
+    context.prepareInBackground(context::getConfiguration);
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var documentContext = context.addDocument(Absolute.uri(file));
+    var inferencerLog = (Logger) LoggerFactory.getLogger(ExpressionTypeInferencer.class);
+    var logged = new ListAppender<ILoggingEvent>();
+    logged.start();
+    inferencerLog.addAppender(logged);
+    try {
+      context.openDocument(documentContext, """
+        Функция Собрать(Значение) Экспорт
+        	Если Значение = 1 Тогда
+        		Результат = Новый Массив;
+        		Для Индекс = 0 По Результат.ВГраница() Цикл
+        			Результат[Индекс] = 1;
+        		КонецЦикла;
+        		Возврат Результат;
+        	КонецЕсли;
+        	Результат = Новый Структура;
+        	Возврат Результат;
+        КонецФункции
+        """, 1);
+      // Тип в точке спрашивают и запросы редактора — подсказка, подсветка.
+      typeService.expressionTypesAt(documentContext, new Position(6, 12));
+
+      // when: метаданные прочитаны, документ перепривязан, и его функции пересчитаны.
+      finishReading.countDown();
+      context.awaitPreparation();
+    } finally {
+      inferencerLog.detachAppender(logged);
+    }
+
+    // then: пересчёт видел уже сброшенную раскладку. Возьми он прежнюю — её ячейки ссылаются
+    // на символы прежнего дерева, и переменная «не размещена в расчёте по потоку».
+    assertThat(logged.list).filteredOn(event -> event.getLevel() == Level.ERROR).isEmpty();
   }
 
   @Test
