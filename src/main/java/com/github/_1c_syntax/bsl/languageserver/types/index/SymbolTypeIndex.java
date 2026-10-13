@@ -180,6 +180,9 @@ public class SymbolTypeIndex {
    * снова поставить итог в зависимость от порядка, теперь от порядка обхода. Поэтому, пока
    * идёт пересборка, запомненным пользуются только у пересобранных документов, а цель в
    * остальных разворачивается из описания заново.
+   * <p>
+   * Пересборки идут по одной: отметка пересобранных у индекса одна, и пересборка, закончившая
+   * раньше, сняла бы её посреди чужой — та дальше брала бы значения, оставшиеся с наполнения.
    *
    * @param event событие наполнения рабочей области.
    */
@@ -187,7 +190,7 @@ public class SymbolTypeIndex {
   // методов, поэтому пересобрать их надо до него.
   @Order(100)
   @EventListener
-  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+  public synchronized void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     Set<URI> rebuilt = ConcurrentHashMap.newKeySet();
     rebuiltAfterPopulation.set(rebuilt);
     try {
