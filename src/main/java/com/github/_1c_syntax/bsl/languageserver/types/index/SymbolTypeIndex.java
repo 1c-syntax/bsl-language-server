@@ -456,18 +456,38 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Ссылка с точкой ведёт в другой модуль; без точки — на функцию своего модуля, и тогда
-   * смотрится её описание: {@link #resolveSeeReference} разворачивает его так же.
+   * Ссылка с точкой ведёт в другой модуль; без точки — на функцию своего модуля. В обоих
+   * случаях смотрится и описание функции, на которую она ведёт: {@link #resolveSeeReference}
+   * разворачивает его целиком, с полями и элементами, и ссылка оттуда в неразобранный модуль
+   * обедняет итог так же, как ссылка верхнего уровня — даже когда модуль самой цели разобран.
    */
   private boolean linkAwaitsUnparsedModule(@Nullable String link, DocumentContext owner, Set<MethodSymbol> visited) {
     if (link == null || link.isBlank()) {
       return false;
     }
     if (link.contains(".")) {
-      return awaitsUnparsedModule(link, owner.getFileType());
+      return awaitsUnparsedModule(link, owner.getFileType())
+        || referencedFunctionAwaitsUnparsedModule(link, owner.getFileType(), visited);
     }
     var localFunction = findLocalFunction(owner, link);
     return localFunction != null && returnAwaitsUnparsedModule(localFunction, visited);
+  }
+
+  /**
+   * Ведёт ли в ещё не разобранный модуль описание функции, на которую указывает ссылка
+   * {@code Модуль.Метод}.
+   *
+   * @param link     текст ссылки.
+   * @param fileType язык, на котором резолвятся имена.
+   * @param visited  уже посещённые функции — защита от закольцованных ссылок.
+   * @return {@code true}, если описание цели ссылается на ещё не разобранный модуль.
+   */
+  private boolean referencedFunctionAwaitsUnparsedModule(String link, FileType fileType, Set<MethodSymbol> visited) {
+    return resolveReferenceSymbol(link, fileType)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .map(function -> returnAwaitsUnparsedModule(function, visited))
+      .orElse(false);
   }
 
   /**
