@@ -45,6 +45,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -838,123 +839,157 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Первый оборот считает всю компоненту.
     Set<URI> changedLastPass = new HashSet<>(component);
     for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
-      var recomputeAnyway = changedLastPass;
-      // Наверняка оборот пересчитает изменившихся на прошлом и устаревших уже к его началу:
-      // устаревший до своей очереди устаревшим и останется.
-      var certain = component.stream()
-        .filter(uri -> recomputeAnyway.contains(uri) || isOutdated(uri, byDocument.get(uri)))
-        .toList();
-      var ahead = new ArrayDeque<Preload>();
-      var nextToPreload = 0;
-      var changed = new HashSet<URI>();
-      try {
-        for (var uri : component) {
-          var methods = byDocument.get(uri);
-          if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
-            continue;
-          }
-          // Место в пределе оставлено документу, который может понадобиться не наверняка:
-          // такой разбирается здесь же, на месте.
-          while (nextToPreload < certain.size() && ahead.size() < MAX_DOCUMENTS_IN_MEMORY - 1) {
-            ahead.add(preload(serverContext, certain.get(nextToPreload++)));
-          }
-          var preloaded = !ahead.isEmpty() && ahead.peek().uri().equals(uri) ? ahead.poll() : null;
-          try {
-            if (preloaded != null) {
-              // Разбор, начатый впереди, дожидаемся: иначе документ разобрали бы дважды.
-              preloaded.loaded().join();
-            }
-            if (recomputeLoading(serverContext, methods)) {
-              changed.add(uri);
-            }
-          } finally {
-            if (preloaded != null) {
-              release(serverContext, preloaded);
-            }
-          }
-        }
-      } finally {
-        ahead.forEach(preload -> release(serverContext, preload));
-      }
-      changedLastPass = changed;
+      changedLastPass = resolvePass(serverContext, component, byDocument, changedLastPass);
     }
+  }
+
+  /**
+   * Один оборот по компоненте, документы которой разом не удержать.
+   * <p>
+   * Решение, пересчитывать ли документ, принимается, когда до него дошла очередь: он мог
+   * устареть уже на этом обороте. А впереди разбираются только те, кого оборот пересчитает
+   * наверняка, — изменившиеся на прошлом и устаревшие уже к его началу: устаревший до своей
+   * очереди устаревшим и останется.
+   *
+   * @param serverContext   рабочая область.
+   * @param component       документы компоненты.
+   * @param byDocument      отложенные методы по документам.
+   * @param changedLastPass документы, значения которых изменились на прошлом обороте.
+   * @return документы, значения которых изменились на этом.
+   */
+  private Set<URI> resolvePass(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    Set<URI> changedLastPass
+  ) {
+    var certain = component.stream()
+      .filter(uri -> changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri)))
+      .map(uri -> byDocument.get(uri).get(0).getOwner())
+      .toList();
+    var changed = new HashSet<URI>();
+    try (var ahead = new AheadLoader(serverContext, certain)) {
+      for (var uri : component) {
+        var methods = byDocument.get(uri);
+        if ((changedLastPass.contains(uri) || isOutdated(uri, methods)) && ahead.recompute(methods)) {
+          changed.add(uri);
+        }
+      }
+    }
+    return changed;
   }
 
   /**
    * Разбор документа, начатый впереди расчёта.
    *
-   * @param uri    URI документа.
-   * @param loaded разобран ли документ этим разбором: тогда отпускать его тоже ему.
+   * @param documentContext документ.
+   * @param loaded          разобран ли документ этим разбором: тогда отпускать его тоже ему.
    */
-  private record Preload(URI uri, CompletableFuture<Boolean> loaded) {
+  private record Preload(DocumentContext documentContext, CompletableFuture<Boolean> loaded) {
   }
 
   /**
-   * Начинает разбор документа на другом потоке, если вторичные данные документа освобождены.
-   *
-   * @param serverContext рабочая область.
-   * @param uri           URI документа.
-   * @return начатый разбор.
+   * Разбор документов впереди расчёта на одном обороте компоненты, документы которой разом не
+   * удержать.
+   * <p>
+   * Впереди разбираются по порядку документы, которые оборот пересчитает наверняка, — не больше
+   * {@link #MAX_DOCUMENTS_IN_MEMORY} без одного: последнее место в пределе оставлено документу,
+   * который понадобится не наверняка и разберётся на месте. Закрытие отпускает то, что разобрано
+   * впереди, но так и не понадобилось.
    */
-  private Preload preload(ServerContext serverContext, URI uri) {
-    var loaded = CompletableFuture
-      .supplyAsync(() -> loadIfReleased(serverContext, uri), resolveReturnTypesExecutor)
-      .exceptionally((Throwable e) -> {
-        // Не разобрался впереди — разберётся на месте, как без этого разбора.
-        LOGGER.warn("Can't preload document {}", uri, e);
-        return false;
-      });
-    return new Preload(uri, loaded);
-  }
+  private final class AheadLoader implements AutoCloseable {
 
-  /**
-   * Разбирает документ, если его вторичные данные освобождены.
-   *
-   * @param serverContext рабочая область.
-   * @param uri           URI документа.
-   * @return {@code true}, если документ разобран здесь.
-   */
-  private boolean loadIfReleased(ServerContext serverContext, URI uri) {
-    var documentContext = serverContext.getDocuments().get(uri);
-    if (documentContext == null) {
-      return false;
+    private final ServerContext serverContext;
+    private final List<DocumentContext> certain;
+    private final Deque<Preload> ahead = new ArrayDeque<>();
+    private int next;
+
+    private AheadLoader(ServerContext serverContext, List<DocumentContext> certain) {
+      this.serverContext = serverContext;
+      this.certain = certain;
     }
-    var lock = serverContext.getDocumentLock(uri).writeLock();
-    lock.lock();
-    try {
-      if (isReadable(documentContext)) {
-        return false;
+
+    /**
+     * Пересчитывает отложенные методы документа, дождавшись его разбора, если тот начат
+     * впереди, — иначе документ разобрали бы дважды.
+     *
+     * @param methods отложенные методы одного документа.
+     * @return {@code true}, если хоть у одного метода набор типов изменился.
+     */
+    private boolean recompute(List<MethodSymbol> methods) {
+      fill();
+      var documentContext = methods.get(0).getOwner();
+      var head = ahead.peek();
+      if (head == null || !head.documentContext().equals(documentContext)) {
+        return recomputeLoading(serverContext, methods);
       }
-      rebuilt.incrementAndGet();
-      rebuiltUris.add(uri);
-      serverContext.rebuildDocument(documentContext);
-      // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
-      return isReadable(documentContext);
-    } finally {
-      lock.unlock();
+      ahead.poll();
+      try {
+        head.loaded().join();
+        return recomputeLoading(serverContext, methods);
+      } finally {
+        release(head);
+      }
     }
-  }
 
-  /**
-   * Отпускает документ, разобранный впереди расчёта, дождавшись конца разбора.
-   *
-   * @param serverContext рабочая область.
-   * @param preload       разбор.
-   */
-  private void release(ServerContext serverContext, Preload preload) {
-    if (!preload.loaded().join()) {
-      return;
+    private void fill() {
+      while (next < certain.size() && ahead.size() < MAX_DOCUMENTS_IN_MEMORY - 1) {
+        ahead.add(preload(certain.get(next)));
+        next++;
+      }
     }
-    var documentContext = serverContext.getDocuments().get(preload.uri());
-    if (documentContext == null) {
-      return;
+
+    private Preload preload(DocumentContext documentContext) {
+      var loaded = CompletableFuture
+        .supplyAsync(() -> loadIfReleased(documentContext), resolveReturnTypesExecutor)
+        .exceptionally((Throwable e) -> {
+          // Не разобрался впереди — разберётся на месте, как без этого разбора.
+          LOGGER.warn("Can't preload document {}", documentContext.getUri(), e);
+          return false;
+        });
+      return new Preload(documentContext, loaded);
     }
-    var lock = serverContext.getDocumentLock(preload.uri()).writeLock();
-    lock.lock();
-    try {
-      serverContext.tryClearDocument(documentContext);
-    } finally {
-      lock.unlock();
+
+    /**
+     * Разбирает документ, если его вторичные данные освобождены.
+     *
+     * @param documentContext документ.
+     * @return {@code true}, если документ разобран здесь: тогда и отпускать его здесь.
+     */
+    private boolean loadIfReleased(DocumentContext documentContext) {
+      var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+      lock.lock();
+      try {
+        if (isReadable(documentContext)) {
+          return false;
+        }
+        rebuilt.incrementAndGet();
+        rebuiltUris.add(documentContext.getUri());
+        serverContext.rebuildDocument(documentContext);
+        // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
+        return isReadable(documentContext);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    private void release(Preload preload) {
+      if (!Boolean.TRUE.equals(preload.loaded().join())) {
+        return;
+      }
+      var documentContext = preload.documentContext();
+      var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+      lock.lock();
+      try {
+        serverContext.tryClearDocument(documentContext);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    @Override
+    public void close() {
+      ahead.forEach(this::release);
     }
   }
 
