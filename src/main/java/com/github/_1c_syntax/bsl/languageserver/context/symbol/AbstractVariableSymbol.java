@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.Value;
@@ -35,6 +34,7 @@ import lombok.experimental.Accessors;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -68,12 +68,12 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   DocumentContext owner;
 
   /**
-   * Символ, внутри которого располагается данный символ.
+   * Символ, внутри которого располагается данный символ. Без обёртки в {@link Optional}:
+   * переменных на большой конфигурации миллионы, и обёртка на каждую стоила бы десятки мегабайт.
    */
-  @Getter
-  @Setter
   @NonFinal
-  Optional<SourceDefinedSymbol> parent;
+  @Nullable
+  SourceDefinedSymbol parent;
 
   /**
    * Тип переменной.
@@ -89,6 +89,34 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    * Описание переменной.
    */
   Optional<VariableDescription> description;
+
+  protected AbstractVariableSymbol(
+    String name,
+    SourceDefinedSymbol scope,
+    DocumentContext owner,
+    Optional<SourceDefinedSymbol> parent,
+    byte kind,
+    boolean export,
+    Optional<VariableDescription> description
+  ) {
+    this.name = name;
+    this.scope = scope;
+    this.owner = owner;
+    this.parent = parent.orElse(null);
+    this.kind = kind;
+    this.export = export;
+    this.description = description;
+  }
+
+  @Override
+  public Optional<SourceDefinedSymbol> getParent() {
+    return Optional.ofNullable(parent);
+  }
+
+  @Override
+  public void setParent(Optional<SourceDefinedSymbol> parent) {
+    this.parent = parent.orElse(null);
+  }
 
   @Override
   public List<SourceDefinedSymbol> getChildren() {

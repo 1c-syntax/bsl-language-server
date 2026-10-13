@@ -920,13 +920,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if (byLength != 0) {
         return byLength;
       }
-      var start = entry.range().getStart();
-      var otherStart = other.entry.range().getStart();
-      var byLine = Integer.compare(start.getLine(), otherStart.getLine());
+      var byLine = Integer.compare(entry.startLine(), other.entry.startLine());
       if (byLine != 0) {
         return byLine;
       }
-      return Integer.compare(start.getCharacter(), otherStart.getCharacter());
+      return Integer.compare(entry.startCharacter(), other.entry.startCharacter());
     }
   }
 }

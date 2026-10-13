@@ -71,9 +71,11 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
     var enabledMethodsInFile = enabledMethods.getOrDefault(documentContext.getUri(), Collections.emptySet());
     var cognitiveComplexityLocations = getComplexityLocations(documentContext);
 
-    return documentContext.getSymbolTree().getMethodsByName().entrySet().stream()
-      .filter(entry -> enabledMethodsInFile.contains(entry.getKey()))
-      .map(Map.Entry::getValue)
+    var symbolTree = documentContext.getSymbolTree();
+    return symbolTree.getMethods().stream()
+      .filter(methodSymbol -> enabledMethodsInFile.contains(methodSymbol.getName()))
+      // Из одноимённых методов подсказки получает первый объявленный — тот, что находит дерево.
+      .filter(methodSymbol -> symbolTree.getMethodSymbol(methodSymbol.getName()).orElse(null) == methodSymbol)
       .map(methodSymbol -> cognitiveComplexityLocations.getOrDefault(methodSymbol, Collections.emptyList()).stream()
         .map(AbstractComplexityInlayHintSupplier::toInlayHint)
         .collect(Collectors.toList()))
