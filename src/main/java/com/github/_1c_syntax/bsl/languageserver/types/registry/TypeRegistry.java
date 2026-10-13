@@ -165,6 +165,11 @@ public class TypeRegistry {
    */
   private final AtomicLong membersEpoch = new AtomicLong();
   /**
+   * Наполнена ли рабочая область: до этого источники членов модулей регистрируются без сдвига
+   * {@link #membersEpoch} (см. {@link #registerOwnMemberSource}).
+   */
+  private volatile boolean populated;
+  /**
    * Эпоха memo членов {@link #GLOBAL_CONTEXT} — вместо {@link #membersEpoch}. Источники
    * глобального контекста (объявления платформы и {@link #globalPropertyMembers}) членов
    * других типов не читают, поэтому регистрация источника у другого типа — а при наполнении
@@ -881,11 +886,13 @@ public class TypeRegistry {
    * Добавить источник членов, который читает только сам тип, — BSL-модуль как источник членов
    * своего типа-обёртки.
    * <p>
-   * В отличие от {@link #registerMemberSource} сбрасывает memo только этого типа, как и
-   * {@link #invalidateMembers} при правке такого модуля, а общую эпоху не двигает: при
-   * наполнении рабочей области такой источник регистрируется на первый разбор каждого модуля,
-   * и сдвиг эпохи пересобирал бы члены всех типов подряд. Типы, чьи члены построены на членах
-   * этого, освежает сдвиг эпохи по окончании наполнения ({@link #handleServerContextPopulated}).
+   * Пока рабочая область наполняется, сбрасывает memo только этого типа, как и
+   * {@link #invalidateMembers} при правке такого модуля, а общую эпоху не двигает: такой
+   * источник регистрируется на первый разбор каждого модуля, и сдвиг эпохи пересобирал бы члены
+   * всех типов подряд. Типы, чьи члены построены на членах этого, освежает сдвиг эпохи по
+   * окончании наполнения ({@link #handleServerContextPopulated}). Модуль, разобранный впервые
+   * уже после него, — новый файл — сдвигает эпоху сам, как {@link #registerMemberSource}:
+   * следующего общего сдвига, который освежил бы построенных на нём, не будет.
    *
    * @param ref      тип, к которому добавляется источник членов.
    * @param source   источник членов, читающий только сам тип.
@@ -893,7 +900,11 @@ public class TypeRegistry {
    */
   public void registerOwnMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
-    invalidateMembers(ref);
+    if (populated) {
+      membersChanged(ref);
+    } else {
+      invalidateMembers(ref);
+    }
   }
 
   /**
@@ -909,6 +920,7 @@ public class TypeRegistry {
   @EventListener
   @Order(Ordered.HIGHEST_PRECEDENCE)
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    populated = true;
     membersEpoch.incrementAndGet();
   }
 

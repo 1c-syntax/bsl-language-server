@@ -248,6 +248,28 @@ class TypeRegistryScopedSourcesTest {
   }
 
   @Test
+  void moduleFirstParsedAfterPopulationRebuildsTypesBuiltOnIt() {
+    // given — рабочая область наполнена, B собирает члены из членов модульного типа A
+    typeRegistry.handleServerContextPopulated(new ServerContextPopulatedEvent(mock(ServerContext.class)));
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйНовыйМодуль");
+    var refB = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитающийНовыйМодуль");
+    typeRegistry.registerMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("A1", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refB,
+      () -> List.copyOf(typeRegistry.getMembers(refA, FileType.BSL)), FileType.BSL);
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1");
+
+    // when — модуль A разобран впервые уже после наполнения: новый файл
+    typeRegistry.registerOwnMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("ЭкспортМодуля", TypeRef.UNKNOWN, "")), FileType.BSL);
+
+    // then — B видит члены модуля: следующего сдвига эпохи по окончании наполнения не будет
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1", "ЭкспортМодуля");
+  }
+
+  @Test
   void registerMemberOverrideInvalidatesMembersCache() {
     // given — члены типа уже прочитаны и мемоизированы
     var ref = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйКэшОверрайда");
