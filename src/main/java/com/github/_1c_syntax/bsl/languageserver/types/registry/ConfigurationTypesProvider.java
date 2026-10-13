@@ -63,6 +63,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -97,15 +98,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Регистрация идемпотентна и подписана на {@link WorkspaceAddedEvent}: к этому моменту
  * {@code configurationRoot} у контекста уже установлен — {@code addWorkspace} подхватывает его
  * из workspace-scoped конфигурации (см. {@code ServerContextProvider#addWorkspace}), поэтому
- * вызывающему достаточно обновить конфигурацию до {@code addWorkspace}. Деревья символов на
- * этот момент ещё не строились: в LSP публикация {@code .bsl}-файлов идёт только после
- * клиентского {@code initialized}, в CLI/MCP наполнение контекста ({@code populateContext})
- * выполняется уже после {@code addWorkspace}.
+ * вызывающему достаточно обновить конфигурацию до {@code addWorkspace}.
+ * <p>
+ * Обработчик события асинхронный: чтение метаданных и регистрация на большой конфигурации —
+ * десятки секунд, и поток, добавивший рабочую область, их не ждёт. Они идут на однопоточном
+ * исполнителе подготовки рабочей области ({@code workspacePreparationExecutor}), и
+ * {@link ServerContext} считает рабочую область готовящейся, пока не выполнится задача,
+ * поставленная туда следом за регистрацией. Наполнение контекста ({@code populateContext})
+ * этого дожидается, а документы, заведённые раньше, по окончании подготовки перепривязываются
+ * к конфигурации — с деревом символов, построенным заново.
  * <p>
  * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно
- * ({@link Ordered#HIGHEST_PRECEDENCE}): Spring вызывает их последовательно на одном потоке,
- * а {@code OScriptLibraryIndex} делает полный обход дерева workspace'а (на больших проектах
- * это секунды). От регистрации типов он не зависит, поэтому ждать его незачем.
+ * ({@link Ordered#HIGHEST_PRECEDENCE}): регистрация ставится на исполнитель подготовки первой,
+ * раньше задачи, по которой {@link ServerContext} узнаёт об окончании подготовки.
  */
 @Component
 @WorkspaceScope
@@ -194,10 +199,12 @@ public class ConfigurationTypesProvider {
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   /**
-   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}).
+   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}) — в фоне,
+   * на исполнителе подготовки рабочей области.
    *
    * @param event событие добавления workspace'а.
    */
+  @Async("workspacePreparationExecutor")
   @EventListener
   @Order(Ordered.HIGHEST_PRECEDENCE)
   public void handleEvent(WorkspaceAddedEvent event) {
@@ -227,7 +234,8 @@ public class ConfigurationTypesProvider {
       return null;
     }
     // workspaceUri установлен всегда: tryRegister зовётся только из обработчика
-    // WorkspaceAddedEvent, а событие публикуется под workspace-контекстом.
+    // WorkspaceAddedEvent, событие публикуется под workspace-контекстом, а исполнитель
+    // подготовки переносит его в свой поток.
     var workspaceUri = WorkspaceContextHolder.get();
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext == null) {
@@ -245,10 +253,12 @@ public class ConfigurationTypesProvider {
       return null;
     });
 
-    if (serverContext.getConfiguration().isEmpty() || !registered.compareAndSet(false, true)) {
+    // Регистрации нужны настоящие метаданные, а getConfiguration(), пока рабочая область
+    // готовится, отвечает пустой конфигурацией.
+    var cf = serverContext.awaitConfiguration();
+    if (cf.isEmpty() || !registered.compareAndSet(false, true)) {
       return null;
     }
-    var cf = serverContext.getConfiguration();
     var children = cf.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());

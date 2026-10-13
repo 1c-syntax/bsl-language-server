@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
@@ -106,21 +107,6 @@ public class ServerContextProvider {
   }
 
   /**
-   * Добавить workspace folder, а его подготовку — обработку
-   * {@link com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent}, то есть
-   * чтение метаданных конфигурации и регистрацию её типов, — выполнить в фоне.
-   * <p>
-   * Контекст сервера заведён и доступен сразу. Подготовка, идущая в фоне, запоминается в нём
-   * ({@link ServerContext#awaitPreparation()}).
-   *
-   * @param workspaceFolder информация о workspace folder
-   * @return созданный контекст сервера
-   */
-  public ServerContext addWorkspaceInBackground(WorkspaceFolder workspaceFolder) {
-    return createServerContext(Absolute.uri(workspaceFolder.getUri()), workspaceFolder.getName());
-  }
-
-  /**
    * Добавить workspace по URI и создать для нее контекст сервера.
    *
    * @param workspaceUri нормализованный через {@link Absolute#uri(URI)} URI
@@ -138,16 +124,16 @@ public class ServerContextProvider {
    * {@link Absolute#uri(URI)} — иначе {@link #clear()} /
    * {@link #removeWorkspace(WorkspaceFolder)} не смогут найти запись по
    * ключу (они ищут через {@code Absolute.uri(...)} ещё раз).
+   * <p>
+   * Контекст доступен сразу, а метаданные конфигурации читаются и её типы регистрируются в
+   * фоне; дождаться этого — {@link ServerContext#awaitPreparation()}.
    *
    * @param workspaceUri  нормализованный URI корня workspace
    * @param workspaceName имя workspace (если null — извлекается из URI)
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
-    return createServerContext(workspaceUri, workspaceName);
-  }
 
-  private ServerContext createServerContext(URI workspaceUri, @Nullable String workspaceName) {
     if (contexts.containsKey(workspaceUri)) {
       LOGGER.debug("Workspace {} already exists", workspaceUri);
       return contexts.get(workspaceUri);
@@ -240,6 +226,9 @@ public class ServerContextProvider {
     // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
     // (для async-propagated workspace'ов запись там может отсутствовать).
     if (serverContext != null) {
+      // Подготовка, идущая в фоне, обращается к бинам рабочей области — их нельзя уничтожать
+      // посреди неё.
+      serverContext.awaitPreparation();
       var name = extractWorkspaceName(uri);
       try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
         serverContext.clear();
@@ -442,6 +431,22 @@ public class ServerContextProvider {
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     documentIndex.remove(event.getUri());
+  }
+
+  /**
+   * Обработчик события добавления рабочей области: отмечает в её контексте, что рабочая
+   * область готовится в фоне ({@link ServerContext#trackPreparation()}).
+   * <p>
+   * Идёт следом за регистрацией типов конфигурации: та — асинхронный обработчик этого же
+   * события и к этому моменту уже поставлена на исполнитель подготовки, поэтому задача
+   * контекста встаёт в очередь после неё.
+   *
+   * @param event событие добавления рабочей области.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE + 1)
+  public void onWorkspaceAdded(WorkspaceAddedEvent event) {
+    getServerContextUnsafe(event.getWorkspaceUri()).ifPresent(ServerContext::trackPreparation);
   }
 
   /**

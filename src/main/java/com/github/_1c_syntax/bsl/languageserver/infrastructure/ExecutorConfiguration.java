@@ -29,6 +29,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.net.URI;
 import java.util.Optional;
@@ -56,8 +57,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Остальные исполнители — короткоживущие обработчики запросов LSP без {@code parallelStream()}
  * внутри — реализуются через {@link SimpleAsyncTaskExecutor} в режиме виртуальных потоков
  * ({@code setVirtualThreads(true)}) с {@link TaskDecorator} для прокидывания контекста.
+ * <p>
+ * Методы с {@code @Async} исполняются на исполнителе, названном в аннотации. Исполнитель по
+ * умолчанию не настроен: {@code @Async} без имени ушёл бы на исполнитель, который Spring
+ * выберет сам, и без контекста workspace.
  */
 @Configuration
+@EnableAsync(proxyTargetClass = true)
 public class ExecutorConfiguration {
 
   @Bean
@@ -127,7 +133,9 @@ public class ExecutorConfiguration {
   }
 
   // workspacePreparationExecutor — один поток на workspace: подготовка рабочей области в фоне
-  // (чтение метаданных и регистрация типов). Контекст workspace, в котором подготовку запустили,
+  // (@Async-обработчики WorkspaceAddedEvent: чтение метаданных и регистрация типов). Задачи
+  // выполняются по одной в порядке постановки, поэтому задача, поставленная следом за
+  // регистрацией, начнётся после её конца. Контекст workspace, в котором задачу поставили,
   // несёт ContextPropagatingExecutorService — его получают и слушатели событий, публикуемых
   // аспектами по ходу подготовки.
   @Bean(destroyMethod = "shutdown")

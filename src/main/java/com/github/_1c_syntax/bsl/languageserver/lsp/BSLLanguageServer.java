@@ -241,9 +241,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     }
 
     // Добавляем все workspace folders
-    // Подготовка рабочей области (метаданные, типы конфигурации) идёт в фоне: ответ на
-    // initialize, а с ним и остальные сообщения клиента её не ждут. Наполнение дождётся.
-    workspaceFolders.forEach(serverContextProvider::addWorkspaceInBackground);
+    workspaceFolders.forEach(serverContextProvider::addWorkspace);
   }
 
   private @Nullable String resolveRootUri(InitializeParams params) {

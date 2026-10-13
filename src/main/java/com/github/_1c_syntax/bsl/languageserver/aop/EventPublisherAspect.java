@@ -221,22 +221,6 @@ public class EventPublisherAspect {
     );
   }
 
-  @AfterReturning(
-    pointcut = "Pointcuts.isServerContextProvider() && Pointcuts.isAddWorkspaceInBackgroundCall()",
-    returning = "serverContext"
-  )
-  public void workspaceAddedInBackground(JoinPoint joinPoint, ServerContext serverContext) {
-    var source = joinPoint.getThis();
-    var workspaceUri = serverContext.getWorkspaceUri();
-    // Слушатели WorkspaceAddedEvent регистрируют типы конфигурации — вместе с чтением её
-    // метаданных на большой конфигурации это десятки секунд, и вызывающий поток их не ждёт.
-    // Запуск — в контексте workspace: исполнитель подготовки — бин рабочей области, и он же
-    // переносит контекст в свой поток, где аспекты публикуют события подготовки.
-    WorkspaceContextHolder.run(workspaceUri, () -> serverContext.prepareInBackground(() ->
-      publishEvent(new WorkspaceAddedEvent(source, workspaceUri))
-    ));
-  }
-
   @Before("Pointcuts.isServerContextProvider() && Pointcuts.isRemoveWorkspaceCall() && args(workspaceFolder)")
   public void beforeWorkspaceRemoved(JoinPoint joinPoint, WorkspaceFolder workspaceFolder) {
     var provider = (ServerContextProvider) joinPoint.getThis();

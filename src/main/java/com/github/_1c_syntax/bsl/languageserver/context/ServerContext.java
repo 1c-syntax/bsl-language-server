@@ -132,40 +132,39 @@ public class ServerContext {
   private volatile boolean clearing;
 
   /**
-   * Подготовка рабочей области, идущая в фоне (см. {@link #prepareInBackground(Runnable)});
-   * завершена, если подготовка шла синхронно.
+   * Подготовка рабочей области, идущая в фоне (см. {@link #trackPreparation()}); завершена,
+   * если рабочая область не готовится.
    */
   private final AtomicReference<CompletableFuture<?>> preparation
     = new AtomicReference<>(CompletableFuture.completedFuture(null));
 
-  /** Документы, заведённые, пока шла подготовка рабочей области в фоне. */
+  /** Документы, заведённые, пока рабочая область готовилась в фоне. */
   private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
 
   /**
-   * Подготовить рабочую область в фоне: прочитать метаданные конфигурации, затем выполнить
-   * {@code preparationWork}.
+   * Отметить, что рабочая область готовится в фоне: работа, уже поставленная на исполнитель
+   * подготовки рабочей области, — чтение метаданных и регистрация типов конфигурации — ещё
+   * идёт. Исполнитель однопоточный и берёт задачи по очереди, поэтому подготовка закончена,
+   * когда он доберётся до задачи, поставленной этим вызовом.
    * <p>
-   * Пока метаданные читаются, {@link #getConfiguration()} отвечает пустой конфигурацией, не
-   * дожидаясь чтения. Документы, заведённые до конца подготовки, пересчитываются по прочитанной
-   * конфигурации и зарегистрированным типам ({@link #refreshDocumentsCreatedWhilePreparing()}).
-   * Наполнение начинается не раньше, чем подготовка закончится.
-   *
-   * @param preparationWork работа подготовки после чтения метаданных: регистрация типов конфигурации.
+   * Пока рабочая область готовится, {@link #getConfiguration()} при непрочитанных метаданных
+   * отвечает пустой конфигурацией, а не ждёт чтения. Документы, заведённые за это время, по
+   * окончании подготовки привязываются к конфигурации заново
+   * ({@link #refreshDocumentsCreatedWhilePreparing()}). Наполнение начинается не раньше конца
+   * подготовки.
    */
-  public void prepareInBackground(Runnable preparationWork) {
+  public void trackPreparation() {
     var future = new CompletableFuture<@Nullable Void>();
-    // Запоминается до запуска: иначе поток, спросивший конфигурацию в самом начале, не узнал
-    // бы, что её читают в фоне, и встал бы ждать чтения.
     preparation.set(future);
     workspacePreparationExecutor.execute(() -> {
       try {
-        // Метаданные читаются здесь, до работы подготовки: та берёт конфигурацию через
-        // getConfiguration(), а он, пока метаданных нет, отвечает пустой конфигурацией.
-        configurationMetadata.getOrCompute();
-        preparationWork.run();
+        refreshDocumentsCreatedWhilePreparing();
+        future.complete(null);
+        // Документ, заведённый, пока перепривязывались прочие, остался в очереди, если узнал о
+        // подготовке до её конца; узнавший после перепривязал себя сам (createDocumentContext).
         refreshDocumentsCreatedWhilePreparing();
       } catch (RuntimeException e) {
-        LOGGER.error("Workspace preparation failed: {}", workspaceUri, e);
+        LOGGER.error("Failed to rebind documents created while preparing workspace {}", workspaceUri, e);
       } finally {
         future.complete(null);
       }
@@ -173,8 +172,8 @@ public class ServerContext {
   }
 
   /**
-   * Дождаться подготовки рабочей области: метаданные конфигурации прочитаны, её типы
-   * зарегистрированы.
+   * Дождаться конца подготовки рабочей области, если она идёт в фоне: метаданные конфигурации
+   * прочитаны, её типы зарегистрированы.
    */
   public void awaitPreparation() {
     preparation.get().join();
@@ -229,7 +228,8 @@ public class ServerContext {
     // Деревья символов опираются на типы конфигурации и запоминают посчитанное, поэтому
     // документы разбираются только после того, как типы зарегистрированы.
     awaitPreparation();
-    // Пересчитывает то, что не успела пересчитать подготовка, если она упала.
+    // Документы, заведённые во время подготовки, перепривязываются до разбора остальных, даже
+    // если подготовка до них ещё не добралась.
     refreshDocumentsCreatedWhilePreparing();
 
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
@@ -591,8 +591,8 @@ public class ServerContext {
   /**
    * Метаданные конфигурации рабочей области; читаются при первом обращении.
    * <p>
-   * Пока их читает подготовка, идущая в фоне ({@link #prepareInBackground(Runnable)}), отвечает
-   * пустой конфигурацией, не дожидаясь чтения.
+   * Пока рабочая область готовится в фоне ({@link #trackPreparation()}), а метаданные ещё не
+   * прочитаны, отвечает пустой конфигурацией, не дожидаясь чтения.
    *
    * @return метаданные конфигурации; пустые, если конфигурации нет или она ещё читается.
    */
@@ -600,9 +600,20 @@ public class ServerContext {
     if (!configurationMetadata.isPresent() && isPreparing()) {
       // На большой конфигурации чтение занимает десятки секунд. До его конца рабочая область
       // выглядит как каталог без конфигурации, а документы, заведённые за это время,
-      // подготовка пересчитает сама.
+      // по окончании подготовки привязываются к ней заново.
       return Solution.EMPTY;
     }
+    return configurationMetadata.getOrCompute();
+  }
+
+  /**
+   * Метаданные конфигурации рабочей области, дождавшись их чтения. В отличие от
+   * {@link #getConfiguration()}, пустой конфигурацией, пока рабочая область готовится, не
+   * отвечает: метаданные читаются здесь же или дожидаются чтения, начатого раньше.
+   *
+   * @return метаданные конфигурации; пустые, если конфигурации нет.
+   */
+  public Solution awaitConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 

@@ -94,6 +94,7 @@ class ConfigurationTypesProviderHelpersTest {
       var serverContext = mock(ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
       when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var p = newProviderWith(serverProvider);
@@ -123,6 +124,7 @@ class ConfigurationTypesProviderHelpersTest {
       var serverContext = mock(ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
       when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
 
@@ -163,6 +165,7 @@ class ConfigurationTypesProviderHelpersTest {
         ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(
         ServerContextProvider.class);
       when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
@@ -203,6 +206,7 @@ class ConfigurationTypesProviderHelpersTest {
       var serverContext = mock(ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
       when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
@@ -246,6 +250,7 @@ class ConfigurationTypesProviderHelpersTest {
       var serverContext = mock(ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
       when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));
@@ -287,6 +292,7 @@ class ConfigurationTypesProviderHelpersTest {
       var serverContext = mock(ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
       when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
       var p = newProviderWith(serverProvider);
@@ -874,6 +880,7 @@ class ConfigurationTypesProviderHelpersTest {
       var serverContext = mock(ServerContext.class);
       when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
+      when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
       when(serverProvider.getAllContexts())
         .thenReturn(java.util.Map.of(workspaceUri, serverContext));

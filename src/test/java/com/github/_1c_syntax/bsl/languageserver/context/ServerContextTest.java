@@ -22,9 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -47,13 +49,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.doAnswer;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -72,6 +75,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
+
+  @Autowired
+  private TypeRegistry typeRegistry;
 
   @Test
   void scriptVariantLanguageFollowsTheConfiguration() {
@@ -206,31 +212,54 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void configurationReadInBackgroundIsNotAwaited() {
     // given
-    var finishReading = startPreparationInBackground();
-    var seenByPreparation = new AtomicReference<ConfigurationSource>();
-    context.prepareInBackground(() -> seenByPreparation.set(context.getConfiguration().getConfigurationSource()));
+    var finishReading = addWorkspacePreparedInBackground();
 
     // when
     var seenMeanwhile = context.getConfiguration().getConfigurationSource();
     var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
     var moduleTypeMeanwhile = documentContext.getModuleType();
+    var managerTypeMeanwhile = typeRegistry.resolve("СправочникМенеджер.Справочник1");
     finishReading.countDown();
     context.awaitPreparation();
 
     // then
     assertThat(seenMeanwhile).isEqualTo(ConfigurationSource.EMPTY);
     assertThat(moduleTypeMeanwhile).isEqualTo(ModuleType.UNKNOWN);
-    assertThat(seenByPreparation.get()).isEqualTo(ConfigurationSource.DESIGNER);
+    assertThat(managerTypeMeanwhile).isEmpty();
+    assertThat(context.getConfiguration().getConfigurationSource()).isEqualTo(ConfigurationSource.DESIGNER);
+    assertThat(typeRegistry.resolve("СправочникМенеджер.Справочник1"))
+      .as("регистрация читает настоящие метаданные, а не пустую конфигурацию на время подготовки")
+      .isPresent();
     assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
     assertThat(context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule))
       .contains(documentContext);
   }
 
   @Test
+  void populateWaitsForConfigurationTypes() throws InterruptedException {
+    // given
+    var finishReading = addWorkspacePreparedInBackground();
+    var workspaceUri = context.getWorkspaceUri();
+    var populating = new Thread(() -> WorkspaceContextHolder.run(workspaceUri, context::populateContext));
+    populating.start();
+    await().atMost(Duration.ofSeconds(10)).until(() -> populating.getState() == Thread.State.WAITING);
+
+    // when
+    var documentsMeanwhile = context.getDocuments().size();
+    finishReading.countDown();
+    populating.join(Duration.ofSeconds(60));
+
+    // then
+    assertThat(documentsMeanwhile).as("наполнение ждёт регистрации типов").isZero();
+    assertThat(populating.isAlive()).isFalse();
+    assertThat(context.getDocuments()).isNotEmpty();
+    assertThat(context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)).isPresent();
+  }
+
+  @Test
   void documentOpenedWhilePreparingIsReboundWithoutReparsing() throws IOException {
     // given
-    var finishReading = startPreparationInBackground();
-    context.prepareInBackground(context::getConfiguration);
+    var finishReading = addWorkspacePreparedInBackground();
     var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
     var documentContext = context.addDocument(Absolute.uri(file));
     context.openDocument(documentContext, Files.readString(file.toPath()), 1);
@@ -258,8 +287,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     // given: документ открыт, пока читаются метаданные, — значения его функций посчитаны по
     // дереву символов без конфигурации, и раскладка расчёта по потоку осела по узлам дерева
     // разбора, которое перепривязка оставит прежним.
-    var finishReading = startPreparationInBackground();
-    context.prepareInBackground(context::getConfiguration);
+    var finishReading = addWorkspacePreparedInBackground();
     var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
     var documentContext = context.addDocument(Absolute.uri(file));
     var inferencerLog = (Logger) LoggerFactory.getLogger(ExpressionTypeInferencer.class);
@@ -298,8 +326,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void documentClearedWhilePreparingDoesNotStayUnderModuleTypeComputedWithoutConfiguration() {
     // given
-    var finishReading = startPreparationInBackground();
-    context.prepareInBackground(context::getConfiguration);
+    var finishReading = addWorkspacePreparedInBackground();
     var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
     var mdoRefMeanwhile = documentContext.getMdoRef();
     // Очистка сбрасывает и тип модуля, посчитанный без конфигурации.
@@ -341,20 +368,20 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   }
 
   /**
-   * Рабочая область с конфигурацией, ещё не прочитанной: чтение достанется подготовке в фоне и
-   * не закончится, пока не отпущена защёлка.
+   * Добавить рабочую область с конфигурацией, не дожидаясь её подготовки: чтение метаданных
+   * идёт в фоне и не закончится, пока не отпущена защёлка.
    *
    * @return защёлка, по которой заканчивается чтение метаданных.
    */
-  private CountDownLatch startPreparationInBackground() {
-    initServerContext(PATH_TO_METADATA, false);
-    // Добавление рабочей области уже прочитало конфигурацию — забываем её.
-    context.clear();
+  private CountDownLatch addWorkspacePreparedInBackground() {
+    serverContextProvider.clear();
     var finishReading = new CountDownLatch(1);
     doAnswer(invocation -> {
       awaitUninterruptibly(finishReading);
       return invocation.callRealMethod();
     }).when(computeConfigurationExecutor).submit(ArgumentMatchers.<Callable<Object>>any());
+    context = serverContextProvider.addWorkspace(Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri()));
+    WorkspaceContextHolder.set(context.getWorkspaceUri());
     return finishReading;
   }
 

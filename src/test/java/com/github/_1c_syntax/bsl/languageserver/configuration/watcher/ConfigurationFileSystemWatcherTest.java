@@ -67,6 +67,7 @@ class ConfigurationFileSystemWatcherTest {
   void setUp() {
     serverContextProvider.clear();
     serverContext = serverContextProvider.addWorkspace(Absolute.uri(workspaceDir.toUri()));
+    serverContext.awaitPreparation();
     WorkspaceContextHolder.set(serverContext.getWorkspaceUri());
   }
 
