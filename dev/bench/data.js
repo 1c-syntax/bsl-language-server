@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791906642468,
+  "lastUpdate": 1791907951117,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45136,6 +45136,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.900850180121182",
             "extra": "mean: 94.83725913365681 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ef97ed3a48f85736cf19bedb316f03106a1cb6b",
+          "message": "Merge pull request #4653 from 1c-syntax/perf/types-workspace-symbol-index-compact\n\nЗапись индекса символов рабочей области хранит диапазон числами: ERP держит на ~40 МБ меньше",
+          "timestamp": "2026-10-13T15:14:10+02:00",
+          "tree_id": "67412fccdb24732f8df096a61e2bd0697fa13283",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8ef97ed3a48f85736cf19bedb316f03106a1cb6b"
+        },
+        "date": 1791907921329,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.65594458580017,
+            "unit": "sec",
+            "range": "stddev: 0.7997631547353596",
+            "extra": "mean: 93.65594458580017 sec\nrounds: 3"
           }
         ]
       }
