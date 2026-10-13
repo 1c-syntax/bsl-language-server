@@ -46,6 +46,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -837,6 +838,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * изменившемся уже после его расчёта. Первое нужно из-за циклов внутри документа: их
    * разрывает прежнее значение, и изменившийся документ на новом заходе может посчитаться
    * иначе. У прочих на входе ровно то же, что и в прошлый раз, и пересчёт ничего бы не дал.
+   * <p>
+   * Считается компонента в одном потоке и по порядку: внутри цикла документ читает значения
+   * тех, кто посчитан до него на этом же обороте, и другой порядок дал бы другой итог. Но
+   * разбор от значений не зависит, поэтому тех, кого оборот пересчитает наверняка, другие
+   * потоки разбирают впереди расчёта — не больше, чем позволяет предел разом разобранных
+   * документов вместе с тем, что считается сейчас.
    *
    * @param serverContext рабочая область.
    * @param component     документы компоненты.
@@ -850,17 +857,157 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Первый оборот считает всю компоненту.
     Set<URI> changedLastPass = new HashSet<>(component);
     for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
-      var changed = new HashSet<URI>();
+      changedLastPass = resolvePass(serverContext, component, byDocument, changedLastPass);
+    }
+  }
+
+  /**
+   * Один оборот по компоненте, документы которой разом не удержать.
+   * <p>
+   * Решение, пересчитывать ли документ, принимается, когда до него дошла очередь: он мог
+   * устареть уже на этом обороте. А впереди разбираются только те, кого оборот пересчитает
+   * наверняка, — изменившиеся на прошлом и устаревшие уже к его началу: устаревший до своей
+   * очереди устаревшим и останется.
+   *
+   * @param serverContext   рабочая область.
+   * @param component       документы компоненты.
+   * @param byDocument      отложенные методы по документам.
+   * @param changedLastPass документы, значения которых изменились на прошлом обороте.
+   * @return документы, значения которых изменились на этом.
+   */
+  private Set<URI> resolvePass(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    Set<URI> changedLastPass
+  ) {
+    var certain = component.stream()
+      .filter(uri -> changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri)))
+      .map(uri -> byDocument.get(uri).get(0).getOwner())
+      .toList();
+    var changed = new HashSet<URI>();
+    try (var ahead = new AheadLoader(serverContext, certain)) {
       for (var uri : component) {
         var methods = byDocument.get(uri);
-        if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
-          continue;
-        }
-        if (recomputeLoading(serverContext, methods)) {
+        if ((changedLastPass.contains(uri) || isOutdated(uri, methods)) && ahead.recompute(methods)) {
           changed.add(uri);
         }
       }
-      changedLastPass = changed;
+    }
+    return changed;
+  }
+
+  /**
+   * Разбор документа, начатый впереди расчёта.
+   *
+   * @param documentContext документ.
+   * @param loaded          разобран ли документ этим разбором: тогда отпускать его тоже ему.
+   */
+  private record Preload(DocumentContext documentContext, CompletableFuture<Boolean> loaded) {
+  }
+
+  /**
+   * Разбор документов впереди расчёта на одном обороте компоненты, документы которой разом не
+   * удержать.
+   * <p>
+   * Впереди разбираются по порядку документы, которые оборот пересчитает наверняка, — не больше
+   * {@link #MAX_DOCUMENTS_IN_MEMORY} без одного: последнее место в пределе оставлено документу,
+   * который понадобится не наверняка и разберётся на месте. Закрытие отпускает то, что разобрано
+   * впереди, но так и не понадобилось.
+   */
+  private final class AheadLoader implements AutoCloseable {
+
+    private final ServerContext serverContext;
+    private final List<DocumentContext> certain;
+    private final Deque<Preload> ahead = new ArrayDeque<>();
+    private int next;
+
+    private AheadLoader(ServerContext serverContext, List<DocumentContext> certain) {
+      this.serverContext = serverContext;
+      this.certain = certain;
+    }
+
+    /**
+     * Пересчитывает отложенные методы документа, дождавшись его разбора, если тот начат
+     * впереди, — иначе документ разобрали бы дважды.
+     *
+     * @param methods отложенные методы одного документа.
+     * @return {@code true}, если хоть у одного метода набор типов изменился.
+     */
+    private boolean recompute(List<MethodSymbol> methods) {
+      fill();
+      var documentContext = methods.get(0).getOwner();
+      var head = ahead.peek();
+      if (head == null || !head.documentContext().equals(documentContext)) {
+        return recomputeLoading(serverContext, methods);
+      }
+      ahead.poll();
+      try {
+        head.loaded().join();
+        return recomputeLoading(serverContext, methods);
+      } finally {
+        release(head);
+      }
+    }
+
+    private void fill() {
+      while (next < certain.size() && ahead.size() < MAX_DOCUMENTS_IN_MEMORY - 1) {
+        ahead.add(preload(certain.get(next)));
+        next++;
+      }
+    }
+
+    private Preload preload(DocumentContext documentContext) {
+      var loaded = CompletableFuture
+        .supplyAsync(() -> loadIfReleased(documentContext), resolveReturnTypesExecutor)
+        .exceptionally((Throwable e) -> {
+          // Не разобрался впереди — разберётся на месте, как без этого разбора.
+          LOGGER.warn("Can't preload document {}", documentContext.getUri(), e);
+          return false;
+        });
+      return new Preload(documentContext, loaded);
+    }
+
+    /**
+     * Разбирает документ, если его вторичные данные освобождены.
+     *
+     * @param documentContext документ.
+     * @return {@code true}, если документ разобран здесь: тогда и отпускать его здесь.
+     */
+    private boolean loadIfReleased(DocumentContext documentContext) {
+      var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+      lock.lock();
+      try {
+        if (isReadable(documentContext)) {
+          return false;
+        }
+        rebuilt.incrementAndGet();
+        rebuiltUris.add(documentContext.getUri());
+        serverContext.rebuildDocument(documentContext);
+        // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
+        return isReadable(documentContext);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    private void release(Preload preload) {
+      if (!Boolean.TRUE.equals(preload.loaded().join())) {
+        return;
+      }
+      var documentContext = preload.documentContext();
+      var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+      lock.lock();
+      try {
+        serverContext.tryClearDocument(documentContext);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    @Override
+    public void close() {
+      ahead.forEach(this::release);
     }
   }
 
