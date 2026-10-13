@@ -71,6 +71,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * Реестр известных типов.
@@ -195,8 +196,13 @@ public class TypeRegistry {
    * только лишней пересборки.
    */
   private final Map<MembersKey, Set<MembersKey>> membersReaders = new ConcurrentHashMap<>();
-  /** Чьи члены собираются в этом потоке прямо сейчас: вершина стека — тот, кто читает. */
-  private final ThreadLocal<ArrayDeque<MembersKey>> membersInProgress = ThreadLocal.withInitial(ArrayDeque::new);
+  /**
+   * Чьи члены собираются в этом потоке прямо сейчас: вершина стека — тот, кто читает. Стек
+   * заводится на время сборки и снимается, когда она закончилась: читают члены куда чаще, чем
+   * собирают, и пустой стек на каждое чтение был бы лишним, а оставленный — держался бы потоком
+   * пула и после того, как рабочую область закрыли.
+   */
+  private final ThreadLocal<@Nullable ArrayDeque<MembersKey>> membersInProgress = new ThreadLocal<>();
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
@@ -566,6 +572,10 @@ public class TypeRegistry {
     // записан: выселение, прошедшее в любой момент между ними, сдвинет поколение.
     membersComputing.merge(key, 1, Integer::sum);
     var inProgress = membersInProgress.get();
+    if (inProgress == null) {
+      inProgress = new ArrayDeque<>();
+      membersInProgress.set(inProgress);
+    }
     inProgress.push(key);
     try {
       var epoch = membersEpochOf(key.ref());
@@ -578,7 +588,10 @@ public class TypeRegistry {
       return members;
     } finally {
       inProgress.pop();
-      membersComputing.computeIfPresent(key, (computing, count) -> count == 1 ? null : count - 1);
+      if (inProgress.isEmpty()) {
+        membersInProgress.remove();
+      }
+      membersComputing.computeIfPresent(key, (computing, count) -> (count == 1) ? null : (count - 1));
     }
   }
 
@@ -589,7 +602,11 @@ public class TypeRegistry {
    * @param key чьи члены читаются.
    */
   private void rememberReader(MembersKey key) {
-    var reader = membersInProgress.get().peek();
+    var inProgress = membersInProgress.get();
+    if (inProgress == null) {
+      return;
+    }
+    var reader = inProgress.peek();
     if (reader != null && !reader.equals(key)) {
       membersReaders.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(reader);
     }
@@ -898,10 +915,9 @@ public class TypeRegistry {
    * @param ref тип, memo членов которого нужно пересобрать.
    */
   public void invalidateMembers(TypeRef ref) {
-    var queue = new ArrayDeque<MembersKey>();
-    for (var fileType : FILE_TYPES) {
-      queue.add(new MembersKey(ref, fileType));
-    }
+    var queue = Arrays.stream(FILE_TYPES)
+      .map(fileType -> new MembersKey(ref, fileType))
+      .collect(Collectors.toCollection(ArrayDeque::new));
     var seen = new HashSet<MembersKey>();
     while (!queue.isEmpty()) {
       var key = queue.poll();
