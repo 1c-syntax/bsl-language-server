@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791831219759,
+  "lastUpdate": 1791894956503,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45012,6 +45012,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1621414761354643",
             "extra": "mean: 94.89394148190816 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa346bad97eb79df7d9d72e863ea564376d9352d",
+          "message": "Merge pull request #4659 from 1c-syntax/fix/build-gradlew-bat-normalized-eol\n\nfix(build): gradlew.bat хранится в индексе с LF, как велит .gitattributes",
+          "timestamp": "2026-10-13T14:20:00+02:00",
+          "tree_id": "47ddd252dfedc85c3ff3d1305ee6bff4d25a6c78",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/aa346bad97eb79df7d9d72e863ea564376d9352d"
+        },
+        "date": 1791894942594,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.48299813270569,
+            "unit": "sec",
+            "range": "stddev: 1.5250446084545262",
+            "extra": "mean: 96.48299813270569 sec\nrounds: 3"
           }
         ]
       }
