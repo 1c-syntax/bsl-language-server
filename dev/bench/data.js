@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791909161724,
+  "lastUpdate": 1791911310971,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45198,6 +45198,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.261064793620465",
             "extra": "mean: 96.41778643925984 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "123b2bbd35291fa270a2b6af658057aa106b2b1c",
+          "message": "Merge pull request #4665 from 1c-syntax/fix/types-declared-rebuild-order-independent\n\nfix(types): пересборка объявленных типов после наполнения не зависит от порядка обхода документов",
+          "timestamp": "2026-10-13T15:25:28+02:00",
+          "tree_id": "9ea1590b48bb2c952717c834fe390c50b62b183d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/123b2bbd35291fa270a2b6af658057aa106b2b1c"
+        },
+        "date": 1791911290828,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.67549149195354,
+            "unit": "sec",
+            "range": "stddev: 1.7662802195763059",
+            "extra": "mean: 93.67549149195354 sec\nrounds: 3"
           }
         ]
       }
