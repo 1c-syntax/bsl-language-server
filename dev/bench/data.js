@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791916832081,
+  "lastUpdate": 1791917749370,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45322,6 +45322,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.2955606382093996",
             "extra": "mean: 91.57064588864644 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8d8ec8011093bf179fd3699ae7ea6886f7b79c4b",
+          "message": "Merge pull request #4533 from 1c-syntax/dependabot/gradle/freefair-cdb75a85ea\n\nbuild(deps): bump the freefair group across 1 directory with 5 updates",
+          "timestamp": "2026-10-13T17:58:35+02:00",
+          "tree_id": "8760cffce5bfc722d3d2927dfb03bb16080754f2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8d8ec8011093bf179fd3699ae7ea6886f7b79c4b"
+        },
+        "date": 1791917723494,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.34162545204163,
+            "unit": "sec",
+            "range": "stddev: 2.8107841538343803",
+            "extra": "mean: 93.34162545204163 sec\nrounds: 3"
           }
         ]
       }
