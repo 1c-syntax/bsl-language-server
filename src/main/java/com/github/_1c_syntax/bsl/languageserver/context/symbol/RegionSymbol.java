@@ -24,13 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,14 +58,22 @@ public class RegionSymbol implements SourceDefinedSymbol {
   @EqualsAndHashCode.Include
   Range regionNameRange;
 
-  @Getter
-  @Setter
-  @Builder.Default
   @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
+  @Nullable
+  SourceDefinedSymbol parent;
 
   @Builder.Default
   List<SourceDefinedSymbol> children = new ArrayList<>();
+
+  @Override
+  public Optional<SourceDefinedSymbol> getParent() {
+    return Optional.ofNullable(parent);
+  }
+
+  @Override
+  public void setParent(Optional<SourceDefinedSymbol> parent) {
+    this.parent = parent.orElse(null);
+  }
 
   public List<MethodSymbol> getMethods() {
     return children.stream()
