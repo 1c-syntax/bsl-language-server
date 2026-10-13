@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791901710227,
+  "lastUpdate": 1791902933786,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45074,6 +45074,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.180891607344816",
             "extra": "mean: 95.03103407224019 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36c499835cb6e9c9ecbaf144e6d63efc0d26fe74",
+          "message": "Merge pull request #4649 from 1c-syntax/perf/types-metadata-owner-overrides-on-demand\n\nСвойства-коллекции объектов метаданных строятся по запросу: ERP держит на 415 МБ меньше",
+          "timestamp": "2026-10-13T14:59:43+02:00",
+          "tree_id": "6098e63b962fa9dfc59782e06fc8e3562fc65781",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/36c499835cb6e9c9ecbaf144e6d63efc0d26fe74"
+        },
+        "date": 1791902907105,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.18316547075908,
+            "unit": "sec",
+            "range": "stddev: 1.9405560855679265",
+            "extra": "mean: 95.18316547075908 sec\nrounds: 3"
           }
         ]
       }
