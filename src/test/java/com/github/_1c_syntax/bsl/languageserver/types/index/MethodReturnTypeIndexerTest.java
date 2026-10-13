@@ -410,6 +410,44 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext).tryClearDocument(consumer);
   }
 
+  @Test
+  void cycleTooLargeToHoldReparsesOnlyDocumentsThatMayChange() {
+    // given: девять документов по кругу — больше, чем проход держит разобранными разом, —
+    // и все отложены. Документ i построен на документе i + 1. Значение меняется только у
+    // первого, а последний, построенный на первом, переписывает его значение себе.
+    var documents = new DocumentContext[9];
+    var methods = new MethodSymbol[documents.length];
+    for (var index = 0; index < documents.length; index++) {
+      documents[index] = document("file:///cycle" + index + ".bsl");
+      methods[index] = method(documents[index], true);
+    }
+    for (var index = 0; index < documents.length; index++) {
+      var next = methods[(index + 1) % methods.length];
+      returns(methods[index], TypeSet.EMPTY, next);
+      indexer.computeIfAbsent(methods[index],
+        () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), true));
+    }
+    var first = methods[0];
+    var last = methods[methods.length - 1];
+    returns(first, STRING, methods[1]);
+    when(inferencer.computeReturnTypes(last)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(first), Set.of(first), false));
+    var serverContext = serverContextOf(documents);
+    when(serverContext.getDocumentState(any())).thenReturn(DocumentState.WITHOUT_CONTENT);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: значение первого дошло до последнего.
+    assertThat(symbolTypeIndex.getReturnTypes(last)).isEqualTo(STRING);
+    // Изменившийся документ разобран на втором обороте ещё раз: циклы внутри него разрывает
+    // прежнее значение, и новый заход может посчитать его иначе.
+    verify(serverContext, times(2)).rebuildDocument(documents[0]);
+    // А тот, у кого на входе ничего не поменялось, — только на первом: повторный разбор дал
+    // бы ровно то же самое, а на большой конфигурации такой цикл держит сотни документов.
+    verify(serverContext, times(1)).rebuildDocument(documents[4]);
+  }
+
   /**
    * Рабочая область, в которой живут документы: блокировки настоящие, состояние документа
    * спрашивается у неё же.
