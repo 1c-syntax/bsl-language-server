@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791914086807,
+  "lastUpdate": 1791916832081,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45291,6 +45291,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.051833060084562864",
             "extra": "mean: 93.70672090848286 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fff992967a71313c2b9125642d79ea224a25c167",
+          "message": "Merge pull request #4650 from 1c-syntax/perf/context-symbol-tree-compact-indexes\n\nИндексы дерева символов по имени и строке хранятся массивами: ERP держит на 378 МБ меньше",
+          "timestamp": "2026-10-13T15:12:15+02:00",
+          "tree_id": "03a9829fb72090063b7b62061e741470b401062b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fff992967a71313c2b9125642d79ea224a25c167"
+        },
+        "date": 1791916817651,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.57064588864644,
+            "unit": "sec",
+            "range": "stddev: 2.2955606382093996",
+            "extra": "mean: 91.57064588864644 sec\nrounds: 3"
           }
         ]
       }
