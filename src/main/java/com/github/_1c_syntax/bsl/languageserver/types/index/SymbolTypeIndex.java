@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс декларативных типов символов.
@@ -115,7 +116,7 @@ public class SymbolTypeIndex {
    * Документы, объявленные типы которых пересобраны идущей сейчас пересборкой после наполнения;
    * {@code null}, когда пересборки нет. У остальных запомненное значение ещё с наполнения.
    */
-  private volatile @Nullable Set<URI> rebuiltAfterPopulation;
+  private final AtomicReference<@Nullable Set<URI>> rebuiltAfterPopulation = new AtomicReference<>();
 
   /**
    * Типы возвращаемого значения, выведенные по телу метода. Пишет их
@@ -188,7 +189,7 @@ public class SymbolTypeIndex {
   @EventListener
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     Set<URI> rebuilt = ConcurrentHashMap.newKeySet();
-    rebuiltAfterPopulation = rebuilt;
+    rebuiltAfterPopulation.set(rebuilt);
     try {
       event.getSource().getDocuments().values().forEach((DocumentContext documentContext) -> {
         // Отметка до пересборки: она первым делом стирает прежние записи документа, и всё,
@@ -197,7 +198,7 @@ public class SymbolTypeIndex {
         reindexDeclared(documentContext);
       });
     } finally {
-      rebuiltAfterPopulation = null;
+      rebuiltAfterPopulation.set(null);
     }
   }
 
@@ -209,7 +210,7 @@ public class SymbolTypeIndex {
    *     пересобран.
    */
   private boolean isDeclaredUpToDate(MethodSymbol function) {
-    var rebuilt = rebuiltAfterPopulation;
+    var rebuilt = rebuiltAfterPopulation.get();
     return rebuilt == null || rebuilt.contains(function.getOwner().getUri());
   }
 
