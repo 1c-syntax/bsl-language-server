@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791911310971,
+  "lastUpdate": 1791913183375,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45229,6 +45229,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7662802195763059",
             "extra": "mean: 93.67549149195354 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ed09354cce7458ab53145aa3baeec0d6ba3a6f72",
+          "message": "Merge pull request #4666 from 1c-syntax/fix/types-see-reference-into-parsed-module-awaits\n\nfix(types): ссылка «см.» в разобранный модуль ждёт разбора, если описание её цели ссылается в неразобранный",
+          "timestamp": "2026-10-13T15:26:39+02:00",
+          "tree_id": "629cd5c03c4e3f31ca3715370eea63307b4fb3ea",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ed09354cce7458ab53145aa3baeec0d6ba3a6f72"
+        },
+        "date": 1791913157206,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.93300414085388,
+            "unit": "sec",
+            "range": "stddev: 3.4460536228190017",
+            "extra": "mean: 94.93300414085388 sec\nrounds: 3"
           }
         ]
       }
