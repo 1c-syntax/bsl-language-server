@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791913183375,
+  "lastUpdate": 1791914086807,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45260,6 +45260,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.4460536228190017",
             "extra": "mean: 94.93300414085388 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0467be7f0cd3689440a2fd63af5d842f210b5be4",
+          "message": "Merge pull request #4668 from 1c-syntax/perf/types-resolve-cycle-preload\n\nperf(types): большой цикл доразрешения разбирает документы впереди расчёта",
+          "timestamp": "2026-10-13T16:41:41+02:00",
+          "tree_id": "ccbadf61d9f9cce3996d0fdeb6b6ade79639700e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0467be7f0cd3689440a2fd63af5d842f210b5be4"
+        },
+        "date": 1791914060918,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.70672090848286,
+            "unit": "sec",
+            "range": "stddev: 0.051833060084562864",
+            "extra": "mean: 93.70672090848286 sec\nrounds: 3"
           }
         ]
       }
