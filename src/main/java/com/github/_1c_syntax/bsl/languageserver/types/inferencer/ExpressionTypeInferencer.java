@@ -1355,18 +1355,13 @@ public class ExpressionTypeInferencer {
     // Раскладку по областям видимости дерево символов уже держит готовой и ленивой —
     // своего перебора всех переменных модуля на каждый расчёт тела не нужно.
     var symbolTree = owner.getSymbolTree();
-    var byScope = symbolTree.getVariablesByName();
     SourceDefinedSymbol module = symbolTree.getModule();
     SourceDefinedSymbol scope = scopeOfBody(symbolTree, body)
       .map(SourceDefinedSymbol.class::cast)
       .orElse(module);
-    var visible = new ArrayList<VariableSymbol>();
-    var inScope = byScope.get(scope);
-    if (inScope != null) {
-      visible.addAll(inScope.values());
-    }
+    var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
     if (scope != module) {
-      addModuleVariables(byScope.get(module), visible);
+      addModuleVariables(symbolTree.getVariablesOfScope(module), visible);
     }
     return visible;
   }
@@ -1375,17 +1370,11 @@ public class ExpressionTypeInferencer {
    * Добавить к набору переменные, объявленные {@code Перем} на уровне модуля: они видны из
    * любого метода, а созданные присваиванием в теле модуля — нет.
    *
-   * @param atModuleLevel переменные области видимости модуля; {@code null}, если их нет.
+   * @param atModuleLevel переменные области видимости модуля.
    * @param target        набор, куда добавлять.
    */
-  private static void addModuleVariables(
-    @Nullable Map<String, VariableSymbol> atModuleLevel,
-    List<VariableSymbol> target
-  ) {
-    if (atModuleLevel == null) {
-      return;
-    }
-    for (var candidate : atModuleLevel.values()) {
+  private static void addModuleVariables(List<VariableSymbol> atModuleLevel, List<VariableSymbol> target) {
+    for (var candidate : atModuleLevel) {
       if (candidate.getKind() == VariableKind.MODULE) {
         target.add(candidate);
       }

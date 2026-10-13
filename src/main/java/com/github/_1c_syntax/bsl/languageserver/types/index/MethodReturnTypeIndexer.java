@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -618,8 +619,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * <p>
    * Внутри компоненты сходимости за один заход нет — там цикл, — поэтому её документы
    * держатся загруженными и крутятся до неподвижной точки. Компонента крупнее
-   * {@link #MAX_DOCUMENTS_IN_MEMORY} обрабатывается по-старому, с загрузкой и
-   * освобождением на каждом обороте: память дороже лишних разборов.
+   * {@link #MAX_DOCUMENTS_IN_MEMORY} обрабатывается с загрузкой и освобождением
+   * документов на каждом обороте: память дороже лишних разборов. Со второго оборота
+   * разбираются только документы, итог которых может измениться.
    * <p>
    * Спуск по зависимостям вглубь по методам пробовался и оказался хуже: грузить всё равно
    * приходится документ целиком, и один документ загружался заново под каждый свой
@@ -791,17 +793,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       return;
     }
     if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
-      // Держать столько документов разом нельзя, поэтому крутим с загрузкой и
-      // освобождением: лишние разборы дешевле переполнения памяти.
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
-        var changed = false;
-        for (var uri : component) {
-          changed |= recomputeLoading(serverContext, byDocument.get(uri));
-        }
-        if (!changed) {
-          return;
-        }
-      }
+      resolveUnloaded(serverContext, component, byDocument);
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
@@ -815,6 +807,68 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         }
       }
     });
+  }
+
+  /**
+   * Доводит до неподвижной точки компоненту, документы которой разом не удержать.
+   * <p>
+   * Держать столько документов разом нельзя, поэтому крутим с загрузкой и освобождением:
+   * лишние разборы дешевле переполнения памяти. Но не каждый документ на каждом обороте:
+   * со второго оборота разбирается только тот, чей расчёт может дать другой итог, —
+   * значения которого на прошлом обороте изменились, либо построенный на документе,
+   * изменившемся уже после его расчёта. Первое нужно из-за циклов внутри документа: их
+   * разрывает прежнее значение, и изменившийся документ на новом заходе может посчитаться
+   * иначе. У прочих на входе ровно то же, что и в прошлый раз, и пересчёт ничего бы не дал.
+   *
+   * @param serverContext рабочая область.
+   * @param component     документы компоненты.
+   * @param byDocument    отложенные методы по документам.
+   */
+  private void resolveUnloaded(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument
+  ) {
+    // Первый оборот считает всю компоненту.
+    Set<URI> changedLastPass = new HashSet<>(component);
+    for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
+      var changed = new HashSet<URI>();
+      for (var uri : component) {
+        var methods = byDocument.get(uri);
+        if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
+          continue;
+        }
+        if (recomputeLoading(serverContext, methods)) {
+          changed.add(uri);
+        }
+      }
+      changedLastPass = changed;
+    }
+  }
+
+  /**
+   * Устарел ли расчёт методов документа: документ, на значениях которого он построен,
+   * изменился уже после него.
+   *
+   * @param uri     URI документа.
+   * @param methods отложенные методы документа.
+   * @return {@code true}, если пересчёт может дать другой итог.
+   */
+  private boolean isOutdated(URI uri, List<MethodSymbol> methods) {
+    var dependencies = dependenciesByUri.get(uri);
+    if (dependencies == null) {
+      return false;
+    }
+    var computed = methods.stream()
+      .mapToLong(method -> computedAt.getOrDefault(method, 0L))
+      .min()
+      .orElse(0L);
+    for (var dependency : dependencies) {
+      if (changedAt.getOrDefault(dependency, 0L) > computed) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -895,6 +949,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
       // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
+      if (!isReadable(documentContext)) {
+        // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
+        // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
+        // файла не вернёт, только повторит ошибку чтения.
+        return false;
+      }
       var changed = recomputeEach(methods);
       serverContext.tryClearDocument(documentContext);
       return changed;

@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -284,7 +285,7 @@ class MethodReturnTypeIndexerTest {
     var serverContext = serverContextOf(source, consumer, other);
     indexer.computeIfAbsent(consumerMethod,
       () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), false));
-    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    trackLoading(serverContext, consumer);
     when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
       new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
 
@@ -370,7 +371,7 @@ class MethodReturnTypeIndexerTest {
     indexer.computeIfAbsent(consumerMethod,
       () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
     var serverContext = serverContextOf(consumer);
-    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    trackLoading(serverContext, consumer);
 
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
@@ -379,6 +380,25 @@ class MethodReturnTypeIndexerTest {
     // области в памяти осело бы всё, что проход трогал.
     verify(serverContext).rebuildDocument(consumer);
     verify(serverContext).tryClearDocument(consumer);
+  }
+
+  @Test
+  void documentWhoseFileFailedToReadKeepsItsValues() {
+    // given: у отложенного метода посчитанное значение, документ освобождён, а файл его при
+    // догрузке не читается — документ так и остаётся без тел.
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    var serverContext = serverContextOf(consumer);
+    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    clearInvocations(inferencer);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: расчёта без тел не было, и посчитанное не затёрто пустым.
+    verify(serverContext).rebuildDocument(consumer);
+    verify(inferencer, never()).computeReturnTypes(consumerMethod);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
   }
 
   @Test
@@ -410,6 +430,44 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext).tryClearDocument(consumer);
   }
 
+  @Test
+  void cycleTooLargeToHoldReparsesOnlyDocumentsThatMayChange() {
+    // given: девять документов по кругу — больше, чем проход держит разобранными разом, —
+    // и все отложены. Документ i построен на документе i + 1. Значение меняется только у
+    // первого, а последний, построенный на первом, переписывает его значение себе.
+    var documents = new DocumentContext[9];
+    var methods = new MethodSymbol[documents.length];
+    for (var index = 0; index < documents.length; index++) {
+      documents[index] = document("file:///cycle" + index + ".bsl");
+      methods[index] = method(documents[index], true);
+    }
+    for (var index = 0; index < documents.length; index++) {
+      var next = methods[(index + 1) % methods.length];
+      returns(methods[index], TypeSet.EMPTY, next);
+      indexer.computeIfAbsent(methods[index],
+        () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), true));
+    }
+    var first = methods[0];
+    var last = methods[methods.length - 1];
+    returns(first, STRING, methods[1]);
+    when(inferencer.computeReturnTypes(last)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(first), Set.of(first), false));
+    var serverContext = serverContextOf(documents);
+    trackLoading(serverContext, documents);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: значение первого дошло до последнего.
+    assertThat(symbolTypeIndex.getReturnTypes(last)).isEqualTo(STRING);
+    // Изменившийся документ разобран на втором обороте ещё раз: циклы внутри него разрывает
+    // прежнее значение, и новый заход может посчитать его иначе.
+    verify(serverContext, times(2)).rebuildDocument(documents[0]);
+    // А тот, у кого на входе ничего не поменялось, — только на первом: повторный разбор дал
+    // бы ровно то же самое, а на большой конфигурации такой цикл держит сотни документов.
+    verify(serverContext, times(1)).rebuildDocument(documents[4]);
+  }
+
   /**
    * Рабочая область, в которой живут документы: блокировки настоящие, состояние документа
    * спрашивается у неё же.
@@ -428,6 +486,26 @@ class MethodReturnTypeIndexerTest {
     when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
     when(serverContext.getDocuments()).thenReturn(Map.copyOf(documents));
     return serverContext;
+  }
+
+  /**
+   * Состояние документов как в рабочей области: перечисленные освобождены, разбор делает
+   * документ читаемым, освобождение — снова нет.
+   *
+   * @param serverContext рабочая область.
+   * @param released      документы, вторичные данные которых освобождены.
+   */
+  private static void trackLoading(ServerContext serverContext, DocumentContext... released) {
+    Set<DocumentContext> unloaded = ConcurrentHashMap.newKeySet();
+    unloaded.addAll(List.of(released));
+    when(serverContext.getDocumentState(any())).thenAnswer(invocation ->
+      unloaded.contains(invocation.<DocumentContext>getArgument(0))
+        ? DocumentState.WITHOUT_CONTENT
+        : DocumentState.WITH_CONTENT);
+    doAnswer(invocation -> unloaded.remove(invocation.<DocumentContext>getArgument(0)))
+      .when(serverContext).rebuildDocument(any(DocumentContext.class));
+    doAnswer(invocation -> unloaded.add(invocation.<DocumentContext>getArgument(0)))
+      .when(serverContext).tryClearDocument(any());
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {
