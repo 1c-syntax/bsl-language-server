@@ -31,17 +31,14 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -112,11 +109,17 @@ public class SymbolTree {
    * Символы, упорядоченные по строке {@code selectionRange}: {@code symbols[i]} объявлен на
    * строке {@code lines[i]}. Два массива вместо карты «строка → список»: на большой
    * конфигурации у деревьев миллионы символов, а карта платила за каждый узлом, ключом и списком.
-   *
-   * @param lines   строки, по возрастанию.
-   * @param symbols символы тех же позиций.
    */
-  private record SelectionLines(int[] lines, SourceDefinedSymbol[] symbols) {
+  private static final class SelectionLines {
+    /** Строки, по возрастанию. */
+    private final int[] lines;
+    /** Символы тех же позиций. */
+    private final SourceDefinedSymbol[] symbols;
+
+    private SelectionLines(int[] lines, SourceDefinedSymbol[] symbols) {
+      this.lines = lines;
+      this.symbols = symbols;
+    }
   }
 
   /**
@@ -203,7 +206,7 @@ public class SymbolTree {
    * @return MethodSymbol, если он был найден в дереве символов.
    */
   public Optional<MethodSymbol> getMethodSymbol(String methodName) {
-    return Optional.ofNullable(findByName(getMethodsByName(), methodName));
+    return findByName(getMethodsByName(), methodName);
   }
 
   /**
@@ -231,7 +234,7 @@ public class SymbolTree {
     Range variableNameRange = Ranges.create(varNameNode);
 
     // variableNameRange == selectionRange переменной, поэтому ищем через
-    // O(1)-индекс селекшн-рейнджей, а не линейным сканом getVariables() с
+    // индекс селекшн-рейнджей, а не линейным сканом getVariables() с
     // Range.equals на каждом.
     // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
     // объявления, а произвольный/ошибочный контекст, старт которого может
@@ -253,7 +256,7 @@ public class SymbolTree {
    */
   public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
     var inScope = getVariablesByScope().get(scopeSymbol);
-    return inScope == null ? Optional.empty() : Optional.ofNullable(findByName(inScope, variableName));
+    return inScope == null ? Optional.empty() : findByName(inScope, variableName);
   }
 
   /**
@@ -304,7 +307,7 @@ public class SymbolTree {
 
   /**
    * Символ, чьё имя ({@code selectionRange}) накрывает позицию — то есть позиция
-   * стоит на объявлении символа. O(1)-lookup по строке через
+   * стоит на объявлении символа. Двоичный поиск по строке через
    * {@link #getSymbolsBySelectionLine()}; при нескольких объявлениях на строке
    * возвращает первый по порядку {@code getChildrenFlat()} накрывающий символ.
    *
@@ -313,10 +316,10 @@ public class SymbolTree {
    */
   public Optional<SourceDefinedSymbol> findSymbolBySelectionRange(Position position) {
     var index = getSymbolsBySelectionLine();
-    var lines = index.lines();
+    var lines = index.lines;
     var line = position.getLine();
     for (var i = firstAtOrAfter(lines, line); i < lines.length && lines[i] == line; i++) {
-      var symbol = index.symbols()[i];
+      var symbol = index.symbols[i];
       if (Ranges.containsPosition(symbol.getSelectionRange(), position)) {
         return Optional.of(symbol);
       }
@@ -340,7 +343,7 @@ public class SymbolTree {
   }
 
   /** Символ с именем {@code name} без учёта регистра в массиве, упорядоченном по имени. */
-  private static <T extends Symbol> @Nullable T findByName(T[] sortedByName, String name) {
+  private static <T extends Symbol> Optional<T> findByName(T[] sortedByName, String name) {
     var low = 0;
     var high = sortedByName.length - 1;
     while (low <= high) {
@@ -351,10 +354,10 @@ public class SymbolTree {
       } else if (comparison > 0) {
         high = mid - 1;
       } else {
-        return sortedByName[mid];
+        return Optional.of(sortedByName[mid]);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
@@ -399,25 +402,26 @@ public class SymbolTree {
       byScope.computeIfAbsent(variable.getScope(), scope -> new ArrayList<>()).add(variable);
     }
     Map<SourceDefinedSymbol, VariableSymbol[]> result = HashMap.newHashMap(byScope.size());
-    byScope.forEach((scope, variables) -> result.put(scope, sortedUniqueByName(variables, VariableSymbol[]::new)));
+    byScope.forEach((scope, inScope) -> result.put(scope, sortedUniqueByName(inScope, new VariableSymbol[0])));
     return result;
   }
 
   private MethodSymbol[] createMethodsByName() {
-    return sortedUniqueByName(getMethods(), MethodSymbol[]::new);
+    return sortedUniqueByName(getMethods(), new MethodSymbol[0]);
   }
 
   /**
    * Символы, упорядоченные по имени без учёта регистра, по одному на имя: сортировка
    * устойчивая, поэтому из одноимённых остаётся первый по порядку {@code symbols}.
    */
-  private static <T extends Symbol> T[] sortedUniqueByName(List<T> symbols, IntFunction<T[]> newArray) {
-    var sorted = symbols.toArray(newArray);
-    Arrays.sort(sorted, Comparator.comparing(Symbol::getName, String.CASE_INSENSITIVE_ORDER));
+  private static <T extends Symbol> T[] sortedUniqueByName(List<T> symbols, T[] empty) {
+    var sorted = symbols.toArray(empty);
+    Arrays.sort(sorted, (left, right) -> String.CASE_INSENSITIVE_ORDER.compare(left.getName(), right.getName()));
     var unique = 0;
     for (var symbol : sorted) {
       if (unique == 0 || String.CASE_INSENSITIVE_ORDER.compare(sorted[unique - 1].getName(), symbol.getName()) != 0) {
-        sorted[unique++] = symbol;
+        sorted[unique] = symbol;
+        unique++;
       }
     }
     return unique == sorted.length ? sorted : Arrays.copyOf(sorted, unique);
@@ -425,28 +429,31 @@ public class SymbolTree {
 
   private SelectionLines createSymbolsBySelectionLine() {
     var flat = getChildrenFlat();
+    // selectionRange имени обычно однострочен, но индексируем по всем строкам,
+    // которые он покрывает, — чтобы поиск оставался точной заменой линейного
+    // скана даже для (редкого) многострочного диапазона.
+    var count = 0;
+    for (var symbol : flat) {
+      var selectionRange = symbol.getSelectionRange();
+      if (selectionRange != null) {
+        count += selectionRange.getEnd().getLine() - selectionRange.getStart().getLine() + 1;
+      }
+    }
     // Ключ — строка в старших 32 битах и место в getChildrenFlat() в младших: сортировка
     // ключей упорядочивает по строке, а внутри строки сохраняет порядок обхода.
-    var keys = new long[flat.size()];
-    var count = 0;
+    var keys = new long[count];
+    var next = 0;
     for (var i = 0; i < flat.size(); i++) {
       var selectionRange = flat.get(i).getSelectionRange();
       if (selectionRange == null) {
         continue;
       }
-      // selectionRange имени обычно однострочен, но индексируем по всем строкам,
-      // которые он покрывает, — чтобы поиск оставался точной заменой линейного
-      // скана даже для (редкого) многострочного диапазона.
-      var startLine = selectionRange.getStart().getLine();
-      var endLine = selectionRange.getEnd().getLine();
-      for (var line = startLine; line <= endLine; line++) {
-        if (count == keys.length) {
-          keys = Arrays.copyOf(keys, count * 2 + 1);
-        }
-        keys[count++] = ((long) line << Integer.SIZE) | i;
+      for (var line = selectionRange.getStart().getLine(); line <= selectionRange.getEnd().getLine(); line++) {
+        keys[next] = ((long) line << Integer.SIZE) | i;
+        next++;
       }
     }
-    Arrays.sort(keys, 0, count);
+    Arrays.sort(keys);
     var lines = new int[count];
     var symbols = new SourceDefinedSymbol[count];
     for (var k = 0; k < count; k++) {
