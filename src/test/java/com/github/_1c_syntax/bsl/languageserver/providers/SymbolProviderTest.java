@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -210,7 +209,7 @@ class SymbolProviderTest {
       symbolName,
       symbolName.toLowerCase(),
       SymbolKind.Method,
-      new Range(),
+      0, 0, 0, 0,
       List.of(),
       ""
     );
