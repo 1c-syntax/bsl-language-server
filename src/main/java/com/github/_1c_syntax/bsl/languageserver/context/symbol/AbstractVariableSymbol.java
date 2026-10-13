@@ -90,6 +90,24 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    */
   Optional<VariableDescription> description;
 
+  protected AbstractVariableSymbol(
+    String name,
+    SourceDefinedSymbol scope,
+    DocumentContext owner,
+    Optional<SourceDefinedSymbol> parent,
+    byte kind,
+    boolean export,
+    Optional<VariableDescription> description
+  ) {
+    this.name = name;
+    this.scope = scope;
+    this.owner = owner;
+    this.parent = parent.orElse(null);
+    this.kind = kind;
+    this.export = export;
+    this.description = description;
+  }
+
   @Override
   public Optional<SourceDefinedSymbol> getParent() {
     return Optional.ofNullable(parent);
