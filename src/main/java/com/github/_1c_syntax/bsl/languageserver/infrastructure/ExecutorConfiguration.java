@@ -33,7 +33,6 @@ import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -127,13 +126,14 @@ public class ExecutorConfiguration {
     return createSharedForkJoinExecutorService("compute-configuration-");
   }
 
-  // workspacePreparationExecutor — singleton в один поток: подготовка рабочей области в фоне
-  // (чтение метаданных и регистрация типов) запускается вне контекста workspace и ставит его
-  // сама, а подготовки разных рабочих областей идут по очереди.
+  // workspacePreparationExecutor — один поток на workspace: подготовка рабочей области в фоне
+  // (чтение метаданных и регистрация типов). Контекст workspace, в котором подготовку запустили,
+  // несёт ContextPropagatingExecutorService — его получают и слушатели событий, публикуемых
+  // аспектами по ходу подготовки.
   @Bean(destroyMethod = "shutdown")
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService workspacePreparationExecutor() {
-    var pool = Executors.newSingleThreadExecutor(new NamedThreadFactory("workspace-preparation-"));
-    return new ContextPropagatingExecutorService(pool);
+    return createWorkspaceExecutorService("workspace-preparation-", 1);
   }
 
   // diagnosticComputerExecutor — обычный ThreadPoolExecutor, а не ForkJoinPool: диагностики одного
@@ -144,7 +144,7 @@ public class ExecutorConfiguration {
   @Bean(destroyMethod = "shutdown")
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService diagnosticComputerExecutor() {
-    return createWorkspaceExecutorService("diagnostic-computer-");
+    return createWorkspaceExecutorService("diagnostic-computer-", ForkJoinPool.getCommonPoolParallelism());
   }
 
   @Bean(destroyMethod = "shutdown")
@@ -185,14 +185,13 @@ public class ExecutorConfiguration {
     return new ContextPropagatingExecutorService(pool);
   }
 
-  private static ExecutorService createWorkspaceExecutorService(String prefix) {
+  private static ExecutorService createWorkspaceExecutorService(String prefix, int parallelism) {
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
       throw new IllegalStateException("Workspace context is not set when creating executor");
     }
     var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
       .orElse("default");
-    var parallelism = ForkJoinPool.getCommonPoolParallelism();
     var factory = new NamedThreadFactory(prefix + workspaceName + "-");
     var pool = new ThreadPoolExecutor(
       parallelism, parallelism,

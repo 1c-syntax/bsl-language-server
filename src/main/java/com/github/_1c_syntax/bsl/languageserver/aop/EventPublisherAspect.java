@@ -230,7 +230,9 @@ public class EventPublisherAspect {
     var workspaceUri = serverContext.getWorkspaceUri();
     // Слушатели WorkspaceAddedEvent регистрируют типы конфигурации — вместе с чтением её
     // метаданных на большой конфигурации это десятки секунд, и вызывающий поток их не ждёт.
-    serverContext.prepareInBackground(() -> WorkspaceContextHolder.run(workspaceUri, () ->
+    // Запуск — в контексте workspace: исполнитель подготовки — бин рабочей области, и он же
+    // переносит контекст в свой поток, где аспекты публикуют события подготовки.
+    WorkspaceContextHolder.run(workspaceUri, () -> serverContext.prepareInBackground(() ->
       publishEvent(new WorkspaceAddedEvent(source, workspaceUri))
     ));
   }
