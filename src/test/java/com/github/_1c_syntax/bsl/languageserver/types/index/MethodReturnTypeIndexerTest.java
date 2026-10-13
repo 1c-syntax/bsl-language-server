@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -284,7 +285,7 @@ class MethodReturnTypeIndexerTest {
     var serverContext = serverContextOf(source, consumer, other);
     indexer.computeIfAbsent(consumerMethod,
       () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), false));
-    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    trackLoading(serverContext, consumer);
     when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
       new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
 
@@ -370,7 +371,7 @@ class MethodReturnTypeIndexerTest {
     indexer.computeIfAbsent(consumerMethod,
       () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
     var serverContext = serverContextOf(consumer);
-    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    trackLoading(serverContext, consumer);
 
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
@@ -379,6 +380,25 @@ class MethodReturnTypeIndexerTest {
     // области в памяти осело бы всё, что проход трогал.
     verify(serverContext).rebuildDocument(consumer);
     verify(serverContext).tryClearDocument(consumer);
+  }
+
+  @Test
+  void documentWhoseFileFailedToReadKeepsItsValues() {
+    // given: у отложенного метода посчитанное значение, документ освобождён, а файл его при
+    // догрузке не читается — документ так и остаётся без тел.
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    var serverContext = serverContextOf(consumer);
+    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    clearInvocations(inferencer);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: расчёта без тел не было, и посчитанное не затёрто пустым.
+    verify(serverContext).rebuildDocument(consumer);
+    verify(inferencer, never()).computeReturnTypes(consumerMethod);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
   }
 
   @Test
@@ -433,7 +453,7 @@ class MethodReturnTypeIndexerTest {
     when(inferencer.computeReturnTypes(last)).thenAnswer(invocation ->
       new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(first), Set.of(first), false));
     var serverContext = serverContextOf(documents);
-    when(serverContext.getDocumentState(any())).thenReturn(DocumentState.WITHOUT_CONTENT);
+    trackLoading(serverContext, documents);
 
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
@@ -466,6 +486,26 @@ class MethodReturnTypeIndexerTest {
     when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
     when(serverContext.getDocuments()).thenReturn(Map.copyOf(documents));
     return serverContext;
+  }
+
+  /**
+   * Состояние документов как в рабочей области: перечисленные освобождены, разбор делает
+   * документ читаемым, освобождение — снова нет.
+   *
+   * @param serverContext рабочая область.
+   * @param released      документы, вторичные данные которых освобождены.
+   */
+  private static void trackLoading(ServerContext serverContext, DocumentContext... released) {
+    Set<DocumentContext> unloaded = ConcurrentHashMap.newKeySet();
+    unloaded.addAll(List.of(released));
+    when(serverContext.getDocumentState(any())).thenAnswer(invocation ->
+      unloaded.contains(invocation.<DocumentContext>getArgument(0))
+        ? DocumentState.WITHOUT_CONTENT
+        : DocumentState.WITH_CONTENT);
+    doAnswer(invocation -> unloaded.remove(invocation.<DocumentContext>getArgument(0)))
+      .when(serverContext).rebuildDocument(any(DocumentContext.class));
+    doAnswer(invocation -> unloaded.add(invocation.<DocumentContext>getArgument(0)))
+      .when(serverContext).tryClearDocument(any());
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {

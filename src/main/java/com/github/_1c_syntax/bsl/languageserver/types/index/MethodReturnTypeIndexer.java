@@ -949,6 +949,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
       // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
+      if (!isReadable(documentContext)) {
+        // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
+        // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
+        // файла не вернёт, только повторит ошибку чтения.
+        return false;
+      }
       var changed = recomputeEach(methods);
       serverContext.tryClearDocument(documentContext);
       return changed;
