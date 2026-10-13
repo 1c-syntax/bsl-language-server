@@ -63,7 +63,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -84,10 +83,6 @@ public class ServerContext {
     .skipDataCompositionSchema(true)
     .build();
 
-  /** Поток подготовки рабочей области в фоне — по одному на подготовку. */
-  private static final Executor PREPARATION_EXECUTOR = (Runnable command) ->
-    Thread.ofPlatform().name("workspace-preparation").daemon().start(command);
-
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
@@ -95,6 +90,8 @@ public class ServerContext {
   private final ExecutorService computeConfigurationExecutor;
   @Qualifier("populateContextExecutor")
   private final ExecutorService populateContextExecutor;
+  @Qualifier("workspacePreparationExecutor")
+  private final ExecutorService workspacePreparationExecutor;
 
   /**
    * Ограниченный кэш резолва общего модуля по имени ({@code имя -> Optional<CommonModule>},
@@ -160,7 +157,7 @@ public class ServerContext {
     // Запоминается до запуска: иначе поток, спросивший конфигурацию в самом начале, не узнал
     // бы, что её читают в фоне, и встал бы ждать чтения.
     preparation.set(future);
-    PREPARATION_EXECUTOR.execute(() -> {
+    workspacePreparationExecutor.execute(() -> {
       try {
         // Метаданные читаются здесь, до работы подготовки: та берёт конфигурацию через
         // getConfiguration(), а он, пока метаданных нет, отвечает пустой конфигурацией.

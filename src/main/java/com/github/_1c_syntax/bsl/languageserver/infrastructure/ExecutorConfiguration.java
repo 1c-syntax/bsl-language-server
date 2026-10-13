@@ -33,6 +33,7 @@ import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -124,6 +125,15 @@ public class ExecutorConfiguration {
   @Bean(destroyMethod = "shutdown")
   public ExecutorService computeConfigurationExecutor() {
     return createSharedForkJoinExecutorService("compute-configuration-");
+  }
+
+  // workspacePreparationExecutor — singleton в один поток: подготовка рабочей области в фоне
+  // (чтение метаданных и регистрация типов) запускается вне контекста workspace и ставит его
+  // сама, а подготовки разных рабочих областей идут по очереди.
+  @Bean(destroyMethod = "shutdown")
+  public ExecutorService workspacePreparationExecutor() {
+    var pool = Executors.newSingleThreadExecutor(new NamedThreadFactory("workspace-preparation-"));
+    return new ContextPropagatingExecutorService(pool);
   }
 
   // diagnosticComputerExecutor — обычный ThreadPoolExecutor, а не ForkJoinPool: диагностики одного
