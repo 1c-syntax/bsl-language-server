@@ -51,6 +51,7 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,6 +59,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -154,10 +156,12 @@ public class TypeRegistry {
    * Мемоизация {@link #getMembers(TypeRef, FileType)}. Сборка членов
    * (особенно переспециализация config/generic-типов) дорогая, а на горячем
    * пути (семантические токены, completion) повторяется для одного типа тысячи
-   * раз. Инвалидация — через {@link #membersEpoch}: любая мутация
-   * {@link #memberSources} (register/unregister) бампает счётчик, и устаревшие
-   * записи пересобираются при следующем обращении. В steady-state (во время
-   * запроса, без регистраций) memo стабилен.
+   * раз. Инвалидация — через {@link #membersEpoch}: её сдвигают мутации, от которых
+   * могут зависеть члены любого типа (снятие типа, набор глобальных свойств, смена
+   * псевдонима), и устаревшие записи пересобираются при следующем обращении. Новый
+   * источник, переопределение или подавление у одного типа эпоху не двигают: они
+   * сбрасывают memo этого типа и тех, кто на нём построен (см. {@link #membersReaders}).
+   * В steady-state (во время запроса, без регистраций) memo стабилен.
    */
   private final AtomicLong membersEpoch = new AtomicLong();
   /**
@@ -177,9 +181,22 @@ public class TypeRegistry {
    * отвергает публикацию из устаревшего поколения. Защищает от гонки, когда параллельный
    * незавершённый {@code computeMembers} публикует устаревший результат уже ПОСЛЕ
    * инвалидации (эпоха при точечной инвалидации не двигается). Ключи заводятся только для
-   * реально инвалидированных типов — для нетронутых поколение по умолчанию {@code 0}.
+   * типов, инвалидированных посреди их сборки (см. {@link #membersComputing}), — для прочих
+   * поколение по умолчанию {@code 0}.
    */
   private final Map<MembersKey, Long> membersGeneration = new ConcurrentHashMap<>();
+  /** Чьи члены собираются прямо сейчас, со счётом параллельных сборок одного ключа. */
+  private final Map<MembersKey, Integer> membersComputing = new ConcurrentHashMap<>();
+  /**
+   * Кто на ком построен: для ключа — ключи, при сборке членов которых читались его члены
+   * (через {@link #getMembers} из источника либо как канонический псевдоним). Источники
+   * других типов видят члены только так, поэтому смена источников типа устаревает memo
+   * ровно его самого и тех, кто достижим отсюда. Связи не снимаются: лишняя связь стоит
+   * только лишней пересборки.
+   */
+  private final Map<MembersKey, Set<MembersKey>> membersReaders = new ConcurrentHashMap<>();
+  /** Чьи члены собираются в этом потоке прямо сейчас: вершина стека — тот, кто читает. */
+  private final ThreadLocal<ArrayDeque<MembersKey>> membersInProgress = ThreadLocal.withInitial(ArrayDeque::new);
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
@@ -512,7 +529,11 @@ public class TypeRegistry {
    * каноничный {@link TypeRef}.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
-    var cached = cachedMembers(ref, fileType);
+    var key = new MembersKey(ref, fileType);
+    // Связь заводится до чтения: смена источников, прошедшая после неё, достанет читающего,
+    // а прошедшая раньше — уже видна в том, что он прочтёт.
+    rememberReader(key);
+    var cached = cachedMembers(key);
     if (cached != null) {
       return cached;
     }
@@ -520,17 +541,16 @@ public class TypeRegistry {
       // Членов глобального контекста спрашивает почти каждое выражение, и после сброса
       // их собирали бы заново все потоки разом: собирает один, остальные ждут его сборку.
       synchronized (globalContextLock) {
-        cached = cachedMembers(ref, fileType);
-        return cached != null ? cached : computeAndCacheMembers(ref, fileType);
+        cached = cachedMembers(key);
+        return cached != null ? cached : computeAndCacheMembers(key);
       }
     }
-    return computeAndCacheMembers(ref, fileType);
+    return computeAndCacheMembers(key);
   }
 
-  private @Nullable Collection<MemberDescriptor> cachedMembers(TypeRef ref, FileType fileType) {
-    var key = new MembersKey(ref, fileType);
+  private @Nullable Collection<MemberDescriptor> cachedMembers(MembersKey key) {
     var cached = membersCache.get(key);
-    if (cached != null && cached.epoch() == membersEpochOf(ref)
+    if (cached != null && cached.epoch() == membersEpochOf(key.ref())
       && cached.generation() == membersGeneration.getOrDefault(key, 0L)) {
       return cached.members();
     }
@@ -541,16 +561,38 @@ public class TypeRegistry {
     return GLOBAL_CONTEXT.equals(ref) ? globalContextEpoch.get() : membersEpoch.get();
   }
 
-  private Collection<MemberDescriptor> computeAndCacheMembers(TypeRef ref, FileType fileType) {
-    var epoch = membersEpochOf(ref);
-    var key = new MembersKey(ref, fileType);
-    var generation = membersGeneration.getOrDefault(key, 0L);
-    var members = computeMembers(ref, fileType);
-    // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
-    // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
-    // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
-    membersCache.put(key, new CachedMembers(epoch, generation, members));
-    return members;
+  private Collection<MemberDescriptor> computeAndCacheMembers(MembersKey key) {
+    // Сборка числится идущей раньше, чем снято поколение, и до тех пор, пока результат не
+    // записан: выселение, прошедшее в любой момент между ними, сдвинет поколение.
+    membersComputing.merge(key, 1, Integer::sum);
+    var inProgress = membersInProgress.get();
+    inProgress.push(key);
+    try {
+      var epoch = membersEpochOf(key.ref());
+      var generation = membersGeneration.getOrDefault(key, 0L);
+      var members = computeMembers(key.ref(), key.fileType());
+      // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
+      // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
+      // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
+      membersCache.put(key, new CachedMembers(epoch, generation, members));
+      return members;
+    } finally {
+      inProgress.pop();
+      membersComputing.computeIfPresent(key, (computing, count) -> count == 1 ? null : count - 1);
+    }
+  }
+
+  /**
+   * Запоминает, что члены {@code key} читаются при сборке членов типа, который собирается
+   * в этом потоке прямо сейчас.
+   *
+   * @param key чьи члены читаются.
+   */
+  private void rememberReader(MembersKey key) {
+    var reader = membersInProgress.get().peek();
+    if (reader != null && !reader.equals(key)) {
+      membersReaders.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(reader);
+    }
   }
 
   /**
@@ -768,6 +810,7 @@ public class TypeRegistry {
     if (sources == null) {
       var canonical = canonicalOf(ref);
       if (canonical != null) {
+        rememberReader(new MembersKey(canonical, fileType));
         sources = byRef.get(canonical);
       }
     }
@@ -786,6 +829,7 @@ public class TypeRegistry {
     if (names == null) {
       var canonical = canonicalOf(ref);
       if (canonical != null) {
+        rememberReader(new MembersKey(canonical, fileType));
         names = byRef.get(canonical);
       }
     }
@@ -841,10 +885,10 @@ public class TypeRegistry {
   }
 
   /**
-   * Точечно сбросить memo {@link #getMembers} для одного типа во всех языках —
-   * без сдвига глобальной эпохи (кэши прочих типов остаются валидными).
-   * Применяется при правке содержимого документа, чьи member-source'ы читают
-   * только этот тип (BSL-модуль как источник членов своего типа-обёртки).
+   * Точечно сбросить memo {@link #getMembers} для одного типа во всех языках и для тех,
+   * чьи члены построены на его членах, — без сдвига глобальной эпохи (кэши прочих типов
+   * остаются валидными). Применяется при правке содержимого документа, чьи member-source'ы
+   * читают только этот тип (BSL-модуль как источник членов своего типа-обёртки).
    * <p>
    * Инвалидация — через инкремент пер-типового поколения ({@link #membersGeneration}),
    * а не удаление записи: это отвергает и уже закэшированный результат, и устаревший
@@ -854,8 +898,38 @@ public class TypeRegistry {
    * @param ref тип, memo членов которого нужно пересобрать.
    */
   public void invalidateMembers(TypeRef ref) {
+    var queue = new ArrayDeque<MembersKey>();
     for (var fileType : FILE_TYPES) {
-      membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
+      queue.add(new MembersKey(ref, fileType));
+    }
+    var seen = new HashSet<MembersKey>();
+    while (!queue.isEmpty()) {
+      var key = queue.poll();
+      if (!seen.add(key)) {
+        continue;
+      }
+      evictMembers(key);
+      var readers = membersReaders.get(key);
+      if (readers != null) {
+        queue.addAll(readers);
+      }
+    }
+  }
+
+  /**
+   * Выселяет memo членов ключа.
+   * <p>
+   * Поколение сдвигается, только если члены ключа собираются прямо сейчас: результат
+   * такой сборки мог прочесть прежние источники, и записать его в кэш она успеет уже после
+   * выселения. Сдвигать поколение всегда значило бы заводить запись на каждый тип, которому
+   * регистрируют источник, — а при регистрации конфигурации их миллионы.
+   *
+   * @param key ключ memo.
+   */
+  private void evictMembers(MembersKey key) {
+    membersCache.remove(key);
+    if (membersComputing.containsKey(key)) {
+      membersGeneration.merge(key, 1L, Long::sum);
     }
   }
 
@@ -873,9 +947,16 @@ public class TypeRegistry {
     membersChanged(ref);
   }
 
-  /** Сдвинуть эпоху memo членов после мутации источников или подавлений типа {@code ref}. */
+  /**
+   * Сбросить memo членов после мутации источников или подавлений типа {@code ref}.
+   * <p>
+   * Глобальная эпоха не двигается: мутация меняет итог сборки только самого типа, а чужие
+   * сборки видят его члены лишь через {@link #getMembers} и потому числятся среди тех, кто
+   * на нём построен. Сдвиг эпохи здесь — а при наполнении источник регистрируется на каждый
+   * разобранный модуль — пересобирал бы члены всех типов подряд.
+   */
   private void membersChanged(TypeRef ref) {
-    membersEpoch.incrementAndGet();
+    invalidateMembers(ref);
     if (GLOBAL_CONTEXT.equals(ref)) {
       globalContextEpoch.incrementAndGet();
     }
@@ -1860,7 +1941,12 @@ public class TypeRegistry {
 
   private void addAlias(String name, TypeRef ref) {
     var key = name.toLowerCase(Locale.ROOT);
-    aliasIndex.put(key, ref);
+    if (!ref.equals(aliasIndex.put(key, ref))) {
+      // Без собственных источников тип берёт члены канона по имени, а какие ссылки с этим
+      // именем уже собирались, реестр не помнит: memo сбрасывается целиком. Повторная
+      // регистрация того же псевдонима — а она идёт на каждый разбор модуля — его не трогает.
+      membersEpoch.incrementAndGet();
+    }
     forEachGenericFamily(key, (String family) ->
       genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
   }

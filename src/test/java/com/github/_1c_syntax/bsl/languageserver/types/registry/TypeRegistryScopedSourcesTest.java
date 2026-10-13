@@ -33,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -189,6 +190,81 @@ class TypeRegistryScopedSourcesTest {
     // а не отдаёт устаревшую запись
     assertThat(typeRegistry.getMembers(ref, FileType.BSL))
       .extracting(MemberDescriptor::name).containsExactly("fresh");
+  }
+
+  @Test
+  void newSourceRebuildsOnlyTypesBuiltOnIt() {
+    // given — A собирает члены из членов B (как копия членов при специализации и
+    // расширении), C ни на ком не построен; все три прочитаны и мемоизированы
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитающийA");
+    var refB = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитаемыйB");
+    var refC = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйПостороннийC");
+    var buildsOfC = new AtomicInteger();
+    typeRegistry.registerMemberSource(refB,
+      () -> List.of(MemberDescriptor.property("B1", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refA,
+      () -> List.copyOf(typeRegistry.getMembers(refB, FileType.BSL)), FileType.BSL);
+    typeRegistry.registerMemberSource(refC, () -> {
+      buildsOfC.incrementAndGet();
+      return List.of(MemberDescriptor.property("C1", TypeRef.UNKNOWN, ""));
+    }, FileType.BSL);
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("B1");
+    assertThat(typeRegistry.getMembers(refC, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("C1");
+
+    // when — у B появился ещё один источник
+    typeRegistry.registerMemberSource(refB,
+      () -> List.of(MemberDescriptor.property("B2", TypeRef.UNKNOWN, "")), FileType.BSL);
+
+    // then — A пересобран по новым членам B, а C взят из кэша: при наполнении источник
+    // регистрируется на каждый разобранный модуль, и сброс memo всех типов подряд
+    // пересобирал бы их члены по разу на модуль
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("B1", "B2");
+    assertThat(typeRegistry.getMembers(refC, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("C1");
+    assertThat(buildsOfC).hasValue(1);
+  }
+
+  @Test
+  void invalidateMembersRebuildsTypesBuiltOnIt() {
+    // given — A собирает члены из членов B, источник B читает изменяемое состояние
+    // (как модуль — своё дерево символов)
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитающийСбросA");
+    var refB = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитаемыйСбросB");
+    var nameB = new AtomicReference<>("B1");
+    typeRegistry.registerMemberSource(refB,
+      () -> List.of(MemberDescriptor.property(nameB.get(), TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refA,
+      () -> List.copyOf(typeRegistry.getMembers(refB, FileType.BSL)), FileType.BSL);
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("B1");
+
+    // when — состояние B изменилось, и сброшен только B
+    nameB.set("B2");
+    typeRegistry.invalidateMembers(refB);
+
+    // then — A тоже пересобран: иначе он навсегда остался бы с членами прежней редакции B
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("B2");
+  }
+
+  @Test
+  void newAliasIsSeenByTypeReadThroughIt() {
+    // given — ссылка с именем, которое ещё не псевдоним, прочитана: членов нет
+    var canonical = typeRegistry.registerConfigurationType("ТестовыйКаноническийТип");
+    typeRegistry.registerMemberSource(canonical,
+      () -> List.of(MemberDescriptor.property("Член", TypeRef.UNKNOWN, "")), FileType.BSL);
+    var aliased = typeRegistry.intern(TypeKind.PLATFORM, "TestCanonicalType");
+    assertThat(typeRegistry.getMembers(aliased, FileType.BSL)).isEmpty();
+
+    // when — имя стало псевдонимом канонического типа
+    typeRegistry.registerConfigurationTypeAlias("TestCanonicalType", canonical);
+
+    // then — члены берутся у канона
+    assertThat(typeRegistry.getMembers(aliased, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("Член");
   }
 
   @Test
