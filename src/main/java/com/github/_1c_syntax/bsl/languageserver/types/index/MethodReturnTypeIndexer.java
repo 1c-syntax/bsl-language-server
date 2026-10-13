@@ -819,6 +819,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * изменившемся уже после его расчёта. Первое нужно из-за циклов внутри документа: их
    * разрывает прежнее значение, и изменившийся документ на новом заходе может посчитаться
    * иначе. У прочих на входе ровно то же, что и в прошлый раз, и пересчёт ничего бы не дал.
+   * <p>
+   * Считается компонента в одном потоке и по порядку: внутри цикла документ читает значения
+   * тех, кто посчитан до него на этом же обороте, и другой порядок дал бы другой итог. Но
+   * разбор от значений не зависит, поэтому тех, кого оборот пересчитает наверняка, другие
+   * потоки разбирают впереди расчёта — не больше, чем позволяет предел разом разобранных
+   * документов вместе с тем, что считается сейчас.
    *
    * @param serverContext рабочая область.
    * @param component     документы компоненты.
@@ -832,17 +838,123 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Первый оборот считает всю компоненту.
     Set<URI> changedLastPass = new HashSet<>(component);
     for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
+      var recomputeAnyway = changedLastPass;
+      // Наверняка оборот пересчитает изменившихся на прошлом и устаревших уже к его началу:
+      // устаревший до своей очереди устаревшим и останется.
+      var certain = component.stream()
+        .filter(uri -> recomputeAnyway.contains(uri) || isOutdated(uri, byDocument.get(uri)))
+        .toList();
+      var ahead = new ArrayDeque<Preload>();
+      var nextToPreload = 0;
       var changed = new HashSet<URI>();
-      for (var uri : component) {
-        var methods = byDocument.get(uri);
-        if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
-          continue;
+      try {
+        for (var uri : component) {
+          var methods = byDocument.get(uri);
+          if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
+            continue;
+          }
+          // Место в пределе оставлено документу, который может понадобиться не наверняка:
+          // такой разбирается здесь же, на месте.
+          while (nextToPreload < certain.size() && ahead.size() < MAX_DOCUMENTS_IN_MEMORY - 1) {
+            ahead.add(preload(serverContext, certain.get(nextToPreload++)));
+          }
+          var preloaded = !ahead.isEmpty() && ahead.peek().uri().equals(uri) ? ahead.poll() : null;
+          try {
+            if (preloaded != null) {
+              // Разбор, начатый впереди, дожидаемся: иначе документ разобрали бы дважды.
+              preloaded.loaded().join();
+            }
+            if (recomputeLoading(serverContext, methods)) {
+              changed.add(uri);
+            }
+          } finally {
+            if (preloaded != null) {
+              release(serverContext, preloaded);
+            }
+          }
         }
-        if (recomputeLoading(serverContext, methods)) {
-          changed.add(uri);
-        }
+      } finally {
+        ahead.forEach(preload -> release(serverContext, preload));
       }
       changedLastPass = changed;
+    }
+  }
+
+  /**
+   * Разбор документа, начатый впереди расчёта.
+   *
+   * @param uri    URI документа.
+   * @param loaded разобран ли документ этим разбором: тогда отпускать его тоже ему.
+   */
+  private record Preload(URI uri, CompletableFuture<Boolean> loaded) {
+  }
+
+  /**
+   * Начинает разбор документа на другом потоке, если вторичные данные документа освобождены.
+   *
+   * @param serverContext рабочая область.
+   * @param uri           URI документа.
+   * @return начатый разбор.
+   */
+  private Preload preload(ServerContext serverContext, URI uri) {
+    var loaded = CompletableFuture
+      .supplyAsync(() -> loadIfReleased(serverContext, uri), resolveReturnTypesExecutor)
+      .exceptionally((Throwable e) -> {
+        // Не разобрался впереди — разберётся на месте, как без этого разбора.
+        LOGGER.warn("Can't preload document {}", uri, e);
+        return false;
+      });
+    return new Preload(uri, loaded);
+  }
+
+  /**
+   * Разбирает документ, если его вторичные данные освобождены.
+   *
+   * @param serverContext рабочая область.
+   * @param uri           URI документа.
+   * @return {@code true}, если документ разобран здесь.
+   */
+  private boolean loadIfReleased(ServerContext serverContext, URI uri) {
+    var documentContext = serverContext.getDocuments().get(uri);
+    if (documentContext == null) {
+      return false;
+    }
+    var lock = serverContext.getDocumentLock(uri).writeLock();
+    lock.lock();
+    try {
+      if (isReadable(documentContext)) {
+        return false;
+      }
+      rebuilt.incrementAndGet();
+      rebuiltUris.add(uri);
+      serverContext.rebuildDocument(documentContext);
+      // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
+      return isReadable(documentContext);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Отпускает документ, разобранный впереди расчёта, дождавшись конца разбора.
+   *
+   * @param serverContext рабочая область.
+   * @param preload       разбор.
+   */
+  private void release(ServerContext serverContext, Preload preload) {
+    if (!preload.loaded().join()) {
+      return;
+    }
+    var documentContext = serverContext.getDocuments().get(preload.uri());
+    if (documentContext == null) {
+      return;
+    }
+    var lock = serverContext.getDocumentLock(preload.uri()).writeLock();
+    lock.lock();
+    try {
+      serverContext.tryClearDocument(documentContext);
+    } finally {
+      lock.unlock();
     }
   }
 

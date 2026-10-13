@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
@@ -468,6 +469,45 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext, times(1)).rebuildDocument(documents[4]);
   }
 
+  @Test
+  void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased() {
+    // given: двадцать документов по кругу, все отложены и все освобождены.
+    var documents = new DocumentContext[20];
+    var methods = new MethodSymbol[documents.length];
+    for (var index = 0; index < documents.length; index++) {
+      documents[index] = document("file:///ahead" + index + ".bsl");
+      methods[index] = method(documents[index], true);
+    }
+    for (var index = 0; index < documents.length; index++) {
+      var next = methods[(index + 1) % methods.length];
+      returns(methods[index], TypeSet.EMPTY, next);
+      indexer.computeIfAbsent(methods[index],
+        () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), true));
+    }
+    var serverContext = serverContextOf(documents);
+    var loading = trackLoading(serverContext, documents);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: каждый документ разобран ровно раз — разбор впереди расчёта не дублирует разбор
+    // на месте — и отпущен; разом разобранных не больше предела, сколько бы ни шло впереди.
+    for (var documentContext : documents) {
+      verify(serverContext, times(1)).rebuildDocument(documentContext);
+    }
+    assertThat(loading.loaded()).isEmpty();
+    assertThat(loading.peak()).hasValueBetween(2, 8);
+  }
+
+  /**
+   * Сколько документов разобрано проходом сейчас и сколько было разом в худший момент.
+   *
+   * @param loaded разобранные документы.
+   * @param peak   наибольшее их число.
+   */
+  private record Loading(Set<DocumentContext> loaded, AtomicInteger peak) {
+  }
+
   /**
    * Рабочая область, в которой живут документы: блокировки настоящие, состояние документа
    * спрашивается у неё же.
@@ -494,18 +534,32 @@ class MethodReturnTypeIndexerTest {
    *
    * @param serverContext рабочая область.
    * @param released      документы, вторичные данные которых освобождены.
+   * @return учёт документов, разобранных проходом.
    */
-  private static void trackLoading(ServerContext serverContext, DocumentContext... released) {
+  private static Loading trackLoading(ServerContext serverContext, DocumentContext... released) {
     Set<DocumentContext> unloaded = ConcurrentHashMap.newKeySet();
     unloaded.addAll(List.of(released));
+    var loading = new Loading(ConcurrentHashMap.newKeySet(), new AtomicInteger());
     when(serverContext.getDocumentState(any())).thenAnswer(invocation ->
       unloaded.contains(invocation.<DocumentContext>getArgument(0))
         ? DocumentState.WITHOUT_CONTENT
         : DocumentState.WITH_CONTENT);
-    doAnswer(invocation -> unloaded.remove(invocation.<DocumentContext>getArgument(0)))
-      .when(serverContext).rebuildDocument(any(DocumentContext.class));
-    doAnswer(invocation -> unloaded.add(invocation.<DocumentContext>getArgument(0)))
-      .when(serverContext).tryClearDocument(any());
+    doAnswer(invocation -> {
+      DocumentContext documentContext = invocation.getArgument(0);
+      if (unloaded.remove(documentContext)) {
+        loading.loaded().add(documentContext);
+        loading.peak().accumulateAndGet(loading.loaded().size(), Math::max);
+      }
+      return null;
+    }).when(serverContext).rebuildDocument(any(DocumentContext.class));
+    doAnswer(invocation -> {
+      DocumentContext documentContext = invocation.getArgument(0);
+      if (loading.loaded().remove(documentContext)) {
+        unloaded.add(documentContext);
+      }
+      return true;
+    }).when(serverContext).tryClearDocument(any());
+    return loading;
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {
