@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
@@ -49,6 +50,9 @@ import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -160,6 +164,11 @@ public class TypeRegistry {
    * запроса, без регистраций) memo стабилен.
    */
   private final AtomicLong membersEpoch = new AtomicLong();
+  /**
+   * Наполнена ли рабочая область: до этого источники членов модулей регистрируются без сдвига
+   * {@link #membersEpoch} (см. {@link #registerOwnMemberSource}).
+   */
+  private volatile boolean populated;
   /**
    * Эпоха memo членов {@link #GLOBAL_CONTEXT} — вместо {@link #membersEpoch}. Источники
    * глобального контекста (объявления платформы и {@link #globalPropertyMembers}) членов
@@ -871,6 +880,48 @@ public class TypeRegistry {
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
     membersChanged(ref);
+  }
+
+  /**
+   * Добавить источник членов, который читает только сам тип, — BSL-модуль как источник членов
+   * своего типа-обёртки.
+   * <p>
+   * Пока рабочая область наполняется, сбрасывает memo только этого типа, как и
+   * {@link #invalidateMembers} при правке такого модуля, а общую эпоху не двигает: такой
+   * источник регистрируется на первый разбор каждого модуля, и сдвиг эпохи пересобирал бы члены
+   * всех типов подряд. Типы, чьи члены построены на членах этого, освежает сдвиг эпохи по
+   * окончании наполнения ({@link #handleServerContextPopulated}). Модуль, разобранный впервые
+   * уже после него, — новый файл — сдвигает эпоху сам, как {@link #registerMemberSource}:
+   * следующего общего сдвига, который освежил бы построенных на нём, не будет.
+   *
+   * @param ref      тип, к которому добавляется источник членов.
+   * @param source   источник членов, читающий только сам тип.
+   * @param fileType язык файла, в котором члены источника видимы.
+   */
+  public void registerOwnMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
+    memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
+    if (populated) {
+      membersChanged(ref);
+    } else {
+      invalidateMembers(ref);
+    }
+  }
+
+  /**
+   * Сдвигает эпоху memo членов, когда рабочая область наполнена.
+   * <p>
+   * Пока она наполнялась, источники членов модулей регистрировались без сдвига эпохи
+   * ({@link #registerOwnMemberSource}), и тип, построивший члены на членах модуля раньше, чем
+   * тот разобран, остался бы с ними до первого сдвига. Теперь разобраны все модули, и члены
+   * всех типов пересобираются по разу — до дорасчёта типов, который их читает.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    populated = true;
+    membersEpoch.incrementAndGet();
   }
 
   /** Сдвинуть эпоху memo членов после мутации источников или подавлений типа {@code ref}. */
