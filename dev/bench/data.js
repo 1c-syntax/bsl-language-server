@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791928334312,
+  "lastUpdate": 1791986370575,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45384,6 +45384,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.907998227191757",
             "extra": "mean: 94.34615572293599 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "26e6fdc623b63393e0e79c9495d0a3dc7850bdf7",
+          "message": "Merge pull request #4674 from 1c-syntax/perf/types-global-property-declarations-after-populate\n\nНаполнение не пересобирает члены глобального контекста на каждом разобранном общем модуле",
+          "timestamp": "2026-10-14T15:18:32+02:00",
+          "tree_id": "2512fdd8ae33563d8dee4b096ae48b843b5b3a76",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/26e6fdc623b63393e0e79c9495d0a3dc7850bdf7"
+        },
+        "date": 1791986341734,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.59881981213887,
+            "unit": "sec",
+            "range": "stddev: 1.9435639940371296",
+            "extra": "mean: 92.59881981213887 sec\nrounds: 3"
           }
         ]
       }
