@@ -70,6 +70,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -244,7 +245,8 @@ public class TypeRegistry {
    * метаданных, поэтому ответ запоминается. Новый дженерик заменяет карту целиком: ответ,
    * посчитанный до него, пишется в прежнюю карту и пропадает вместе с ней.
    */
-  private volatile Map<String, List<TypeRef>> genericsByFamilyCore = new ConcurrentHashMap<>();
+  private final AtomicReference<Map<String, List<TypeRef>>> genericsByFamilyCore =
+    new AtomicReference<>(new ConcurrentHashMap<>());
 
   /**
    * Двуязычные имена типов (для hover/inlay): для канонических TypeRef
@@ -442,7 +444,8 @@ public class TypeRegistry {
     if (familyCore == null || familyCore.isEmpty()) {
       return List.of();
     }
-    return genericsByFamilyCore.computeIfAbsent(familyCore.toLowerCase(Locale.ROOT), this::scanGenericsByFamilyCore);
+    return genericsByFamilyCore.get()
+      .computeIfAbsent(familyCore.toLowerCase(Locale.ROOT), this::scanGenericsByFamilyCore);
   }
 
   private List<TypeRef> scanGenericsByFamilyCore(String needle) {
@@ -1651,7 +1654,7 @@ public class TypeRegistry {
   private void registerPackTypeParameters(TypePackProvider.TypeDecl decl, TypeRef ref) {
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
-      genericsByFamilyCore = new ConcurrentHashMap<>();
+      genericsByFamilyCore.set(new ConcurrentHashMap<>());
     }
   }
 
