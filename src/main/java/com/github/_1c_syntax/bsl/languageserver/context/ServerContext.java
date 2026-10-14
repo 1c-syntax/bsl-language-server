@@ -181,6 +181,24 @@ public class ServerContext {
   }
 
   /**
+   * Дождаться конца подготовки, показывая клиенту, что ждём регистрацию типов конфигурации:
+   * на большой конфигурации это десятки секунд, и без индикатора они выглядят зависанием.
+   */
+  private void awaitPreparationShowingProgress() {
+    var current = preparation.get();
+    if (current.isDone()) {
+      return;
+    }
+    var progress = workDoneProgressHelper.createProgress(0, "");
+    progress.beginProgress(getMessage("registerConfigurationTypes"));
+    try {
+      current.join();
+    } finally {
+      progress.endProgress(getMessage("registerConfigurationTypesDone"));
+    }
+  }
+
+  /**
    * Пересчитать привязку к метаданным конфигурации у документов, заведённых, пока шла
    * подготовка рабочей области в фоне: их тип модуля и ссылка на объект метаданных могли быть
    * посчитаны без конфигурации ({@link #rebindDocument(DocumentContext)}). Документы,
@@ -228,7 +246,7 @@ public class ServerContext {
   public void populateContext(Collection<File> files) {
     // Деревья символов опираются на типы конфигурации и запоминают посчитанное, поэтому
     // документы разбираются только после того, как типы зарегистрированы.
-    awaitPreparation();
+    awaitPreparationShowingProgress();
     // Документы, заведённые во время подготовки, перепривязываются до разбора остальных, даже
     // если подготовка до них ещё не добралась.
     refreshDocumentsCreatedWhilePreparing();
