@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.net.URI;
@@ -64,19 +65,12 @@ class ReceiverSitesIndexTest extends AbstractServerContextAwareTest {
     // then — группировка по приёмнику.
     assertAllSites(uri, ast);
 
-    // when/then — каждое из 4 событий чистит индекс по URI; после него
-    // индекс пересобирается целиком (проверяем все приёмники, не один ключ).
-    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    assertAllSites(uri, ast);
-
-    eventPublisher.publishEvent(new ServerContextDocumentClearedEvent(serverContext, documentContext));
-    assertAllSites(uri, ast);
-
-    eventPublisher.publishEvent(new ServerContextDocumentClosedEvent(serverContext, documentContext));
-    assertAllSites(uri, ast);
-
-    eventPublisher.publishEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
-    assertAllSites(uri, ast);
+    // when/then — каждое из 4 событий чистит индекс по URI: следующий запрос строит его заново
+    // (списки — новые экземпляры), и построенный целиком (проверяем все приёмники, не один ключ).
+    assertRebuiltAfter(uri, ast, new DocumentContextContentChangedEvent(documentContext));
+    assertRebuiltAfter(uri, ast, new ServerContextDocumentClearedEvent(serverContext, documentContext));
+    assertRebuiltAfter(uri, ast, new ServerContextDocumentClosedEvent(serverContext, documentContext));
+    assertRebuiltAfter(uri, ast, new ServerContextDocumentRemovedEvent(serverContext, uri));
   }
 
   @Test
@@ -127,6 +121,19 @@ class ReceiverSitesIndexTest extends AbstractServerContextAwareTest {
     assertThat(index.propertyCalls(uri, ast, "Объект")).isEmpty();
     assertThat(index.propertyCalls(uri, ast, "Поле")).isEmpty();
     assertThat(index.propertyCalls(uri, ast, "Приёмник")).isEmpty();
+  }
+
+  private void assertRebuiltAfter(URI uri, BSLParser.FileContext ast, ApplicationEvent event) {
+    var callsBefore = index.callStatements(uri, ast, "ТЗ");
+    var assignmentsBefore = index.assignments(uri, ast, "Элемент");
+    var propertyCallsBefore = index.propertyCalls(uri, ast, "Значение");
+
+    eventPublisher.publishEvent(event);
+
+    assertThat(index.callStatements(uri, ast, "ТЗ")).as("построено заново").isNotSameAs(callsBefore);
+    assertThat(index.assignments(uri, ast, "Элемент")).as("построено заново").isNotSameAs(assignmentsBefore);
+    assertThat(index.propertyCalls(uri, ast, "Значение")).as("построено заново").isNotSameAs(propertyCallsBefore);
+    assertAllSites(uri, ast);
   }
 
   private void assertAllSites(URI uri, BSLParser.FileContext ast) {
