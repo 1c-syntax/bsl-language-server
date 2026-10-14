@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791997060872,
+  "lastUpdate": 1791998302678,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45477,6 +45477,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.379550497034132",
             "extra": "mean: 96.36257529258728 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "16402db4ddebf66aea90993f6c557eff661a7ee9",
+          "message": "Merge pull request #4673 from 1c-syntax/perf/types-generics-by-family-memo\n\nРегистрация типов конфигурации не ищет заново на каждом объекте метаданных то, что от объекта не зависит",
+          "timestamp": "2026-10-14T18:37:17+02:00",
+          "tree_id": "b1c2e83b3fed828f47bbf31783567bdfead2b5ba",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/16402db4ddebf66aea90993f6c557eff661a7ee9"
+        },
+        "date": 1791998275616,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.14748167991638,
+            "unit": "sec",
+            "range": "stddev: 2.1741741658711025",
+            "extra": "mean: 93.14748167991638 sec\nrounds: 3"
           }
         ]
       }
