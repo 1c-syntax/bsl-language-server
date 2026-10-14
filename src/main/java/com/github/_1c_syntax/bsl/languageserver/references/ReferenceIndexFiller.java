@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
@@ -164,17 +165,33 @@ public class ReferenceIndexFiller {
    * конфигурации), самих self-членов ещё не проиндексировал — здесь их подхватываем, чем
    * и обеспечивается обещанное {@code SelfMemberResolverImpl}/{@code ReferenceIndex}
    * восстановление подсветки/резолва. Перебираем только уже наполненные документы с
-   * self-типом; при обычном порядке (типы регистрируются раньше {@code didOpen}) наполненных
-   * документов на этот момент ещё нет — обработчик вхолостую.
+   * self-типом.
+   * <p>
+   * Типы регистрируются в фоне, и к концу регистрации документы уже могут быть наполнены, а
+   * часть из них — и освобождена. Документ с текстом наполняется заново под своей блокировкой
+   * на чтение; у освобождённого снимается отметка о наполнении, чтобы следующий разбор, даже
+   * того же текста, наполнил его заново: перечитывать файл ради одних ссылок здесь не стоит.
    *
    * @param event событие успешной регистрации конфигурационных типов.
    */
   @EventListener
   public void handleEvent(ConfigurationTypesRegisteredEvent event) {
-    for (var documentContext : event.getSource().getDocuments().values()) {
-      if (filled.contains(documentContext.getUri())
-        && globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
-        fill(documentContext);
+    var serverContext = event.getSource();
+    for (var documentContext : serverContext.getDocuments().values()) {
+      var uri = documentContext.getUri();
+      if (!filled.contains(uri) || globalScopeProvider.moduleTypeRefByUri(uri).isEmpty()) {
+        continue;
+      }
+      var lock = serverContext.getDocumentLock(uri);
+      lock.readLock().lock();
+      try {
+        if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
+          fill(documentContext);
+        } else {
+          filled.remove(uri);
+        }
+      } finally {
+        lock.readLock().unlock();
       }
     }
   }
