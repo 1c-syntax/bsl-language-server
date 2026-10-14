@@ -170,9 +170,6 @@ public class ReceiverSitesIndex extends AbstractDocumentLifecycleClearableIndex 
       }
     }
     var children = node.getChildren();
-    if (children == null) {
-      return;
-    }
     for (var i = 0; i < children.size(); i++) {
       if (children.get(i) instanceof ParserRuleContext child) {
         collect(child, sites);
