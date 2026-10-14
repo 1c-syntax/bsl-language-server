@@ -131,7 +131,7 @@ dependencies {
     implementation("commons-beanutils:commons-beanutils:1.11.0") {
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec:commons-codec:1.22.1")
+    implementation("commons-codec:commons-codec:1.23.0")
     implementation("org.apache.commons:commons-lang3:3.21.0")
     implementation("org.apache.commons:commons-collections4:4.6.0")
     implementation("org.apache.commons:commons-exec:1.6.0")
