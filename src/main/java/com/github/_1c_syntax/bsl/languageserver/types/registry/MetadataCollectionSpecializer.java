@@ -51,6 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -336,6 +337,13 @@ public class MetadataCollectionSpecializer {
    */
   private final Map<TypeRef, Set<MD>> registeredOwners = new HashMap<>();
 
+  /**
+   * Типы коллекций и их элементов, найденные по имени в рамках одного {@link #specialize()}.
+   * Имена у коллекции одни на всех владельцев, а владельцев на большой конфигурации — десятки
+   * тысяч: искать их заново у каждого — заметная доля всей регистрации.
+   */
+  private final Map<String, Optional<TypeRef>> resolvedByName = new HashMap<>();
+
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
     for (var spec : COLLECTIONS) {
@@ -370,6 +378,7 @@ public class MetadataCollectionSpecializer {
     }
 
     registeredOwners.clear();
+    resolvedByName.clear();
     var mdosByGroup = collectMdosByGroup(configuration.getChildrenByMdoRef().values());
     var counters = new SpecializationCounters();
     for (var context : providerOpt.get().getContexts()) {
@@ -745,12 +754,12 @@ public class MetadataCollectionSpecializer {
     if (!spec.appliesTo().test(owner)) {
       return false;
     }
-    var baseRef = typeRegistry.resolve(spec.baseCollectionName()).orElse(null);
+    var baseRef = resolveOnce(spec.baseCollectionName()).orElse(null);
     if (baseRef == null) {
       return false;
     }
     var children = spec.childExtractor().apply(owner);
-    var elementRef = typeRegistry.resolve(spec.elementTypeName())
+    var elementRef = resolveOnce(spec.elementTypeName())
       .orElseGet(() -> new TypeRef(TypeKind.PLATFORM, spec.elementTypeName()));
     var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollectionName(spec, ownerSuffix));
     registerSubChildOwners(children, elementRef, ownerSuffix);
@@ -769,6 +778,10 @@ public class MetadataCollectionSpecializer {
         capturedChildren, ownerSuffix),
       FileType.BSL);
     return true;
+  }
+
+  private Optional<TypeRef> resolveOnce(String name) {
+    return resolvedByName.computeIfAbsent(name, typeRegistry::resolve);
   }
 
   private void registerSubChildOwners(List<ChildName> children, TypeRef elementRef, String ownerSuffix) {
