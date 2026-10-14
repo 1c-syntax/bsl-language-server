@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.DereferenceLocator;
-import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -94,7 +94,7 @@ public class PropertyMethodInference {
   private static final int KEY_ARGUMENT_INDEX = 0;
 
   private final TypeRegistry typeRegistry;
-  private final PropertyMethodCallIndex propertyMethodCallIndex;
+  private final ReceiverSitesIndex receiverSitesIndex;
 
   /**
    * Вызовы {@code Свойство}, типизирующие эту переменную, по позиции их начала.
@@ -117,7 +117,7 @@ public class PropertyMethodInference {
     // весь модуль, и туда попадают вызовы из всех его тел, как и должно быть.
     var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.MethodCallContext> calls = new LinkedHashMap<>();
-    for (var call : propertyMethodCallIndex.byOutParameter(owner.getUri(), ast, variable.getName())) {
+    for (var call : receiverSitesIndex.propertyCalls(owner.getUri(), ast, variable.getName())) {
       var start = Positions.create(call);
       if (Ranges.containsPosition(scopeRange, start)) {
         calls.put(start, call);

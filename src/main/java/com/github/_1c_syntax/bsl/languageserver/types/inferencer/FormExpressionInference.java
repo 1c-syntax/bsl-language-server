@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.index.AssignmentByReceiverIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -107,7 +107,7 @@ public class FormExpressionInference {
   private final FormByNameResolver formByNameResolver;
   private final FormAttributeTypeIndex formAttributeTypeIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final AssignmentByReceiverIndex assignmentByReceiverIndex;
+  private final ReceiverSitesIndex receiverSitesIndex;
   private final TableCollectionInference tableCollectionInference;
 
   /**
@@ -365,7 +365,7 @@ public class FormExpressionInference {
     // переменные разных методов получали бы присваивания друг друга.
     var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.AssignmentContext> assignments = new LinkedHashMap<>();
-    for (var assignment : assignmentByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
+    for (var assignment : receiverSitesIndex.assignments(owner.getUri(), ast, variable.getName())) {
       var start = Positions.create(assignment);
       if (Ranges.containsPosition(scopeRange, start) && assignedKindName(assignment) != null) {
         assignments.put(start, assignment);
