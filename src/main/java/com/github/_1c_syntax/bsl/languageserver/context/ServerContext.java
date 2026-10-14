@@ -58,6 +58,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -151,15 +152,30 @@ public class ServerContext {
    * Наполнить контекст документами из перечисленных файлов.
    * <p>
    * Наполнение — фоновая работа ({@link #runBackgroundWork(Runnable)}): после остановки
-   * ({@link #stopBackgroundWork()}) оставшиеся файлы не разбираются.
+   * ({@link #stopBackgroundWork()}) оставшиеся файлы не разбираются, а об остановленном
+   * наполнении не сообщается. Обработка окончания наполнения — слушатели
+   * {@code ServerContextPopulatedEvent} — идёт как его часть.
    *
    * @param files файлы модулей.
    */
   public void populateContext(Collection<File> files) {
-    runBackgroundWork(() -> populate(files));
+    runBackgroundWork(() -> {
+      try {
+        populateDocuments(files);
+      } catch (CancellationException e) {
+        LOGGER.debug("Populating context stopped.");
+      }
+    });
   }
 
-  private void populate(Collection<File> files) {
+  /**
+   * Завести и разобрать документы перечисленных файлов. По окончании публикуется
+   * {@code ServerContextPopulatedEvent}.
+   *
+   * @param files файлы модулей.
+   * @throws CancellationException если фоновая работа остановлена и наполнение не закончено.
+   */
+  private void populateDocuments(Collection<File> files) {
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
       files.size(),
       getMessage("populateFilesPostfix")
@@ -207,6 +223,11 @@ public class ServerContext {
     }
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
+    if (backgroundWorkStopped) {
+      // Часть файлов пропущена, и обрабатывать окончание наполнения незачем: рабочую
+      // область закрывают.
+      throw new CancellationException("Populating context stopped");
+    }
     LOGGER.debug("Context populated.");
   }
 
