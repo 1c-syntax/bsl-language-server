@@ -124,6 +124,13 @@ public class ServerContext {
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
   private volatile boolean clearing;
+  /**
+   * Фоновая работа над рабочей областью: наполнение и обработка его окончания — слушатели
+   * {@code ServerContextPopulatedEvent}. Идёт под этой блокировкой на чтение, остановка берёт её
+   * на запись и тем дожидается конца работы.
+   */
+  private final ReadWriteLock backgroundWork = new ReentrantReadWriteLock();
+  private volatile boolean backgroundWorkStopped;
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -140,7 +147,19 @@ public class ServerContext {
     populateContext(files);
   }
 
+  /**
+   * Наполнить контекст документами из перечисленных файлов.
+   * <p>
+   * Наполнение — фоновая работа ({@link #runBackgroundWork(Runnable)}): после остановки
+   * ({@link #stopBackgroundWork()}) оставшиеся файлы не разбираются.
+   *
+   * @param files файлы модулей.
+   */
   public void populateContext(Collection<File> files) {
+    runBackgroundWork(() -> populate(files));
+  }
+
+  private void populate(Collection<File> files) {
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
       files.size(),
       getMessage("populateFilesPostfix")
@@ -159,6 +178,9 @@ public class ServerContext {
     try {
       populateContextExecutor.submit(() ->
         files.parallelStream().forEach((File file) -> {
+          if (backgroundWorkStopped) {
+            return;
+          }
           workDoneProgressReporter.tick();
 
           var uri = Absolute.uri(file.toURI());
@@ -363,6 +385,50 @@ public class ServerContext {
    */
   public boolean isClearing() {
     return clearing;
+  }
+
+  /**
+   * Выполнить фоновую работу над рабочей областью, если она ещё не остановлена.
+   * <p>
+   * {@link #stopBackgroundWork()} дожидается конца такой работы, поэтому долгая работа должна
+   * сверяться с {@link #isBackgroundWorkStopped()} и после остановки заканчиваться.
+   *
+   * @param work работа.
+   * @return {@code true}, если работа выполнена; {@code false}, если фоновая работа уже остановлена.
+   */
+  public boolean runBackgroundWork(Runnable work) {
+    backgroundWork.readLock().lock();
+    try {
+      if (backgroundWorkStopped) {
+        return false;
+      }
+      work.run();
+      return true;
+    } finally {
+      backgroundWork.readLock().unlock();
+    }
+  }
+
+  /**
+   * Остановить фоновую работу над рабочей областью и дождаться конца той, что уже идёт. После
+   * этого с документами области никто не работает, и её можно очищать. Новая фоновая работа не
+   * начинается.
+   * <p>
+   * Вызывающий поток не должен держать блокировок, которых может ждать фоновая работа.
+   */
+  public void stopBackgroundWork() {
+    backgroundWorkStopped = true;
+    backgroundWork.writeLock().lock();
+    backgroundWork.writeLock().unlock();
+  }
+
+  /**
+   * Остановлена ли фоновая работа над рабочей областью ({@link #stopBackgroundWork()}).
+   *
+   * @return {@code true}, если остановлена: долгой работе пора заканчиваться.
+   */
+  public boolean isBackgroundWorkStopped() {
+    return backgroundWorkStopped;
   }
 
   /**

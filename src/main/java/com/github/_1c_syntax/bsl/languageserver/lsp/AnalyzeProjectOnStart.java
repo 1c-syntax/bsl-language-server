@@ -72,6 +72,9 @@ public class AnalyzeProjectOnStart {
     try {
       executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
+          if (serverContext.isBackgroundWorkStopped()) {
+            return;
+          }
           progress.tick();
 
           // Работа с документом — под его верхнеуровневым локом, как в остальных

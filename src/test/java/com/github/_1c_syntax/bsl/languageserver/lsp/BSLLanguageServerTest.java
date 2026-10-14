@@ -532,18 +532,20 @@ class BSLLanguageServerTest {
     }
 
     @Test
-    void shutdownKeepsWorkspaces() throws ExecutionException, InterruptedException {
-      // given — наполнение рабочей области идёт в фоне и к shutdown может быть ещё не закончено
+    void shutdownStopsBackgroundWorkAndClearsWorkspaces() throws ExecutionException, InterruptedException {
+      // given
       var params = new InitializeParams();
       var workspaceUri = Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri());
       params.setWorkspaceFolders(List.of(new WorkspaceFolder(workspaceUri.toString(), "test")));
       server.initialize(params).get();
+      var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
 
       // when
       server.shutdown().get();
 
-      // then — контекст не разобран из-под работающих над ним потоков
-      assertThat(serverContextProvider.getAllContexts()).containsKey(workspaceUri);
+      // then
+      assertThat(serverContext.isBackgroundWorkStopped()).isTrue();
+      assertThat(serverContextProvider.getAllContexts()).doesNotContainKey(workspaceUri);
     }
 
     @Test

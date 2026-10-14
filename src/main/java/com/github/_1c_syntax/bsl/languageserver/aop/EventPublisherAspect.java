@@ -145,7 +145,10 @@ public class EventPublisherAspect {
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
   public void serverContextPopulated(JoinPoint joinPoint, Collection<File> files) {
-    publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
+    var serverContext = (ServerContext) joinPoint.getThis();
+    // Слушатели продолжают наполнение — дорасчёт типов, анализ при старте, — поэтому идут как
+    // фоновая работа: остановленное наполнение не дорассчитывается, а остановка их дожидается.
+    serverContext.runBackgroundWork(() -> publishEvent(new ServerContextPopulatedEvent(serverContext)));
   }
 
   @AfterReturning(
