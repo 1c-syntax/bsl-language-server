@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791998302678,
+  "lastUpdate": 1792000852331,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45508,6 +45508,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.1741741658711025",
             "extra": "mean: 93.14748167991638 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "460899dcace368bb937b5fbe263a016d55322cf6",
+          "message": "Merge pull request #4669 from 1c-syntax/perf/types-receiver-sites-single-walk\n\nМеста приёмников переменной собираются за один обход дерева разбора",
+          "timestamp": "2026-10-14T18:39:57+02:00",
+          "tree_id": "590186b87b82119a2c62343c8d0eb40bc4ce26ab",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/460899dcace368bb937b5fbe263a016d55322cf6"
+        },
+        "date": 1792000823171,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.7020054658254,
+            "unit": "sec",
+            "range": "stddev: 1.3382561604488523",
+            "extra": "mean: 92.7020054658254 sec\nrounds: 3"
           }
         ]
       }
