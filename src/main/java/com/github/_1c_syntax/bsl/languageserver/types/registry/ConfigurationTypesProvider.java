@@ -101,16 +101,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * вызывающему достаточно обновить конфигурацию до {@code addWorkspace}.
  * <p>
  * Обработчик события асинхронный: чтение метаданных и регистрация на большой конфигурации —
- * десятки секунд, и поток, добавивший рабочую область, их не ждёт. Они идут на однопоточном
- * исполнителе подготовки рабочей области ({@code workspacePreparationExecutor}), и
- * {@link ServerContext} считает рабочую область готовящейся, пока не выполнится задача,
- * поставленная туда следом за регистрацией. Наполнение контекста ({@code populateContext})
- * этого дожидается, а документы, заведённые раньше, по окончании подготовки перепривязываются
- * к конфигурации — с деревом символов, построенным заново.
+ * десятки секунд, и поток, добавивший рабочую область, их не ждёт. До конца попытки регистрации
+ * (событие {@code ConfigurationTypesRegistrationFinishedEvent} — оно публикуется при любом
+ * исходе) {@link ServerContext} считает рабочую область готовящейся: наполнение контекста
+ * ({@code populateContext}) этого дожидается, а документы, заведённые раньше, по окончании
+ * подготовки перепривязываются к конфигурации — с деревом символов, построенным заново.
  * <p>
- * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно
- * ({@link Ordered#HIGHEST_PRECEDENCE}): регистрация ставится на исполнитель подготовки первой,
- * раньше задачи, по которой {@link ServerContext} узнаёт об окончании подготовки.
+ * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно: регистрация запускается
+ * сразу после того, как контекст отметил начало подготовки ({@link Ordered#HIGHEST_PRECEDENCE}),
+ * и не ждёт остальных слушателей — {@code OScriptLibraryIndex} обходит всё дерево workspace'а.
  */
 @Component
 @WorkspaceScope
@@ -199,14 +198,13 @@ public class ConfigurationTypesProvider {
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   /**
-   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}) — в фоне,
-   * на исполнителе подготовки рабочей области.
+   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}) — в фоне.
    *
    * @param event событие добавления workspace'а.
    */
-  @Async("workspacePreparationExecutor")
+  @Async("asyncEventListenerExecutor")
   @EventListener
-  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @Order(Ordered.HIGHEST_PRECEDENCE + 1)
   public void handleEvent(WorkspaceAddedEvent event) {
     tryRegister();
   }
@@ -235,7 +233,7 @@ public class ConfigurationTypesProvider {
     }
     // workspaceUri установлен всегда: tryRegister зовётся только из обработчика
     // WorkspaceAddedEvent, событие публикуется под workspace-контекстом, а исполнитель
-    // подготовки переносит его в свой поток.
+    // асинхронных обработчиков переносит его в свой поток.
     var workspaceUri = WorkspaceContextHolder.get();
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext == null) {

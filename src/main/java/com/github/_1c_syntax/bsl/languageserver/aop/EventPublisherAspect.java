@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegistrationFinishedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
@@ -46,8 +47,10 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.events.OScriptLibr
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.eclipse.lsp4j.InitializeParams;
@@ -161,14 +164,21 @@ public class EventPublisherAspect {
     publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
   }
 
-  @AfterReturning(
-    pointcut = "Pointcuts.isConfigurationTypesProvider() && Pointcuts.isTryRegisterCall()",
-    returning = "serverContext"
-  )
-  public void configurationTypesRegistered(JoinPoint joinPoint, @Nullable ServerContext serverContext) {
-    if (serverContext != null) {
-      // tryRegister отдаёт non-null только при реальной регистрации, отсев no-op
-      publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
+  @Around("Pointcuts.isConfigurationTypesProvider() && Pointcuts.isTryRegisterCall()")
+  public @Nullable Object configurationTypesRegistration(ProceedingJoinPoint joinPoint) throws Throwable {
+    var workspaceUri = WorkspaceContextHolder.get();
+    try {
+      var serverContext = (ServerContext) joinPoint.proceed();
+      if (serverContext != null) {
+        // tryRegister отдаёт non-null только при реальной регистрации, отсев no-op
+        publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
+      }
+      return serverContext;
+    } finally {
+      // Конец попытки публикуется всегда — и при отказе, и при исключении.
+      if (workspaceUri != null) {
+        publishEvent(new ConfigurationTypesRegistrationFinishedEvent(joinPoint.getThis(), workspaceUri));
+      }
     }
   }
 

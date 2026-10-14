@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegistrationFinishedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
@@ -213,6 +214,13 @@ public class ServerContextProvider {
    */
   public void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    var preparing = contexts.get(uri);
+    if (preparing != null) {
+      // Подготовка, идущая в фоне, обращается к бинам рабочей области, а заканчивается по
+      // событию, слушатель которого ищет контекст в этой карте, — поэтому дожидаемся её,
+      // пока рабочая область ещё на месте.
+      preparing.awaitPreparation();
+    }
     // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
     // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
     repointPrimaryBeforeRemoval(uri);
@@ -226,9 +234,6 @@ public class ServerContextProvider {
     // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
     // (для async-propagated workspace'ов запись там может отсутствовать).
     if (serverContext != null) {
-      // Подготовка, идущая в фоне, обращается к бинам рабочей области — их нельзя уничтожать
-      // посреди неё.
-      serverContext.awaitPreparation();
       var name = extractWorkspaceName(uri);
       try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
         serverContext.clear();
@@ -434,19 +439,29 @@ public class ServerContextProvider {
   }
 
   /**
-   * Обработчик события добавления рабочей области: отмечает в её контексте, что рабочая
-   * область готовится в фоне ({@link ServerContext#trackPreparation()}).
+   * Обработчик события добавления рабочей области: отмечает в её контексте начало подготовки
+   * в фоне — регистрации типов конфигурации асинхронным обработчиком этого же события.
    * <p>
-   * Идёт следом за регистрацией типов конфигурации: та — асинхронный обработчик этого же
-   * события и к этому моменту уже поставлена на исполнитель подготовки, поэтому задача
-   * контекста встаёт в очередь после неё.
+   * Идёт первым, раньше запуска регистрации: иначе она могла бы закончиться прежде, чем
+   * подготовка отмечена начатой, и подготовка не закончилась бы никогда.
    *
    * @param event событие добавления рабочей области.
    */
   @EventListener
-  @Order(Ordered.HIGHEST_PRECEDENCE + 1)
+  @Order(Ordered.HIGHEST_PRECEDENCE)
   public void onWorkspaceAdded(WorkspaceAddedEvent event) {
-    getServerContextUnsafe(event.getWorkspaceUri()).ifPresent(ServerContext::trackPreparation);
+    Optional.ofNullable(contexts.get(event.getWorkspaceUri())).ifPresent(ServerContext::beginPreparation);
+  }
+
+  /**
+   * Обработчик окончания регистрации типов конфигурации — при любом её исходе: заканчивает
+   * подготовку рабочей области.
+   *
+   * @param event событие окончания регистрации типов конфигурации.
+   */
+  @EventListener
+  public void onConfigurationTypesRegistrationFinished(ConfigurationTypesRegistrationFinishedEvent event) {
+    Optional.ofNullable(contexts.get(event.getWorkspaceUri())).ifPresent(ServerContext::finishPreparation);
   }
 
   /**

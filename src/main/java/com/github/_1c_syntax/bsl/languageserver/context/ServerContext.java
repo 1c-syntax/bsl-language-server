@@ -90,8 +90,6 @@ public class ServerContext {
   private final ExecutorService computeConfigurationExecutor;
   @Qualifier("populateContextExecutor")
   private final ExecutorService populateContextExecutor;
-  @Qualifier("workspacePreparationExecutor")
-  private final ExecutorService workspacePreparationExecutor;
 
   /**
    * Ограниченный кэш резолва общего модуля по имени ({@code имя -> Optional<CommonModule>},
@@ -132,20 +130,19 @@ public class ServerContext {
   private volatile boolean clearing;
 
   /**
-   * Подготовка рабочей области, идущая в фоне (см. {@link #trackPreparation()}); завершена,
+   * Подготовка рабочей области, идущая в фоне (см. {@link #beginPreparation()}); завершена,
    * если рабочая область не готовится.
    */
-  private final AtomicReference<CompletableFuture<?>> preparation
+  private final AtomicReference<CompletableFuture<@Nullable Void>> preparation
     = new AtomicReference<>(CompletableFuture.completedFuture(null));
 
   /** Документы, заведённые, пока рабочая область готовилась в фоне. */
   private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
 
   /**
-   * Отметить, что рабочая область готовится в фоне: работа, уже поставленная на исполнитель
-   * подготовки рабочей области, — чтение метаданных и регистрация типов конфигурации — ещё
-   * идёт. Исполнитель однопоточный и берёт задачи по очереди, поэтому подготовка закончена,
-   * когда он доберётся до задачи, поставленной этим вызовом.
+   * Отметить начало подготовки рабочей области в фоне — чтения метаданных и регистрации типов
+   * конфигурации. Подготовка идёт до {@link #finishPreparation()}; если она уже идёт, вызов
+   * ничего не меняет.
    * <p>
    * Пока рабочая область готовится, {@link #getConfiguration()} при непрочитанных метаданных
    * отвечает пустой конфигурацией, а не ждёт чтения. Документы, заведённые за это время, по
@@ -153,22 +150,26 @@ public class ServerContext {
    * ({@link #refreshDocumentsCreatedWhilePreparing()}). Наполнение начинается не раньше конца
    * подготовки.
    */
-  public void trackPreparation() {
-    var future = new CompletableFuture<@Nullable Void>();
-    preparation.set(future);
-    workspacePreparationExecutor.execute(() -> {
-      try {
-        refreshDocumentsCreatedWhilePreparing();
-        future.complete(null);
-        // Документ, заведённый, пока перепривязывались прочие, остался в очереди, если узнал о
-        // подготовке до её конца; узнавший после перепривязал себя сам (createDocumentContext).
-        refreshDocumentsCreatedWhilePreparing();
-      } catch (RuntimeException e) {
-        LOGGER.error("Failed to rebind documents created while preparing workspace {}", workspaceUri, e);
-      } finally {
-        future.complete(null);
-      }
-    });
+  void beginPreparation() {
+    preparation.updateAndGet(current -> current.isDone() ? new CompletableFuture<>() : current);
+  }
+
+  /**
+   * Закончить подготовку рабочей области: заново привязать к конфигурации документы,
+   * заведённые за время подготовки, и отпустить тех, кто её ждёт.
+   * <p>
+   * Берёт блокировки документов по одной, поэтому вызывающий поток не должен держать
+   * блокировку какого-либо документа.
+   */
+  void finishPreparation() {
+    try {
+      refreshDocumentsCreatedWhilePreparing();
+    } finally {
+      preparation.get().complete(null);
+    }
+    // Документ, заведённый, пока перепривязывались прочие, остался в очереди, если узнал о
+    // подготовке до её конца; узнавший после перепривязал себя сам (createDocumentContext).
+    refreshDocumentsCreatedWhilePreparing();
   }
 
   /**
@@ -591,7 +592,7 @@ public class ServerContext {
   /**
    * Метаданные конфигурации рабочей области; читаются при первом обращении.
    * <p>
-   * Пока рабочая область готовится в фоне ({@link #trackPreparation()}), а метаданные ещё не
+   * Пока рабочая область готовится в фоне ({@code beginPreparation()}), а метаданные ещё не
    * прочитаны, отвечает пустой конфигурацией, не дожидаясь чтения.
    *
    * @return метаданные конфигурации; пустые, если конфигурации нет или она ещё читается.

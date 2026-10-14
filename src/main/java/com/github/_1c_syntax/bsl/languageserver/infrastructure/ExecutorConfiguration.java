@@ -107,6 +107,12 @@ public class ExecutorConfiguration {
     return createVirtualThreadExecutor(compositeTaskDecorator, "sentry-");
   }
 
+  // Асинхронные обработчики событий: @Async("asyncEventListenerExecutor").
+  @Bean
+  public AsyncTaskExecutor asyncEventListenerExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "async-event-listener-");
+  }
+
   // --- ForkJoinPool beans (parallelStream runs inside) ---
   // Per-workspace: worker threads set workspace URI in onStart(),
   // so parallelStream forks always have correct ThreadLocal context.
@@ -132,18 +138,6 @@ public class ExecutorConfiguration {
     return createSharedForkJoinExecutorService("compute-configuration-");
   }
 
-  // workspacePreparationExecutor — один поток на workspace: подготовка рабочей области в фоне
-  // (@Async-обработчики WorkspaceAddedEvent: чтение метаданных и регистрация типов). Задачи
-  // выполняются по одной в порядке постановки, поэтому задача, поставленная следом за
-  // регистрацией, начнётся после её конца. Контекст workspace, в котором задачу поставили,
-  // несёт ContextPropagatingExecutorService — его получают и слушатели событий, публикуемых
-  // аспектами по ходу подготовки.
-  @Bean(destroyMethod = "shutdown")
-  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
-  public ExecutorService workspacePreparationExecutor() {
-    return createWorkspaceExecutorService("workspace-preparation-", 1);
-  }
-
   // diagnosticComputerExecutor — обычный ThreadPoolExecutor, а не ForkJoinPool: диагностики одного
   // документа сабмитятся отдельными задачами, а вызывающая сторона собирает результат через
   // Future.get(). Блокировка на get() обычного пула не проходит через ForkJoinPool.managedBlock,
@@ -152,7 +146,7 @@ public class ExecutorConfiguration {
   @Bean(destroyMethod = "shutdown")
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService diagnosticComputerExecutor() {
-    return createWorkspaceExecutorService("diagnostic-computer-", ForkJoinPool.getCommonPoolParallelism());
+    return createWorkspaceExecutorService("diagnostic-computer-");
   }
 
   @Bean(destroyMethod = "shutdown")
@@ -193,13 +187,14 @@ public class ExecutorConfiguration {
     return new ContextPropagatingExecutorService(pool);
   }
 
-  private static ExecutorService createWorkspaceExecutorService(String prefix, int parallelism) {
+  private static ExecutorService createWorkspaceExecutorService(String prefix) {
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
       throw new IllegalStateException("Workspace context is not set when creating executor");
     }
     var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
       .orElse("default");
+    var parallelism = ForkJoinPool.getCommonPoolParallelism();
     var factory = new NamedThreadFactory(prefix + workspaceName + "-");
     var pool = new ThreadPoolExecutor(
       parallelism, parallelism,

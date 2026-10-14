@@ -14,13 +14,15 @@
   документов (add/remove/rebuild/clear), кэш метаданных конфигурации 1С (`CF` через `Lazy`,
   Caffeine-кэш общих модулей). Мутации публикуют Spring-события (через AOP).
   **Подготовка рабочей области идёт в фоне.** Типы конфигурации регистрирует `@Async`-обработчик
-  `WorkspaceAddedEvent` (`ConfigurationTypesProvider`) на однопоточном `workspacePreparationExecutor`;
-  следом `ServerContextProvider` ставит туда же задачу контекста (`trackPreparation`), и подготовка
-  закончена, когда исполнитель до неё доберётся. До тех пор `getConfiguration()` при непрочитанных
-  метаданных отвечает пустой конфигурацией, а не ждёт чтения (настоящие — `awaitConfiguration()`),
-  документы, заведённые за это время, потом перепривязываются, `populateContext` ждёт конца
-  подготовки (`awaitPreparation()`). Кто читает типы или метаданные сразу после `addWorkspace`
-  без наполнения (CLI `format`, MCP, тесты), сам зовёт `awaitPreparation()`.
+  `WorkspaceAddedEvent` (`ConfigurationTypesProvider`, исполнитель `asyncEventListenerExecutor`).
+  Раньше него `ServerContextProvider` отмечает начало подготовки (`beginPreparation`), а
+  заканчивает её по `ConfigurationTypesRegistrationFinishedEvent` — аспект публикует его после
+  `tryRegister` при любом исходе, в том числе при исключении. До тех пор `getConfiguration()`
+  при непрочитанных метаданных отвечает пустой конфигурацией, а не ждёт чтения (настоящие —
+  `awaitConfiguration()`), документы, заведённые за это время, потом перепривязываются,
+  `populateContext` ждёт конца подготовки (`awaitPreparation()`). Кто читает типы или метаданные
+  сразу после `addWorkspace` без наполнения (CLI `format`, MCP, тесты), сам зовёт
+  `awaitPreparation()`.
   **`getScriptVariantLanguage()`** — язык исходников проекта (ScriptVariant конфигурации,
   фолбэк на язык сервера). Единственное место этого расчёта: его спрашивают и там, где
   документа нет (регистрация типов), а `DocumentContext` делегирует сюда, добавляя одну
@@ -76,7 +78,8 @@
 
 Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEvent`,
 `DocumentContextContentChangedEvent`, `DocumentContextConfigurationBindingChangedEvent`,
-`ServerContextPopulatedEvent`, `ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
+`ServerContextPopulatedEvent`, `ConfigurationTypesRegisteredEvent`,
+`ConfigurationTypesRegistrationFinishedEvent`. Используются downstream-индексами (`references/`, `types/`)
 для инвалидации кэшей. События жизненного цикла workspace (`Workspace(Before)Added/RemovedEvent`)
 вынесены в корневой пакет `events` и «похудели» до URI (контекст в payload не носят), чтобы от них
 мог зависеть `configuration`, не образуя цикл `configuration↔context`; подписчики резолвят контекст

@@ -37,6 +37,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentMatchers;
@@ -57,7 +58,9 @@ import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest extends AbstractServerContextAwareTest {
@@ -233,6 +236,39 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
     assertThat(context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule))
       .contains(documentContext);
+  }
+
+  @Test
+  void failedRegistrationStillEndsPreparation() {
+    // given: чтение метаданных падает — регистрация типов кончается исключением.
+    serverContextProvider.clear();
+    doThrow(new IllegalStateException("metadata reading failed"))
+      .when(computeConfigurationExecutor).submit(ArgumentMatchers.<Callable<Object>>any());
+
+    // when
+    var workspace = serverContextProvider.addWorkspace(Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri()));
+
+    // then: подготовка заканчивается — наполнение, которое её ждёт, не повиснет.
+    assertTimeoutPreemptively(Duration.ofSeconds(30), workspace::awaitPreparation);
+  }
+
+  @Test
+  void workspaceRemovedWhilePreparingWaitsForPreparationToEnd() throws InterruptedException {
+    // given: рабочую область снимают, пока её типы ещё регистрируются.
+    var finishReading = addWorkspacePreparedInBackground();
+    var workspaceUri = context.getWorkspaceUri();
+    var removing = new Thread(() ->
+      serverContextProvider.removeWorkspace(new WorkspaceFolder(workspaceUri.toString(), "test")));
+    removing.start();
+    await().atMost(Duration.ofSeconds(10)).until(() -> removing.getState() == Thread.State.WAITING);
+
+    // when
+    finishReading.countDown();
+    removing.join(Duration.ofSeconds(30));
+
+    // then: конец регистрации нашёл свой контекст, и снятие дождалось его.
+    assertThat(removing.isAlive()).isFalse();
+    assertThat(serverContextProvider.getAllContexts()).doesNotContainKey(workspaceUri);
   }
 
   @Test
