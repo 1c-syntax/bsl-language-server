@@ -238,6 +238,13 @@ public class TypeRegistry {
    * Источник истины — {@code Context.typeParameters()} в bsl-context.
    */
   private final Map<TypeRef, List<String>> typeParameters = new ConcurrentHashMap<>();
+  /**
+   * Ответы {@link #findAllGenericsByFamilyCore(String)} по началу имени в нижнем регистре. Дженерики
+   * заводятся только вместе с платформенными типами, а спрашивают о них на каждом объекте
+   * метаданных, поэтому ответ запоминается. Новый дженерик заменяет карту целиком: ответ,
+   * посчитанный до него, пишется в прежнюю карту и пропадает вместе с ней.
+   */
+  private volatile Map<String, List<TypeRef>> genericsByFamilyCore = new ConcurrentHashMap<>();
 
   /**
    * Двуязычные имена типов (для hover/inlay): для канонических TypeRef
@@ -429,20 +436,23 @@ public class TypeRegistry {
    *                   (например, {@code "Справочник"} матчит
    *                   {@code "СправочникСсылка.<Имя справочника>"},
    *                   {@code "СправочникВыборка.<Имя справочника>"} и т.п.)
-   * @return список интернированных TypeRef'ов; пустой, если совпадений нет
+   * @return неизменяемый список интернированных TypeRef'ов; пустой, если совпадений нет
    */
   public List<TypeRef> findAllGenericsByFamilyCore(String familyCore) {
     if (familyCore == null || familyCore.isEmpty()) {
       return List.of();
     }
-    var needle = familyCore.toLowerCase(Locale.ROOT);
+    return genericsByFamilyCore.computeIfAbsent(familyCore.toLowerCase(Locale.ROOT), this::scanGenericsByFamilyCore);
+  }
+
+  private List<TypeRef> scanGenericsByFamilyCore(String needle) {
     var result = new ArrayList<TypeRef>();
     for (var ref : typeParameters.keySet()) {
       if (ref.qualifiedName().toLowerCase(Locale.ROOT).startsWith(needle)) {
         result.add(ref);
       }
     }
-    return result;
+    return List.copyOf(result);
   }
 
   /**
@@ -1641,6 +1651,7 @@ public class TypeRegistry {
   private void registerPackTypeParameters(TypePackProvider.TypeDecl decl, TypeRef ref) {
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
+      genericsByFamilyCore = new ConcurrentHashMap<>();
     }
   }
 
