@@ -372,11 +372,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return didChangeWatchedFilesRelativePatternSupport;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Рабочие области не очищаются: их состояние освобождается вместе с процессом по {@link #exit()},
+   * а очистка посреди наполнения разбирала бы контекст из-под работающих над ним потоков.
+   */
   @Override
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
-    textDocumentService.reset();
-    serverContextProvider.clear();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
 
