@@ -116,6 +116,34 @@ class SeeReferenceParseOrderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void assignmentCommentReferringToModuleParsedLastIsRecomputed() {
+    // Тип переменной дан висячим комментарием в строке присваивания — ссылкой на функцию
+    // модуля, до которого очередь ещё не дошла, — а по телу значение непустое за счёт
+    // `Неопределено`. Без пометки о неполноте проход после наполнения функцию не пересчитал бы.
+    assertThat(returnTypes(List.of("Поставщик", "Переопределяемый"), "РезультатИзСоответствия"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void assignmentCommentReferringToModuleParsedFirst() {
+    assertThat(returnTypes(List.of("Переопределяемый", "Поставщик"), "РезультатИзСоответствия"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void declarationCommentReferringToModuleParsedLastIsRecomputed() {
+    // То же, но тип дан висячим комментарием объявления `Перем`.
+    assertThat(returnTypes(List.of("Поставщик", "Переопределяемый"), "РезультатИзОбъявленной"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void declarationCommentReferringToModuleParsedFirst() {
+    assertThat(returnTypes(List.of("Переопределяемый", "Поставщик"), "РезультатИзОбъявленной"))
+      .containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
   void declaredValueRebuiltAfterPopulationDoesNotDependOnRebuildOrder() {
     // given: при наполнении интерфейс и поставщик разобраны раньше переопределяемого модуля,
     // и объявленное значение функции интерфейса посчитано без него: в поле — одно

@@ -1655,7 +1655,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(commentTypeResolver.ofAssignment(owner, assignment));
+      return types.union(typesOfAssignmentComment(owner, assignment, ctx));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1668,6 +1668,27 @@ public class ExpressionTypeInferencer {
       return elementTypesOfCollection(forEach.expression(), ctx);
     }
     return inferFromDefinitionPosition(owner, position, ctx);
+  }
+
+  /**
+   * Типы из висячего комментария в строке присваивания.
+   * <p>
+   * Ссылка {@code см.} в модуль, до разбора которого очередь ещё не дошла, пока рабочая
+   * область наполняется, не разрешается ни во что. Значение метода, посчитанное на таком
+   * ответе, решил бы порядок наполнения, поэтому расчёт помечается неполным: проход после
+   * наполнения его повторит.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @param ctx        контекст текущего инференса.
+   * @return типы из комментария; пустой набор, если комментария нет либо типы в нём не распознаны.
+   */
+  private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                                           InferenceContext ctx) {
+    if (!workspacePopulated && commentTypeResolver.assignmentAwaitsUnparsedModule(owner, assignment)) {
+      ctx.sawMissing = true;
+    }
+    return commentTypeResolver.ofAssignment(owner, assignment);
   }
 
   /**
@@ -1707,7 +1728,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(commentTypeResolver.ofAssignment(owner, assignment.get()));
+      result = result.union(typesOfAssignmentComment(owner, assignment.get(), ctx));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:
