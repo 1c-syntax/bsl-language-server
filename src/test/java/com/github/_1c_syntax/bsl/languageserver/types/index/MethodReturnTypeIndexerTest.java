@@ -506,9 +506,10 @@ class MethodReturnTypeIndexerTest {
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
 
-    // then: к началу второго оборота отсчитаны все документы первого — ход виден по ходу
-    // расчёта цикла, а не разом после него.
-    assertThat(ticksBySecondPass).hasValue(documents.length);
+    // then: к пересчёту первого документа на втором обороте отсчитаны все документы первого —
+    // ход виден по ходу расчёта цикла, а не разом после него. Больше их может быть, если
+    // по порядку компоненты на втором обороте до него пересчитаны другие.
+    assertThat(ticksBySecondPass.get()).isGreaterThanOrEqualTo(documents.length);
     // Пересчитанное на следующих оборотах добавлено в план и отсчитано: отсчёт сходится с планом.
     var sizes = ArgumentCaptor.forClass(Integer.class);
     verify(reporter, atLeastOnce()).setSize(sizes.capture());
