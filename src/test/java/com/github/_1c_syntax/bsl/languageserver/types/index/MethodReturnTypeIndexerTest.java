@@ -41,6 +41,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -59,12 +60,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -471,6 +476,49 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void progressOfCycleTooLargeToHoldIsCountedByDocumentWhileItIsComputed() {
+    // given: индикатор, по которому видно, когда отсчитаны документы, и большой цикл, второй
+    // оборот которого пересчитывает часть документов заново.
+    var progressHelper = mock(WorkDoneProgressHelper.class);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    when(progressHelper.createProgress(anyInt(), anyString())).thenReturn(reporter);
+    var configuration = mock(GlobalLanguageServerConfiguration.class);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration, resolveExecutor);
+    var ring = ring("cycle", 9);
+    var documents = ring.documents();
+    var methods = ring.methods();
+    var first = methods[0];
+    var last = methods[methods.length - 1];
+    var firstComputations = new AtomicInteger();
+    var ticksBySecondPass = new AtomicInteger(-1);
+    when(inferencer.computeReturnTypes(first)).thenAnswer(invocation -> {
+      if (firstComputations.incrementAndGet() == 2) {
+        ticksBySecondPass.set(ticksOf(reporter));
+      }
+      return new ComputedReturnTypes(STRING, Set.of(methods[1]), false);
+    });
+    when(inferencer.computeReturnTypes(last)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(first), Set.of(first), false));
+    var serverContext = serverContextOf(documents);
+    trackLoading(serverContext, documents);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: к пересчёту первого документа на втором обороте отсчитаны все документы первого —
+    // ход виден по ходу расчёта цикла, а не разом после него. Больше их может быть, если
+    // по порядку компоненты на втором обороте до него пересчитаны другие.
+    assertThat(ticksBySecondPass.get()).isGreaterThanOrEqualTo(documents.length);
+    // Пересчитанное на следующих оборотах добавлено в план и отсчитано: отсчёт сходится с планом.
+    var sizes = ArgumentCaptor.forClass(Integer.class);
+    verify(reporter, atLeastOnce()).setSize(sizes.capture());
+    var planned = sizes.getValue();
+    assertThat(planned).isGreaterThan(documents.length);
+    assertThat(ticksOf(reporter)).isEqualTo(planned);
+  }
+
+  @Test
   void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased() {
     // given: двадцать документов по кругу, все отложены и все освобождены.
     var ring = ring("ahead", 20);
@@ -683,6 +731,12 @@ class MethodReturnTypeIndexerTest {
       return true;
     }).when(serverContext).tryClearDocument(any());
     return loading;
+  }
+
+  private static int ticksOf(WorkDoneProgressHelper.WorkDoneProgressReporter reporter) {
+    return (int) mockingDetails(reporter).getInvocations().stream()
+      .filter(invocation -> invocation.getMethod().getName().equals("tick"))
+      .count();
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {

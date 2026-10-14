@@ -293,7 +293,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     );
     progressReporter.beginProgress(getMessage("resolveReturnTypes"));
     try {
-      drainPending(serverContext, progressReporter);
+      drainPending(serverContext, new ResolveProgress(progressReporter));
     } finally {
       maintenance = false;
       pending.clear();
@@ -568,24 +568,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /**
    * Разносит накопленные общим проходом изменения, догружая документы потребителей.
    *
-   * @param serverContext    рабочая область.
-   * @param progressReporter индикатор хода работы.
+   * @param serverContext рабочая область.
+   * @param progress      ход работы.
    */
-  private void drainPending(
-    ServerContext serverContext,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
-  ) {
-    var planned = 0;
+  private void drainPending(ServerContext serverContext, ResolveProgress progress) {
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
-      // Проход вскрывает новые зависимости, поэтому общий объём работы заранее не
-      // известен: наращиваем его по мере того, как работа находится. Считается ровно то,
-      // по чему идёт отсчёт, — документы, иначе числитель убегает за знаменатель.
-      planned += documentsOf(roots);
-      progressReporter.setSize(planned);
+      progress.plan(documentsOf(roots));
       var changesBefore = valueChanges.get();
-      resolveAll(serverContext, roots, progressReporter);
+      resolveAll(serverContext, roots, progress);
       // План волны строится по связям, известным на её начало, а вскрываются они её же
       // расчётом: метод, чья зависимость обогатилась после него, отложить было некому.
       var outdated = outdated();
@@ -649,12 +641,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    *
    * @param serverContext    рабочая область.
    * @param roots            отложенные методы.
-   * @param progressReporter индикатор хода работы.
+   * @param progress         ход работы.
    */
   private void resolveAll(
     ServerContext serverContext,
     List<MethodSymbol> roots,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+    ResolveProgress progress
   ) {
     var byDocument = new LinkedHashMap<URI, List<MethodSymbol>>();
     for (var root : roots) {
@@ -669,17 +661,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // конфигурации почти каждая компонента — один документ.
       var cycles = tier.stream().filter(component -> component.size() > 1).toList();
       for (var cycle : cycles) {
-        resolveComponent(serverContext, cycle, byDocument, progressReporter);
+        resolveComponent(serverContext, cycle, byDocument, progress);
       }
       var singles = tier.stream().filter(component -> component.size() == 1).toList();
       if (singles.size() == 1) {
-        resolveComponent(serverContext, singles.get(0), byDocument, progressReporter);
+        resolveComponent(serverContext, singles.get(0), byDocument, progress);
         continue;
       }
       var loaded = new Semaphore(MAX_DOCUMENTS_IN_MEMORY);
       var tasks = singles.stream()
         .map(component -> CompletableFuture.runAsync(
-          () -> resolveHoldingPermit(loaded, serverContext, component, byDocument, progressReporter),
+          () -> resolveHoldingPermit(loaded, serverContext, component, byDocument, progress),
           resolveReturnTypesExecutor))
         .toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(tasks).join();
@@ -697,18 +689,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param serverContext    рабочая область.
    * @param component        документы компоненты.
    * @param byDocument       отложенные методы по документам.
-   * @param progressReporter индикатор хода работы.
+   * @param progress         ход работы.
    */
   private void resolveHoldingPermit(
     Semaphore loaded,
     ServerContext serverContext,
     List<URI> component,
     Map<URI, List<MethodSymbol>> byDocument,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+    ResolveProgress progress
   ) {
     loaded.acquireUninterruptibly();
     try {
-      resolveComponent(serverContext, component, byDocument, progressReporter);
+      resolveComponent(serverContext, component, byDocument, progress);
     } finally {
       loaded.release();
     }
@@ -751,19 +743,24 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * <p>
    * Компонента из одного документа считается за один заход: всё, от чего она зависит, уже
    * посчитано. В цикле заходов несколько, поэтому его документы держатся загруженными —
-   * так повторные обороты не стоят ни одного лишнего разбора.
+   * так повторные обороты не стоят ни одного лишнего разбора. Цикл, документы которого
+   * разом не удержать, считается оборотами с загрузкой и освобождением.
    *
    * @param serverContext    рабочая область.
    * @param component        документы компоненты.
    * @param byDocument       отложенные методы по документам.
-   * @param progressReporter индикатор хода работы.
+   * @param progress         ход работы.
    */
   private void resolveComponent(
     ServerContext serverContext,
     List<URI> component,
     Map<URI, List<MethodSymbol>> byDocument,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+    ResolveProgress progress
   ) {
+    if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
+      resolveUnloaded(serverContext, component, byDocument, progress);
+      return;
+    }
     var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
     try {
       resolveComponent(serverContext, component, byDocument, methods);
@@ -771,7 +768,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Единица счёта — документ: он и есть единица работы прохода, а методов в нём
       // сколько угодно. Отсчёт после работы: компонента считается целиком, и до её конца
       // сказать про её документы нечего, а ярус вдобавок считается сразу многими потоками.
-      component.forEach(uri -> progressReporter.tick());
+      progress.done(component.size());
     }
   }
 
@@ -791,10 +788,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   ) {
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
-      return;
-    }
-    if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
-      resolveUnloaded(serverContext, component, byDocument);
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
@@ -826,20 +819,26 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * разбор от значений не зависит, поэтому тех, кого оборот пересчитает наверняка, другие
    * потоки разбирают впереди расчёта — не больше, чем позволяет предел разом разобранных
    * документов вместе с тем, что считается сейчас.
+   * <p>
+   * Такой цикл считается десятки секунд, поэтому ход по нему отсчитывается по документам, а
+   * не разом после последнего оборота. Документы первого оборота уже в плане волны, а
+   * пересчитанные на следующих оборотах добавляются в план по мере пересчёта.
    *
    * @param serverContext рабочая область.
    * @param component     документы компоненты.
    * @param byDocument    отложенные методы по документам.
+   * @param progress      ход работы.
    */
   private void resolveUnloaded(
     ServerContext serverContext,
     List<URI> component,
-    Map<URI, List<MethodSymbol>> byDocument
+    Map<URI, List<MethodSymbol>> byDocument,
+    ResolveProgress progress
   ) {
     // Первый оборот считает всю компоненту.
     Set<URI> changedLastPass = new HashSet<>(component);
     for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
-      changedLastPass = resolvePass(serverContext, component, byDocument, changedLastPass);
+      changedLastPass = resolvePass(serverContext, component, byDocument, changedLastPass, progress, pass == 0);
     }
   }
 
@@ -855,13 +854,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param component       документы компоненты.
    * @param byDocument      отложенные методы по документам.
    * @param changedLastPass документы, значения которых изменились на прошлом обороте.
+   * @param progress        ход работы.
+   * @param planned         в плане ли уже документы этого оборота: так у первого оборота.
    * @return документы, значения которых изменились на этом.
    */
   private Set<URI> resolvePass(
     ServerContext serverContext,
     List<URI> component,
     Map<URI, List<MethodSymbol>> byDocument,
-    Set<URI> changedLastPass
+    Set<URI> changedLastPass,
+    ResolveProgress progress,
+    boolean planned
   ) {
     var certain = component.stream()
       .filter(uri -> changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri)))
@@ -871,12 +874,57 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     try (var ahead = new AheadLoader(serverContext, certain)) {
       for (var uri : component) {
         var methods = byDocument.get(uri);
-        if ((changedLastPass.contains(uri) || isOutdated(uri, methods)) && ahead.recompute(methods)) {
+        if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
+          continue;
+        }
+        if (!planned) {
+          progress.plan(1);
+        }
+        if (ahead.recompute(methods)) {
           changed.add(uri);
         }
+        progress.done(1);
       }
     }
     return changed;
+  }
+
+  /**
+   * Ход доразрешения в документах: сколько разборов запланировано и сколько сделано.
+   * <p>
+   * Общий объём работы заранее не известен: волна вскрывает новые зависимости, а оборот
+   * большого цикла пересчитывает документы заново. План поэтому наращивается по мере того,
+   * как работа находится, и считается ровно то, по чему идёт отсчёт, — разборы документов,
+   * иначе числитель убегает за знаменатель.
+   */
+  private static final class ResolveProgress {
+
+    private final WorkDoneProgressHelper.WorkDoneProgressReporter reporter;
+    private final AtomicInteger planned = new AtomicInteger();
+
+    private ResolveProgress(WorkDoneProgressHelper.WorkDoneProgressReporter reporter) {
+      this.reporter = reporter;
+    }
+
+    /**
+     * Добавить разборы в план.
+     *
+     * @param documents число разборов.
+     */
+    void plan(int documents) {
+      reporter.setSize(planned.addAndGet(documents));
+    }
+
+    /**
+     * Отсчитать сделанные разборы.
+     *
+     * @param documents число разборов.
+     */
+    void done(int documents) {
+      for (var i = 0; i < documents; i++) {
+        reporter.tick();
+      }
+    }
   }
 
   /**
