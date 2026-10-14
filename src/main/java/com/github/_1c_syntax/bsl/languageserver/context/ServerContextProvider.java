@@ -23,8 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
@@ -409,6 +411,28 @@ public class ServerContextProvider {
    * Обработчик события добавления документа в контекст.
    * Добавляет документ в индекс для быстрого поиска.
    */
+  /**
+   * Типы конфигурации зарегистрированы: деревья символов, построенные раньше, классифицировали
+   * методы и члены без них, и перечитанный тот же текст должен построить дерево заново.
+   *
+   * @param event событие регистрации типов конфигурации.
+   */
+  @EventListener
+  public void onConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    event.getSource().advanceContentEpoch();
+  }
+
+  /**
+   * Наполнение завершено: члены модулей, собранные за наполнение, видны теперь разом, а деревья
+   * символов, построенные по ходу наполнения, их ещё не видели.
+   *
+   * @param event событие завершения наполнения.
+   */
+  @EventListener
+  public void onServerContextPopulated(ServerContextPopulatedEvent event) {
+    event.getSource().advanceContentEpoch();
+  }
+
   @EventListener
   public void onDocumentAdded(ServerContextDocumentAddedEvent event) {
     documentIndex.put(event.getUri(), event.getSource());
