@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -98,9 +100,11 @@ class GlobalContextMembersCacheTest {
 
   @Test
   void declarationOfCommonModuleReachesItsGlobalMember() {
-    // given: общий модуль объявлен по метаданным, до разбора файла, — без символа
+    // given: общий модуль объявлен по метаданным, до разбора файла, — без символа;
+    // область наполнена
     var commonModule = typeRegistry.registerConfigurationType("ОбщегоНазначения");
     typeRegistry.registerGlobalPropertyType(commonModule, FileType.BSL);
+    populated();
     assertThat(globalMember("ОбщегоНазначения", FileType.BSL).getSourceSymbol()).isEmpty();
     var declaration = mock(SourceDefinedSymbol.class);
 
@@ -112,10 +116,28 @@ class GlobalContextMembersCacheTest {
   }
 
   @Test
+  void declarationsParsedWhilePopulatingReachGlobalMembersWhenPopulated() {
+    // given: общий модуль объявлен по метаданным, memo глобального контекста собрано
+    var commonModule = typeRegistry.registerConfigurationType("ОбщегоНазначения");
+    typeRegistry.registerGlobalPropertyType(commonModule, FileType.BSL);
+    var before = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+    var declaration = mock(SourceDefinedSymbol.class);
+
+    // when: наполнение разбирает файл модуля
+    typeRegistry.registerGlobalPropertyType(commonModule, FileType.BSL, declaration);
+
+    // then: memo не сброшено — символы разобранных модулей доходят разом, с концом наполнения
+    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL)).isSameAs(before);
+    populated();
+    assertThat(globalMember("ОбщегоНазначения", FileType.BSL).getSourceSymbol()).containsSame(declaration);
+  }
+
+  @Test
   void newDeclarationOfReparsedCommonModuleReachesItsGlobalMember() {
     // given
     var commonModule = typeRegistry.registerConfigurationType("ОбщегоНазначения");
     typeRegistry.registerGlobalPropertyType(commonModule, FileType.BSL, mock(SourceDefinedSymbol.class));
+    populated();
     globalMember("ОбщегоНазначения", FileType.BSL);
     var reparsed = mock(SourceDefinedSymbol.class);
 
@@ -199,6 +221,10 @@ class GlobalContextMembersCacheTest {
     } finally {
       executor.shutdownNow();
     }
+  }
+
+  private void populated() {
+    typeRegistry.handleServerContextPopulated(new ServerContextPopulatedEvent(mock(ServerContext.class)));
   }
 
   private MemberDescriptor globalMember(String name, FileType fileType) {

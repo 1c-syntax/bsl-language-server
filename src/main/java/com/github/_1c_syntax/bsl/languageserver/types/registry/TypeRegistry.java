@@ -635,6 +635,10 @@ public class TypeRegistry {
   /**
    * То же, но с явным source-символом — для типов, не несущих declaration сами.
    * Символ удерживается слабо ({@link WeakReference}).
+   * <p>
+   * Пока рабочая область наполняется, смена одного лишь символа-источника у типа, уже
+   * помеченного глобальным свойством, memo членов {@link #GLOBAL_CONTEXT} не сбрасывает: их
+   * пересобирает конец наполнения ({@link #handleServerContextPopulated}).
    *
    * @param ref         тип-глобал-свойство.
    * @param fileType    язык, в котором он виден без префикса.
@@ -645,10 +649,14 @@ public class TypeRegistry {
     if (globalPropertyTypes.get(fileType).add(ref)) {
       membersEpoch.incrementAndGet();
       globalContextEpoch.incrementAndGet();
-    } else if (previous == null || previous.get() != declaration) {
-      // Тип уже был глобальным свойством (объявлен по метаданным до разбора файла либо
-      // помечен прошлой редакцией модуля) — сменился только символ-источник, а он входит
-      // в член глобального контекста.
+      return;
+    }
+    // Тип уже был глобальным свойством (объявлен по метаданным до разбора файла либо помечен
+    // прошлой редакцией модуля) — сменился только символ-источник, а он входит в член
+    // глобального контекста. При наполнении так меняется символ каждого разобранного общего
+    // модуля — тысячи раз подряд, и каждый раз члены глобального контекста и индекс
+    // глобальных имён пересобирались бы целиком, под общим замком.
+    if ((previous == null || previous.get() != declaration) && populated) {
       globalContextEpoch.incrementAndGet();
     }
   }
@@ -913,7 +921,9 @@ public class TypeRegistry {
    * Пока она наполнялась, источники членов модулей регистрировались без сдвига эпохи
    * ({@link #registerOwnMemberSource}), и тип, построивший члены на членах модуля раньше, чем
    * тот разобран, остался бы с ними до первого сдвига. Теперь разобраны все модули, и члены
-   * всех типов пересобираются по разу — до дорасчёта типов, который их читает.
+   * всех типов пересобираются по разу — до дорасчёта типов, который их читает. Члены
+   * {@link #GLOBAL_CONTEXT} — тоже: символы-источники общих модулей при наполнении менялись без
+   * сдвига ({@link #registerGlobalPropertyType(TypeRef, FileType, SourceDefinedSymbol)}).
    *
    * @param event событие наполнения рабочей области.
    */
@@ -922,6 +932,7 @@ public class TypeRegistry {
   public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     populated = true;
     membersEpoch.incrementAndGet();
+    globalContextEpoch.incrementAndGet();
   }
 
   /** Сдвинуть эпоху memo членов после мутации источников или подавлений типа {@code ref}. */
