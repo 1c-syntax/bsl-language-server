@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailab
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -84,7 +84,7 @@ public class OpenDataObjectInference {
   private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
 
   private final TypeRegistry typeRegistry;
-  private final CallStatementByReceiverIndex callStatementByReceiverIndex;
+  private final ReceiverSitesIndex receiverSitesIndex;
 
   /**
    * Типы выражения — то, чего этот компонент сам не умеет.
@@ -349,7 +349,7 @@ public class OpenDataObjectInference {
     // Остальные изменением не считаются: иначе тело с `Лог.Отладка(…)` выглядело бы
     // меняющим переменную модуля `Лог`, и расчёт её ячейки проходил бы по нему наравне
     // с телами, где она правда меняется.
-    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
+    for (var call : receiverSitesIndex.callStatements(owner.getUri(), ast, variable.getName())) {
       var start = Positions.create(call);
       if (Ranges.containsPosition(scopeRange, start) && isMutatorCall(call)) {
         calls.put(start, call);
