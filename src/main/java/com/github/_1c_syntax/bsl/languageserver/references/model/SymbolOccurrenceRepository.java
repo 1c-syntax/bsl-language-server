@@ -51,7 +51,8 @@ public class SymbolOccurrenceRepository {
    * сам {@link SymbolOccurrence} без обёртки-коллекции (доминирующий случай); для символа
    * с несколькими обращениями — отсортированный по {@link SymbolOccurrence#compareTo} массив
    * {@code SymbolOccurrence[]}. Массивы вместо {@code ConcurrentSkipListSet} на каждый символ
-   * убирают сотни МБ накладных расходов (на cpm — ~565 МиБ).
+   * убирают сотни МБ накладных расходов (на cpm — ~565 МиБ). Пока обращений к символу нет, но он
+   * уже интернирован ({@link #intern}), значением служит сам символ.
    * <p>
    * Обращения символа наполняются пачкой на документ ({@link #saveAll}) — одно копирование
    * массива на документ вместо копирования на каждое обращение, что снимает квадратичность
@@ -89,23 +90,29 @@ public class SymbolOccurrenceRepository {
   }
 
   /**
-   * Экземпляр символа, на который ссылаются его сохранённые обращения.
+   * Интернировать символ: вернуть единственный экземпляр, равный {@code symbol}.
    * <p>
-   * Обращений на порядок больше, чем символов: новое обращение к уже известному символу
-   * должно ссылаться на тот же экземпляр, а не держать свою копию ключа.
+   * Интернером служит сама карта обращений: обращений на порядок больше, чем символов, и все
+   * обращения к символу должны ссылаться на один экземпляр ключа, а отдельная карта-интернер
+   * дублировала бы ключи этой. Символ, к которому обращений ещё нет, кладётся в карту меткой
+   * (значением служит он сам) — её подхватывают следующие обращения, в том числе из других
+   * документов, и замещает первое сохранённое обращение.
    *
    * @param symbol Символ.
-   * @return Экземпляр из сохранённых обращений; сам {@code symbol}, если обращений к нему нет.
+   * @return Экземпляр, на который ссылаются обращения к символу; сам {@code symbol}, если его ещё нет.
    */
-  public Symbol canonical(Symbol symbol) {
-    var current = occurrencesToSymbols.get(symbol);
+  public Symbol intern(Symbol symbol) {
+    var current = occurrencesToSymbols.putIfAbsent(symbol, symbol);
+    if (current == null) {
+      return symbol;
+    }
+    if (current instanceof Symbol known) {
+      return known;
+    }
     if (current instanceof SymbolOccurrence single) {
       return single.symbol();
     }
-    if (current instanceof SymbolOccurrence[] occurrences) {
-      return occurrences[0].symbol();
-    }
-    return symbol;
+    return ((SymbolOccurrence[]) current)[0].symbol();
   }
 
   /**
@@ -117,7 +124,7 @@ public class SymbolOccurrenceRepository {
    */
   public Collection<SymbolOccurrence> getAllBySymbol(Symbol symbol) {
     var current = occurrencesToSymbols.get(symbol);
-    if (current == null) {
+    if (current == null || current instanceof Symbol) {
       return List.of();
     }
     if (current instanceof SymbolOccurrence single) {
@@ -150,7 +157,7 @@ public class SymbolOccurrenceRepository {
   }
 
   private static Object insert(@Nullable Object current, SymbolOccurrence occurrence) {
-    if (current == null) {
+    if (current == null || current instanceof Symbol) {
       return occurrence;
     }
     if (current instanceof SymbolOccurrence single) {
@@ -189,7 +196,7 @@ public class SymbolOccurrenceRepository {
     }
     var added = occurrences.stream().distinct().sorted().toArray(SymbolOccurrence[]::new);
     SymbolOccurrence[] base;
-    if (current == null) {
+    if (current == null || current instanceof Symbol) {
       base = EMPTY;
     } else if (current instanceof SymbolOccurrence single) {
       base = new SymbolOccurrence[]{single};
@@ -234,6 +241,10 @@ public class SymbolOccurrenceRepository {
    * схлопывается к одиночному значению или {@code null} (удаление ключа).
    */
   private static @Nullable Object removeAll(Object current, Set<SymbolOccurrence> toRemove) {
+    if (current instanceof Symbol) {
+      // метка интернированного символа без обращений: удалять нечего, а держать её незачем
+      return null;
+    }
     if (current instanceof SymbolOccurrence single) {
       return toRemove.contains(single) ? null : single;
     }
