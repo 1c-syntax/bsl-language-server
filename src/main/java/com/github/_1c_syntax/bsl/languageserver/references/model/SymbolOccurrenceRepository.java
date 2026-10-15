@@ -116,6 +116,16 @@ public class SymbolOccurrenceRepository {
   }
 
   /**
+   * Снять метку интернированного символа, если обращений к нему так и не сохранили.
+   * Символ с сохранёнными обращениями не трогается.
+   *
+   * @param symbol Символ.
+   */
+  public void releaseUnused(Symbol symbol) {
+    occurrencesToSymbols.remove(symbol, symbol);
+  }
+
+  /**
    * Получить все обращения к указанному символу.
    *
    * @param symbol Символ.
