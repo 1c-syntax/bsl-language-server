@@ -346,9 +346,10 @@ class MetadataCollectionSpecializerUnitTest {
     var perMdoMembers = registry.getMembers(perMdoRef, FileType.BSL);
     // у perMdoRef должны быть override-членов известных коллекций.
     var perMdoNames = perMdoMembers.stream().map(MemberDescriptor::name).toList();
-    assertThat(perMdoNames).contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты");
     // Коллекций, которых нет в описании документа, нет и у самого документа.
-    assertThat(perMdoNames).doesNotContain("Подсистемы", "Кубы", "Характеристики");
+    assertThat(perMdoNames)
+      .contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты")
+      .doesNotContain("Подсистемы", "Кубы", "Характеристики");
 
     assertThat(perMdoRef).isNotNull();
   }
