@@ -795,7 +795,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
+      for (var pass = 0; pass < MAX_PASSES && !serverContext.isBackgroundWorkStopped(); pass++) {
         var changed = false;
         for (var method : methods) {
           changed |= recompute(method);
@@ -1182,7 +1182,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     provisional.addAll(methods);
+    var serverContext = methods.get(0).getOwner().getServerContext();
     for (var method : methods) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        // В большом общем модуле функций сотни: остановка не ждёт конца документа.
+        break;
+      }
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
       // ушёл бы в отложенные — очередь не сходилась бы.
