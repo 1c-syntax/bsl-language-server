@@ -2,6 +2,8 @@
 
 While typing a method call, shows the parameter list and highlights the active parameter.
 
+If a function can return values of different types, signature help lists all known types in alphabetical order, separated by commas, for example `Choose(Condition): Array, Number`.
+
 **Shortcut:** `Ctrl+Shift+Space`
 
 [← All features](index.md)
