@@ -1333,8 +1333,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var ast = documentContext.getAst();
     var subs = ast.subs();
     if (subs != null) {
-      for (var sub : subs.sub()) {
-        if (!Ranges.containsPosition(Ranges.create(sub), position)) {
+      // Тело ищется на каждое изменение переменной, а перебор идёт по всем методам модуля,
+      // поэтому ни список объявлений, ни их диапазоны на каждый поиск не собираются.
+      for (var i = 0; i < subs.getChildCount(); i++) {
+        if (!(subs.getChild(i) instanceof BSLParser.SubContext sub) || !covers(sub, position)) {
           continue;
         }
         var procedure = sub.procedure();
@@ -1362,6 +1364,26 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     BSLParser.@Nullable CodeBlockContext codeBlock,
     Position position
   ) {
-    return codeBlock != null && Ranges.containsPosition(Ranges.create(codeBlock), position) ? codeBlock : null;
+    return codeBlock != null && covers(codeBlock, position) ? codeBlock : null;
+  }
+
+  /**
+   * Накрывает ли узел позицию — так же, как его диапазон в {@link Ranges#containsPosition}.
+   * Колонки нужны, только когда позиция на строке начала или конца узла: в остальных
+   * случаях ответ дают номера строк, и диапазон не собирается.
+   */
+  private static boolean covers(ParserRuleContext node, Position position) {
+    var start = node.getStart();
+    var stop = node.getStop() == null ? start : node.getStop();
+    var line = position.getLine();
+    var startLine = start.getLine() - 1;
+    var endLine = stop.getLine() - 1;
+    if (line < startLine || line > endLine) {
+      return false;
+    }
+    if (line > startLine && line < endLine) {
+      return true;
+    }
+    return Ranges.containsPosition(Ranges.create(node), position);
   }
 }
