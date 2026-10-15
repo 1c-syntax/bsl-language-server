@@ -701,23 +701,31 @@ public class TypeRegistry {
    * в том же наборе, и прежний символ — а с ним и прежнее дерево документа — больше ничем не
    * удерживается. Читатель, взявший набор раньше, увидит либо прежний символ, либо новый — они
    * равны.
+   * <p>
+   * Подмена идёт под тем же замком, что и сборка этих членов: иначе сборка, прочитавшая прежний
+   * символ до подмены, опубликовала бы набор с ним уже после неё.
    *
    * @param ref         тип-глобальное свойство.
    * @param declaration символ-источник из нового дерева, равный прежнему.
    */
   public void refreshGlobalPropertyDeclaration(TypeRef ref, SourceDefinedSymbol declaration) {
-    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
-    for (var fileType : FILE_TYPES) {
-      var cached = membersCache.get(new MembersKey(GLOBAL_CONTEXT, fileType));
-      var slots = cached == null ? null : cached.slots();
-      if (slots == null) {
-        continue;
-      }
-      for (var i = 0; i < slots.size(); i++) {
-        var member = slots.get(i);
-        if (member.sourceSymbol() != declaration && declaration.equals(member.sourceSymbol())) {
-          slots.set(i, member.withSourceSymbol(declaration));
+    synchronized (globalContextLock) {
+      globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+      for (var fileType : FILE_TYPES) {
+        var cached = membersCache.get(new MembersKey(GLOBAL_CONTEXT, fileType));
+        var slots = cached == null ? null : cached.slots();
+        if (slots != null) {
+          replaceDeclaration(slots, declaration);
         }
+      }
+    }
+  }
+
+  private static void replaceDeclaration(List<MemberDescriptor> slots, SourceDefinedSymbol declaration) {
+    for (var i = 0; i < slots.size(); i++) {
+      var member = slots.get(i);
+      if (member.sourceSymbol() != declaration && declaration.equals(member.sourceSymbol())) {
+        slots.set(i, member.withSourceSymbol(declaration));
       }
     }
   }
