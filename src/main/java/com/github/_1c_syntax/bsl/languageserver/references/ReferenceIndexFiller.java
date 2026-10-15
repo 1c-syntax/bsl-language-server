@@ -870,11 +870,14 @@ public class ReferenceIndexFiller {
     }
 
     private Optional<VariableSymbol> findVariableSymbol(String variableName) {
-      var variableSymbol = documentContext.getSymbolTree()
-        .getVariableSymbol(variableName, currentScope);
+      // Пока не встретился ни один метод, области ещё нет — ищется сразу в модуле.
+      if (currentScope != null) {
+        var variableSymbol = documentContext.getSymbolTree()
+          .getVariableSymbol(variableName, currentScope);
 
-      if (variableSymbol.isPresent()) {
-        return variableSymbol;
+        if (variableSymbol.isPresent()) {
+          return variableSymbol;
+        }
       }
 
       return documentContext.getSymbolTree()
