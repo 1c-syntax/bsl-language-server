@@ -135,11 +135,15 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Методы, изменившиеся в ходе общего прохода и ждущие разноса по потребителям. */
   private final Set<MethodSymbol> pending = ConcurrentHashMap.newKeySet();
 
-  /** Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает». */
-  private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
+  /**
+   * Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает».
+   * Символ метода — из последнего дерева его документа: перечитанный с тем же текстом документ
+   * подставляет сюда символы своего нового дерева ({@link #rememberCurrentSymbols}).
+   */
+  private final Map<MethodKey, MethodSymbol> indexed = new ConcurrentHashMap<>();
 
   /** Методы, значение которых посчитано по приближениям и ждёт пересчёта (см. computeIfAbsent). */
-  private final Set<MethodSymbol> provisional = ConcurrentHashMap.newKeySet();
+  private final Set<MethodKey> provisional = ConcurrentHashMap.newKeySet();
 
   /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
@@ -149,7 +153,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final AtomicLong clock = new AtomicLong();
 
   /** Отметка часов на момент, когда начинался последний расчёт метода. */
-  private final Map<MethodSymbol, Long> computedAt = new ConcurrentHashMap<>();
+  private final Map<MethodKey, Long> computedAt = new ConcurrentHashMap<>();
 
   /** Отметка часов на момент, когда в документе в последний раз менялось чьё-то значение. */
   private final Map<URI, Long> changedAt = new ConcurrentHashMap<>();
@@ -194,16 +198,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     if (!method.isFunction()) {
       return;
     }
-    var known = indexed.contains(method);
-    if (known && (approximate || !provisional.contains(method))) {
+    var key = MethodKey.of(method);
+    var known = indexed.containsKey(key);
+    if (known && (approximate || !provisional.contains(key))) {
       return;
     }
     var startedAt = clock.incrementAndGet();
     store(method, computation.get(), startedAt);
     if (approximate) {
-      provisional.add(method);
+      provisional.add(key);
     } else {
-      provisional.remove(method);
+      provisional.remove(key);
     }
     if (!known) {
       rememberMethodOfUri(method);
@@ -233,7 +238,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если типы возврата метода уже выводились и не по приближениям.
    */
   public boolean isIndexed(MethodSymbol method) {
-    return indexed.contains(method) && !provisional.contains(method);
+    var key = MethodKey.of(method);
+    return indexed.containsKey(key) && !provisional.contains(key);
   }
 
   /**
@@ -253,7 +259,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Тот же самый текст перечитан заново — посчитанные по нему значения остаются в силе.
       // Снести и посчитать их заново означало бы, во-первых, оставить окно, в котором чужой
       // поток не находит значений уже посчитанного метода, а во-вторых, потерять точность:
-      // расчёт с чистого листа рвёт цепочку взаимных вызовов в другом месте.
+      // расчёт с чистого листа рвёт цепочку взаимных вызовов в другом месте. Меняются только
+      // символы: прежние держали бы прежнее дерево документа целиком.
+      rememberCurrentSymbols(event.getSource());
       return;
     }
     var documentContext = event.getSource();
@@ -342,9 +350,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var methods = methodsByUri.remove(uri);
     if (methods != null) {
       methods.forEach(method -> {
-        indexed.remove(method);
-        provisional.remove(method);
-        computedAt.remove(method);
+        var key = MethodKey.of(method);
+        indexed.remove(key);
+        provisional.remove(key);
+        computedAt.remove(key);
       });
     }
   }
@@ -408,6 +417,34 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
+   * Подставляет в запомненное символы нового дерева документа, перечитанного с тем же текстом.
+   * <p>
+   * Записи о методах остаются в силе, а символы меняются на равные им из нового дерева: прежний
+   * символ держал бы прежнее дерево целиком. Каждая подстановка неделима, поэтому окна, в
+   * котором метод не найден, нет. Метод, которого в новом дереве нет, остаётся как был.
+   *
+   * @param documentContext документ.
+   */
+  private void rememberCurrentSymbols(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    if (!methodsByUri.containsKey(uri)) {
+      return;
+    }
+    var current = new HashMap<MethodKey, MethodSymbol>();
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      current.putIfAbsent(MethodKey.of(method), method);
+    }
+    methodsByUri.computeIfPresent(uri, (key, remembered) -> {
+      var rebound = new CopyOnWriteArrayList<MethodSymbol>();
+      for (var method : remembered) {
+        rebound.add(current.getOrDefault(MethodKey.of(method), method));
+      }
+      return rebound;
+    });
+    current.forEach((key, method) -> indexed.computeIfPresent(key, (k, remembered) -> method));
+  }
+
+  /**
    * Пересчитывает один метод и обновляет его связи.
    *
    * @param method метод.
@@ -419,7 +456,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var startedAt = clock.incrementAndGet();
     var changed = store(method, inferencer.computeReturnTypes(method), startedAt);
     // Расчёт со свежего контекста идёт не посреди кругов: значение окончательное.
-    provisional.remove(method);
+    provisional.remove(MethodKey.of(method));
     return changed;
   }
 
@@ -458,16 +495,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         LOGGER.debug("Отложен повторно: {} из {}; не посчитаны: {}",
           method.getName(), method.getOwner().getUri(),
           computed.consulted().stream()
-            .filter(dependency -> !indexed.contains(dependency))
+            .filter(dependency -> !indexed.containsKey(MethodKey.of(dependency)))
             .map(dependency -> dependency.getName() + "@" + dependency.getOwner().getMdoRef())
             .toList());
       }
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, computed.types());
-    indexed.add(method);
+    var key = MethodKey.of(method);
+    indexed.putIfAbsent(key, method);
     var valueChanged = !symbolTypeIndex.getReturnTypes(method).equals(previous);
-    computedAt.put(method, startedAt);
+    computedAt.put(key, startedAt);
     if (valueChanged) {
       // Обе отметки берутся из одной точки — до расчёта. Строго полнее было бы отмечать
       // изменение уже после того, как значение выложено: тогда ловился бы и расчёт,
@@ -493,12 +531,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private Set<MethodSymbol> outdated() {
     var outdated = new LinkedHashSet<MethodSymbol>();
-    for (var method : indexed) {
+    for (var entry : indexed.entrySet()) {
+      var method = entry.getValue();
       var dependencies = dependenciesByUri.get(method.getOwner().getUri());
       if (dependencies == null) {
         continue;
       }
-      var computed = computedAt.getOrDefault(method, 0L);
+      var computed = computedAt.getOrDefault(entry.getKey(), 0L);
       for (var dependency : dependencies) {
         if (changedAt.getOrDefault(dependency, 0L) > computed) {
           outdated.add(method);
@@ -1055,7 +1094,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       return false;
     }
     var computed = methods.stream()
-      .mapToLong(method -> computedAt.getOrDefault(method, 0L))
+      .mapToLong(method -> computedAt.getOrDefault(MethodKey.of(method), 0L))
       .min()
       .orElse(0L);
     for (var dependency : dependencies) {
@@ -1172,7 +1211,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
-    provisional.addAll(methods);
+    methods.forEach(method -> provisional.add(MethodKey.of(method)));
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
