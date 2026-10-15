@@ -724,7 +724,10 @@ public class TypeRegistry {
   private static void replaceDeclaration(List<MemberDescriptor> slots, SourceDefinedSymbol declaration) {
     for (var i = 0; i < slots.size(); i++) {
       var member = slots.get(i);
-      if (member.sourceSymbol() != declaration && declaration.equals(member.sourceSymbol())) {
+      // Документ сравнивается по ссылке — он у символа один и тот же, а полное равенство
+      // сравнивало бы адреса всех членов глобального контекста.
+      if (member.sourceSymbol() instanceof SourceDefinedSymbol source && source != declaration
+        && source.getOwner() == declaration.getOwner() && declaration.equals(source)) {
         slots.set(i, member.withSourceSymbol(declaration));
       }
     }
