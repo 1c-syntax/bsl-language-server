@@ -1355,7 +1355,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   private static BSLParser.@Nullable SubContext subAt(BSLParser.SubsContext subs, Position position) {
     for (var i = 0; i < subs.getChildCount(); i++) {
-      if (subs.getChild(i) instanceof BSLParser.SubContext sub && covers(sub, position)) {
+      if (subs.getChild(i) instanceof BSLParser.SubContext sub && Ranges.containsPosition(sub, position)) {
         return sub;
       }
     }
@@ -1373,24 +1373,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /** Блок кода, если он есть и накрывает позицию. */
-  private static BSLParser.@Nullable CodeBlockContext covering(BSLParser.@Nullable CodeBlockContext codeBlock,
-                                                               Position position) {
-    return codeBlock != null && covers(codeBlock, position) ? codeBlock : null;
-  }
-
-  /**
-   * Накрывает ли узел позицию — так же, как его диапазон в {@link Ranges#containsPosition}.
-   * Колонки нужны, только когда позиция на строке начала или конца узла: в остальных
-   * случаях ответ дают номера строк, и диапазон не собирается. У пустого узла в начале
-   * текста конечного токена нет — диапазон тогда начинается и кончается его началом.
-   */
-  private static boolean covers(ParserRuleContext node, Position position) {
-    var startLine = node.getStart().getLine() - 1;
-    var endLine = Objects.requireNonNullElse(node.getStop(), node.getStart()).getLine() - 1;
-    if (position.getLine() < startLine || position.getLine() > endLine) {
-      return false;
-    }
-    return position.getLine() > startLine && position.getLine() < endLine
-      || Ranges.containsPosition(Ranges.create(node), position);
+  private static BSLParser.@Nullable CodeBlockContext covering(
+    BSLParser.@Nullable CodeBlockContext codeBlock,
+    Position position
+  ) {
+    return codeBlock != null && Ranges.containsPosition(codeBlock, position) ? codeBlock : null;
   }
 }
