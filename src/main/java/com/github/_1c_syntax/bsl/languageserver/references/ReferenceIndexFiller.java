@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -200,24 +201,27 @@ public class ReferenceIndexFiller {
   private final class BatchingSink {
 
     private final List<SymbolOccurrence> batch;
+    /** Символы, встреченные в документе: все его обращения к символу ссылаются на один экземпляр. */
+    private final Map<Symbol, Symbol> documentSymbols = new HashMap<>();
 
     void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-      batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
+      batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range, documentSymbols));
     }
 
     void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
-      batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
+      batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range, documentSymbols));
     }
 
     void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
                           String variableName, Range range, OccurrenceType occurrenceType) {
-      batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+      batch.add(index.variableOccurrence(
+        uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType, documentSymbols));
     }
 
     void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
                             String name, Range range) {
       batch.add(index.selfMemberOccurrence(
-        uri, mdoRef, moduleType, symbolKind, name, range, OccurrenceType.REFERENCE));
+        uri, mdoRef, moduleType, symbolKind, name, range, OccurrenceType.REFERENCE, documentSymbols));
     }
   }
 

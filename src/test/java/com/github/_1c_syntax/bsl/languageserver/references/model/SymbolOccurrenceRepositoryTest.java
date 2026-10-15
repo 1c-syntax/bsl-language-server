@@ -59,6 +59,22 @@ class SymbolOccurrenceRepositoryTest {
   }
 
   @Test
+  void canonicalIsInstanceOfStoredOccurrences() {
+    var equalKey = new Symbol(SYMBOL.mdoRef(), SYMBOL.moduleType(), SYMBOL.scopeName(), SYMBOL.symbolKind(),
+      SYMBOL.symbolName());
+    assertThat(equalKey).isEqualTo(SYMBOL).isNotSameAs(SYMBOL);
+
+    // пока обращений нет, общего экземпляра тоже нет
+    assertThat(repository.canonical(equalKey)).isSameAs(equalKey);
+
+    repository.save(occurrence(1));
+    assertThat(repository.canonical(equalKey)).as("одиночное обращение").isSameAs(SYMBOL);
+
+    repository.save(occurrence(2));
+    assertThat(repository.canonical(equalKey)).as("массив обращений").isSameAs(SYMBOL);
+  }
+
+  @Test
   void singleOccurrence() {
     var occurrence = occurrence(1);
     repository.save(occurrence);
