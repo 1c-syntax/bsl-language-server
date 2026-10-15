@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.OpenDataObjectI
 import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.SeeReferenceSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -1260,9 +1261,14 @@ public class SymbolTypeIndex {
       .orElse(null);
   }
 
-  /** Ленивая ссылка на возвращаемый тип функции (из кэша, на момент чтения). */
+  /**
+   * Ленивая ссылка на возвращаемый тип функции (из кэша, на момент чтения). Ни ключ, ни
+   * чтение не держат символ функции: ссылка переживает перечитывание документа.
+   */
   private LazyTypeSet lazyReturnTypes(MethodSymbol function) {
-    return new LazyTypeSet(function, () -> getDeclaredReturnTypes(function));
+    var key = MethodKey.of(function);
+    return new LazyTypeSet(SeeReferenceSource.of(function),
+      () -> declaredReturnTypes.getOrDefault(key, TypeSet.EMPTY));
   }
 
   /**
