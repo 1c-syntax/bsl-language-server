@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
@@ -44,7 +44,7 @@ public record SeeReferenceSource(URI uri, String name, Range selectionRange) {
    * @param function функция.
    * @return ключ функции.
    */
-  public static SeeReferenceSource of(MethodSymbol function) {
+  public static SeeReferenceSource of(SourceDefinedSymbol function) {
     return new SeeReferenceSource(function.getOwner().getUri(), function.getName(), function.getSelectionRange());
   }
 }

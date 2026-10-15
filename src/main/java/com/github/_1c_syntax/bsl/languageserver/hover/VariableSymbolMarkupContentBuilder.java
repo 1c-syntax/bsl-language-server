@@ -339,11 +339,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    * определение; пустая строка, если источник — не функция с позицией.
    */
   private static String sourceLink(Object key) {
-    if (!(key instanceof SeeReferenceSource function)) {
+    if (!(key instanceof SeeReferenceSource(var uri, var name, var selectionRange))) {
       return "";
     }
-    var target = NavigationLinks.toTarget(function.uri(), function.selectionRange());
-    return "[%s](%s)".formatted(function.name(), target);
+    var target = NavigationLinks.toTarget(uri, selectionRange);
+    return "[%s](%s)".formatted(name, target);
   }
 
   /** markdown-метка типов значения поля: имена в кавычках, объединение через {@code |}. */
