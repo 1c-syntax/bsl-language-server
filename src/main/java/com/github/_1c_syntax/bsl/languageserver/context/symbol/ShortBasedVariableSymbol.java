@@ -96,11 +96,6 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
   }
 
   @Override
-  public boolean containsPosition(Position position) {
-    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
-  }
-
-  @Override
   public Range getVariableNameRange() {
     return Ranges.create(
       variableNameLine,
@@ -125,4 +120,8 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     return variableNameEndCharacter;
   }
 
+  @Override
+  public boolean containsPosition(Position position) {
+    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
+  }
 }
