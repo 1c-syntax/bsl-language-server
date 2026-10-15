@@ -101,7 +101,9 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
     // then: у всех обращений документа к символу один экземпляр ключа, и индекс отдаёт сохранённый
     assertThat(byKey.values()).anySatisfy(occurrences -> assertThat(occurrences).hasSizeGreaterThan(1));
     byKey.forEach((key, occurrences) -> {
-      assertThat(occurrences).allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+      assertThat(occurrences)
+        .isNotEmpty()
+        .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
       var copy = new Symbol(key.mdoRef(), key.moduleType(), key.scopeName(), key.symbolKind(), key.symbolName());
       assertThat(referenceIndex.canonical(copy)).isEqualTo(key).isNotSameAs(copy);
     });
