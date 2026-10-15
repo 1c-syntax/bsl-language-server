@@ -1373,31 +1373,24 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /** Блок кода, если он есть и накрывает позицию. */
-  private static BSLParser.@Nullable CodeBlockContext covering(
-    BSLParser.@Nullable CodeBlockContext codeBlock,
-    Position position
-  ) {
+  private static BSLParser.@Nullable CodeBlockContext covering(BSLParser.@Nullable CodeBlockContext codeBlock,
+                                                               Position position) {
     return codeBlock != null && covers(codeBlock, position) ? codeBlock : null;
   }
 
   /**
    * Накрывает ли узел позицию — так же, как его диапазон в {@link Ranges#containsPosition}.
    * Колонки нужны, только когда позиция на строке начала или конца узла: в остальных
-   * случаях ответ дают номера строк, и диапазон не собирается.
+   * случаях ответ дают номера строк, и диапазон не собирается. У пустого узла в начале
+   * текста конечного токена нет — диапазон тогда начинается и кончается его началом.
    */
   private static boolean covers(ParserRuleContext node, Position position) {
-    var start = node.getStart();
-    // У пустого узла в начале текста конечного токена нет: диапазон тогда — его начало.
-    var stop = Objects.requireNonNullElse(node.getStop(), start);
-    var line = position.getLine();
-    var startLine = start.getLine() - 1;
-    var endLine = stop.getLine() - 1;
-    if (line < startLine || line > endLine) {
+    var startLine = node.getStart().getLine() - 1;
+    var endLine = Objects.requireNonNullElse(node.getStop(), node.getStart()).getLine() - 1;
+    if (position.getLine() < startLine || position.getLine() > endLine) {
       return false;
     }
-    if (line > startLine && line < endLine) {
-      return true;
-    }
-    return Ranges.containsPosition(Ranges.create(node), position);
+    return position.getLine() > startLine && position.getLine() < endLine
+      || Ranges.containsPosition(Ranges.create(node), position);
   }
 }
