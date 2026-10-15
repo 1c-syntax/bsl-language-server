@@ -149,6 +149,25 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void perMdoTypeRefHasOnlyCollectionsOfItsDescription() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Подсистемы, кубы, операции и прочее есть только у своих видов объектов — у документа
+    // и у реквизита их нет, и обращение к ним по имени — ошибка, а не член.
+    var documentRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
+    assertThat(memberNames(typeRegistry.getMembers(documentRef, FileType.BSL)))
+      .contains("Реквизиты", "ТабличныеЧасти")
+      .doesNotContain("Подсистемы", "Кубы", "Каналы", "Операции", "ШаблоныURL");
+
+    var attributeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Реквизит.Реквизит1");
+    assertThat(memberNames(typeRegistry.getMembers(attributeRef, FileType.BSL)))
+      .contains("Тип")
+      .doesNotContain("Подсистемы", "Кубы", "Поля", "Характеристики", "ВводПоСтроке");
+  }
+
+  @Test
   void perMdoAttributesExpandedFromMdclasses() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
