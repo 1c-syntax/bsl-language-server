@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.client;
 
+import com.github._1c_syntax.bsl.languageserver.client.events.ClientInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -33,6 +34,7 @@ import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.WorkDoneProgressReport;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -47,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Управляет созданием и обновлением индикаторов прогресса выполнения
  * длительных операций (WorkDoneProgress).
  * <p>
- * Индикатор, начатый до того, как клиент готов их показывать ({@link #clientInitialized()}),
+ * Индикатор, начатый до того, как клиент готов их показывать ({@link #handleEvent(ClientInitializedEvent)}),
  * клиенту не отправляется, а только запоминается: создать индикатор по запросу сервера клиент
  * может лишь после уведомления {@code initialized} — раньше запрос
  * {@code window/workDoneProgress/create} ему нечем обработать, и индикатор теряется. Когда
@@ -63,7 +65,7 @@ public class WorkDoneProgressHelper {
 
   private boolean isWorkDoneProgressSupported;
 
-  /** Готов ли клиент показывать индикаторы (см. {@link #clientInitialized()}). */
+  /** Готов ли клиент показывать индикаторы (см. {@link #handleEvent(ClientInitializedEvent)}). */
   private volatile boolean clientInitialized;
 
   /** Индикаторы, начатые до готовности клиента и ещё не законченные. */
@@ -97,8 +99,11 @@ public class WorkDoneProgressHelper {
    * <p>
    * Индикаторы, начатые раньше и ещё не законченные, создаются у клиента с текущим
    * состоянием; новые создаются сразу.
+   *
+   * @param event событие окончания инициализации клиента.
    */
-  public void clientInitialized() {
+  @EventListener
+  public void handleEvent(ClientInitializedEvent event) {
     clientInitialized = true;
     for (var reporter : List.copyOf(deferred)) {
       if (deferred.remove(reporter)) {

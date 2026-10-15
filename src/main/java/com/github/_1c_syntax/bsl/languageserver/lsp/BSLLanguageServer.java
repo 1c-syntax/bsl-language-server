@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
-import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;
@@ -138,7 +137,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder languageClientHolder;
-  private final WorkDoneProgressHelper workDoneProgressHelper;
   private final ServerContextProvider serverContextProvider;
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerInfo serverInfo;
@@ -269,7 +267,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   @Override
   public void initialized(InitializedParams params) {
-    workDoneProgressHelper.clientInitialized();
     registerFileWatchers();
 
     // Populate all workspace contexts
