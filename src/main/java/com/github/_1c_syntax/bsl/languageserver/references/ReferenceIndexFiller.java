@@ -201,27 +201,37 @@ public class ReferenceIndexFiller {
   private final class BatchingSink {
 
     private final List<SymbolOccurrence> batch;
-    /** Символы, встреченные в документе: все его обращения к символу ссылаются на один экземпляр. */
+    /**
+     * Ключи, уже встреченные в документе. Все обращения документа к символу ссылаются на один
+     * экземпляр ключа: для уже сохранённого символа — на тот, что в индексе
+     * ({@link ReferenceIndex#canonical}), для нового — на первый встреченный.
+     * <p>
+     * Документы наполняются параллельно, и первые обращения разных документов к ещё не
+     * сохранённому символу могут получить разные, но равные экземпляры — на поиск это не влияет.
+     */
     private final Map<Symbol, Symbol> documentSymbols = new HashMap<>();
 
     void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-      batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range, documentSymbols));
+      add(OccurrenceType.REFERENCE, index.methodCallSymbol(mdoRef, moduleType, symbolName), uri, range);
     }
 
     void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
-      batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range, documentSymbols));
+      add(OccurrenceType.REFERENCE, index.moduleReferenceSymbol(mdoRef, moduleType), uri, range);
     }
 
     void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
                           String variableName, Range range, OccurrenceType occurrenceType) {
-      batch.add(index.variableOccurrence(
-        uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType, documentSymbols));
+      add(occurrenceType, index.variableSymbol(mdoRef, moduleType, methodName, variableName), uri, range);
     }
 
     void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
                             String name, Range range) {
-      batch.add(index.selfMemberOccurrence(
-        uri, mdoRef, moduleType, symbolKind, name, range, OccurrenceType.REFERENCE, documentSymbols));
+      add(OccurrenceType.REFERENCE, index.selfMemberSymbol(mdoRef, moduleType, symbolKind, name), uri, range);
+    }
+
+    private void add(OccurrenceType occurrenceType, Symbol symbol, URI uri, Range range) {
+      var shared = documentSymbols.computeIfAbsent(symbol, index::canonical);
+      batch.add(SymbolOccurrence.of(occurrenceType, shared, uri, range));
     }
   }
 
@@ -977,7 +987,7 @@ public class ReferenceIndexFiller {
   /**
    * Индексирует неквалифицированные (без явного получателя) обращения к self-члену
    * текущего модуля — реквизиту/платформенному методу self-типа — как ссылки на
-   * {@code PlatformMemberSymbol} (см. {@link ReferenceIndex#selfMemberOccurrence}).
+   * {@code PlatformMemberSymbol} (см. {@link ReferenceIndex#selfMemberSymbol}).
    * Благодаря этому их подсветку ведёт общий {@code SymbolsSemanticTokensSupplier} по
    * индексу (а не отдельный сапплаер), а резолв/definition/hover — единым путём через
    * {@link ReferenceIndex}. Затенение — как у резолва имени в BSL: локальный метод/

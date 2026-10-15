@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
 /**
  * Регрессия: объявленный обработчик платформенного события попадает в дерево символов как
  * {@link EventMethodSymbol} (display-вид {@link SymbolKind#Event}), но его прямые вызовы
- * {@link ReferenceIndex#methodCallOccurrence} индексирует под каноническим {@link SymbolKind#Method}.
+ * {@link ReferenceIndex#methodCallSymbol} индексирует под каноническим {@link SymbolKind#Method}.
  * Читающая сторона {@link ReferenceIndex#getReferencesTo} строит ключ по настоящему
  * {@code getSymbolKind()} символа ({@code Event}) и без канонизации в {@link ReferenceIndex#indexedKindOf}
  * никогда не совпала бы с сохранённым {@code Method} — Find References / Call Hierarchy incoming молча
