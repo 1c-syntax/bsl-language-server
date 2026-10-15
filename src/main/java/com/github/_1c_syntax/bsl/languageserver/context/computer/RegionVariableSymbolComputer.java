@@ -30,8 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -57,8 +55,7 @@ import java.util.Set;
 public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
 
   private final DocumentContext documentContext;
-  private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack =
-    new ArrayDeque<>();
+  private final Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
   private final Set<RegionSymbol> regions = new HashSet<>();
 
   public RegionVariableSymbolComputer(DocumentContext documentContext,
@@ -98,7 +95,7 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
       .regionNameRange(Ranges.create(ctx.regionName()))
       .startRange(Ranges.create(ctx));
 
-    regionStack.push(Pair.of(builder, ctx));
+    regionStack.push(builder);
     return super.visitRegionStart(ctx);
   }
 
@@ -108,15 +105,8 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
       return super.visitRegionEnd(ctx);
     }
 
-    var pair = regionStack.pop();
-
-    RegionSymbol.RegionSymbolBuilder builder = pair.getLeft();
-    BSLParser.RegionStartContext regionStartContext = pair.getRight();
-
-    Range range = Ranges.create(regionStartContext, ctx);
-    builder
-      .range(range)
-      .endRange(Ranges.create(ctx));
+    var builder = regionStack.pop();
+    builder.endRange(Ranges.create(ctx));
 
     regions.add(builder.build());
 
