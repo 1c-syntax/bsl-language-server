@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
@@ -98,14 +97,14 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
     var byKey = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
       .collect(Collectors.groupingBy(SymbolOccurrence::symbol));
 
-    // then: у всех обращений документа к символу один экземпляр ключа, и индекс отдаёт сохранённый
+    // then: у всех обращений документа к символу один экземпляр ключа, и он же — интернированный
     assertThat(byKey.values()).anySatisfy(occurrences -> assertThat(occurrences).hasSizeGreaterThan(1));
     byKey.forEach((key, occurrences) -> {
       assertThat(occurrences)
         .isNotEmpty()
         .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
       var copy = new Symbol(key.mdoRef(), key.moduleType(), key.scopeName(), key.symbolKind(), key.symbolName());
-      assertThat(referenceIndex.canonical(copy)).isEqualTo(key).isNotSameAs(copy);
+      assertThat(symbolOccurrenceRepository.intern(copy)).isSameAs(key);
     });
   }
 
@@ -447,9 +446,10 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       // given - workspace 1 is already initialized with PATH_TO_METADATA in @BeforeEach
       // Manually add a reference to workspace 1's repos to verify isolation
       var workspace1Uri = context.getDocuments().keySet().iterator().next();
-      var occurrence = SymbolOccurrence.of(OccurrenceType.REFERENCE,
-        referenceIndex.methodCallSymbol("CommonModule.TestModule", ModuleType.CommonModule, "TestMethod"),
-        workspace1Uri, Ranges.create(0, 0, 10));
+      var occurrence = referenceIndex.methodCallOccurrence(
+        workspace1Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
+        Ranges.create(0, 0, 10)
+      );
       referenceIndex.replaceReferences(workspace1Uri, java.util.List.of(occurrence));
 
       // Build the same Symbol key used for both workspaces

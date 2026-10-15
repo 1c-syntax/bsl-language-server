@@ -59,19 +59,49 @@ class SymbolOccurrenceRepositoryTest {
   }
 
   @Test
-  void canonicalIsInstanceOfStoredOccurrences() {
-    var equalKey = new Symbol(SYMBOL.mdoRef(), SYMBOL.moduleType(), SYMBOL.scopeName(), SYMBOL.symbolKind(),
-      SYMBOL.symbolName());
-    assertThat(equalKey).isEqualTo(SYMBOL).isNotSameAs(SYMBOL);
+  void internReturnsOneInstanceBeforeAndAfterOccurrencesAreSaved() {
+    var first = copyOf(SYMBOL);
 
-    // пока обращений нет, общего экземпляра тоже нет
-    assertThat(repository.canonical(equalKey)).isSameAs(equalKey);
+    // первый интернированный экземпляр становится общим ещё до того, как обращения сохранены
+    assertThat(repository.intern(first)).isSameAs(first);
+    assertThat(repository.intern(copyOf(SYMBOL))).as("метка").isSameAs(first);
+    assertThat(repository.getAllBySymbol(SYMBOL)).as("метка — не обращение").isEmpty();
 
-    repository.save(occurrence(1));
-    assertThat(repository.canonical(equalKey)).as("одиночное обращение").isSameAs(SYMBOL);
+    var occurrence = SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(1, 0, 1, 5));
+    repository.save(occurrence);
+    assertThat(repository.intern(copyOf(SYMBOL))).as("одиночное обращение").isSameAs(first);
+    assertThat(repository.getAllBySymbol(SYMBOL)).containsExactly(occurrence);
 
-    repository.save(occurrence(2));
-    assertThat(repository.canonical(equalKey)).as("массив обращений").isSameAs(SYMBOL);
+    repository.save(SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(2, 0, 2, 5)));
+    assertThat(repository.intern(copyOf(SYMBOL))).as("массив обращений").isSameAs(first);
+  }
+
+  @Test
+  void batchSavedOverMarkerReplacesIt() {
+    var first = repository.intern(copyOf(SYMBOL));
+    var occurrences = List.of(
+      SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(2, 0, 2, 5)),
+      SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(1, 0, 1, 5)));
+
+    repository.saveAll(first, occurrences);
+
+    assertThat(repository.getAllBySymbol(SYMBOL)).containsExactly(occurrences.get(1), occurrences.get(0));
+    assertThat(repository.intern(copyOf(SYMBOL))).isSameAs(first);
+  }
+
+  @Test
+  void deletingOccurrencesOfInternedSymbolWithoutOccurrencesDropsMarker() {
+    var first = repository.intern(copyOf(SYMBOL));
+
+    repository.deleteAll(List.of(occurrence(1)));
+
+    // метка ушла: следующий интернированный экземпляр — уже другой
+    assertThat(repository.intern(copyOf(SYMBOL))).isNotSameAs(first);
+  }
+
+  private static Symbol copyOf(Symbol symbol) {
+    return new Symbol(symbol.mdoRef(), symbol.moduleType(), symbol.scopeName(), symbol.symbolKind(),
+      symbol.symbolName());
   }
 
   @Test
