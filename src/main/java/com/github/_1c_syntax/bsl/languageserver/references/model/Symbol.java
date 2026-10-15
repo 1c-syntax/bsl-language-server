@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.GenericInterner;
 import lombok.Builder;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
@@ -51,8 +50,6 @@ public record Symbol(
   String symbolName
 ) implements Comparable<Symbol> {
 
-  private static final GenericInterner<Symbol> INTERNER = new GenericInterner<>();
-
   // Компаратор по всем полям, вынесенный в константу. Иначе цепочка из пяти
   // comparing/thenComparing пересобиралась на каждый вызов compareTo, а он
   // вызывается при каждой навигации по сортированным структурам reference-индекса
@@ -63,10 +60,6 @@ public record Symbol(
       .thenComparing(Symbol::scopeName)
       .thenComparing(Symbol::symbolKind)
       .thenComparing(Symbol::symbolName);
-
-  public Symbol intern() {
-    return INTERNER.intern(this);
-  }
 
   @Override
   public int compareTo(@Nullable Symbol other) {

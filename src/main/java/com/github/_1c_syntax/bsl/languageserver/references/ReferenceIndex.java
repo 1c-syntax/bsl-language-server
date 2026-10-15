@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -276,20 +277,21 @@ public class ReferenceIndex {
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
    * @param range      Диапазон, в котором происходит обращение к символу.
+   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
    * @return построенное вхождение.
    */
   protected SymbolOccurrence methodCallOccurrence(URI uri, String mdoRef, ModuleType moduleType,
-                                                  String symbolName, Range range) {
+                                                  String symbolName, Range range,
+                                                  Map<Symbol, Symbol> documentSymbols) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = canonical(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Method)
       .symbolName(symbolNameCanonical)
-      .build()
-      .intern();
+      .build(), documentSymbols);
 
     return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
@@ -305,21 +307,22 @@ public class ReferenceIndex {
    * @param mdoRef     Ссылка на объект-метаданных модуля (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля (например, {@link ModuleType#CommonModule}).
    * @param range      Диапазон, в котором происходит обращение к модулю.
+   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
    * @return построенное вхождение.
    */
-  protected SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+  protected SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range,
+                                                       Map<Symbol, Symbol> documentSymbols) {
     var symbolName = stringInterner.intern(
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
 
-    var symbol = Symbol.builder()
+    var symbol = canonical(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Module)
       .symbolName(symbolName)
-      .build()
-      .intern();
+      .build(), documentSymbols);
 
     return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
@@ -335,6 +338,7 @@ public class ReferenceIndex {
    * @param variableName   Имя переменной, к которой происходит обращение.
    * @param range          Диапазон, в котором происходит обращение к символу.
    * @param occurrenceType Вид обращения к символу.
+   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
    * @return построенное вхождение.
    */
   protected SymbolOccurrence variableOccurrence(URI uri,
@@ -343,18 +347,18 @@ public class ReferenceIndex {
                                                 String methodName,
                                                 String variableName,
                                                 Range range,
-                                                OccurrenceType occurrenceType) {
+                                                OccurrenceType occurrenceType,
+                                                Map<Symbol, Symbol> documentSymbols) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = canonical(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build()
-      .intern();
+      .build(), documentSymbols);
 
     return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }
@@ -372,23 +376,40 @@ public class ReferenceIndex {
    * @param name           имя self-члена.
    * @param range          диапазон обращения.
    * @param occurrenceType вид обращения.
+   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
    * @return построенное вхождение.
    */
   protected SymbolOccurrence selfMemberOccurrence(URI uri, String mdoRef, ModuleType moduleType,
                                                   SymbolKind symbolKind, String name, Range range,
-                                                  OccurrenceType occurrenceType) {
+                                                  OccurrenceType occurrenceType,
+                                                  Map<Symbol, Symbol> documentSymbols) {
     var nameCanonical = stringInterner.intern(name.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = canonical(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(SELF_MEMBER_SCOPE)
       .symbolKind(symbolKind)
       .symbolName(nameCanonical)
-      .build()
-      .intern();
+      .build(), documentSymbols);
 
     return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
+  }
+
+  /**
+   * Общий экземпляр символа для нового вхождения: тот, на который ссылаются уже сохранённые
+   * обращения, либо встреченный раньше в том же документе. Обращений на порядок больше, чем
+   * символов, и без общего экземпляра каждое держало бы свою копию ключа.
+   * <p>
+   * Документы наполняются параллельно, и первые обращения разных документов к ещё не
+   * сохранённому символу могут получить разные, но равные экземпляры — на поиск это не влияет.
+   *
+   * @param symbol          ключ нового вхождения.
+   * @param documentSymbols символы, уже встреченные в документе; пополняется.
+   * @return общий экземпляр, равный {@code symbol}.
+   */
+  private Symbol canonical(Symbol symbol, Map<Symbol, Symbol> documentSymbols) {
+    return documentSymbols.computeIfAbsent(symbol, symbolOccurrenceRepository::canonical);
   }
 
   private Optional<Reference> buildReference(

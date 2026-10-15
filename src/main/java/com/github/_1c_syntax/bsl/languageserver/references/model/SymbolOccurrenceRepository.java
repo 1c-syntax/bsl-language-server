@@ -89,6 +89,26 @@ public class SymbolOccurrenceRepository {
   }
 
   /**
+   * Экземпляр символа, на который ссылаются его сохранённые обращения.
+   * <p>
+   * Обращений на порядок больше, чем символов: новое обращение к уже известному символу
+   * должно ссылаться на тот же экземпляр, а не держать свою копию ключа.
+   *
+   * @param symbol Символ.
+   * @return Экземпляр из сохранённых обращений; сам {@code symbol}, если обращений к нему нет.
+   */
+  public Symbol canonical(Symbol symbol) {
+    var current = occurrencesToSymbols.get(symbol);
+    if (current instanceof SymbolOccurrence single) {
+      return single.symbol();
+    }
+    if (current instanceof SymbolOccurrence[] occurrences) {
+      return occurrences[0].symbol();
+    }
+    return symbol;
+  }
+
+  /**
    * Получить все обращения к указанному символу.
    *
    * @param symbol Символ.
