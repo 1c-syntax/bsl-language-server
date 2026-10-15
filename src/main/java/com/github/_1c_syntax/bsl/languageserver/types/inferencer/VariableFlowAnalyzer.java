@@ -783,7 +783,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var before = facts.beforeStatement().getOrDefault(useStatement, Environment.EMPTY).get(index);
     var inclusive = useNode == null
       ? atDefinition
-      : change != null && change.definition() && Ranges.containsPosition(Ranges.create(useNode), change.position());
+      : change != null && change.definition() && Ranges.containsPosition(useNode, change.position());
     if (!inclusive || change == null) {
       return narrowedInsideCondition(layout, useStatement, usePosition, variable, before, inputs);
     }

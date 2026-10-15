@@ -91,8 +91,7 @@ public class SDBLCaseDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
     var caseExpressions = Trees.findAllRuleNodes(ast, SDBLParser.RULE_caseExpression);
     for (var ctx : caseExpressions) {
       if (ctx instanceof SDBLParser.CaseExpressionContext caseCtx) {
-        var range = Ranges.create(caseCtx);
-        if (Ranges.containsPosition(range, position)) {
+        if (Ranges.containsPosition(caseCtx, position)) {
           // Проверяем, нет ли вложенного caseExpression, который тоже содержит позицию
           var nestedCase = findNestedCaseAtPosition(caseCtx, position);
           return nestedCase != null ? nestedCase : caseCtx;
@@ -110,8 +109,7 @@ public class SDBLCaseDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
       var nestedCases = Trees.findAllRuleNodes(branch, SDBLParser.RULE_caseExpression);
       for (var ctx : nestedCases) {
         if (ctx instanceof SDBLParser.CaseExpressionContext nestedCaseCtx) {
-          var range = Ranges.create(nestedCaseCtx);
-          if (Ranges.containsPosition(range, position)) {
+          if (Ranges.containsPosition(nestedCaseCtx, position)) {
             // Рекурсивно проверяем ещё более глубокие вложенности
             var deeper = findNestedCaseAtPosition(nestedCaseCtx, position);
             return deeper != null ? deeper : nestedCaseCtx;
@@ -126,8 +124,7 @@ public class SDBLCaseDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
       var nestedCases = Trees.findAllRuleNodes(elseExp, SDBLParser.RULE_caseExpression);
       for (var ctx : nestedCases) {
         if (ctx instanceof SDBLParser.CaseExpressionContext nestedCaseCtx) {
-          var range = Ranges.create(nestedCaseCtx);
-          if (Ranges.containsPosition(range, position)) {
+          if (Ranges.containsPosition(nestedCaseCtx, position)) {
             var deeper = findNestedCaseAtPosition(nestedCaseCtx, position);
             return deeper != null ? deeper : nestedCaseCtx;
           }
