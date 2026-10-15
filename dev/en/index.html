@@ -2871,6 +2871,11 @@ To redefine the path to the LSP server, you must use the <code>--app.websocket.l
 </blockquote>
 <div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...<span class="w"> </span>other<span class="w"> </span>parameters
 </code></pre></div>
+<blockquote>
+<p>On Java 25 and later, the <code>-XX:+UseCompactObjectHeaders</code> parameter saves more memory: every object header shrinks to 8 bytes. How much the heap shrinks depends on the project: on the ERP configuration it was 8–9% in our measurement. The release executable already has it enabled. Java 21 does not know this parameter and will not start with it.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-XX:+UseCompactObjectHeaders<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...<span class="w"> </span>other<span class="w"> </span>parameters
+</code></pre></div>
 <p><a id="analyze"></a></p>
 <h2 id="Run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#Run-in-analyzer-mode" title="Permanent link">&para;</a></h2>
 <p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>).</p>

@@ -2871,6 +2871,11 @@ Websocket<span class="w"> </span>server<span class="w"> </span>mode
 </blockquote>
 <div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...остальные<span class="w"> </span>параметры
 </code></pre></div>
+<blockquote>
+<p>На Java 25 и новее память дополнительно экономит параметр <code>-XX:+UseCompactObjectHeaders</code>: заголовок каждого объекта сжимается до 8 байт. Насколько уменьшится куча, зависит от проекта: на конфигурации ERP при замере — на 8–9 %. В исполняемом файле из релиза параметр уже включён. Java 21 этот параметр не знает и с ним не запустится.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>java<span class="w"> </span>-Xmx4g<span class="w"> </span>-XX:+UseCompactObjectHeaders<span class="w"> </span>-jar<span class="w"> </span>bsl-language-server.jar<span class="w"> </span>...остальные<span class="w"> </span>параметры
+</code></pre></div>
 <p><a id="analyze"></a></p>
 <h2 id="Запуск-в-режиме-анализатора">Запуск в режиме анализатора<a class="headerlink" href="#Запуск-в-режиме-анализатора" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме анализа используется параметр <code>--analyze</code> (сокращенно <code>-a</code>). </p>
