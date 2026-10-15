@@ -1122,6 +1122,12 @@
                     "default": true,
                     "type": "boolean",
                     "title": "Check length of strings in method descriptions"
+                },
+                 "checkComments": {
+                    "description": "Check length of comments strings",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check length of comments strings"
                 }
             },
             "$id": "#/definitions/LineLength"
