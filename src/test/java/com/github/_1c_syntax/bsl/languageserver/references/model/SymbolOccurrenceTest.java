@@ -75,6 +75,23 @@ class SymbolOccurrenceTest {
   }
 
   @Test
+  void definitionKeepsTypeAndLineAtBoundaries() {
+    // when
+    var first = SymbolOccurrence.of(OccurrenceType.DEFINITION, SYMBOL, DOC_URI, 0, 1, 0, 5);
+    var last = SymbolOccurrence.of(OccurrenceType.DEFINITION, SYMBOL, DOC_URI,
+      Short.MAX_VALUE, 0, Short.MAX_VALUE, 5);
+
+    // then
+    assertThat(first).isInstanceOf(ShortBasedSymbolOccurrence.class);
+    assertThat(first.occurrenceType()).isEqualTo(OccurrenceType.DEFINITION);
+    assertThat(first.startLine()).isZero();
+    assertThat(last).isInstanceOf(ShortBasedSymbolOccurrence.class);
+    assertThat(last.occurrenceType()).isEqualTo(OccurrenceType.DEFINITION);
+    assertThat(last.startLine()).isEqualTo(Short.MAX_VALUE);
+    assertThat(first).isNotEqualTo(SymbolOccurrence.of(OccurrenceType.REFERENCE, SYMBOL, DOC_URI, 0, 1, 0, 5));
+  }
+
+  @Test
   void largeLineFallsBackToIntBased() {
     // given
     var bigLine = Short.MAX_VALUE + 1;
