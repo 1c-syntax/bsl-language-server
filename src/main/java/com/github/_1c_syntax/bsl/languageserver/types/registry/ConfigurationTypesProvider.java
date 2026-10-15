@@ -102,10 +102,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Обработчик события асинхронный: чтение метаданных и регистрация на большой конфигурации —
  * десятки секунд, и поток, добавивший рабочую область, их не ждёт. До конца попытки регистрации
- * (событие {@code ConfigurationTypesRegistrationFinishedEvent} — оно публикуется при любом
- * исходе) {@link ServerContext} считает рабочую область готовящейся: наполнение контекста
- * ({@code populateContext}) этого дожидается, а документы, заведённые раньше, по окончании
- * подготовки перепривязываются к конфигурации — с деревом символов, построенным заново.
+ * — при любом её исходе — {@link ServerContext} считает рабочую область готовящейся: наполнение
+ * контекста ({@code populateContext}) этого дожидается, а документы, заведённые раньше, по
+ * окончании подготовки перепривязываются к конфигурации — с деревом символов, построенным заново.
  * <p>
  * Порядок среди слушателей {@link WorkspaceAddedEvent} задан явно: регистрация запускается
  * сразу после того, как контекст отметил начало подготовки ({@link Ordered#HIGHEST_PRECEDENCE}),
@@ -198,7 +197,11 @@ public class ConfigurationTypesProvider {
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
   /**
-   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}) — в фоне.
+   * Регистрирует типы конфигурации текущего workspace'а (см. {@link #tryRegister()}) — в фоне
+   * — и заканчивает подготовку его контекста при любом исходе регистрации.
+   * <p>
+   * Контекст берётся до регистрации: снятие рабочей области, пришедшее за это время, убирает
+   * его из провайдера, а ждёт при этом как раз конца подготовки.
    *
    * @param event событие добавления workspace'а.
    */
@@ -206,7 +209,14 @@ public class ConfigurationTypesProvider {
   @EventListener
   @Order(Ordered.HIGHEST_PRECEDENCE + 1)
   public void handleEvent(WorkspaceAddedEvent event) {
-    tryRegister();
+    var serverContext = serverContextProvider.getAllContexts().get(event.getWorkspaceUri());
+    try {
+      tryRegister();
+    } finally {
+      if (serverContext != null) {
+        serverContext.finishPreparation();
+      }
+    }
   }
 
   /**

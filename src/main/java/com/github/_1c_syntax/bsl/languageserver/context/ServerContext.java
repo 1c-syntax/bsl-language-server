@@ -161,7 +161,7 @@ public class ServerContext {
    * Берёт блокировки документов по одной, поэтому вызывающий поток не должен держать
    * блокировку какого-либо документа.
    */
-  void finishPreparation() {
+  public void finishPreparation() {
     try {
       refreshDocumentsCreatedWhilePreparing();
     } finally {
