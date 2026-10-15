@@ -212,6 +212,12 @@ java -jar bsl-language-server.jar --websocket --server.port=8080
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
 
+> На Java 25 и новее память дополнительно экономит параметр `-XX:+UseCompactObjectHeaders`: заголовок каждого объекта становится меньше на 4 байта, и на большой конфигурации куча уменьшается на 8–9 %. В исполняемом файле из релиза он уже включён. Java 21 этот параметр не знает и с ним не запустится.
+
+```sh
+java -Xmx4g -XX:+UseCompactObjectHeaders -jar bsl-language-server.jar ...остальные параметры
+```
+
 <a id="analyze"></a>
 
 ## Запуск в режиме анализатора

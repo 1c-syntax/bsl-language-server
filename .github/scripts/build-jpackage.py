@@ -24,6 +24,10 @@ def build_image(base_dir, image_prefix, executable_file):
     cmd_args.append('app-image')
     cmd_args.append('--java-options')
     cmd_args.append('-Xmx4g')
+    # Образ собирается с JDK 25 (release.yml): компактные заголовки объектов
+    # уменьшают кучу на большой конфигурации на 8-9 %. На JDK 21 флаг не существует.
+    cmd_args.append('--java-options')
+    cmd_args.append('-XX:+UseCompactObjectHeaders')
 
     cmd = ' '.join(cmd_args)
     os.system(cmd)
