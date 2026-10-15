@@ -58,6 +58,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -203,7 +204,17 @@ public class TypeRegistry {
     }
   }
 
-  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
+  /**
+   * Запомненные члены типа.
+   *
+   * @param epoch      эпоха, при которой они собраны.
+   * @param generation поколение типа, при котором они собраны.
+   * @param members    члены — неизменяемый вид.
+   * @param slots      массив под видом {@code members}, если члены освежаются на месте (только у
+   *                   {@link #GLOBAL_CONTEXT}); иначе {@code null}.
+   */
+  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members,
+                               MemberDescriptor @Nullable [] slots) {
   }
 
   /**
@@ -568,10 +579,17 @@ public class TypeRegistry {
     var key = new MembersKey(ref, fileType);
     var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
+    MemberDescriptor @Nullable [] slots = null;
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      // Символ-источник глобального свойства освежается на месте (см.
+      // refreshGlobalPropertyDeclaration), поэтому под неизменяемым видом — свой массив.
+      slots = members.toArray(MemberDescriptor[]::new);
+      members = Collections.unmodifiableList(Arrays.asList(slots));
+    }
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
     // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
-    membersCache.put(key, new CachedMembers(epoch, generation, members));
+    membersCache.put(key, new CachedMembers(epoch, generation, members, slots));
     return members;
   }
 
@@ -671,6 +689,35 @@ public class TypeRegistry {
     // глобальных имён пересобирались бы целиком, под общим замком.
     if ((previous == null || previous.get() != declaration) && populated) {
       globalContextEpoch.incrementAndGet();
+    }
+  }
+
+  /**
+   * Освежить символ-источник типа-глобального свойства, равный прежнему: объявивший тип
+   * документ перечитан с тем же текстом, и его символ из нового дерева.
+   * <p>
+   * Члены {@link #GLOBAL_CONTEXT} не пересобираются: член этого свойства подменяется на месте,
+   * в том же наборе, и прежний символ — а с ним и прежнее дерево документа — больше ничем не
+   * удерживается. Читатель, взявший набор раньше, увидит либо прежний символ, либо новый — они
+   * равны.
+   *
+   * @param ref         тип-глобальное свойство.
+   * @param declaration символ-источник из нового дерева, равный прежнему.
+   */
+  public void refreshGlobalPropertyDeclaration(TypeRef ref, SourceDefinedSymbol declaration) {
+    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+    for (var fileType : FILE_TYPES) {
+      var cached = membersCache.get(new MembersKey(GLOBAL_CONTEXT, fileType));
+      var slots = cached == null ? null : cached.slots();
+      if (slots == null) {
+        continue;
+      }
+      for (var i = 0; i < slots.length; i++) {
+        var source = slots[i].sourceSymbol();
+        if (source != declaration && declaration.equals(source)) {
+          slots[i] = slots[i].withSourceSymbol(declaration);
+        }
+      }
     }
   }
 
