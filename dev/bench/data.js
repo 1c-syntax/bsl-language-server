@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792004981197,
+  "lastUpdate": 1792042760390,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45570,6 +45570,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.114812094804301",
             "extra": "mean: 91.51302353541057 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "87d15c40efd11ccbd1c551150c60889bebbbf302",
+          "message": "Merge pull request #4681 from 1c-syntax/build/jpackage-compact-object-headers\n\nИсполняемый файл из релиза запускается с компактными заголовками объектов (−8,6 % кучи)",
+          "timestamp": "2026-10-15T07:19:21+02:00",
+          "tree_id": "43ce86a356dcbd9dd66a52d4b4326387b014a047",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/87d15c40efd11ccbd1c551150c60889bebbbf302"
+        },
+        "date": 1792042731411,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.95331128438313,
+            "unit": "sec",
+            "range": "stddev: 0.42777229208880524",
+            "extra": "mean: 93.95331128438313 sec\nrounds: 3"
           }
         ]
       }
