@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792042760390,
+  "lastUpdate": 1792045189944,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45601,6 +45601,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.42777229208880524",
             "extra": "mean: 93.95331128438313 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d5d58ec719103ffec70656d5a451438c921e296",
+          "message": "Merge pull request #4682 from 1c-syntax/perf/context-region-ranges-as-numbers\n\nДиапазоны областей хранятся числами, а не объектами Range",
+          "timestamp": "2026-10-15T07:57:39+02:00",
+          "tree_id": "0369dd7649c01d4a4778478e23994d503d6c4317",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3d5d58ec719103ffec70656d5a451438c921e296"
+        },
+        "date": 1792045159130,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.43687351544698,
+            "unit": "sec",
+            "range": "stddev: 1.6755402773803145",
+            "extra": "mean: 94.43687351544698 sec\nrounds: 3"
           }
         ]
       }
