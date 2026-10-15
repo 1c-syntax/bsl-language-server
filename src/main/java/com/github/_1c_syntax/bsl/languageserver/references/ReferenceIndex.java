@@ -227,6 +227,16 @@ public class ReferenceIndex {
   }
 
   /**
+   * Отказаться от построенных, но не опубликованных вхождений: символы, интернированные при их
+   * построении и так и не получившие обращений, перестают занимать место в индексе.
+   *
+   * @param occurrences Отброшенные вхождения.
+   */
+  public void discardOccurrences(List<SymbolOccurrence> occurrences) {
+    occurrences.forEach(occurrence -> symbolOccurrenceRepository.releaseUnused(occurrence.symbol()));
+  }
+
+  /**
    * Канонический вид callable-символа для построения/поиска ключа индекса вхождений
    * ({@code Symbol.symbolKind}), в отличие от display-{@link SymbolKind}, возвращаемого
    * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol#getSymbolKind()}.

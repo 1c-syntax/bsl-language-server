@@ -90,6 +90,21 @@ class SymbolOccurrenceRepositoryTest {
   }
 
   @Test
+  void releaseUnusedDropsOnlyMarker() {
+    var unused = repository.intern(copyOf(SYMBOL));
+    var other = new Symbol("CommonModule.Другой", ModuleType.CommonModule, "", SymbolKind.Method, "метод");
+    var used = repository.intern(other);
+    var occurrence = SymbolOccurrence.of(OccurrenceType.REFERENCE, used, DOC_URI, Ranges.create(1, 0, 1, 5));
+    repository.save(occurrence);
+
+    repository.releaseUnused(unused);
+    repository.releaseUnused(used);
+
+    assertThat(repository.intern(copyOf(SYMBOL))).as("метка снята").isNotSameAs(unused);
+    assertThat(repository.getAllBySymbol(other)).as("обращения на месте").containsExactly(occurrence);
+  }
+
+  @Test
   void deletingOccurrencesOfInternedSymbolWithoutOccurrencesDropsMarker() {
     var first = repository.intern(copyOf(SYMBOL));
 
