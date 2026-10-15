@@ -153,6 +153,15 @@ public class FormTypesProvider {
 
   /** Первый параметр обработчика события элемента — сам элемент. */
   private static final BilingualString ELEMENT_PARAMETER = BilingualString.of("Элемент", "Item");
+  private static final BilingualString ELEMENT_PARAMETER_DESCRIPTION = BilingualString.of(
+    "Элемент формы, событие которого обрабатывается.", "The form item whose event is being handled.");
+
+  private static final BilingualString PARAMETERS_PROPERTY =
+    BilingualString.of(FormPlatformTypes.PARAMETERS_PROPERTY_RU, FormPlatformTypes.PARAMETERS_PROPERTY_EN);
+  private static final BilingualString COMMANDS_PROPERTY =
+    BilingualString.of(FormPlatformTypes.COMMANDS_PROPERTY_RU, FormPlatformTypes.COMMANDS_PROPERTY_EN);
+  private static final BilingualString THIS_OBJECT = BilingualString.of(THIS_OBJECT_RU, THIS_OBJECT_EN);
+  private static final BilingualString THIS_FORM = BilingualString.of(THIS_FORM_RU, THIS_FORM_EN);
 
   private final TypeRegistry typeRegistry;
   private final FormParametersResolver formParametersResolver;
@@ -371,28 +380,26 @@ public class FormTypesProvider {
                                                          @Nullable TypeRef injectedRef) {
     var members = new ArrayList<MemberDescriptor>();
     members.add(FormPlatformTypes.platformProperty(
-      BilingualString.of(kind.itemsPropertyRu(), kind.itemsPropertyEn()), itemsRef, BilingualString.EMPTY));
+      kind.itemsProperty(), itemsRef, BilingualString.EMPTY));
     if (parametersRef != null) {
       members.add(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.PARAMETERS_PROPERTY_RU, FormPlatformTypes.PARAMETERS_PROPERTY_EN),
-        parametersRef, BilingualString.EMPTY));
+        PARAMETERS_PROPERTY, parametersRef, BilingualString.EMPTY));
     }
     if (commandsRef != null) {
       members.add(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.COMMANDS_PROPERTY_RU, FormPlatformTypes.COMMANDS_PROPERTY_EN),
-        commandsRef, BilingualString.EMPTY));
+        COMMANDS_PROPERTY, commandsRef, BilingualString.EMPTY));
     }
     // У обычной формы `ЭтотОбъект` не существует вовсе: он появляется только в модуле
     // формы объекта — и ведёт на сам объект, чей контекст туда инжечен
     // (см. registerModuleType). У управляемой формы это сама форма.
     if (kind == FormKind.MANAGED || injectedRef != null) {
-      members.add(FormPlatformTypes.platformProperty(BilingualString.of(THIS_OBJECT_RU, THIS_OBJECT_EN),
+      members.add(FormPlatformTypes.platformProperty(THIS_OBJECT,
         injectedRef == null ? formRef : injectedRef, BilingualString.EMPTY));
     }
     // `ЭтаФорма` платформа отдаёт в модуле формы обоих видов: у обычной это штатное
     // имя, у управляемой — устаревший синоним `ЭтотОбъект` (см. UsingThisFormDiagnostic).
     members.add(FormPlatformTypes.platformProperty(
-      BilingualString.of(THIS_FORM_RU, THIS_FORM_EN), formRef, THIS_FORM_DESCRIPTION));
+      THIS_FORM, formRef, THIS_FORM_DESCRIPTION));
     return List.copyOf(members);
   }
 
@@ -560,8 +567,7 @@ public class FormTypesProvider {
    */
   private static MemberDescriptor withElementParameter(MemberDescriptor contract, List<TypeRef> elementTypes) {
     var element = new ParameterDescriptor(ELEMENT_PARAMETER, TypeSet.of(elementTypes), false,
-      BilingualString.of("Элемент формы, событие которого обрабатывается.",
-        "The form item whose event is being handled."), "");
+      ELEMENT_PARAMETER_DESCRIPTION, "");
     if (contract.signatures().isEmpty()) {
       return contract.withSignatures(List.of(
         new SignatureDescriptor(List.of(element), TypeSet.EMPTY, BilingualString.EMPTY)));
