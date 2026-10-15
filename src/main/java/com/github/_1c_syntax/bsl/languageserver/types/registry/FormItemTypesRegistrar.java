@@ -267,7 +267,7 @@ class FormItemTypesRegistrar {
       typeRegistry.displayName(rowBaseRef, Language.EN)));
     typeRegistry.registerMemberOverride(tableRef,
       () -> List.of(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
+        FormPlatformTypes.CURRENT_DATA,
         rowRef, BilingualString.EMPTY)),
       FileType.BSL);
   }
