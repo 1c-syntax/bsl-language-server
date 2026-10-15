@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
+import com.github._1c_syntax.bsl.languageserver.types.model.SeeReferenceSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.NavigationLinks;
@@ -335,14 +336,14 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
 
   /**
    * Имя функции-источника {@code см.}-ссылки как markdown-гиперссылка на её
-   * определение; пустая строка, если источник не является символом с позицией.
+   * определение; пустая строка, если источник — не функция с позицией.
    */
   private static String sourceLink(Object key) {
-    if (!(key instanceof MethodSymbol method)) {
+    if (!(key instanceof SeeReferenceSource function)) {
       return "";
     }
-    var target = NavigationLinks.toTarget(method.getOwner().getUri(), method.getSelectionRange());
-    return "[%s](%s)".formatted(method.getName(), target);
+    var target = NavigationLinks.toTarget(function.uri(), function.selectionRange());
+    return "[%s](%s)".formatted(function.name(), target);
   }
 
   /** markdown-метка типов значения поля: имена в кавычках, объединение через {@code |}. */
