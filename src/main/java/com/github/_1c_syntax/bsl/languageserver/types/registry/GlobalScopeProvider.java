@@ -83,6 +83,8 @@ public class GlobalScopeProvider {
 
   private static final String RETURN_TYPE_FIELD = "returnType";
   private static final String ALIASES_FIELD = "aliases";
+  /** Сколько написаний имени у члена глобального контекста: русское и английское. */
+  private static final int NAMES_PER_MEMBER = 2;
 
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
@@ -295,9 +297,9 @@ public class GlobalScopeProvider {
     return result;
   }
 
-  private Map<String, Integer> globalNameIndex(List<MemberDescriptor> members) {
-    // до двух записей на член (ru и en) — задаём ёмкость сразу, чтобы не рехэшировать
-    var map = HashMap.<String, Integer>newHashMap(members.size() * 2);
+  private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members) {
+    // на член — запись на каждое написание (ru и en); ёмкость сразу, чтобы не рехэшировать
+    var map = HashMap.<String, Integer>newHashMap(members.size() * NAMES_PER_MEMBER);
     for (var position = 0; position < members.size(); position++) {
       var member = members.get(position);
       var ru = member.bilingualName().ru();

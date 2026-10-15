@@ -210,11 +210,12 @@ public class TypeRegistry {
    * @param epoch      эпоха, при которой они собраны.
    * @param generation поколение типа, при котором они собраны.
    * @param members    члены — неизменяемый вид.
-   * @param slots      массив под видом {@code members}, если члены освежаются на месте (только у
-   *                   {@link #GLOBAL_CONTEXT}); иначе {@code null}.
+   * @param slots      те же члены как список фиксированной длины, в котором их можно подменять на
+   *                   месте, если члены освежаются (только у {@link #GLOBAL_CONTEXT}); иначе
+   *                   {@code null}.
    */
   private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members,
-                               MemberDescriptor @Nullable [] slots) {
+                               @Nullable List<MemberDescriptor> slots) {
   }
 
   /**
@@ -579,12 +580,12 @@ public class TypeRegistry {
     var key = new MembersKey(ref, fileType);
     var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
-    MemberDescriptor @Nullable [] slots = null;
+    List<MemberDescriptor> slots = null;
     if (GLOBAL_CONTEXT.equals(ref)) {
       // Символ-источник глобального свойства освежается на месте (см.
-      // refreshGlobalPropertyDeclaration), поэтому под неизменяемым видом — свой массив.
-      slots = members.toArray(MemberDescriptor[]::new);
-      members = Collections.unmodifiableList(Arrays.asList(slots));
+      // refreshGlobalPropertyDeclaration), поэтому под неизменяемым видом — свой список.
+      slots = Arrays.asList(members.toArray(MemberDescriptor[]::new));
+      members = Collections.unmodifiableList(slots);
     }
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
@@ -712,10 +713,10 @@ public class TypeRegistry {
       if (slots == null) {
         continue;
       }
-      for (var i = 0; i < slots.length; i++) {
-        var source = slots[i].sourceSymbol();
-        if (source != declaration && declaration.equals(source)) {
-          slots[i] = slots[i].withSourceSymbol(declaration);
+      for (var i = 0; i < slots.size(); i++) {
+        var member = slots.get(i);
+        if (member.sourceSymbol() != declaration && declaration.equals(member.sourceSymbol())) {
+          slots.set(i, member.withSourceSymbol(declaration));
         }
       }
     }
