@@ -1332,20 +1332,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   static BSLParser.@Nullable CodeBlockContext bodyAt(DocumentContext documentContext, Position position) {
     var ast = documentContext.getAst();
     var subs = ast.subs();
-    if (subs != null) {
-      // Тело ищется на каждое изменение переменной, а перебор идёт по всем методам модуля,
-      // поэтому ни список объявлений, ни их диапазоны на каждый поиск не собираются.
-      for (var i = 0; i < subs.getChildCount(); i++) {
-        if (!(subs.getChild(i) instanceof BSLParser.SubContext sub) || !covers(sub, position)) {
-          continue;
-        }
-        var procedure = sub.procedure();
-        if (procedure != null) {
-          return procedure.subCodeBlock().codeBlock();
-        }
-        var function = sub.function();
-        return function == null ? null : function.subCodeBlock().codeBlock();
-      }
+    var sub = subs == null ? null : subAt(subs, position);
+    if (sub != null) {
+      return bodyOf(sub);
     }
     // Тело модуля в дереве может быть не одно: код до объявлений методов (так пишут на
     // OneScript) и после них (так требует 1С). Отдаём блок, только если он правда
@@ -1357,6 +1346,30 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
     var fileCodeBlock = ast.fileCodeBlock();
     return covering(fileCodeBlock == null ? null : fileCodeBlock.codeBlock(), position);
+  }
+
+  /**
+   * Объявление метода, накрывающее позицию. Тело ищется на каждое изменение переменной, а
+   * перебор идёт по всем методам модуля, поэтому ни список объявлений, ни их диапазоны на
+   * каждый поиск не собираются.
+   */
+  private static BSLParser.@Nullable SubContext subAt(BSLParser.SubsContext subs, Position position) {
+    for (var i = 0; i < subs.getChildCount(); i++) {
+      if (subs.getChild(i) instanceof BSLParser.SubContext sub && covers(sub, position)) {
+        return sub;
+      }
+    }
+    return null;
+  }
+
+  /** Тело процедуры или функции. */
+  private static BSLParser.@Nullable CodeBlockContext bodyOf(BSLParser.SubContext sub) {
+    var procedure = sub.procedure();
+    if (procedure != null) {
+      return procedure.subCodeBlock().codeBlock();
+    }
+    var function = sub.function();
+    return function == null ? null : function.subCodeBlock().codeBlock();
   }
 
   /** Блок кода, если он есть и накрывает позицию. */
@@ -1374,7 +1387,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   private static boolean covers(ParserRuleContext node, Position position) {
     var start = node.getStart();
-    var stop = node.getStop() == null ? start : node.getStop();
+    // У пустого узла в начале текста конечного токена нет: диапазон тогда — его начало.
+    var stop = Objects.requireNonNullElse(node.getStop(), start);
     var line = position.getLine();
     var startLine = start.getLine() - 1;
     var endLine = stop.getLine() - 1;
