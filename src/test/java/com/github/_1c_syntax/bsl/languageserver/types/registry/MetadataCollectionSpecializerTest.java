@@ -161,7 +161,13 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
       .contains("Реквизиты", "ТабличныеЧасти")
       .doesNotContain("Подсистемы", "Кубы", "Каналы", "Операции", "ШаблоныURL");
 
-    var attributeRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Реквизит.Реквизит1");
+    // Свой тип у реквизита — в коллекции реквизитов общего описания документа, где перечислены
+    // реквизиты всех документов: `Метаданные.Документы[Имя].Реквизиты.Реквизит1`.
+    var allAttributes = typeRegistry.intern(TypeKind.PLATFORM, "КоллекцияОбъектовМетаданных.Реквизиты");
+    var attribute = findMember(typeRegistry.getMembers(allAttributes, FileType.BSL), "Реквизит1");
+    assertThat(attribute).isNotNull();
+    assertThat(attribute.returnType().qualifiedName()).isEqualTo("ОбъектМетаданных: Реквизит.Реквизит1");
+    var attributeRef = typeRegistry.intern(TypeKind.PLATFORM, attribute.returnType().qualifiedName());
     assertThat(memberNames(typeRegistry.getMembers(attributeRef, FileType.BSL)))
       .contains("Тип")
       .doesNotContain("Подсистемы", "Кубы", "Поля", "Характеристики", "ВводПоСтроке");
