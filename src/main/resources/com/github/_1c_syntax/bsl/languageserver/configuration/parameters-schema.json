@@ -228,6 +228,16 @@
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
         },
+        "CommonModuleIncompatibleCall": {
+            "description": "Call of a common module unavailable in the call context",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Call of a common module unavailable in the call context",
+            "$id": "#/definitions/CommonModuleIncompatibleCall"
+        },
         "CommonModuleInvalidType": {
             "description": "Common module invalid type",
             "default": true,
@@ -355,6 +365,16 @@
             ],
             "title": "Comparison with a boolean constant",
             "$id": "#/definitions/CompareWithBoolean"
+        },
+        "CompilationDirectiveIncompatibleCall": {
+            "description": "Call of a method unavailable in the caller context",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Call of a method unavailable in the caller context",
+            "$id": "#/definitions/CompilationDirectiveIncompatibleCall"
         },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
