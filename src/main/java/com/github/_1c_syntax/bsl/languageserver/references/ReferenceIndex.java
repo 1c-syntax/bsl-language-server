@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
@@ -38,7 +37,6 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
@@ -49,7 +47,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -235,7 +232,7 @@ public class ReferenceIndex {
    * На месте вызова (например, {@code Новый ИмяКласса(...)}) неизвестно без резолва
    * документа-получателя, является ли цель обычным методом или конструктором OneScript-класса
    * ({@link com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol}) —
-   * поэтому все callable-вхождения индексируются {@link #methodCallOccurrence} под единым
+   * поэтому все callable-вхождения индексируются {@link #methodCallSymbol} под единым
    * {@link SymbolKind#Method} независимо от истинного вида цели (см. и
    * {@code ReferenceIndexFiller#tryRegisterLibraryClassReference}, который знает, что вызывает
    * именно конструктор, но всё равно идёт тем же общим путём индексации). Читающая сторона
@@ -246,7 +243,7 @@ public class ReferenceIndex {
    * <p>
    * Так же канонизируется {@link SymbolKind#Event}: объявленные обработчики платформенных
    * событий попадают в дерево символов как {@code EventMethodSymbol} (display-вид {@code Event}),
-   * но их прямые вызовы индексируются {@link #methodCallOccurrence} под {@code Method} — без
+   * но их прямые вызовы индексируются {@link #methodCallSymbol} под {@code Method} — без
    * канонизации Find References/Call Hierarchy не нашли бы ни одного прямого вызова обработчика.
    * И так же — {@link SymbolKind#Function}: методы модулей без состояния (общих модулей BSL и
    * модулей OneScript) отдаются в дереве символов как {@code Function}
@@ -267,149 +264,108 @@ public class ReferenceIndex {
   }
 
   /**
-   * Построить вхождение «вызов метода» без записи в индекс.
+   * Ключ вхождения «вызов метода».
    * <p>
    * Кладётся под каноническим {@link SymbolKind#Method} независимо от истинного вида цели
    * (обычный метод или конструктор OneScript-класса) — см. {@link #indexedKindOf}.
    *
-   * @param uri        URI документа, откуда произошел вызов.
    * @param mdoRef     Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
    * @param symbolName Имя символа, к которому происходит обращение.
-   * @param range      Диапазон, в котором происходит обращение к символу.
-   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
-   * @return построенное вхождение.
+   * @return ключ вхождения; общий экземпляр даёт {@link #canonical}.
    */
-  protected SymbolOccurrence methodCallOccurrence(URI uri, String mdoRef, ModuleType moduleType,
-                                                  String symbolName, Range range,
-                                                  Map<Symbol, Symbol> documentSymbols) {
+  protected Symbol methodCallSymbol(String mdoRef, ModuleType moduleType, String symbolName) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = canonical(Symbol.builder()
+    return Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Method)
       .symbolName(symbolNameCanonical)
-      .build(), documentSymbols);
-
-    return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
+      .build();
   }
 
   /**
-   * Построить вхождение «ссылка на модуль» без записи в индекс.
+   * Ключ вхождения «ссылка на модуль».
    * <p>
    * Имя символа вычисляется детерминированно из {@code mdoRef} и {@code moduleType}
    * ({@link ModuleSymbol#nameOf}) и совпадает с {@link ModuleSymbol#getName()}, поэтому
    * запись и поиск ({@link #getReferencesTo}) симметричны без какой-либо спецобработки.
    *
-   * @param uri        URI документа, откуда произошло обращение к модулю.
    * @param mdoRef     Ссылка на объект-метаданных модуля (например, CommonModule.ОбщийМодуль1).
    * @param moduleType Тип модуля (например, {@link ModuleType#CommonModule}).
-   * @param range      Диапазон, в котором происходит обращение к модулю.
-   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
-   * @return построенное вхождение.
+   * @return ключ вхождения; общий экземпляр даёт {@link #canonical}.
    */
-  protected SymbolOccurrence moduleReferenceOccurrence(URI uri, String mdoRef, ModuleType moduleType, Range range,
-                                                       Map<Symbol, Symbol> documentSymbols) {
+  protected Symbol moduleReferenceSymbol(String mdoRef, ModuleType moduleType) {
     var symbolName = stringInterner.intern(
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
 
-    var symbol = canonical(Symbol.builder()
+    return Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Module)
       .symbolName(symbolName)
-      .build(), documentSymbols);
-
-    return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
+      .build();
   }
 
   /**
-   * Построить вхождение «обращение к переменной» без записи в индекс.
-   * Вид вхождения ({@link OccurrenceType}) задаётся явно.
+   * Ключ вхождения «обращение к переменной».
    *
-   * @param uri            URI документа, откуда произошел вызов.
-   * @param mdoRef         Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
-   * @param moduleType     Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
-   * @param methodName     Имя метода, к которому относится переменная. Пустой, если переменная относится к модулю.
-   * @param variableName   Имя переменной, к которой происходит обращение.
-   * @param range          Диапазон, в котором происходит обращение к символу.
-   * @param occurrenceType Вид обращения к символу.
-   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
-   * @return построенное вхождение.
+   * @param mdoRef       Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType   Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
+   * @param methodName   Имя метода, к которому относится переменная. Пустой, если переменная относится к модулю.
+   * @param variableName Имя переменной, к которой происходит обращение.
+   * @return ключ вхождения; общий экземпляр даёт {@link #canonical}.
    */
-  protected SymbolOccurrence variableOccurrence(URI uri,
-                                                String mdoRef,
-                                                ModuleType moduleType,
-                                                String methodName,
-                                                String variableName,
-                                                Range range,
-                                                OccurrenceType occurrenceType,
-                                                Map<Symbol, Symbol> documentSymbols) {
+  protected Symbol variableSymbol(String mdoRef, ModuleType moduleType, String methodName, String variableName) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = canonical(Symbol.builder()
+    return Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build(), documentSymbols);
-
-    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
+      .build();
   }
 
   /**
-   * Построить вхождение «обращение к неквалифицированному self-члену» (реквизиту/
-   * платформенному методу self-типа модуля) без записи в индекс. Ключ помечается
-   * {@link #SELF_MEMBER_SCOPE}, по которому {@link #buildReference} реконструирует
-   * {@code PlatformMemberSymbol} через {@link SelfMemberResolver}.
+   * Ключ вхождения «обращение к неквалифицированному self-члену» (реквизиту/платформенному
+   * методу self-типа модуля). Ключ помечается {@link #SELF_MEMBER_SCOPE}, по которому
+   * {@link #buildReference} реконструирует {@code PlatformMemberSymbol} через {@link SelfMemberResolver}.
    *
-   * @param uri            URI документа, где встречен self-член.
-   * @param mdoRef         mdoRef документа (self-тип — это его собственный тип модуля).
-   * @param moduleType     тип модуля документа.
-   * @param symbolKind     вид: {@link SymbolKind#Method} (вызов) / {@link SymbolKind#Property} (ссылка).
-   * @param name           имя self-члена.
-   * @param range          диапазон обращения.
-   * @param occurrenceType вид обращения.
-   * @param documentSymbols символы, уже встреченные в документе (см. {@link #canonical}).
-   * @return построенное вхождение.
+   * @param mdoRef     mdoRef документа (self-тип — это его собственный тип модуля).
+   * @param moduleType тип модуля документа.
+   * @param symbolKind вид: {@link SymbolKind#Method} (вызов) / {@link SymbolKind#Property} (ссылка).
+   * @param name       имя self-члена.
+   * @return ключ вхождения; общий экземпляр даёт {@link #canonical}.
    */
-  protected SymbolOccurrence selfMemberOccurrence(URI uri, String mdoRef, ModuleType moduleType,
-                                                  SymbolKind symbolKind, String name, Range range,
-                                                  OccurrenceType occurrenceType,
-                                                  Map<Symbol, Symbol> documentSymbols) {
+  protected Symbol selfMemberSymbol(String mdoRef, ModuleType moduleType, SymbolKind symbolKind, String name) {
     var nameCanonical = stringInterner.intern(name.toLowerCase(Locale.ENGLISH));
 
-    var symbol = canonical(Symbol.builder()
+    return Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(SELF_MEMBER_SCOPE)
       .symbolKind(symbolKind)
       .symbolName(nameCanonical)
-      .build(), documentSymbols);
-
-    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
+      .build();
   }
 
   /**
-   * Общий экземпляр символа для нового вхождения: тот, на который ссылаются уже сохранённые
-   * обращения, либо встреченный раньше в том же документе. Обращений на порядок больше, чем
-   * символов, и без общего экземпляра каждое держало бы свою копию ключа.
-   * <p>
-   * Документы наполняются параллельно, и первые обращения разных документов к ещё не
-   * сохранённому символу могут получить разные, но равные экземпляры — на поиск это не влияет.
+   * Экземпляр ключа, на который ссылаются уже сохранённые обращения к символу. Обращений на
+   * порядок больше, чем символов: новое обращение к известному символу должно ссылаться на тот же
+   * экземпляр, а не держать свою копию ключа.
    *
-   * @param symbol          ключ нового вхождения.
-   * @param documentSymbols символы, уже встреченные в документе; пополняется.
-   * @return общий экземпляр, равный {@code symbol}.
+   * @param symbol ключ нового вхождения.
+   * @return сохранённый экземпляр, равный {@code symbol}; сам {@code symbol}, если обращений к нему нет.
    */
-  private Symbol canonical(Symbol symbol, Map<Symbol, Symbol> documentSymbols) {
-    return documentSymbols.computeIfAbsent(symbol, symbolOccurrenceRepository::canonical);
+  protected Symbol canonical(Symbol symbol) {
+    return symbolOccurrenceRepository.canonical(symbol);
   }
 
   private Optional<Reference> buildReference(

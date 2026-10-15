@@ -22,8 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -40,8 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -55,6 +56,9 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private SymbolOccurrenceRepository symbolOccurrenceRepository;
+
+  @Autowired
+  private LocationRepository locationRepository;
 
   @Autowired
   private OScriptLibraryIndex oScriptLibraryIndex;
@@ -83,6 +87,24 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       .isNotEmpty()
       .contains(Reference.of(method, method, location))
     ;
+  }
+
+  @Test
+  void occurrencesOfOneSymbolShareOneKeyInstance() {
+    // given: параметр ПервыйОбщийМодуль и функции общего модуля упоминаются в документе по нескольку раз
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    // when
+    var byKey = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
+      .collect(Collectors.groupingBy(SymbolOccurrence::symbol));
+
+    // then: у всех обращений документа к символу один экземпляр ключа, и индекс отдаёт сохранённый
+    assertThat(byKey.values()).anySatisfy(occurrences -> assertThat(occurrences).hasSizeGreaterThan(1));
+    byKey.forEach((key, occurrences) -> {
+      assertThat(occurrences).allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+      var copy = new Symbol(key.mdoRef(), key.moduleType(), key.scopeName(), key.symbolKind(), key.symbolName());
+      assertThat(referenceIndex.canonical(copy)).isEqualTo(key).isNotSameAs(copy);
+    });
   }
 
   @Test
@@ -419,37 +441,13 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
     @Test
     @DirtiesContext
-    void occurrencesOfOneSymbolShareOneKeyInstance() {
-      // given
-      var documents = context.getDocuments().keySet().iterator();
-      var uri = documents.next();
-      var otherUri = documents.next();
-      var documentSymbols = new HashMap<Symbol, Symbol>();
-
-      // when
-      var first = referenceIndex.methodCallOccurrence(uri, "CommonModule.МодульКлючей", ModuleType.CommonModule,
-        "Метод", Ranges.create(0, 0, 5), documentSymbols);
-      var second = referenceIndex.methodCallOccurrence(uri, "CommonModule.МодульКлючей", ModuleType.CommonModule,
-        "МЕТОД", Ranges.create(1, 0, 5), documentSymbols);
-      referenceIndex.replaceReferences(uri, List.of(first, second));
-      var fromOtherDocument = referenceIndex.methodCallOccurrence(otherUri, "CommonModule.МодульКлючей",
-        ModuleType.CommonModule, "метод", Ranges.create(0, 0, 5), new HashMap<>());
-
-      // then: ключ у обращений один экземпляр — и в документе, и в другом документе после сохранения
-      assertThat(second.symbol()).isSameAs(first.symbol());
-      assertThat(fromOtherDocument.symbol()).isSameAs(first.symbol());
-    }
-
-    @Test
-    @DirtiesContext
     void crossWorkspaceIsolation() {
       // given - workspace 1 is already initialized with PATH_TO_METADATA in @BeforeEach
       // Manually add a reference to workspace 1's repos to verify isolation
       var workspace1Uri = context.getDocuments().keySet().iterator().next();
-      var occurrence = referenceIndex.methodCallOccurrence(
-        workspace1Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
-        Ranges.create(0, 0, 10), new java.util.HashMap<>()
-      );
+      var occurrence = SymbolOccurrence.of(OccurrenceType.REFERENCE,
+        referenceIndex.methodCallSymbol("CommonModule.TestModule", ModuleType.CommonModule, "TestMethod"),
+        workspace1Uri, Ranges.create(0, 0, 10));
       referenceIndex.replaceReferences(workspace1Uri, java.util.List.of(occurrence));
 
       // Build the same Symbol key used for both workspaces

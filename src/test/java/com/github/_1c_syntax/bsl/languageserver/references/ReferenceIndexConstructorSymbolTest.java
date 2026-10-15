@@ -38,7 +38,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Регрессия: {@link ReferenceIndex#methodCallOccurrence} индексирует ЛЮБОЙ вызов метода
+ * Регрессия: {@link ReferenceIndex#methodCallSymbol} индексирует ЛЮБОЙ вызов метода
  * (в т.ч. {@code Новый ИмяКласса(...)}, попадающий туда же через
  * {@code ReferenceIndexFiller#tryRegisterLibraryClassReference}) под каноническим
  * {@link SymbolKind#Method}, тогда как
