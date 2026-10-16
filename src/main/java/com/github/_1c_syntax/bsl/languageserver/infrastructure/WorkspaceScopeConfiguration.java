@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import org.springframework.aop.scope.ScopedProxyFactoryBean;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,5 +44,31 @@ public class WorkspaceScopeConfiguration {
     var configurer = new CustomScopeConfigurer();
     configurer.addScope(WorkspaceBeanScope.SCOPE_NAME, workspaceScope);
     return configurer;
+  }
+
+  /**
+   * Прокси бинов рабочей области строит {@link WorkspaceScopedProxyFactoryBean} вместо
+   * {@link ScopedProxyFactoryBean}: описания прокси, которые Spring завёл для бинов области
+   * {@link WorkspaceBeanScope#SCOPE_NAME}, получают другой класс фабрики, остальное в них
+   * не меняется.
+   *
+   * @return постпроцессор описаний бинов.
+   */
+  @Bean
+  public static BeanFactoryPostProcessor workspaceScopedProxies() {
+    return (ConfigurableListableBeanFactory beanFactory) -> {
+      for (var name : beanFactory.getBeanDefinitionNames()) {
+        var definition = beanFactory.getBeanDefinition(name);
+        if (!ScopedProxyFactoryBean.class.getName().equals(definition.getBeanClassName())) {
+          continue;
+        }
+        var targetBeanName = definition.getPropertyValues().get("targetBeanName");
+        if (targetBeanName instanceof String target
+          && beanFactory.containsBeanDefinition(target)
+          && WorkspaceBeanScope.SCOPE_NAME.equals(beanFactory.getBeanDefinition(target).getScope())) {
+          definition.setBeanClassName(WorkspaceScopedProxyFactoryBean.class.getName());
+        }
+      }
+    };
   }
 }
