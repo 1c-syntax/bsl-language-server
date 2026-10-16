@@ -119,6 +119,23 @@ class DocumentContextTest {
   }
 
   @Test
+  void rebuildIsAChangeWhenLongTextDiffersOnlyAtTheEnd() {
+    // given: длинный текст — отпечаток собирается из него по кускам, а правка стоит
+    // далеко за первым из них.
+    var documentContext = getDocumentContext();
+    var comment = "// " + "ж".repeat(10_000) + "\n";
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+
+    // when
+    documentContext.rebuild(comment + "Процедура Б() КонецПроцедуры", documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
   void frozenDocumentDropsSecondaryDataWhenContentReallyChanged() throws IllegalAccessException {
     // given: документ заморожен — так область поступает с файлом, который никто не открывал.
     var documentContext = getDocumentContext();
