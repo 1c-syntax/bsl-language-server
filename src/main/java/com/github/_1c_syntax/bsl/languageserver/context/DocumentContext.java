@@ -463,16 +463,16 @@ public class DocumentContext implements Comparable<DocumentContext> {
     // Свёртываются сами кодовые единицы UTF-16, кусками: перекодирование всего текста
     // в UTF-8 обходилось дороже самой свёртки.
     var chars = new char[FINGERPRINT_CHUNK];
-    var bytes = new byte[FINGERPRINT_CHUNK * 2];
+    var bytes = new byte[FINGERPRINT_CHUNK * Character.BYTES];
     var length = content.length();
     for (var from = 0; from < length; from += FINGERPRINT_CHUNK) {
       var count = Math.min(FINGERPRINT_CHUNK, length - from);
       content.getChars(from, from + count, chars, 0);
       for (var i = 0; i < count; i++) {
-        bytes[2 * i] = (byte) (chars[i] >> 8);
-        bytes[2 * i + 1] = (byte) chars[i];
+        bytes[Character.BYTES * i] = (byte) (chars[i] >> Byte.SIZE);
+        bytes[Character.BYTES * i + 1] = (byte) chars[i];
       }
-      digest.update(bytes, 0, 2 * count);
+      digest.update(bytes, 0, Character.BYTES * count);
     }
     return digest.digest();
   }
