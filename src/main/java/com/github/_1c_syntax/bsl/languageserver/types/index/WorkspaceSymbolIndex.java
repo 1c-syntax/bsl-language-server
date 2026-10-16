@@ -219,7 +219,6 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    */
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-
   /**
    * Пересобрать записи документа на изменении его содержимого.
    * <p>
