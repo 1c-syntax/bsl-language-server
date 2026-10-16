@@ -101,6 +101,21 @@ class WorkspaceScopedProxyFactoryBeanTest {
   }
 
   @Test
+  void removeFromScopeDropsTheBeanOfTheCurrentWorkspace() {
+    // given
+    try (var ignored = WorkspaceContextHolder.forUri(FIRST, "first")) {
+      counter.increment();
+      counter.increment();
+
+      // when
+      ((ScopedObject) counter).removeFromScope();
+
+      // then: следующий вызов идёт в новый бин этой рабочей области
+      assertThat(counter.increment()).isEqualTo(1);
+    }
+  }
+
+  @Test
   void callWithoutWorkspaceFailsAsBefore() {
     // given
     WorkspaceContextHolder.clear();

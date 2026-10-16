@@ -104,7 +104,14 @@ public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
     var scopedObject = new DefaultScopedObject(configurableBeanFactory, targetBeanName);
     factory.addInterface(ScopedObject.class);
     factory.addAdvisor(new DefaultPointcutAdvisor(SCOPED_OBJECT_METHODS,
-      (MethodInterceptor) invocation -> invocation.getMethod().invoke(scopedObject, invocation.getArguments())));
+      (MethodInterceptor) invocation -> switch (invocation.getMethod().getName()) {
+        case "getTargetObject" -> scopedObject.getTargetObject();
+        case "removeFromScope" -> {
+          scopedObject.removeFromScope();
+          yield null;
+        }
+        default -> invocation.proceed();
+      }));
     factory.addInterface(AopInfrastructureBean.class);
 
     proxy = factory.getProxy(configurableBeanFactory.getBeanClassLoader());
