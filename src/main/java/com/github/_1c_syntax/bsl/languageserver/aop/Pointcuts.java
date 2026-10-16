@@ -142,10 +142,10 @@ public class Pointcuts {
   }
 
   /**
-   * Это вызов метода populateContext.
+   * Это вызов метода populateDocuments — наполнения контекста документами.
    */
-  @Pointcut("isBSLLanguageServerScope() && execution(* populateContext(..))")
-  public void isPopulateContextCall() {
+  @Pointcut("isBSLLanguageServerScope() && execution(* populateDocuments(..))")
+  public void isPopulateDocumentsCall() {
     // no-op
   }
 

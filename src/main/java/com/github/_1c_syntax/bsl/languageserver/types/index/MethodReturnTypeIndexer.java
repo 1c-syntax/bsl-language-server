@@ -572,7 +572,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param progress      ход работы.
    */
   private void drainPending(ServerContext serverContext, ResolveProgress progress) {
-    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
+    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty() && !serverContext.isBackgroundWorkStopped(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
       progress.plan(documentsOf(roots));
@@ -786,12 +786,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     Map<URI, List<MethodSymbol>> byDocument,
     List<MethodSymbol> methods
   ) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      // Рабочую область закрывают и ждут, пока проход закончится.
+      return;
+    }
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
+      for (var pass = 0; pass < MAX_PASSES && !serverContext.isBackgroundWorkStopped(); pass++) {
         var changed = false;
         for (var method : methods) {
           changed |= recompute(method);
@@ -837,7 +841,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   ) {
     // Первый оборот считает всю компоненту.
     Set<URI> changedLastPass = new HashSet<>(component);
-    for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
+    for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty() && !serverContext.isBackgroundWorkStopped();
+         pass++) {
       changedLastPass = resolvePass(serverContext, component, byDocument, changedLastPass, progress, pass == 0);
     }
   }
@@ -873,6 +878,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var changed = new HashSet<URI>();
     try (var ahead = new AheadLoader(serverContext, certain)) {
       for (var uri : component) {
+        if (serverContext.isBackgroundWorkStopped()) {
+          // Такой цикл считается десятки секунд: остановка не ждёт его конца.
+          break;
+        }
         var methods = byDocument.get(uri);
         if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
           continue;
@@ -1173,7 +1182,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     provisional.addAll(methods);
+    var serverContext = methods.get(0).getOwner().getServerContext();
     for (var method : methods) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        // В большом общем модуле функций сотни: остановка не ждёт конца документа.
+        break;
+      }
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
       // ушёл бы в отложенные — очередь не сходилась бы.
