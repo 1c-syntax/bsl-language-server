@@ -67,6 +67,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Типы возвращаемого значения методов, рассчитанные по их телам.
@@ -296,7 +297,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     rebuilt.set(0);
     rebuiltUris.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
-      documentsOf(pending),
+      documentsOf(pending.stream().map(MethodSymbol::getOwner)),
       getMessage("resolveDocumentsPostfix")
     );
     progressReporter.beginProgress(getMessage("resolveReturnTypes"));
@@ -595,13 +596,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Сколько различных документов стоит за методами.
+   * Сколько различных документов среди документов методов.
    *
-   * @param methods методы.
+   * @param owners документы методов.
    * @return число документов.
    */
-  private static int documentsOf(Collection<MethodSymbol> methods) {
-    return (int) methods.stream().map(method -> method.getOwner().getUri()).distinct().count();
+  private static int documentsOf(Stream<DocumentContext> owners) {
+    return (int) owners.map(DocumentContext::getUri).distinct().count();
   }
 
   /**
@@ -612,9 +613,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private void drainPending(ServerContext serverContext, ResolveProgress progress) {
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
-      var roots = List.copyOf(pending);
+      // Волна держит ключи, а не символы: документ, разобранный ею заново, получает новое
+      // дерево, и символ из прежнего держал бы прежнее дерево целиком до конца волны.
+      var roots = pending.stream().map(MethodKey::of).toList();
       pending.clear();
-      progress.plan(documentsOf(roots));
+      progress.plan(documentsOf(roots.stream().map(MethodKey::owner)));
       var changesBefore = valueChanges.get();
       resolveAll(serverContext, roots, progress);
       // План волны строится по связям, известным на её начало, а вскрываются они её же
@@ -626,7 +629,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         // этом может оказаться метод вне волны: зависимость поменялась после его расчёта ещё
         // при наполнении, а разнос его не пересчитал — документ был отпущен, — и до первой
         // волны устаревших никто не искал.
-        roots.forEach(outdated::remove);
+        var recomputed = Set.copyOf(roots);
+        outdated.removeIf(method -> recomputed.contains(MethodKey.of(method)));
         pending.clear();
         if (outdated.isEmpty()) {
           LOGGER.debug("Волна {}: пересчитано методов {}, ни одно значение не изменилось — проход окончен",
@@ -684,12 +688,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private void resolveAll(
     ServerContext serverContext,
-    List<MethodSymbol> roots,
+    List<MethodKey> roots,
     ResolveProgress progress
   ) {
-    var byDocument = new LinkedHashMap<URI, List<MethodSymbol>>();
+    var byDocument = new LinkedHashMap<URI, List<MethodKey>>();
     for (var root : roots) {
-      byDocument.computeIfAbsent(root.getOwner().getUri(), k -> new ArrayList<>()).add(root);
+      byDocument.computeIfAbsent(root.owner().getUri(), k -> new ArrayList<>()).add(root);
     }
     var order = DocumentDependencies.of(byDocument.keySet(),
       uri -> dependenciesByUri.getOrDefault(uri, Set.of()));
@@ -734,7 +738,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     Semaphore loaded,
     ServerContext serverContext,
     List<URI> component,
-    Map<URI, List<MethodSymbol>> byDocument,
+    Map<URI, List<MethodKey>> byDocument,
     ResolveProgress progress
   ) {
     loaded.acquireUninterruptibly();
@@ -793,7 +797,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private void resolveComponent(
     ServerContext serverContext,
     List<URI> component,
-    Map<URI, List<MethodSymbol>> byDocument,
+    Map<URI, List<MethodKey>> byDocument,
     ResolveProgress progress
   ) {
     if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
@@ -822,17 +826,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private void resolveComponent(
     ServerContext serverContext,
     List<URI> component,
-    Map<URI, List<MethodSymbol>> byDocument,
-    List<MethodSymbol> methods
+    Map<URI, List<MethodKey>> byDocument,
+    List<MethodKey> methods
   ) {
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
+      var current = currentSymbols(methods);
       for (var pass = 0; pass < MAX_PASSES; pass++) {
         var changed = false;
-        for (var method : methods) {
+        for (var method : current) {
           changed |= recompute(method);
         }
         if (!changed) {
@@ -871,7 +876,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private void resolveUnloaded(
     ServerContext serverContext,
     List<URI> component,
-    Map<URI, List<MethodSymbol>> byDocument,
+    Map<URI, List<MethodKey>> byDocument,
     ResolveProgress progress
   ) {
     // Первый оборот считает всю компоненту.
@@ -900,14 +905,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private Set<URI> resolvePass(
     ServerContext serverContext,
     List<URI> component,
-    Map<URI, List<MethodSymbol>> byDocument,
+    Map<URI, List<MethodKey>> byDocument,
     Set<URI> changedLastPass,
     ResolveProgress progress,
     boolean planned
   ) {
     var certain = component.stream()
       .filter(uri -> changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri)))
-      .map(uri -> byDocument.get(uri).get(0).getOwner())
+      .map(uri -> byDocument.get(uri).get(0).owner())
       .toList();
     var changed = new HashSet<URI>();
     try (var ahead = new AheadLoader(serverContext, certain)) {
@@ -1003,9 +1008,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
      * @param methods отложенные методы одного документа.
      * @return {@code true}, если хоть у одного метода набор типов изменился.
      */
-    private boolean recompute(List<MethodSymbol> methods) {
+    private boolean recompute(List<MethodKey> methods) {
       fill();
-      var documentContext = methods.get(0).getOwner();
+      var documentContext = methods.get(0).owner();
       var head = ahead.peek();
       if (head == null || !head.documentContext().equals(documentContext)) {
         return recomputeLoading(serverContext, methods);
@@ -1088,13 +1093,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param methods отложенные методы документа.
    * @return {@code true}, если пересчёт может дать другой итог.
    */
-  private boolean isOutdated(URI uri, List<MethodSymbol> methods) {
+  private boolean isOutdated(URI uri, List<MethodKey> methods) {
     var dependencies = dependenciesByUri.get(uri);
     if (dependencies == null) {
       return false;
     }
     var computed = methods.stream()
-      .mapToLong(method -> computedAt.getOrDefault(MethodKey.of(method), 0L))
+      .mapToLong(method -> computedAt.getOrDefault(method, 0L))
       .min()
       .orElse(0L);
     for (var dependency : dependencies) {
@@ -1160,13 +1165,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param methods       отложенные методы одного документа.
    * @return {@code true}, если хоть у одного метода набор типов изменился.
    */
-  private boolean recomputeLoading(ServerContext serverContext, List<MethodSymbol> methods) {
-    var documentContext = methods.get(0).getOwner();
+  private boolean recomputeLoading(ServerContext serverContext, List<MethodKey> methods) {
+    var documentContext = methods.get(0).owner();
     var lock = serverContext.getDocumentLock(documentContext.getUri());
     lock.readLock().lock();
     try {
       if (isReadable(documentContext)) {
-        return recomputeEach(methods);
+        return recomputeEach(currentSymbols(methods));
       }
     } finally {
       lock.readLock().unlock();
@@ -1176,7 +1181,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
       if (isReadable(documentContext)) {
-        return recomputeEach(methods);
+        return recomputeEach(currentSymbols(methods));
       }
       rebuilt.incrementAndGet();
       rebuiltUris.add(documentContext.getUri());
@@ -1189,12 +1194,34 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         // файла не вернёт, только повторит ошибку чтения.
         return false;
       }
-      var changed = recomputeEach(methods);
+      var changed = recomputeEach(currentSymbols(methods));
       serverContext.tryClearDocument(documentContext);
       return changed;
     } finally {
       lock.writeLock().unlock();
     }
+  }
+
+  /**
+   * Символы методов из последнего дерева их документа.
+   * <p>
+   * Документ, разобранный заново с тем же текстом, подставляет в запомненное символы своего
+   * нового дерева ({@link #rememberCurrentSymbols}), поэтому брать их надо после разбора.
+   * Метода, записи о котором уже нет, — документ изменился или удалён, и его методы
+   * посчитаны заново, — среди них нет.
+   *
+   * @param methods ключи методов.
+   * @return символы методов.
+   */
+  private List<MethodSymbol> currentSymbols(List<MethodKey> methods) {
+    var current = new ArrayList<MethodSymbol>(methods.size());
+    for (var key : methods) {
+      var method = indexed.get(key);
+      if (method != null) {
+        current.add(method);
+      }
+    }
+    return current;
   }
 
   /**
@@ -1206,10 +1233,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * чем до него дошла очередь, пересчитает его на месте, а не возьмёт прежнее значение
    * себе навсегда.
    *
-   * @param methods методы.
+   * @param methods методы; может быть пуст — тогда пересчитывать нечего.
    * @return {@code true}, если хоть у одного набор типов изменился.
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
+    if (methods.isEmpty()) {
+      return false;
+    }
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     methods.forEach(method -> provisional.add(MethodKey.of(method)));
     for (var method : methods) {

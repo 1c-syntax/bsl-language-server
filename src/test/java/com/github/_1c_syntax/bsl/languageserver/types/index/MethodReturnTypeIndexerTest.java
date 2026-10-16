@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ComputedReturnTypes;
@@ -51,6 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +63,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.atLeastOnce;
@@ -396,6 +399,35 @@ class MethodReturnTypeIndexerTest {
     // области в памяти осело бы всё, что проход трогал.
     verify(serverContext).rebuildDocument(consumer);
     verify(serverContext).tryClearDocument(consumer);
+  }
+
+  @Test
+  void reloadedDocumentIsRecomputedWithSymbolOfItsNewTree() {
+    // given: отложенный метод лежит в освобождённом документе, а разбор заново даёт новое
+    // дерево с равным, но другим символом метода.
+    var before = function(consumer);
+    var after = function(consumer);
+    var methods = new AtomicReference<List<MethodSymbol>>(List.of(before));
+    when(consumer.getSymbolTree().getMethods()).thenAnswer(invocation -> methods.get());
+    returns(before, TypeSet.EMPTY, sourceMethod);
+    indexer.computeIfAbsent(before,
+      () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+    var serverContext = serverContextOf(consumer);
+    var loading = trackLoading(serverContext, consumer);
+    doAnswer(invocation -> {
+      loading.load(consumer);
+      methods.set(List.of(after));
+      indexer.handleContentChanged(new DocumentContextContentChangedEvent(consumer, false));
+      return null;
+    }).when(serverContext).rebuildDocument(consumer);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: метод посчитан по символу нового дерева — символ прежнего держал бы всё прежнее
+    // дерево до конца волны.
+    verify(inferencer).computeReturnTypes(argThat(method -> method == after));
+    verify(inferencer, never()).computeReturnTypes(argThat(method -> method == before));
   }
 
   @Test
@@ -752,6 +784,23 @@ class MethodReturnTypeIndexerTest {
     when(documentContext.getServerContext()).thenReturn(serverContext);
     when(serverContext.getDocumentState(documentContext)).thenReturn(DocumentState.WITH_CONTENT);
     return documentContext;
+  }
+
+  /**
+   * Настоящий символ функции: равен любому другому, построенному так же для того же документа.
+   *
+   * @param owner документ.
+   * @return символ функции.
+   */
+  private static MethodSymbol function(DocumentContext owner) {
+    return RegularMethodSymbol.builder()
+      .name("Функция")
+      .owner(owner)
+      .subNameLine(0)
+      .subNameStartCharacter(8)
+      .subNameEndCharacter(15)
+      .function(true)
+      .build();
   }
 
   private static MethodSymbol method(DocumentContext owner, boolean export) {
