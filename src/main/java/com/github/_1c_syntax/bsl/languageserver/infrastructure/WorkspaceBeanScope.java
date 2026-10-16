@@ -65,6 +65,21 @@ public class WorkspaceBeanScope implements Scope {
     return previous != null ? previous : created;
   }
 
+  /**
+   * Уже созданный бин текущей рабочей области.
+   *
+   * @param name имя бина в области.
+   * @return бин; {@code null}, если рабочая область не выбрана или бин в ней ещё не создан.
+   */
+  public @Nullable Object getIfPresent(String name) {
+    var key = WorkspaceContextHolder.get();
+    if (key == null) {
+      return null;
+    }
+    var beans = store.get(key);
+    return beans == null ? null : beans.get(name);
+  }
+
   private static <K, V> Map<K, V> getOrCreate(ConcurrentHashMap<URI, Map<K, V>> outer, URI key) {
     var inner = outer.get(key);
     if (inner != null) {
