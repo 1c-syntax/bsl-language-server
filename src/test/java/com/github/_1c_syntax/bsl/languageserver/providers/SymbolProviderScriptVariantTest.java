@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.SymbolKind;
+import com.github._1c_syntax.utils.StringInterner;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -92,7 +93,7 @@ class SymbolProviderScriptVariantTest {
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
 
     // имя контейнера вычисляется индексом на момент индексации в варианте языка проекта
-    var index = new WorkspaceSymbolIndex(new FuzzyMatcher());
+    var index = new WorkspaceSymbolIndex(new FuzzyMatcher(), new StringInterner());
     index.handleContentChanged(new DocumentContextContentChangedEvent(documentContext));
 
     // запрос без partialResultToken: клиент не используется, древесная выдача отдаётся синхронно
