@@ -39,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install mkdocs mkdocs-material pygments-bsl
+        pip install mkdocs mkdocs-material pygments-bsl pillow cairosvg
     
     - name: Dowload latest GitHub Pages
       run: |

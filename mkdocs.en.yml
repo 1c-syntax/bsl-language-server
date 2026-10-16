@@ -119,6 +119,10 @@ plugins:
       lang:
         - en
         - ru
+  - social:
+      cards_layout_options:
+        background_color: "#0b57d0"
+        color: "#ffffff"
 
 site_url: 'https://1c-syntax.github.io/bsl-language-server'
 repo_name: '1c-syntax/bsl-language-server'
