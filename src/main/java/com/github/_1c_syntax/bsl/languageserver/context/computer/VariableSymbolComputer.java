@@ -42,6 +42,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +53,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -72,6 +74,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   private SourceDefinedSymbol currentMethod;
+  private @Nullable Predicate<String> bareSelfProperties;
 
   public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,
                                 List<? extends MethodSymbol> methods,
@@ -85,6 +88,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public List<VariableSymbol> compute() {
+    bareSelfProperties = null;
     variables.clear();
     moduleVariables.clear();
     visitFile(documentContext.getAst());
@@ -188,7 +192,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       // индексация в ReferenceIndexFiller, подсветка SymbolsSemanticTokensSupplier). Проверка
       // здесь, а не в общем updateVariablesCache: переменные цикла Для/Для Каждого — реальные
       // объявления и НЕ должны подавляться, даже если их имя совпадает с реквизитом.
-      || selfMemberClassifier.isBareSelfProperty(documentContext, ctx.IDENTIFIER().getText())
+      || isBareSelfProperty(ctx.IDENTIFIER().getText())
     ) {
       return ctx;
     }
@@ -364,4 +368,11 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
   }
 
+  /** Классификатор документа берётся один раз, при первом голом присваивании. */
+  private boolean isBareSelfProperty(String name) {
+    if (bareSelfProperties == null) {
+      bareSelfProperties = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
+    }
+    return bareSelfProperties.test(name);
+  }
 }
