@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792065031351,
+  "lastUpdate": 1792138829277,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45663,6 +45663,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.943055264549594",
             "extra": "mean: 93.4340402285258 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d506f2afd1a71b0ff4633aa1ccc67fcbd1134e8c",
+          "message": "Merge pull request #4697 from 1c-syntax/perf/context-fingerprint-from-utf16\n\nОтпечаток содержимого документа считается по символам, без перекодирования текста в UTF-8",
+          "timestamp": "2026-10-16T09:58:26+02:00",
+          "tree_id": "5813bbdd50343e0d51a012d980da2a3d6f56d082",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d506f2afd1a71b0ff4633aa1ccc67fcbd1134e8c"
+        },
+        "date": 1792138797814,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.94635915756226,
+            "unit": "sec",
+            "range": "stddev: 0.16921051069836218",
+            "extra": "mean: 92.94635915756226 sec\nrounds: 3"
           }
         ]
       }
