@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutionException;
@@ -52,7 +51,6 @@ public class AnalyzeProjectOnStart {
   private final ExecutorService executor;
 
   @EventListener
-  @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
 
     if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {

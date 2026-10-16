@@ -79,6 +79,7 @@ class OScriptLibraryFileSystemWatcherTest {
   void setUp() {
     serverContextProvider.clear();
     var serverContext = serverContextProvider.addWorkspace(Absolute.uri(workspaceDir.toUri()));
+    serverContext.awaitPreparation();
     workspaceUri = serverContext.getWorkspaceUri();
     WorkspaceContextHolder.set(workspaceUri);
   }
