@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -59,6 +60,12 @@ public class CommonModuleByNameInference {
   private final TypeRegistry typeRegistry;
 
   /**
+   * Разобранный список методов доступа к общим модулям вместе с копией списка, из которого он
+   * разобран: разбор повторяется, только когда список в настройках изменился.
+   */
+  private volatile @Nullable ParsedFrom parsedAccessors;
+
+  /**
    * Тип общего модуля, названного строковым литералом в вызове у получателя:
    * {@code ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")}.
    *
@@ -72,8 +79,7 @@ public class CommonModuleByNameInference {
   @Nullable
   public TypeSet refinedCallTypes(TypeSet receiverTypes, String memberName,
                                   MethodCallNode call, FileType fileType) {
-    var accessors = ModuleReference.parseAccessors(
-      configuration.getReferencesOptions().getCommonModuleAccessors());
+    var accessors = accessors();
     var member = memberName.toLowerCase(Locale.ENGLISH);
     var matches = receiverTypes.refs().stream()
       .map(ref -> accessors.moduleMethodPairs().get(ref.qualifiedName().toLowerCase(Locale.ENGLISH)))
@@ -92,8 +98,7 @@ public class CommonModuleByNameInference {
    */
   @Nullable
   public TypeSet localCallTypes(MethodCallNode call, FileType fileType) {
-    var accessors = ModuleReference.parseAccessors(
-      configuration.getReferencesOptions().getCommonModuleAccessors());
+    var accessors = accessors();
     var callName = call.getName().getText().toLowerCase(Locale.ENGLISH);
     return accessors.localMethods().contains(callName) ? namedModuleType(call, fileType) : null;
   }
@@ -117,5 +122,19 @@ public class CommonModuleByNameInference {
       return null;
     }
     return typeRegistry.resolve(moduleName.trim(), fileType).map(TypeSet::of).orElse(null);
+  }
+
+  /** Разобранный список методов доступа из текущих настроек. */
+  private ModuleReference.ParsedAccessors accessors() {
+    var source = configuration.getReferencesOptions().getCommonModuleAccessors();
+    var parsed = parsedAccessors;
+    if (parsed == null || !parsed.source().equals(source)) {
+      parsed = new ParsedFrom(List.copyOf(source), ModuleReference.parseAccessors(source));
+      parsedAccessors = parsed;
+    }
+    return parsed.accessors();
+  }
+
+  private record ParsedFrom(List<String> source, ModuleReference.ParsedAccessors accessors) {
   }
 }
