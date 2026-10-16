@@ -84,6 +84,7 @@ public final class MethodSymbolComputer
 
   @Override
   public List<MethodSymbol> compute() {
+    eventHandlers = null;
     methods.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(methods);
