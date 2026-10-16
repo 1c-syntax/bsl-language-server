@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.aop.Pointcut;
+import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.AopInfrastructureBean;
 import org.springframework.aop.framework.ProxyConfig;
 import org.springframework.aop.framework.ProxyFactory;
@@ -32,7 +33,6 @@ import org.springframework.aop.scope.ScopedObject;
 import org.springframework.aop.scope.ScopedProxyFactoryBean;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
-import org.springframework.aop.target.SimpleBeanTargetSource;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
@@ -40,8 +40,10 @@ import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.util.ClassUtils;
 
+import java.io.Serial;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 
 /**
  * Прокси бина рабочей области — замена {@link ScopedProxyFactoryBean} для области
@@ -53,8 +55,11 @@ import java.lang.reflect.Modifier;
  * советник, который срабатывает только на них, а не перехватчик-введение на всех методах цели:
  * у остальных методов цепочка пуста, и вызов идёт в цель напрямую.
  */
-public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
+public final class WorkspaceScopedProxyFactoryBean extends ProxyConfig
   implements FactoryBean<Object>, BeanFactoryAware, AopInfrastructureBean {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   private static final Pointcut SCOPED_OBJECT_METHODS = new StaticMethodMatcherPointcut() {
     @Override
@@ -63,8 +68,9 @@ public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
     }
   };
 
-  private final WorkspaceTargetSource targetSource = new WorkspaceTargetSource();
-  private @Nullable Object proxy;
+  private @Nullable String targetBeanName;
+  private transient @Nullable WorkspaceTargetSource targetSource;
+  private transient @Nullable Object proxy;
 
   /**
    * Прокси по классу цели, как у {@link ScopedProxyFactoryBean}; по интерфейсам — если
@@ -78,7 +84,7 @@ public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
    * @param targetBeanName имя бина-цели в фабрике бинов.
    */
   public void setTargetBeanName(String targetBeanName) {
-    targetSource.setTargetBeanName(targetBeanName);
+    this.targetBeanName = targetBeanName;
   }
 
   @Override
@@ -86,22 +92,24 @@ public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
     if (!(beanFactory instanceof ConfigurableBeanFactory configurableBeanFactory)) {
       throw new IllegalStateException("Not running in a ConfigurableBeanFactory: " + beanFactory);
     }
-    targetSource.setBeanFactory(beanFactory);
+    var name = Objects.requireNonNull(targetBeanName, "Property 'targetBeanName' is required");
+    var beanType = beanFactory.getType(name);
+    if (beanType == null) {
+      throw new IllegalStateException(
+        "Cannot create scoped proxy for bean '" + name + "': Target type could not be determined at the time of proxy creation.");
+    }
+    if (!(configurableBeanFactory.getRegisteredScope(WorkspaceBeanScope.SCOPE_NAME) instanceof WorkspaceBeanScope scope)) {
+      throw new IllegalStateException("Scope '" + WorkspaceBeanScope.SCOPE_NAME + "' is not registered");
+    }
+    targetSource = new WorkspaceTargetSource(configurableBeanFactory, scope, name, beanType);
 
     var factory = new ProxyFactory();
     factory.copyFrom(this);
     factory.setTargetSource(targetSource);
-
-    var targetBeanName = targetSource.getTargetBeanName();
-    var beanType = beanFactory.getType(targetBeanName);
-    if (beanType == null) {
-      throw new IllegalStateException(
-        "Cannot create scoped proxy for bean '" + targetBeanName + "': Target type could not be determined at the time of proxy creation.");
-    }
     if (!isProxyTargetClass() || beanType.isInterface() || Modifier.isPrivate(beanType.getModifiers())) {
       factory.setInterfaces(ClassUtils.getAllInterfacesForClass(beanType, configurableBeanFactory.getBeanClassLoader()));
     }
-    var scopedObject = new DefaultScopedObject(configurableBeanFactory, targetBeanName);
+    var scopedObject = new DefaultScopedObject(configurableBeanFactory, name);
     factory.addInterface(ScopedObject.class);
     factory.addAdvisor(new DefaultPointcutAdvisor(SCOPED_OBJECT_METHODS,
       (MethodInterceptor) invocation -> switch (invocation.getMethod().getName()) {
@@ -130,7 +138,7 @@ public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
     if (proxy != null) {
       return proxy.getClass();
     }
-    return targetSource.getTargetClass();
+    return targetSource == null ? null : targetSource.getTargetClass();
   }
 
   @Override
@@ -141,27 +149,32 @@ public class WorkspaceScopedProxyFactoryBean extends ProxyConfig
   /**
    * Цель — бин текущей рабочей области; пока его нет, он создаётся обычным путём фабрики бинов.
    */
-  private static final class WorkspaceTargetSource extends SimpleBeanTargetSource {
-
-    private transient volatile @Nullable WorkspaceBeanScope scope;
+  private record WorkspaceTargetSource(
+    ConfigurableBeanFactory beanFactory,
+    WorkspaceBeanScope scope,
+    String targetBeanName,
+    Class<?> targetClass
+  ) implements TargetSource {
 
     @Override
-    public Object getTarget() throws Exception {
-      var existing = scope().getIfPresent(getTargetBeanName());
-      return existing != null ? existing : super.getTarget();
+    public Class<?> getTargetClass() {
+      return targetClass;
     }
 
-    private WorkspaceBeanScope scope() {
-      var current = scope;
-      if (current == null) {
-        current = (WorkspaceBeanScope) ((ConfigurableBeanFactory) getBeanFactory())
-          .getRegisteredScope(WorkspaceBeanScope.SCOPE_NAME);
-        if (current == null) {
-          throw new IllegalStateException("Scope '" + WorkspaceBeanScope.SCOPE_NAME + "' is not registered");
-        }
-        scope = current;
-      }
-      return current;
+    @Override
+    public boolean isStatic() {
+      return false;
+    }
+
+    @Override
+    public Object getTarget() {
+      var existing = scope.getIfPresent(targetBeanName);
+      return existing != null ? existing : beanFactory.getBean(targetBeanName);
+    }
+
+    @Override
+    public void releaseTarget(Object target) {
+      // цель живёт в рабочей области, отпускать нечего
     }
   }
 }

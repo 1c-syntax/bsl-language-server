@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import org.springframework.aop.scope.ScopedProxyFactoryBean;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +56,7 @@ public class WorkspaceScopeConfiguration {
    */
   @Bean
   public static BeanFactoryPostProcessor workspaceScopedProxies() {
-    return beanFactory -> {
+    return (ConfigurableListableBeanFactory beanFactory) -> {
       for (var name : beanFactory.getBeanDefinitionNames()) {
         var definition = beanFactory.getBeanDefinition(name);
         if (!ScopedProxyFactoryBean.class.getName().equals(definition.getBeanClassName())) {
