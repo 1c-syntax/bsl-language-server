@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Общий модуль, полученный по имени: {@code ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")}
@@ -63,7 +64,7 @@ public class CommonModuleByNameInference {
    * Разобранный список методов доступа к общим модулям вместе с копией списка, из которого он
    * разобран: разбор повторяется, только когда список в настройках изменился.
    */
-  private volatile @Nullable ParsedFrom parsedAccessors;
+  private final AtomicReference<@Nullable ParsedFrom> parsedAccessors = new AtomicReference<>();
 
   /**
    * Тип общего модуля, названного строковым литералом в вызове у получателя:
@@ -127,10 +128,10 @@ public class CommonModuleByNameInference {
   /** Разобранный список методов доступа из текущих настроек. */
   private ModuleReference.ParsedAccessors accessors() {
     var source = configuration.getReferencesOptions().getCommonModuleAccessors();
-    var parsed = parsedAccessors;
+    var parsed = parsedAccessors.get();
     if (parsed == null || !parsed.source().equals(source)) {
       parsed = new ParsedFrom(List.copyOf(source), ModuleReference.parseAccessors(source));
-      parsedAccessors = parsed;
+      parsedAccessors.set(parsed);
     }
     return parsed.accessors();
   }
