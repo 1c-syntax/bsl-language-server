@@ -408,10 +408,6 @@ public class ServerContextProvider {
   }
 
   /**
-   * Обработчик события добавления документа в контекст.
-   * Добавляет документ в индекс для быстрого поиска.
-   */
-  /**
    * Типы конфигурации зарегистрированы: деревья символов, построенные раньше, классифицировали
    * методы и члены без них, и перечитанный тот же текст должен построить дерево заново.
    *
@@ -433,6 +429,10 @@ public class ServerContextProvider {
     event.getSource().advanceContentEpoch();
   }
 
+  /**
+   * Обработчик события добавления документа в контекст.
+   * Добавляет документ в индекс для быстрого поиска.
+   */
   @EventListener
   public void onDocumentAdded(ServerContextDocumentAddedEvent event) {
     documentIndex.put(event.getUri(), event.getSource());
