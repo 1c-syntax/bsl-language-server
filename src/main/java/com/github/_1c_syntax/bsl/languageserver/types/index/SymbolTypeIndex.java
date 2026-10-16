@@ -109,8 +109,8 @@ public class SymbolTypeIndex {
   private final TemplateByNameResolver templateByNameResolver;
   private final GlobalScopeProvider globalScopeProvider;
 
-  private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
-  private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
+  private final Map<MethodKey, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
+  private final Map<URI, List<MethodKey>> indexedByUri = new ConcurrentHashMap<>();
 
   /**
    * Документы, объявленные типы которых пересобраны идущей сейчас пересборкой после наполнения;
@@ -123,7 +123,7 @@ public class SymbolTypeIndex {
    * {@code MethodReturnTypeIndexer}; сюда они складываются, чтобы ответ на вопрос
    * «что возвращает метод» был один и тот же у всех потребителей.
    */
-  private final Map<MethodSymbol, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
+  private final Map<MethodKey, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
 
   /**
    * Методы документа, у которых есть выведенное значение, — по ним запись стирается вместе
@@ -131,7 +131,7 @@ public class SymbolTypeIndex {
    * доразрешение, разнос по потребителям), и список копил бы один и тот же метод при каждом
    * пересчёте.
    */
-  private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Set<MethodKey>> inferredByUri = new ConcurrentHashMap<>();
 
   /**
    * Значение метода, соединённое из описания и вывода по телу, вместе с источниками, из
@@ -142,7 +142,7 @@ public class SymbolTypeIndex {
    * годность проверяется сравнением источников по ссылке, поэтому отдельного сброса при
    * записи не нужно и гонки между записью и чтением тоже нет.
    */
-  private final Map<MethodSymbol, CombinedReturnTypes> combinedReturnTypes = new ConcurrentHashMap<>();
+  private final Map<MethodKey, CombinedReturnTypes> combinedReturnTypes = new ConcurrentHashMap<>();
 
   // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
   // а здесь записи документа сначала стираются. Без явного порядка слушатель без
@@ -234,7 +234,7 @@ public class SymbolTypeIndex {
       previous.forEach(combinedReturnTypes::remove);
     }
 
-    var collected = new ArrayList<MethodSymbol>();
+    var collected = new ArrayList<MethodKey>();
     indexMethodsRecursive(documentContext.getSymbolTree().getModule(), collected);
     indexedByUri.put(uri, collected);
   }
@@ -243,7 +243,7 @@ public class SymbolTypeIndex {
    * @return объявленные типы возвращаемого значения метода либо пустой {@link TypeSet}.
    */
   public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
-    return declaredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+    return declaredReturnTypes.getOrDefault(MethodKey.of(method), TypeSet.EMPTY);
   }
 
   /**
@@ -258,8 +258,9 @@ public class SymbolTypeIndex {
    *     ничего не дал.
    */
   public TypeSet getReturnTypes(MethodSymbol method) {
-    var inferred = inferredReturnTypes.get(method);
-    var declared = getDeclaredReturnTypes(method);
+    var key = MethodKey.of(method);
+    var inferred = inferredReturnTypes.get(key);
+    var declared = declaredReturnTypes.getOrDefault(key, TypeSet.EMPTY);
     if (inferred == null || inferred.isEmpty()) {
       return declared;
     }
@@ -268,12 +269,12 @@ public class SymbolTypeIndex {
     // достаточно. Так запись и чтение могут идти одновременно: запись, случившаяся между
     // взятием источников и укладыванием результата, обесценит его сама — следующее чтение
     // увидит другие источники и посчитает заново.
-    var remembered = combinedReturnTypes.get(method);
+    var remembered = combinedReturnTypes.get(key);
     if (remembered != null && remembered.declared() == declared && remembered.inferred() == inferred) {
       return remembered.value();
     }
     var value = combine(declared, inferred);
-    combinedReturnTypes.put(method, new CombinedReturnTypes(declared, inferred, value));
+    combinedReturnTypes.put(key, new CombinedReturnTypes(declared, inferred, value));
     return value;
   }
 
@@ -323,18 +324,19 @@ public class SymbolTypeIndex {
     // источников по ссылке, и запись обесценит его сама. Снятие тут ничего бы не
     // гарантировало — читатель, взявший источники до него, всё равно уложил бы результат
     // после.
+    var key = MethodKey.of(method);
     inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
       if (types.isEmpty()) {
-        inferredReturnTypes.remove(method);
+        inferredReturnTypes.remove(key);
         if (methods == null) {
           return null;
         }
-        methods.remove(method);
+        methods.remove(key);
         return methods.isEmpty() ? null : methods;
       }
-      inferredReturnTypes.put(method, types);
-      var target = methods == null ? ConcurrentHashMap.<MethodSymbol>newKeySet() : methods;
-      target.add(method);
+      inferredReturnTypes.put(key, types);
+      var target = methods == null ? ConcurrentHashMap.<MethodKey>newKeySet() : methods;
+      target.add(key);
       return target;
     });
   }
@@ -764,7 +766,7 @@ public class SymbolTypeIndex {
     }
   }
 
-  private void indexMethodsRecursive(SourceDefinedSymbol parent, List<MethodSymbol> collected) {
+  private void indexMethodsRecursive(SourceDefinedSymbol parent, List<MethodKey> collected) {
     if (parent instanceof MethodSymbol method) {
       method.getDescription().ifPresent(descr -> {
         var returnedValue = descr.getReturnedValue();
@@ -780,8 +782,9 @@ public class SymbolTypeIndex {
         // проходом: см.-ссылка резолвится через resolveSeeReference при наличии owner.
         var returnTypes = resolveTypes(returnedValue, context);
         if (!returnTypes.isEmpty()) {
-          declaredReturnTypes.put(method, returnTypes);
-          collected.add(method);
+          var key = MethodKey.of(method);
+          declaredReturnTypes.put(key, returnTypes);
+          collected.add(key);
         }
       });
     }
