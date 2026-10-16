@@ -29,6 +29,8 @@ import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -71,8 +73,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testParametersKeyword() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testParametersKeyword(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание метода
@@ -92,8 +96,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testParameterNames() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testParameterNames(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание метода
@@ -135,8 +141,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testTypeNames() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTypeNames(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание метода
@@ -175,8 +183,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testMultipleTypesOnSeparateLines() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testMultipleTypesOnSeparateLines(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - parameter with multiple types on separate lines
     String bsl = """
       // Описание метода
@@ -202,8 +212,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testMultipleReturnTypesOnSeparateLines() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testMultipleReturnTypesOnSeparateLines(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - return value with multiple types on separate lines
     String bsl = """
       // Описание функции
@@ -271,8 +283,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testTrailingVariableDescriptionTypeHighlighting() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTrailingVariableDescriptionTypeHighlighting(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - висячий (trailing) комментарий переменной с типом в начале (нотация «тип в начале»).
     // Описание начинается не со столбца 0, поэтому проверяем сквозную работу:
     // bsl-parser отдаёт TYPE_NAME-элемент в абсолютных координатах, а сапплаер подсвечивает его
@@ -335,8 +349,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testTrailingVariableCollectionTypeHighlighting() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTrailingVariableCollectionTypeHighlighting(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - висячий комментарий с типом-коллекцией «Массив из Число»: подсвечиваться должны
     // и тип-голова (Массив), и тип-значение коллекции (Число), а не только голова.
     String bsl = """
@@ -380,6 +396,36 @@ class BslDocSemanticTokensSupplierTest {
       new ExpectedToken(1, 14, 5, SemanticTokenTypes.Type,
         Set.of(SemanticTokenModifiers.Documentation), "Число")
     ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testPlainVariableDescription(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+
+    String bsl = """
+
+      // Описание переменной.
+      // Число - описание
+      Перем МояПеременная;
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // Тип переменной распознаётся только в начале описания: вторая строка остаётся текстом.
+    if (multilineTokenSupport) {
+      helper.assertTokensMatch(decoded, List.of(
+        new ExpectedToken(1, 0, 43, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Описание переменной.\n// Число - описание")
+      ));
+    } else {
+      helper.assertTokensMatch(decoded, List.of(
+        new ExpectedToken(1, 0, 23, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Описание переменной."),
+        new ExpectedToken(2, 0, 19, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Число - описание")
+      ));
+    }
   }
 
   @Test

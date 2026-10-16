@@ -175,16 +175,13 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     int lineIdx = 0;
     while (lineIdx < lines.length) {
       int fileLine = fileStartLine + lineIdx;
-      String lineText = lines[lineIdx];
-      int charOffset = (lineIdx == 0) ? fileStartChar : 0;
-
       var lineElements = elementsByLine.getOrDefault(fileLine, List.of());
 
       if (lineElements.isEmpty()) {
         int startLineIdx = lineIdx;
 
         while (lineIdx < lines.length) {
-          var nextLineElements = elementsByLine.getOrDefault(fileLine, List.of());
+          var nextLineElements = elementsByLine.getOrDefault(fileStartLine + lineIdx, List.of());
           if (!nextLineElements.isEmpty()) {
             break;
           }
@@ -213,6 +210,8 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
           }
         }
       } else {
+        String lineText = lines[lineIdx];
+        int charOffset = (lineIdx == 0) ? fileStartChar : 0;
         addBslDocTokensForLine(entries, fileLine, lineText, lineElements, charOffset);
         lineIdx++;
       }
