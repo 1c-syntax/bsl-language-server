@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792138829277,
+  "lastUpdate": 1792159711748,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45694,6 +45694,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.16921051069836218",
             "extra": "mean: 92.94635915756226 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "598fe559a0dd741cf2c7f5a946025f97cf5ef64b",
+          "message": "Merge pull request #4704 from 1c-syntax/perf/context-symbol-tree-lists-exact-size\n\nПлоские списки дерева символов хранятся точного размера, без запаса от роста",
+          "timestamp": "2026-10-16T15:53:49+02:00",
+          "tree_id": "bbaf55a1d225a51da70d61fbe4dd7fcd93bb18b4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/598fe559a0dd741cf2c7f5a946025f97cf5ef64b"
+        },
+        "date": 1792159680038,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.98350278536479,
+            "unit": "sec",
+            "range": "stddev: 3.360581443611867",
+            "extra": "mean: 91.98350278536479 sec\nrounds: 3"
           }
         ]
       }
