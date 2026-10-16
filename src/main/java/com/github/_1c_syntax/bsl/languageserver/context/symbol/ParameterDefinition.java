@@ -28,6 +28,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Collections;
@@ -47,14 +48,10 @@ public class ParameterDefinition {
   String name;
 
   /**
-   * Передача параметра по значению.
+   * Описание параметра; {@code null}, если его нет.
    */
-  boolean byValue;
-
-  /**
-   * Описание параметра.
-   */
-  Optional<ParameterDescription> description;
+  @Getter(AccessLevel.NONE)
+  @Nullable ParameterDescription description;
 
   /**
    * Значение по умолчанию.
@@ -64,20 +61,39 @@ public class ParameterDefinition {
   @Builder.Default
   List<Annotation> annotations = Collections.emptyList();
 
+  /**
+   * Строка места объявления, а в знаке — способ передачи: у параметра «Знач» строка хранится
+   * как {@code ~line}. Место — один токен, поэтому строка конца совпадает со строкой начала.
+   * Параметров на большой конфигурации больше миллиона, и отдельные поля под признак и строку
+   * конца выводили объект за 40 байт.
+   */
   @Getter(AccessLevel.NONE)
-  int startLine;
+  int signedLine;
   @Getter(AccessLevel.NONE)
   int startCharacter;
   @Getter(AccessLevel.NONE)
-  int endLine;
-  @Getter(AccessLevel.NONE)
   int endCharacter;
+
+  /**
+   * Передача параметра по значению.
+   */
+  public boolean isByValue() {
+    return signedLine < 0;
+  }
+
+  /**
+   * Описание параметра.
+   */
+  public Optional<ParameterDescription> getDescription() {
+    return Optional.ofNullable(description);
+  }
 
   /**
    * Место объявления параметра.
    */
   public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+    var line = signedLine < 0 ? ~signedLine : signedLine;
+    return Ranges.create(line, startCharacter, line, endCharacter);
   }
 
   public boolean isOptional() {
@@ -104,13 +120,30 @@ public class ParameterDefinition {
 
   public static class ParameterDefinitionBuilder {
 
+    private boolean byValue;
+    private int line;
+
+    public ParameterDefinitionBuilder byValue(boolean byValue) {
+      this.byValue = byValue;
+      signedLine = byValue ? ~line : line;
+      return this;
+    }
+
+    public ParameterDefinitionBuilder description(Optional<ParameterDescription> description) {
+      this.description = description.orElse(null);
+      return this;
+    }
+
+    /**
+     * @param range место объявления — один токен, в пределах одной строки.
+     * @return этот же построитель.
+     */
     public ParameterDefinitionBuilder range(Range range) {
       var start = range.getStart();
-      var end = range.getEnd();
-      startLine = start.getLine();
+      line = start.getLine();
+      signedLine = byValue ? ~line : line;
       startCharacter = start.getCharacter();
-      endLine = end.getLine();
-      endCharacter = end.getCharacter();
+      endCharacter = range.getEnd().getCharacter();
 
       return this;
     }
