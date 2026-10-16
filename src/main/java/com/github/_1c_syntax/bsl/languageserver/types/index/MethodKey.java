@@ -60,6 +60,13 @@ sealed interface MethodKey {
   }
 
   /**
+   * Документ метода.
+   *
+   * @return документ, в котором объявлен метод.
+   */
+  DocumentContext owner();
+
+  /**
    * То, по чему равны символы {@link AbstractMethodSymbol}: класс символа (символы разных
    * классов не равны, даже с одним именем и местом), документ, имя и место имени.
    *
@@ -105,6 +112,11 @@ sealed interface MethodKey {
    * @param method символ.
    */
   record Itself(MethodSymbol method) implements MethodKey {
+
+    @Override
+    public DocumentContext owner() {
+      return method.getOwner();
+    }
 
     @Override
     public int hashCode() {
