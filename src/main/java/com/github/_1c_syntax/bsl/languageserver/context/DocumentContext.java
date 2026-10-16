@@ -94,6 +94,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+  private static final int FINGERPRINT_CHUNK = 4096;
 
   @Getter
   @EqualsAndHashCode.Include
@@ -452,12 +453,28 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * @return отпечаток.
    */
   private static byte[] contentFingerprint(String content) {
+    MessageDigest digest;
     try {
-      return MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8));
+      digest = MessageDigest.getInstance("SHA-256");
     } catch (NoSuchAlgorithmException e) {
       // SHA-256 обязателен для любой реализации Java, поэтому сюда попасть нельзя.
       throw new IllegalStateException(e);
     }
+    // Свёртываются сами кодовые единицы UTF-16, кусками: перекодирование всего текста
+    // в UTF-8 обходилось дороже самой свёртки.
+    var chars = new char[FINGERPRINT_CHUNK];
+    var bytes = new byte[FINGERPRINT_CHUNK * 2];
+    var length = content.length();
+    for (var from = 0; from < length; from += FINGERPRINT_CHUNK) {
+      var count = Math.min(FINGERPRINT_CHUNK, length - from);
+      content.getChars(from, from + count, chars, 0);
+      for (var i = 0; i < count; i++) {
+        bytes[2 * i] = (byte) (chars[i] >> 8);
+        bytes[2 * i + 1] = (byte) chars[i];
+      }
+      digest.update(bytes, 0, 2 * count);
+    }
+    return digest.digest();
   }
 
   /**
