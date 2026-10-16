@@ -945,7 +945,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
      */
     abstract CompletableFuture<Void> perform(int item);
 
-    /** Раздача кончилась, а места ещё есть: их можно занять впрок, см. {@link #reserve}. */
+    /** Свободные места можно занять впрок, см. {@link #reserve}; спрашивается до раздачи готовых и после неё. */
     void spare() {
       // по умолчанию впрок ничего не занимается
     }
@@ -1038,6 +1038,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       }
       dispatching = true;
       try {
+        // Впрок — ещё до раздачи: готовая работа, место которой занято впрок, начнётся с тем, что
+        // для неё уже начато, а не возьмёт ещё одно место и не сделает того же на месте.
+        if (failure == null) {
+          spare();
+        }
         while (failure == null && !ready.isEmpty()) {
           int item = ready.peek();
           var need = places(item) - reserved[item];
