@@ -108,7 +108,32 @@ public class ConfigurationModuleMembersProvider {
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
+    if (!event.isContentChanged() && refreshCommonModule(documentContext)) {
+      return;
+    }
     register(documentContext);
+  }
+
+  /**
+   * Освежает общий модуль, перечитанный с тем же текстом: имя и члены у него прежние, а символы
+   * из нового дерева. Члены самого модуля пересобираются по новому дереву, а член глобального
+   * контекста только получает новый символ-источник — пересобирать ради него все члены
+   * глобального контекста и индекс глобальных имён незачем.
+   *
+   * @param documentContext документ.
+   * @return {@code true}, если это уже зарегистрированный общий модуль и он освежён.
+   */
+  private boolean refreshCommonModule(DocumentContext documentContext) {
+    if (documentContext.getModuleType() != ModuleType.CommonModule) {
+      return false;
+    }
+    var ref = registeredByUri.get(documentContext.getUri());
+    if (ref == null) {
+      return false;
+    }
+    typeRegistry.refreshGlobalPropertyDeclaration(ref, documentContext.getSymbolTree().getModule());
+    typeRegistry.invalidateMembers(ref);
+    return true;
   }
 
   /**
