@@ -78,6 +78,68 @@ class DocumentContextTest {
   }
 
   @Test
+  void rereadingSameContentKeepsSymbolTree() {
+    // given: документ освобождён — так бывает, когда он больше не нужен
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+    var symbolTree = documentContext.getSymbolTree();
+    documentContext.clearSecondaryData();
+
+    // when: тот же текст понадобился снова
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then: дерево то же самое, а текст снова разобран
+    assertThat(documentContext.getSymbolTree()).isSameAs(symbolTree);
+    assertThat(documentContext.getAst()).isNotNull();
+  }
+
+  @Test
+  void rebuildWithOtherContentBuildsNewSymbolTree() {
+    // given
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+
+    // when
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getMethodSymbol("Ещё")).isPresent();
+  }
+
+  @Test
+  void rereadingSameContentAfterTextChangedElsewhereRebuildsSymbolTree() {
+    // given: после построения дерева в рабочей области изменился чей-то текст — члены чужих
+    // модулей и типов, по которым классифицируются символы, могли стать другими
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+    var symbolTree = documentContext.getSymbolTree();
+    documentContext.getServerContext().advanceContentEpoch();
+
+    // when
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+  }
+
+  @Test
+  void rereadingSameContentUnderOtherBindingRebuildsSymbolTree() throws IllegalAccessException {
+    // given: дерево построено при другой привязке к метаданным — например, тип модуля стал
+    // известен уже после разбора файла
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    FieldUtils.writeField(documentContext, "symbolTreeMdoRef", "Другой.Объект", true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+  }
+
+  @Test
   void firstBuildCountsAsChange() {
     // given, when
     var documentContext = getDocumentContext();
