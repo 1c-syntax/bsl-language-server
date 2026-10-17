@@ -39,6 +39,8 @@ import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.logging.LogLevel;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -85,6 +87,7 @@ public class FormatCommand implements Callable<Integer> {
   private final LanguageServerConfiguration configuration;
   @Qualifier("cliExecutor")
   private final ExecutorService cliExecutor;
+  private final LoggingSystem loggingSystem;
 
   private ServerContext serverContext;
 
@@ -107,6 +110,8 @@ public class FormatCommand implements Callable<Integer> {
   private boolean silentMode;
 
   public Integer call() {
+    // Пакетная команда выводит отчёт и ход работы, а не этапы старта рабочей области.
+    loggingSystem.setLogLevel(ServerContext.STARTUP_LOGGER.getName(), LogLevel.WARN);
     serverContextProvider.clear();
 
     String[] filePaths = COMMA_PATTERN.split(srcDirOption);
