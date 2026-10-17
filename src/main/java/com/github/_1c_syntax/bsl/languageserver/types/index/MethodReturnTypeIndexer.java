@@ -299,7 +299,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       pending.clear();
       progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
     }
-    ServerContext.STARTUP_LOGGER.info("Return types resolved in {} ms: {} deferred methods, {} document parses of {} documents",
+    ServerContext.STARTUP_LOGGER.info(
+      "Return types resolved in {} ms: {} deferred methods, {} document parse attempts of {} documents",
       (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilt.get(), rebuiltUris.size());
   }
 
