@@ -42,6 +42,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -75,6 +77,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class ServerContext {
+  /**
+   * Логгер этапов старта рабочей области: каждый этап пишет в него на уровне INFO, сколько он длился.
+   * Дочерний к логгеру класса: уровень, заданный для {@code ServerContext}, действует и на него.
+   */
+  public static final Logger STARTUP_LOGGER = LoggerFactory.getLogger(ServerContext.class.getName() + ".startup");
+
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
     .skipDataCompositionSchema(true)
     .build();
@@ -131,13 +139,19 @@ public class ServerContext {
       return;
     }
 
+    var startedAt = System.nanoTime();
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(0, "");
     workDoneProgressReporter.beginProgress(getMessage("populateFindFiles"));
 
     LOGGER.debug("Finding files to populate context...");
     var files = BSLFiles.listBslFiles(configurationRoot, languageServerConfiguration.getExcludePaths());
     workDoneProgressReporter.endProgress("");
+    STARTUP_LOGGER.info("Found {} files to populate context of {} in {} ms",
+      files.size(), configurationRoot, millisSince(startedAt));
     populateContext(files);
+    // Слушатели события наполнения (дорасчёт типов и прочее) отработали в этом же вызове.
+    STARTUP_LOGGER.info("Workspace {} is ready in {} ms: context populated, post-population work done",
+      configurationRoot, millisSince(startedAt));
   }
 
   public void populateContext(Collection<File> files) {
@@ -148,6 +162,7 @@ public class ServerContext {
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
+    var startedAt = System.nanoTime();
 
     // Конфигурацию спрашивает каждый создаваемый документ — из неё берётся его mdoRef, — и
     // спрашивает под блокировкой своих вычислений. Лениво из задачи заполнения её читать
@@ -185,7 +200,8 @@ public class ServerContext {
     }
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
-    LOGGER.debug("Context populated.");
+    STARTUP_LOGGER.info("Context of {} populated with {} files in {} ms",
+      configurationRoot, files.size(), millisSince(startedAt));
   }
 
   public Map<URI, DocumentContext> getDocuments() {
@@ -561,6 +577,7 @@ public class ServerContext {
       return Solution.EMPTY;
     }
 
+    var startedAt = System.nanoTime();
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
@@ -578,8 +595,13 @@ public class ServerContext {
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
+    STARTUP_LOGGER.info("Configuration metadata of {} read in {} ms", configurationRoot, millisSince(startedAt));
 
     return configuration;
+  }
+
+  private static long millisSince(long startedAt) {
+    return (System.nanoTime() - startedAt) / 1_000_000;
   }
 
   /**

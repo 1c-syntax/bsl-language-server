@@ -39,6 +39,8 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.logging.LogLevel;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -150,10 +152,13 @@ public class AnalyzeCommand implements Callable<Integer> {
   private final LanguageServerConfiguration configuration;
   @Qualifier("cliExecutor")
   private final ExecutorService cliExecutor;
+  private final LoggingSystem loggingSystem;
 
   private ServerContext serverContext;
 
   public Integer call() {
+    // Пакетная команда выводит отчёт и ход работы, а не этапы старта рабочей области.
+    loggingSystem.setLogLevel(ServerContext.STARTUP_LOGGER.getName(), LogLevel.WARN);
 
     var workspaceDir = Absolute.path(workspaceDirOption);
     if (!workspaceDir.toFile().exists()) {
