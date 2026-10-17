@@ -945,7 +945,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
      */
     abstract CompletableFuture<Void> perform(int item);
 
-    /** Свободные места можно занять впрок, см. {@link #reserve}; спрашивается до раздачи готовых и после неё. */
+    /** Раздача кончилась, а места ещё есть: их можно занять впрок, см. {@link #reserve}. */
     void spare() {
       // по умолчанию впрок ничего не занимается
     }
@@ -1038,11 +1038,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       }
       dispatching = true;
       try {
-        // Впрок — ещё до раздачи: готовая работа, место которой занято впрок, начнётся с тем, что
-        // для неё уже начато, а не возьмёт ещё одно место и не сделает того же на месте.
-        if (failure == null) {
-          spare();
-        }
         while (failure == null && !ready.isEmpty()) {
           int item = ready.peek();
           var need = places(item) - reserved[item];
@@ -1259,9 +1254,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     CompletableFuture<Void> perform(int item) {
       var uri = component.get(item);
       var methods = byDocument.get(uri);
-      var preload = preloads.remove(item);
-      // Разбор впереди уже идёт: расчёт ждёт его, иначе документ разобрали бы дважды.
-      var loaded = preload != null ? preload : CompletableFuture.completedFuture(false);
+      var owner = methods.get(0).owner();
+      // Разбор впереди уже идёт — расчёт ждёт его, иначе документ разобрали бы дважды. Не начат —
+      // документ разбирается тем же путём на своём месте: сбой такого разбора не валит оборот, а
+      // повторяется на месте при расчёте.
+      var ahead = preloads.remove(item);
+      var loaded = ahead != null ? ahead : preload(owner);
       return loaded
         .thenAcceptAsync(ignored -> {
           if (recomputeLoading(serverContext, methods)) {
@@ -1269,9 +1267,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
           }
         }, resolveReturnTypesExecutor)
         .whenComplete((ignored, error) -> {
-          if (preload != null) {
-            release(methods.get(0).owner(), preload.getNow(false));
-          }
+          release(owner, loaded.getNow(false));
           progress.done(1);
         });
     }
