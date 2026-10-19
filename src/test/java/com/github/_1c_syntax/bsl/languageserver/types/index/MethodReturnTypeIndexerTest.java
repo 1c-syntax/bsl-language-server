@@ -44,12 +44,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
@@ -86,6 +89,9 @@ class MethodReturnTypeIndexerTest {
 
   /** Сколько документов большой цикл разбирает впереди расчёта: предел разом разобранных без одного. */
   private static final int AHEAD_WINDOW = 7;
+
+  /** Предел разом разобранных документов: окно впереди и документ, который считается. */
+  private static final int DOCUMENTS_IN_MEMORY = 8;
 
   private ExpressionTypeInferencer inferencer;
   private SymbolTypeIndex symbolTypeIndex;
@@ -124,7 +130,7 @@ class MethodReturnTypeIndexerTest {
     when(consumer.getSymbolTree().getMethods()).thenReturn(List.of(consumerMethod));
 
     // Значения запоминаются по-настоящему: по ним индекс решает, изменился ли метод.
-    var stored = new HashMap<MethodSymbol, TypeSet>();
+    var stored = new ConcurrentHashMap<MethodSymbol, TypeSet>();
     when(symbolTypeIndex.getReturnTypes(any()))
       .thenAnswer(invocation -> stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY));
     doAnswer(invocation -> stored.put(invocation.getArgument(0), invocation.getArgument(1)))
@@ -539,13 +545,103 @@ class MethodReturnTypeIndexerTest {
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
 
     // then: каждый документ разобран ровно раз — разбор впереди расчёта не дублирует разбор
-    // на месте — и отпущен; разом разобрано ровно окно: семь впереди, а восьмое место в
-    // пределе оставлено документу, который понадобится не наверняка и разберётся на месте.
+    // на месте — и отпущен; разом разобрано не больше предела: семь впереди и документ,
+    // который считается, — восьмое место впереди не занимается.
     for (var documentContext : documents) {
       verify(serverContext, times(1)).rebuildDocument(documentContext);
     }
     assertThat(loading.loaded()).isEmpty();
-    assertThat(loading.peak()).hasValue(AHEAD_WINDOW);
+    assertThat(loading.peak()).hasValue(DOCUMENTS_IN_MEMORY);
+  }
+
+  @Test
+  void componentStartsAsSoonAsItsDependenciesAreComputed() throws InterruptedException {
+    // given: потребитель построен на источнике, а третий документ ни от кого не зависит и
+    // считается, пока не начнётся потребитель. Пул на несколько потоков: работа идёт разом.
+    var executor = Executors.newFixedThreadPool(4);
+    try {
+      indexer = indexerOn(executor);
+      var slow = document("file:///slow.bsl");
+      var slowMethod = method(slow, true);
+      when(slow.getSymbolTree().getMethods()).thenReturn(List.of(slowMethod));
+      var consumerStarted = new CountDownLatch(1);
+      when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation -> {
+        consumerStarted.countDown();
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), false);
+      });
+      when(inferencer.computeReturnTypes(slowMethod)).thenAnswer(invocation ->
+        new ComputedReturnTypes(consumerStarted.await(10, SECONDS) ? STRING : NUMBER, Set.of(), false));
+      indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+      indexer.computeIfAbsent(consumerMethod,
+        () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+      indexer.computeIfAbsent(slowMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+      var serverContext = serverContextOf(source, consumer, slow);
+
+      // when
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      // then: потребитель начался, пока независимый документ ещё считался, — ждать его
+      // потребителю незачем, хотя по ярусам он стоит вместе с источником.
+      assertThat(symbolTypeIndex.getReturnTypes(slowMethod)).isEqualTo(STRING);
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
+  void documentsOfLargeCycleUnrelatedToEachOtherAreComputedTogether() {
+    // given: большой цикл звездой — центр построен на каждом луче, а каждый луч на центре;
+    // друг с другом лучи не связаны. Документов больше, чем держится разобранными разом.
+    var executor = Executors.newFixedThreadPool(4);
+    try {
+      indexer = indexerOn(executor);
+      var hub = document("file:///hub.bsl");
+      var hubMethod = method(hub, true);
+      var documents = new ArrayList<DocumentContext>(List.of(hub));
+      var spokes = new ArrayList<MethodSymbol>();
+      for (var index = 0; index < 9; index++) {
+        var spoke = document("file:///spoke" + index + ".bsl");
+        documents.add(spoke);
+        spokes.add(method(spoke, true));
+      }
+      var inside = new AtomicInteger();
+      var together = new CountDownLatch(2);
+      var spokesMetEachOther = new AtomicBoolean(true);
+      var hubAlone = new AtomicBoolean(true);
+      for (var spoke : spokes) {
+        when(inferencer.computeReturnTypes(spoke)).thenAnswer(invocation -> {
+          inside.incrementAndGet();
+          try {
+            together.countDown();
+            if (!together.await(10, SECONDS)) {
+              spokesMetEachOther.set(false);
+            }
+            return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(hubMethod), false);
+          } finally {
+            inside.decrementAndGet();
+          }
+        });
+        indexer.computeIfAbsent(spoke, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(hubMethod), true));
+      }
+      when(inferencer.computeReturnTypes(hubMethod)).thenAnswer(invocation -> {
+        if (inside.get() > 0) {
+          hubAlone.set(false);
+        }
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.copyOf(spokes), false);
+      });
+      indexer.computeIfAbsent(hubMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.copyOf(spokes), true));
+      var serverContext = serverContextOf(documents.toArray(DocumentContext[]::new));
+
+      // when
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      // then: лучи считались разом — порядок обхода их друг от друга не отделяет, — а центр
+      // ни с одним лучом не пересёкся: каждому из них нужен его итог либо прежнее значение.
+      assertThat(spokesMetEachOther).isTrue();
+      assertThat(hubAlone).isTrue();
+    } finally {
+      executor.shutdownNow();
+    }
   }
 
   @Test
@@ -737,6 +833,24 @@ class MethodReturnTypeIndexerTest {
     return (int) mockingDetails(reporter).getInvocations().stream()
       .filter(invocation -> invocation.getMethod().getName().equals("tick"))
       .count();
+  }
+
+  /**
+   * Индекс, проход которого считает на переданном пуле.
+   *
+   * @param executor пул прохода.
+   * @return индекс.
+   */
+  private MethodReturnTypeIndexer indexerOn(ExecutorService executor) {
+    var configuration = mock(GlobalLanguageServerConfiguration.class);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    return new MethodReturnTypeIndexer(
+      inferencer,
+      symbolTypeIndex,
+      mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
+      configuration,
+      executor
+    );
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {
