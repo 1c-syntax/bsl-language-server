@@ -61,7 +61,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -125,13 +124,6 @@ public class ServerContext {
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
   private volatile boolean clearing;
-
-  /**
-   * Эпоха содержимого рабочей области: сдвигается, когда у какого-то документа меняется текст
-   * или регистрируются типы конфигурации — то есть когда могли измениться члены модулей и типов,
-   * по которым классифицируются символы документов.
-   */
-  private final AtomicLong contentEpoch = new AtomicLong();
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -358,21 +350,6 @@ public class ServerContext {
     } finally {
       clearing = false;
     }
-  }
-
-  /**
-   * @return эпоха содержимого рабочей области; растёт при каждом {@link #advanceContentEpoch()}.
-   */
-  public long getContentEpoch() {
-    return contentEpoch.get();
-  }
-
-  /**
-   * Сдвинуть эпоху содержимого рабочей области: у документа изменился текст или зарегистрированы
-   * типы конфигурации.
-   */
-  public void advanceContentEpoch() {
-    contentEpoch.incrementAndGet();
   }
 
   /**

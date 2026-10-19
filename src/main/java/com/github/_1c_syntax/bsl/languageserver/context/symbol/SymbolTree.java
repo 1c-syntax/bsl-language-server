@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
@@ -31,6 +32,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +54,11 @@ public class SymbolTree {
    * Корневой символ модуля документа.
    */
   ModuleSymbol module;
+
+  /**
+   * На чём, кроме текста документа, построено дерево.
+   */
+  Basis basis;
 
   /**
    * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
@@ -104,6 +112,22 @@ public class SymbolTree {
    */
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   SelectionLines symbolsBySelectionLine = createSymbolsBySelectionLine();
+
+  /**
+   * На чём, кроме текста документа, построено дерево: привязка документа к метаданным и голые
+   * имена, признанные при построении реквизитами своего типа. Символов у таких имён нет, поэтому
+   * из самого дерева их не восстановить.
+   *
+   * @param moduleType         тип модуля документа.
+   * @param mdoRef             ссылка на объект метаданных документа.
+   * @param bareSelfProperties голые имена, признанные реквизитами своего типа.
+   */
+  public record Basis(@Nullable ModuleType moduleType, @Nullable String mdoRef, Set<String> bareSelfProperties) {
+    /**
+     * Основание дерева, построенного не по документу: годным для документа такое дерево не бывает.
+     */
+    public static final Basis NONE = new Basis(null, null, Set.of());
+  }
 
   /**
    * Символы, упорядоченные по строке {@code selectionRange}: {@code symbols[i]} объявлен на

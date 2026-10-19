@@ -72,7 +72,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -119,17 +118,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
    */
   @Getter
   private boolean contentChangedOnLastRebuild = true;
-
-  /**
-   * При чём построено нынешнее дерево символов, кроме текста: тип модуля, ссылка на объект
-   * метаданных и эпоха содержимого рабочей области ({@link ServerContext#getContentEpoch()}).
-   * Перечитанный тот же текст при тех же привязках и той же эпохе дерево не перестраивает.
-   */
-  @Nullable
-  private ModuleType symbolTreeModuleType;
-  @Nullable
-  private String symbolTreeMdoRef;
-  private long symbolTreeContentEpoch = -1;
 
   @Getter
   private int version;
@@ -439,23 +427,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
       }
       this.version = version;
       // Перечитывание того же текста — документ освобождали, а теперь он снова нужен проходу
-      // доразрешения или пакетному анализу — дерева не меняет: строить его заново значило бы
-      // повторить заметную долю всего разбора ради равного по содержимому результата. Кроме
-      // текста, дерево зависит от членов чужих модулей и типов (обработчики событий, члены
-      // своего типа), поэтому годно, только пока в рабочей области не менялся ничей текст.
-      if (contentChanged) {
-        context.advanceContentEpoch();
-      }
-      var contentEpoch = context.getContentEpoch();
-      var keepSymbolTree = !contentChanged
-        && symbolTreeContentEpoch == contentEpoch
-        && symbolTreeModuleType == getModuleType()
-        && Objects.equals(symbolTreeMdoRef, getMdoRef());
-      if (!keepSymbolTree) {
+      // доразрешения или пакетному анализу — дерева не меняет, пока оно годно: строить его
+      // заново значило бы повторить заметную долю всего разбора ради того же результата.
+      if (contentChanged || !isSymbolTreeUpToDate()) {
         symbolTree.set(computeSymbolTree());
-        symbolTreeModuleType = getModuleType();
-        symbolTreeMdoRef = getMdoRef();
-        symbolTreeContentEpoch = contentEpoch;
       }
 
       // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
@@ -597,6 +572,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private SymbolTree computeSymbolTree() {
     return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).compute();
+  }
+
+  private boolean isSymbolTreeUpToDate() {
+    return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).isUpToDate(symbolTree.get());
   }
 
 
