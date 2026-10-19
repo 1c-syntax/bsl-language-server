@@ -256,7 +256,7 @@ public class ConfigurationTypesProvider {
     platformTypesWarmup.join();
     register(cf, children, serverContext.getScriptVariantLanguage());
     serviceModuleEventRegistrar.register(children);
-    ServerContext.STARTUP_LOGGER.info("Configuration types of {} registered in {} ms: {} metadata objects",
+    LOGGER.info("Configuration types of {} registered in {} ms: {} metadata objects",
       serverContext.getConfigurationRoot(), (System.nanoTime() - startedAt) / 1_000_000, children.size());
     return serverContext;
   }
