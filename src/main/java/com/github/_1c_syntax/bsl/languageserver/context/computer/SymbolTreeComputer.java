@@ -65,17 +65,17 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
   @Override
   public SymbolTree compute() {
 
-    ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
-    List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
     // Имя, признанное реквизитом, символа не получает: запомнить его можно только здесь.
     var bareSelfProperties = new HashSet<String>();
-    SelfMemberClassifier recordingClassifier = (document, name) -> {
+    SelfMemberClassifier recordingClassifier = (DocumentContext document, String name) -> {
       var bareSelfProperty = selfMemberClassifier.isBareSelfProperty(document, name);
       if (bareSelfProperty) {
         bareSelfProperties.add(name);
       }
       return bareSelfProperty;
     };
+    ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
+    List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
     // Переменные и регионы — за один общий обход дерева (оба обходят его вглубь).
     var regionVariableComputer =
       new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods, recordingClassifier);
