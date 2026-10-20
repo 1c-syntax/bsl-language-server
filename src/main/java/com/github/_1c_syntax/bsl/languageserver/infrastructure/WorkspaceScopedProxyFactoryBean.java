@@ -139,7 +139,7 @@ public final class WorkspaceScopedProxyFactoryBean extends ProxyConfig
     factory.setTargetSource(source);
 
     // Интерфейсный прокси нужен и тогда, когда класс цели нельзя проксировать напрямую.
-    var beanType = source.getTargetClass();
+    var beanType = source.targetClass();
     if (!isProxyTargetClass() || beanType.isInterface() || Modifier.isPrivate(beanType.getModifiers())) {
       factory.setInterfaces(ClassUtils.getAllInterfacesForClass(beanType, beanFactory.getBeanClassLoader()));
     }
