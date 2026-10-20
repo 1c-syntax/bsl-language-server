@@ -846,6 +846,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     private final int[] state;
     private final int[] waitingFor;
     private final int[] reserved;
+    private final boolean[] skipped;
     private final List<List<Integer>> dependents;
     private final PriorityQueue<Integer> ready = new PriorityQueue<>();
     private final CompletableFuture<Void> completion = new CompletableFuture<>();
@@ -860,6 +861,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       state = new int[size];
       waitingFor = new int[size];
       reserved = new int[size];
+      skipped = new boolean[size];
       dependents = new ArrayList<>(size);
       for (var item = 0; item < size; item++) {
         dependents.add(new ArrayList<>());
@@ -900,6 +902,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
      * @return окончание работы.
      */
     abstract CompletableFuture<Void> perform(int item);
+
+    /**
+     * Отпускает занятое впрок за работой, которая уже не нужна. Вызывается под замком и
+     * ждать в нём не должна; место возвращается только после окончания освобождения.
+     *
+     * @param item ненужная работа.
+     * @return окончание освобождения.
+     */
+    CompletableFuture<Void> discard(int item) {
+      return CompletableFuture.completedFuture(null);
+    }
 
     /** Раздача кончилась, а места ещё есть: их можно занять впрок, см. {@link #reserve}. */
     void spare() {
@@ -966,7 +979,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         if (state[current] != 0) {
           continue;
         }
-        if (isNeeded(current)) {
+        skipped[current] = !isNeeded(current);
+        if (!skipped[current] || reserved[current] > 0) {
+          // Занятое ненужной работой сначала отпускается тем же путём, что обычная работа:
+          // окончание освобождения вернёт место и даст ход зависимым.
           state[current] = READY;
           ready.add(current);
           continue;
@@ -1020,7 +1036,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       running++;
       CompletableFuture<Void> work;
       try {
-        work = perform(item);
+        work = skipped[item] ? discard(item) : perform(item);
       } catch (RejectedExecutionException e) {
         running--;
         free += places(item);
@@ -1204,6 +1220,20 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     @Override
     int places(int item) {
       return 1;
+    }
+
+    @Override
+    CompletableFuture<Void> discard(int item) {
+      var owner = byDocument.get(component.get(item)).get(0).getOwner();
+      // Освобождение берёт замок документа, поэтому не выполняется под замком раздачи.
+      // Запись остаётся до успеха: при отказе пула её подхватит releaseUnused.
+      return preloads.get(item)
+        .thenAcceptAsync(loaded -> release(owner, loaded), resolveReturnTypesExecutor)
+        .thenRun(() -> {
+          synchronized (this) {
+            preloads.remove(item);
+          }
+        });
     }
 
     @Override

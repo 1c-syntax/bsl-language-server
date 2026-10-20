@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -701,6 +702,79 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext, never()).rebuildDocument(open);
     verify(serverContext, never()).tryClearDocument(open);
     verify(inferencer).computeReturnTypes(ring.methods()[3]);
+  }
+
+  @Test
+  void preloadedDocumentThatBecameCurrentIsReleasedBeforePassCompletes() {
+    // Все документы связаны друг с другом: порядок обхода произволен, но расчёт последовательный.
+    var executor = Executors.newFixedThreadPool(4);
+    try {
+      indexer = indexerOn(executor);
+      var ring = ring("skippedAhead", 9);
+      var documents = ring.documents();
+      var methods = ring.methods();
+      var consulted = Set.of(methods);
+      var order = new CopyOnWriteArrayList<MethodSymbol>();
+      var refreshed = new CountDownLatch(1);
+      var released = new CountDownLatch(1);
+      var releasedDuringPass = new AtomicBoolean();
+      for (var method : methods) {
+        var document = method.getOwner();
+        when(document.getSymbolTree().getMethods()).thenReturn(List.of(method));
+        indexer.clear(document.getUri());
+        indexer.computeIfAbsent(method, () -> new ComputedReturnTypes(TypeSet.EMPTY, consulted, true));
+        var computations = new AtomicInteger();
+        when(inferencer.computeReturnTypes(method)).thenAnswer(invocation -> {
+          var computation = computations.incrementAndGet();
+          if (computation == 1) {
+            order.add(method);
+          }
+          var position = order.indexOf(method);
+          if (computation == 2 && position == 0) {
+            assertThat(refreshed.await(10, SECONDS)).isTrue();
+          }
+          if (computation == 2 && position == 7) {
+            releasedDuringPass.set(released.await(5, SECONDS));
+          }
+          // Изменение последнего документа делает середину устаревшей ко второму обороту.
+          var types = position == 0 || position == 8 ? STRING : TypeSet.EMPTY;
+          return new ComputedReturnTypes(types, consulted, false);
+        });
+      }
+      var serverContext = serverContextOf(documents);
+      var loading = trackLoading(serverContext, documents);
+      Map<DocumentContext, AtomicInteger> parses = new ConcurrentHashMap<>();
+      doAnswer(invocation -> {
+        DocumentContext document = invocation.getArgument(0);
+        loading.load(document);
+        var parse = parses.computeIfAbsent(document, ignored -> new AtomicInteger()).incrementAndGet();
+        if (parse == 2 && document == order.get(4).getOwner()) {
+          // Перечитывание изменённого текста уже пересчитало методы; очередная работа не нужна.
+          indexer.handleContentChanged(new DocumentContextContentChangedEvent(document));
+          refreshed.countDown();
+        }
+        return null;
+      }).when(serverContext).rebuildDocument(any(DocumentContext.class));
+      doAnswer(invocation -> {
+        DocumentContext document = invocation.getArgument(0);
+        if (loading.loaded().remove(document)) {
+          loading.unloaded().add(document);
+        }
+        if (refreshed.getCount() == 0 && document == order.get(4).getOwner()) {
+          released.countDown();
+        }
+        return true;
+      }).when(serverContext).tryClearDocument(any());
+
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      assertThat(releasedDuringPass).isTrue();
+      assertThat(parses.get(order.get(4).getOwner())).hasValue(2);
+      assertThat(loading.loaded()).isEmpty();
+      assertThat(loading.peak().get()).isLessThanOrEqualTo(DOCUMENTS_IN_MEMORY);
+    } finally {
+      executor.shutdownNow();
+    }
   }
 
   @Test
