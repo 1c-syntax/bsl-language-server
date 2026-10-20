@@ -92,37 +92,9 @@ public final class WorkspaceScopedProxyFactoryBean extends ProxyConfig
     if (!(beanFactory instanceof ConfigurableBeanFactory configurableBeanFactory)) {
       throw new IllegalStateException("Not running in a ConfigurableBeanFactory: " + beanFactory);
     }
-    var name = Objects.requireNonNull(targetBeanName, "Property 'targetBeanName' is required");
-    var beanType = beanFactory.getType(name);
-    if (beanType == null) {
-      throw new IllegalStateException(
-        "Cannot create scoped proxy for bean '" + name + "': Target type could not be determined at the time of proxy creation.");
-    }
-    if (!(configurableBeanFactory.getRegisteredScope(WorkspaceBeanScope.SCOPE_NAME) instanceof WorkspaceBeanScope scope)) {
-      throw new IllegalStateException("Scope '" + WorkspaceBeanScope.SCOPE_NAME + "' is not registered");
-    }
-    targetSource = new WorkspaceTargetSource(configurableBeanFactory, scope, name, beanType);
 
-    var factory = new ProxyFactory();
-    factory.copyFrom(this);
-    factory.setTargetSource(targetSource);
-    if (!isProxyTargetClass() || beanType.isInterface() || Modifier.isPrivate(beanType.getModifiers())) {
-      factory.setInterfaces(ClassUtils.getAllInterfacesForClass(beanType, configurableBeanFactory.getBeanClassLoader()));
-    }
-    var scopedObject = new DefaultScopedObject(configurableBeanFactory, name);
-    factory.addInterface(ScopedObject.class);
-    factory.addAdvisor(new DefaultPointcutAdvisor(SCOPED_OBJECT_METHODS,
-      (MethodInterceptor) invocation -> switch (invocation.getMethod().getName()) {
-        case "getTargetObject" -> scopedObject.getTargetObject();
-        case "removeFromScope" -> {
-          scopedObject.removeFromScope();
-          yield null;
-        }
-        default -> invocation.proceed();
-      }));
-    factory.addInterface(AopInfrastructureBean.class);
-
-    proxy = factory.getProxy(configurableBeanFactory.getBeanClassLoader());
+    targetSource = createTargetSource(configurableBeanFactory);
+    proxy = createProxy(configurableBeanFactory, targetSource);
   }
 
   @Override
@@ -144,6 +116,57 @@ public final class WorkspaceScopedProxyFactoryBean extends ProxyConfig
   @Override
   public boolean isSingleton() {
     return true;
+  }
+
+  private WorkspaceTargetSource createTargetSource(ConfigurableBeanFactory beanFactory) {
+    var name = Objects.requireNonNull(targetBeanName, "Property 'targetBeanName' is required");
+    var beanType = beanFactory.getType(name);
+    if (beanType == null) {
+      throw new IllegalStateException(
+        "Cannot create scoped proxy for bean '" + name + "': Target type could not be determined at the time of proxy creation.");
+    }
+
+    if (!(beanFactory.getRegisteredScope(WorkspaceBeanScope.SCOPE_NAME) instanceof WorkspaceBeanScope scope)) {
+      throw new IllegalStateException("Scope '" + WorkspaceBeanScope.SCOPE_NAME + "' is not registered");
+    }
+
+    return new WorkspaceTargetSource(beanFactory, scope, name, beanType);
+  }
+
+  private Object createProxy(ConfigurableBeanFactory beanFactory, WorkspaceTargetSource source) {
+    var factory = new ProxyFactory();
+    factory.copyFrom(this);
+    factory.setTargetSource(source);
+
+    // Интерфейсный прокси нужен и тогда, когда класс цели нельзя проксировать напрямую.
+    var beanType = source.getTargetClass();
+    if (!isProxyTargetClass() || beanType.isInterface() || Modifier.isPrivate(beanType.getModifiers())) {
+      factory.setInterfaces(ClassUtils.getAllInterfacesForClass(beanType, beanFactory.getBeanClassLoader()));
+    }
+
+    addScopedObjectSupport(factory, beanFactory, source.targetBeanName());
+    factory.addInterface(AopInfrastructureBean.class);
+
+    return factory.getProxy(beanFactory.getBeanClassLoader());
+  }
+
+  private static void addScopedObjectSupport(
+    ProxyFactory factory,
+    ConfigurableBeanFactory beanFactory,
+    String targetBeanName
+  ) {
+    var scopedObject = new DefaultScopedObject(beanFactory, targetBeanName);
+    factory.addInterface(ScopedObject.class);
+    // Советник обслуживает только ScopedObject: обычным методам цели перехватчик не нужен.
+    factory.addAdvisor(new DefaultPointcutAdvisor(SCOPED_OBJECT_METHODS,
+      (MethodInterceptor) invocation -> switch (invocation.getMethod().getName()) {
+        case "getTargetObject" -> scopedObject.getTargetObject();
+        case "removeFromScope" -> {
+          scopedObject.removeFromScope();
+          yield null;
+        }
+        default -> invocation.proceed();
+      }));
   }
 
   /**
