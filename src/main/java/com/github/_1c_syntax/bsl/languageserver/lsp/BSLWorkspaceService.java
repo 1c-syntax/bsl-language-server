@@ -54,6 +54,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -348,10 +349,11 @@ public class BSLWorkspaceService implements WorkspaceService {
    * Пропал ли с диска файл или каталог, о котором сообщил клиент.
    *
    * @param file файл; {@code null}, если URI не указывает на путь в файловой системе
-   * @return {@code true}, если путь в файловой системе есть, а файла по нему нет
+   * @return {@code true}, если путь в файловой системе есть и подтверждено, что файла по нему нет;
+   * {@code false}, если файл есть или проверить это не удалось
    */
   private static boolean isGone(@Nullable File file) {
-    return file != null && !file.exists();
+    return file != null && Files.notExists(file.toPath());
   }
 
   /**
