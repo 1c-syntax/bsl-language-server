@@ -32,7 +32,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,11 +121,12 @@ public class SymbolTree {
    * @param mdoRef             ссылка на объект метаданных документа.
    * @param bareSelfProperties голые имена, признанные реквизитами своего типа.
    */
-  public record Basis(@Nullable ModuleType moduleType, @Nullable String mdoRef, Set<String> bareSelfProperties) {
+  public record Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties) {
     /**
      * Основание дерева, построенного не по документу: годным для документа такое дерево не бывает.
+     * Узнаётся по ссылке, а не по значениям полей.
      */
-    public static final Basis NONE = new Basis(null, null, Set.of());
+    public static final Basis NONE = new Basis(ModuleType.UNKNOWN, "", Set.of());
   }
 
   /**

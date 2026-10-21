@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -118,7 +117,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     var basis = symbolTree.getBasis();
     return basis != SymbolTree.Basis.NONE
       && basis.moduleType() == documentContext.getModuleType()
-      && Objects.equals(basis.mdoRef(), documentContext.getMdoRef())
+      && basis.mdoRef().equals(documentContext.getMdoRef())
       && basis.bareSelfProperties().stream()
         .allMatch(name -> selfMemberClassifier.isBareSelfProperty(documentContext, name))
       && classifiedAsBefore(symbolTree.getModule());
