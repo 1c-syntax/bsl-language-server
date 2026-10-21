@@ -24,11 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import org.springframework.aop.scope.ScopedProxyFactoryBean;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Заменяет фабрики прокси бинов области {@link WorkspaceBeanScope#SCOPE_NAME}
  * на {@link WorkspaceScopedProxyFactoryBean}, сохраняя остальные свойства описаний бинов.
  */
+@Component
 public final class WorkspaceScopedProxyBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
   @Override

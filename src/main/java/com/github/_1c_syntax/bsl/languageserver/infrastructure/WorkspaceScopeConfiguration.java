@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,10 +41,5 @@ public class WorkspaceScopeConfiguration {
     var configurer = new CustomScopeConfigurer();
     configurer.addScope(WorkspaceBeanScope.SCOPE_NAME, workspaceScope);
     return configurer;
-  }
-
-  @Bean
-  public static BeanFactoryPostProcessor workspaceScopedProxies() {
-    return new WorkspaceScopedProxyBeanFactoryPostProcessor();
   }
 }
