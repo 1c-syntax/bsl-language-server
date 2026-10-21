@@ -494,7 +494,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
     } catch (NoSuchFileException e) {
       // Файл удалили раньше, чем до него дошло чтение: временный файл, удалённый каталог.
       // Это не сбой сервера — документ просто остаётся без текста.
-      LOGGER.debug("Can't rebuild content from uri, file is gone: {}", uri);
+      LOGGER.debug("Can't rebuild content from uri, file is gone: {}", uri, e);
       return false;
     } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
