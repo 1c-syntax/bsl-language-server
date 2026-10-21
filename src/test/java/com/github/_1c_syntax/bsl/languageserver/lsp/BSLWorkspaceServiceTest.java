@@ -285,6 +285,79 @@ class BSLWorkspaceServiceTest {
     assertThat(ctx.getDocument(uri)).isNull();
   }
 
+  /** Созданный файл, удалённый раньше, чем дошла очередь до события, в контекст не попадает. */
+  @Test
+  void createdFileGoneBeforeEventIsNotAdded() throws IOException {
+    // given
+    var testFile = createTestFile("test_created_gone.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+    var marker = createTestFile("test_created_gone_marker.bsl");
+    var markerUri = Absolute.uri(marker.toURI());
+    FileUtils.delete(testFile);
+    var ctx = workspaceServerContext();
+
+    // when
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(
+      new FileEvent(uri.toString(), FileChangeType.Created),
+      new FileEvent(markerUri.toString(), FileChangeType.Created)
+    )));
+    await().until(() -> ctx.getDocument(markerUri) != null);
+
+    // then
+    assertThat(ctx.getDocument(uri)).isNull();
+  }
+
+  /** Изменённый файл, удалённый раньше, чем дошла очередь до события, убирается из контекста. */
+  @Test
+  void changedFileGoneBeforeEventIsRemoved() throws IOException {
+    // given
+    var testFile = createTestFile("test_changed_gone.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+    var ctx = workspaceServerContext();
+    var documentContext = ctx.addDocument(uri);
+    ctx.rebuildDocument(documentContext);
+    ctx.tryClearDocument(documentContext);
+    var marker = createTestFile("test_changed_gone_marker.bsl");
+    var markerUri = Absolute.uri(marker.toURI());
+    FileUtils.delete(testFile);
+
+    // when
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(
+      new FileEvent(uri.toString(), FileChangeType.Changed),
+      new FileEvent(markerUri.toString(), FileChangeType.Created)
+    )));
+    await().until(() -> ctx.getDocument(markerUri) != null);
+
+    // then
+    assertThat(ctx.getDocument(uri)).isNull();
+  }
+
+  /** Открытым документом владеет клиент: пропажа файла при изменении его не выгружает. */
+  @Test
+  void changedFileGoneKeepsOpenedDocument() throws IOException {
+    // given
+    var testFile = createTestFile("test_changed_gone_opened.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+    var content = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
+    var ctx = workspaceServerContext();
+    var documentContext = ctx.addDocument(uri);
+    ctx.openDocument(documentContext, content, 1);
+    var marker = createTestFile("test_changed_gone_opened_marker.bsl");
+    var markerUri = Absolute.uri(marker.toURI());
+    FileUtils.delete(testFile);
+
+    // when
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(
+      new FileEvent(uri.toString(), FileChangeType.Changed),
+      new FileEvent(markerUri.toString(), FileChangeType.Created)
+    )));
+    await().until(() -> ctx.getDocument(markerUri) != null);
+
+    // then
+    assertThat(ctx.getDocument(uri)).isSameAs(documentContext);
+    assertThat(documentContext.getContent()).isEqualTo(content);
+  }
+
   /** Закрытие открытого документа, чей файл на месте, документ из контекста не убирает. */
   @Test
   void didCloseKeepsDocumentWhoseFileExists() throws IOException {
