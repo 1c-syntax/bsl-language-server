@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792730234418,
+  "lastUpdate": 1792731495298,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45849,6 +45849,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.1438673654430103",
             "extra": "mean: 92.79147553443909 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "245339a8a256eda622040e3795dedce47729e488",
+          "message": "Merge pull request #4596 from DimaShapovaloff/codex/fix-4427-signature-return-types\n\nfix(providers): показывать все типы возврата в подсказке сигнатуры",
+          "timestamp": "2026-10-23T13:58:37+10:00",
+          "tree_id": "2a0e53a79c15bff42eefe7103af7c797c7b10596",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/245339a8a256eda622040e3795dedce47729e488"
+        },
+        "date": 1792731466880,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.69463841120402,
+            "unit": "sec",
+            "range": "stddev: 2.7271276634617476",
+            "extra": "mean: 94.69463841120402 sec\nrounds: 3"
           }
         ]
       }
