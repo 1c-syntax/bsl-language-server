@@ -2250,10 +2250,35 @@
 </tr>
 </tbody>
 </table>
+<h2 id="Параметры">Параметры<a class="headerlink" href="#Параметры" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Имя</th>
+<th style="text-align: center;">Тип</th>
+<th style="text-align: center;">Описание</th>
+<th style="text-align: center;">Значение<br>по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>prefixes</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: center;"><code>Список отсекаемых префиксов через запятую (без учета регистра)</code></td>
+<td style="text-align: center;">``</td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <p>В имени функции слово получить лишнее т.к. функция по определению возвращает значение.</p>
+<p>Параметр <code>prefixes</code> задаёт список префиксов через запятую, например <code>"АЯ_, БСП_"</code>.
+Проверка выполняется без учёта регистра для исходного имени и имени после одного из указанных префиксов.
+Префиксы — обычный текст, не регулярные выражения. Пробелы вокруг элементов и пустые элементы игнорируются.
+Пустое значение (по умолчанию) сохраняет проверку только исходного имени. Префиксы не удаляются последовательно.</p>
+<p>Правило проверяет слово <code>Получить</code>; английское <code>Get</code> не проверяется.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
+<p>При <code>"prefixes": "АЯ_"</code> функция <code>АЯ_ПолучитьВажныеДанные()</code> также вызовет замечание.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Не правильно: </span>
 <span class="k">Функция</span> <span class="nf">ПолучитьИмяПоКоду</span><span class="p">()</span>
 
@@ -2271,7 +2296,9 @@
 <span class="c1">// BSLLS:FunctionNameStartsWithGet-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">"FunctionNameStartsWithGet"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"FunctionNameStartsWithGet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"prefixes"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
+<span class="p">}</span>
 </code></pre></div>
 
 
