@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792728689274,
+  "lastUpdate": 1792730234418,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45818,6 +45818,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8724299719272343",
             "extra": "mean: 93.08788776397705 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ff1e149cf65bb309df05f1b46e81073e4a747ce9",
+          "message": "Merge pull request #4602 from DimaShapovaloff/codex/3173-service-tag-overrides\n\nfeat(diagnostics): add UsingServiceTag additions and exclusions",
+          "timestamp": "2026-10-23T13:38:08+10:00",
+          "tree_id": "99bd9fe974c097e9d2551cfb9de60d18ce4e0542",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ff1e149cf65bb309df05f1b46e81073e4a747ce9"
+        },
+        "date": 1792730207259,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.79147553443909,
+            "unit": "sec",
+            "range": "stddev: 2.1438673654430103",
+            "extra": "mean: 92.79147553443909 sec\nrounds: 3"
           }
         ]
       }
