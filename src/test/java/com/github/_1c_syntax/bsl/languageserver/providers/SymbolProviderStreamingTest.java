@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.Entry;
 import com.github._1c_syntax.bsl.languageserver.types.index.WorkspaceSymbolIndex;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.ProgressParams;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
@@ -284,7 +283,7 @@ class SymbolProviderStreamingTest {
       name,
       name.toLowerCase(),
       SymbolKind.Method,
-      new Range(),
+      0, 0, 0, 0,
       List.of(),
       ""
     );

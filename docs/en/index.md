@@ -212,6 +212,12 @@ java -jar bsl-language-server.jar --websocket --server.port=8080
 java -Xmx4g -jar bsl-language-server.jar ... other parameters
 ```
 
+> On Java 25 and later, the `-XX:+UseCompactObjectHeaders` parameter saves more memory: every object header shrinks to 8 bytes. How much the heap shrinks depends on the project: on the ERP configuration it was 8–9% in our measurement. The release executable already has it enabled. Java 21 does not know this parameter and will not start with it.
+
+```sh
+java -Xmx4g -XX:+UseCompactObjectHeaders -jar bsl-language-server.jar ... other parameters
+```
+
 <a id="analyze"></a>
 
 ## Run in analyzer mode

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import java.lang.ref.WeakReference;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
@@ -49,6 +50,9 @@ import com.github._1c_syntax.utils.GenericInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -63,8 +67,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -125,10 +132,12 @@ public class TypeRegistry {
   private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
 
   /**
-   * Запомненные ответы {@link #resolveGenericByPrefix(String)}, включая промахи.
-   * Сбрасывается при любом изменении {@link #aliasIndex}.
+   * Generic-типы по семейству: часть имени до плейсхолдера ({@code "документссылка"} у
+   * {@code "документссылка.<имя документа>"}) → имена типов семейства с их ссылками.
+   * Ведётся вместе с {@link #aliasIndex}, поэтому {@link #resolveGenericByPrefix(String)}
+   * не перебирает индекс имён.
    */
-  private final Map<String, Optional<TypeRef>> genericByPrefix = new ConcurrentHashMap<>();
+  private final Map<String, ConcurrentSkipListMap<String, TypeRef>> genericsByFamily = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /**
@@ -156,6 +165,21 @@ public class TypeRegistry {
    * запроса, без регистраций) memo стабилен.
    */
   private final AtomicLong membersEpoch = new AtomicLong();
+  /**
+   * Наполнена ли рабочая область: до этого источники членов модулей регистрируются без сдвига
+   * {@link #membersEpoch} (см. {@link #registerOwnMemberSource}).
+   */
+  private volatile boolean populated;
+  /**
+   * Эпоха memo членов {@link #GLOBAL_CONTEXT} — вместо {@link #membersEpoch}. Источники
+   * глобального контекста (объявления платформы и {@link #globalPropertyMembers}) членов
+   * других типов не читают, поэтому регистрация источника у другого типа — а при наполнении
+   * она идёт на каждый модуль — memo глобального контекста не устаревает. Сдвигается тем,
+   * от чего его члены зависят: собственными источниками и подавлениями, набором
+   * типов-глобальных свойств, их отображаемыми именами и объявлениями.
+   */
+  private final AtomicLong globalContextEpoch = new AtomicLong();
+  private final Object globalContextLock = new Object();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
   /**
    * Пер-типовые поколения memo членов: точечная инвалидация ({@link #invalidateMembers})
@@ -215,6 +239,14 @@ public class TypeRegistry {
    * Источник истины — {@code Context.typeParameters()} в bsl-context.
    */
   private final Map<TypeRef, List<String>> typeParameters = new ConcurrentHashMap<>();
+  /**
+   * Ответы {@link #findAllGenericsByFamilyCore(String)} по началу имени в нижнем регистре. Дженерики
+   * заводятся только вместе с платформенными типами, а спрашивают о них на каждом объекте
+   * метаданных, поэтому ответ запоминается. Новый дженерик заменяет карту целиком: ответ,
+   * посчитанный до него, пишется в прежнюю карту и пропадает вместе с ней.
+   */
+  private final AtomicReference<Map<String, List<TypeRef>>> genericsByFamilyCore =
+    new AtomicReference<>(new ConcurrentHashMap<>());
 
   /**
    * Двуязычные имена типов (для hover/inlay): для канонических TypeRef
@@ -362,8 +394,9 @@ public class TypeRegistry {
    * Платформа 1С регистрирует обобщённые типы вида
    * {@code "ДокументСсылка.<Имя документа>"}, {@code "СправочникОбъект.<Имя справочника>"}
    * и т.п. — конкретное имя плейсхолдера в угловых скобках различается для каждого
-   * MDOType. Этот метод выбирает первый тип, чьё qualifiedName начинается с
-   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство.
+   * MDOType. Этот метод выбирает тип, чьё qualifiedName начинается с
+   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство; если их несколько,
+   * первый по имени.
    *
    * @param prefix начальная часть qualifiedName до точки-плейсхолдера
    *               (например, {@code "ДокументСсылка"})
@@ -373,27 +406,21 @@ public class TypeRegistry {
     if (prefix == null || prefix.isEmpty()) {
       return Optional.empty();
     }
-    // Ответ зависит только от содержимого индекса имён, а тот меняется лишь при
-    // регистрации типов — поэтому запоминается, включая промахи. Без этого перебор всего
-    // индекса шёл на каждое разрешаемое имя: в профиле analyze по cpm это была вторая
-    // строка сверху.
-    return genericByPrefix.computeIfAbsent(prefix.toLowerCase(Locale.ROOT), this::findGenericByPrefix);
+    var family = genericsByFamily.get(prefix.toLowerCase(Locale.ROOT));
+    var first = family == null ? null : family.firstEntry();
+    return first == null ? Optional.empty() : Optional.of(first.getValue());
   }
 
   /**
-   * Ищет generic-тип перебором индекса имён.
+   * Передаёт семейства, к которым относится имя типа: части имени до каждого плейсхолдера.
    *
-   * @param needlePrefix начало имени в нижнем регистре.
-   * @return тип семейства; {@link Optional#empty()}, если такого нет.
+   * @param key    имя типа в нижнем регистре.
+   * @param action действие над семейством.
    */
-  private Optional<TypeRef> findGenericByPrefix(String needlePrefix) {
-    var needle = needlePrefix + ".<";
-    for (var entry : aliasIndex.entrySet()) {
-      if (entry.getKey().startsWith(needle)) {
-        return Optional.of(entry.getValue());
-      }
+  private static void forEachGenericFamily(String key, Consumer<String> action) {
+    for (var at = key.indexOf(".<"); at > 0; at = key.indexOf(".<", at + 1)) {
+      action.accept(key.substring(0, at));
     }
-    return Optional.empty();
   }
 
   /**
@@ -411,20 +438,24 @@ public class TypeRegistry {
    *                   (например, {@code "Справочник"} матчит
    *                   {@code "СправочникСсылка.<Имя справочника>"},
    *                   {@code "СправочникВыборка.<Имя справочника>"} и т.п.)
-   * @return список интернированных TypeRef'ов; пустой, если совпадений нет
+   * @return неизменяемый список интернированных TypeRef'ов; пустой, если совпадений нет
    */
   public List<TypeRef> findAllGenericsByFamilyCore(String familyCore) {
     if (familyCore == null || familyCore.isEmpty()) {
       return List.of();
     }
-    var needle = familyCore.toLowerCase(Locale.ROOT);
+    return genericsByFamilyCore.get()
+      .computeIfAbsent(familyCore.toLowerCase(Locale.ROOT), this::scanGenericsByFamilyCore);
+  }
+
+  private List<TypeRef> scanGenericsByFamilyCore(String needle) {
     var result = new ArrayList<TypeRef>();
     for (var ref : typeParameters.keySet()) {
       if (ref.qualifiedName().toLowerCase(Locale.ROOT).startsWith(needle)) {
         result.add(ref);
       }
     }
-    return result;
+    return List.copyOf(result);
   }
 
   /**
@@ -503,13 +534,39 @@ public class TypeRegistry {
    * каноничный {@link TypeRef}.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
-    var epoch = membersEpoch.get();
+    var cached = cachedMembers(ref, fileType);
+    if (cached != null) {
+      return cached;
+    }
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      // Членов глобального контекста спрашивает почти каждое выражение, и после сброса
+      // их собирали бы заново все потоки разом: собирает один, остальные ждут его сборку.
+      synchronized (globalContextLock) {
+        cached = cachedMembers(ref, fileType);
+        return cached != null ? cached : computeAndCacheMembers(ref, fileType);
+      }
+    }
+    return computeAndCacheMembers(ref, fileType);
+  }
+
+  private @Nullable Collection<MemberDescriptor> cachedMembers(TypeRef ref, FileType fileType) {
     var key = new MembersKey(ref, fileType);
-    var generation = membersGeneration.getOrDefault(key, 0L);
     var cached = membersCache.get(key);
-    if (cached != null && cached.epoch() == epoch && cached.generation() == generation) {
+    if (cached != null && cached.epoch() == membersEpochOf(ref)
+      && cached.generation() == membersGeneration.getOrDefault(key, 0L)) {
       return cached.members();
     }
+    return null;
+  }
+
+  private long membersEpochOf(TypeRef ref) {
+    return GLOBAL_CONTEXT.equals(ref) ? globalContextEpoch.get() : membersEpoch.get();
+  }
+
+  private Collection<MemberDescriptor> computeAndCacheMembers(TypeRef ref, FileType fileType) {
+    var epoch = membersEpochOf(ref);
+    var key = new MembersKey(ref, fileType);
+    var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
@@ -584,25 +641,37 @@ public class TypeRegistry {
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType) {
     if (globalPropertyTypes.get(fileType).add(ref)) {
       membersEpoch.incrementAndGet();
+      globalContextEpoch.incrementAndGet();
     }
   }
 
   /**
    * То же, но с явным source-символом — для типов, не несущих declaration сами.
    * Символ удерживается слабо ({@link WeakReference}).
+   * <p>
+   * Пока рабочая область наполняется, смена одного лишь символа-источника у типа, уже
+   * помеченного глобальным свойством, memo членов {@link #GLOBAL_CONTEXT} не сбрасывает: их
+   * пересобирает конец наполнения ({@link #handleServerContextPopulated}).
    *
    * @param ref         тип-глобал-свойство.
    * @param fileType    язык, в котором он виден без префикса.
    * @param declaration символ-источник, объявивший тип.
    */
   public void registerGlobalPropertyType(TypeRef ref, FileType fileType, SourceDefinedSymbol declaration) {
-    globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+    var previous = globalPropertySymbols.put(ref, new WeakReference<>(declaration));
     if (globalPropertyTypes.get(fileType).add(ref)) {
       membersEpoch.incrementAndGet();
+      globalContextEpoch.incrementAndGet();
+      return;
     }
-    // Повторная пометка (правка уже зарегистрированного модуля) обновляет только
-    // symbol-источник; инвалидацию memo GLOBAL_CONTEXT-члена и name-индекса, куда
-    // символ уже вошёл, выполняет вызывающий провайдер точечно.
+    // Тип уже был глобальным свойством (объявлен по метаданным до разбора файла либо помечен
+    // прошлой редакцией модуля) — сменился только символ-источник, а он входит в член
+    // глобального контекста. При наполнении так меняется символ каждого разобранного общего
+    // модуля — тысячи раз подряд, и каждый раз члены глобального контекста и индекс
+    // глобальных имён пересобирались бы целиком, под общим замком.
+    if ((previous == null || previous.get() != declaration) && populated) {
+      globalContextEpoch.incrementAndGet();
+    }
   }
 
   /**
@@ -615,6 +684,7 @@ public class TypeRegistry {
     globalPropertyTypes.get(fileType).remove(ref);
     globalPropertySymbols.remove(ref);
     membersEpoch.incrementAndGet();
+    globalContextEpoch.incrementAndGet();
   }
 
   /**
@@ -830,7 +900,60 @@ public class TypeRegistry {
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
+    membersChanged(ref);
+  }
+
+  /**
+   * Добавить источник членов, который читает только сам тип, — BSL-модуль как источник членов
+   * своего типа-обёртки.
+   * <p>
+   * Пока рабочая область наполняется, сбрасывает memo только этого типа, как и
+   * {@link #invalidateMembers} при правке такого модуля, а общую эпоху не двигает: такой
+   * источник регистрируется на первый разбор каждого модуля, и сдвиг эпохи пересобирал бы члены
+   * всех типов подряд. Типы, чьи члены построены на членах этого, освежает сдвиг эпохи по
+   * окончании наполнения ({@link #handleServerContextPopulated}). Модуль, разобранный впервые
+   * уже после него, — новый файл — сдвигает эпоху сам, как {@link #registerMemberSource}:
+   * следующего общего сдвига, который освежил бы построенных на нём, не будет.
+   *
+   * @param ref      тип, к которому добавляется источник членов.
+   * @param source   источник членов, читающий только сам тип.
+   * @param fileType язык файла, в котором члены источника видимы.
+   */
+  public void registerOwnMemberSource(TypeRef ref, MemberSource source, FileType fileType) {
+    memberSources.get(fileType).merge(ref, source, TypeRegistry::appendSource);
+    if (populated) {
+      membersChanged(ref);
+    } else {
+      invalidateMembers(ref);
+    }
+  }
+
+  /**
+   * Сдвигает эпоху memo членов, когда рабочая область наполнена.
+   * <p>
+   * Пока она наполнялась, источники членов модулей регистрировались без сдвига эпохи
+   * ({@link #registerOwnMemberSource}), и тип, построивший члены на членах модуля раньше, чем
+   * тот разобран, остался бы с ними до первого сдвига. Теперь разобраны все модули, и члены
+   * всех типов пересобираются по разу — до дорасчёта типов, который их читает. Члены
+   * {@link #GLOBAL_CONTEXT} — тоже: символы-источники общих модулей при наполнении менялись без
+   * сдвига ({@link #registerGlobalPropertyType(TypeRef, FileType, SourceDefinedSymbol)}).
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    populated = true;
     membersEpoch.incrementAndGet();
+    globalContextEpoch.incrementAndGet();
+  }
+
+  /** Сдвинуть эпоху memo членов после мутации источников или подавлений типа {@code ref}. */
+  private void membersChanged(TypeRef ref) {
+    membersEpoch.incrementAndGet();
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
   }
 
   /**
@@ -857,7 +980,7 @@ public class TypeRegistry {
     memberSuppressions.get(fileType)
       .computeIfAbsent(ref, key -> ConcurrentHashMap.newKeySet())
       .addAll(memberNames);
-    membersEpoch.incrementAndGet();
+    membersChanged(ref);
   }
 
   /**
@@ -872,7 +995,7 @@ public class TypeRegistry {
    */
   public void registerMemberOverride(TypeRef ref, MemberSource source, FileType fileType) {
     memberSources.get(fileType).merge(ref, source, TypeRegistry::prependSource);
-    membersEpoch.incrementAndGet();
+    membersChanged(ref);
   }
 
   /**
@@ -1227,8 +1350,7 @@ public class TypeRegistry {
       enBindings.put(enPlaceholders.get(i).name(), value);
     }
     var en = TypeRef.specialize(enRef, enBindings).qualifiedName();
-    displayNames.putIfAbsent(specializedRef,
-      BilingualString.of(specializedRef.qualifiedName(), en));
+    putDisplayName(specializedRef, BilingualString.of(specializedRef.qualifiedName(), en));
   }
 
   /**
@@ -1243,6 +1365,11 @@ public class TypeRegistry {
   public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration, FileType fileType) {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.put(ref, new UserType(ref, declaration));
+    // Объявление пользовательского типа — символ-источник его члена в глобальном контексте, если
+    // тип — глобальное свойство. Пометка глобальным свойством сбрасывает memo сама.
+    if (isGlobalPropertyType(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
     addAlias(qualifiedName, ref);
     registerFileType(ref, fileType);
     return ref;
@@ -1300,7 +1427,27 @@ public class TypeRegistry {
     if (name.isEmpty()) {
       return;
     }
-    displayNames.putIfAbsent(ref, name);
+    putDisplayName(ref, name);
+  }
+
+  /**
+   * Запомнить отображаемое имя типа, если его ещё нет. Имя типа-глобального свойства —
+   * имя его члена в глобальном контексте, поэтому новое имя такого типа сбрасывает memo
+   * членов {@link #GLOBAL_CONTEXT}.
+   */
+  private void putDisplayName(TypeRef ref, BilingualString name) {
+    if (displayNames.putIfAbsent(ref, name) == null && isGlobalPropertyType(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
+  }
+
+  private boolean isGlobalPropertyType(TypeRef ref) {
+    for (var refs : globalPropertyTypes.values()) {
+      if (refs.contains(ref)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -1431,9 +1578,18 @@ public class TypeRegistry {
     types.remove(ref);
     memberSources.values().forEach(byRef -> byRef.remove(ref));
     membersEpoch.incrementAndGet();
+    if (isGlobalPropertyType(ref)) {
+      globalContextEpoch.incrementAndGet();
+    }
     visibleTypes.values().forEach(typed -> typed.remove(ref));
-    aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
-    genericByPrefix.clear();
+    var key = qualifiedName.toLowerCase(Locale.ROOT);
+    aliasIndex.remove(key);
+    forEachGenericFamily(key, (String family) -> {
+      var generics = genericsByFamily.get(family);
+      if (generics != null) {
+        generics.remove(key);
+      }
+    });
     collectionTraits.remove(ref);
   }
 
@@ -1450,7 +1606,7 @@ public class TypeRegistry {
     collectionTraits.registerPack(decl, ref, fileType);
     registerPackTypeParameters(decl, ref);
     if (!decl.name().isEmpty()) {
-      displayNames.putIfAbsent(ref, decl.name());
+      putDisplayName(ref, decl.name());
     }
     registerFileType(ref, fileType);
   }
@@ -1509,6 +1665,7 @@ public class TypeRegistry {
   private void registerPackTypeParameters(TypePackProvider.TypeDecl decl, TypeRef ref) {
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
+      genericsByFamilyCore.set(new ConcurrentHashMap<>());
     }
   }
 
@@ -1778,8 +1935,10 @@ public class TypeRegistry {
   }
 
   private void addAlias(String name, TypeRef ref) {
-    aliasIndex.put(name.toLowerCase(Locale.ROOT), ref);
-    genericByPrefix.clear();
+    var key = name.toLowerCase(Locale.ROOT);
+    aliasIndex.put(key, ref);
+    forEachGenericFamily(key, (String family) ->
+      genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
   }
 
   /**

@@ -71,6 +71,23 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
 
   @EventListener
   public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    if (event.getSource().isClearing() && clearWholeIndex()) {
+      return;
+    }
     clear(event.getUri());
+  }
+
+  /**
+   * Удалить все записи индекса, пока контекст очищается целиком: следом уйдут все его
+   * документы. Зовётся на удаление каждого из них, поэтому по уже пустому индексу должен
+   * отрабатывать дёшево.
+   * <p>
+   * По умолчанию индекс чистится по документу. Переопределять стоит индексу, у которого
+   * удаление записей одного документа стоит больше, чем поиск по его URI.
+   *
+   * @return {@code true}, если индекс очищен целиком и записи документа удалять не нужно.
+   */
+  protected boolean clearWholeIndex() {
+    return false;
   }
 }

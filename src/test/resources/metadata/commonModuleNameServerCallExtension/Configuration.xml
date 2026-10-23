@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" version="2.10">
+  <Configuration uuid="968558ca-b2fc-47fb-b919-9784dc64f0ef">
+    <Properties>
+      <Name>Расширение</Name>
+      <ConfigurationExtensionPurpose>Customization</ConfigurationExtensionPurpose>
+      <NamePrefix>Расш_</NamePrefix>
+      <DefaultRunMode>ManagedApplication</DefaultRunMode>
+    </Properties>
+    <ChildObjects>
+      <CommonModule>ЗаимствованныйМодуль</CommonModule>
+      <CommonModule>СобственныйМодуль</CommonModule>
+      <CommonModule>СобственныйМодульВызовСервера</CommonModule>
+    </ChildObjects>
+  </Configuration>
+</MetaDataObject>

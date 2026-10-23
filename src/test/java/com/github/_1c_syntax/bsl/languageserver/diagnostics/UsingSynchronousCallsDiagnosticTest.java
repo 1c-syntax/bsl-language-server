@@ -25,16 +25,19 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdclasses.Solution;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -135,11 +138,48 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     assertThat(diagnostics).isEmpty();
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "false, false, true, false, 0",
+    "false, true, true, true, 0",
+    "false, true, false, false, 0",
+    "true, false, false, false, 1",
+    "true, true, true, true, 1"
+  })
+  void testDeleteFilesInCommonModule(boolean managedClient, boolean ordinaryClient,
+                                    boolean server, boolean externalConnection, int expectedDiagnostics) {
+    var documentContext = getDocumentContextWithUseFlag(UseMode.DONT_USE, PATH_TO_SERVER_MODULE_FILE,
+      """
+      Функция ПодготовитьФайлНаСервере(ИмяВременногоФайла)
+          УдалитьФайлы(ИмяВременногоФайла);
+      КонецФункции
+      """);
+    var module = spy((CommonModule) documentContext.getMdObject().orElseThrow());
+    when(module.isClientManagedApplication()).thenReturn(managedClient);
+    when(module.isClientOrdinaryApplication()).thenReturn(ordinaryClient);
+    when(module.isServer()).thenReturn(server);
+    when(module.isExternalConnection()).thenReturn(externalConnection);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(expectedDiagnostics);
+    if (expectedDiagnostics > 0) {
+      assertThat(diagnostics.getFirst().getRange()).isEqualTo(Ranges.create(1, 4, 1, 36));
+      assertThat(DiagnosticMessage.getStringValue(diagnostics.getFirst().getMessage()))
+        .contains("УдалитьФайлы", "НачатьУдалениеФайлов");
+    }
+  }
+
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
     return getDocumentContextWithUseFlag(useMode, PATH_TO_CLIENT_MODULE_FILE);
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode, String moduleFile) {
+    return getDocumentContextWithUseFlag(useMode, moduleFile, getText());
+  }
+
+  private DocumentContext getDocumentContextWithUseFlag(UseMode useMode, String moduleFile, String text) {
     var path = Absolute.path(PATH_TO_METADATA);
     var testFile = Path.of(moduleFile).toAbsolutePath();
 
@@ -150,7 +190,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     when(serverContext.getConfiguration())
       .thenReturn(Solution.builder().mergedConfiguration(mergedConfiguration).build());
 
-    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), text, serverContext));
     when(documentContext.getServerContext()).thenReturn(serverContext);
 
     return documentContext;
