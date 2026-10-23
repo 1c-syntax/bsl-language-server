@@ -744,11 +744,6 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void reset() {
-    textDocumentService.reset();
-  }
-
-  @Test
   void testDiagnosticsUnknownFile() throws ExecutionException, InterruptedException {
     // when
     var params = new DiagnosticParams(getTextDocumentIdentifier());

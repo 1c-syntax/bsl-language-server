@@ -516,10 +516,9 @@ class BSLLanguageServerTest {
 
   /**
    * Группа тестов shutdown/exit изолирована в @Nested-классе с fullRefresh: их методы рвут
-   * singleton-state (флаг shutdownWasCalled на BSLLanguageServer, плюс AsyncTaskExecutor,
-   * закрываемый textDocumentService.reset() в shutdown()), которое lite-cleanup не пересоздаёт.
-   * Полный Spring refresh между методами этой группы — единственный способ получить свежие
-   * BSLLanguageServer и executor.
+   * singleton-state (флаг shutdownWasCalled на BSLLanguageServer), которое lite-cleanup не
+   * пересоздаёт. Полный Spring refresh между методами этой группы — единственный способ получить
+   * свежий BSLLanguageServer.
    */
   @Nested
   @CleanupContextBeforeClassAndAfterEachTestMethod(fullRefresh = true)
@@ -530,6 +529,23 @@ class BSLLanguageServerTest {
       CompletableFuture<Object> shutdownFuture = server.shutdown();
 
       assertThat(shutdownFuture.get()).isEqualTo(true);
+    }
+
+    @Test
+    void shutdownStopsBackgroundWorkAndClearsWorkspaces() throws ExecutionException, InterruptedException {
+      // given
+      var params = new InitializeParams();
+      var workspaceUri = Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri());
+      params.setWorkspaceFolders(List.of(new WorkspaceFolder(workspaceUri.toString(), "test")));
+      server.initialize(params).get();
+      var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+
+      // when
+      server.shutdown().get();
+
+      // then
+      assertThat(serverContext.isBackgroundWorkStopped()).isTrue();
+      assertThat(serverContextProvider.getAllContexts()).doesNotContainKey(workspaceUri);
     }
 
     @Test
