@@ -2267,6 +2267,18 @@
 <td style="text-align: center;"><code>Служебные теги</code></td>
 <td style="text-align: center;"><code>todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG|Вставить\s*содержимое\s*обработчика|Paste\s*handler\s*content|Insert\s*handler\s*code|Insert\s*handler\s*content|Insert\s*handler\s*contents</code></td>
 </tr>
+<tr>
+<td style="text-align: center;"><code>additionalServiceTags</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: center;"><code>Дополнительные служебные теги (регулярное выражение)</code></td>
+<td style="text-align: center;">``</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>excludedServiceTags</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: center;"><code>Исключаемые служебные теги (регулярное выражение; исключения имеют приоритет)</code></td>
+<td style="text-align: center;">``</td>
+</tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
@@ -2289,7 +2301,36 @@
 <li>Insert handler contents</li>
 <li>Paste handler content</li>
 </ul>
-<p>Список тегов так же можно расширить через настройки.</p>
+<p>Параметр <code>serviceTags</code> заменяет стандартное регулярное выражение целиком.
+Чтобы сохранить стандартные теги (включая добавляемые в будущих версиях), оставьте его без изменений:</p>
+<ul>
+<li><code>additionalServiceTags</code> — регулярное выражение для дополнительных тегов. По умолчанию пустое (добавлений нет).</li>
+<li><code>excludedServiceTags</code> — регулярное выражение для исключений. По умолчанию пустое (исключений нет).</li>
+</ul>
+<p>Пустые и состоящие только из пробельных символов значения дополнений и исключений отключают соответствующую настройку.
+Исключения проверяются для каждого найденного тега и имеют приоритет над обоими наборами.
+Исключённый тег не мешает найти другой тег в том же комментарии: например, при исключении <code>@</code> строка
+<code>// @strict-types // TODO: проверить</code> всё равно вызовет замечание на <code>TODO</code>.
+На комментарий выдаётся не больше одного замечания: сначала ищется неисключённый тег из <code>serviceTags</code>, затем из дополнений.</p>
+<p>Выражения проверяют текст после <code>//</code> и необязательных пробельных символов без учёта регистра, включая кириллицу.
+Пробелы в выражении игнорируются; для пробельных символов используйте <code>\s</code>, для литерального <code>#</code> — <code>\#</code>.
+Границы слов автоматически не добавляются: <code>todo</code> совпадает и с <code>todos</code>; для целого слова укажите <code>todo\b</code>.
+В JSON обратную косую черту нужно удваивать: <code>"todo\\b"</code>.
+Если используются обратные ссылки на захватывающие группы, первая пользовательская группа имеет номер 2.
+У каждого выражения собственная нумерация групп.</p>
+<p>Например, исключить аннотации EDT, начинающиеся с <code>@</code>, и добавить тег <code>REVIEW</code>, сохранив остальные стандартные теги:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"UsingServiceTag"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"excludedServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"@"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"additionalServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"review\\b"</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Эти параметры также применяются к пользовательскому <code>serviceTags</code>.</p>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
@@ -2298,7 +2339,9 @@
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">"UsingServiceTag"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"serviceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG|Вставить\\s*содержимое\\s*обработчика|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents"</span>
+<span class="w">    </span><span class="nt">"serviceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG|Вставить\\s*содержимое\\s*обработчика|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"additionalServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"excludedServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
 <span class="p">}</span>
 </code></pre></div>
 

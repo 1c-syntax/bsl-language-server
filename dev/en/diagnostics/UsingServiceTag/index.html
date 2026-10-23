@@ -2267,6 +2267,18 @@
 <td style="text-align: center;"><code>Service tags</code></td>
 <td style="text-align: center;"><code>todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG|Вставить\s*содержимое\s*обработчика|Paste\s*handler\s*content|Insert\s*handler\s*code|Insert\s*handler\s*content|Insert\s*handler\s*contents</code></td>
 </tr>
+<tr>
+<td style="text-align: center;"><code>additionalServiceTags</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: center;"><code>Additional service tags (regular expression)</code></td>
+<td style="text-align: center;">``</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>excludedServiceTags</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: center;"><code>Excluded service tags (regular expression; exclusions take precedence)</code></td>
+<td style="text-align: center;">``</td>
+</tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
@@ -2289,7 +2301,36 @@
 <li>Insert handler contents</li>
 <li>Paste handler content</li>
 </ul>
-<p>Tags list can be extended via options.</p>
+<p>The <code>serviceTags</code> parameter replaces the entire default regular expression.
+To keep the default tags (including tags added in future versions), leave it unchanged:</p>
+<ul>
+<li><code>additionalServiceTags</code> — a regular expression for additional tags. Empty by default (no additions).</li>
+<li><code>excludedServiceTags</code> — a regular expression for exclusions. Empty by default (no exclusions).</li>
+</ul>
+<p>Empty and whitespace-only values disable the respective additions or exclusions.
+Exclusions apply to each matched tag and take precedence over both tag sets.
+An excluded tag does not hide another tag in the same comment: for example, with <code>@</code> excluded,
+<code>// @strict-types // TODO: check</code> still produces a diagnostic for <code>TODO</code>.
+Each comment produces at most one diagnostic: a non-excluded tag from <code>serviceTags</code> takes priority over additional tags.</p>
+<p>Expressions match the text after <code>//</code> and optional whitespace, case-insensitively, including Cyrillic letters.
+Spaces in expressions are ignored; use <code>\s</code> for whitespace and <code>\#</code> for a literal <code>#</code>.
+Word boundaries are not added automatically: <code>todo</code> also matches <code>todos</code>; use <code>todo\b</code> to match a whole word.
+Backslashes must be doubled in JSON: <code>"todo\\b"</code>.
+For backreferences, the first user capture group has number 2.
+Each expression has its own capture group numbering.</p>
+<p>For example, exclude EDT annotations starting with <code>@</code> and add the <code>REVIEW</code> tag while keeping the other default tags:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"diagnostics"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"UsingServiceTag"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"excludedServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"@"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"additionalServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"review\\b"</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>These parameters also apply when <code>serviceTags</code> is customized.</p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
@@ -2298,7 +2339,9 @@
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nt">"UsingServiceTag"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"serviceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG|Вставить\\s*содержимое\\s*обработчика|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents"</span>
+<span class="w">    </span><span class="nt">"serviceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG|Вставить\\s*содержимое\\s*обработчика|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"additionalServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"excludedServiceTags"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span>
 <span class="p">}</span>
 </code></pre></div>
 
