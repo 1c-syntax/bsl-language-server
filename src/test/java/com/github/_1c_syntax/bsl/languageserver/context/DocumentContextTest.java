@@ -31,16 +31,21 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -114,6 +119,23 @@ class DocumentContextTest {
   }
 
   @Test
+  void rebuildIsAChangeWhenLongTextDiffersOnlyAtTheEnd() {
+    // given: длинный текст — отпечаток собирается из него по кускам, а правка стоит
+    // далеко за первым из них.
+    var documentContext = getDocumentContext();
+    var comment = "// " + "ж".repeat(10_000) + "\n";
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+
+    // when
+    documentContext.rebuild(comment + "Процедура Б() КонецПроцедуры", documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
   void frozenDocumentDropsSecondaryDataWhenContentReallyChanged() throws IllegalAccessException {
     // given: документ заморожен — так область поступает с файлом, который никто не открывал.
     var documentContext = getDocumentContext();
@@ -178,6 +200,22 @@ class DocumentContextTest {
     // then
     final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
     assertThat(tokenizer).isNull();
+  }
+
+  @Test
+  void documentWithoutContentReportsItsUri() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when
+    documentContext.clearSecondaryData();
+
+    // then
+    assertThatThrownBy(documentContext::getAst)
+      .isInstanceOfSatisfying(DocumentContentUnavailableException.class,
+        e -> assertThat(e.getUri()).isEqualTo(documentContext.getUri()));
+    assertThatThrownBy(documentContext::getTokens).isInstanceOf(DocumentContentUnavailableException.class);
+    assertThatThrownBy(documentContext::getContent).isInstanceOf(DocumentContentUnavailableException.class);
   }
 
   @Test
@@ -308,6 +346,28 @@ class DocumentContextTest {
     // when-then: нет файла → IOException; на Unix Path.of(file://host/...) → IAE.
     // Оба логируются, populate не рвётся.
     assertThatCode(documentContext::rebuildFromFileSystem).doesNotThrowAnyException();
+  }
+
+  @Test
+  void rebuildFromFileSystemReadsFileWithBytesInvalidForUtf8(@TempDir Path tempDir) throws IOException {
+    // given: модуль сохранён не в UTF-8 — кириллица комментария в windows-1251 даёт байты,
+    // которых в UTF-8 быть не может.
+    var file = tempDir.resolve("Module.bsl");
+    Files.writeString(file, "// Комментарий\nProcedure Test()\nEndProcedure\n", Charset.forName("windows-1251"));
+    var documentContext = TestUtils.getDocumentContext(
+      file.toUri(),
+      "Procedure Previous()\nEndProcedure\n",
+      TestUtils.getRegisteredServerContext()
+    );
+
+    // when
+    documentContext.rebuildFromFileSystem();
+
+    // then: недопустимые байты заменены, а не сорвали чтение — документ разобран по файлу.
+    assertThat(documentContext.getContent()).contains("Procedure Test()");
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .extracting(MethodSymbol::getName)
+      .containsExactly("Test");
   }
 
   @SneakyThrows

@@ -227,7 +227,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -255,7 +255,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered form module as member source for {} -> {}",
       documentContext.getUri(), ref.qualifiedName());
   }
@@ -291,8 +291,8 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
-    typeRegistry.registerMemberSource(ref, () -> commonModulePlatformMembers(ref), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> commonModulePlatformMembers(ref), FileType.BSL);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }
 

@@ -27,11 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.DereferenceLocator;
-import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
@@ -93,7 +94,7 @@ public class PropertyMethodInference {
   private static final int KEY_ARGUMENT_INDEX = 0;
 
   private final TypeRegistry typeRegistry;
-  private final PropertyMethodCallIndex propertyMethodCallIndex;
+  private final ReceiverSitesIndex receiverSitesIndex;
 
   /**
    * Вызовы {@code Свойство}, типизирующие эту переменную, по позиции их начала.
@@ -114,13 +115,12 @@ public class PropertyMethodInference {
     // рядом. Отбор по области видимости оставляет только свои вызовы — так же поступает
     // `OpenDataObjectInference` с операторами-мутаторами. У переменной модуля область —
     // весь модуль, и туда попадают вызовы из всех его тел, как и должно быть.
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
+    var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.MethodCallContext> calls = new LinkedHashMap<>();
-    for (var call : propertyMethodCallIndex.byOutParameter(owner.getUri(), ast, variable.getName())) {
-      var range = Ranges.create(call);
-      if (scopeRange == null || Ranges.containsRange(scopeRange, range)) {
-        calls.put(range.getStart(), call);
+    for (var call : receiverSitesIndex.propertyCalls(owner.getUri(), ast, variable.getName())) {
+      var start = Positions.create(call);
+      if (Ranges.containsPosition(scopeRange, start)) {
+        calls.put(start, call);
       }
     }
     return calls;

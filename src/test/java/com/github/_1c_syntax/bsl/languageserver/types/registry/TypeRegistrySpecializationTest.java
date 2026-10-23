@@ -76,6 +76,21 @@ class TypeRegistrySpecializationTest {
       .anyMatch(n -> n.startsWith("СправочникМенеджер.<"));
   }
 
+  @Test
+  void findAllGenericsByFamilyCoreAnswersAnyCaseOfFamilyCoreAlike() {
+    // given
+    var generics = typeRegistry.findAllGenericsByFamilyCore("Справочник");
+
+    // when
+    var lowerCase = typeRegistry.findAllGenericsByFamilyCore("справочник");
+    var repeated = typeRegistry.findAllGenericsByFamilyCore("Справочник");
+
+    // then — запомненный ответ тот же, что и посчитанный, в том же порядке
+    assertThat(generics).isNotEmpty();
+    assertThat(lowerCase).containsExactlyElementsOf(generics);
+    assertThat(repeated).containsExactlyElementsOf(generics);
+  }
+
   // === registerSpecialization ===
 
   @Test

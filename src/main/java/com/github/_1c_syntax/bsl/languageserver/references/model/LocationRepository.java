@@ -168,4 +168,12 @@ public class LocationRepository {
     locations.remove(uri);
     sortedOccurrences.remove(uri);
   }
+
+  /**
+   * Удалить расположения обращений к символам во всех документах.
+   */
+  public void clear() {
+    locations.clear();
+    sortedOccurrences.clear();
+  }
 }

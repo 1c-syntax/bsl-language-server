@@ -216,6 +216,25 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void resolveGenericByPrefixFollowsRegistrationAndRemoval() {
+    // given — семейство ещё не зарегистрировано
+    assertThat(typeRegistry.resolveGenericByPrefix("МоёСемейство")).isEmpty();
+
+    // when
+    var ref = typeRegistry.registerUserType("МоёСемейство.<Имя>", declaration, FileType.BSL);
+
+    // then — находится по семейству в любом регистре, а не по началу имени
+    assertThat(typeRegistry.resolveGenericByPrefix("моёсемейство")).contains(ref);
+    assertThat(typeRegistry.resolveGenericByPrefix("МоёСемей")).isEmpty();
+
+    // when
+    typeRegistry.unregisterUserType("МоёСемейство.<Имя>");
+
+    // then
+    assertThat(typeRegistry.resolveGenericByPrefix("МоёСемейство")).isEmpty();
+  }
+
+  @Test
   void findAllGenericsByFamilyCoreReturnsEmptyForBlank() {
     // when / then
     assertThat(typeRegistry.findAllGenericsByFamilyCore(null)).isEmpty();

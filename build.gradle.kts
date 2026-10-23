@@ -10,16 +10,16 @@ plugins {
     `maven-publish`
     jacoco
     id("com.diffplug.spotless") version "7.0.4"
-    id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.5.0"
-    id("io.freefair.javadoc-links") version "9.5.0"
-    id("io.freefair.javadoc-utf-8") version "9.5.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
-    id("io.freefair.maven-central.validate-poms") version "9.5.0"
-    id("com.github.ben-manes.versions") version "0.64.0"
+    id("me.qoomon.git-versioning") version "7.0.0"
+    id("io.freefair.lombok") version "9.8.2"
+    id("io.freefair.javadoc-links") version "9.8.2"
+    id("io.freefair.javadoc-utf-8") version "9.8.2"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.8.2"
+    id("io.freefair.maven-central.validate-poms") version "9.8.2"
+    id("com.github.ben-manes.versions") version "0.66.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.23.0"
+    id("io.sentry.jvm.gradle") version "6.24.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.26.0"
@@ -80,7 +80,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine:caffeine:3.3.0")
+    api("com.github.ben-manes.caffeine:caffeine:3.3.1")
     api("org.ehcache:ehcache:3.12.0")
 
     // lsp4j core
@@ -96,12 +96,12 @@ dependencies {
     api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.39.0")
+    api("io.github.1c-syntax:bsl-parser:0.40.0")
     api("io.github.1c-syntax:utils:0.10.1")
-    api("io.github.1c-syntax:mdclasses:0.19.0.117-SNAPSHOT")
+    api("io.github.1c-syntax:mdclasses:0.21.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.5")
     api("io.github.1c-syntax:supportconf:0.17.1")
-    api("io.github.1c-syntax:bsl-context:0.10.0")
+    api("io.github.1c-syntax:bsl-context:0.10.2")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.1")
@@ -131,7 +131,7 @@ dependencies {
     implementation("commons-beanutils:commons-beanutils:1.11.0") {
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec:commons-codec:1.22.1")
+    implementation("commons-codec:commons-codec:1.23.0")
     implementation("org.apache.commons:commons-lang3:3.21.0")
     implementation("org.apache.commons:commons-collections4:4.6.0")
     implementation("org.apache.commons:commons-exec:1.6.0")

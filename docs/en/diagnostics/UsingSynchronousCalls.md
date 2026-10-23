@@ -5,6 +5,8 @@
 
 When developing configurations designed to work in the web client, it is forbidden to use modal forms and dialogs and synchronous calls. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard, and asynchronous tools are required to ensure user interaction.
 
+Common modules are checked only when the "Client (managed application)" flag is enabled. The "Client (ordinary application)" flag alone does not enable the check: asynchronous alternatives are unavailable in that context.
+
 ### Diagnostic restrictions
 
 Currently, **only the use of global context methods** is diagnosed.

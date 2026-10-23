@@ -77,7 +77,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 /**
@@ -95,6 +94,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+  private static final int FINGERPRINT_CHUNK = 4096;
 
   @Getter
   @EqualsAndHashCode.Include
@@ -208,27 +208,51 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return symbolTree.get();
   }
 
+  /**
+   * Текст документа.
+   *
+   * @return текст документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String getContent() {
-    requireNonNull(content);
+    if (content == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
     return content;
   }
 
+  /**
+   * Строки текста документа.
+   *
+   * @return строки текста документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  /**
+   * Дерево разбора документа.
+   *
+   * @return дерево разбора документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(tokenizer);
-    return tokenizer.getAst();
+    return requireTokenizer().getAst();
   }
 
+  /**
+   * Токены документа.
+   *
+   * @return токены документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(tokenizer);
-    return tokenizer.getTokens();
+    return requireTokenizer().getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
@@ -429,20 +453,46 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * @return отпечаток.
    */
   private static byte[] contentFingerprint(String content) {
+    MessageDigest digest;
     try {
-      return MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8));
+      digest = MessageDigest.getInstance("SHA-256");
     } catch (NoSuchAlgorithmException e) {
       // SHA-256 обязателен для любой реализации Java, поэтому сюда попасть нельзя.
       throw new IllegalStateException(e);
     }
+    // Свёртываются сами кодовые единицы UTF-16, кусками: перекодирование всего текста
+    // в UTF-8 обходилось дороже самой свёртки.
+    var chars = new char[FINGERPRINT_CHUNK];
+    var bytes = new byte[FINGERPRINT_CHUNK * Character.BYTES];
+    var length = content.length();
+    for (var from = 0; from < length; from += FINGERPRINT_CHUNK) {
+      var count = Math.min(FINGERPRINT_CHUNK, length - from);
+      content.getChars(from, from + count, chars, 0);
+      for (var i = 0; i < count; i++) {
+        bytes[Character.BYTES * i] = (byte) (chars[i] >> Byte.SIZE);
+        bytes[Character.BYTES * i + 1] = (byte) chars[i];
+      }
+      digest.update(bytes, 0, Character.BYTES * count);
+    }
+    return digest.digest();
   }
 
-  protected void rebuildFromFileSystem() {
+  /**
+   * Перестроить документ по содержимому его файла.
+   *
+   * @return {@code true}, если файл прочитан; {@code false}, если прочитать его не удалось
+   *     и документ не изменился.
+   */
+  protected boolean rebuildFromFileSystem() {
     try {
-      var newContent = Files.readString(Path.of(uri), StandardCharsets.UTF_8);
+      // Не Files.readString: тот бросает на байтах, недопустимых в UTF-8, и модуль в другой
+      // кодировке не загрузился бы вовсе. Конструктор строки заменяет их символом-заменителем.
+      var newContent = new String(Files.readAllBytes(Path.of(uri)), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
+      return true;
     } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
+      return false;
     }
   }
 
@@ -506,6 +556,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private String[] computeContentList() {
     return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
+  }
+
+  private BSLTokenizer requireTokenizer() {
+    if (tokenizer == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
+    return tokenizer;
   }
 
   private SymbolTree computeSymbolTree() {

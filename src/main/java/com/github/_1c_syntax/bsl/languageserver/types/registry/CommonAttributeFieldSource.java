@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Общие реквизиты как поля таблицы, включая разделители.
@@ -46,6 +49,14 @@ class CommonAttributeFieldSource implements QueryTableFieldSource {
 
   private final MdoMemberFactory mdoMembers;
 
+  /**
+   * Общие реквизиты последней спрошенной конфигурации. Их отбор — перебор всех объектов
+   * конфигурации, а спрашивают о них по каждой таблице каждой формы с динамическим списком;
+   * состав же меняется только вместе с экземпляром конфигурации. Сама конфигурация держится
+   * слабо: перечитанная заменит прежнюю, и прежняя не должна жить из-за этой ссылки.
+   */
+  private final AtomicReference<CommonAttributes> lastConfiguration = new AtomicReference<>();
+
   @Override
   public List<MemberDescriptor> fields(QueryTableRequest request) {
     var md = request.mdo();
@@ -53,11 +64,24 @@ class CommonAttributeFieldSource implements QueryTableFieldSource {
     if (md == null || configuration == null || !declaresCommonAttributes(request)) {
       return List.of();
     }
-    var all = configuration.getChildrenByMdoRef().values().stream()
+    var all = commonAttributesOf(configuration);
+    return mdoMembers.commonAttributeMembers(MdoMemberFactory.applicableCommonAttributes(md, all));
+  }
+
+  private List<CommonAttribute> commonAttributesOf(CF configuration) {
+    var last = lastConfiguration.get();
+    if (last != null && last.configuration().get() == configuration) {
+      return last.attributes();
+    }
+    var attributes = configuration.getChildrenByMdoRef().values().stream()
       .filter(CommonAttribute.class::isInstance)
       .map(CommonAttribute.class::cast)
       .toList();
-    return mdoMembers.commonAttributeMembers(MdoMemberFactory.applicableCommonAttributes(md, all));
+    lastConfiguration.set(new CommonAttributes(new WeakReference<>(configuration), attributes));
+    return attributes;
+  }
+
+  private record CommonAttributes(WeakReference<CF> configuration, List<CommonAttribute> attributes) {
   }
 
   /**

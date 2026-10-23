@@ -56,18 +56,45 @@ final class CollectionTraitsIndex {
    * выполняется на чтении ({@link #defaultElementTypes(TypeRef, UnaryOperator)}).
    */
   private final Map<TypeRef, List<TypeRef>> defaultElementTypes = new ConcurrentHashMap<>();
-  /** Тип ↔ {@code supportsForEach} в разрезе языка ({@code true} — обход {@code Для Каждого} разрешён). */
-  private final Map<FileType, Map<TypeRef, Boolean>> supportsForEach = perFileType();
-  /** Тип ↔ {@code supportsIndexAccess} в разрезе языка ({@code true} — индексатор {@code [...]} разрешён). */
-  private final Map<FileType, Map<TypeRef, Boolean>> supportsIndexAccess = perFileType();
-  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника, в разрезе языка. */
-  private final Map<FileType, Map<TypeRef, BilingualString>> forEachDescriptions = perFileType();
-  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника, в разрезе языка. */
-  private final Map<FileType, Map<TypeRef, BilingualString>> indexAccessDescriptions = perFileType();
+  /**
+   * Тип ↔ признаки обхода и индексатора с описаниями, в разрезе языка. Тип, унаследовавший
+   * признаки и не имеющий своих, держит тот же экземпляр {@link Traits}, что и источник: таких
+   * типов на большой конфигурации сотни тысяч.
+   */
+  private final Map<FileType, Map<TypeRef, Traits>> traits =
+    Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
 
-  /** Пустой контейнер с разрезами по всем языкам. */
-  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
-    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
+  /**
+   * Признаки коллекции типа. Отсутствие признака и явное «нет» неразличимы: {@code false}
+   * и пустое описание значат «не задано».
+   *
+   * @param forEach                 разрешён обход {@code Для Каждого}.
+   * @param indexAccess             разрешён индексатор {@code [...]}.
+   * @param forEachDescription     описание обхода из синтакс-помощника.
+   * @param indexAccessDescription описание индексатора из синтакс-помощника.
+   */
+  private record Traits(boolean forEach, boolean indexAccess,
+                        BilingualString forEachDescription, BilingualString indexAccessDescription) {
+
+    static final Traits EMPTY = new Traits(false, false, BilingualString.EMPTY, BilingualString.EMPTY);
+
+    boolean isEmpty() {
+      return !forEach && !indexAccess && forEachDescription.isEmpty() && indexAccessDescription.isEmpty();
+    }
+
+    /** Свои признаки, а не заданные — из {@code fallback}. */
+    Traits orElse(Traits fallback) {
+      var merged = new Traits(
+        forEach || fallback.forEach,
+        indexAccess || fallback.indexAccess,
+        forEachDescription.isEmpty() ? fallback.forEachDescription : forEachDescription,
+        indexAccessDescription.isEmpty() ? fallback.indexAccessDescription : indexAccessDescription);
+      return merged.equals(this) ? this : merged;
+    }
+
+    Traits withForEach(boolean value) {
+      return new Traits(value, indexAccess, forEachDescription, indexAccessDescription);
+    }
   }
 
   /**
@@ -82,17 +109,11 @@ final class CollectionTraitsIndex {
     if (!decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
     }
-    if (decl.supportsForEach()) {
-      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
-    }
-    if (decl.supportsIndexAccess()) {
-      supportsIndexAccess.get(fileType).put(ref, Boolean.TRUE);
-    }
-    if (!decl.forEachDescription().isEmpty()) {
-      forEachDescriptions.get(fileType).put(ref, decl.forEachDescription());
-    }
-    if (!decl.indexAccessDescription().isEmpty()) {
-      indexAccessDescriptions.get(fileType).put(ref, decl.indexAccessDescription());
+    var declared = new Traits(decl.supportsForEach(), decl.supportsIndexAccess(),
+      decl.forEachDescription(), decl.indexAccessDescription());
+    if (!declared.isEmpty()) {
+      // Объявленное перетирает прежнее, не объявленное остаётся как было.
+      traits.get(fileType).merge(ref, declared, (existing, update) -> update.orElse(existing));
     }
   }
 
@@ -131,16 +152,10 @@ final class CollectionTraitsIndex {
     if (elements != null && !elements.isEmpty()) {
       defaultElementTypes.putIfAbsent(target, elements);
     }
-    copyTrait(supportsForEach.get(fileType), target, source);
-    copyTrait(supportsIndexAccess.get(fileType), target, source);
-    copyTrait(forEachDescriptions.get(fileType), target, source);
-    copyTrait(indexAccessDescriptions.get(fileType), target, source);
-  }
-
-  private static <V> void copyTrait(Map<TypeRef, V> trait, TypeRef target, TypeRef source) {
-    var value = trait.get(source);
-    if (value != null) {
-      trait.putIfAbsent(target, value);
+    var byRef = traits.get(fileType);
+    var inherited = byRef.get(source);
+    if (inherited != null) {
+      byRef.merge(target, inherited, Traits::orElse);
     }
   }
 
@@ -154,20 +169,16 @@ final class CollectionTraitsIndex {
    * @param fileType языковой скоуп, в котором действует признак.
    */
   void setIterable(TypeRef ref, boolean iterable, FileType fileType) {
-    if (iterable) {
-      supportsForEach.get(fileType).put(ref, Boolean.TRUE);
-    } else {
-      supportsForEach.get(fileType).remove(ref);
-    }
+    traits.get(fileType).compute(ref, (key, existing) -> {
+      var updated = (existing == null ? Traits.EMPTY : existing).withForEach(iterable);
+      return updated.isEmpty() ? null : updated;
+    });
   }
 
   /** Забыть всё, что известно о типе, во всех языковых скоупах. */
   void remove(TypeRef ref) {
     defaultElementTypes.remove(ref);
-    supportsForEach.values().forEach(byRef -> byRef.remove(ref));
-    supportsIndexAccess.values().forEach(byRef -> byRef.remove(ref));
-    forEachDescriptions.values().forEach(byRef -> byRef.remove(ref));
-    indexAccessDescriptions.values().forEach(byRef -> byRef.remove(ref));
+    traits.values().forEach(byRef -> byRef.remove(ref));
   }
 
   /**
@@ -193,21 +204,25 @@ final class CollectionTraitsIndex {
 
   /** {@code true}, если у типа разрешён обход {@code Для Каждого} в данном языке файла. */
   boolean supportsForEach(TypeRef ref, FileType fileType) {
-    return Boolean.TRUE.equals(supportsForEach.get(fileType).get(ref));
+    return traitsOf(ref, fileType).forEach();
   }
 
   /** {@code true}, если у типа разрешён индексатор {@code [...]} в данном языке файла. */
   boolean supportsIndexAccess(TypeRef ref, FileType fileType) {
-    return Boolean.TRUE.equals(supportsIndexAccess.get(fileType).get(ref));
+    return traitsOf(ref, fileType).indexAccess();
   }
 
   /** Описание обхода {@code Для Каждого} в указанной локали; пустая строка, если не задано. */
   String forEachDescription(TypeRef ref, FileType fileType, Language language) {
-    return forEachDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+    return traitsOf(ref, fileType).forEachDescription().forLanguage(language);
   }
 
   /** Описание индексатора {@code [...]} в указанной локали; пустая строка, если не задано. */
   String indexAccessDescription(TypeRef ref, FileType fileType, Language language) {
-    return indexAccessDescriptions.get(fileType).getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+    return traitsOf(ref, fileType).indexAccessDescription().forLanguage(language);
+  }
+
+  private Traits traitsOf(TypeRef ref, FileType fileType) {
+    return traits.get(fileType).getOrDefault(ref, Traits.EMPTY);
   }
 }
