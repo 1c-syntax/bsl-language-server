@@ -31,9 +31,9 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -46,19 +46,24 @@ import java.util.regex.Pattern;
 
 )
 public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern get = CaseInsensitivePattern.compile(
-    "^Получить.*$"
-  );
+  private static final Pattern GET_PATTERN = CaseInsensitivePattern.compile("^Получить");
 
   @DiagnosticParameter(type = String.class)
-  private List<String> prefixes = List.of();
+  private String prefixes = "";
+
+  private Pattern functionNamePattern = GET_PATTERN;
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    prefixes = Arrays.stream(((String) configuration.getOrDefault("prefixes", "")).split(","))
+    prefixes = (String) configuration.getOrDefault("prefixes", "");
+    var quotedPrefixes = Arrays.stream(prefixes.split(","))
       .map(String::trim)
       .filter(prefix -> !prefix.isEmpty())
-      .toList();
+      .map(Pattern::quote)
+      .collect(Collectors.joining("|"));
+    functionNamePattern = quotedPrefixes.isEmpty()
+      ? GET_PATTERN
+      : CaseInsensitivePattern.compile("^(?:" + quotedPrefixes + ")?Получить");
   }
 
   @Override
@@ -70,10 +75,7 @@ public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnost
       return ctx;
     }
 
-    var name = subName.getText();
-    if (get.matcher(name).matches() || prefixes.stream().anyMatch(prefix ->
-      name.regionMatches(true, 0, prefix, 0, prefix.length())
-        && get.matcher(name.substring(prefix.length())).matches())) {
+    if (functionNamePattern.matcher(subName.getText()).lookingAt()) {
       diagnosticStorage.addDiagnostic(subName);
     }
 
