@@ -64,6 +64,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -490,6 +491,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
       var newContent = new String(Files.readAllBytes(Path.of(uri)), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
       return true;
+    } catch (NoSuchFileException e) {
+      // Файл удалили раньше, чем до него дошло чтение: временный файл, удалённый каталог.
+      // Это не сбой сервера — документ просто остаётся без текста.
+      LOGGER.debug("Can't rebuild content from uri, file is gone: {}", uri, e);
+      return false;
     } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
       return false;
