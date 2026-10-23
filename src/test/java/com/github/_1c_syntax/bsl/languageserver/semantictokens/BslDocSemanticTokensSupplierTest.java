@@ -89,10 +89,24 @@ class BslDocSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - "Параметры:" should be Macro with Documentation modifier
-    helper.assertContainsTokens(decoded, List.of(
+    // then - comment tokens must not overlap the keyword, parameter or type.
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(0, 0, 18, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// Описание метода"),
+      new ExpectedToken(1, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
       new ExpectedToken(1, 3, 10, SemanticTokenTypes.Macro,
-        Set.of(SemanticTokenModifiers.Documentation), "Параметры:")
+        SemanticTokenModifiers.Documentation, "Параметры:"),
+      new ExpectedToken(2, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(2, 4, 9, SemanticTokenTypes.Parameter,
+        SemanticTokenModifiers.Documentation, "Параметр1"),
+      new ExpectedToken(2, 13, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - "),
+      new ExpectedToken(2, 16, 6, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Строка"),
+      new ExpectedToken(2, 22, 21, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - описание параметра")
     ));
   }
 
@@ -119,8 +133,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testReturnsKeyword() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testReturnsKeyword(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание функции
@@ -138,6 +154,53 @@ class BslDocSemanticTokensSupplierTest {
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(1, 3, 22, SemanticTokenTypes.Macro,
         Set.of(SemanticTokenModifiers.Documentation), "Возвращаемое значение:")
+    ));
+  }
+
+  @Test
+  void testMultilineCommentBetweenDescriptionElements() {
+    supplier.setMultilineTokenSupport(true);
+    String bsl = """
+      // Параметры:
+      //  Параметр - Строка - описание
+      //    Первая строка продолжения.
+      //    Вторая строка продолжения.
+      // Возвращаемое значение:
+      //  Число - результат
+      Функция Тест(Параметр)
+        Возврат 0;
+      КонецФункции
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(0, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(0, 3, 10, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Параметры:"),
+      new ExpectedToken(1, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(1, 4, 8, SemanticTokenTypes.Parameter,
+        SemanticTokenModifiers.Documentation, "Параметр"),
+      new ExpectedToken(1, 12, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - "),
+      new ExpectedToken(1, 15, 6, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Строка"),
+      new ExpectedToken(1, 21, 11, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - описание"),
+      new ExpectedToken(2, 0, 65, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//    Первая строка продолжения.\n//    Вторая строка продолжения."),
+      new ExpectedToken(4, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(4, 3, 22, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Возвращаемое значение:"),
+      new ExpectedToken(5, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(5, 4, 5, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Число"),
+      new ExpectedToken(5, 9, 12, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - результат")
     ));
   }
 
@@ -466,4 +529,3 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 }
-
