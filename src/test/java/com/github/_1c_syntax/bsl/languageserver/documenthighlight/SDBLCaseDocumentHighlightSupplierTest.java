@@ -36,6 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class SDBLCaseDocumentHighlightSupplierTest {
   private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/SDBLCaseDocumentHighlight.bsl";
+  private static final String PATH_TO_NESTED_FILE =
+    "./src/test/resources/providers/documentHighlight/SDBLCaseNestedDocumentHighlight.bsl";
   // Точные позиции токенов в тестовом файле (0-based):
   // Строка 7: "|   ВЫБОР" - ВЫБОР на позиции 8-12 (Range: 7, 8, 7, 13)
   // Строка 8: "|       КОГДА ... ТОГДА" - КОГДА на 12-16, ТОГДА на 37-41
@@ -144,6 +146,38 @@ class SDBLCaseDocumentHighlightSupplierTest {
     assertThat(highlights)
       .extracting(DocumentHighlight::getKind)
       .containsOnly(DocumentHighlightKind.Text);
+  }
+  @Test
+  void testNestedCaseInWhenBranch() {
+    // given - курсор на ВЫБОР, вложенном в ветку КОГДА (строка 8, ВЫБОР на 16-20)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_NESTED_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(8, 17));
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+    // then - подсвечен вложенный ВЫБОР со своим КОНЕЦ, а не внешний
+    assertHighlightRange(highlights, 8, 16, 8, 21);   // вложенный ВЫБОР
+    assertHighlightRange(highlights, 11, 16, 11, 21); // его КОНЕЦ
+    assertThat(highlights)
+      .extracting(DocumentHighlight::getRange)
+      .doesNotContain(new Range(new Position(6, 8), new Position(6, 13)));
+  }
+  @Test
+  void testNestedCaseInElse() {
+    // given - курсор на ВЫБОР, вложенном в ИНАЧЕ (строка 13, ВЫБОР на 16-20)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_NESTED_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(13, 17));
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+    // then - подсвечен вложенный ВЫБОР со своим КОНЕЦ, а не внешний
+    assertHighlightRange(highlights, 13, 16, 13, 21); // вложенный ВЫБОР
+    assertHighlightRange(highlights, 16, 16, 16, 21); // его КОНЕЦ
+    assertThat(highlights)
+      .extracting(DocumentHighlight::getRange)
+      .doesNotContain(new Range(new Position(6, 8), new Position(6, 13)));
   }
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
