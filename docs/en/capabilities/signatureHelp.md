@@ -2,7 +2,8 @@
 
 While typing a method call, shows the parameter list and highlights the active parameter.
 
-If a function can return values of different types, signature help lists all known types in alphabetical order, separated by commas, for example `Choose(Condition): Array, Number`.
+If a function can return values of different types, signature help lists all known types separated by commas, for example `Choose(Condition): Array, Number`.
+Types declared in the function documentation precede types inferred from its body; duplicate types are listed only once.
 
 **Shortcut:** `Ctrl+Shift+Space`
 
