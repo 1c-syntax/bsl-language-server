@@ -183,7 +183,7 @@ class BSLTextDocumentServiceTest {
     // Register workspace for test resources
     var workspacePath = new File(WORKSPACE_PATH).getAbsoluteFile();
     var workspaceFolder = new WorkspaceFolder(workspacePath.toURI().toString(), "test-workspace");
-    serverContextProvider.addWorkspace(workspaceFolder);
+    serverContextProvider.addWorkspace(workspaceFolder).awaitPreparation();
   }
 
   private static URI expectedWorkspaceUri() {
@@ -445,7 +445,8 @@ class BSLTextDocumentServiceTest {
   @Test
   void callHierarchyOfClosedDocumentIsServedWithoutContent(@TempDir Path tempDir) throws Exception {
     // given
-    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"));
+    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"))
+      .awaitPreparation();
     var file = Files.writeString(tempDir.resolve("Calls.bsl"), """
       Процедура Вызывающая()
           Вызываемая();
@@ -1483,7 +1484,7 @@ class BSLTextDocumentServiceTest {
 
     private void addWorkspace(String path, String name) {
       var dir = new File(path).getAbsoluteFile();
-      serverContextProvider.addWorkspace(new WorkspaceFolder(dir.toURI().toString(), name));
+      serverContextProvider.addWorkspace(new WorkspaceFolder(dir.toURI().toString(), name)).awaitPreparation();
     }
 
     @Test

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -256,7 +257,24 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // расчёт с чистого листа рвёт цепочку взаимных вызовов в другом месте.
       return;
     }
-    var documentContext = event.getSource();
+    reindexDocument(event.getSource());
+  }
+
+  /**
+   * Посчитать заново значения документа, у которого изменилась привязка к метаданным
+   * конфигурации. Его дерево символов построено заново, а методы нового дерева не равны
+   * прежним, если сменился их вид, поэтому значения, записанные по прежним, уже не найти.
+   *
+   * @param event событие изменения привязки документа.
+   */
+  @Order(300)
+  @EventListener
+  @Override
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+    reindexDocument(event.getSource());
+  }
+
+  private void reindexDocument(DocumentContext documentContext) {
     clear(documentContext.getUri());
     var changed = recomputeDocument(documentContext);
     if (maintenance) {

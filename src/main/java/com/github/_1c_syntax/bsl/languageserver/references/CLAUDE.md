@@ -15,8 +15,8 @@ call hierarchy. См. корневой [CLAUDE.md](../../../../../../../../../CL
   конструкторов) через `isReferenceAccessible()`. Хранилище — в `model/`
   (`SymbolOccurrenceRepository`, `LocationRepository`, `AnnotationRepository`).
 - **`ReferenceIndexFiller`** — обходит ANTLR-дерево (`BSLParserBaseVisitor`) и наполняет индекс.
-  Триггеры: `DocumentContextContentChangedEvent` → `fill(DocumentContext)`;
-  `ServerContextDocumentRemovedEvent` → `clearReferences()`. Внутри —
+  Триггеры: `DocumentContextContentChangedEvent` и `DocumentContextConfigurationBindingChangedEvent`
+  → `fill(DocumentContext)`; `ServerContextDocumentRemovedEvent` → `clearReferences()`. Внутри —
   `MethodSymbolReferenceIndexFinder` (вызовы методов, ссылки на модули/классы, обработчики
   `NotifyDescription`) и `VariableSymbolReferenceIndexFinder` (использования переменных с флагом
   definition/reference, паттерны общих модулей). Имена интернируются (lowercase).
