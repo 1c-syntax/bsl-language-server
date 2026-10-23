@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792159711748,
+  "lastUpdate": 1792721589519,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45725,6 +45725,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.360581443611867",
             "extra": "mean: 91.98350278536479 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cb20daa4fde7efdc257be8d1cfb4c9a6c3941aa5",
+          "message": "Merge pull request #4598 from DimaShapovaloff/codex/fix-4469-multiline-doc-tokens\n\nfix(semantictokens): сохранять элементы BSLDoc при multilineTokenSupport",
+          "timestamp": "2026-10-23T11:43:48+10:00",
+          "tree_id": "db6d138e8df45e49d4d55bcca5b9d289d64b61a4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cb20daa4fde7efdc257be8d1cfb4c9a6c3941aa5"
+        },
+        "date": 1792721535709,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 110.23636293411255,
+            "unit": "sec",
+            "range": "stddev: 15.0189070039807",
+            "extra": "mean: 110.23636293411255 sec\nrounds: 3"
           }
         ]
       }
