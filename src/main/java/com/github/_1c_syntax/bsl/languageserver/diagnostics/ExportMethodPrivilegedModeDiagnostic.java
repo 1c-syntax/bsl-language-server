@@ -40,8 +40,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import  java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+type = DiagnosticType.SECURITY_HOTSPOT,
+severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
   tags = {
     DiagnosticTag.SUSPICIOUS
@@ -71,20 +71,29 @@ public class ExportMethodPrivilegedModeDiagnostic extends AbstractVisitorDiagnos
     }
     return super.visitGlobalMethodCall(ctx);
   }
-  private static boolean isExplicitTrue(BSLParser.GlobalMethodCallContext ctx) {
-    if (ctx.doCall() == null || ctx.doCall().callParamList() == null) {
-      return false;
-    }
-    var parameters = ctx.doCall().callParamList().callParam();
 
-    if (parameters.size() != 1 || parameters.getFirst().expression() == null) {
-      return false;
-    }
-
-    String value = parameters.getFirst().expression().getText();
-
-    return value.equalsIgnoreCase("True")
-      || value.equalsIgnoreCase("Истина");
+private static boolean isExplicitTrue(BSLParser.GlobalMethodCallContext ctx) {
+  if (ctx.doCall() == null || ctx.doCall().callParamList() == null) {
+    return false;
   }
+
+  var parameters = ctx.doCall().callParamList().callParam();
+
+  if (parameters.size() != 1 || parameters.getFirst().expression() == null) {
+    return false;
+  }
+
+  String value = parameters.getFirst().expression().getText();
+
+  while (value.length() >= 2
+    && value.startsWith("(")
+    && value.endsWith(")")) {
+    value = value.substring(1, value.length() - 1);
+  }
+
+  return value.equalsIgnoreCase("True")
+    || value.equalsIgnoreCase("Истина");
+}
+
 
 }

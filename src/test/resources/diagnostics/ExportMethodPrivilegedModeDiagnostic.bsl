@@ -19,3 +19,11 @@ Procedure SafeVariable() Export
     Value = True;
     SetPrivilegedMode(Value);
 EndProcedure
+
+Procedure DangerousParentheses() Export
+    SetPrivilegedMode((True));
+EndProcedure
+
+Procedure SafeParenthesizedFalse() Export
+    SetPrivilegedMode((False));
+EndProcedure

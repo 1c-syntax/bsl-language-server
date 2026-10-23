@@ -37,7 +37,7 @@ class ExportMethodPrivilegedModeDiagnosticTest extends AbstractDiagnosticTest<Ex
 void test() {
   List<Diagnostic> diagnostics = getDiagnostics();
 
-  assertThat(diagnostics).hasSize(2);
+  assertThat(diagnostics).hasSize(3);
 
   assertTrue(diagnostics.stream()
     .anyMatch(d ->d.getMessage().isLeft()
@@ -45,6 +45,13 @@ void test() {
 
   assertTrue(diagnostics.stream()
     .anyMatch(d ->d.getMessage().isLeft()
-        && d.getMessage().getLeft().contains("DangerousEnglish") ));
+        && d.getMessage().getLeft().contains("DangerousRussian")));
+
+  assertTrue(diagnostics.stream()
+    .anyMatch(d -> d.getMessage().isLeft()
+        && d.getMessage().getLeft().contains("DangerousParentheses")));
+
+
+
 }
 }
