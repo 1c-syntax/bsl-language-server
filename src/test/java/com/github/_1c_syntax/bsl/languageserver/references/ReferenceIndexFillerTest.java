@@ -687,4 +687,24 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     // Не должно быть ссылки на модуль ПервыйОбщийМодуль, т.к. это строковый литерал - параметр метода
     assertThat(referenceOnModuleName).isEmpty();
   }
+
+  @Test
+  void testFindVariablesInModuleWithoutMethods() {
+    // given: код модуля без единого метода — область метода так и не появляется.
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем Счетчик;
+      Счетчик = 1;
+      Сообщить(Счетчик);
+      """);
+
+    // when
+    referenceIndexFiller.fill(documentContext);
+
+    // then: обращение находит переменную модуля.
+    var referencedSymbol = referenceIndex.getReference(documentContext.getUri(), new Position(2, 10));
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::symbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Счетчик");
+  }
 }
