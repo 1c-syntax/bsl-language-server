@@ -21,15 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.TestApplicationContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,6 +136,26 @@ class GlobalContextMembersCacheTest {
   }
 
   @Test
+  void refreshedDeclarationReplacesGlobalMemberInPlace() {
+    // given: символ общего модуля дошёл до члена глобального контекста
+    var commonModule = typeRegistry.registerConfigurationType("ОбщегоНазначения");
+    var owner = mock(DocumentContext.class);
+    var parsed = moduleSymbol(owner);
+    typeRegistry.registerGlobalPropertyType(commonModule, FileType.BSL, parsed);
+    populated();
+    var before = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+    assertThat(globalMember("ОбщегоНазначения", FileType.BSL).getSourceSymbol()).containsSame(parsed);
+    var reread = moduleSymbol(owner);
+
+    // when: модуль перечитан с тем же текстом — символ новый, но равен прежнему
+    typeRegistry.refreshGlobalPropertyDeclaration(commonModule, reread);
+
+    // then: члены не пересобраны, а член модуля — уже с новым символом
+    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL)).isSameAs(before);
+    assertThat(globalMember("ОбщегоНазначения", FileType.BSL).getSourceSymbol()).containsSame(reread);
+  }
+
+  @Test
   void newDeclarationOfReparsedCommonModuleReachesItsGlobalMember() {
     // given
     var commonModule = typeRegistry.registerConfigurationType("ОбщегоНазначения");
@@ -225,6 +248,15 @@ class GlobalContextMembersCacheTest {
 
   private void populated() {
     typeRegistry.handleServerContextPopulated(new ServerContextPopulatedEvent(mock(ServerContext.class)));
+  }
+
+  private static ModuleSymbol moduleSymbol(DocumentContext owner) {
+    return ModuleSymbol.builder()
+      .name("ОбщегоНазначения")
+      .owner(owner)
+      .range(Ranges.create(0, 0, 10, 0))
+      .selectionRange(Ranges.create(0, 0, 0, 9))
+      .build();
   }
 
   private MemberDescriptor globalMember(String name, FileType fileType) {

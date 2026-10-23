@@ -83,6 +83,8 @@ public class GlobalScopeProvider {
 
   private static final String RETURN_TYPE_FIELD = "returnType";
   private static final String ALIASES_FIELD = "aliases";
+  /** Сколько написаний имени у члена глобального контекста: русское и английское. */
+  private static final int NAMES_PER_MEMBER = 2;
 
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
@@ -190,7 +192,14 @@ public class GlobalScopeProvider {
     if (!isBuiltFrom(index, bslSource, osSource)) {
       index = rebuildGlobalIndex();
     }
-    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+    var position = index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT));
+    if (position == null) {
+      return Optional.empty();
+    }
+    // Член берётся из набора, а не из индекса: в наборе символ-источник глобального свойства
+    // освежается на месте (TypeRegistry.refreshGlobalPropertyDeclaration), а позиции те же.
+    var members = fileType == FileType.OS ? index.osMembers() : index.bslMembers();
+    return Optional.of(members.get(position));
   }
 
   /**
@@ -207,12 +216,19 @@ public class GlobalScopeProvider {
       if (isBuiltFrom(index, bslSource, osSource)) {
         return index;
       }
-      var rebuilt = new GlobalIndex(bslSource, osSource, Map.of(
-        FileType.BSL, globalNameIndex(bslSource),
-        FileType.OS, globalNameIndex(osSource)));
+      var bslMembers = asList(bslSource);
+      var osMembers = asList(osSource);
+      var rebuilt = new GlobalIndex(bslSource, osSource, bslMembers, osMembers, Map.of(
+        FileType.BSL, globalNameIndex(bslMembers),
+        FileType.OS, globalNameIndex(osMembers)));
       globalIndexRef.set(rebuilt);
       return rebuilt;
     }
+  }
+
+  /** Тот же набор как список — без копии, если он уже список: освежённые на месте члены видны. */
+  private static List<MemberDescriptor> asList(Collection<MemberDescriptor> members) {
+    return members instanceof List<MemberDescriptor> list ? list : List.copyOf(members);
   }
 
   private static boolean isBuiltFrom(@org.jspecify.annotations.Nullable GlobalIndex index,
@@ -281,17 +297,18 @@ public class GlobalScopeProvider {
     return result;
   }
 
-  private Map<String, MemberDescriptor> globalNameIndex(Collection<MemberDescriptor> members) {
-    // до двух записей на член (ru и en) — задаём ёмкость сразу, чтобы не рехэшировать
-    var map = HashMap.<String, MemberDescriptor>newHashMap(members.size() * 2);
-    for (var member : members) {
+  private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members) {
+    // на член — запись на каждое написание (ru и en); ёмкость сразу, чтобы не рехэшировать
+    var map = HashMap.<String, Integer>newHashMap(members.size() * NAMES_PER_MEMBER);
+    for (var position = 0; position < members.size(); position++) {
+      var member = members.get(position);
       var ru = member.bilingualName().ru();
       var en = member.bilingualName().en();
       if (!ru.isBlank()) {
-        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), member);
+        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), position);
       }
       if (!en.isBlank()) {
-        map.putIfAbsent(en.toLowerCase(Locale.ROOT), member);
+        map.putIfAbsent(en.toLowerCase(Locale.ROOT), position);
       }
     }
     return map;
@@ -300,10 +317,19 @@ public class GlobalScopeProvider {
   /**
    * Индекс имён членов GLOBAL_CONTEXT в разрезе языка вместе с наборами-источниками,
    * из которых он собран: сверка их идентичности и есть критерий актуальности индекса.
+   * Индекс хранит позицию члена в наборе, а не сам член.
+   *
+   * @param bslSource  набор BSL, как его отдал реестр.
+   * @param osSource   набор OneScript, как его отдал реестр.
+   * @param bslMembers набор BSL как список.
+   * @param osMembers  набор OneScript как список.
+   * @param byName     позиция члена по имени в нижнем регистре, в разрезе языка.
    */
   private record GlobalIndex(Collection<MemberDescriptor> bslSource,
                              Collection<MemberDescriptor> osSource,
-                             Map<FileType, Map<String, MemberDescriptor>> byName) {
+                             List<MemberDescriptor> bslMembers,
+                             List<MemberDescriptor> osMembers,
+                             Map<FileType, Map<String, Integer>> byName) {
   }
 
   /**
