@@ -156,6 +156,26 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(context.getDocuments()).hasSizeGreaterThan(0);
   }
 
+  @Test
+  void documentsOfConfigurationModulesShareTheConfigurationUri() {
+    // given
+    initServerContext(PATH_TO_METADATA, false);
+    var configuration = context.getConfiguration();
+
+    // when
+    context.populateContext();
+    var added = context.addDocument(Absolute.uri(new File(PATH_TO_METADATA, PATH_TO_CATALOG_FILE)));
+
+    // then: URI документа модуля конфигурации — тот же экземпляр, что у модуля в метаданных
+    var moduleDocuments = context.getDocuments().values().stream()
+      .filter(documentContext -> configuration.getModuleByUri(documentContext.getUri()).isPresent())
+      .toList();
+    assertThat(moduleDocuments).isNotEmpty().contains(added);
+    assertThat(moduleDocuments).allSatisfy(documentContext ->
+      assertThat(documentContext.getUri())
+        .isSameAs(configuration.getModuleByUri(documentContext.getUri()).orElseThrow().getUri()));
+  }
+
   /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */
   @Test
   void testPopulateContextExcludesPathsFromConfig() {

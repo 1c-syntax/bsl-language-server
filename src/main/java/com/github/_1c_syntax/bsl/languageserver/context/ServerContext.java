@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.Module;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
@@ -161,7 +162,7 @@ public class ServerContext {
         files.parallelStream().forEach((File file) -> {
           workDoneProgressReporter.tick();
 
-          var uri = Absolute.uri(file.toURI());
+          var uri = configurationUri(Absolute.uri(file.toURI()));
           var lock = getDocumentLock(uri);
           lock.writeLock().lock();
           try {
@@ -283,12 +284,13 @@ public class ServerContext {
    * @return Контекст документа
    */
   public DocumentContext addDocument(URI uri) {
-    var lock = getDocumentLock(uri);
+    var documentUri = configurationUri(uri);
+    var lock = getDocumentLock(documentUri);
     lock.writeLock().lock();
     try {
-      var documentContext = documents.get(uri);
+      var documentContext = documents.get(documentUri);
       if (documentContext == null) {
-        documentContext = createDocumentContext(uri);
+        documentContext = createDocumentContext(documentUri);
       }
       return documentContext;
     } finally {
@@ -545,6 +547,17 @@ public class ServerContext {
    */
   public Optional<CommonModule> findCommonModule(String name) {
     return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
+  }
+
+  /**
+   * Тот же URI, но экземпляром из метаданных конфигурации, если модуль в ней есть: иначе модуль
+   * держал бы два равных URI, каждый со своими строками, — свой и конфигурации.
+   */
+  private URI configurationUri(URI uri) {
+    return getConfiguration().getModuleByUri(uri)
+      .map(Module::getUri)
+      .filter(moduleUri -> moduleUri.toString().equals(uri.toString()))
+      .orElse(uri);
   }
 
   private DocumentContext createDocumentContext(URI uri) {
