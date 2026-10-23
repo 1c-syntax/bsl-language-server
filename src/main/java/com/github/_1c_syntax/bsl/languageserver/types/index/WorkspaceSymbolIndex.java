@@ -214,9 +214,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   /**
-   * Имена в нижнем регистре: одно и то же имя повторяется в тысячах модулей.
+   * Имена в нижнем регистре: одно и то же имя повторяется в тысячах модулей. Интернер общий для
+   * приложения — те же имена в нижнем регистре держат ключи индекса ссылок.
    */
-  private final StringInterner lowerCaseNames = new StringInterner();
+  private final StringInterner lowerCaseNames;
 
   /**
    * Пересобрать записи документа на изменении его содержимого.
@@ -294,7 +295,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Каждая запись лежит под несколькими ключами (полное имя и начало каждого CamelCase-слова),
    * поэтому удаляется из ВСЕХ своих ключей: их множество детерминированно пересчитывается из имени
-   * записи методом {@link #keysOf(String)} (обратная карта не нужна). И {@link #indexedByUri}, и
+   * записи методом {@link #keysOf(String, String)} (обратная карта не нужна). И {@link #indexedByUri}, и
    * {@link #trie} меняются под одним write-lock, чтобы search (read-lock), читающий обе структуры,
    * не увидел запись удалённой из одной раньше другой; ключи, оставшиеся без записей, удаляются из
    * дерева, чтобы не копить пустые узлы.
@@ -311,7 +312,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       }
       var keys = new HashSet<String>();
       for (var entry : removed) {
-        keys.addAll(keysOf(entry.name()));
+        keys.addAll(keysOf(entry.name(), entry.lowerName()));
       }
       for (var key : keys) {
         removeEntryFromKey(key, uri);
@@ -756,7 +757,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       // и не должен увидеть запись в одной из них раньше другой.
       indexedByUri.put(uri, snapshot);
       for (var entry : snapshot) {
-        for (var key : keysOf(entry.name())) {
+        for (var key : keysOf(entry.name(), entry.lowerName())) {
           var bucket = trie.get(key);
           if (bucket == null) {
             bucket = new ArrayList<>();
@@ -782,12 +783,12 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * {@code ПровестиДокументОтбора} находится по ключу {@code документотбора}). Ключи дедуплицируются
    * (имя из одного слова даёт единственный ключ).
    *
-   * @param name исходное имя символа (непустое)
+   * @param name      исходное имя символа (непустое)
+   * @param lowerName то же имя в нижнем регистре — первый ключ; дерево держит именно этот экземпляр
    * @return упорядоченное множество ключей дерева без дублей (как минимум полное lowercase-имя)
    */
-  private static Set<String> keysOf(String name) {
+  private static Set<String> keysOf(String name, String lowerName) {
     var keys = new LinkedHashSet<String>();
-    var lowerName = name.toLowerCase(Locale.ENGLISH);
     keys.add(lowerName);
     var offset = 0;
     for (var word : StringUtils.splitByCharacterTypeCamelCase(name)) {
