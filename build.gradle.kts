@@ -12,7 +12,7 @@ plugins {
     id("com.diffplug.spotless") version "7.0.4"
     // git-versioning 7.0.0 подтягивает JGit 7 без GpgObjectSigner и ломает jreleaserDeploy в JReleaser 1.26.0.
     // Оставляем 6.4.4 до устранения несовместимости: https://github.com/jreleaser/jreleaser/issues/1846
-    id("me.qoomon.git-versioning") version "6.4.4"
+    id("me.qoomon.git-versioning") version "7.0.0"
     id("io.freefair.lombok") version "9.8.2"
     id("io.freefair.javadoc-links") version "9.8.2"
     id("io.freefair.javadoc-utf-8") version "9.8.2"
