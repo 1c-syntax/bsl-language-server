@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.EqualsAndHashCode;
@@ -53,7 +52,6 @@ public class AnnotatedVariableSymbol extends IntBasedVariableSymbol {
   public AnnotatedVariableSymbol(
     String name,
     SourceDefinedSymbol scope,
-    DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
     byte kind,
     boolean export,
@@ -70,7 +68,6 @@ public class AnnotatedVariableSymbol extends IntBasedVariableSymbol {
     super(
       name,
       scope,
-      owner,
       parent,
       kind,
       export,

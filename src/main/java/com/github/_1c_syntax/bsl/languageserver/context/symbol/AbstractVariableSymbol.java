@@ -56,15 +56,10 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   String name;
 
   /**
-   * Область доступности символа. Метод или модуль.
+   * Область доступности символа. Метод или модуль; файл переменной — её файл
+   * (см. {@link #getOwner()}).
    */
   SourceDefinedSymbol scope;
-
-  /**
-   * Файл в котором располагается переменная.
-   */
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
 
   /**
    * Символ, внутри которого располагается данный символ. Без обёртки в {@link Optional}:
@@ -92,7 +87,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   protected AbstractVariableSymbol(
     String name,
     SourceDefinedSymbol scope,
-    DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
     byte kind,
     boolean export,
@@ -100,11 +94,20 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   ) {
     this.name = name;
     this.scope = scope;
-    this.owner = owner;
     this.parent = parent.orElse(null);
     this.kind = kind;
     this.export = export;
     this.description = description;
+  }
+
+  /**
+   * Файл, в котором располагается переменная, — файл её области. Не хранится: переменных на
+   * большой конфигурации миллионы, и поле на каждую стоило бы десятки мегабайт.
+   */
+  @Override
+  @EqualsAndHashCode.Include
+  public DocumentContext getOwner() {
+    return scope.getOwner();
   }
 
   @Override
@@ -193,7 +196,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         return new AnnotatedVariableSymbol(
           name,
           scope,
-          owner,
           parent,
           (byte) kind.ordinal(),
           export,
@@ -222,7 +224,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         return new ShortBasedVariableSymbol(
           name,
           scope,
-          owner,
           parent,
           (byte) kind.ordinal(),
           export,
@@ -239,7 +240,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         return new IntBasedVariableSymbol(
           name,
           scope,
-          owner,
           parent,
           (byte) kind.ordinal(),
           export,
