@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.client;
 
+import com.github._1c_syntax.bsl.languageserver.client.events.ClientInitializedEvent;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WindowClientCapabilities;
@@ -29,6 +30,7 @@ import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.WorkDoneProgressReport;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +50,7 @@ class WorkDoneProgressHelperTest {
 
     var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.FALSE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
 
     // when
     var progress = workDoneProgressHelper.createProgress(1, "");
@@ -68,6 +71,7 @@ class WorkDoneProgressHelperTest {
 
     var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
 
     // when
     workDoneProgressHelper.createProgress(1, "");
@@ -84,6 +88,7 @@ class WorkDoneProgressHelperTest {
 
     var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
 
     var progress = workDoneProgressHelper.createProgress(1, "");
 
@@ -112,6 +117,7 @@ class WorkDoneProgressHelperTest {
 
     var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
 
     var progress = workDoneProgressHelper.createProgress(2, " files");
     progress.beginProgress("test");
@@ -162,6 +168,7 @@ class WorkDoneProgressHelperTest {
 
     var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
     var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
 
     var progress = workDoneProgressHelper.createProgress(1, "");
 
@@ -182,6 +189,70 @@ class WorkDoneProgressHelperTest {
           "token"
         )
       );
+  }
+
+  @Test
+  void progressStartedBeforeClientInitializedIsShownWithItsStateWhenClientIsReady() {
+    // given — индикатор начат и продвинут, пока клиент ещё не готов
+    var languageClientHolder = getLanguageClientHolder();
+    var languageClient = languageClientHolder.getClient().orElseThrow();
+
+    var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
+    var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+
+    var progress = workDoneProgressHelper.createProgress(2, " files");
+    progress.beginProgress("test");
+    progress.tick();
+
+    // then — клиенту ничего не отправлено
+    verify(languageClient, never()).createProgress(any());
+    verify(languageClient, never()).notifyProgress(any());
+
+    // when
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
+
+    // then — индикатор создан с заголовком и последним отчётом
+    verify(languageClient, times(1)).createProgress(any());
+    var begin = new WorkDoneProgressBegin();
+    begin.setTitle("test");
+    verify(languageClient, times(1))
+      .notifyProgress(refEq(new ProgressParams(Either.forLeft("token"), Either.forLeft(begin)), "token"));
+    var report = new WorkDoneProgressReport();
+    report.setMessage("1/2 files");
+    report.setCancellable(false);
+    report.setPercentage(50);
+    verify(languageClient, times(1))
+      .notifyProgress(refEq(new ProgressParams(Either.forLeft("token"), Either.forLeft(report)), "token"));
+
+    // when — дальше индикатор идёт как обычно
+    progress.endProgress("end");
+
+    // then
+    var end = new WorkDoneProgressEnd();
+    end.setMessage("end");
+    verify(languageClient, times(1))
+      .notifyProgress(refEq(new ProgressParams(Either.forLeft("token"), Either.forLeft(end)), "token"));
+  }
+
+  @Test
+  void progressEndedBeforeClientInitializedIsNeverShown() {
+    // given
+    var languageClientHolder = getLanguageClientHolder();
+    var languageClient = languageClientHolder.getClient().orElseThrow();
+
+    var clientCapabilitiesHolder = getClientCapabilitiesHolder(Boolean.TRUE);
+    var workDoneProgressHelper = new WorkDoneProgressHelper(languageClientHolder, clientCapabilitiesHolder);
+
+    var progress = workDoneProgressHelper.createProgress(1, "");
+    progress.beginProgress("test");
+    progress.endProgress("end");
+
+    // when
+    workDoneProgressHelper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
+
+    // then
+    verify(languageClient, never()).createProgress(any());
+    verify(languageClient, never()).notifyProgress(any());
   }
 
   private LanguageClientHolder getLanguageClientHolder() {

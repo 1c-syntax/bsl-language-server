@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop;
 
+import com.github._1c_syntax.bsl.languageserver.client.events.ClientInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
@@ -193,6 +194,12 @@ public class EventPublisherAspect {
       initializeParams
     );
     publishEvent(event);
+  }
+
+  // До обработки уведомления: то, что она запустит, уже застанет клиента готовым.
+  @Before("Pointcuts.isLanguageServer() && Pointcuts.isInitializedCall()")
+  public void clientInitialized(JoinPoint joinPoint) {
+    publishEvent(new ClientInitializedEvent((LanguageServer) joinPoint.getThis()));
   }
 
   @AfterReturning(
