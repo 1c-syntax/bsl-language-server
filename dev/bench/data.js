@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792721589519,
+  "lastUpdate": 1792726584480,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45756,6 +45756,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 15.0189070039807",
             "extra": "mean: 110.23636293411255 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c28c567f20da36d5f869024e136c472d0ef6a7e4",
+          "message": "Merge pull request #4603 from DimaShapovaloff/codex/3259-function-prefixes\n\nfeat(diagnostics): настройка префиксов FunctionNameStartsWithGet",
+          "timestamp": "2026-10-23T11:57:19+10:00",
+          "tree_id": "f997c43a88e097ae701a7a3ffb4a585da7088d7f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c28c567f20da36d5f869024e136c472d0ef6a7e4"
+        },
+        "date": 1792726556977,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 101.69141753514607,
+            "unit": "sec",
+            "range": "stddev: 3.9679685905831388",
+            "extra": "mean: 101.69141753514607 sec\nrounds: 3"
           }
         ]
       }
