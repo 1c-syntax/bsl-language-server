@@ -24,7 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,15 +93,24 @@ class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingServiceT
   @Test
   void excludesEdtAnnotationsWithoutReplacingDefaults() {
     diagnosticInstance.configure(Map.of("excludedServiceTags", "@"));
-    assertThat(diagnosticsFor("// @strict-types\n// TODO: implement\n// FIXME: fix\n// !! check"))
-      .hasSize(3);
+    var diagnostics = diagnosticsFor("// @strict-types\n// TODO: implement\n// FIXME: fix\n// !! check");
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 1, 18)
+      .hasRange(2, 0, 2, 13)
+      .hasRange(3, 0, 3, 11);
   }
 
   @Test
   void addsTagsWithoutReplacingDefaults() {
     diagnosticInstance.configure(Map.of("additionalServiceTags", "review|xxx"));
-    assertThat(diagnosticsFor("// REVIEW: check\n// xxx: check\n// TODO: implement\n// @strict-types"))
-      .hasSize(4);
+    var diagnostics = diagnosticsFor("// REVIEW: check\n// xxx: check\n// TODO: implement\n// @strict-types");
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 0, 16)
+      .hasRange(1, 0, 1, 13)
+      .hasRange(2, 0, 2, 18)
+      .hasRange(3, 0, 3, 16);
   }
 
   @Test
@@ -146,16 +159,104 @@ class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingServiceT
     assertThat(diagnosticsFor("// abab\n// cdcd\n// abcd")).hasSize(2);
   }
 
-  @Test
-  void emptyOverridesDoNotMatchOrdinaryComments() {
-    diagnosticInstance.configure(Map.of("additionalServiceTags", "", "excludedServiceTags", ""));
-    assertThat(diagnosticsFor("// ordinary comment\n//\n// TODO: implement")).hasSize(1);
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {" ", "\t", "\r\n"})
+  void emptyOverridesDoNotMatchOrdinaryComments(String value) {
+    var configuration = new HashMap<String, Object>();
+    configuration.put("additionalServiceTags", value);
+    configuration.put("excludedServiceTags", value);
+    diagnosticInstance.configure(configuration);
+
+    var diagnostics = diagnosticsFor("// ordinary comment\n//\n// TODO: implement");
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true).hasRange(2, 0, 2, 18);
   }
 
   @Test
   void exclusionsUseTheMatchedCommentPrefix() {
     diagnosticInstance.configure(Map.of("excludedServiceTags", "@"));
-    assertThat(diagnosticsFor("// TODO: see // @annotation\n// @annotation // TODO: skip")).hasSize(1);
+    var diagnostics = diagnosticsFor("// TODO: see // @annotation\n// @annotation // TODO: check");
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).extracting(d -> d.getMessage().getLeft())
+      .containsOnly(diagnosticInstance.getInfo().getMessage("// TODO"));
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 0, 27)
+      .hasRange(1, 0, 1, 29);
+  }
+
+  @Test
+  void excludedBaseTagDoesNotHideAdditionalTag() {
+    diagnosticInstance.configure(Map.of("additionalServiceTags", "review", "excludedServiceTags", "@"));
+
+    var diagnostics = diagnosticsFor("// @annotation // REVIEW: check\n// @annotation");
+
+    assertThat(diagnostics).singleElement().extracting(d -> d.getMessage().getLeft())
+      .isEqualTo(diagnosticInstance.getInfo().getMessage("// REVIEW"));
+    assertThat(diagnostics, true).hasRange(0, 0, 0, 31);
+  }
+
+  @Test
+  void excludedAdditionalTagDoesNotHideLaterAdditionalTag() {
+    diagnosticInstance.configure(Map.of(
+      "additionalServiceTags", "review|xxx",
+      "excludedServiceTags", "review"));
+
+    var diagnostics = diagnosticsFor("// REVIEW // xxx: check\n// REVIEW");
+
+    assertThat(diagnostics).singleElement().extracting(d -> d.getMessage().getLeft())
+      .isEqualTo(diagnosticInstance.getInfo().getMessage("// xxx"));
+    assertThat(diagnostics, true).hasRange(0, 0, 0, 23);
+  }
+
+  @Test
+  void baseTagHasPriorityOverEarlierAdditionalTag() {
+    diagnosticInstance.configure(Map.of("additionalServiceTags", "review"));
+
+    assertThat(diagnosticsFor("// REVIEW // TODO: implement")).singleElement()
+      .extracting(d -> d.getMessage().getLeft())
+      .isEqualTo(diagnosticInstance.getInfo().getMessage("// TODO"));
+  }
+
+  @Test
+  void reconfigurationClearsOmittedOverrides() {
+    var text = "// @strict-types\n// TODO: implement\n// REVIEW";
+    diagnosticInstance.configure(Map.of("additionalServiceTags", "review", "excludedServiceTags", "@"));
+    assertThat(diagnosticsFor(text)).extracting(d -> d.getRange().getStart().getLine())
+      .containsExactlyInAnyOrder(1, 2);
+
+    diagnosticInstance.configure(Map.of());
+
+    var diagnostics = diagnosticsFor(text);
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 0, 16)
+      .hasRange(1, 0, 1, 18);
+  }
+
+  @Test
+  void defaultTagsIgnoreCyrillicCase() {
+    var diagnostics = diagnosticsFor("// ОТЛАДКА\n// ДЛЯ ОТЛАДКИ");
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 0, 10)
+      .hasRange(1, 0, 1, 14);
+  }
+
+  @Test
+  void overridesIgnoreCyrillicCase() {
+    diagnosticInstance.configure(Map.of(
+      "serviceTags", "отладка",
+      "additionalServiceTags", "доработать",
+      "excludedServiceTags", "отладка"));
+
+    var diagnostics = diagnosticsFor("// ОТЛАДКА\n// ДОРАБОТАТЬ\n// доработать");
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 1, 13)
+      .hasRange(2, 0, 2, 13);
   }
 
   @Test

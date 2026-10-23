@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.antlr.v4.runtime.Token;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -58,36 +59,32 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
     type = String.class,
     defaultValue = ""
   )
-  private String additionalServiceTags = "";
+  private Pattern additionalServiceTags = NO_TAGS;
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = ""
   )
-  private String excludedServiceTags = "";
+  private Pattern excludedServiceTags = NO_TAGS;
 
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
-  private Pattern additionalPattern = NO_TAGS;
-  private Pattern excludedPattern = NO_TAGS;
 
   @Override
   public void configure(Map<String, Object> configuration) {
     serviceTags = (String) configuration.getOrDefault("serviceTags", serviceTags);
-    additionalServiceTags = (String) configuration.getOrDefault("additionalServiceTags", additionalServiceTags);
-    excludedServiceTags = (String) configuration.getOrDefault("excludedServiceTags", excludedServiceTags);
     pattern = getPatternSearch(serviceTags);
-    additionalPattern = getOptionalPatternSearch(additionalServiceTags);
-    excludedPattern = getOptionalPatternSearch(excludedServiceTags);
+    additionalServiceTags = getOptionalPatternSearch((String) configuration.get("additionalServiceTags"));
+    excludedServiceTags = getOptionalPatternSearch((String) configuration.get("excludedServiceTags"));
   }
 
-  private Pattern getOptionalPatternSearch(String value) {
-    return value.isEmpty() ? NO_TAGS : getPatternSearch(value);
+  private Pattern getOptionalPatternSearch(@Nullable String value) {
+    return value == null || value.isBlank() ? NO_TAGS : getPatternSearch(value);
   }
 
   public Pattern getPatternSearch(String value) {
     return Pattern.compile(
       "//\\s*+(" + value + ")",
-      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.COMMENTS);
+      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
   }
 
   @Override
@@ -96,21 +93,32 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
       .parallelStream()
       .forEach((Token token) -> {
         var text = token.getText();
-        var matcher = pattern.matcher(text);
-        if (!matcher.find()) {
-          matcher = additionalPattern.matcher(text);
-          if (!matcher.find()) {
-            return;
-          }
+        var tag = findUnexcludedTag(pattern, text);
+        if (tag == null) {
+          tag = findUnexcludedTag(additionalServiceTags, text);
         }
-        if (excludedPattern.matcher(text).region(matcher.start(), text.length()).lookingAt()) {
+        if (tag == null) {
           return;
         }
         diagnosticStorage.addDiagnostic(
           token,
-          info.getMessage(matcher.group(0))
+          info.getMessage(tag)
         );
       });
+  }
+
+  private @Nullable String findUnexcludedTag(Pattern tags, String text) {
+    if (tags == NO_TAGS) {
+      return null;
+    }
+    var matcher = tags.matcher(text);
+    while (matcher.find()) {
+      if (excludedServiceTags == NO_TAGS
+        || !excludedServiceTags.matcher(text).region(matcher.start(), text.length()).lookingAt()) {
+        return matcher.group();
+      }
+    }
+    return null;
   }
 
 }
