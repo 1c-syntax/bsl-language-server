@@ -128,17 +128,65 @@ public class CommentTypeResolver implements VariableTypeSource {
    *     не распознаны.
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
-    if (trailingComment.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var trailing = VariableDescription.create(Collections.emptyList(), trailingComment)
-      .getTrailingDescription()
-      .orElse(null);
+    var trailing = trailingOf(owner, assignment);
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
     return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+  }
+
+  /**
+   * Может ли тип из висячего комментария в строке присваивания ещё пополниться: ссылка
+   * {@code см.} в нём ведёт в модуль, до разбора которого очередь ещё не дошла. Тогда ответ
+   * {@link #ofAssignment} неполон, хотя по нему этого не видно.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @return {@code true}, если комментарий ссылается на ещё не разобранный модуль.
+   */
+  public boolean assignmentAwaitsUnparsedModule(DocumentContext owner, BSLParser.AssignmentContext assignment) {
+    var trailing = trailingOf(owner, assignment);
+    return trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner);
+  }
+
+  /**
+   * Может ли тип из комментария переменной ещё пополниться: ссылка {@code см.} в нём ведёт
+   * в модуль, до разбора которого очередь ещё не дошла.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если комментарий ссылается на ещё не разобранный модуль.
+   */
+  @Override
+  public boolean isIncomplete(VariableSymbol variable) {
+    var description = variable.getDescription().orElse(null);
+    if (description == null) {
+      return false;
+    }
+    var owner = variable.getOwner();
+    var trailing = description.getTrailingDescription().orElse(null);
+    return (trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner))
+      || anyLinkAwaitsUnparsedModule(description.getLinks(), owner);
+  }
+
+  private boolean anyLinkAwaitsUnparsedModule(List<Hyperlink> links, DocumentContext owner) {
+    return links.stream().anyMatch(link -> symbolTypeIndex.linkAwaitsUnparsedModule(link.link(), owner));
+  }
+
+  /**
+   * Висячий комментарий в строке присваивания, разобранный как описание переменной.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @return висячая часть описания; {@code null}, если комментария нет.
+   */
+  private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment) {
+    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
+    if (trailingComment.isEmpty()) {
+      return null;
+    }
+    return VariableDescription.create(Collections.emptyList(), trailingComment)
+      .getTrailingDescription()
+      .orElse(null);
   }
 
   /**

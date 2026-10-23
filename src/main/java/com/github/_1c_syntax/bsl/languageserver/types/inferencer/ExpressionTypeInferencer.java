@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -71,6 +72,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -153,6 +157,25 @@ public class ExpressionTypeInferencer {
    * новый вид объявления — новый бин, а не правка этого класса.
    */
   private final List<VariableTypeSource> variableTypeSources;
+
+  /**
+   * Рабочая область наполнена: каждый её файл разобран хотя бы раз. Бин живёт по экземпляру на
+   * рабочую область, поэтому и признак — её собственный.
+   */
+  private volatile boolean workspacePopulated;
+
+  /**
+   * Запоминает, что рабочая область наполнена.
+   *
+   * @param event событие окончания наполнения рабочей области.
+   */
+  // Раньше всех слушателей: по этому же событию считаются типы, и расчёт должен видеть
+  // область уже наполненной.
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    workspacePopulated = true;
+  }
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -737,6 +760,9 @@ public class ExpressionTypeInferencer {
     }
     TypeSet result = TypeSet.EMPTY;
     var unparsedModule = false;
+    // Когда рабочая область наполнена, разобрано всё, что вообще разбирается. Тип без членов
+    // из кода тогда — тип, у которого кода нет: элементы обычной формы, модуль без исходников.
+    var populating = !workspacePopulated;
     for (var leftType : leftTypes.refs()) {
       // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
       // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
@@ -751,7 +777,8 @@ public class ExpressionTypeInferencer {
       // standardLibrary. Пока область наполняется, обращение в такой модуль отвечает
       // пустотой, ничем не отличимой от честной; расчёт придётся повторить.
       unparsedModule = unparsedModule
-        || (leftType.kind() == TypeKind.CONFIGURATION
+        || (populating
+        && leftType.kind() == TypeKind.CONFIGURATION
         && members.stream().allMatch(MemberDescriptor::standardLibrary));
       for (var member : members) {
         result = result.union(typesOfMember(member, memberName, expectedKind, elementSet, ctx));
@@ -1328,18 +1355,13 @@ public class ExpressionTypeInferencer {
     // Раскладку по областям видимости дерево символов уже держит готовой и ленивой —
     // своего перебора всех переменных модуля на каждый расчёт тела не нужно.
     var symbolTree = owner.getSymbolTree();
-    var byScope = symbolTree.getVariablesByName();
     SourceDefinedSymbol module = symbolTree.getModule();
     SourceDefinedSymbol scope = scopeOfBody(symbolTree, body)
       .map(SourceDefinedSymbol.class::cast)
       .orElse(module);
-    var visible = new ArrayList<VariableSymbol>();
-    var inScope = byScope.get(scope);
-    if (inScope != null) {
-      visible.addAll(inScope.values());
-    }
+    var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
     if (scope != module) {
-      addModuleVariables(byScope.get(module), visible);
+      addModuleVariables(symbolTree.getVariablesOfScope(module), visible);
     }
     return visible;
   }
@@ -1348,17 +1370,11 @@ public class ExpressionTypeInferencer {
    * Добавить к набору переменные, объявленные {@code Перем} на уровне модуля: они видны из
    * любого метода, а созданные присваиванием в теле модуля — нет.
    *
-   * @param atModuleLevel переменные области видимости модуля; {@code null}, если их нет.
+   * @param atModuleLevel переменные области видимости модуля.
    * @param target        набор, куда добавлять.
    */
-  private static void addModuleVariables(
-    @Nullable Map<String, VariableSymbol> atModuleLevel,
-    List<VariableSymbol> target
-  ) {
-    if (atModuleLevel == null) {
-      return;
-    }
-    for (var candidate : atModuleLevel.values()) {
+  private static void addModuleVariables(List<VariableSymbol> atModuleLevel, List<VariableSymbol> target) {
+    for (var candidate : atModuleLevel) {
       if (candidate.getKind() == VariableKind.MODULE) {
         target.add(candidate);
       }
@@ -1639,7 +1655,7 @@ public class ExpressionTypeInferencer {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
       var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
-      return types.union(commentTypeResolver.ofAssignment(owner, assignment));
+      return types.union(typesOfAssignmentComment(owner, assignment, ctx));
     }
     if (statement instanceof BSLParser.ForStatementContext) {
       // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
@@ -1652,6 +1668,27 @@ public class ExpressionTypeInferencer {
       return elementTypesOfCollection(forEach.expression(), ctx);
     }
     return inferFromDefinitionPosition(owner, position, ctx);
+  }
+
+  /**
+   * Типы из висячего комментария в строке присваивания.
+   * <p>
+   * Ссылка {@code см.} в модуль, до разбора которого очередь ещё не дошла, пока рабочая
+   * область наполняется, не разрешается ни во что. Значение метода, посчитанное на таком
+   * ответе, решил бы порядок наполнения, поэтому расчёт помечается неполным: проход после
+   * наполнения его повторит.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @param ctx        контекст текущего инференса.
+   * @return типы из комментария; пустой набор, если комментария нет либо типы в нём не распознаны.
+   */
+  private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                                           InferenceContext ctx) {
+    if (!workspacePopulated && commentTypeResolver.assignmentAwaitsUnparsedModule(owner, assignment)) {
+      ctx.sawMissing = true;
+    }
+    return commentTypeResolver.ofAssignment(owner, assignment);
   }
 
   /**
@@ -1691,7 +1728,7 @@ public class ExpressionTypeInferencer {
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
-      result = result.union(commentTypeResolver.ofAssignment(owner, assignment.get()));
+      result = result.union(typesOfAssignmentComment(owner, assignment.get(), ctx));
       return result;
     }
     // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:

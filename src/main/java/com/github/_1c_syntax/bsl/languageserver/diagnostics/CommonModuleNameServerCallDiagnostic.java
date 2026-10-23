@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.support.ObjectBelonging;
 import com.github._1c_syntax.bsl.types.ModuleType;
 
 @DiagnosticMetadata(
@@ -54,6 +55,6 @@ public class CommonModuleNameServerCallDiagnostic extends AbstractCommonModuleNa
 
   @Override
   protected boolean flagsCheck(CommonModule commonModule) {
-    return isServerCall(commonModule);
+    return commonModule.getObjectBelonging() != ObjectBelonging.ADOPTED && isServerCall(commonModule);
   }
 }

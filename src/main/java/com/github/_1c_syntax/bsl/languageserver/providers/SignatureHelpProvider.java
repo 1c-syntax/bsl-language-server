@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -303,7 +304,7 @@ public final class SignatureHelpProvider {
     BSLParser.FileContext ast;
     try {
       ast = documentContext.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return Optional.empty();
     }
 

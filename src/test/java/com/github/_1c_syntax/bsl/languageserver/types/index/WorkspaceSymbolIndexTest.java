@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
@@ -38,12 +39,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -133,6 +136,33 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     // бы пустым до следующей правки файла.
     assertThat(index.search("Забытая", NO_CANCEL))
       .anyMatch(entry -> entry.name().equals("Забытая"));
+  }
+
+  @Test
+  void removalWhileContextIsClearedDropsEntriesOfAllDocuments() {
+    // given: проиндексированы два документа
+    var first = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ПерваяОчищаемая.bsl").toUri(), """
+      Процедура ПерваяОчищаемая()
+      КонецПроцедуры
+      """);
+    var second = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ВтораяОчищаемая.bsl").toUri(), """
+      Процедура ВтораяОчищаемая()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(first));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(second));
+    assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isNotEmpty();
+    var clearing = mock(ServerContext.class);
+    when(clearing.isClearing()).thenReturn(true);
+
+    // when: контекст очищается целиком, и удалён первый документ
+    index.handleDocumentRemoved(new ServerContextDocumentRemovedEvent(clearing, first.getUri()));
+
+    // then: индекс очищен разом — записей второго документа в нём тоже нет
+    assertThat(index.search("ПерваяОчищаемая", NO_CANCEL)).isEmpty();
+    assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isEmpty();
   }
 
   @Test

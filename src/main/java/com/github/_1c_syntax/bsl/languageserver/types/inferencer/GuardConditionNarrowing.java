@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.index.PropertyMethodCallIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -109,9 +109,9 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
    * записать изменением типа, а этот класс — какое условие считать проверкой его исхода;
    * разойдись правила, расхождение было бы молчаливым.
    */
-  private static final String PROPERTY_RU = PropertyMethodCallIndex.PROPERTY_METHOD_RU;
-  private static final String PROPERTY_EN = PropertyMethodCallIndex.PROPERTY_METHOD_EN;
-  private static final int OUT_PARAMETER_INDEX = PropertyMethodCallIndex.OUT_PARAMETER_INDEX;
+  private static final String PROPERTY_RU = ReceiverSitesIndex.PROPERTY_METHOD_RU;
+  private static final String PROPERTY_EN = ReceiverSitesIndex.PROPERTY_METHOD_EN;
+  private static final int OUT_PARAMETER_INDEX = ReceiverSitesIndex.OUT_PARAMETER_INDEX;
 
   private final Map<URI, Map<BSLParser.ExpressionContext, CompiledGuard>> compiledByUri = new ConcurrentHashMap<>();
 

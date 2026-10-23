@@ -30,10 +30,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,11 +113,11 @@ public abstract class AbstractMethodSymbol implements MethodSymbol {
 
   /**
    * Родительский символ — область ({@code #Область}), модуль или вложенная область.
-   * Выставляется снаружи (после построения дерева), поэтому {@code @Setter}.
+   * Выставляется снаружи (после построения дерева). Без обёртки в {@link Optional}: методов
+   * на большой конфигурации сотни тысяч.
    */
-  @Setter
-  @Builder.Default
-  private Optional<SourceDefinedSymbol> parent = Optional.empty();
+  @Getter(AccessLevel.NONE)
+  private @Nullable SourceDefinedSymbol parent;
 
   /**
    * Вложенные символы (локальные переменные, области внутри метода и т.п.).
@@ -170,6 +170,16 @@ public abstract class AbstractMethodSymbol implements MethodSymbol {
    */
   @Builder.Default
   private final List<Annotation> annotations = Collections.emptyList();
+
+  @Override
+  public Optional<SourceDefinedSymbol> getParent() {
+    return Optional.ofNullable(parent);
+  }
+
+  @Override
+  public void setParent(Optional<SourceDefinedSymbol> parent) {
+    this.parent = parent.orElse(null);
+  }
 
   @Override
   public Range getRange() {

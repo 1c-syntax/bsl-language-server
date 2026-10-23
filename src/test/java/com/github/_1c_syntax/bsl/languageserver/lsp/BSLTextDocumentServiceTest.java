@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
@@ -94,10 +95,13 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEvent;
@@ -111,10 +115,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,6 +132,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -387,6 +397,106 @@ class BSLTextDocumentServiceTest {
     } finally {
       applicationContext.removeApplicationListener(listener);
     }
+  }
+
+  /**
+   * Запрос, отправленный до закрытия документа, выполняется уже после него: текста у документа
+   * нет. Отвечать нечем — клиент получает «содержимое изменилось», а не NPE.
+   */
+  @Test
+  void requestAfterCloseFailsAsContentModified() throws Exception {
+    // given
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier()));
+
+    // when
+    var result = textDocumentService.foldingRange(new FoldingRangeRequestParams(getTextDocumentIdentifier()));
+
+    // then
+    assertThat(result)
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isInstanceOfSatisfying(ResponseErrorException.class, e ->
+        assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+  }
+
+  /** Ошибка провайдера, не связанная с текстом, и на закрытом документе доходит до клиента как есть. */
+  @Test
+  void providerFailureOnClosedDocumentIsNotReportedAsContentModified() throws Exception {
+    // given
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier()));
+    var failure = new IllegalArgumentException("Сбой провайдера");
+    doThrow(failure).when(hoverProvider).getHover(any(), any());
+
+    // when
+    var result = textDocumentService.hover(new HoverParams(getTextDocumentIdentifier(), new Position(0, 0)));
+
+    // then
+    assertThat(result)
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isSameAs(failure);
+  }
+
+  /** Запросу, которому текст не нужен, закрытый документ не мешает, и файл ради него не перечитывается. */
+  @Test
+  void callHierarchyOfClosedDocumentIsServedWithoutContent(@TempDir Path tempDir) throws Exception {
+    // given
+    serverContextProvider.addWorkspace(new WorkspaceFolder(tempDir.toUri().toString(), "temp-workspace"));
+    var file = Files.writeString(tempDir.resolve("Calls.bsl"), """
+      Процедура Вызывающая()
+          Вызываемая();
+      КонецПроцедуры
+
+      Процедура Вызываемая()
+      КонецПроцедуры
+      """);
+    var uri = Absolute.uri(file.toUri());
+    var identifier = new TextDocumentIdentifier(uri.toString());
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(
+      new TextDocumentItem(uri.toString(), "bsl", 1, Files.readString(file))));
+    var item = textDocumentService.prepareCallHierarchy(
+      new CallHierarchyPrepareParams(identifier, new Position(4, 12))).get().get(0);
+    textDocumentService.didClose(new DidCloseTextDocumentParams(identifier));
+
+    // when
+    var calls = textDocumentService.callHierarchyIncomingCalls(new CallHierarchyIncomingCallsParams(item)).get();
+
+    // then
+    assertThat(calls)
+      .extracting(call -> call.getFrom().getName())
+      .containsExactly("Вызывающая");
+    var serverContext = serverContextProvider.getServerContext(uri).orElseThrow();
+    assertThat(serverContext.getDocumentState(serverContext.getDocument(uri))).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+  /** Закрытие документа посреди запроса к нему ждёт запрос, а не освобождает текст у него из-под ног. */
+  @Test
+  void didCloseWaitsForRequestInProgress() throws Exception {
+    // given: запрос к открытому документу выполняется
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      assertThat(release.await(10, TimeUnit.SECONDS)).isTrue();
+      return invocation.callRealMethod();
+    }).when(hoverProvider).getHover(any(), any());
+    var hover = textDocumentService.hover(new HoverParams(getTextDocumentIdentifier(), new Position(0, 12)));
+    assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+
+    // when
+    var closed = CompletableFuture.runAsync(() ->
+      textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier())));
+
+    // then: закрытие стоит, пока запрос не доработает, а запрос дорабатывает по тексту документа
+    await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !closed.isDone());
+    release.countDown();
+    assertThat(hover).succeedsWithin(Duration.ofSeconds(10));
+    assertThat(closed).succeedsWithin(Duration.ofSeconds(10));
   }
 
   @Test
