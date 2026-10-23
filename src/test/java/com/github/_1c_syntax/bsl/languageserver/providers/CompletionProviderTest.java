@@ -52,6 +52,8 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -67,6 +69,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class CompletionProviderTest extends AbstractServerContextAwareTest {
@@ -519,6 +523,45 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .filteredOn(it -> "ПриСозданииОбъекта".equals(it.getLabel()))
       .isNotEmpty()
       .allMatch(it -> it.getKind() == CompletionItemKind.Constructor);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"RU, false, строка, Структура", "RU, true, строка, Структура",
+    "EN, false, row, Structure", "EN, true, row, Structure"})
+  void tabularSectionAndRowHaveDistinctCompletionDetails(Language language, boolean labelDetails,
+                                                        String rowSuffix, String structureName) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    enableLabelDetailsSupport(labelDetails);
+    var documentContext = spy(TestUtils.getDocumentContext("""
+      // Параметры:
+      //  ЧастьТаблицы - См. Справочник.Справочник1.ТабличнаяЧасть1
+      //  СтрокаЧасти - СтрокаТабличнойЧасти: См. Справочник.Справочник1.ТабличнаяЧасть1
+      //  Данные - Структура
+      Процедура СсылкаНаСтроку(ЧастьТаблицы, СтрокаЧасти, Данные) Экспорт
+
+      КонецПроцедуры
+      """, context));
+    // Проверяем оба языка представления на одних и тех же метаданных.
+    doReturn(language).when(documentContext).getScriptVariantLanguage();
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(5, 0));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    for (var expected : List.of(
+      List.of("ЧастьТаблицы", "ТабличнаяЧасть1"),
+      List.of("СтрокаЧасти", "ТабличнаяЧасть1 (" + rowSuffix + ")"),
+      List.of("Данные", structureName))) {
+      var item = items.stream().filter(it -> expected.getFirst().equals(it.getLabel())).findFirst().orElseThrow();
+      if (labelDetails) {
+        assertThat(item.getLabelDetails().getDescription()).isEqualTo(expected.getLast());
+        assertThat(item.getDetail()).isNullOrEmpty();
+      } else {
+        assertThat(item.getDetail()).isEqualTo(expected.getLast());
+      }
+    }
   }
 
   @Test
