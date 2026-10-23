@@ -244,8 +244,8 @@ public class BSLWorkspaceService implements WorkspaceService {
   /**
    * Обрабатывает событие удаления файла из файловой системы.
    * <p>
-   * Если файл был открыт в редакторе, сначала закрывает его и очищает вторичные данные.
-   * Затем полностью удаляет документ из контекста сервера, включая все связанные метаданные.
+   * Полностью удаляет документ из контекста сервера, включая все связанные метаданные.
+   * Открытый в редакторе документ не трогает (см. {@link #removeDocument}).
    * <p>
    * Если документ с таким URI в контексте отсутствует, URI трактуется как удаленный каталог:
    * клиенты (в т.ч. VS Code) при удалении каталога присылают одно событие Deleted с URI каталога
@@ -291,16 +291,20 @@ public class BSLWorkspaceService implements WorkspaceService {
   }
 
   /**
-   * Удаляет документ из контекста сервера, предварительно закрыв его, если он открыт в редакторе.
+   * Удаляет документ из контекста сервера, если он не открыт в редакторе.
+   * <p>
+   * Содержимым открытого документа владеет клиент, а не файл на диске: редактор продолжает
+   * его показывать и слать по нему запросы, и файл ещё может появиться снова (переключение
+   * ветки, атомарная запись). Поэтому открытый документ остаётся в контексте, как и при
+   * событиях создания и изменения файла.
    *
    * @param context         контекст сервера
    * @param uri             URI документа
    * @param documentContext контекст документа
    */
   private static void removeDocument(ServerContext context, URI uri, DocumentContext documentContext) {
-    var isDocumentOpened = context.isDocumentOpened(documentContext);
-    if (isDocumentOpened) {
-      context.closeDocument(documentContext);
+    if (context.isDocumentOpened(documentContext)) {
+      return;
     }
     context.removeDocument(uri);
   }

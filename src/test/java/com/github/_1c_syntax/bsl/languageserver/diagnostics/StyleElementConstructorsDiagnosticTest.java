@@ -38,23 +38,39 @@ class StyleElementConstructorsDiagnosticTest extends AbstractDiagnosticTest<Styl
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(15);
+    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
       .hasRange(2, 12, 37)
       .hasRange(3, 12, 33)
-      .hasRange(4, 12, 25)
       .hasRange(8, 9, 33)
       .hasRange(9, 9, 31)
-      .hasRange(10, 9, 19)
-      .hasRange(12, 9, 23)
       .hasRange(13, 9, 33)
       .hasRange(14, 9, 37)
-      .hasRange(24, 39, 53)
       .hasRange(25, 39, 63)
       .hasRange(26, 39, 67)
-      .hasRange(28, 39, 52)
       .hasRange(29, 39, 60)
       .hasRange(30, 39, 64);
 
   }
+
+  @Test
+  void defaultStyleConstructorsAreAllowed() {
+    assertThat(getDiagnostics("StyleElementConstructorsDefault")).isEmpty();
+  }
+
+  @Test
+  void explicitStyleConstructorsAreReported() {
+    var diagnostics = getDiagnostics("StyleElementConstructorsExplicit");
+    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics, true)
+      .hasRange(0, 4, 24)
+      .hasRange(1, 4, 21)
+      .hasRange(2, 4, 27)
+      .hasRange(3, 4, 24)
+      .hasRange(4, 4, 21)
+      .hasRange(5, 4, 21)
+      .hasRange(6, 4, 20)
+      .hasRange(7, 4, 20);
+  }
+
 }

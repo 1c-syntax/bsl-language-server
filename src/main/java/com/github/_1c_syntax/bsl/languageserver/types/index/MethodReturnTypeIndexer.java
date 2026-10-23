@@ -45,11 +45,13 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -151,6 +153,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /** Отметка часов на момент, когда в документе в последний раз менялось чьё-то значение. */
   private final Map<URI, Long> changedAt = new ConcurrentHashMap<>();
+
+  /** Сколько раз менялось чьё-либо значение: волна, не изменившая ничего, повторилась бы дословно. */
+  private final AtomicLong valueChanges = new AtomicLong();
 
   /** Сколько раз пришлось перечитать документ за общий проход — для отладочного счёта. */
   private final AtomicInteger rebuilt = new AtomicInteger();
@@ -288,7 +293,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     );
     progressReporter.beginProgress(getMessage("resolveReturnTypes"));
     try {
-      drainPending(serverContext, progressReporter);
+      drainPending(serverContext, new ResolveProgress(progressReporter));
     } finally {
       maintenance = false;
       pending.clear();
@@ -470,6 +475,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // делать нельзя — лишние пересчёты вскрывают немонотонность самого пересчёта, и
       // воспроизводимость падает вместо того, чтобы вырасти (замеры в #4480).
       changedAt.merge(method.getOwner().getUri(), startedAt, Math::max);
+      valueChanges.incrementAndGet();
     }
     return valueChanged;
   }
@@ -562,26 +568,33 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /**
    * Разносит накопленные общим проходом изменения, догружая документы потребителей.
    *
-   * @param serverContext    рабочая область.
-   * @param progressReporter индикатор хода работы.
+   * @param serverContext рабочая область.
+   * @param progress      ход работы.
    */
-  private void drainPending(
-    ServerContext serverContext,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
-  ) {
-    var planned = 0;
+  private void drainPending(ServerContext serverContext, ResolveProgress progress) {
     for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
-      // Проход вскрывает новые зависимости, поэтому общий объём работы заранее не
-      // известен: наращиваем его по мере того, как работа находится. Считается ровно то,
-      // по чему идёт отсчёт, — документы, иначе числитель убегает за знаменатель.
-      planned += documentsOf(roots);
-      progressReporter.setSize(planned);
-      resolveAll(serverContext, roots, progressReporter);
+      progress.plan(documentsOf(roots));
+      var changesBefore = valueChanges.get();
+      resolveAll(serverContext, roots, progress);
       // План волны строится по связям, известным на её начало, а вскрываются они её же
       // расчётом: метод, чья зависимость обогатилась после него, отложить было некому.
       var outdated = outdated();
+      if (valueChanges.get() == changesBefore) {
+        // Волна не изменила ни одного значения: её методы следующая посчитала бы с тем же
+        // итогом, и снова отложенные среди них остаются с тем, что посчитано. Устаревшим при
+        // этом может оказаться метод вне волны: зависимость поменялась после его расчёта ещё
+        // при наполнении, а разнос его не пересчитал — документ был отпущен, — и до первой
+        // волны устаревших никто не искал.
+        roots.forEach(outdated::remove);
+        pending.clear();
+        if (outdated.isEmpty()) {
+          LOGGER.debug("Волна {}: пересчитано методов {}, ни одно значение не изменилось — проход окончен",
+            pass + 1, roots.size());
+          break;
+        }
+      }
       pending.addAll(outdated);
       LOGGER.debug("Волна {}: пересчитано методов {}, снова отложено {}, из них устаревших {}",
         pass + 1, roots.size(), pending.size(), outdated.size());
@@ -599,8 +612,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * <p>
    * Внутри компоненты сходимости за один заход нет — там цикл, — поэтому её документы
    * держатся загруженными и крутятся до неподвижной точки. Компонента крупнее
-   * {@link #MAX_DOCUMENTS_IN_MEMORY} обрабатывается по-старому, с загрузкой и
-   * освобождением на каждом обороте: память дороже лишних разборов.
+   * {@link #MAX_DOCUMENTS_IN_MEMORY} обрабатывается с загрузкой и освобождением
+   * документов на каждом обороте: память дороже лишних разборов. Со второго оборота
+   * разбираются только документы, итог которых может измениться.
    * <p>
    * Спуск по зависимостям вглубь по методам пробовался и оказался хуже: грузить всё равно
    * приходится документ целиком, и один документ загружался заново под каждый свой
@@ -627,12 +641,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    *
    * @param serverContext    рабочая область.
    * @param roots            отложенные методы.
-   * @param progressReporter индикатор хода работы.
+   * @param progress         ход работы.
    */
   private void resolveAll(
     ServerContext serverContext,
     List<MethodSymbol> roots,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+    ResolveProgress progress
   ) {
     var byDocument = new LinkedHashMap<URI, List<MethodSymbol>>();
     for (var root : roots) {
@@ -647,17 +661,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // конфигурации почти каждая компонента — один документ.
       var cycles = tier.stream().filter(component -> component.size() > 1).toList();
       for (var cycle : cycles) {
-        resolveComponent(serverContext, cycle, byDocument, progressReporter);
+        resolveComponent(serverContext, cycle, byDocument, progress);
       }
       var singles = tier.stream().filter(component -> component.size() == 1).toList();
       if (singles.size() == 1) {
-        resolveComponent(serverContext, singles.get(0), byDocument, progressReporter);
+        resolveComponent(serverContext, singles.get(0), byDocument, progress);
         continue;
       }
       var loaded = new Semaphore(MAX_DOCUMENTS_IN_MEMORY);
       var tasks = singles.stream()
         .map(component -> CompletableFuture.runAsync(
-          () -> resolveHoldingPermit(loaded, serverContext, component, byDocument, progressReporter),
+          () -> resolveHoldingPermit(loaded, serverContext, component, byDocument, progress),
           resolveReturnTypesExecutor))
         .toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(tasks).join();
@@ -675,18 +689,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param serverContext    рабочая область.
    * @param component        документы компоненты.
    * @param byDocument       отложенные методы по документам.
-   * @param progressReporter индикатор хода работы.
+   * @param progress         ход работы.
    */
   private void resolveHoldingPermit(
     Semaphore loaded,
     ServerContext serverContext,
     List<URI> component,
     Map<URI, List<MethodSymbol>> byDocument,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+    ResolveProgress progress
   ) {
     loaded.acquireUninterruptibly();
     try {
-      resolveComponent(serverContext, component, byDocument, progressReporter);
+      resolveComponent(serverContext, component, byDocument, progress);
     } finally {
       loaded.release();
     }
@@ -729,19 +743,24 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * <p>
    * Компонента из одного документа считается за один заход: всё, от чего она зависит, уже
    * посчитано. В цикле заходов несколько, поэтому его документы держатся загруженными —
-   * так повторные обороты не стоят ни одного лишнего разбора.
+   * так повторные обороты не стоят ни одного лишнего разбора. Цикл, документы которого
+   * разом не удержать, считается оборотами с загрузкой и освобождением.
    *
    * @param serverContext    рабочая область.
    * @param component        документы компоненты.
    * @param byDocument       отложенные методы по документам.
-   * @param progressReporter индикатор хода работы.
+   * @param progress         ход работы.
    */
   private void resolveComponent(
     ServerContext serverContext,
     List<URI> component,
     Map<URI, List<MethodSymbol>> byDocument,
-    WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter
+    ResolveProgress progress
   ) {
+    if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
+      resolveUnloaded(serverContext, component, byDocument, progress);
+      return;
+    }
     var methods = component.stream().flatMap(uri -> byDocument.get(uri).stream()).toList();
     try {
       resolveComponent(serverContext, component, byDocument, methods);
@@ -749,7 +768,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Единица счёта — документ: он и есть единица работы прохода, а методов в нём
       // сколько угодно. Отсчёт после работы: компонента считается целиком, и до её конца
       // сказать про её документы нечего, а ярус вдобавок считается сразу многими потоками.
-      component.forEach(uri -> progressReporter.tick());
+      progress.done(component.size());
     }
   }
 
@@ -771,20 +790,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
     }
-    if (component.size() > MAX_DOCUMENTS_IN_MEMORY) {
-      // Держать столько документов разом нельзя, поэтому крутим с загрузкой и
-      // освобождением: лишние разборы дешевле переполнения памяти.
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
-        var changed = false;
-        for (var uri : component) {
-          changed |= recomputeLoading(serverContext, byDocument.get(uri));
-        }
-        if (!changed) {
-          return;
-        }
-      }
-      return;
-    }
     withDocumentsLoaded(serverContext, component, () -> {
       for (var pass = 0; pass < MAX_PASSES; pass++) {
         var changed = false;
@@ -796,6 +801,269 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         }
       }
     });
+  }
+
+  /**
+   * Доводит до неподвижной точки компоненту, документы которой разом не удержать.
+   * <p>
+   * Держать столько документов разом нельзя, поэтому крутим с загрузкой и освобождением:
+   * лишние разборы дешевле переполнения памяти. Но не каждый документ на каждом обороте:
+   * со второго оборота разбирается только тот, чей расчёт может дать другой итог, —
+   * значения которого на прошлом обороте изменились, либо построенный на документе,
+   * изменившемся уже после его расчёта. Первое нужно из-за циклов внутри документа: их
+   * разрывает прежнее значение, и изменившийся документ на новом заходе может посчитаться
+   * иначе. У прочих на входе ровно то же, что и в прошлый раз, и пересчёт ничего бы не дал.
+   * <p>
+   * Считается компонента в одном потоке и по порядку: внутри цикла документ читает значения
+   * тех, кто посчитан до него на этом же обороте, и другой порядок дал бы другой итог. Но
+   * разбор от значений не зависит, поэтому тех, кого оборот пересчитает наверняка, другие
+   * потоки разбирают впереди расчёта — не больше, чем позволяет предел разом разобранных
+   * документов вместе с тем, что считается сейчас.
+   * <p>
+   * Такой цикл считается десятки секунд, поэтому ход по нему отсчитывается по документам, а
+   * не разом после последнего оборота. Документы первого оборота уже в плане волны, а
+   * пересчитанные на следующих оборотах добавляются в план по мере пересчёта.
+   *
+   * @param serverContext рабочая область.
+   * @param component     документы компоненты.
+   * @param byDocument    отложенные методы по документам.
+   * @param progress      ход работы.
+   */
+  private void resolveUnloaded(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    ResolveProgress progress
+  ) {
+    // Первый оборот считает всю компоненту.
+    Set<URI> changedLastPass = new HashSet<>(component);
+    for (var pass = 0; pass < MAX_PASSES && !changedLastPass.isEmpty(); pass++) {
+      changedLastPass = resolvePass(serverContext, component, byDocument, changedLastPass, progress, pass == 0);
+    }
+  }
+
+  /**
+   * Один оборот по компоненте, документы которой разом не удержать.
+   * <p>
+   * Решение, пересчитывать ли документ, принимается, когда до него дошла очередь: он мог
+   * устареть уже на этом обороте. А впереди разбираются только те, кого оборот пересчитает
+   * наверняка, — изменившиеся на прошлом и устаревшие уже к его началу: устаревший до своей
+   * очереди устаревшим и останется.
+   *
+   * @param serverContext   рабочая область.
+   * @param component       документы компоненты.
+   * @param byDocument      отложенные методы по документам.
+   * @param changedLastPass документы, значения которых изменились на прошлом обороте.
+   * @param progress        ход работы.
+   * @param planned         в плане ли уже документы этого оборота: так у первого оборота.
+   * @return документы, значения которых изменились на этом.
+   */
+  private Set<URI> resolvePass(
+    ServerContext serverContext,
+    List<URI> component,
+    Map<URI, List<MethodSymbol>> byDocument,
+    Set<URI> changedLastPass,
+    ResolveProgress progress,
+    boolean planned
+  ) {
+    var certain = component.stream()
+      .filter(uri -> changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri)))
+      .map(uri -> byDocument.get(uri).get(0).getOwner())
+      .toList();
+    var changed = new HashSet<URI>();
+    try (var ahead = new AheadLoader(serverContext, certain)) {
+      for (var uri : component) {
+        var methods = byDocument.get(uri);
+        if (!changedLastPass.contains(uri) && !isOutdated(uri, methods)) {
+          continue;
+        }
+        if (!planned) {
+          progress.plan(1);
+        }
+        if (ahead.recompute(methods)) {
+          changed.add(uri);
+        }
+        progress.done(1);
+      }
+    }
+    return changed;
+  }
+
+  /**
+   * Ход доразрешения в документах: сколько разборов запланировано и сколько сделано.
+   * <p>
+   * Общий объём работы заранее не известен: волна вскрывает новые зависимости, а оборот
+   * большого цикла пересчитывает документы заново. План поэтому наращивается по мере того,
+   * как работа находится, и считается ровно то, по чему идёт отсчёт, — разборы документов,
+   * иначе числитель убегает за знаменатель.
+   */
+  private static final class ResolveProgress {
+
+    private final WorkDoneProgressHelper.WorkDoneProgressReporter reporter;
+    private final AtomicInteger planned = new AtomicInteger();
+
+    private ResolveProgress(WorkDoneProgressHelper.WorkDoneProgressReporter reporter) {
+      this.reporter = reporter;
+    }
+
+    /**
+     * Добавить разборы в план.
+     *
+     * @param documents число разборов.
+     */
+    void plan(int documents) {
+      reporter.setSize(planned.addAndGet(documents));
+    }
+
+    /**
+     * Отсчитать сделанные разборы.
+     *
+     * @param documents число разборов.
+     */
+    void done(int documents) {
+      for (var i = 0; i < documents; i++) {
+        reporter.tick();
+      }
+    }
+  }
+
+  /**
+   * Разбор документа, начатый впереди расчёта.
+   *
+   * @param documentContext документ.
+   * @param loaded          разобран ли документ этим разбором: тогда отпускать его тоже ему.
+   */
+  private record Preload(DocumentContext documentContext, CompletableFuture<Boolean> loaded) {
+  }
+
+  /**
+   * Разбор документов впереди расчёта на одном обороте компоненты, документы которой разом не
+   * удержать.
+   * <p>
+   * Впереди разбираются по порядку документы, которые оборот пересчитает наверняка, — не больше
+   * {@link #MAX_DOCUMENTS_IN_MEMORY} без одного: последнее место в пределе оставлено документу,
+   * который понадобится не наверняка и разберётся на месте. Закрытие отпускает то, что разобрано
+   * впереди, но так и не понадобилось.
+   */
+  private final class AheadLoader implements AutoCloseable {
+
+    private final ServerContext serverContext;
+    private final List<DocumentContext> certain;
+    private final Deque<Preload> ahead = new ArrayDeque<>();
+    private int next;
+
+    private AheadLoader(ServerContext serverContext, List<DocumentContext> certain) {
+      this.serverContext = serverContext;
+      this.certain = certain;
+    }
+
+    /**
+     * Пересчитывает отложенные методы документа, дождавшись его разбора, если тот начат
+     * впереди, — иначе документ разобрали бы дважды.
+     *
+     * @param methods отложенные методы одного документа.
+     * @return {@code true}, если хоть у одного метода набор типов изменился.
+     */
+    private boolean recompute(List<MethodSymbol> methods) {
+      fill();
+      var documentContext = methods.get(0).getOwner();
+      var head = ahead.peek();
+      if (head == null || !head.documentContext().equals(documentContext)) {
+        return recomputeLoading(serverContext, methods);
+      }
+      ahead.poll();
+      try {
+        head.loaded().join();
+        return recomputeLoading(serverContext, methods);
+      } finally {
+        release(head);
+      }
+    }
+
+    private void fill() {
+      while (next < certain.size() && ahead.size() < MAX_DOCUMENTS_IN_MEMORY - 1) {
+        ahead.add(preload(certain.get(next)));
+        next++;
+      }
+    }
+
+    private Preload preload(DocumentContext documentContext) {
+      var loaded = CompletableFuture
+        .supplyAsync(() -> loadIfReleased(documentContext), resolveReturnTypesExecutor)
+        .exceptionally((Throwable e) -> {
+          // Не разобрался впереди — разберётся на месте, как без этого разбора.
+          LOGGER.warn("Can't preload document {}", documentContext.getUri(), e);
+          return false;
+        });
+      return new Preload(documentContext, loaded);
+    }
+
+    /**
+     * Разбирает документ, если его вторичные данные освобождены.
+     *
+     * @param documentContext документ.
+     * @return {@code true}, если документ разобран здесь: тогда и отпускать его здесь.
+     */
+    private boolean loadIfReleased(DocumentContext documentContext) {
+      var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+      lock.lock();
+      try {
+        if (isReadable(documentContext)) {
+          return false;
+        }
+        rebuilt.incrementAndGet();
+        rebuiltUris.add(documentContext.getUri());
+        serverContext.rebuildDocument(documentContext);
+        // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
+        return isReadable(documentContext);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    private void release(Preload preload) {
+      if (!Boolean.TRUE.equals(preload.loaded().join())) {
+        return;
+      }
+      var documentContext = preload.documentContext();
+      var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+      lock.lock();
+      try {
+        serverContext.tryClearDocument(documentContext);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    @Override
+    public void close() {
+      ahead.forEach(this::release);
+    }
+  }
+
+  /**
+   * Устарел ли расчёт методов документа: документ, на значениях которого он построен,
+   * изменился уже после него.
+   *
+   * @param uri     URI документа.
+   * @param methods отложенные методы документа.
+   * @return {@code true}, если пересчёт может дать другой итог.
+   */
+  private boolean isOutdated(URI uri, List<MethodSymbol> methods) {
+    var dependencies = dependenciesByUri.get(uri);
+    if (dependencies == null) {
+      return false;
+    }
+    var computed = methods.stream()
+      .mapToLong(method -> computedAt.getOrDefault(method, 0L))
+      .min()
+      .orElse(0L);
+    for (var dependency : dependencies) {
+      if (changedAt.getOrDefault(dependency, 0L) > computed) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -876,6 +1144,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
       // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
+      if (!isReadable(documentContext)) {
+        // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
+        // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
+        // файла не вернёт, только повторит ошибку чтения.
+        return false;
+      }
       var changed = recomputeEach(methods);
       serverContext.tryClearDocument(documentContext);
       return changed;

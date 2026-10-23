@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -30,6 +31,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -243,10 +245,10 @@ class ExpressionAtPositionTest {
 
   @Test
   void allLookupsReturnEmptyWhenAstUnavailable() {
-    // given — документ без инициализированного токенизатора: getAst() кидает NPE
+    // given — документ без текста: getAst() кидает DocumentContentUnavailableException
     // (например, документ ещё не открыт/не прочитан).
     var dc = mock(DocumentContext.class);
-    when(dc.getAst()).thenThrow(new NullPointerException());
+    when(dc.getAst()).thenThrow(new DocumentContentUnavailableException(URI.create("file:///test.bsl")));
 
     // when / then — все точки входа безопасно возвращают пусто (safeGetAst → null).
     var position = new Position(0, 0);

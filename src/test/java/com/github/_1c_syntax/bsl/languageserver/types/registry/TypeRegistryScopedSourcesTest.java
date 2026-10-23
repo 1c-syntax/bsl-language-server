@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -33,9 +35,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Тип с одним qualifiedName может иметь РАЗНЫЕ члены, конструкторы и описания
@@ -189,6 +193,80 @@ class TypeRegistryScopedSourcesTest {
     // а не отдаёт устаревшую запись
     assertThat(typeRegistry.getMembers(ref, FileType.BSL))
       .extracting(MemberDescriptor::name).containsExactly("fresh");
+  }
+
+  @Test
+  void ownMemberSourceRebuildsOnlyItsType() {
+    // given — у модульного типа A и постороннего C члены прочитаны и мемоизированы
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйМодульныйA");
+    var refC = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйПостороннийC");
+    var buildsOfC = new AtomicInteger();
+    typeRegistry.registerMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("A1", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refC, () -> {
+      buildsOfC.incrementAndGet();
+      return List.of(MemberDescriptor.property("C1", TypeRef.UNKNOWN, ""));
+    }, FileType.BSL);
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1");
+    assertThat(typeRegistry.getMembers(refC, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("C1");
+
+    // when — разобран модуль A: его источник читает только сам тип
+    typeRegistry.registerOwnMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("ЭкспортМодуля", TypeRef.UNKNOWN, "")), FileType.BSL);
+
+    // then — A пересобран, C взят из кэша: при наполнении источник модуля регистрируется на
+    // каждый разобранный модуль, и сброс memo всех типов пересобирал бы их по разу на модуль
+    assertThat(typeRegistry.getMembers(refA, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1", "ЭкспортМодуля");
+    assertThat(typeRegistry.getMembers(refC, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("C1");
+    assertThat(buildsOfC).hasValue(1);
+  }
+
+  @Test
+  void populatedWorkspaceRebuildsTypesBuiltOnModuleMembers() {
+    // given — B собирает члены из членов модульного типа A, и оба мемоизированы
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйМодульныйДляB");
+    var refB = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитающийМодуль");
+    typeRegistry.registerMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("A1", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refB,
+      () -> List.copyOf(typeRegistry.getMembers(refA, FileType.BSL)), FileType.BSL);
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1");
+    typeRegistry.registerOwnMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("ЭкспортМодуля", TypeRef.UNKNOWN, "")), FileType.BSL);
+
+    // when — рабочая область наполнена
+    typeRegistry.handleServerContextPopulated(new ServerContextPopulatedEvent(mock(ServerContext.class)));
+
+    // then — B пересобран по членам модуля, разобранного уже после того, как B их прочёл
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1", "ЭкспортМодуля");
+  }
+
+  @Test
+  void moduleFirstParsedAfterPopulationRebuildsTypesBuiltOnIt() {
+    // given — рабочая область наполнена, B собирает члены из членов модульного типа A
+    typeRegistry.handleServerContextPopulated(new ServerContextPopulatedEvent(mock(ServerContext.class)));
+    var refA = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйНовыйМодуль");
+    var refB = typeRegistry.intern(TypeKind.PLATFORM, "ТестовыйЧитающийНовыйМодуль");
+    typeRegistry.registerMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("A1", TypeRef.UNKNOWN, "")), FileType.BSL);
+    typeRegistry.registerMemberSource(refB,
+      () -> List.copyOf(typeRegistry.getMembers(refA, FileType.BSL)), FileType.BSL);
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1");
+
+    // when — модуль A разобран впервые уже после наполнения: новый файл
+    typeRegistry.registerOwnMemberSource(refA,
+      () -> List.of(MemberDescriptor.property("ЭкспортМодуля", TypeRef.UNKNOWN, "")), FileType.BSL);
+
+    // then — B видит члены модуля: следующего сдвига эпохи по окончании наполнения не будет
+    assertThat(typeRegistry.getMembers(refB, FileType.BSL))
+      .extracting(MemberDescriptor::name).containsExactly("A1", "ЭкспортМодуля");
   }
 
   @Test
