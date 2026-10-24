@@ -194,6 +194,9 @@
                 "ExecuteExternalCodeInCommonModule": {
                     "$ref": "parameters-schema.json#/definitions/ExecuteExternalCodeInCommonModule"
                 },
+                "ExportMethodPrivilegedMode": {
+                    "$ref": "parameters-schema.json#/definitions/ExportMethodPrivilegedMode"
+                },
                 "ExportVariables": {
                     "$ref": "parameters-schema.json#/definitions/ExportVariables"
                 },
