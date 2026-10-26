@@ -171,7 +171,7 @@ public class ServerContext {
       try {
         populateDocuments(files);
       } catch (CancellationException e) {
-        LOGGER.debug("Populating context stopped.");
+        LOGGER.debug("Populating context stopped.", e);
       }
     });
   }
