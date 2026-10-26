@@ -51,9 +51,12 @@ class CommonModuleAccessorsConfigurationTest {
 
     options.setCommonModuleAccessors(List.of("Restored"));
     assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("restored");
-    assertThatThrownBy(() -> first.localMethods().clear()).isInstanceOf(UnsupportedOperationException.class);
-    assertThatThrownBy(() -> first.moduleMethodPairs().clear()).isInstanceOf(UnsupportedOperationException.class);
-    assertThatThrownBy(() -> first.moduleMethodPairs().get("commonuse").clear())
+    var localMethods = first.localMethods();
+    var moduleMethods = first.moduleMethodPairs();
+    var commonUseMethods = moduleMethods.get("commonuse");
+    assertThatThrownBy(localMethods::clear).isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(moduleMethods::clear).isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(commonUseMethods::clear)
       .isInstanceOf(UnsupportedOperationException.class);
   }
 
@@ -87,6 +90,6 @@ class CommonModuleAccessorsConfigurationTest {
 
     assertThat(mapper.writeValueAsString(configuration)).isEqualTo(before);
     assertThat(configuration.hashCode()).isEqualTo(hashBefore);
-    assertThat(configuration.toString()).isEqualTo(descriptionBefore);
+    assertThat(configuration).hasToString(descriptionBefore);
   }
 }

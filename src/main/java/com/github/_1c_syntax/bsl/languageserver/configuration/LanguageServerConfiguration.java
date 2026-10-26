@@ -121,27 +121,6 @@ public class LanguageServerConfiguration {
   private final AtomicReference<@Nullable ParsedCommonModuleAccessors> parsedCommonModuleAccessors
     = new AtomicReference<>();
 
-  /**
-   * Неизменяемые паттерны доступа к общим модулям из текущих настроек.
-   * Результат переиспользуется, пока исходный список не изменился.
-   *
-   * @return Разобранные имена локальных методов и пар «модуль — метод».
-   */
-  @JsonIgnore
-  public ModuleReference.ParsedAccessors getParsedCommonModuleAccessors() {
-    var source = referencesOptions.getCommonModuleAccessors();
-    var parsed = parsedCommonModuleAccessors.get();
-    if (parsed == null || !parsed.source().equals(source)) {
-      var snapshot = List.copyOf(source);
-      parsed = new ParsedCommonModuleAccessors(snapshot, ModuleReference.parseAccessors(snapshot));
-      parsedCommonModuleAccessors.set(parsed);
-    }
-    return parsed.accessors();
-  }
-
-  private record ParsedCommonModuleAccessors(List<String> source, ModuleReference.ParsedAccessors accessors) {
-  }
-
   @JsonProperty("semanticTokens")
   @Setter(value = AccessLevel.NONE)
   private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
@@ -198,6 +177,24 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   @Nullable
   private LanguageServerConfiguration initialSnapshot;
+
+  /**
+   * Неизменяемые паттерны доступа к общим модулям из текущих настроек.
+   * Результат переиспользуется, пока исходный список не изменился.
+   *
+   * @return Разобранные имена локальных методов и пар «модуль — метод».
+   */
+  @JsonIgnore
+  public ModuleReference.ParsedAccessors getParsedCommonModuleAccessors() {
+    var source = referencesOptions.getCommonModuleAccessors();
+    var parsed = parsedCommonModuleAccessors.get();
+    if (parsed == null || !parsed.source().equals(source)) {
+      var snapshot = List.copyOf(source);
+      parsed = new ParsedCommonModuleAccessors(snapshot, ModuleReference.parseAccessors(snapshot));
+      parsedCommonModuleAccessors.set(parsed);
+    }
+    return parsed.accessors();
+  }
 
   /**
    * Инициализация конфигурации при создании workspace-scoped бина.
@@ -352,5 +349,8 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
     PropertyUtils.copyProperties(this.oscriptOptions, configuration.oscriptOptions);
     PropertyUtils.copyProperties(this.v8PlatformOptions, configuration.v8PlatformOptions);
+  }
+
+  private record ParsedCommonModuleAccessors(List<String> source, ModuleReference.ParsedAccessors accessors) {
   }
 }
