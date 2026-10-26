@@ -126,7 +126,7 @@ dependencies {
     }
 
     // AOP
-    implementation("org.aspectj:aspectjrt:1.9.25.1")
+    implementation("org.aspectj:aspectjrt:1.9.26")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
