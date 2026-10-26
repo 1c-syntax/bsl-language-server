@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793033822774,
+  "lastUpdate": 1793037691671,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45973,6 +45973,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.0772734284188608",
             "extra": "mean: 94.50098427136739 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d97f07ffbabdaf4ea5aa28958c4f34e127376364",
+          "message": "Merge pull request #4713 from 1c-syntax/feat/context-startup-phases-logged\n\nЭтапы старта рабочей области пишутся в лог на уровне INFO с длительностью",
+          "timestamp": "2026-10-26T17:15:01+01:00",
+          "tree_id": "79f22ed0beab40c9b954c1d19d173d6dd06ff5ac",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d97f07ffbabdaf4ea5aa28958c4f34e127376364"
+        },
+        "date": 1793037663657,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.5107827981313,
+            "unit": "sec",
+            "range": "stddev: 2.721486415669224",
+            "extra": "mean: 93.5107827981313 sec\nrounds: 3"
           }
         ]
       }
