@@ -552,7 +552,9 @@ class MethodReturnTypeIndexerTest {
       verify(serverContext, times(1)).rebuildDocument(documentContext);
     }
     assertThat(loading.loaded()).isEmpty();
-    assertThat(loading.peak()).hasValue(DOCUMENTS_IN_MEMORY);
+    // Окно предзагрузки заполнено; восьмой документ может успеть освободиться до
+    // следующего разбора. Точный пик зависит от порядка завершения задач.
+    assertThat(loading.peak().get()).isBetween(AHEAD_WINDOW, DOCUMENTS_IN_MEMORY);
   }
 
   @Test
