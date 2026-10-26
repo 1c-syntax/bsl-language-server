@@ -60,11 +60,11 @@ class MethodSymbolComputerEventClassificationTest {
   void methodMatchingEventContractIsRegisteredAsEventMethodSymbolDirectly() {
     // given — стаб регистрируется ДО создания документа: MethodSymbolComputer опрашивает
     // классификатор синхронно при обходе AST, то есть уже во время TestUtils.getDocumentContext(...).
-    // Стабится именно isEventHandler (сам метод EventHandlerClassifier, который дёргает
-    // MethodSymbolComputer), а не lookupContract: eventHandlerResolver — мок, а не spy, поэтому
-    // стаб lookupContract не заставит невыстабленный isEventHandler вызвать её "по-настоящему".
-    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
-      .thenReturn(true);
+    // Стабится именно eventHandlersOf (метод EventHandlerClassifier, который MethodSymbolComputer
+    // дёргает один раз на документ), а не lookupContract: eventHandlerResolver — мок, а не spy, поэтому
+    // стаб lookupContract не заставит невыстабленный eventHandlersOf вызвать её "по-настоящему".
+    when(eventHandlerResolver.eventHandlersOf(ArgumentMatchers.any()))
+      .thenReturn("ПриЗаписи"::equals);
 
     // when
     var documentContext = TestUtils.getDocumentContext("""
@@ -80,8 +80,8 @@ class MethodSymbolComputerEventClassificationTest {
 
   @Test
   void methodNotMatchingAnyEventContractIsRegularMethodSymbol() {
-    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
-      .thenReturn(false);
+    when(eventHandlerResolver.eventHandlersOf(ArgumentMatchers.any()))
+      .thenReturn(methodName -> false);
 
     var documentContext = TestUtils.getDocumentContext("""
       Процедура ОбычнаяПроцедура()
@@ -99,8 +99,8 @@ class MethodSymbolComputerEventClassificationTest {
     // совпало с контрактом события — см. EventHandlerResolver.OSCRIPT_CLASS_EVENTS): конструктор
     // всё равно не должен реклассифицироваться (проверяется ДО события в
     // MethodSymbolComputer.createMethodSymbol).
-    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
-      .thenReturn(true);
+    when(eventHandlerResolver.eventHandlersOf(ArgumentMatchers.any()))
+      .thenReturn(methodName -> true);
     // Уникальный URI (не общий FAKE_OSCRIPT_DOCUMENT_URI, которым делится множество других
     // тестовых классов): OScriptModuleTypeResolver.register — putIfAbsent, и при переиспользовании
     // общего URI регистрация могла бы молча оказаться no-op'ом, если тот уже зарегистрирован
