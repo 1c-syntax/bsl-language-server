@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -174,6 +176,59 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(moduleDocuments).allSatisfy(documentContext ->
       assertThat(documentContext.getUri())
         .isSameAs(configuration.getModuleByUri(documentContext.getUri()).orElseThrow().getUri()));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Скрипт.os", "Внешний модуль.bsl"})
+  void filesWithoutMetadataKeepTheirUri(String fileName, @TempDir Path directory) throws IOException {
+    var file = directory.resolve(fileName);
+    initServerContext(directory, false);
+    Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
+    var uri = Absolute.uri(file.toUri());
+
+    var document = context.addDocument(uri);
+    assertThat(document.getUri()).isSameAs(uri);
+    context.rebuildDocument(document);
+    context.populateContext();
+
+    assertThat(context.getDocuments()).hasSize(1);
+    assertThat(context.addDocument(uri)).isSameAs(document);
+    assertThat(document.getContent()).contains("Процедура Тест()");
+    assertThat(document.getFileType()).isEqualTo(fileName.endsWith(".os") ? FileType.OS : FileType.BSL);
+    assertThat(context.getConfiguration().getModuleByUri(uri)).isEmpty();
+  }
+
+  @Test
+  void existingOneScriptLibraryDocumentIsReused(@TempDir Path directory) throws IOException {
+    var file = directory.resolve("Скрипт.os");
+    Files.writeString(file, "Процедура Тест()\nКонецПроцедуры\n");
+    initServerContext(directory, false);
+    var uri = Absolute.uri(file.toUri());
+    var indexed = context.getDocuments().get(uri);
+    assertThat(indexed).isNotNull();
+    assertThat(context.getConfiguration().getModuleByUri(uri)).isEmpty();
+    var indexedUri = indexed.getUri();
+
+    context.populateContext();
+    var added = context.addDocument(uri);
+
+    assertThat(added).isSameAs(indexed);
+    assertThat(added.getUri()).isSameAs(indexedUri).isEqualTo(uri);
+    assertThat(added.getFileType()).isEqualTo(FileType.OS);
+    assertThat(context.getDocuments()).hasSize(1);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Скрипт.os", "Внешний модуль.bsl"})
+  void externalFilesKeepTheirUriInConfigurationWorkspace(String fileName, @TempDir Path directory) {
+    initServerContext(PATH_TO_METADATA, false);
+    var uri = Absolute.uri(directory.resolve(fileName).toUri());
+
+    var document = context.addDocument(uri);
+
+    assertThat(context.getConfiguration().getModuleByUri(uri)).isEmpty();
+    assertThat(document.getUri()).isSameAs(uri);
+    assertThat(context.addDocument(uri)).isSameAs(document);
   }
 
   /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */
