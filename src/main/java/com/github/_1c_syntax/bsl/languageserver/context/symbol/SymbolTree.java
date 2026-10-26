@@ -22,16 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -194,33 +190,7 @@ public class SymbolTree {
    * @return найденный символ метода.
    */
   public Optional<MethodSymbol> getMethodSymbol(ParserRuleContext ctx) {
-    ParserRuleContext subNameNode;
-    if (Trees.nodeContainsErrors(ctx)) {
-      subNameNode = ctx;
-    } else if (ctx instanceof BSLParser.SubContext subContext) {
-      if (subContext.function() == null) {
-        subNameNode = subContext.procedure().procDeclaration().subName();
-      } else {
-        subNameNode = subContext.function().funcDeclaration().subName();
-      }
-    } else {
-      subNameNode = ctx;
-    }
-
-    Range subNameRange = Ranges.create(subNameNode);
-
-    // subNameRange == selectionRange метода, поэтому ищем через O(1)-индекс
-    // селекшн-рейнджей (тот же, что и findSymbolBySelectionRange), а не линейным
-    // сканом getMethods() с Range.equals на каждом.
-    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
-    // объявления, а произвольный/ошибочный контекст (напр. ctx.getParent()),
-    // старт которого может попасть в selectionRange соседнего символа. Прежний
-    // скан для таких возвращал пусто (точное равенство не выполнялось) —
-    // сохраняем это, иначе резолвится «лишний» метод.
-    return findSymbolBySelectionRange(subNameRange.getStart())
-      .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
-      .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange));
+    return SymbolTreeLookup.methodByNode(this, ctx);
   }
 
   /**
@@ -242,32 +212,7 @@ public class SymbolTree {
    * @return найденный символ переменной.
    */
   public Optional<VariableSymbol> getVariableSymbol(ParserRuleContext ctx) {
-
-    ParserRuleContext varNameNode;
-
-    if (Trees.nodeContainsErrors(ctx)) {
-      varNameNode = ctx;
-    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext moduleVarDeclarationContext) {
-      varNameNode = moduleVarDeclarationContext.var_name();
-    } else if (ctx instanceof BSLParser.SubVarDeclarationContext subVarDeclarationContext) {
-      varNameNode = subVarDeclarationContext.var_name();
-    } else {
-      varNameNode = ctx;
-    }
-
-    Range variableNameRange = Ranges.create(varNameNode);
-
-    // variableNameRange == selectionRange переменной, поэтому ищем через
-    // индекс селекшн-рейнджей, а не линейным сканом getVariables() с
-    // Range.equals на каждом.
-    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
-    // объявления, а произвольный/ошибочный контекст, старт которого может
-    // попасть в selectionRange соседнего символа. Прежний скан для таких
-    // возвращал пусто — сохраняем это, иначе резолвится «лишняя» переменная.
-    return findSymbolBySelectionRange(variableNameRange.getStart())
-      .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast)
-      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange));
+    return SymbolTreeLookup.variableByNode(this, ctx);
   }
 
   /**
@@ -307,14 +252,7 @@ public class SymbolTree {
    * @return видимая переменная; empty, если такой в области видимости нет.
    */
   public Optional<VariableSymbol> getVariableSymbolInScope(ParserRuleContext node, String variableName) {
-    var sub = Trees.getRootParent(node, BSLParser.RULE_sub);
-    if (sub instanceof BSLParser.SubContext subContext) {
-      var inMethod = getMethodSymbol(subContext).flatMap(method -> getVariableSymbol(variableName, method));
-      if (inMethod.isPresent()) {
-        return inMethod;
-      }
-    }
-    return getVariableSymbol(variableName, module);
+    return SymbolTreeLookup.variableInScope(this, node, variableName);
   }
 
   /**
@@ -326,7 +264,7 @@ public class SymbolTree {
    * @return Символ, содержащий позицию, или символ модуля, если позиция вне всех символов.
    */
   public SourceDefinedSymbol getSymbolAtPosition(Position position) {
-    return findSymbolAtPosition(module, position);
+    return SymbolTreeLookup.innermostSymbol(module, position);
   }
 
   /**
@@ -384,22 +322,6 @@ public class SymbolTree {
     return Optional.empty();
   }
 
-  private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
-    // Ищем среди детей символ, содержащий позицию
-    for (var child : parent.getChildren()) {
-      if (Ranges.containsPosition(child.getRange(), position)) {
-        // Рекурсивно ищем более вложенный символ
-        var found = findSymbolAtPosition(child, position);
-        // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
-        if (found.getSymbolKind() == SymbolKind.Namespace) {
-          continue;
-        }
-        return found;
-      }
-    }
-    // Если среди детей не нашли — возвращаем текущий символ
-    return parent;
-  }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
     var symbols = new ArrayList<SourceDefinedSymbol>();

@@ -22,18 +22,56 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class SymbolTreeComputerTest {
 
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier eventHandlerClassifier;
+
+  @Test
+  void buildingAndRevalidatingUseDocumentClassifiers() {
+    var document = TestUtils.getDocumentContext("""
+      Процедура Первая()
+        Свойство = 1;
+        Переменная = 2;
+      КонецПроцедуры
+      Процедура Вторая()
+        ДругаяПеременная = 3;
+      КонецПроцедуры
+      """);
+    var properties = mock(SelfMemberClassifier.class);
+    var handlers = mock(EventHandlerClassifier.class);
+    when(properties.bareSelfPropertiesOf(document)).thenReturn("Свойство"::equalsIgnoreCase);
+    when(handlers.eventHandlersOf(document)).thenReturn("Первая"::equalsIgnoreCase);
+    var computer = new SymbolTreeComputer(document, properties, handlers);
+
+    var tree = computer.compute();
+    assertThat(tree.getBasis().bareSelfProperties()).containsExactly("Свойство");
+    assertThat(computer.isUpToDate(tree)).isTrue();
+    verify(properties, times(2)).bareSelfPropertiesOf(document);
+    verify(handlers, times(2)).eventHandlersOf(document);
+    verify(properties, never()).isBareSelfProperty(any(), anyString());
+    verify(handlers, never()).isEventHandler(any(), anyString());
+
+    when(properties.bareSelfPropertiesOf(document)).thenReturn(name -> false);
+    assertThat(computer.isUpToDate(tree)).isFalse();
+  }
 
   @Test
   void testModule() {
