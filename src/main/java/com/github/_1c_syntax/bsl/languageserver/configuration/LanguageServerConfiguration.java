@@ -36,15 +36,18 @@ import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8Platfor
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
@@ -61,6 +64,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
@@ -109,6 +113,34 @@ public class LanguageServerConfiguration {
   @JsonProperty("references")
   @Setter(value = AccessLevel.NONE)
   private ReferencesOptions referencesOptions = new ReferencesOptions();
+
+  @JsonIgnore
+  @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
+  private final AtomicReference<@Nullable ParsedCommonModuleAccessors> parsedCommonModuleAccessors
+    = new AtomicReference<>();
+
+  /**
+   * Неизменяемые паттерны доступа к общим модулям из текущих настроек.
+   * Результат переиспользуется, пока исходный список не изменился.
+   *
+   * @return Разобранные имена локальных методов и пар «модуль — метод».
+   */
+  @JsonIgnore
+  public ModuleReference.ParsedAccessors getParsedCommonModuleAccessors() {
+    var source = referencesOptions.getCommonModuleAccessors();
+    var parsed = parsedCommonModuleAccessors.get();
+    if (parsed == null || !parsed.source().equals(source)) {
+      var snapshot = List.copyOf(source);
+      parsed = new ParsedCommonModuleAccessors(snapshot, ModuleReference.parseAccessors(snapshot));
+      parsedCommonModuleAccessors.set(parsed);
+    }
+    return parsed.accessors();
+  }
+
+  private record ParsedCommonModuleAccessors(List<String> source, ModuleReference.ParsedAccessors accessors) {
+  }
 
   @JsonProperty("semanticTokens")
   @Setter(value = AccessLevel.NONE)

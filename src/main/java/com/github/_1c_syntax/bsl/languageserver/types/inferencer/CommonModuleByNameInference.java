@@ -26,16 +26,13 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Общий модуль, полученный по имени: {@code ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")}
@@ -49,8 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Какие вызовы считать таким получателем, задаёт настройка
  * {@code references.commonModuleAccessors} — та же, по которой индекс ссылок разбирает
  * {@code ОбщийМодуль("Имя").Метод(...)}, чтобы переход по F12 вёл в конкретный модуль.
- * Здесь она читается на каждом обращении, потому что меняется на лету, а разбирается заново,
- * только когда список в ней изменился.
+ * Разобранные паттерны предоставляет конфигурация с учётом изменения настроек на лету.
  */
 @Component
 @WorkspaceScope
@@ -59,12 +55,6 @@ public class CommonModuleByNameInference {
 
   private final LanguageServerConfiguration configuration;
   private final TypeRegistry typeRegistry;
-
-  /**
-   * Разобранный список методов доступа к общим модулям вместе с копией списка, из которого он
-   * разобран: разбор повторяется, только когда список в настройках изменился.
-   */
-  private final AtomicReference<@Nullable ParsedFrom> parsedAccessors = new AtomicReference<>();
 
   /**
    * Тип общего модуля, названного строковым литералом в вызове у получателя:
@@ -80,7 +70,7 @@ public class CommonModuleByNameInference {
   @Nullable
   public TypeSet refinedCallTypes(TypeSet receiverTypes, String memberName,
                                   MethodCallNode call, FileType fileType) {
-    var accessors = accessors();
+    var accessors = configuration.getParsedCommonModuleAccessors();
     var member = memberName.toLowerCase(Locale.ENGLISH);
     var matches = receiverTypes.refs().stream()
       .map(ref -> accessors.moduleMethodPairs().get(ref.qualifiedName().toLowerCase(Locale.ENGLISH)))
@@ -99,7 +89,7 @@ public class CommonModuleByNameInference {
    */
   @Nullable
   public TypeSet localCallTypes(MethodCallNode call, FileType fileType) {
-    var accessors = accessors();
+    var accessors = configuration.getParsedCommonModuleAccessors();
     var callName = call.getName().getText().toLowerCase(Locale.ENGLISH);
     return accessors.localMethods().contains(callName) ? namedModuleType(call, fileType) : null;
   }
@@ -125,17 +115,4 @@ public class CommonModuleByNameInference {
     return typeRegistry.resolve(moduleName.trim(), fileType).map(TypeSet::of).orElse(null);
   }
 
-  /** Разобранный список методов доступа из текущих настроек. */
-  private ModuleReference.ParsedAccessors accessors() {
-    var source = configuration.getReferencesOptions().getCommonModuleAccessors();
-    var parsed = parsedAccessors.get();
-    if (parsed == null || !parsed.source().equals(source)) {
-      parsed = new ParsedFrom(List.copyOf(source), ModuleReference.parseAccessors(source));
-      parsedAccessors.set(parsed);
-    }
-    return parsed.accessors();
-  }
-
-  private record ParsedFrom(List<String> source, ModuleReference.ParsedAccessors accessors) {
-  }
 }

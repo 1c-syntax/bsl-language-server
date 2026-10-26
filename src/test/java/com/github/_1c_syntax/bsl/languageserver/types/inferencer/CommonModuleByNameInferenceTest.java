@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -48,10 +47,9 @@ class CommonModuleByNameInferenceTest {
   @Test
   void accessorsFollowSettingsChangedInPlaceAndReplaced() {
     // given
-    var options = new ReferencesOptions();
+    var configuration = new LanguageServerConfiguration();
+    var options = configuration.getReferencesOptions();
     options.setCommonModuleAccessors(new ArrayList<>(List.of("ОбщийМодуль")));
-    var configuration = mock(LanguageServerConfiguration.class);
-    when(configuration.getReferencesOptions()).thenReturn(options);
     var moduleRef = new TypeRef(TypeKind.CONFIGURATION, "ОбщийМодуль.Модуль1");
     var typeRegistry = mock(TypeRegistry.class);
     when(typeRegistry.resolve("Модуль1", FileType.BSL)).thenReturn(Optional.of(moduleRef));
