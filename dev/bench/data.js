@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792731495298,
+  "lastUpdate": 1793030627486,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45880,6 +45880,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.7271276634617476",
             "extra": "mean: 94.69463841120402 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8e2cd5fe2d5523e3ffe8537fa444a32b1068bb12",
+          "message": "Merge pull request #4841 from 1c-syntax/fix/context-vanished-file-not-error\n\nФайл, удалённый раньше, чем сервер его прочитал, убирается из контекста и не пишется в лог как ошибка",
+          "timestamp": "2026-10-26T16:50:20+01:00",
+          "tree_id": "318a93d879d1256bbe673be6d41ab1441e0aa66e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8e2cd5fe2d5523e3ffe8537fa444a32b1068bb12"
+        },
+        "date": 1793030597095,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.5735867023468,
+            "unit": "sec",
+            "range": "stddev: 3.654451573278301",
+            "extra": "mean: 96.5735867023468 sec\nrounds: 3"
           }
         ]
       }
