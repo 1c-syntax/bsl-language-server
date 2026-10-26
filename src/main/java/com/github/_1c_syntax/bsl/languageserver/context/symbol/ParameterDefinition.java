@@ -48,6 +48,11 @@ public class ParameterDefinition {
   String name;
 
   /**
+   * Передача параметра по значению.
+   */
+  boolean byValue;
+
+  /**
    * Описание параметра; {@code null}, если его нет.
    */
   @Getter(AccessLevel.NONE)
@@ -61,25 +66,14 @@ public class ParameterDefinition {
   @Builder.Default
   List<Annotation> annotations = Collections.emptyList();
 
-  /**
-   * Строка места объявления, а в знаке — способ передачи: у параметра «Знач» строка хранится
-   * как {@code ~line}. Место — один токен, поэтому строка конца совпадает со строкой начала.
-   * Параметров на большой конфигурации больше миллиона, и отдельные поля под признак и строку
-   * конца выводили объект за 40 байт.
-   */
   @Getter(AccessLevel.NONE)
-  int signedLine;
+  int startLine;
   @Getter(AccessLevel.NONE)
   int startCharacter;
   @Getter(AccessLevel.NONE)
+  int endLine;
+  @Getter(AccessLevel.NONE)
   int endCharacter;
-
-  /**
-   * Передача параметра по значению.
-   */
-  public boolean isByValue() {
-    return signedLine < 0;
-  }
 
   /**
    * Описание параметра.
@@ -92,8 +86,7 @@ public class ParameterDefinition {
    * Место объявления параметра.
    */
   public Range getRange() {
-    var line = signedLine < 0 ? ~signedLine : signedLine;
-    return Ranges.create(line, startCharacter, line, endCharacter);
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
   }
 
   public boolean isOptional() {
@@ -120,30 +113,18 @@ public class ParameterDefinition {
 
   public static class ParameterDefinitionBuilder {
 
-    private boolean byValue;
-    private int line;
-
-    public ParameterDefinitionBuilder byValue(boolean byValue) {
-      this.byValue = byValue;
-      signedLine = byValue ? ~line : line;
-      return this;
-    }
-
     public ParameterDefinitionBuilder description(Optional<ParameterDescription> description) {
       this.description = description.orElse(null);
       return this;
     }
 
-    /**
-     * @param range место объявления — один токен, в пределах одной строки.
-     * @return этот же построитель.
-     */
     public ParameterDefinitionBuilder range(Range range) {
       var start = range.getStart();
-      line = start.getLine();
-      signedLine = byValue ? ~line : line;
+      var end = range.getEnd();
+      startLine = start.getLine();
       startCharacter = start.getCharacter();
-      endCharacter = range.getEnd().getCharacter();
+      endLine = end.getLine();
+      endCharacter = end.getCharacter();
 
       return this;
     }
