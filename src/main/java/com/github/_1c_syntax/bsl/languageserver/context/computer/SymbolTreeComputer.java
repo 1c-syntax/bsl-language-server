@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Вычислитель дерева символов документа.
@@ -66,12 +67,24 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     // Имя, признанное реквизитом, символа не получает: запомнить его можно только здесь.
     var bareSelfProperties = new HashSet<String>();
-    SelfMemberClassifier recordingClassifier = (DocumentContext document, String name) -> {
-      var bareSelfProperty = selfMemberClassifier.isBareSelfProperty(document, name);
-      if (bareSelfProperty) {
-        bareSelfProperties.add(name);
+    SelfMemberClassifier recordingClassifier = new SelfMemberClassifier() {
+      @Override
+      public boolean isBareSelfProperty(DocumentContext document, String name) {
+        return recorded(selfMemberClassifier.isBareSelfProperty(document, name), name);
       }
-      return bareSelfProperty;
+
+      @Override
+      public Predicate<String> bareSelfPropertiesOf(DocumentContext document) {
+        var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(document);
+        return name -> recorded(bareSelfProperty.test(name), name);
+      }
+
+      private boolean recorded(boolean bareSelfProperty, String name) {
+        if (bareSelfProperty) {
+          bareSelfProperties.add(name);
+        }
+        return bareSelfProperty;
+      }
     };
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
@@ -115,12 +128,15 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
    */
   public boolean isUpToDate(SymbolTree symbolTree) {
     var basis = symbolTree.getBasis();
-    return basis != SymbolTree.Basis.NONE
-      && basis.moduleType() == documentContext.getModuleType()
-      && basis.mdoRef().equals(documentContext.getMdoRef())
-      && basis.bareSelfProperties().stream()
-        .allMatch(name -> selfMemberClassifier.isBareSelfProperty(documentContext, name))
-      && classifiedAsBefore(symbolTree.getModule());
+    if (basis == SymbolTree.Basis.NONE
+      || basis.moduleType() != documentContext.getModuleType()
+      || !basis.mdoRef().equals(documentContext.getMdoRef())) {
+      return false;
+    }
+    var eventHandlers = eventHandlerClassifier.eventHandlersOf(documentContext);
+    var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
+    return basis.bareSelfProperties().stream().allMatch(bareSelfProperty)
+      && classifiedAsBefore(symbolTree.getModule(), eventHandlers, bareSelfProperty);
   }
 
   /**
@@ -128,20 +144,20 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
    * детям, а не по плоским спискам дерева: те строятся лениво, и проверка не должна их
    * достраивать у документов, которые после неё сразу отпустят.
    */
-  private boolean classifiedAsBefore(SourceDefinedSymbol symbol) {
+  private static boolean classifiedAsBefore(SourceDefinedSymbol symbol, Predicate<String> eventHandlers,
+                                            Predicate<String> bareSelfProperty) {
     for (var child : symbol.getChildren()) {
       if (child instanceof MethodSymbol method
         && !(method instanceof ConstructorSymbol)
-        && method instanceof EventMethodSymbol
-          != eventHandlerClassifier.isEventHandler(documentContext, method.getName())) {
+        && method instanceof EventMethodSymbol != eventHandlers.test(method.getName())) {
         return false;
       }
       if (child instanceof VariableSymbol variable
         && variable.getKind() == VariableKind.DYNAMIC
-        && selfMemberClassifier.isBareSelfProperty(documentContext, variable.getName())) {
+        && bareSelfProperty.test(variable.getName())) {
         return false;
       }
-      if (!classifiedAsBefore(child)) {
+      if (!classifiedAsBefore(child, eventHandlers, bareSelfProperty)) {
         return false;
       }
     }
