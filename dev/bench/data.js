@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793032504431,
+  "lastUpdate": 1793033822774,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45942,6 +45942,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8891708804365775",
             "extra": "mean: 97.43261472384135 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3266de896f3cf4e70f2695ad6dd38155abd92049",
+          "message": "Merge pull request #4700 from 1c-syntax/perf/context-event-handlers-classified-once-per-document\n\nОбработчики событий модуля распознаются без перебора членов владельца на каждый метод",
+          "timestamp": "2026-10-26T17:11:56+01:00",
+          "tree_id": "7e90803ec84c8c38de03f9448003819573ff0fa1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3266de896f3cf4e70f2695ad6dd38155abd92049"
+        },
+        "date": 1793033793396,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.50098427136739,
+            "unit": "sec",
+            "range": "stddev: 0.0772734284188608",
+            "extra": "mean: 94.50098427136739 sec\nrounds: 3"
           }
         ]
       }
