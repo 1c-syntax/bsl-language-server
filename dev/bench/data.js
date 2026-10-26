@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793030627486,
+  "lastUpdate": 1793032504431,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -45911,6 +45911,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.654451573278301",
             "extra": "mean: 96.5735867023468 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b58d6d1b9b6fc3277a7b07590adacc5c9c5b84ed",
+          "message": "Merge pull request #4712 from 1c-syntax/perf/types-resolve-pass-parallel\n\nДорасчёт типов возврата считает компоненты по готовности зависимостей, а несвязанные документы большого цикла — одновременно",
+          "timestamp": "2026-10-26T16:53:05+01:00",
+          "tree_id": "38e0e38a0bd24e3e27a4ecc84b2d3c6e93228672",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b58d6d1b9b6fc3277a7b07590adacc5c9c5b84ed"
+        },
+        "date": 1793032425132,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 97.43261472384135,
+            "unit": "sec",
+            "range": "stddev: 0.8891708804365775",
+            "extra": "mean: 97.43261472384135 sec\nrounds: 3"
           }
         ]
       }
