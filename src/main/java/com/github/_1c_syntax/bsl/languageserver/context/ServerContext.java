@@ -139,13 +139,21 @@ public class ServerContext {
       return;
     }
 
+    var startedAt = System.nanoTime();
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(0, "");
     workDoneProgressReporter.beginProgress(getMessage("populateFindFiles"));
 
     LOGGER.debug("Finding files to populate context...");
     var files = BSLFiles.listBslFiles(configurationRoot, languageServerConfiguration.getExcludePaths());
     workDoneProgressReporter.endProgress("");
+    LOGGER.info("Found {} files to populate context of {} in {} ms",
+      files.size(), configurationRoot, millisSince(startedAt));
     populateContext(files);
+    // Слушатели события наполнения (дорасчёт типов и прочее) отработали в этом же вызове.
+    if (!isBackgroundWorkStopped()) {
+      LOGGER.info("Workspace {} is ready in {} ms: context populated, post-population work done",
+        configurationRoot, millisSince(startedAt));
+    }
   }
 
   /**
@@ -183,6 +191,7 @@ public class ServerContext {
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
+    var startedAt = System.nanoTime();
 
     // Конфигурацию спрашивает каждый создаваемый документ — из неё берётся его mdoRef, — и
     // спрашивает под блокировкой своих вычислений. Лениво из задачи заполнения её читать
@@ -228,7 +237,8 @@ public class ServerContext {
       // область закрывают.
       throw new CancellationException("Populating context stopped");
     }
-    LOGGER.debug("Context populated.");
+    LOGGER.info("Context of {} populated with {} files in {} ms",
+      configurationRoot, files.size(), millisSince(startedAt));
   }
 
   public Map<URI, DocumentContext> getDocuments() {
@@ -648,6 +658,7 @@ public class ServerContext {
       return Solution.EMPTY;
     }
 
+    var startedAt = System.nanoTime();
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
@@ -665,8 +676,13 @@ public class ServerContext {
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
+    LOGGER.info("Configuration metadata of {} read in {} ms", configurationRoot, millisSince(startedAt));
 
     return configuration;
+  }
+
+  private static long millisSince(long startedAt) {
+    return (System.nanoTime() - startedAt) / 1_000_000;
   }
 
   /**

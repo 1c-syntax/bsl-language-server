@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -215,6 +216,25 @@ public class EventHandlerResolver implements EventHandlerClassifier {
   @Override
   public boolean isEventHandler(DocumentContext documentContext, String methodName) {
     return lookupContract(documentContext, methodName).isPresent();
+  }
+
+  /**
+   * Тип-владелец модуля и его события находятся один раз на документ: у модуля объекта сотни
+   * методов, и на каждый из них заново собирать имя владельца и перебирать все его члены выходило
+   * дорого.
+   */
+  @Override
+  public Predicate<String> eventHandlersOf(DocumentContext documentContext) {
+    var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass || GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return methodName -> isEventHandler(documentContext, methodName);
+    }
+    var events = resolveOwnerType(documentContext, moduleType)
+      .map(owner -> typeRegistry.getMembers(owner, documentContext.getFileType()).stream()
+        .filter(m -> m.kind() == MemberKind.EVENT)
+        .toList())
+      .orElse(List.of());
+    return methodName -> events.stream().anyMatch(event -> event.matches(methodName));
   }
 
   /**
