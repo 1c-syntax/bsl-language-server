@@ -21,9 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -54,14 +55,21 @@ import java.util.stream.Collectors;
  */
 public final class LazyTypeSet {
 
-  private final Map<Object, Supplier<TypeSet>> sources;
+  // Источники лежат списком, а не картой по ключу: ключи разнородны (символ метода,
+  // составной список) и упорядочить их нельзя. Ключи в списке не повторяются.
+  private final List<Source> sources;
+  private final Set<Object> keys;
 
   public LazyTypeSet(Object key, Supplier<TypeSet> resolver) {
-    this(Map.of(key, resolver));
+    this.sources = List.of(new Source(key, resolver));
+    this.keys = Set.of(key);
   }
 
-  private LazyTypeSet(Map<Object, Supplier<TypeSet>> sources) {
+  private LazyTypeSet(List<Source> sources) {
     this.sources = sources;
+    var sourceKeys = new LinkedHashSet<>();
+    sources.forEach(source -> sourceKeys.add(source.key()));
+    this.keys = Collections.unmodifiableSet(sourceKeys);
   }
 
   /**
@@ -71,8 +79,8 @@ public final class LazyTypeSet {
    */
   public TypeSet get() {
     var acc = TypeSet.EMPTY;
-    for (var resolver : sources.values()) {
-      var resolved = resolver.get();
+    for (var source : sources) {
+      var resolved = source.resolver().get();
       if (resolved != null) {
         acc = acc.union(resolved);
       }
@@ -84,7 +92,7 @@ public final class LazyTypeSet {
    * @return ключи источников ссылки (у объединённой — каждого из объединённых).
    */
   public Set<Object> keys() {
-    return Collections.unmodifiableSet(sources.keySet());
+    return keys;
   }
 
   /**
@@ -95,12 +103,13 @@ public final class LazyTypeSet {
    * @return ссылка с теми же ключами и преобразованными источниками.
    */
   public LazyTypeSet map(UnaryOperator<TypeSet> mapper) {
-    var mapped = new LinkedHashMap<Object, Supplier<TypeSet>>();
-    sources.forEach((key, resolver) -> mapped.put(key, () -> {
-      var resolved = resolver.get();
-      return resolved == null ? null : mapper.apply(resolved);
-    }));
-    return new LazyTypeSet(Collections.unmodifiableMap(mapped));
+    var mapped = sources.stream()
+      .map(source -> new Source(source.key(), () -> {
+        var resolved = source.resolver().get();
+        return resolved == null ? null : mapper.apply(resolved);
+      }))
+      .toList();
+    return new LazyTypeSet(mapped);
   }
 
   /**
@@ -109,31 +118,36 @@ public final class LazyTypeSet {
    * уже входят в другую, возвращается та, что их содержит.
    */
   public static LazyTypeSet combine(LazyTypeSet a, LazyTypeSet b) {
-    if (a.sources.keySet().containsAll(b.sources.keySet())) {
+    if (a.keys.containsAll(b.keys)) {
       return a;
     }
-    if (b.sources.keySet().containsAll(a.sources.keySet())) {
+    if (b.keys.containsAll(a.keys)) {
       return b;
     }
-    var merged = new LinkedHashMap<>(a.sources);
-    b.sources.forEach(merged::putIfAbsent);
-    return new LazyTypeSet(Collections.unmodifiableMap(merged));
+    var merged = new ArrayList<>(a.sources);
+    b.sources.stream()
+      .filter(source -> !a.keys.contains(source.key()))
+      .forEach(merged::add);
+    return new LazyTypeSet(List.copyOf(merged));
   }
 
   @Override
   public boolean equals(Object o) {
-    return o instanceof LazyTypeSet other && sources.keySet().equals(other.sources.keySet());
+    return o instanceof LazyTypeSet other && keys.equals(other.keys);
   }
 
   @Override
   public int hashCode() {
-    return sources.keySet().hashCode();
+    return keys.hashCode();
   }
 
   @Override
   public String toString() {
-    return sources.keySet().stream()
+    return keys.stream()
       .map(String::valueOf)
       .collect(Collectors.joining(", ", "Lazy(", ")"));
+  }
+
+  private record Source(Object key, Supplier<TypeSet> resolver) {
   }
 }
