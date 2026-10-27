@@ -21,8 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * Отложенный («ленивый») тип-декорация для {@link TypeSet}: тип элемента коллекции
@@ -36,59 +41,99 @@ import java.util.function.Supplier;
  * конечной глубины, — поэтому каждый шаг форсит ровно один уровень, а глубина
  * рекурсии естественно ограничена выражением.
  * <p>
+ * Ссылка может объединять несколько источников ({@link #combine}); они хранятся
+ * плоским набором по ключам, без вложенности. Поэтому повторное объединение с уже
+ * вошедшим источником ничего не меняет, а чтение обращается к каждому источнику
+ * один раз, сколько бы раз и в каком порядке их ни объединяли.
+ * <p>
  * Объект <b>неизменяем</b> и <b>не мемоизирует</b> результат: {@link #get()}
  * каждый раз обращается к актуальному кэшу (никакой устаревшей информации и
  * разделяемого мутабельного состояния). {@code equals}/{@code hashCode} — по
- * {@code key} (значение-идентификатор источника), а не по результату форса,
+ * набору ключей (значений-идентификаторов источников), а не по результату форса,
  * поэтому участие в {@code equals} {@link TypeSet} конечно и стабильно.
  */
 public final class LazyTypeSet {
 
-  private final Object key;
-  private final Supplier<TypeSet> resolver;
+  private final Map<Object, Supplier<TypeSet>> sources;
 
   public LazyTypeSet(Object key, Supplier<TypeSet> resolver) {
-    this.key = key;
-    this.resolver = resolver;
+    this(Map.of(key, resolver));
+  }
+
+  private LazyTypeSet(Map<Object, Supplier<TypeSet>> sources) {
+    this.sources = sources;
   }
 
   /**
-   * @return разрешённый тип (один уровень — его собственные вложенные {@code см.}
-   *         остаются ленивыми); {@link TypeSet#EMPTY}, если источник не разрешается.
+   * @return объединение разрешённых типов всех источников (один уровень — их
+   *         собственные вложенные {@code см.} остаются ленивыми); {@link TypeSet#EMPTY},
+   *         если ни один источник не разрешается.
    */
   public TypeSet get() {
-    var resolved = resolver.get();
-    return resolved == null ? TypeSet.EMPTY : resolved;
+    var acc = TypeSet.EMPTY;
+    for (var resolver : sources.values()) {
+      var resolved = resolver.get();
+      if (resolved != null) {
+        acc = acc.union(resolved);
+      }
+    }
+    return acc;
   }
 
-  public Object key() {
-    return key;
+  /**
+   * @return ключи источников ссылки (у объединённой — каждого из объединённых).
+   */
+  public Set<Object> keys() {
+    return Collections.unmodifiableSet(sources.keySet());
+  }
+
+  /**
+   * Применить преобразование к тому, что вернёт каждый источник при чтении. Ключи
+   * не меняются, поэтому результат равен исходной ссылке.
+   *
+   * @param mapper преобразование разрешённого типа.
+   * @return ссылка с теми же ключами и преобразованными источниками.
+   */
+  public LazyTypeSet map(UnaryOperator<TypeSet> mapper) {
+    var mapped = new LinkedHashMap<Object, Supplier<TypeSet>>();
+    sources.forEach((key, resolver) -> mapped.put(key, () -> {
+      var resolved = resolver.get();
+      return resolved == null ? null : mapper.apply(resolved);
+    }));
+    return new LazyTypeSet(Collections.unmodifiableMap(mapped));
   }
 
   /**
    * Объединить две ленивые ссылки (при union {@link TypeSet} по одному и тому же
-   * ключу-владельцу). Одинаковые источники схлопываются; разные — оборачиваются в
-   * ленивую ссылку, форсящую обе.
+   * ключу-владельцу): получается ссылка на источники обеих. Если источники одной
+   * уже входят в другую, возвращается та, что их содержит.
    */
   public static LazyTypeSet combine(LazyTypeSet a, LazyTypeSet b) {
-    if (a.equals(b)) {
+    if (a.sources.keySet().containsAll(b.sources.keySet())) {
       return a;
     }
-    return new LazyTypeSet(List.of(a.key, b.key), () -> a.get().union(b.get()));
+    if (b.sources.keySet().containsAll(a.sources.keySet())) {
+      return b;
+    }
+    var merged = new LinkedHashMap<>(a.sources);
+    b.sources.forEach(merged::putIfAbsent);
+    return new LazyTypeSet(Collections.unmodifiableMap(merged));
   }
 
   @Override
   public boolean equals(Object o) {
-    return o instanceof LazyTypeSet other && key.equals(other.key);
+    return o instanceof LazyTypeSet other && sources.keySet().equals(other.sources.keySet());
   }
 
   @Override
   public int hashCode() {
-    return key.hashCode();
+    return sources.keySet().hashCode();
   }
 
   @Override
   public String toString() {
-    return "Lazy(" + key + ")";
+    return sources.keySet().stream()
+      .map(String::valueOf)
+      .collect(Collectors.joining(", ", "Lazy(", ")"));
   }
 }

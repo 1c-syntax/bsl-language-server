@@ -276,41 +276,41 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
    * обнаруживают цикл, и дают имя для метки {@code См. Функция}.
    */
   private static Set<Object> fieldExpansionSources(TypeSet owner, String key, TypeSet fieldTypes) {
-    var ownSource = lazyFieldSource(owner, key);
-    if (ownSource != null) {
-      return Set.of(ownSource);
+    var ownSources = lazyFieldSources(owner, key);
+    if (ownSources != null) {
+      return ownSources;
     }
     var elementKeys = new HashSet<>();
-    fieldTypes.lazyElements().values().forEach(lazy -> elementKeys.add(lazy.key()));
+    fieldTypes.lazyElements().values().forEach(lazy -> elementKeys.addAll(lazy.keys()));
     return elementKeys;
   }
 
   /**
-   * Ключ собственной ленивой см.-ссылки поля {@code name}, либо {@code null}. Поле ищется
+   * Ключи собственной ленивой см.-ссылки поля {@code name}, либо {@code null}. Поле ищется
    * там же, откуда его берёт {@link #collectFields}: у самого набора, а у коллекции без
    * собственных полей — у типа её элемента.
    */
-  private static @Nullable Object lazyFieldSource(TypeSet owner, String name) {
-    var source = lazyFieldSourceIn(owner, name);
-    if (source != null) {
-      return source;
+  private static @Nullable Set<Object> lazyFieldSources(TypeSet owner, String name) {
+    var sources = lazyFieldSourcesIn(owner, name);
+    if (sources != null) {
+      return sources;
     }
     for (var ref : owner.refs()) {
       if (owner.getLocalFields(ref).isEmpty()) {
-        var elementSource = lazyFieldSourceIn(owner.getElementTypes(ref), name);
-        if (elementSource != null) {
-          return elementSource;
+        var elementSources = lazyFieldSourcesIn(owner.getElementTypes(ref), name);
+        if (elementSources != null) {
+          return elementSources;
         }
       }
     }
     return null;
   }
 
-  private static @Nullable Object lazyFieldSourceIn(TypeSet owner, String name) {
+  private static @Nullable Set<Object> lazyFieldSourcesIn(TypeSet owner, String name) {
     for (var byName : owner.lazyFields().values()) {
       for (var entry : byName.entrySet()) {
         if (entry.getKey().equalsIgnoreCase(name)) {
-          return entry.getValue().types().key();
+          return entry.getValue().types().keys();
         }
       }
     }
