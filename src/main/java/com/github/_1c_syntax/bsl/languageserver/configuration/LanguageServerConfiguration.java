@@ -64,7 +64,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
@@ -115,11 +114,11 @@ public class LanguageServerConfiguration {
   private ReferencesOptions referencesOptions = new ReferencesOptions();
 
   @JsonIgnore
-  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
-  private final AtomicReference<@Nullable ParsedCommonModuleAccessors> parsedCommonModuleAccessors
-    = new AtomicReference<>();
+  private ModuleReference.ParsedAccessors parsedCommonModuleAccessors
+    = ModuleReference.parseAccessors(referencesOptions.getCommonModuleAccessors());
 
   @JsonProperty("semanticTokens")
   @Setter(value = AccessLevel.NONE)
@@ -179,21 +178,17 @@ public class LanguageServerConfiguration {
   private LanguageServerConfiguration initialSnapshot;
 
   /**
-   * Неизменяемые паттерны доступа к общим модулям из текущих настроек.
-   * Результат переиспользуется, пока исходный список не изменился.
+   * Применить настройки ссылок и вычислить их неизменяемое разобранное представление.
+   * Изменения списка методов доступа применяются этим сеттером.
    *
-   * @return Разобранные имена локальных методов и пар «модуль — метод».
+   * @param referencesOptions новые настройки ссылок.
    */
-  @JsonIgnore
-  public ModuleReference.ParsedAccessors getParsedCommonModuleAccessors() {
-    var source = referencesOptions.getCommonModuleAccessors();
-    var parsed = parsedCommonModuleAccessors.get();
-    if (parsed == null || !parsed.source().equals(source)) {
-      var snapshot = List.copyOf(source);
-      parsed = new ParsedCommonModuleAccessors(snapshot, ModuleReference.parseAccessors(snapshot));
-      parsedCommonModuleAccessors.set(parsed);
-    }
-    return parsed.accessors();
+  @JsonProperty("references")
+  public void setReferencesOptions(ReferencesOptions referencesOptions) {
+    var snapshot = new ReferencesOptions(new ArrayList<>(referencesOptions.getCommonModuleAccessors()));
+    var parsed = ModuleReference.parseAccessors(snapshot.getCommonModuleAccessors());
+    this.referencesOptions = snapshot;
+    this.parsedCommonModuleAccessors = parsed;
   }
 
   /**
@@ -345,12 +340,9 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
-    PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
     PropertyUtils.copyProperties(this.oscriptOptions, configuration.oscriptOptions);
     PropertyUtils.copyProperties(this.v8PlatformOptions, configuration.v8PlatformOptions);
   }
 
-  private record ParsedCommonModuleAccessors(List<String> source, ModuleReference.ParsedAccessors accessors) {
-  }
 }

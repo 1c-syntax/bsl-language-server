@@ -45,11 +45,12 @@ import static org.mockito.Mockito.when;
 class CommonModuleByNameInferenceTest {
 
   @Test
-  void accessorsFollowSettingsChangedInPlaceAndReplaced() {
+  void accessorsFollowSettingsAppliedThroughSetter() {
     // given
     var configuration = new LanguageServerConfiguration();
     var options = configuration.getReferencesOptions();
     options.setCommonModuleAccessors(new ArrayList<>(List.of("ОбщийМодуль")));
+    configuration.setReferencesOptions(options);
     var moduleRef = new TypeRef(TypeKind.CONFIGURATION, "ОбщийМодуль.Модуль1");
     var typeRegistry = mock(TypeRegistry.class);
     when(typeRegistry.resolve("Модуль1", FileType.BSL)).thenReturn(Optional.of(moduleRef));
@@ -59,12 +60,14 @@ class CommonModuleByNameInferenceTest {
     // when, then: метод доступа из настроек распознаётся
     assertThat(inference.localCallTypes(call, FileType.BSL)).isEqualTo(TypeSet.of(moduleRef));
 
-    // список поменяли на месте — разобранный по старому списку больше не годится
+    // изменённые настройки применили через сеттер конфигурации
     options.getCommonModuleAccessors().set(0, "ДругойМетод");
+    configuration.setReferencesOptions(options);
     assertThat(inference.localCallTypes(call, FileType.BSL)).isNull();
 
     // список заменили целиком
     options.setCommonModuleAccessors(List.of("ОбщийМодуль"));
+    configuration.setReferencesOptions(options);
     assertThat(inference.localCallTypes(call, FileType.BSL)).isEqualTo(TypeSet.of(moduleRef));
   }
 

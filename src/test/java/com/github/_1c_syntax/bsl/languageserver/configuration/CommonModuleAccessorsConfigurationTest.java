@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.json.JsonMapper;
@@ -37,19 +38,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CommonModuleAccessorsConfigurationTest {
 
   @Test
-  void cachedPatternsFollowChangesWithoutChangingPreviousSnapshots() {
+  void setterUpdatesPatternsWithoutChangingPreviousSnapshots() {
     var configuration = new LanguageServerConfiguration();
     var options = configuration.getReferencesOptions();
     options.setCommonModuleAccessors(new ArrayList<>(List.of("CommonModule", "CommonUse.Module")));
+    configuration.setReferencesOptions(options);
     var first = configuration.getParsedCommonModuleAccessors();
 
     assertThat(configuration.getParsedCommonModuleAccessors()).isSameAs(first);
     options.getCommonModuleAccessors().set(0, "OtherMethod");
+    assertThat(configuration.getReferencesOptions().getCommonModuleAccessors()).contains("CommonModule");
+    configuration.setReferencesOptions(options);
     var changed = configuration.getParsedCommonModuleAccessors();
     assertThat(changed.localMethods()).containsExactly("othermethod");
     assertThat(first.localMethods()).containsExactly("commonmodule");
 
     options.setCommonModuleAccessors(List.of("Restored"));
+    configuration.setReferencesOptions(options);
     assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("restored");
     var localMethods = first.localMethods();
     var moduleMethods = first.moduleMethodPairs();
@@ -58,6 +63,30 @@ class CommonModuleAccessorsConfigurationTest {
     assertThatThrownBy(moduleMethods::clear).isInstanceOf(UnsupportedOperationException.class);
     assertThatThrownBy(commonUseMethods::clear)
       .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  void jsonDeserializationUsesTheReferencesSetter() {
+    var mapper = new JsonMapper();
+    var configuration = mapper.readValue("""
+      {"references": {"commonModuleAccessors": ["CustomMethod"]}}
+      """, LanguageServerConfiguration.class);
+
+    assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("custommethod");
+    assertThat(configuration.getParsedCommonModuleAccessors().moduleMethodPairs()).isEmpty();
+    assertThat(mapper.writeValueAsString(configuration)).doesNotContain("parsedCommonModuleAccessors");
+  }
+
+  @Test
+  void resetRestoresInitializedReferencesSnapshot() {
+    var configuration = new LanguageServerConfiguration();
+    configuration.setReferencesOptions(new ReferencesOptions(List.of("InitialMethod")));
+    configuration.init();
+    configuration.setReferencesOptions(new ReferencesOptions(List.of("ChangedMethod")));
+
+    configuration.reset();
+
+    assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("initialmethod");
   }
 
   @Test
@@ -86,7 +115,7 @@ class CommonModuleAccessorsConfigurationTest {
     var before = mapper.writeValueAsString(configuration);
     var hashBefore = configuration.hashCode();
     var descriptionBefore = configuration.toString();
-    configuration.getParsedCommonModuleAccessors();
+    configuration.setReferencesOptions(configuration.getReferencesOptions());
 
     assertThat(mapper.writeValueAsString(configuration)).isEqualTo(before);
     assertThat(configuration.hashCode()).isEqualTo(hashBefore);
