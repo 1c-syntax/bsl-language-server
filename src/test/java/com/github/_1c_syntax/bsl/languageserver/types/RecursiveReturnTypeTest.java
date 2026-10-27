@@ -163,7 +163,7 @@ class RecursiveReturnTypeTest extends AbstractServerContextAwareTest {
   void moduleVariableJoiningTwoRecursiveFunctionsIsInferredInFiniteTime() {
     // given: переменная модуля формы получает значение одной из двух рекурсивных функций
     // общего модуля, и обе кладут в своё значение собственный же результат.
-    initServerContext("./src/test/resources/types/RecursiveFunctionsThroughModuleVariable");
+    initServerContext("./src/test/resources/metadata/recursiveFunctionsThroughModuleVariable");
     var documentContext = context.getDocuments().values().stream()
       .filter(candidate -> candidate.getUri().toString().contains("CommonForms"))
       .findFirst()
