@@ -177,6 +177,10 @@ class RecursiveReturnTypeTest extends AbstractServerContextAwareTest {
     var types = assertTimeoutPreemptively(Duration.ofSeconds(30),
       () -> WorkspaceContextHolder.call(context.getWorkspaceUri(),
         () -> typeService.expressionTypesAt(documentContext, position)));
+    // Тот же расчёт поднимает и диагностика присваивания свойству только для чтения — на ней
+    // зависал `analyze`.
+    assertTimeoutPreemptively(Duration.ofSeconds(30),
+      () -> WorkspaceContextHolder.call(context.getWorkspaceUri(), documentContext::getDiagnostics));
 
     // then
     assertThat(types.refs()).isEmpty();
