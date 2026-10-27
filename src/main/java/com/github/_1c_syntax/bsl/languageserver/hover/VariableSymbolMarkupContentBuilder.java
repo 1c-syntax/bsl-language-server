@@ -48,7 +48,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -228,8 +227,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     // ключа: собственная ленивая ссылка поля (`Содержимое - см. Коробка`), либо —
     // для коллекций — ленивый элемент (`Массив из см. Узел`). Именно её имя нужно
     // показать при обрыве цикла, а не источники уровнем глубже.
+    // Цикл — когда на пути уже развёрнуты все источники поля. Если повторилась только часть,
+    // разворот ещё покажет новое; каждый уровень добавляет на путь хотя бы один источник,
+    // поэтому разворот конечен.
     var fieldSources = fieldExpansionSources(owner, key, fieldTypes);
-    var cyclic = !fieldSources.isEmpty() && !Collections.disjoint(fieldSources, expandedSources);
+    var cyclic = !fieldSources.isEmpty() && expandedSources.containsAll(fieldSources);
     var seeLabel = cyclic ? seeReferenceLabel(fieldSources, lang) : "";
     var typeLabel = seeLabel.isBlank() ? fieldTypeLabel(fieldTypes, lang) : seeLabel;
 
