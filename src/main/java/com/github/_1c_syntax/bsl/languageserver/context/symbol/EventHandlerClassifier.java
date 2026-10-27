@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
+import java.util.function.Predicate;
+
 /**
  * Классифицирует объявленный в коде метод как обработчик платформенного события.
  */
@@ -33,4 +35,15 @@ public interface EventHandlerClassifier {
    * модуля {@code documentContext}.
    */
   boolean isEventHandler(DocumentContext documentContext, String methodName);
+
+  /**
+   * Классификатор методов одного документа: то же, что {@link #isEventHandler}, но всё, что
+   * зависит только от документа, находится один раз, а не на каждый метод.
+   *
+   * @param documentContext документ, методы которого классифицируются.
+   * @return проверка имени метода.
+   */
+  default Predicate<String> eventHandlersOf(DocumentContext documentContext) {
+    return methodName -> isEventHandler(documentContext, methodName);
+  }
 }

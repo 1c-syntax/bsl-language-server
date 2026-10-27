@@ -252,9 +252,12 @@ public class ConfigurationTypesProvider {
     var children = cf.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects",
       workspaceUri, children.size());
+    var startedAt = System.nanoTime();
     platformTypesWarmup.join();
     register(cf, children, serverContext.getScriptVariantLanguage());
     serviceModuleEventRegistrar.register(children);
+    LOGGER.info("Configuration types of {} registered in {} ms: {} metadata objects",
+      serverContext.getConfigurationRoot(), (System.nanoTime() - startedAt) / 1_000_000, children.size());
     return serverContext;
   }
 
