@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793037691671,
+  "lastUpdate": 1793084618110,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46004,6 +46004,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.721486415669224",
             "extra": "mean: 93.5107827981313 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c0271a0ea399a31cd86ce7132e48c27c1acec08",
+          "message": "Merge pull request #4698 from 1c-syntax/perf/infrastructure-workspace-proxy-without-bean-lookup\n\nПрокси бинов рабочей области берут цель прямо из области, без поиска в фабрике бинов на каждый вызов",
+          "timestamp": "2026-10-27T07:43:02+01:00",
+          "tree_id": "b580a49ae41976d87fe1e9d3b1b2e36924c5fe8a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1c0271a0ea399a31cd86ce7132e48c27c1acec08"
+        },
+        "date": 1793084588080,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.49898886680603,
+            "unit": "sec",
+            "range": "stddev: 1.1229437156057636",
+            "extra": "mean: 91.49898886680603 sec\nrounds: 3"
           }
         ]
       }
