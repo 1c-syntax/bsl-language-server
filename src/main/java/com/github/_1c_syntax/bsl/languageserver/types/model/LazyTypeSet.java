@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Отложенный («ленивый») тип-декорация для {@link TypeSet}: тип элемента коллекции
@@ -124,11 +124,11 @@ public final class LazyTypeSet {
     if (b.keys.containsAll(a.keys)) {
       return b;
     }
-    var merged = new ArrayList<>(a.sources);
-    b.sources.stream()
-      .filter(source -> !a.keys.contains(source.key()))
-      .forEach(merged::add);
-    return new LazyTypeSet(List.copyOf(merged));
+    var merged = Stream.concat(
+        a.sources.stream(),
+        b.sources.stream().filter(source -> !a.keys.contains(source.key())))
+      .toList();
+    return new LazyTypeSet(merged);
   }
 
   @Override
