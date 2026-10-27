@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Единая точка для consumer'ов (hover, completion, signature help) для
@@ -128,6 +129,29 @@ public class TypeService implements SelfMemberClassifier {
   @Override
   public boolean isBareSelfProperty(DocumentContext documentContext, String name) {
     return findSelfMember(documentContext, name, MemberKind.PROPERTY).isPresent();
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Self-тип модуля и его свойства находятся один раз на документ; имя сравнивается только со
+   * свойствами, без перебора методов и событий self-типа.
+   */
+  @Override
+  public Predicate<String> bareSelfPropertiesOf(DocumentContext documentContext) {
+    var properties = selfTypeRef(documentContext)
+      .map(ref -> typeRegistry.getMembers(ref, documentContext.getFileType()).stream()
+        .filter(member -> member.kind() == MemberKind.PROPERTY)
+        .toList())
+      .orElse(List.of());
+    return name -> {
+      for (var property : properties) {
+        if (property.matches(name)) {
+          return true;
+        }
+      }
+      return false;
+    };
   }
 
   /**
@@ -211,6 +235,20 @@ public class TypeService implements SelfMemberClassifier {
    */
   public TypeSet getReturnTypes(MethodSymbol method) {
     return symbolTypeIndex.getReturnTypes(method);
+  }
+
+  /**
+   * Типы возвращаемого значения с расчётом тела метода при первом обращении.
+   * <p>
+   * Используется для локальных методов, чьи документы доступны потребителю: неэкспортные
+   * функции не рассчитываются при наполнении рабочей области. Повторные обращения
+   * используют индекс, сохраняя порядок объявленных и выведенных типов.
+   *
+   * @param method метод в доступном документе.
+   * @return известные типы возвращаемого значения, либо пустой набор.
+   */
+  public TypeSet inferReturnTypes(MethodSymbol method) {
+    return inferencer.inferReturnTypes(method);
   }
 
   /**
