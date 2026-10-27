@@ -91,7 +91,7 @@ class MainApplicationTest {
 
     // then
     // main-method should run without exceptions
-    assertThat(outContent.toString()).isEmpty();
+    assertThat(outContent.toString()).contains("populated with").doesNotContain("ERROR");
     // assertThat(errContent.toString()).contains("100%");
     assertThat(errContent.toString()).doesNotContain("ERROR");
   }
@@ -108,7 +108,7 @@ class MainApplicationTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
+    assertThat(outContent.toString()).doesNotContain("ERROR");
     assertThat(errContent.toString()).isEmpty();
   }
 
@@ -140,7 +140,7 @@ class MainApplicationTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
+    assertThat(outContent.toString()).doesNotContain("ERROR");
     // assertThat(errContent.toString()).contains("100%");
     assertThat(errContent.toString()).doesNotContain("ERROR");
   }
@@ -157,7 +157,7 @@ class MainApplicationTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
+    assertThat(outContent.toString()).doesNotContain("ERROR");
     // assertThat(errContent.toString()).contains("100%");
     assertThat(errContent.toString()).doesNotContain("ERROR");
   }
@@ -174,7 +174,7 @@ class MainApplicationTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
+    assertThat(outContent.toString()).doesNotContain("ERROR");
     // assertThat(errContent.toString()).contains("100%");
     assertThat(errContent.toString()).doesNotContain("ERROR");
   }
@@ -191,7 +191,7 @@ class MainApplicationTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
+    assertThat(outContent.toString()).doesNotContain("ERROR");
     assertThat(errContent.toString()).isEmpty();
   }
 

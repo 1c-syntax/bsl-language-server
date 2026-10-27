@@ -40,6 +40,8 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -565,6 +567,126 @@ class SignatureHelpProviderTest {
     var paramDoc = sig.getParameters().get(0).getDocumentation();
     assertThat(paramDoc).isNotNull();
     assertThat(paramDoc.getLeft()).contains("первичный документ");
+  }
+
+  @ParameterizedTest
+  @CsvSource(delimiter = '|', value = {
+    "RU | Новый Массив | 1 | Выбрать(Условие): Массив, Число",
+    "RU | 1 | Новый Массив | Выбрать(Условие): Число, Массив",
+    "EN | Новый Массив | 1 | Выбрать(Условие): Array, Number",
+    "EN | 1 | Новый Массив | Выбрать(Условие): Number, Array",
+    "RU | 1 | 2 | Выбрать(Условие): Число",
+    "EN | 1 | 2 | Выбрать(Условие): Number",
+    "RU | НеизвестноеЗначение | НеизвестноеЗначение | Выбрать(Условие)",
+    "EN | НеизвестноеЗначение | НеизвестноеЗначение | Выбрать(Условие)",
+    "RU | Новый Массив | НеизвестноеЗначение | Выбрать(Условие): Массив",
+    "EN | Новый Массив | НеизвестноеЗначение | Выбрать(Условие): Array"
+  })
+  void localMethodSignaturePreservesInferredReturnTypeOrder(
+    Language language, String firstReturn, String secondReturn, String expectedLabel
+  ) {
+    var previousLanguage = languageServerConfiguration.getLanguage();
+    languageServerConfiguration.setLanguage(language);
+    try {
+      var content = """
+        Функция Выбрать(Условие)
+          Если Условие Тогда
+            Возврат %s;
+          Иначе
+            Возврат %s;
+          КонецЕсли;
+        КонецФункции
+        Результат = Выбрать(Истина);
+        """.formatted(firstReturn, secondReturn);
+      var documentContext = TestUtils.getDocumentContext(content);
+      var params = new SignatureHelpParams();
+      params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+      params.setPosition(new Position(7, "Результат = Выбрать(".length()));
+
+      var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+      assertThat(help.getSignatures()).singleElement().extracting(SignatureInformation::getLabel)
+        .isEqualTo(expectedLabel);
+    } finally {
+      languageServerConfiguration.setLanguage(previousLanguage);
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(delimiter = '|', value = {"RU | Число, Массив", "EN | Number, Array"})
+  void localMethodSignatureListsDeclaredTypesBeforeInferredTypes(Language language, String expectedTypes) {
+    var previousLanguage = languageServerConfiguration.getLanguage();
+    languageServerConfiguration.setLanguage(language);
+    try {
+      var content = """
+        // Возвращаемое значение:
+        //  Число - объявленный тип
+        Функция Выбрать()
+          Возврат Новый Массив;
+        КонецФункции
+        Результат = Выбрать();
+        """;
+      var documentContext = TestUtils.getDocumentContext(content);
+      var params = new SignatureHelpParams();
+      params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+      params.setPosition(new Position(5, "Результат = Выбрать(".length()));
+
+      var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+      assertThat(help.getSignatures()).singleElement().extracting(SignatureInformation::getLabel)
+        .isEqualTo("Выбрать(): " + expectedTypes);
+    } finally {
+      languageServerConfiguration.setLanguage(previousLanguage);
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(delimiter = '|', value = {
+    "RU | СтрокаТаблицыЗначений, Неопределено",
+    "EN | ValueTableRow, Undefined"
+  })
+  void platformMethodSignatureListsAllReturnTypes(Language language, String expectedTypes) {
+    var previousLanguage = languageServerConfiguration.getLanguage();
+    languageServerConfiguration.setLanguage(language);
+    try {
+      var content = """
+        Таблица = Новый ТаблицаЗначений;
+        Строка = Таблица.Найти(1);
+        """;
+      var documentContext = TestUtils.getDocumentContext(content);
+      var params = new SignatureHelpParams();
+      params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+      params.setPosition(new Position(1, "Строка = Таблица.Найти(".length()));
+
+      var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+      assertThat(help.getSignatures()).singleElement().extracting(SignatureInformation::getLabel)
+        .asString().endsWith("): " + expectedTypes);
+    } finally {
+      languageServerConfiguration.setLanguage(previousLanguage);
+    }
+  }
+
+  @Test
+  void localMethodSignatureInfersRecursiveReturnTypeWithoutWarmup() {
+    var content = """
+      Функция Рекурсивная(Условие)
+        Если Условие Тогда
+          Возврат Рекурсивная(Ложь);
+        КонецЕсли;
+        Возврат 1;
+      КонецФункции
+      Результат = Рекурсивная(Истина);
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(6, "Результат = Рекурсивная(".length()));
+
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    assertThat(help.getSignatures()).singleElement().extracting(SignatureInformation::getLabel)
+      .isEqualTo("Рекурсивная(Условие): Число");
   }
 
   @Test

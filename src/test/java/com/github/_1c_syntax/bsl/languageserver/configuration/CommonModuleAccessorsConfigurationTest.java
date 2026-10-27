@@ -82,7 +82,9 @@ class CommonModuleAccessorsConfigurationTest {
     var configuration = new LanguageServerConfiguration();
     configuration.setReferencesOptions(new ReferencesOptions(List.of("InitialMethod")));
     configuration.init();
-    configuration.setReferencesOptions(new ReferencesOptions(List.of("ChangedMethod")));
+    var changed = configuration.getReferencesOptions();
+    changed.setCommonModuleAccessors(List.of("ChangedMethod"));
+    configuration.setReferencesOptions(changed);
 
     configuration.reset();
 

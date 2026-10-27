@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -32,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
@@ -113,6 +118,23 @@ class DocumentContextTest {
 
     // when
     documentContext.rebuild(second, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildIsAChangeWhenLongTextDiffersOnlyAtTheEnd() {
+    // given: длинный текст — отпечаток собирается из него по кускам, а правка стоит
+    // далеко за первым из них.
+    var documentContext = getDocumentContext();
+    var comment = "// " + "ж".repeat(10_000) + "\n";
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+
+    // when
+    documentContext.rebuild(comment + "Процедура Б() КонецПроцедуры", documentContext.getVersion() + 1);
 
     // then
     assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
@@ -351,6 +373,33 @@ class DocumentContextTest {
     assertThat(documentContext.getSymbolTree().getMethods())
       .extracting(MethodSymbol::getName)
       .containsExactly("Test");
+  }
+
+  @Test
+  void rebuildFromFileSystemDoesNotReportVanishedFileAsError(@TempDir Path tempDir) {
+    // given: файл удалили раньше, чем до него дошло чтение.
+    var documentContext = TestUtils.getDocumentContext(
+      tempDir.resolve("Module.bsl").toUri(),
+      "Procedure Previous()\nEndProcedure\n",
+      TestUtils.getRegisteredServerContext()
+    );
+    var logger = (Logger) LoggerFactory.getLogger(DocumentContext.class);
+    var appender = new ListAppender<ILoggingEvent>();
+    appender.start();
+    logger.addAppender(appender);
+
+    try {
+      // when
+      var read = documentContext.rebuildFromFileSystem();
+
+      // then: файл не прочитан и документ прежний, но ошибкой сервера это не считается.
+      assertThat(read).isFalse();
+      assertThat(documentContext.getContent()).contains("Procedure Previous()");
+      assertThat(appender.list)
+        .noneMatch(event -> event.getLevel().isGreaterOrEqual(Level.ERROR));
+    } finally {
+      logger.detachAppender(appender);
+    }
   }
 
   @SneakyThrows
