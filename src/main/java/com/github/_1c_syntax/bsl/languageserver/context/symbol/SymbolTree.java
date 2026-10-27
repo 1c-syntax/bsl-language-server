@@ -116,13 +116,25 @@ public class SymbolTree {
    * @param moduleType         тип модуля документа.
    * @param mdoRef             ссылка на объект метаданных документа.
    * @param bareSelfProperties голые имена, признанные реквизитами своего типа.
+   * @param loopVariables      переменные, впервые объявленные заголовком цикла.
    */
-  public record Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties) {
+  public record Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties,
+                      Set<VariableSymbol> loopVariables) {
     /**
      * Основание дерева, построенного не по документу: годным для документа такое дерево не бывает.
      * Узнаётся по ссылке, а не по значениям полей.
      */
     public static final Basis NONE = new Basis(ModuleType.UNKNOWN, "", Set.of());
+
+    public Basis {
+      bareSelfProperties = Set.copyOf(bareSelfProperties);
+      loopVariables = Set.copyOf(loopVariables);
+    }
+
+    public Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties) {
+      this(moduleType, mdoRef, bareSelfProperties, Set.of());
+    }
+
   }
 
   /**

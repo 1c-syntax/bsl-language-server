@@ -24,10 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +46,80 @@ class SymbolTreeComputerTest {
 
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier eventHandlerClassifier;
+
+  @Test
+  void loopDeclarationsDoNotDependOnSelfPropertyClassification() {
+    var document = TestUtils.getDocumentContext("""
+      Процедура Циклы()
+        Для Свойство = 1 По 2 Цикл
+        КонецЦикла;
+        Для Каждого ДругоеСвойство Из Массив Цикл
+        КонецЦикла;
+      КонецПроцедуры
+      """);
+    var selfProperty = new AtomicBoolean(true);
+    var computer = new SymbolTreeComputer(document, (doc, name) -> selfProperty.get(),
+      (doc, name) -> false);
+
+    var tree = computer.compute();
+    assertThat(tree.getVariables()).extracting(VariableSymbol::getName)
+      .containsExactlyInAnyOrder("Свойство", "ДругоеСвойство");
+    assertThat(computer.isUpToDate(tree)).isTrue();
+
+    selfProperty.set(false);
+    assertThat(computer.isUpToDate(tree)).isTrue();
+    selfProperty.set(true);
+    assertThat(computer.isUpToDate(tree)).isTrue();
+  }
+
+  @Test
+  void loopNameInAnotherMethodDoesNotHideAssignmentClassificationChanges() {
+    var document = TestUtils.getDocumentContext("""
+      Процедура Цикл()
+        Для Свойство = 1 По 2 Цикл
+        КонецЦикла;
+      КонецПроцедуры
+      Процедура Присваивание()
+        Свойство = 0;
+      КонецПроцедуры
+      """);
+    var selfProperty = new AtomicBoolean(false);
+    var computer = new SymbolTreeComputer(document, (doc, name) -> selfProperty.get(),
+      (doc, name) -> false);
+    var tree = computer.compute();
+    assertThat(tree.getVariables()).hasSize(2);
+
+    selfProperty.set(true);
+    assertThat(computer.isUpToDate(tree)).isFalse();
+    var refreshed = computer.compute();
+    assertThat(refreshed.getVariables()).hasSize(1);
+    assertThat(computer.isUpToDate(refreshed)).isTrue();
+  }
+
+  @Test
+  void assignmentBeforeLoopStillDependsOnSelfPropertyClassification() {
+    var document = TestUtils.getDocumentContext("""
+      Процедура Цикл()
+        Свойство = 0;
+        Для Свойство = 1 По 2 Цикл
+        КонецЦикла;
+      КонецПроцедуры
+      """);
+    var selfProperty = new AtomicBoolean(false);
+    var computer = new SymbolTreeComputer(document, (doc, name) -> selfProperty.get(),
+      (doc, name) -> false);
+    var assignmentTree = computer.compute();
+    assertThat(assignmentTree.getVariables().getFirst().getVariableNameRange().getStart().getLine()).isEqualTo(1);
+
+    selfProperty.set(true);
+    assertThat(computer.isUpToDate(assignmentTree)).isFalse();
+    var loopTree = computer.compute();
+    assertThat(loopTree.getVariables().getFirst().getVariableNameRange().getStart().getLine()).isEqualTo(2);
+    assertThat(computer.isUpToDate(loopTree)).isTrue();
+
+    selfProperty.set(false);
+    assertThat(computer.isUpToDate(loopTree)).isFalse();
+  }
 
   @Test
   void buildingAndRevalidatingUseDocumentClassifiers() {

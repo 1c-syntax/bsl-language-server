@@ -109,7 +109,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     collapseChildrenCollection(moduleSymbol);
     var basis = new SymbolTree.Basis(documentContext.getModuleType(), documentContext.getMdoRef(),
-      Set.copyOf(bareSelfProperties));
+      bareSelfProperties, regionVariableComputer.getLoopVariables());
     return new SymbolTree(moduleSymbol, basis);
   }
 
@@ -120,8 +120,8 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
    * классификаторы ответили на вопросы о его методах и голых присваиваниях, — а их ответы
    * держатся на членах чужих модулей и типов. Дерево годно, если привязка та же и
    * классификаторы отвечают то же самое. Голые присваивания переспрашиваются по
-   * переменным с неявным объявлением: среди них и переменные циклов, о которых при
-   * построении не спрашивали, поэтому проверка строже нужного, но не слабее.
+   * переменным с неявным объявлением. Объявления циклов от классификатора реквизитов
+   * не зависят и в этой проверке не участвуют.
    *
    * @param symbolTree дерево, построенное по тому же тексту документа.
    * @return {@code true}, если построение заново дало бы то же дерево.
@@ -136,7 +136,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     var eventHandlers = eventHandlerClassifier.eventHandlersOf(documentContext);
     var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
     return basis.bareSelfProperties().stream().allMatch(bareSelfProperty)
-      && classifiedAsBefore(symbolTree.getModule(), eventHandlers, bareSelfProperty);
+      && classifiedAsBefore(symbolTree.getModule(), eventHandlers, bareSelfProperty, basis.loopVariables());
   }
 
   /**
@@ -145,7 +145,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
    * достраивать у документов, которые после неё сразу отпустят.
    */
   private static boolean classifiedAsBefore(SourceDefinedSymbol symbol, Predicate<String> eventHandlers,
-                                            Predicate<String> bareSelfProperty) {
+                                            Predicate<String> bareSelfProperty, Set<VariableSymbol> loopVariables) {
     for (var child : symbol.getChildren()) {
       if (child instanceof MethodSymbol method
         && !(method instanceof ConstructorSymbol)
@@ -154,10 +154,11 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
       }
       if (child instanceof VariableSymbol variable
         && variable.getKind() == VariableKind.DYNAMIC
+        && !loopVariables.contains(variable)
         && bareSelfProperty.test(variable.getName())) {
         return false;
       }
-      if (!classifiedAsBefore(child, eventHandlers, bareSelfProperty)) {
+      if (!classifiedAsBefore(child, eventHandlers, bareSelfProperty, loopVariables)) {
         return false;
       }
     }
