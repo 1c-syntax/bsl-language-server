@@ -365,7 +365,7 @@ public class ConfigurationTypesProvider {
 
     collectionMembersByType
       .computeIfAbsent(mdoType, k -> new ArrayList<>())
-      .add(MemberDescriptor.property(name, ref));
+      .add(MemberDescriptor.property(name, ref).withBilingualName(BilingualString.of(name, name)));
     return true;
   }
 
@@ -417,13 +417,11 @@ public class ConfigurationTypesProvider {
     if (!collectionAliasRu.equals(managerNames.ru())) {
       typeRegistry.registerConfigurationTypeAlias(collectionAliasRu, ref);
     }
-    globalScopeProvider.registerConfigurationQualifiedName(collectionAliasRu);
     if (!groupEn.equals(groupRu)) {
       var collectionAliasEn = groupEn + "." + name;
       if (!collectionAliasEn.equals(managerNames.ru()) && !collectionAliasEn.equals(managerNames.en())) {
         typeRegistry.registerConfigurationTypeAlias(collectionAliasEn, ref);
       }
-      globalScopeProvider.registerConfigurationQualifiedName(collectionAliasEn);
     }
   }
 
@@ -662,7 +660,7 @@ public class ConfigurationTypesProvider {
       // только из членов объектного типа — читать их из её ленивого источника нельзя.
       formDataTypesRegistrar.registerTabularSectionData(collRef, columnSource);
 
-      tsMembers.add(MemberDescriptor.property(tsName, collRef));
+      tsMembers.add(MemberDescriptor.property(tsName, collRef).withBilingualName(BilingualString.of(tsName, tsName)));
     }
     if (!tsMembers.isEmpty()) {
       var immutableTs = List.copyOf(tsMembers);
@@ -832,9 +830,10 @@ public class ConfigurationTypesProvider {
     var refType = typeRegistry.resolve(familyCore + "Ссылка." + mdName).orElse(null);
     var members = valueNames.stream()
       .distinct()
-      .map(valueName -> refType == null
+      .map(valueName -> (refType == null
         ? MemberDescriptor.property(valueName)
         : MemberDescriptor.property(valueName, refType))
+        .withBilingualName(BilingualString.of(valueName, valueName)))
       .toList();
     // В отличие от значений перечислений (placeholder generic-члена менеджера), у менеджеров
     // справочников/планов нет placeholder'а под предопределённые — регистрируем members напрямую.

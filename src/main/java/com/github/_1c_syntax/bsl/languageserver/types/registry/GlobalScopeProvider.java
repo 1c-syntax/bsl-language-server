@@ -127,14 +127,6 @@ public class GlobalScopeProvider {
    * library-модуль OneScript) — у потребителя на руках {@link TypeRef}, а не URI.
    */
   private final Map<TypeRef, URI> uriByModuleTypeRef = new ConcurrentHashMap<>();
-  /**
-   * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
-   * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
-   * Поддерживается no-dot completion: пользователь печатает {@code Докум} —
-   * подсказывается и {@code Документы}, и {@code Документы.Документ1}.
-   */
-  private final Set<String> configurationQualifiedNames =
-    Collections.newSetFromMap(new ConcurrentHashMap<>());
 
   /**
    * Загружает наполнение глобальной области:
@@ -473,26 +465,6 @@ public class GlobalScopeProvider {
    */
   public Optional<URI> uriByModuleTypeRef(TypeRef ref) {
     return Optional.ofNullable(uriByModuleTypeRef.get(ref));
-  }
-
-
-  /**
-   * Зарегистрировать каноничное составное имя MD-объекта конфигурации
-   * (например, {@code Документы.Документ1} или {@code Documents.Документ1}).
-   * Используется в no-dot completion.
-   */
-  public void registerConfigurationQualifiedName(String qualifiedName) {
-    if (qualifiedName == null || qualifiedName.isBlank()) {
-      return;
-    }
-    configurationQualifiedNames.add(qualifiedName);
-  }
-
-  /**
-   * @return Каноничные составные имена MD-объектов в исходном написании.
-   */
-  public Collection<String> getConfigurationQualifiedNames() {
-    return List.copyOf(configurationQualifiedNames);
   }
 
 

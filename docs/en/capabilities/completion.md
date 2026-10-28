@@ -98,7 +98,9 @@ After typing `ОбщегоНазначения.Знач`, completion of the comm
 
 ## Metadata collections (Catalogs.)
 
-After typing `Справочники.`, completion of the metadata object collection is triggered. The list offers the configuration's catalogs along with manager methods.
+The ordinary completion list offers the collections themselves (`Catalogs`, `Documents`, `AccumulationRegisters`), without listing full paths to every object. Collection names follow the script language; object names from metadata are preserved without translation.
+
+After typing `Catalogs.` (or `Справочники.`), completion of the metadata object collection is triggered. The list offers the configuration's catalogs along with manager methods.
 
 ![comp-08-metadata-collection](https://github.com/user-attachments/assets/c9a28547-6609-4233-8477-2b9756f1d99d)
 
