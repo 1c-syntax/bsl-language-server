@@ -8,7 +8,16 @@ The diagnostic detects references to methods and properties that do not exist �
 * `Receiver.Member` — the receiver type is inferred and concrete, but it has no member with that name;
 * a bare `Name(...)` call — the name resolves neither to a global function/property of the platform or the configuration, nor to a method/variable of the current module.
 
-The diagnostic relies on type inference and member data from the 1C platform syntax assistant (via `bsl-context`) or the bundled reference. When the receiver type cannot be inferred or is arbitrary/undefined, the diagnostic stays silent to avoid false positives.
+Type names follow the project's script variant, while diagnostic text follows the server language.
+User-defined method and property names are preserved without translation.
+
+The diagnostic relies on type inference and member data from the 1C platform syntax assistant (via `bsl-context`) or the bundled reference. Each known receiver type is checked independently: a member present on one possible type does not hide its absence on another. Unresolved and arbitrary types do not prove an error and are skipped.
+
+When module metadata is available, receiver types are inferred separately for each compilation context, taking method directives and preprocessor branches into account. Checked contexts are selected automatically from the root configuration metadata, following the `auto` policy of `MethodCallUnavailable`. Related information identifies the context in which the member is missing. Files without metadata retain ordinary checks of known types and names.
+
+Provably unreachable branches, such as `#If Server And Not Server`, are skipped. OneScript preprocessor symbols are independent of 1C platform contexts; logical contradictions such as `Windows And Not Windows` also exclude a branch.
+
+A declared method remains a known member even when calling it is prohibited. `MethodCallUnavailable` checks that prohibition, so the same cause is not reported by both diagnostics. Different possible receivers on the same line can have different problems and produce a message from each diagnostic.
 
 Members of "open" data objects — `Структура`, a value table row and the like — are collected from the code itself: a key added by `Вставить("Name", …)` or listed in the constructor counts as a known member. The key name is known even when the type of its value cannot be inferred: these are different facts, and the absence of the latter does not cancel the former.
 
@@ -26,6 +35,18 @@ Fix it by using an existing member:
 
 ```bsl
 Массив.Добавить(1);
+```
+
+A receiver from another preprocessor branch does not hide a missing member:
+
+```bsl
+#If Server Then
+    Collection = New Map;
+#Else
+    Collection = New Array;
+#EndIf
+
+Collection.Add(1); // Map has no Add method in the server context.
 ```
 
 ## Sources

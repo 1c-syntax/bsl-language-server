@@ -4,6 +4,78 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
+        "MethodCallUnavailable": {
+            "description": "Member access unavailable in the calling context",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Member access unavailable in the calling context",
+            "properties": {
+                "checkExternalConnection": {
+                    "description": "Check external connection (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check external connection (on/off/auto)"
+                },
+                "checkMobileStandaloneServer": {
+                    "description": "Check mobile standalone server (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile standalone server (on/off/auto)"
+                },
+                "checkServer": {
+                    "description": "Check server (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check server (on/off/auto)"
+                },
+                "checkMobileApplicationClient": {
+                    "description": "Check mobile application (client) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile application (client) (on/off/auto)"
+                },
+                "checkThickClientManagedApplication": {
+                    "description": "Check thick client (managed application) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check thick client (managed application) (on/off/auto)"
+                },
+                "checkThinClient": {
+                    "description": "Check thin client (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check thin client (on/off/auto)"
+                },
+                "checkMobileClient": {
+                    "description": "Check mobile client (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile client (on/off/auto)"
+                },
+                "checkWebClient": {
+                    "description": "Check web client (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check web client (on/off/auto)"
+                },
+                "checkThickClientOrdinaryApplication": {
+                    "description": "Check thick client (ordinary application) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check thick client (ordinary application) (on/off/auto)"
+                },
+                "checkMobileApplicationServer": {
+                    "description": "Check mobile application (server) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile application (server) (on/off/auto)"
+                }
+            },
+            "$id": "#/definitions/MethodCallUnavailable"
+        },
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",
             "default": true,
@@ -377,13 +449,13 @@
             "$id": "#/definitions/CompilationDirectiveNeedLess"
         },
         "CompilationDirectiveNotAllowed": {
-            "description": "Compilation directive is not available in this module type",
+            "description": "Compilation directive is not available in this module",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Compilation directive is not available in this module type",
+            "title": "Compilation directive is not available in this module",
             "$id": "#/definitions/CompilationDirectiveNotAllowed"
         },
         "ConsecutiveEmptyLines": {
