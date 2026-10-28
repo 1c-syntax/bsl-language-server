@@ -539,12 +539,16 @@ class MethodReturnTypeIndexerTest {
     var loading = trackLoading(serverContext, documents);
     // Расчёт первого документа ждёт, пока разбор впереди заполнит всё окно: иначе мгновенный
     // расчёт на заглушках успевал бы за разбором, и разом разобранным всегда был бы один.
-    var first = methods[0];
-    var second = methods[1];
-    when(inferencer.computeReturnTypes(first)).thenAnswer(invocation -> {
-      await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= AHEAD_WINDOW);
-      return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(second), false);
-    });
+    var firstComputation = new AtomicBoolean(true);
+    for (var index = 0; index < methods.length; index++) {
+      var next = methods[(index + 1) % methods.length];
+      when(inferencer.computeReturnTypes(methods[index])).thenAnswer(invocation -> {
+        if (firstComputation.getAndSet(false)) {
+          await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= AHEAD_WINDOW);
+        }
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
+      });
+    }
 
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
