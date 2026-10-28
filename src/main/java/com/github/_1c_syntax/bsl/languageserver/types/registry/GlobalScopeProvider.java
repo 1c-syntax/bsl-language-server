@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.context.api.ContextLanguageKeyword;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.context.api.ContextType;
-import com.github._1c_syntax.bsl.context.api.LanguageKeywordCategory;
 import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
@@ -52,7 +51,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -411,16 +409,6 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Ключевые слова указанного языка для completion в no-dot контексте.
-   *
-   * @param fileType язык файла-потребителя.
-   * @return ключевые слова.
-   */
-  public List<String> getKeywords(FileType fileType) {
-    return byFileType.get(fileType).keywords;
-  }
-
-  /**
    * Связать URI документа-модуля с его типом-значением. Вызывается провайдерами
    * регистрации модулей синхронно рядом с регистрацией имени. Повторный вызов с тем
    * же URI перезаписывает тип (корректно отражает переименование модуля).
@@ -502,8 +490,6 @@ public class GlobalScopeProvider {
 
     var classes = new ArrayList<String>();
     var classSeen = new HashSet<String>();
-    var keywords = new ArrayList<String>();
-    var keywordSeen = new HashSet<String>();
     var keywordSnippets = new HashMap<String, LanguageKeywordSnippet>();
     var keywordDescriptions = new HashMap<String, KeywordDescription>();
     var variables = new ArrayList<PlatformVariable>();
@@ -523,15 +509,14 @@ public class GlobalScopeProvider {
         addNameWithAlias(classes, classSeen, type.name().getName(), type.name().getAlias());
       } else if (ctx instanceof ContextEnum enumeration) {
         addContextEnum(enumeration, variableSeen, enums);
-      } else if (ctx instanceof ContextLanguageKeyword kw && KEYWORD_CATEGORIES.contains(kw.category())) {
-        addContextKeyword(kw, keywords, keywordSeen, keywordSnippets, keywordDescriptions);
+      } else if (ctx instanceof ContextLanguageKeyword kw) {
+        addContextKeyword(kw, keywordSnippets, keywordDescriptions);
       }
     }
 
     return new LanguageData(
       Collections.unmodifiableMap(functions),
       List.copyOf(classes),
-      List.copyOf(keywords),
       List.copyOf(variables),
       List.copyOf(enums),
       Map.copyOf(keywordSnippets),
@@ -578,19 +563,12 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Ключевое слово из СП: имя (ru + en) — в completion-список, сниппет и
-   * описание (включая контекстно-зависимые {@code descriptionByParent}) —
-   * в индексы по обоим написаниям.
+   * Сниппет и описание конструкции из СП (включая контекстно-зависимые
+   * {@code descriptionByParent}) — в индексы по обоим написаниям.
    */
   private static void addContextKeyword(ContextLanguageKeyword kw,
-                                        List<String> keywords,
-                                        Set<String> keywordSeen,
                                         Map<String, LanguageKeywordSnippet> keywordSnippets,
                                         Map<String, KeywordDescription> keywordDescriptions) {
-    var added = addNameWithAlias(keywords, keywordSeen, kw.name().getName(), kw.name().getAlias());
-    if (!added) {
-      return;
-    }
     if (!kw.snippet().isEmpty()) {
       // Сниппет по обоим написаниям — пользователь может ввести любое.
       putByNameAndAlias(keywordSnippets, kw, kw.snippet());
@@ -664,38 +642,17 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Категории {@link LanguageKeywordCategory}, пригодные для no-dot completion
-   * как «keywords». PRAGMA / ANNOTATION / PREPROCESSOR_INSTRUCTION
-   * предваряются специальными префиксами ({@code &} / {@code #}) и
-   * обрабатываются другим completion-flow.
+   * Добавляет ru-имя и en-алиас класса в общий список с дедупликацией по lowercase.
    */
-  private static final Set<LanguageKeywordCategory> KEYWORD_CATEGORIES =
-    EnumSet.of(
-      LanguageKeywordCategory.LITERAL,
-      LanguageKeywordCategory.STATEMENT,
-      LanguageKeywordCategory.OPERATOR,
-      LanguageKeywordCategory.DECLARATION
-    );
-
-  /**
-   * Добавляет ru-имя и en-алиас в общий список с дедупликацией по lowercase.
-   * @return {@code true}, если хотя бы одно из имён было добавлено впервые
-   *         (нужно для маппинга «ключ → snippet» — он привязывается только
-   *         к новым именам).
-   */
-  private static boolean addNameWithAlias(List<String> sink,
+  private static void addNameWithAlias(List<String> sink,
                                           Set<String> seen,
                                           String name, String alias) {
-    var added = false;
     if (!name.isBlank() && seen.add(name.toLowerCase(Locale.ROOT))) {
       sink.add(name);
-      added = true;
     }
     if (!alias.isBlank() && seen.add(alias.toLowerCase(Locale.ROOT))) {
       sink.add(alias);
-      added = true;
     }
-    return added;
   }
 
   private static void putFunction(
@@ -717,28 +674,17 @@ public class GlobalScopeProvider {
       var functions = readFunctions(root);
       @SuppressWarnings("unchecked")
       var classes = (List<String>) root.getOrDefault("classes", Collections.emptyList());
-      @SuppressWarnings("unchecked")
-      var keywords = new ArrayList<>(
-        (List<String>) root.getOrDefault("keywords", Collections.emptyList()));
       var variables = readVariables(root);
-      // Догружаем структурированные keywords (category/description/snippet)
+      // Догружаем описания и сниппеты языковых конструкций
       // из соседнего ресурса builtin-keywords.json — это JSON-fallback к
       // ContextLanguageKeyword из bsl-context, когда HBK не подключён.
       var keywordMeta = loadKeywordMetadata(keywordsResourceFor(resourcePath));
-      var seenKeywords = new HashSet<String>();
-      keywords.forEach(k -> seenKeywords.add(k.toLowerCase(Locale.ROOT)));
-      for (var k : keywordMeta.keywords()) {
-        if (seenKeywords.add(k.toLowerCase(Locale.ROOT))) {
-          keywords.add(k);
-        }
-      }
-      return new LanguageData(functions, List.copyOf(classes), List.copyOf(keywords), variables,
+      return new LanguageData(functions, List.copyOf(classes), variables,
         List.of(),
         Map.copyOf(keywordMeta.snippets()), Map.copyOf(keywordMeta.descriptions()));
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
-      return new LanguageData(Collections.emptyMap(), List.of(), List.of(), List.of(),
-        List.of(), Map.of(), Map.of());
+      return new LanguageData(Collections.emptyMap(), List.of(), List.of(), List.of(), Map.of(), Map.of());
     }
   }
 
@@ -751,12 +697,7 @@ public class GlobalScopeProvider {
   }
 
   private static KeywordMetadata loadKeywordMetadata(String resourcePath) {
-    return KeywordMetadataLoader.load(resourcePath, GlobalScopeProvider::isCompletionCategory);
-  }
-
-  /** Категория из JSON-fallback'a, попадающая в плоский completion-список. */
-  private static boolean isCompletionCategory(String categoryStr) {
-    return KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
+    return KeywordMetadataLoader.load(resourcePath);
   }
 
   /**
@@ -963,13 +904,12 @@ public class GlobalScopeProvider {
 
   /**
    * Иммутабельный снапшот загруженных глобалов одного языка: функции, классы,
-   * ключевые слова, платформенные переменные/перечисления, описания и сниппеты
+   * платформенные переменные/перечисления, описания и сниппеты
    * ключевых слов.
    */
   private record LanguageData(
     Map<String, MemberDescriptor> functions,
     List<String> classes,
-    List<String> keywords,
     List<PlatformVariable> platformVariables,
     List<PlatformVariable> platformEnums,
     Map<String, LanguageKeywordSnippet> keywordSnippets,

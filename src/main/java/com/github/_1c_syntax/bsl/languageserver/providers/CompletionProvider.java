@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
+import com.github._1c_syntax.bsl.languageserver.completion.KeywordCompletion;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -850,9 +851,8 @@ public final class CompletionProvider {
       collectEventHandlerStubs(documentContext, prefix, target, items);
     }
 
-    // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
-    // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
-    for (var keyword : globalScopeProvider.getKeywords(fileType)) {
+    var wordStart = new Position(position.getLine(), lineInfo.cursor - lineInfo.prefix.length());
+    for (var keyword : KeywordCompletion.suggest(documentContext, wordStart)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
