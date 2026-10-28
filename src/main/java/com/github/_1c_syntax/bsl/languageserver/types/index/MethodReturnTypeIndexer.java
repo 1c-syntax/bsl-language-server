@@ -23,10 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -34,14 +37,17 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -108,6 +114,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
+  private final LanguageServerConfiguration configuration;
+  private final ServerContextProvider serverContextProvider;
+  /** Значение настройки, для которого построен индекс; остальные изменения конфигурации его не сбрасывают. */
+  private boolean supportThickClientFileMode;
 
   /**
    * Пул, на котором считаются компоненты одного яруса. Свой, а не пул наполнения: проход
@@ -165,6 +175,40 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /** Какие документы перечитывались: волн несколько, и один документ может попасть в разбор не раз. */
   private final Set<URI> rebuiltUris = ConcurrentHashMap.newKeySet();
+
+  @PostConstruct
+  void captureCompilationSettings() {
+    supportThickClientFileMode = configuration.isSupportThickClientFileMode();
+  }
+
+  /**
+   * Пересчитать выведенные возвращаемые типы при смене поддерживаемых режимов проекта.
+   * <p>
+   * Выполняется после сброса окружений и выражений, до обновления диагностик и подсказок.
+   * Используется обычный проход индекса с ограничением числа одновременно загруженных документов.
+   *
+   * @param event новые настройки рабочей области.
+   */
+  @Order(Ordered.HIGHEST_PRECEDENCE + 100)
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    var enabled = event.getSource().isSupportThickClientFileMode();
+    if (enabled == supportThickClientFileMode) {
+      return;
+    }
+    supportThickClientFileMode = enabled;
+    pending.addAll(indexed);
+    indexed.clear();
+    provisional.clear();
+    computedAt.clear();
+    changedAt.clear();
+    symbolTypeIndex.clearInferredReturnTypes();
+    var workspace = WorkspaceContextHolder.get();
+    var context = workspace == null ? null : serverContextProvider.getAllContexts().get(workspace);
+    if (context != null && !context.isClearing() && !maintenance && !pending.isEmpty()) {
+      handleServerContextPopulated(new ServerContextPopulatedEvent(context));
+    }
+  }
 
   /**
    * Считает типы возврата метода по телу, если этого ещё не делалось, и складывает

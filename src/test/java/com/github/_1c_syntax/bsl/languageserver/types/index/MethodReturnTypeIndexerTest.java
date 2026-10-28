@@ -23,9 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -119,6 +121,7 @@ class MethodReturnTypeIndexerTest {
       symbolTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
       configuration,
+      new LanguageServerConfiguration(), mock(ServerContextProvider.class),
       resolveExecutor
     );
 
@@ -491,7 +494,8 @@ class MethodReturnTypeIndexerTest {
     when(progressHelper.createProgress(anyInt(), anyString())).thenReturn(reporter);
     var configuration = mock(GlobalLanguageServerConfiguration.class);
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration, resolveExecutor);
+    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration,
+      new LanguageServerConfiguration(), mock(ServerContextProvider.class), resolveExecutor);
     var ring = ring("cycle", 9);
     var documents = ring.documents();
     var methods = ring.methods();
@@ -923,6 +927,8 @@ class MethodReturnTypeIndexerTest {
       symbolTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
       configuration,
+      new LanguageServerConfiguration(),
+      mock(ServerContextProvider.class),
       executor
     );
   }

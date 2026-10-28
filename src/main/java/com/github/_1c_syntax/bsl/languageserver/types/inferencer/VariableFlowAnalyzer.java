@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
+import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -43,6 +46,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -50,12 +56,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
@@ -90,6 +96,12 @@ import java.util.stream.Stream;
  * по позициям тело и рассчитанные по нему окружения. Без второго неподвижная точка
  * считалась бы заново на каждый запрос типа, а диагностики спрашивают тип на каждое
  * обращение к члену.
+ * <p>
+ * Окружения и ячейки для конкретных контекстов создаются по запросу и хранятся отдельно
+ * от результата без ограничения режима. Иначе запрос для {@code #Если Сервер}
+ * мог бы заменить тип, нужный другому клиенту API. Разложение тела общее: контекст
+ * исключает недостижимые вершины и рёбра без изменения исходного графа.
+ * Все варианты очищаются через {@link #clear(URI)} по жизненному циклу документа.
  */
 @Component
 @WorkspaceScope
@@ -107,6 +119,18 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   private final Map<URI, Map<BSLParser.CodeBlockContext, FlowLayout>> layoutsByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<BSLParser.CodeBlockContext, Facts>> factsByUri = new ConcurrentHashMap<>();
+  /**
+   * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
+   * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
+   */
+  private final Map<URI, Map<ExecutionContext, Map<BSLParser.CodeBlockContext, Facts>>> contextualFactsByUri =
+    new ConcurrentHashMap<>();
+  /**
+   * Ячейки переменных модуля по режимам и версии дерева символов. Смена дерева
+   * обесценивает запись целиком, даже если символ переменной сравнивается равным прежнему.
+   */
+  private final SourceBoundRecords<SymbolTree, Map<ExecutionContext, Map<VariableSymbol, TypeSet>>>
+    contextualCellsByUri = new SourceBoundRecords<>();
   /**
    * Ячейки переменных, видимых другим телам.
    * <p>
@@ -430,6 +454,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
    * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
    *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
+   * @param executionContext    режим для выбора кеша; {@code null} использует общий результат
+   *                            по всем возможным контекстам модуля и метода.
+   * @param compilationContexts возможные режимы каждого тела с учётом выбранного контекста,
+   *                            модуля, директивы и ветки объявления метода. Пустое множество
+   *                            исключает тело; пустой Optional отключает модель контекстов 1С.
    * @param sawMissing          видел ли вывод типов значения, которых ещё нет: пока рабочая
    *                            область наполняется, так бывает с функциями модулей, до которых
    *                            очередь не дошла. Посчитанное на них неполно и в кэши, живущие
@@ -459,6 +488,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   public record FlowInputs(
     FlowSession session,
     boolean cacheable,
+    @Nullable ExecutionContext executionContext,
+    Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
     BooleanSupplier sawMissing,
     Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
     Predicate<VariableSymbol> sharedWithOtherBodies,
@@ -584,17 +615,29 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @return тип на входе в тело.
    */
   private TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
-    var settled = cellsOf(documentContext).get(variable);
+    var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
     if (settled != null) {
       return settled;
     }
-    return inputs.session().cells.getOrDefault(variable, inputs.declaredFact().apply(variable));
+    var current = inputs.session().cells.get(variable);
+    return current == null ? inputs.declaredFact().apply(variable) : current;
   }
 
-  /** Готовые ячейки документа — посчитанные по его нынешнему дереву символов. */
-  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext) {
-    return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
-      tree -> new ConcurrentHashMap<>());
+  /**
+   * Получить хранилище завершённых ячеек для текущей версии дерева и выбранного режима.
+   *
+   * @param documentContext документ — владелец переменных.
+   * @param context режим компиляции или {@code null} для общего хранилища.
+   * @return изменяемая потокобезопасная карта, создаваемая при первом обращении.
+   */
+  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext, @Nullable ExecutionContext context) {
+    if (context == null) {
+      return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
+        tree -> new ConcurrentHashMap<>());
+    }
+    return contextualCellsByUri
+      .get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(), tree -> new ConcurrentHashMap<>())
+      .computeIfAbsent(context, ignored -> new ConcurrentHashMap<>());
   }
 
   /**
@@ -634,7 +677,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // этой проверки круги гонялись бы заново на каждый запрос типа: своя память о них
     // заводится на один вывод, а запросов на документ тысячи. Посчитанное кладётся туда
     // же, откуда прочитано, — к дереву символов, по которому шёл расчёт.
-    var settled = cellsOf(documentContext);
+    var settled = cellsOf(documentContext, inputs.executionContext());
     var pending = new ArrayList<VariableSymbol>(shared.size());
     for (var variable : shared) {
       if (!settled.containsKey(variable) && session.cellsDone.add(variable)) {
@@ -680,6 +723,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     for (var round = 0; round < MAX_PASSES && !bodies.isEmpty(); round++) {
       var grown = false;
       for (var body : bodies) {
+        if (inputs.compilationContexts().apply(body).map(Set::isEmpty).orElse(false)) {
+          continue;
+        }
         // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
         // и через круг устареют.
         var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
@@ -728,8 +774,20 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   public void clear(URI uri) {
     layoutsByUri.remove(uri);
     factsByUri.remove(uri);
+    contextualFactsByUri.remove(uri);
     cellsByUri.remove(uri);
+    contextualCellsByUri.remove(uri);
     changesByUri.remove(uri);
+  }
+
+  /** Изменение общих режимов обесценивает типы, но не раскладку неизменённого AST. */
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    factsByUri.clear();
+    contextualFactsByUri.clear();
+    cellsByUri.clear();
+    contextualCellsByUri.clear();
   }
 
   /**
@@ -824,9 +882,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Рассчитанные по телу окружения — из кэша либо посчитанные на месте. Окружения не
-   * зависят от точки запроса, поэтому одного расчёта хватает на все обращения ко всем
-   * переменным тела.
+   * Рассчитанные по телу окружения — из кеша выбранного режима либо посчитанные на месте.
+   * Окружения не зависят от точки запроса, поэтому одного расчёта хватает на все обращения
+   * ко всем переменным тела в этом режиме.
+   * <p>
+   * Запись разрешена только для самостоятельного расчёта с полными исходными данными
+   * и завершёнными ячейками переменных модуля. Промежуточный результат возвращается
+   * текущему запросу, но не публикуется для следующих запросов.
    */
   private Facts factsOf(
     DocumentContext documentContext,
@@ -834,9 +896,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     FlowLayout layout,
     FlowInputs inputs
   ) {
-    var byBody = inputs.cacheable()
-      ? factsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
-      : null;
+    Map<BSLParser.CodeBlockContext, Facts> byBody = null;
+    if (inputs.cacheable()) {
+      byBody = inputs.executionContext() == null
+        ? factsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
+        : contextualFactsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
+          .computeIfAbsent(inputs.executionContext(), context -> new ConcurrentHashMap<>());
+    }
     if (byBody != null) {
       var cached = byBody.get(body);
       if (cached != null) {
@@ -924,7 +990,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return new Facts(Map.of(), Map.of(), Map.of(), Environment.EMPTY);
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
-    var pass = new Pass(this, documentContext, graph, layout, inputs, variables, indexes, changesByStatement);
+    var compiled = inputs.compilationContexts().apply(body)
+      .map(contexts -> PreprocessorFlow.of(graph, contexts)).orElse(null);
+    var pass = new Pass(this, documentContext, graph, layout, inputs, compiled, variables, indexes, changesByStatement);
     var active = inputs.session().active;
     active.put(body, pass);
     try {
@@ -975,13 +1043,36 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private final Map<ParserRuleContext, List<Change>> changesByStatement;
     /** Номера переменных, видимых другим телам: их тип сбрасывается на вызовах. */
     private final List<Integer> shared;
+    /** Достижимая часть графа во всех возможных режимах; {@code null} отключает модель контекстов 1С. */
+    private final @Nullable PreprocessorFlow compiledFlow;
 
     /**
-     * Присваиваемые типы, уже посчитанные в этом расчёте. Каждый проход до неподвижной
-     * точки заново проходит по тем же присваиваниям, а вывод типа выражения справа —
-     * самая дорогая часть шага.
+     * Типы правых частей с зависимостями от прочитанных окружений.
+     * Карта живёт только в этом поиске неподвижной точки тела: ячейки других тел
+     * на его время фиксированы. Результат переиспользуется, пока все наблюдавшиеся
+     * чтения дают прежние типы, независимо от изменений остальных переменных.
      */
-    private final Map<Position, TypeSet> assignedTypes = new HashMap<>();
+    private final Map<Position, AssignmentResult> assignedTypes = new HashMap<>();
+    /** Приёмник чтений текущей правой части; вложенный расчёт дополняет родительский список. */
+    private @Nullable List<VariableRead> assignmentReads;
+
+    /**
+     * Чтение переменной во время вычисления правой части.
+     *
+     * @param statement оператор, перед которым запрошено окружение.
+     * @param index номер переменной в окружениях этого тела.
+     * @param type прочитанный тип; {@code null}, если окружение ещё не рассчитано.
+     *     Появление окружения также обесценивает сохранённый результат.
+     */
+    private record VariableRead(ParserRuleContext statement, int index, @Nullable TypeSet type) { }
+
+    /**
+     * Результат правой части и снимок её зависимостей для повторных проходов.
+     *
+     * @param type выведенный тип в текущем приближении.
+     * @param reads неизменяемый список наблюдавшихся чтений, включая вложенные расчёты.
+     */
+    private record AssignmentResult(TypeSet type, List<VariableRead> reads) { }
 
     /**
      * Окружение перед каждым оператором. Заполняется по ходу расчёта, а не только в конце:
@@ -1010,6 +1101,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       ControlFlowGraph graph,
       FlowLayout layout,
       FlowInputs inputs,
+      @Nullable PreprocessorFlow compiledFlow,
       List<VariableSymbol> variables,
       Map<VariableSymbol, Integer> indexes,
       Map<ParserRuleContext, List<Change>> changesByStatement
@@ -1019,6 +1111,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       this.graph = graph;
       this.layout = layout;
       this.inputs = inputs;
+      this.compiledFlow = compiledFlow;
       this.variables = variables;
       this.indexes = indexes;
       this.changesByStatement = changesByStatement;
@@ -1040,6 +1133,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private Facts computeFacts() {
       var byVertex = computeEntryFacts();
       for (var vertex : layout.orderedVertices()) {
+        if (compiledFlow != null && !compiledFlow.vertices().contains(vertex)) {
+          continue;
+        }
         // Через тот же кэш выхода: к концу поиска неподвижной точки он уже посчитан для
         // этих же входных окружений, и повторный проход по операторам не нужен — вместе с
         // ним не нужны и повторные вызовы колбэков мутаторов.
@@ -1068,7 +1164,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         return null;
       }
       var environment = beforeStatement.get(statement);
-      return environment == null ? null : environment.get(index);
+      var type = environment == null ? null : environment.get(index);
+      if (assignmentReads != null) {
+        assignmentReads.add(new VariableRead(statement, index, type));
+      }
+      return type;
     }
 
     /**
@@ -1083,6 +1183,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       for (var pass = 0; pass < MAX_PASSES; pass++) {
         var changed = false;
         for (var vertex : layout.orderedVertices()) {
+          if (compiledFlow != null && !compiledFlow.vertices().contains(vertex)) {
+            continue;
+          }
           var incoming = joinOfPredecessors(vertex, facts);
           if (vertex == graph.getEntryPoint()) {
             incoming = incoming.union(entryEnvironment());
@@ -1106,8 +1209,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     private Environment entryEnvironment() {
       if (entry == null) {
-        var types = Environment.blank(variables.size());
-        var current = types;
+        var current = Environment.blank(variables.size());
         for (var i = 0; i < variables.size(); i++) {
           current = current.with(i, entryFactOf(variables.get(i)), variables.size());
         }
@@ -1136,6 +1238,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private Environment joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, Environment> facts) {
       var joined = Environment.EMPTY;
       for (var edge : graph.incomingEdgesOf(vertex)) {
+        if (compiledFlow != null && !compiledFlow.edges().contains(edge)) {
+          continue;
+        }
         var predecessor = graph.getEdgeSource(edge);
         var atPredecessor = facts.get(predecessor);
         if (atPredecessor != null) {
@@ -1236,13 +1341,64 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         for (var change : changes) {
           var variable = change.variable();
           var updated = change.definition()
-            ? assignedTypes.computeIfAbsent(
-              change.position(), position -> inputs.assigned().at(variable, statement, position))
+            ? assignedType(change, statement)
             : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
           current = current.with(change.index(), updated, variables.size());
         }
       }
       return forgetSharedAfterCall(statement, changes, current);
+    }
+
+    /**
+     * Пересчитать правую часть, если изменился хотя бы один прочитанный ею тип.
+     * Изменение других переменных заставляет пересчитать вершину, но на эту правую
+     * часть не влияет. Неизвестное ещё окружение тоже запоминается: когда расчёт до
+     * него дойдёт, {@code null} сменится известным типом и прежний ответ будет пересчитан.
+     * <p>
+     * При использовании сохранённого ответа его зависимости передаются внешнему расчёту:
+     * вложенная правая часть не должна скрывать от него прочитанные переменные.
+     *
+     * @param change присваивание с позицией, однозначной внутри этого тела.
+     * @param statement оператор, содержащий присваивание.
+     * @return тип правой части в текущем приближении окружений.
+     */
+    private TypeSet assignedType(Change change, ParserRuleContext statement) {
+      var cached = assignedTypes.get(change.position());
+      if (cached != null && readsUnchanged(cached.reads())) {
+        if (assignmentReads != null) {
+          assignmentReads.addAll(cached.reads());
+        }
+        return cached.type();
+      }
+      var previousReads = assignmentReads;
+      var reads = new ArrayList<VariableRead>(0);
+      assignmentReads = reads;
+      try {
+        var type = inputs.assigned().at(change.variable(), statement, change.position());
+        assignedTypes.put(change.position(), new AssignmentResult(type, List.copyOf(reads)));
+        return type;
+      } finally {
+        assignmentReads = previousReads;
+        if (previousReads != null) {
+          previousReads.addAll(reads);
+        }
+      }
+    }
+
+    /**
+     * Проверить каждое сохранённое чтение в его собственной точке программы.
+     * Отсутствующее окружение отличается от известного пустого типа. Пустой список
+     * означает, что результат не зависел от чтения переменных этого тела.
+     */
+    private boolean readsUnchanged(List<VariableRead> reads) {
+      for (var read : reads) {
+        var environment = beforeStatement.get(read.statement());
+        var type = environment == null ? null : environment.get(read.index());
+        if (!Objects.equals(type, read.type())) {
+          return false;
+        }
+      }
+      return true;
     }
 
     /**

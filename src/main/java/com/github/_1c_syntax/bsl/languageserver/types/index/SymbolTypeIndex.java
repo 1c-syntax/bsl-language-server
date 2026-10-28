@@ -247,6 +247,22 @@ public class SymbolTypeIndex {
   }
 
   /**
+   * Соединить тип из документирующего комментария с переданным результатом вывода.
+   * <p>
+   * Применяет те же правила, что {@link #getReturnTypes(MethodSymbol)}: для совпавшего
+   * типа сохраняется уточнение из комментария, а известные поля дополняются из вывода.
+   * Общий индекс и его кеш объединений не изменяются, поэтому метод подходит для результата,
+   * посчитанного только в одном контексте компиляции.
+   *
+   * @param method метод, чей документирующий комментарий нужно учесть.
+   * @param inferred отдельный результат вывода по телу, в том числе пустой.
+   * @return объединённый тип; пустой набор, если оба источника пусты.
+   */
+  public TypeSet getReturnTypes(MethodSymbol method, TypeSet inferred) {
+    return combine(getDeclaredReturnTypes(method), inferred);
+  }
+
+  /**
    * Типы возвращаемого значения метода: объявленные в документирующем комментарии вместе
    * с рассчитанными по телу.
    * <p>
@@ -762,6 +778,13 @@ public class SymbolTypeIndex {
       declaredReturnTypes.remove(m);
       combinedReturnTypes.remove(m);
     }
+  }
+
+  /** Сбросить результаты расчёта по телам при смене режимов, сохранив типы из описаний. */
+  public void clearInferredReturnTypes() {
+    inferredReturnTypes.clear();
+    inferredByUri.clear();
+    combinedReturnTypes.clear();
   }
 
   private void indexMethodsRecursive(SourceDefinedSymbol parent, List<MethodSymbol> collected) {
