@@ -125,6 +125,13 @@ public class LanguageServerConfiguration {
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
+  /**
+   * Учитывать толстый клиент в файловом варианте работы, включая совмещённые символы
+   * {@code Клиент} и {@code Сервер}. По умолчанию выключено. Настройка общая для
+   * диагностик, вывода типов и подсказок; файловое внешнее соединение от неё не зависит.
+   */
+  private boolean supportThickClientFileMode;
+
   @Nullable
   private Path configurationRoot;
 

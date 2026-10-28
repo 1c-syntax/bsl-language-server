@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -31,6 +32,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +54,52 @@ public class SymbolTree {
    * Корневой символ модуля документа.
    */
   ModuleSymbol module;
+
+  /**
+   * Условия препроцессора по диапазону имени метода в этой версии дерева.
+   * Отсутствующий ключ означает все контексты, значение {@code null} — неизвестное условие,
+   * пустое множество — недостижимую ветку. Диапазоны и множества не удерживают AST.
+   */
+  @Getter(AccessLevel.NONE)
+  Map<Range, Set<ExecutionContext>> methodConditions;
+
+  /**
+   * Создать дерево без ограничений препроцессора для объявлений методов.
+   *
+   * @param module корневой символ документа.
+   */
+  public SymbolTree(ModuleSymbol module) {
+    this(module, Map.of());
+  }
+
+  /**
+   * Создать дерево с сохранёнными условиями объявлений методов.
+   * <p>
+   * Карта, её ключи и множества используются без защитного копирования.
+   * Вызывающий код должен обеспечить их неизменность в течение жизни дерева.
+   *
+   * @param module корневой символ документа.
+   * @param methodConditions условия по диапазонам имён методов этой версии документа;
+   *     значения {@code null} допустимы и означают неизвестное условие.
+   */
+  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
+    this.module = module;
+    this.methodConditions = methodConditions;
+  }
+
+  /**
+   * Получить контексты ветки препроцессора, в которой объявлен метод.
+   * <p>
+   * Доступно после выгрузки AST. Контексты модуля, директивы компиляции и настройки
+   * диагностики не учитываются. Возвращённое множество изменять нельзя.
+   *
+   * @param method метод из этой версии символьного дерева.
+   * @return все контексты при отсутствии ограничения, пустое множество для недостижимой
+   *     ветки или {@code null}, если условие нельзя вычислить.
+   */
+  public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
+    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
+  }
 
   /**
    * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
