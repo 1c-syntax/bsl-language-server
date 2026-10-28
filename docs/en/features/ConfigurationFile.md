@@ -2,6 +2,29 @@
 
 BSL Language Server provides the ability to change settings using a configuration file in JSON format.
 
+## Thick client support in file mode
+
+The workspace-wide `supportThickClientFileMode` option controls file-mode thick client contexts
+in diagnostics, type inference, hover, completion, and inlay hints. It is disabled by default:
+
+```json
+{
+  "supportThickClientFileMode": false
+}
+```
+
+With `false`, analysis keeps client and server contexts separate and excludes file-mode thick clients.
+Client/server thick clients and file-mode external connections remain supported.
+
+Set the option to `true` when the configuration supports a thick client connected to a file infobase.
+Both `Client` and `Server` can then be true, including inside a managed form's client method.
+This does not imply a server call: method directives and side transitions are checked separately.
+A function returning a number under `#If Server` and a string under `#Else` may give a client caller
+the union `String | Number`. These branches are not treated as unconditionally unreachable.
+
+The option does not apply to OneScript. Changing it recalculates context-dependent types and refreshes
+diagnostics and hints. Recalculation can take time in large projects.
+
 ## Global and Local Configuration
 
 BSL Language Server uses a two-level configuration system:

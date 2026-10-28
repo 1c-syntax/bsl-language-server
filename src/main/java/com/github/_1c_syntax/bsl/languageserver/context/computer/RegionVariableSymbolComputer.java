@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorContexts;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
@@ -30,12 +32,16 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,12 +57,17 @@ import java.util.Set;
  * <p>
  * {@link VariableSymbolComputer} остаётся самостоятельным (используется отдельно), а этот класс лишь
  * расширяет его сбором регионов в том же {@code visitFile}.
+ * В этом же обходе отслеживаются ветки препроцессора у объявлений методов.
+ * Их условия сохраняются в символьном дереве без ссылок на AST и остаются доступны
+ * диагностике и выводу типов после выгрузки текста документа.
  */
 public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
 
   private final DocumentContext documentContext;
   private final Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
   private final Set<RegionSymbol> regions = new HashSet<>();
+  private final PreprocessorContexts preprocessor = new PreprocessorContexts();
+  private final Map<Range, Set<ExecutionContext>> methodConditions = new HashMap<>();
 
   public RegionVariableSymbolComputer(DocumentContext documentContext,
                                       ModuleSymbol module,
@@ -70,8 +81,10 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
   public List<VariableSymbol> compute() {
     regionStack.clear();
     regions.clear();
+    preprocessor.clear();
+    methodConditions.clear();
 
-    // Единственный обход дерева: попутно с переменными собираем регионы (см. visitRegion*).
+    // Единственный обход дерева: вместе с переменными собираем регионы и условия объявлений.
     var variables = super.compute();
 
     regionStack.clear();
@@ -85,6 +98,53 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
    */
   public List<RegionSymbol> getRegions() {
     return new ArrayList<>(regions);
+  }
+
+  /**
+   * Получить снимок условий объявлений, собранных во время {@link #compute()}.
+   * <p>
+   * Ключ — диапазон имени метода. Безусловные объявления не включаются в карту;
+   * пустое множество обозначает недостижимую ветку, {@code null} — неизвестное условие.
+   * Снимок сохраняется в символьном дереве и не удерживает AST.
+   * Вызывать после завершения обхода; ключи-диапазоны изменять нельзя.
+   *
+   * @return неизменяемая карта с неизменяемыми множествами либо значениями {@code null}.
+   */
+  public Map<Range, Set<ExecutionContext>> getMethodConditions() {
+    return methodConditions.isEmpty() ? Map.of() : Collections.unmodifiableMap(new HashMap<>(methodConditions));
+  }
+
+  @Override
+  public ParseTree visitPreproc_if(BSLParser.Preproc_ifContext ctx) {
+    preprocessor.enterIf(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
+    preprocessor.enterElsif(ctx);
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitPreproc_else(BSLParser.Preproc_elseContext ctx) {
+    preprocessor.enterElse();
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
+    preprocessor.enterEndif();
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitSubName(BSLParser.SubNameContext ctx) {
+    var active = preprocessor.active();
+    if (active == null || !active.equals(ExecutionContext.ALL)) {
+      methodConditions.put(Ranges.create(ctx), active == null ? null : Set.copyOf(active));
+    }
+    return ctx;
   }
 
   @Override
