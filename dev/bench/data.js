@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793084618110,
+  "lastUpdate": 1793218504063,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46035,6 +46035,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1229437156057636",
             "extra": "mean: 91.49898886680603 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2dfd8cb80a1b1462b6ea20e27f931422e6c3f9d",
+          "message": "Merge pull request #4863 from 1c-syntax/claude/s1051-false-positive-j8x5o3\n\nfix(types): flatten combined lazy type sources",
+          "timestamp": "2026-10-28T20:54:31+01:00",
+          "tree_id": "713e29026a8867442f2f193f9717000a4ffa584f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c2dfd8cb80a1b1462b6ea20e27f931422e6c3f9d"
+        },
+        "date": 1793218474526,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.3273647626241,
+            "unit": "sec",
+            "range": "stddev: 2.1202504380462703",
+            "extra": "mean: 90.3273647626241 sec\nrounds: 3"
           }
         ]
       }
