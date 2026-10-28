@@ -132,6 +132,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
+    // В этой фикстуре нет доступности типа менеджера из СП; контексты не предполагаются.
     assertThat(blocks).hasSize(2);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
@@ -140,6 +141,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
       """);
     assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ManagerModule.bsl#\\d+\\)\n\n");
+    assertThat(content).doesNotContain("**Контексты компиляции:**");
   }
 
   @Test
@@ -156,7 +158,8 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(4);
+    assertThat(blocks).hasSize(5);
+    assertThat(blocks.getLast()).contains("**Контексты компиляции:**");
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Процедура УстаревшаяПроцедура() Экспорт

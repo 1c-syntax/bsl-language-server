@@ -10,6 +10,12 @@ Hovering over a symbol shows its signature, type and the description from doc co
 
 The cursor hovers over a method call in the module code. The popup shows the method's signature and its description from the doc comment.
 
+For an application method, hover also shows **compilation contexts**: the intersection of module flags, the method directive and the preprocessor condition surrounding its declaration. For example, a client method under `#If WebClient` lists only the web client. Same-named declarations in separate branches retain their own contexts.
+
+The **Server call** note appears when a transition to the method's server context is possible. It accounts for form or command directives, common module exports and the Server call flag, and the declaration condition. The `MethodCallUnavailable` diagnostic separately checks whether a particular procedure may make a particular call.
+
+This information describes the method's capabilities independently of enabled diagnostics and their selected checking modes. File-mode variants are listed separately when availability is limited to them. No 1C compilation-context section is added for unknown preprocessor conditions, missing module information or OneScript. A provably excluded declaration is shown as having no compilation contexts.
+
 ![hover-01-method](https://github.com/user-attachments/assets/cff69a27-5b22-45a0-abac-1681ba649cd1)
 
 ## Hover on a variable
@@ -57,7 +63,7 @@ The cursor hovers over the variable `Количество`, assigned the result 
 
 ## Hover on a common module
 
-The cursor hovers over a common module name in the code. The popup shows the common module's name and its description.
+The cursor hovers over a common module name in the code. The popup shows its name, description, module flags and return-value reuse setting.
 
 ![hover-08-common-module](https://github.com/user-attachments/assets/52795e2a-612e-4e9a-aa38-02122f54f097)
 
