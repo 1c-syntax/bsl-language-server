@@ -6,6 +6,54 @@ Context-aware suggestions as you type: global functions, object methods and prop
 
 [← All features](index.md)
 
+## Compilation-context filtering and priority
+
+When metadata is known, suggestions are filtered and ordered using the current module, method directive and preprocessor branch. The project's automatically selected configuration modes and the shared `supportThickClientFileMode` setting are used. Known unavailable suggestions are hidden by default. Available suggestions come first, followed by suggestions available in only some possible contexts.
+
+Filtering is controlled in `.bsl-language-server.json`:
+
+```json
+{
+  "completion": {
+    "hideUnavailableByContext": true
+  }
+}
+```
+
+Set it to `false` to also show unavailable suggestions at the end of the list. Changes apply to the next completion request.
+A suggestion is hidden only when it is known to be unavailable in every current context and for every possible target.
+Partial availability and missing information do not cause suggestions to be removed.
+
+Ranking accounts for platform member and type availability, common-module visibility, application-method declaration conditions and permitted server transitions. A server method callable from the client therefore keeps its normal priority in client code.
+
+Application types inherit availability from their Syntax Assistant base type, such as `DocumentManager.<Document name>`.
+Common modules use their metadata flags even before their source file has been parsed. Global properties, including
+`Catalogs`, are ranked using their own availability and that of their value type.
+
+After a dot, receiver types are inferred in the current compilation contexts. When preprocessor branches assign different structures to a variable, repeating the condition selects the matching type: fields of the excluded type are not offered. The same context filter applies to members of the remaining type; when filtering is disabled, unavailable members stay in the list with a lower priority.
+
+Existing priorities for local names, fields, global functions and keywords, and the ordering of deprecated items, are preserved within each group. Missing availability information does not penalize a suggestion. OneScript, files without metadata and unknown compilation contexts retain the original ordering.
+
+## Method contexts and server calls
+
+Only a server-call marker appears to the right of the signature, before the return type, for example `→S · ValueTable`.
+The name, signature and inserted code are preserved. Labels follow the project's script variant, like platform
+method and type names; diagnostic messages separately follow the server's interface language.
+
+| Label | Meaning | In a Russian project |
+| --- | --- | --- |
+| `→S` | Calling from this position requires a transition to the server side | `→С` |
+| `→S?` | The transition depends on the mode or the selected call target | `→С?` |
+
+Compilation contexts and call explanations appear as plain text below the method documentation,
+including documentation loaded through completion resolve. They do not create a separate `detail` heading.
+The current directive and preprocessor branch determine the transition:
+a server method called from the server has no arrow. A local common-module call in file mode is not a server
+transition. A transition between form parts does not necessarily involve network communication.
+Platform method availability alone does not prove a server call. Unknown contexts and OneScript have no labels.
+Clients without structured label support receive the short label in the regular detail field after the signature
+and return type.
+
 ## Global functions by prefix
 
 After typing `Сообщ` inside the procedure, prefix-based completion is triggered. The popup lists global functions starting with that string, including `Сообщить`.

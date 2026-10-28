@@ -24,18 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -135,6 +135,7 @@ public final class CompletionProvider {
   private static final String BUCKET_MEMBER_DEFAULT = "2";
 
   private final TypeService typeService;
+  private final CompilationContextResolver compilationContexts;
   private final GlobalScopeProvider globalScopeProvider;
   private final EventContractsIndex eventContractsIndex;
   private final OScriptLibraryIndex oScriptLibraryIndex;
@@ -366,9 +367,15 @@ public final class CompletionProvider {
    */
   public CompletionList getCompletion(DocumentContext documentContext, CompletionParams params) {
     var position = params.getPosition();
+    var ranking = new CompletionContextRanker(documentContext, position, compilationContexts,
+      typeService);
     var items = isDotCompletion(documentContext, position)
-      ? dotCompletion(documentContext, position)
-      : noDotCompletion(documentContext, position);
+      ? dotCompletion(documentContext, position, ranking)
+      : noDotCompletion(documentContext, position, ranking);
+    if (configuration.getCompletionOptions().isHideUnavailableByContext()) {
+      items = items.stream().filter(item -> !ranking.isUnavailable(item)).toList();
+    }
+    ranking.apply(items, labelDetailsSupport).forEach(this::attachContextDescription);
     return new CompletionList(false, items);
   }
 
@@ -399,8 +406,28 @@ public final class CompletionProvider {
     } else {
       resolveMemberDocumentation(unresolved, data);
     }
+    if (data.getContextDescription() != null) {
+      appendContextDescription(unresolved, data.getContextDescription());
+    }
     unresolved.setData(null);
     return unresolved;
+  }
+
+  /** Сохранить приписку для resolve либо сразу добавить её к уже сформированной документации. */
+  private void attachContextDescription(CompletionItem item, String description) {
+    if (item.getData() instanceof CompletionData data) {
+      data.setContextDescription(description);
+    } else {
+      appendContextDescription(item, description);
+    }
+  }
+
+  /** Контексты идут обычным текстом после назначения метода, без отдельного заголовка в detail. */
+  private void appendContextDescription(CompletionItem item, String description) {
+    var documentation = item.getDocumentation();
+    var original = documentation == null ? ""
+      : documentation.isLeft() ? documentation.getLeft() : documentation.getRight().getValue();
+    setDocumentation(item, original.isBlank() ? description : original + "\n\n" + description);
   }
 
   /**
@@ -469,10 +496,14 @@ public final class CompletionProvider {
     if (rawData instanceof CompletionData completionData) {
       return completionData;
     }
+    if (rawData instanceof Map<?, ?>) {
+      return jsonMapper.convertValue(rawData, CompletionData.class);
+    }
     return jsonMapper.readValue(rawData.toString(), CompletionData.class);
   }
 
-  private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {
+  private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position,
+                                            CompletionContextRanker ranking) {
     var dotInfo = dotCompletionInfo(documentContext, position);
     if (dotInfo == null) {
       return List.of();
@@ -525,6 +556,7 @@ public final class CompletionProvider {
       var member = filtered.get(i);
       var bucket = localFieldNames.contains(memberKey(member)) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
       applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
+      ranking.rankDotMember(items.get(i), member);
     }
     return items;
   }
@@ -687,7 +719,8 @@ public final class CompletionProvider {
     return !scope.equals(moduleSymbol) && !scope.equals(enclosingMethod);
   }
 
-  private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {
+  private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position,
+                                              CompletionContextRanker ranking) {
     var lineInfo = currentLineInfo(documentContext, position);
     if (lineInfo == null) {
       return List.of();
@@ -725,6 +758,7 @@ public final class CompletionProvider {
           var deprecated = isPlatformClassDeprecated(className, fileType, target);
           var item = buildPlatformClassCompletionItem(className, fileType, scriptVariant, deprecated);
           applySortText(item, BUCKET_TYPE, deprecated);
+          ranking.rankType(item, className);
           items.add(item);
         }
       }
@@ -762,6 +796,7 @@ public final class CompletionProvider {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
           applySortText(item, BUCKET_TYPE, false);
+          ranking.rankType(item, qualified);
           applyCommitCharacters(item);
           items.add(item);
         }
@@ -774,7 +809,7 @@ public final class CompletionProvider {
     // применяется library-gating (#Использовать / свой пакет / implicit) через
     // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
     for (var ctx : globalScopeProvider.globalProperties(fileType)) {
-      var name = ctx.name();
+      var name = ctx.displayName(scriptVariant);
       if (!matches(name, prefix)) {
         continue;
       }
@@ -787,6 +822,7 @@ public final class CompletionProvider {
       var item = new CompletionItem(name);
       item.setKind(completionKindForGlobalProperty(ctx, fileType));
       applySortText(item, BUCKET_GLOBAL, false);
+      ranking.rankMember(item, ctx);
       applyCommitCharacters(item);
       items.add(item);
     }
@@ -804,6 +840,7 @@ public final class CompletionProvider {
       if (matches(displayName, prefix)) {
         var item = toCompletionItem(fn, fileType, scriptVariant, target, documentContext.getUri());
         applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
+        ranking.rankMember(item, fn);
         items.add(item);
       }
     }
@@ -823,6 +860,7 @@ public final class CompletionProvider {
         // его редко вызывают вручную, он не должен теснить процедуры/функции документа.
         applySortText(item, method.getSymbolKind() == SymbolKind.Event ? BUCKET_EVENT_STUB : BUCKET_LOCAL,
           method.isDeprecated());
+        ranking.rankLocalMethod(item, method);
         applyCommitCharacters(item);
         items.add(item);
       }
@@ -868,7 +906,7 @@ public final class CompletionProvider {
       }
     }
 
-    selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items));
+    selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items, ranking));
     // Заглушки ещё не объявленных обработчиков платформенных событий owner-типа модуля —
     // только на уровне модуля (курсор вне тела метода): внутри чужого метода вставка нового
     // объявления процедуры/функции была бы синтаксически некорректной (аналог «override method»
@@ -1003,7 +1041,8 @@ public final class CompletionProvider {
                                   Set<String> declaredLocalNames,
                                   CompatibilityMode target,
                                   String prefix,
-                                  List<CompletionItem> items) {
+                                  List<CompletionItem> items,
+                                  CompletionContextRanker ranking) {
     var fileType = documentContext.getFileType();
     var scriptVariant = documentContext.getScriptVariantLanguage();
     var typeSet = TypeSet.of(selfRef);
@@ -1030,6 +1069,7 @@ public final class CompletionProvider {
     var selfItems = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
     for (var i = 0; i < filtered.size(); i++) {
       applySortText(selfItems.get(i), BUCKET_SELF, isMemberDeprecated(filtered.get(i), target));
+      ranking.rankMember(selfItems.get(i), filtered.get(i));
     }
     items.addAll(selfItems);
   }
