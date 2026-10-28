@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.completion.CompletionOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
@@ -93,6 +94,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("codeLens")
   @Setter(value = AccessLevel.NONE)
   private CodeLensOptions codeLensOptions = new CodeLensOptions();
+
+  @JsonProperty("completion")
+  @Setter(value = AccessLevel.NONE)
+  private CompletionOptions completionOptions = new CompletionOptions();
 
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
@@ -320,6 +325,7 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this, configuration);
     PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.completionOptions, configuration.completionOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
