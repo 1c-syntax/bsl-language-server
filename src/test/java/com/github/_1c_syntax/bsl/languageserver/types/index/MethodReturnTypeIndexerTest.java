@@ -548,7 +548,7 @@ class MethodReturnTypeIndexerTest {
       var next = methods[(index + 1) % methods.length];
       when(inferencer.computeReturnTypes(methods[index])).thenAnswer(invocation -> {
         if (firstComputation.getAndSet(false)) {
-          await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= DOCUMENTS_IN_MEMORY);
+          await().atMost(10, SECONDS).until(() -> loading.peak().get() >= DOCUMENTS_IN_MEMORY);
         }
         return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
       });
