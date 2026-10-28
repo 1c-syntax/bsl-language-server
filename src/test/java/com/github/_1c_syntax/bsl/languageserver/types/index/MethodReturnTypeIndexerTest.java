@@ -43,6 +43,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
@@ -89,9 +91,6 @@ class MethodReturnTypeIndexerTest {
 
   private static final TypeSet STRING = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
   private static final TypeSet NUMBER = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Число"));
-
-  /** Сколько документов большой цикл разбирает впереди расчёта: предел разом разобранных без одного. */
-  private static final int AHEAD_WINDOW = 7;
 
   /** Предел разом разобранных документов: окно впереди и документ, который считается. */
   private static final int DOCUMENTS_IN_MEMORY = 8;
@@ -529,8 +528,13 @@ class MethodReturnTypeIndexerTest {
     assertThat(ticksOf(reporter)).isEqualTo(planned);
   }
 
-  @Test
-  void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased() {
+  @ParameterizedTest
+  @ValueSource(ints = {2, 4})
+  void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased(int workers) {
+    // Ожидание предзагрузки внутри расчёта оставляет второй поток свободным для разбора.
+    resolveExecutor.shutdownNow();
+    resolveExecutor = Executors.newFixedThreadPool(workers);
+    indexer = indexerOn(resolveExecutor);
     // given: двадцать документов по кругу, все отложены и все освобождены.
     var ring = ring("ahead", 20);
     var documents = ring.documents();
@@ -544,7 +548,7 @@ class MethodReturnTypeIndexerTest {
       var next = methods[(index + 1) % methods.length];
       when(inferencer.computeReturnTypes(methods[index])).thenAnswer(invocation -> {
         if (firstComputation.getAndSet(false)) {
-          await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= AHEAD_WINDOW);
+          await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= DOCUMENTS_IN_MEMORY);
         }
         return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
       });
