@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -51,20 +52,26 @@ class PreprocessorTypingDiagnosticTest extends AbstractServerContextAwareTest {
 
   @ParameterizedTest
   @MethodSource("unfinishedMethods")
-  void allDiagnosticsTolerateUnfinishedPreprocessor(FileType fileType, String source) {
+  void allDiagnosticsTolerateUnfinishedPreprocessor(FileType fileType, boolean function) {
     var root = Path.of("src/test/resources/metadata/designer");
     initServerContext(root);
     var uri = fileType == FileType.BSL
       ? root.resolve("Catalogs/Справочник1/Forms/ФормаСписка/Ext/Form/Module.bsl").toUri()
       : URI.create("file:///preprocessor-typing.os");
-    var document = TestUtils.getDocumentContext(uri, source, context);
-
-    assertAll(diagnosticInfosFactory.getDiagnosticClasses().stream().map(diagnosticClass -> () -> {
-      try {
-        diagnosticObjectProvider.get(diagnosticClass).getDiagnostics(document);
-      } catch (RuntimeException exception) {
-        throw new AssertionError(diagnosticClass.getSimpleName(), exception);
-      }
+    var document = context.addDocument(Absolute.uri(uri));
+    context.openDocument(document, "", 0);
+    assertAll(unfinishedInstructions().stream().map(instruction -> () -> {
+      var source = function
+        ? "Function Example(Parameter)\n" + instruction + "\nReturn 1;\nEndFunction"
+        : "Процедура Пример(Параметр)\n" + instruction + "\nКонецПроцедуры";
+      context.rebuildDocument(document, source, 0);
+      assertAll(source, diagnosticInfosFactory.getDiagnosticClasses().stream().map(diagnosticClass -> () -> {
+        try {
+          diagnosticObjectProvider.get(diagnosticClass).getDiagnostics(document);
+        } catch (RuntimeException exception) {
+          throw new AssertionError(diagnosticClass.getSimpleName(), exception);
+        }
+      }));
     }));
   }
 
@@ -97,14 +104,16 @@ class PreprocessorTypingDiagnosticTest extends AbstractServerContextAwareTest {
   }
 
   private static Stream<Arguments> unfinishedMethods() {
-    var instructions = List.of("#", "#Е", "#Если", "#Если ", "#Если Сервер", "#Если Сервер И",
+    return Stream.of(FileType.BSL, FileType.OS).flatMap(fileType -> Stream.of(
+      Arguments.of(fileType, false), Arguments.of(fileType, true)));
+  }
+
+  private static List<String> unfinishedInstructions() {
+    return List.of("#", "#Е", "#Если", "#Если ", "#Если Сервер", "#Если Сервер И",
       "#Если Сервер Тогда", "#If", "#If Server", "#If Server Then",
       "#Если Сервер Тогда\nА = 1;\n#И", "#Если Сервер Тогда\nА = 1;\n#ИначеЕсли",
-      "#Если Сервер Тогда\nА = 1;\n#Конец", "#Если Сервер Тогда\nА = 1;\n#КонецЕсли");
-    return Stream.of(FileType.BSL, FileType.OS).flatMap(fileType ->
-      instructions.stream().flatMap(instruction -> Stream.of(
-        Arguments.of(fileType, "Процедура Пример(Параметр)\n" + instruction + "\nКонецПроцедуры"),
-        Arguments.of(fileType, "Function Example(Parameter)\n" + instruction + "\nReturn 1;\nEndFunction")
-      )));
+      "#Если Сервер Тогда\nА = 1;\n#Конец", "#Если Сервер Тогда\nА = 1;\n#КонецЕсли",
+      "#ElsIf", "#ElsIf Server", "#If Server Then\nA = 1;\n#ElsIf",
+      "#If Server Then\nA = 1;\n#ElsIf Client", "#If Server Then\nA = 1;\n#ElsIf Client Then");
   }
 }
