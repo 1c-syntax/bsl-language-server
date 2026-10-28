@@ -44,11 +44,9 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -110,18 +108,14 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       } else if (node.preproc_endif() != null) {
         savePreprocessorRange(previousNodes, node, reachability);
         reachability.enterEndif();
+      } else {
+        // Области не открывают и не закрывают условные ветки.
       }
-      // Области не открывают и не закрывают условные ветки.
     }
 
     // Неполная структура не задаёт корректных веток и может нарушить построение CFG.
     if (!reachability.isWellFormed()) {
       return ctx;
-    }
-
-    // сделано для поиска с конца, т.к. у нас есть вложенность, т.е. в большой вложен маленький
-    if (preprocessorRanges.size() > 1) {
-      Collections.reverse(preprocessorRanges);
     }
 
     super.visitFile(ctx);
@@ -184,20 +178,8 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
     var ranges = new ArrayList<>(unreachablePreprocessorRanges);
     diagnosticStorage.getDiagnostics().forEach(diagnostic -> ranges.add(diagnostic.getRange()));
-    var positionOrder = Comparator.comparingInt(Position::getLine).thenComparingInt(Position::getCharacter);
-    ranges.sort(Comparator.comparing(Range::getStart, positionOrder)
-      .thenComparing(Range::getEnd, positionOrder.reversed()));
-    var merged = new ArrayList<Range>();
-    for (var range : ranges) {
-      if (merged.isEmpty() || positionOrder.compare(merged.getLast().getEnd(), range.getStart()) < 0) {
-        merged.add(range);
-      } else if (positionOrder.compare(merged.getLast().getEnd(), range.getEnd()) < 0) {
-        var previous = merged.removeLast();
-        merged.add(new Range(previous.getStart(), range.getEnd()));
-      }
-    }
     diagnosticStorage.clearDiagnostics();
-    merged.forEach(diagnosticStorage::addDiagnostic);
+    Ranges.mergeOverlapping(ranges).forEach(diagnosticStorage::addDiagnostic);
   }
 
   @Override
@@ -315,12 +297,10 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
           BSLParser.RULE_regionStart,
           BSLParser.RULE_regionEnd,
           BSLParser.RULE_preproc_endif))
-      .collect(Collectors.toList());
+      .toList().reversed();
 
     // если в блоке кода есть еще стейты кроме текущего
     if (statements.size() > 1) {
-      Collections.reverse(statements);
-
       // найдем последний блок
       ParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
 
@@ -340,7 +320,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
-    for (Range range : preprocessorRanges) {
+    for (Range range : preprocessorRanges.reversed()) {
       if (Ranges.containsPosition(range, pos)) {
         preprocRange = range;
       }
