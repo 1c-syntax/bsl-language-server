@@ -88,7 +88,7 @@ public final class KeywordCompletion {
     new Word(BSLLexer.TRUE, Keywords.TRUE),
     new Word(BSLLexer.FALSE, Keywords.FALSE),
     new Word(BSLLexer.UNDEFINED, Keywords.UNDEFINED),
-    new Word(BSLLexer.NULL, MultiName.create("NULL", "NULL"))
+    new Word(BSLLexer.NULL, MultiName.create("Null", "Null"))
   );
 
   private KeywordCompletion() {
