@@ -172,7 +172,7 @@ class ThickClientFileModeTest extends AbstractServerContextAwareTest {
       EndFunction
       """);
     initServerContext(project);
-    var document = context.getDocument(module.toUri());
+    var document = context.getDocumentUnsafe(module.toUri());
     assertThat(context.getDocumentState(document)).isEqualTo(DocumentState.WITHOUT_CONTENT);
     assertThat(indexedTypes(document)).containsExactly("Строка");
     var file = temp.resolve("reload.json");
