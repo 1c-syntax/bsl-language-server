@@ -427,8 +427,9 @@ public class MemberAccessChecker {
           && !platformContexts.computeIfAbsent(available, contextResolver::platformContexts).contains(context)) {
         return true;
       }
-      if (member.owner() != null) {
-        return typeUnavailable(member.owner(), context);
+      var owner = member.owner();
+      if (owner != null) {
+        return typeUnavailable(owner, context);
       }
       return member.descriptor().kind() == MemberKind.PROPERTY
         && member.descriptor().returnTypes().refs().stream().anyMatch(type -> typeUnavailable(type, context));
@@ -576,13 +577,16 @@ public class MemberAccessChecker {
     return Ranges.create(node).getStart();
   }
 
-  /** Ближайшая цепочка; обращения в аргументах имеют собственную цепочку и проверяются независимо. */
+  /**
+   * Ближайшая цепочка; обращения в аргументах проверяются независимо.
+   * Отдельное имя вне цепочки представляет самостоятельное обращение.
+   */
   private static ParseTree accessChain(TerminalNode node) {
     for (var parent = node.getParent(); parent != null; parent = parent.getParent()) {
       if (parent instanceof BSLParser.ComplexIdentifierContext || parent instanceof BSLParser.CallStatementContext) {
         return parent;
       }
     }
-    return node.getParent();
+    return node;
   }
 }
