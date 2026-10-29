@@ -511,6 +511,8 @@ public class GlobalScopeProvider {
         addContextEnum(enumeration, variableSeen, enums);
       } else if (ctx instanceof ContextLanguageKeyword kw) {
         addContextKeyword(kw, keywordSnippets, keywordDescriptions);
+      } else {
+        // Шаблоны generic-типов и прочие контексты не задают самостоятельных глобальных имён.
       }
     }
 

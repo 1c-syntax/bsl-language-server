@@ -68,9 +68,8 @@ class CompletionKeywordsTest extends AbstractServerContextAwareTest {
     var words = complete("<caret>", fileType);
 
     assertThat(words).doesNotContain("DefVal", "DefaultValue", "Declarations", "By",
-      "ДефЗнач", "ЗначениеПоУмолчанию", "Объявления", "ElseIf");
-    assertThat(words).doesNotHaveDuplicates();
-    assertThat(words).contains("Null").doesNotContain("NULL");
+      "ДефЗнач", "ЗначениеПоУмолчанию", "Объявления", "ElseIf")
+      .doesNotHaveDuplicates().contains("Null").doesNotContain("NULL");
     if (language == Language.RU) {
       assertThat(words).contains("Если", "Для", "Истина", "Процедура")
         .doesNotContain("If", "For", "True", "Procedure");
