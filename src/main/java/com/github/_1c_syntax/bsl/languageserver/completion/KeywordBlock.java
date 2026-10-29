@@ -50,9 +50,15 @@ final class KeywordBlock {
     return new KeywordBlock(kind);
   }
 
-  boolean body() { return body; }
-  boolean activeLoop() { return loop() && body; }
-  private boolean loop() { return kind == Kind.FOR || kind == Kind.WHILE; }
+  boolean body() {
+    return body;
+  }
+  boolean activeLoop() {
+    return loop() && body;
+  }
+  private boolean loop() {
+    return kind == Kind.FOR || kind == Kind.WHILE;
+  }
 
   boolean closedBy(int type) {
     return switch (type) {
@@ -101,7 +107,9 @@ final class KeywordBlock {
   }
 
   private void acceptWhile(int type) {
-    if (type == BSLLexer.DO_KEYWORD) { body = true; }
+    if (type == BSLLexer.DO_KEYWORD) {
+      body = true;
+    }
   }
 
   private void acceptTry(int type) {

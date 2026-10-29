@@ -80,6 +80,20 @@ class CompletionKeywordsTest extends AbstractServerContextAwareTest {
   }
 
   @ParameterizedTest
+  @CsvSource({"BSL, RU", "BSL, EN", "OS, RU", "OS, EN"})
+  void asynchronousKeywordsFollowRuntimeSupport(FileType fileType, Language language) {
+    context.getLanguageServerConfiguration().setLanguage(language);
+    var async = language == Language.RU ? "Асинх" : "Async";
+    var await = language == Language.RU ? "Ждать" : "Await";
+
+    assertThat(complete("<caret>", fileType).contains(async)).isEqualTo(fileType == FileType.BSL);
+    assertThat(complete("Async Procedure P()\n<caret>\nEndProcedure", fileType).contains(await))
+      .isEqualTo(fileType == FileType.BSL);
+    assertThat(complete("Async Function F()\n<caret>\nEndFunction", fileType).contains(await))
+      .isEqualTo(fileType == FileType.BSL);
+  }
+
+  @ParameterizedTest
   @EnumSource(Language.class)
   void projectScriptLanguageTakesPrecedenceOverInterfaceLanguage(Language language) throws IOException {
     FileUtils.copyDirectory(Path.of("src/test/resources/metadata/commonModuleCalls").toFile(), workspace.toFile());

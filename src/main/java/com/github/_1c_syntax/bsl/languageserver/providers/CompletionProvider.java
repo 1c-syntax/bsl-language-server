@@ -888,8 +888,7 @@ public final class CompletionProvider {
   }
 
   private void collectKeywords(NoDotContext query, List<CompletionItem> items, Position wordStart) {
-    // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
-    // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
+    // Язык и допустимость ключевого слова определяются по позиции в документе.
     for (var keyword : KeywordCompletion.suggest(query.document(), wordStart)) {
       if (matches(keyword, query.prefix())) {
         var item = new CompletionItem(keyword);

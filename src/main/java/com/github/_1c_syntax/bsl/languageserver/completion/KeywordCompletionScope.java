@@ -76,7 +76,9 @@ final class KeywordCompletionScope {
     canExportMethod = false;
   }
 
-  private boolean inSignature() { return method != Token.INVALID_TYPE && !signatureComplete; }
+  private boolean inSignature() {
+    return method != Token.INVALID_TYPE && !signatureComplete;
+  }
 
   private void acceptSignature(int type) {
     if (type == BSLLexer.LPAREN) {
@@ -105,7 +107,9 @@ final class KeywordCompletionScope {
 
   private void acceptExpressionDepth(int type) {
     switch (type) {
-      case BSLLexer.LPAREN, BSLLexer.LBRACK -> expressionDepth++;
+      case BSLLexer.LPAREN, BSLLexer.LBRACK -> {
+        expressionDepth++;
+      }
       case BSLLexer.RPAREN, BSLLexer.RBRACK -> expressionDepth = Math.max(0, expressionDepth - 1);
       default -> { /* токен не является скобкой */ }
     }
@@ -130,7 +134,9 @@ final class KeywordCompletionScope {
 
   private void updateBlock(int type) {
     var top = blocks.peek();
-    if (top != null) { top.accept(type); }
+    if (top != null) {
+      top.accept(type);
+    }
   }
 
   /** Явное закрытие внешнего блока удаляет и незавершённые вложенные конструкции. */
@@ -193,10 +199,18 @@ final class KeywordCompletionScope {
     };
   }
 
-  private boolean asyncMethod() { return method != Token.INVALID_TYPE && async; }
-  private boolean topLevel() { return method == Token.INVALID_TYPE && blocks.isEmpty(); }
-  private boolean endsMethod(int expected) { return method == expected && blocks.isEmpty(); }
-  private boolean canExport() { return canExportMethod || (moduleVariable && previous == BSLLexer.IDENTIFIER); }
+  private boolean asyncMethod() {
+    return method != Token.INVALID_TYPE && async;
+  }
+  private boolean topLevel() {
+    return method == Token.INVALID_TYPE && blocks.isEmpty();
+  }
+  private boolean endsMethod(int expected) {
+    return method == expected && blocks.isEmpty();
+  }
+  private boolean canExport() {
+    return canExportMethod || (moduleVariable && previous == BSLLexer.IDENTIFIER);
+  }
 
   private boolean expressionEnd() {
     return switch (previous) {

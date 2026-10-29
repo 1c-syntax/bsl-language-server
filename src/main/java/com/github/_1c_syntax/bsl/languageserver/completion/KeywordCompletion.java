@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.completion;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.MultiName;
@@ -112,8 +113,16 @@ public final class KeywordCompletion {
       }
     }
     var language = document.getScriptVariantLanguage();
-    return WORDS.stream().filter(word -> scope.allows(word.type()))
+    return WORDS.stream().filter(word -> supported(word.type(), document.getFileType()))
+      .filter(word -> scope.allows(word.type()))
       .map(word -> language == Language.RU ? word.name().getRu() : word.name().getEn()).toList();
+  }
+
+  private static boolean supported(int keyword, FileType fileType) {
+    return switch (keyword) {
+      case BSLLexer.ASYNC_KEYWORD, BSLLexer.AWAIT_KEYWORD -> fileType != FileType.OS;
+      default -> true;
+    };
   }
 
   private static boolean startsBefore(Token token, Position position) {

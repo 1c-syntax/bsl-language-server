@@ -505,14 +505,14 @@ public class GlobalScopeProvider {
     }
 
     for (var ctx : provider.getContexts()) {
-      if (ctx instanceof ContextType type && !type.isGeneric()) {
-        addNameWithAlias(classes, classSeen, type.name().getName(), type.name().getAlias());
-      } else if (ctx instanceof ContextEnum enumeration) {
-        addContextEnum(enumeration, variableSeen, enums);
-      } else if (ctx instanceof ContextLanguageKeyword kw) {
-        addContextKeyword(kw, keywordSnippets, keywordDescriptions);
-      } else {
-        // Шаблоны generic-типов и прочие контексты не задают самостоятельных глобальных имён.
+      switch (ctx) {
+        case ContextType type when !type.isGeneric() ->
+          addNameWithAlias(classes, classSeen, type.name().getName(), type.name().getAlias());
+        case ContextEnum enumeration -> addContextEnum(enumeration, variableSeen, enums);
+        case ContextLanguageKeyword keyword -> addContextKeyword(keyword, keywordSnippets, keywordDescriptions);
+        default -> {
+          // Шаблоны generic-типов и прочие контексты не задают самостоятельных глобальных имён.
+        }
       }
     }
 
