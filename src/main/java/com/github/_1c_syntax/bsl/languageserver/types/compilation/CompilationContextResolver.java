@@ -30,16 +30,13 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,12 +56,6 @@ import java.util.Set;
 @Component
 @WorkspaceScope
 public class CompilationContextResolver {
-
-  private static final Set<CompilerDirectiveKind> FORM_DIRECTIVES = EnumSet.of(
-    CompilerDirectiveKind.AT_CLIENT, CompilerDirectiveKind.AT_SERVER,
-    CompilerDirectiveKind.AT_SERVER_NO_CONTEXT, CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT);
-  private static final Set<CompilerDirectiveKind> COMMAND_DIRECTIVES = EnumSet.of(
-    CompilerDirectiveKind.AT_CLIENT, CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
 
   private final ModuleCompilationContexts modules;
   private final CompilationContextIndex index = new CompilationContextIndex();
@@ -177,11 +168,8 @@ public class CompilationContextResolver {
     if (document.getFileType() != FileType.BSL) {
       return Optional.empty();
     }
-    var enclosing = node;
-    while (enclosing != null && !(enclosing instanceof BSLParser.SubContext)) {
-      enclosing = enclosing.getParent();
-    }
-    if (!(enclosing instanceof BSLParser.SubContext sub)) {
+    var sub = CompilationContextIndex.enclosingMethod(node);
+    if (sub == null) {
       var contexts = moduleContexts(document);
       return Optional.of(contexts.isEmpty() ? supportedContexts(document) : Set.copyOf(contexts));
     }
@@ -261,10 +249,6 @@ public class CompilationContextResolver {
     return Optional.of(new MethodContext(profile.orElseThrow().directive(), Set.copyOf(contexts)));
   }
 
-
-
-
-
   /**
    * Перевести доступность API из СП в режимы его использования, включая файловые части форм.
    *
@@ -303,7 +287,7 @@ public class CompilationContextResolver {
    * @return неизменяемое множество автоматически выбранных режимов.
    */
   public Set<ExecutionContext> automaticContexts(DocumentContext document) {
-    return modules.automaticContexts(document);
+    return ModuleCompilationContexts.automaticContexts(document);
   }
 
   /**
@@ -342,35 +326,12 @@ public class CompilationContextResolver {
       return Optional.empty();
     }
     if (usesFormDirectives(document)) {
-      return formMethodContext(document, directive.orElse(CompilerDirectiveKind.AT_SERVER), contexts);
+      return MethodCompilationContexts.formMethodContext(document, directive.orElse(CompilerDirectiveKind.AT_SERVER), contexts);
     }
     if (directive.isEmpty()) {
       return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
     }
-    return commonMethodContext(document, directive.orElseThrow(), contexts);
-  }
-
-  private static Optional<MethodContext> formMethodContext(DocumentContext document, CompilerDirectiveKind kind,
-                                                          Set<ExecutionContext> contexts) {
-    var allowed = document.getModuleType() == ModuleType.CommandModule ? COMMAND_DIRECTIVES : FORM_DIRECTIVES;
-    if (!allowed.contains(kind)) {
-      return Optional.empty();
-    }
-    restrictToDirective(contexts, kind);
-    return Optional.of(new MethodContext(CompilerDirectiveKind.of(kind.getTokenType()), Set.copyOf(contexts)));
-  }
-
-  private static Optional<MethodContext> commonMethodContext(DocumentContext document, CompilerDirectiveKind kind,
-                                                            Set<ExecutionContext> contexts) {
-    if (document.getMdObject().filter(CommonModule.class::isInstance).isEmpty()) {
-      return Optional.empty();
-    }
-    var directive = CompilerDirectiveKind.of(kind.getTokenType());
-    if (kind != CompilerDirectiveKind.AT_CLIENT && kind != CompilerDirectiveKind.AT_SERVER) {
-      return Optional.of(new MethodContext(directive, Set.of()));
-    }
-    restrictToDirective(contexts, kind);
-    return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
+    return MethodCompilationContexts.commonMethodContext(document, directive.orElseThrow(), contexts);
   }
 
   /**
@@ -570,16 +531,14 @@ public class CompilationContextResolver {
 
   private Set<ExecutionContext> serverCallContexts(DocumentContext owner, boolean form, MethodContext profile,
                                                    Collection<ExecutionContext> declarationContexts) {
-    var result = EnumSet.noneOf(ExecutionContext.class);
-    var callers = form ? moduleContexts(owner) : supportedContexts(owner);
-    for (var context : ExecutionContext.copyOf(callers)) {
-      if (isClientOrConnection(context) && (form || !context.isFileMode())) {
-        var target = targetContext(form, owner, profile, context);
-        if (isServerTransition(context, target) && declarationContexts.contains(target)) {
-          result.add(context);
-        }
+    var result = ExecutionContext.copyOf(form ? moduleContexts(owner) : supportedContexts(owner));
+    result.removeIf(context -> {
+      if (!isClientOrConnection(context) || (!form && context.isFileMode())) {
+        return true;
       }
-    }
+      var target = targetContext(form, owner, profile, context);
+      return !isServerTransition(context, target) || !declarationContexts.contains(target);
+    });
     return Set.copyOf(result);
   }
 
@@ -598,15 +557,5 @@ public class CompilationContextResolver {
       default -> ExecutionContext.SERVER;
     };
   }
-
-  private static void restrictToDirective(Set<ExecutionContext> contexts, CompilerDirectiveKind directive) {
-    switch (directive) {
-      case AT_CLIENT -> contexts.retainAll(ExecutionContext.CLIENTS);
-      case AT_SERVER, AT_SERVER_NO_CONTEXT -> contexts.retainAll(ExecutionContext.SERVER_CONTEXTS);
-      default -> { /* директива разрешает обе стороны */ }
-    }
-  }
-
-
 
 }
