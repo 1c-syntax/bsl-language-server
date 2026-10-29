@@ -30,23 +30,15 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationModuleMembersProvider;
-import com.github._1c_syntax.bsl.languageserver.types.registry.ModulePlatformTypeNames;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
-import com.github._1c_syntax.bsl.mdo.Form;
-import com.github._1c_syntax.bsl.mdo.support.FormType;
-import com.github._1c_syntax.bsl.mdo.support.ApplicationRunMode;
-import com.github._1c_syntax.bsl.mdo.support.UsePurposes;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -76,16 +68,15 @@ import java.util.TreeMap;
  */
 @Component
 @WorkspaceScope
-@RequiredArgsConstructor
 public class CompilationContextResolver {
 
-  private static final Set<CompilerDirectiveKind> FORM_DIRECTIVES = Set.of(
+  private static final Set<CompilerDirectiveKind> FORM_DIRECTIVES = EnumSet.of(
     CompilerDirectiveKind.AT_CLIENT, CompilerDirectiveKind.AT_SERVER,
     CompilerDirectiveKind.AT_SERVER_NO_CONTEXT, CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT);
-  private static final Set<CompilerDirectiveKind> COMMAND_DIRECTIVES = Set.of(
+  private static final Set<CompilerDirectiveKind> COMMAND_DIRECTIVES = EnumSet.of(
     CompilerDirectiveKind.AT_CLIENT, CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
 
-  private final TypeRegistry typeRegistry;
+  private final ModuleCompilationContexts modules;
   /**
    * Объявления по идентичности символьного дерева. Значения не удерживают дерево или документ;
    * слабый ключ позволяет удалить запись после освобождения всех внешних ссылок на старое дерево.
@@ -130,6 +121,15 @@ public class CompilationContextResolver {
   public record MethodContext(Optional<CompilerDirectiveKind> directive, Set<ExecutionContext> contexts) { }
 
   /**
+   * Создать резолвер рабочей области.
+   *
+   * @param typeRegistry реестр типов той же рабочей области
+   */
+  public CompilationContextResolver(TypeRegistry typeRegistry) {
+    modules = new ModuleCompilationContexts(typeRegistry);
+  }
+
+  /**
    * Получить все объявления методов из текущего символьного дерева без обращения к AST.
    * <p>
    * Ключи сравниваются без учёта регистра; одноимённые объявления сохраняются в одном списке.
@@ -150,8 +150,7 @@ public class CompilationContextResolver {
    * @return все контексты либо множество без файловых вариантов толстого клиента.
    */
   public Set<ExecutionContext> supportedContexts(DocumentContext document) {
-    return document.getServerContext().getLanguageServerConfiguration().isSupportThickClientFileMode()
-      ? ExecutionContext.ALL : ExecutionContext.WITHOUT_THICK_CLIENT_FILE;
+    return modules.supportedContexts(document);
   }
 
   /**
@@ -174,7 +173,7 @@ public class CompilationContextResolver {
     if (branch == null) {
       return Optional.empty();
     }
-    return methodContext(owner, method.getCompilerDirectiveKind()).map(profile -> {
+    return methodContext(owner, method.getCompilerDirectiveKind()).map((MethodContext profile) -> {
       var contexts = ExecutionContext.copyOf(profile.contexts());
       contexts.retainAll(branch);
       return Set.copyOf(contexts);
@@ -291,7 +290,7 @@ public class CompilationContextResolver {
       var middle = (low + high) >>> 1;
       var start = branches.get(middle).directive().getStart();
       if (start.getLine() < position.getLine()
-          || start.getLine() == position.getLine() && start.getCharacter() <= position.getCharacter()) {
+          || (start.getLine() == position.getLine() && start.getCharacter() <= position.getCharacter())) {
         low = middle + 1;
       } else {
         high = middle;
@@ -309,15 +308,7 @@ public class CompilationContextResolver {
     var preprocessor = new PreprocessorContexts();
     for (var tree : Trees.findAllRuleNodes(document.getAst(), BSLParser.RULE_preprocessor)) {
       var node = (BSLParser.PreprocessorContext) tree;
-      if (node.preproc_if() != null) {
-        preprocessor.enterIf(node.preproc_if());
-      } else if (node.preproc_elsif() != null) {
-        preprocessor.enterElsif(node.preproc_elsif());
-      } else if (node.preproc_else() != null) {
-        preprocessor.enterElse();
-      } else if (node.preproc_endif() != null) {
-        preprocessor.enterEndif();
-      } else {
+      if (!preprocessor.enter(node)) {
         continue;
       }
       var active = preprocessor.active();
@@ -333,16 +324,7 @@ public class CompilationContextResolver {
    * @return поддерживаемые режимы; пустой вход означает отсутствие сведений, а не запрет.
    */
   public Set<ExecutionContext> platformContexts(Collection<Availability> availabilities) {
-    var direct = fromAvailability(availabilities);
-    var result = ExecutionContext.copyOf(direct);
-    for (var context : ExecutionContext.ALL) {
-      if (direct.contains(context.sharedFileContext())
-          || context.isFileMode() && ExecutionContext.SERVER_CONTEXTS.contains(context)
-            && direct.contains(ExecutionContext.SERVER)) {
-        result.add(context);
-      }
-    }
-    return Set.copyOf(result);
+    return modules.platformContexts(availabilities);
   }
 
   /**
@@ -357,24 +339,7 @@ public class CompilationContextResolver {
    * @return известные контексты, включая пустой набор; пустой Optional при недостатке сведений.
    */
   public Optional<Set<ExecutionContext>> typeContexts(DocumentContext document, TypeRef type) {
-    if (type.equals(TypeRef.ANY) || type.equals(TypeRef.UNKNOWN)) {
-      return Optional.empty();
-    }
-    if (type.kind() == TypeKind.CONFIGURATION) {
-      var module = document.getServerContext().findCommonModule(type.qualifiedName());
-      if (module.isPresent()) {
-        var contexts = ExecutionContext.copyOf(supportedContexts(document));
-        contexts.removeIf(context -> !canSeeCommonModule(module.orElseThrow(), context));
-        return Optional.of(Set.copyOf(contexts));
-      }
-    }
-    var available = typeRegistry.getTypeMetadata(type, document.getFileType()).availabilities();
-    if (available.isEmpty()) {
-      return Optional.empty();
-    }
-    var contexts = ExecutionContext.copyOf(platformContexts(available));
-    contexts.retainAll(supportedContexts(document));
-    return Optional.of(Set.copyOf(contexts));
+    return modules.typeContexts(document, type);
   }
 
   /**
@@ -390,32 +355,7 @@ public class CompilationContextResolver {
    * @return неизменяемое множество автоматически выбранных режимов.
    */
   public Set<ExecutionContext> automaticContexts(DocumentContext document) {
-    var contexts = ExecutionContext.copyOf(supportedContexts(document));
-    // До чтения автономного состава в MDClasses и его учёта здесь этот контекст доступен только через on.
-    // https://github.com/1c-syntax/mdclasses/issues/728
-    contexts.remove(ExecutionContext.MOBILE_STANDALONE_SERVER);
-    var solution = document.getServerContext().getConfiguration();
-    if (solution.isEmpty()) {
-      return Set.copyOf(contexts);
-    }
-    var configuration = solution.getMergedConfiguration();
-    if (!configuration.getUsePurposes().isEmpty()) {
-      var mobile = Set.of(ExecutionContext.MOBILE_APPLICATION_CLIENT, ExecutionContext.MOBILE_APPLICATION_SERVER);
-      if (!configuration.getUsePurposes().contains(UsePurposes.MOBILE_PLATFORM_APPLICATION)) {
-        contexts.removeAll(mobile);
-      }
-      if (!configuration.getUsePurposes().contains(UsePurposes.PLATFORM_APPLICATION)) {
-        contexts.retainAll(mobile);
-      }
-    }
-    if (configuration.getDefaultRunMode() == ApplicationRunMode.MANAGED_APPLICATION) {
-      contexts.removeIf(context -> context.optionContext() == ExecutionContext.THICK_CLIENT_ORDINARY);
-    } else if (configuration.getDefaultRunMode() == ApplicationRunMode.ORDINARY_APPLICATION) {
-      var managed = Set.of(ExecutionContext.THIN_CLIENT, ExecutionContext.WEB_CLIENT,
-        ExecutionContext.MOBILE_CLIENT, ExecutionContext.THICK_CLIENT_MANAGED);
-      contexts.removeIf(context -> managed.contains(context.optionContext()));
-    }
-    return Set.copyOf(contexts);
+    return modules.automaticContexts(document);
   }
 
   /**
@@ -432,45 +372,7 @@ public class CompilationContextResolver {
    *     проверяемых режимов здесь не учитываются.
    */
   public Set<ExecutionContext> moduleContexts(DocumentContext document) {
-    var contexts = ExecutionContext.copyOf(moduleContextsFromMetadata(document));
-    contexts.retainAll(supportedContexts(document));
-    return Set.copyOf(contexts);
-  }
-
-  private Set<ExecutionContext> moduleContextsFromMetadata(DocumentContext document) {
-    var moduleType = document.getModuleType();
-    if (moduleType == ModuleType.CommonModule) {
-      return document.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast)
-        .map(CompilationContextResolver::commonModuleContexts).orElse(Set.of());
-    }
-    if (moduleType == ModuleType.FormModule && !usesFormDirectives(document)) {
-      var configuration = document.getServerContext().getConfiguration().getMergedConfiguration();
-      return configuration.isUseOrdinaryFormInManagedApplication()
-        ? Set.of(ExecutionContext.THICK_CLIENT_ORDINARY, ExecutionContext.THICK_CLIENT_ORDINARY_FILE,
-          ExecutionContext.THICK_CLIENT_MANAGED, ExecutionContext.THICK_CLIENT_MANAGED_FILE)
-        : Set.of(ExecutionContext.THICK_CLIENT_ORDINARY, ExecutionContext.THICK_CLIENT_ORDINARY_FILE);
-    }
-    if (moduleType == ModuleType.FormModule || moduleType == ModuleType.CommandModule) {
-      // Клиентская доступность объекта контекста в СП не исключает серверные методы модуля.
-      return addOrdinaryManagedFormContext(document, managedContexts());
-    }
-    var platform = platformContexts(document);
-    if (!platform.isEmpty()) {
-      return platform;
-    }
-    return switch (moduleType) {
-      case ManagedApplicationModule -> withFileContexts(ExecutionContext.MANAGED_CLIENTS,
-        ExecutionContext.THICK_CLIENT_MANAGED_FILE);
-      case OrdinaryApplicationModule -> Set.of(
-        ExecutionContext.THICK_CLIENT_ORDINARY, ExecutionContext.THICK_CLIENT_ORDINARY_FILE);
-      case ExternalConnectionModule -> ExecutionContext.EXTERNAL_PREPROCESSOR;
-      // Сеанс проверяется на сервере и в файловых вариантах, где сервер исполняется в клиентском процессе.
-      // Доступность события УстановкаПараметровСеанса из СП не описывает компиляцию модуля сеанса.
-      case SessionModule -> withFileContexts(ExecutionContext.SERVERS,
-        ExecutionContext.THICK_CLIENT_MANAGED_FILE, ExecutionContext.THICK_CLIENT_ORDINARY_FILE,
-        ExecutionContext.EXTERNAL_CONNECTION_FILE);
-      default -> Set.of();
-    };
+    return modules.moduleContexts(document);
   }
 
   /**
@@ -486,34 +388,41 @@ public class CompilationContextResolver {
    *     или сочетание вида модуля и директивы не поддерживается. Ветки препроцессора
    *     из {@link Declaration#branch()} вызывающий код пересекает с результатом отдельно.
    */
+  @SuppressWarnings("java:S3553") // Пустой Optional — явный контракт отсутствующей директивы, без null.
   public Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
     var contexts = ExecutionContext.copyOf(moduleContexts(document));
     if (contexts.isEmpty()) {
       return Optional.empty();
     }
     if (usesFormDirectives(document)) {
-      var effective = directive.or(() -> CompilerDirectiveKind.of(CompilerDirectiveKind.AT_SERVER.getTokenType()));
-      var kind = effective.orElseThrow();
-      var allowed = document.getModuleType() == ModuleType.CommandModule ? COMMAND_DIRECTIVES : FORM_DIRECTIVES;
-      if (!allowed.contains(kind)) {
-        return Optional.empty();
-      }
-      restrictToDirective(contexts, kind);
-      return Optional.of(new MethodContext(effective, Set.copyOf(contexts)));
+      return formMethodContext(document, directive.orElse(CompilerDirectiveKind.AT_SERVER), contexts);
     }
-    if (directive.isPresent()) {
-      // Директивы общего модуля дополнительно ограничиваются флагами самого модуля.
-      var common = document.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
-      if (common.isEmpty()) {
-        return Optional.empty();
-      }
-      var kind = directive.orElseThrow();
-      if (kind != CompilerDirectiveKind.AT_CLIENT && kind != CompilerDirectiveKind.AT_SERVER) {
-        // Прочие директивы форм/команд не создают метод общего модуля при компиляции.
-        return Optional.of(new MethodContext(directive, Set.of()));
-      }
-      restrictToDirective(contexts, kind);
+    if (directive.isEmpty()) {
+      return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
     }
+    return commonMethodContext(document, directive.orElseThrow(), contexts);
+  }
+
+  private static Optional<MethodContext> formMethodContext(DocumentContext document, CompilerDirectiveKind kind,
+                                                          Set<ExecutionContext> contexts) {
+    var allowed = document.getModuleType() == ModuleType.CommandModule ? COMMAND_DIRECTIVES : FORM_DIRECTIVES;
+    if (!allowed.contains(kind)) {
+      return Optional.empty();
+    }
+    restrictToDirective(contexts, kind);
+    return Optional.of(new MethodContext(CompilerDirectiveKind.of(kind.getTokenType()), Set.copyOf(contexts)));
+  }
+
+  private static Optional<MethodContext> commonMethodContext(DocumentContext document, CompilerDirectiveKind kind,
+                                                            Set<ExecutionContext> contexts) {
+    if (document.getMdObject().filter(CommonModule.class::isInstance).isEmpty()) {
+      return Optional.empty();
+    }
+    var directive = CompilerDirectiveKind.of(kind.getTokenType());
+    if (kind != CompilerDirectiveKind.AT_CLIENT && kind != CompilerDirectiveKind.AT_SERVER) {
+      return Optional.of(new MethodContext(directive, Set.of()));
+    }
+    restrictToDirective(contexts, kind);
     return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
   }
 
@@ -528,25 +437,31 @@ public class CompilationContextResolver {
    * @param context режим вызывающего кода; серверный переход учитывается отдельно.
    * @return доступность объявления, включая причину запрета либо недостаток сведений.
    */
+  @SuppressWarnings("java:S3553") // Неизвестный профиль сохраняется отдельно от доказанной недоступности модуля.
   public CallAvailability availability(DocumentContext documentContext, MethodContext caller,
-                                   DocumentContext owner, Declaration definition, Optional<MethodContext> method,
-                                   ExecutionContext context) {
+                                       DocumentContext owner, Declaration definition, Optional<MethodContext> method,
+                                       ExecutionContext context) {
     var sameModule = owner.getUri().equals(documentContext.getUri());
     var common = owner.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
     if (!sameModule && common.isPresent() && !canSeeCommonModule(common.get(), context)) {
       return CallAvailability.MODULE_UNAVAILABLE;
     }
-    if (method.isEmpty() || definition.branch() == null) {
+    var branch = definition.branch();
+    if (method.isEmpty() || branch == null) {
       return CallAvailability.UNKNOWN;
     }
-    var effective = method.get();
-    if (sameModule && usesFormDirectives(owner)) {
-      if (!directivesCompatible(caller.directive().orElseThrow(), effective.directive().orElseThrow(), context)) {
-        return CallAvailability.METHOD_UNAVAILABLE;
-      }
+    return knownAvailability(sameModule, caller, owner, method.orElseThrow(), branch, context);
+  }
+
+  private CallAvailability knownAvailability(boolean sameModule, MethodContext caller, DocumentContext owner,
+                                             MethodContext method, Collection<ExecutionContext> branch,
+                                             ExecutionContext context) {
+    if (sameModule && usesFormDirectives(owner)
+      && !directivesCompatible(caller.directive().orElseThrow(), method.directive().orElseThrow(), context)) {
+      return CallAvailability.METHOD_UNAVAILABLE;
     }
-    var targetContext = targetContext(documentContext, owner, effective, context);
-    return effective.contexts().contains(targetContext) && definition.branch().contains(targetContext)
+    var target = targetContext(sameModule, owner, method, context);
+    return method.contexts().contains(target) && branch.contains(target)
       ? CallAvailability.AVAILABLE : CallAvailability.METHOD_UNAVAILABLE;
   }
 
@@ -578,12 +493,7 @@ public class CompilationContextResolver {
    * @return {@code true} для команд и управляемых форм, {@code false} для остальных модулей.
    */
   public boolean usesFormDirectives(DocumentContext document) {
-    if (document.getModuleType() == ModuleType.CommandModule) {
-      return true;
-    }
-    return document.getModuleType() == ModuleType.FormModule && document.getMdObject()
-      .filter(Form.class::isInstance).map(Form.class::cast)
-      .map(form -> form.getFormType() == FormType.MANAGED).orElse(true);
+    return modules.usesFormDirectives(document);
   }
 
   /**
@@ -598,24 +508,7 @@ public class CompilationContextResolver {
    * @return видимость модуля; существование метода и контекст его выполнения здесь не проверяются.
    */
   public boolean canSeeCommonModule(CommonModule module, ExecutionContext context) {
-    if (context.isFileMode()) {
-      var local = switch (context.optionContext()) {
-        case THICK_CLIENT_MANAGED -> module.isClientManagedApplication();
-        case THICK_CLIENT_ORDINARY -> module.isClientOrdinaryApplication();
-        case EXTERNAL_CONNECTION -> module.isExternalConnection();
-        default -> false;
-      };
-      return module.isServer() || local;
-    }
-    if (ExecutionContext.SERVERS.contains(context)) {
-      return module.isServer();
-    }
-    var local = switch (context) {
-      case EXTERNAL_CONNECTION -> module.isExternalConnection();
-      case THICK_CLIENT_ORDINARY -> module.isClientOrdinaryApplication();
-      default -> module.isClientManagedApplication();
-    };
-    return local || module.isServer() && module.isServerCall();
+    return modules.canSeeCommonModule(module, context);
   }
 
   /**
@@ -639,29 +532,49 @@ public class CompilationContextResolver {
   private ExecutionContext targetContext(boolean sameModule, DocumentContext owner, MethodContext method,
                                          ExecutionContext context) {
     if (usesFormDirectives(owner)) {
-      var formContext = switch (context) {
-        case THICK_CLIENT_MANAGED_FILE -> ExecutionContext.THICK_CLIENT_MANAGED_FILE_CLIENT;
-        case THICK_CLIENT_ORDINARY_FILE -> ExecutionContext.THICK_CLIENT_ORDINARY_FILE_CLIENT;
-        default -> context;
-      };
-      if (ExecutionContext.CLIENTS.contains(formContext)
-          && method.directive().filter(directive -> directive == CompilerDirectiveKind.AT_SERVER
-            || directive == CompilerDirectiveKind.AT_SERVER_NO_CONTEXT).isPresent()) {
-        return serverFor(formContext);
-      }
-      return formContext;
+      return formTargetContext(method, context);
     }
     if (context.isFileMode()) {
       return context.sharedFileContext();
     }
-    var common = owner.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
-    if (!sameModule && common.isPresent()
-        && (ExecutionContext.CLIENTS.contains(context) || context == ExecutionContext.EXTERNAL_CONNECTION)
-        && common.get().isServer() && common.get().isServerCall()
-        && !moduleContexts(owner).contains(context)) {
+    if (!sameModule && hasServerTransition(owner, context)) {
       return serverFor(context);
     }
     return context;
+  }
+
+  private static ExecutionContext formTargetContext(MethodContext method, ExecutionContext context) {
+    var formContext = switch (context) {
+      case THICK_CLIENT_MANAGED_FILE -> ExecutionContext.THICK_CLIENT_MANAGED_FILE_CLIENT;
+      case THICK_CLIENT_ORDINARY_FILE -> ExecutionContext.THICK_CLIENT_ORDINARY_FILE_CLIENT;
+      default -> context;
+    };
+    if (ExecutionContext.CLIENTS.contains(formContext)
+      && method.directive().filter(CompilationContextResolver::isServerDirective).isPresent()) {
+      return serverFor(formContext);
+    }
+    return formContext;
+  }
+
+  private static boolean isServerDirective(CompilerDirectiveKind directive) {
+    return directive == CompilerDirectiveKind.AT_SERVER || directive == CompilerDirectiveKind.AT_SERVER_NO_CONTEXT;
+  }
+
+  private boolean hasServerTransition(DocumentContext owner, ExecutionContext context) {
+    if (!isClientOrConnection(context)) {
+      return false;
+    }
+    var common = owner.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
+    if (common.isEmpty()) {
+      return false;
+    }
+    var module = common.orElseThrow();
+    return module.isServer() && module.isServerCall() && !moduleContexts(owner).contains(context);
+  }
+
+  private static boolean isClientOrConnection(ExecutionContext context) {
+    return ExecutionContext.CLIENTS.contains(context)
+      || context.optionContext() == ExecutionContext.EXTERNAL_CONNECTION;
   }
 
   /**
@@ -692,32 +605,33 @@ public class CompilationContextResolver {
    * @return режимы, для которых доказана возможность серверного перехода; пусто, если переход
    *     не найден либо профиль метода неизвестен.
    */
-  public Set<ExecutionContext> serverCallContexts(MethodSymbol method, Set<ExecutionContext> declarationContexts) {
+  public Set<ExecutionContext> serverCallContexts(MethodSymbol method, Collection<ExecutionContext> declarationContexts) {
     var owner = method.getOwner();
     var form = usesFormDirectives(owner);
-    if (!form) {
-      var common = owner.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
-      if (!method.isExport() || common.isEmpty() || !common.get().isServer() || !common.get().isServerCall()) {
-        return Set.of();
-      }
-    }
-    var profile = methodContext(owner, method.getCompilerDirectiveKind());
-    if (profile.isEmpty()) {
+    if (!form && !exportsServerCall(method)) {
       return Set.of();
     }
+    return methodContext(owner, method.getCompilerDirectiveKind())
+      .map((MethodContext profile) -> serverCallContexts(owner, form, profile, declarationContexts))
+      .orElse(Set.of());
+  }
+
+  private static boolean exportsServerCall(MethodSymbol method) {
+    return method.isExport() && method.getOwner().getMdObject()
+      .filter(CommonModule.class::isInstance).map(CommonModule.class::cast)
+      .filter(CommonModule::isServer).filter(CommonModule::isServerCall).isPresent();
+  }
+
+  private Set<ExecutionContext> serverCallContexts(DocumentContext owner, boolean form, MethodContext profile,
+                                                   Collection<ExecutionContext> declarationContexts) {
     var result = EnumSet.noneOf(ExecutionContext.class);
     var callers = form ? moduleContexts(owner) : supportedContexts(owner);
     for (var context : ExecutionContext.copyOf(callers)) {
-      if (!ExecutionContext.CLIENTS.contains(context)
-          && context.optionContext() != ExecutionContext.EXTERNAL_CONNECTION) {
-        continue;
-      }
-      if (!form && context.isFileMode()) {
-        continue;
-      }
-      var target = targetContext(form, owner, profile.orElseThrow(), context);
-      if (isServerTransition(context, target) && declarationContexts.contains(target)) {
-        result.add(context);
+      if (isClientOrConnection(context) && (form || !context.isFileMode())) {
+        var target = targetContext(form, owner, profile, context);
+        if (isServerTransition(context, target) && declarationContexts.contains(target)) {
+          result.add(context);
+        }
       }
     }
     return Set.copyOf(result);
@@ -739,97 +653,12 @@ public class CompilationContextResolver {
     };
   }
 
-  /**
-   * Контексты компиляции по флагам общего модуля. «Вызов сервера» здесь не участвует:
-   * он разрешает обращение к серверному модулю, но не компиляцию его кода на клиенте.
-   */
-  private static Set<ExecutionContext> commonModuleContexts(CommonModule module) {
-    var result = EnumSet.noneOf(ExecutionContext.class);
-    if (module.isServer()) {
-      result.addAll(ExecutionContext.SERVERS);
-      result.addAll(Set.of(ExecutionContext.THICK_CLIENT_MANAGED_FILE, ExecutionContext.THICK_CLIENT_ORDINARY_FILE,
-        ExecutionContext.EXTERNAL_CONNECTION_FILE));
-    }
-    if (module.isClientManagedApplication()) {
-      result.addAll(ExecutionContext.MANAGED_CLIENTS);
-      result.add(ExecutionContext.THICK_CLIENT_MANAGED_FILE);
-    }
-    if (module.isClientOrdinaryApplication()) {
-      result.add(ExecutionContext.THICK_CLIENT_ORDINARY);
-      result.add(ExecutionContext.THICK_CLIENT_ORDINARY_FILE);
-    }
-    if (module.isExternalConnection()) {
-      result.add(ExecutionContext.EXTERNAL_CONNECTION);
-      result.add(ExecutionContext.EXTERNAL_CONNECTION_FILE);
-    }
-    return Set.copyOf(result);
-  }
-
-  private Set<ExecutionContext> addOrdinaryManagedFormContext(DocumentContext document,
-                                                             Set<ExecutionContext> contexts) {
-    var configuration = document.getServerContext().getConfiguration().getMergedConfiguration();
-    if (configuration.isUseManagedFormInOrdinaryApplication()) {
-      var expanded = ExecutionContext.copyOf(contexts);
-      expanded.add(ExecutionContext.THICK_CLIENT_ORDINARY);
-      expanded.add(ExecutionContext.THICK_CLIENT_ORDINARY_FILE_CLIENT);
-      return Set.copyOf(expanded);
-    }
-    return contexts;
-  }
-
-  private static Set<ExecutionContext> managedContexts() {
-    var contexts = ExecutionContext.copyOf(ExecutionContext.MANAGED_CLIENTS);
-    contexts.addAll(ExecutionContext.SERVERS);
-    contexts.addAll(Set.of(ExecutionContext.THICK_CLIENT_MANAGED_FILE_CLIENT,
-      ExecutionContext.THICK_CLIENT_MANAGED_FILE_SERVER, ExecutionContext.THICK_CLIENT_ORDINARY_FILE_SERVER));
-    return Set.copyOf(contexts);
-  }
-
   private static void restrictToDirective(Set<ExecutionContext> contexts, CompilerDirectiveKind directive) {
     switch (directive) {
       case AT_CLIENT -> contexts.retainAll(ExecutionContext.CLIENTS);
       case AT_SERVER, AT_SERVER_NO_CONTEXT -> contexts.retainAll(ExecutionContext.SERVER_CONTEXTS);
       default -> { /* директива разрешает обе стороны */ }
     }
-  }
-
-  private Set<ExecutionContext> platformContexts(DocumentContext document) {
-    var names = new ArrayList<String>();
-    document.getMdObject().ifPresent(md ->
-      ConfigurationModuleMembersProvider.selfTypeQualifiedName(document.getModuleType(), md).ifPresent(qualifiedName -> {
-        var name = switch (md.getMdoType()) {
-          case EXTERNAL_DATA_SOURCE_TABLE, EXTERNAL_DATA_SOURCE_CUBE -> "ВнешнийИсточникДанных" + qualifiedName;
-          default -> qualifiedName;
-        };
-        names.add(name);
-        var dot = name.indexOf('.');
-        if (dot > 0) {
-          names.add(name.substring(0, dot));
-        }
-      }));
-    var family = ModulePlatformTypeNames.familyName(document.getModuleType());
-    if (family != null) {
-      names.add(family);
-    }
-    for (var name : names) {
-      var types = new ArrayList<>(typeRegistry.findAllGenericsByFamilyCore(name));
-      typeRegistry.resolve(name).ifPresent(types::add);
-      var contexts = EnumSet.noneOf(ExecutionContext.class);
-      for (var type : types) {
-        contexts.addAll(fromAvailability(typeRegistry.getTypeMetadata(type, FileType.BSL).availabilities()));
-      }
-      if (!contexts.isEmpty()) {
-        return Set.copyOf(contexts);
-      }
-    }
-    return Set.of();
-  }
-
-  private static Set<ExecutionContext> withFileContexts(Set<ExecutionContext> original,
-                                                       ExecutionContext... fileContexts) {
-    var contexts = ExecutionContext.copyOf(original);
-    Collections.addAll(contexts, fileContexts);
-    return Set.copyOf(contexts);
   }
 
   private static Map<String, List<Declaration>> collectDeclarations(SymbolTree tree) {
@@ -842,27 +671,5 @@ public class CompilationContextResolver {
     result.replaceAll((name, methods) -> List.copyOf(methods));
     return Collections.unmodifiableMap(result);
   }
-  /** Перевод доступности из СП в контексты компиляции. */
-  private static Set<ExecutionContext> fromAvailability(Collection<Availability> availabilities) {
-    var result = EnumSet.noneOf(ExecutionContext.class);
-    for (var availability : availabilities) {
-      switch (availability) {
-        case SERVER -> result.add(ExecutionContext.SERVER);
-        case THIN_CLIENT -> result.add(ExecutionContext.THIN_CLIENT);
-        case WEB_CLIENT -> result.add(ExecutionContext.WEB_CLIENT);
-        case MOBILE_CLIENT -> result.add(ExecutionContext.MOBILE_CLIENT);
-        case THICK_CLIENT -> {
-          result.add(ExecutionContext.THICK_CLIENT_MANAGED);
-          result.add(ExecutionContext.THICK_CLIENT_ORDINARY);
-          result.add(ExecutionContext.THICK_CLIENT_MANAGED_FILE);
-          result.add(ExecutionContext.THICK_CLIENT_ORDINARY_FILE);
-        }
-        case EXTERNAL_CONNECTION -> result.addAll(ExecutionContext.EXTERNAL_PREPROCESSOR);
-        case MOBILE_APPLICATION_CLIENT -> result.add(ExecutionContext.MOBILE_APPLICATION_CLIENT);
-        case MOBILE_APPLICATION_SERVER -> result.add(ExecutionContext.MOBILE_APPLICATION_SERVER);
-        case MOBILE_STANDALONE_SERVER -> result.add(ExecutionContext.MOBILE_STANDALONE_SERVER);
-      }
-    }
-    return Set.copyOf(result);
-  }
+
 }
