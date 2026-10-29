@@ -228,7 +228,9 @@ public final class CompletionProvider {
       var ref = typeService.resolve(name, fileType).orElse(null);
       if (ref == null) {
         result.add(name);
-      } else if (seen.add(ref)) {
+        continue;
+      }
+      if (seen.add(ref)) {
         result.add(typeService.displayName(ref, language));
       }
     }
