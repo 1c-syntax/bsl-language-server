@@ -71,8 +71,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -170,11 +170,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Сколько раз менялось чьё-либо значение: волна, не изменившая ничего, повторилась бы дословно. */
   private final AtomicLong valueChanges = new AtomicLong();
 
-  /** Сколько раз пришлось перечитать документ за общий проход — для отладочного счёта. */
-  private final AtomicInteger rebuilt = new AtomicInteger();
-
-  /** Какие документы перечитывались: волн несколько, и один документ может попасть в разбор не раз. */
-  private final Set<URI> rebuiltUris = ConcurrentHashMap.newKeySet();
+  /** Общее число перечитываний и число уникальных документов за проход. */
+  private final DocumentRebuildStatistics rebuilds = new DocumentRebuildStatistics();
 
   @PostConstruct
   void captureCompilationSettings() {
@@ -332,8 +329,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     maintenance = true;
     var deferred = pending.size();
     var startedAt = System.nanoTime();
-    rebuilt.set(0);
-    rebuiltUris.clear();
+    rebuilds.clear();
     var progressReporter = workDoneProgressHelper.createProgress(
       documentsOf(pending),
       getMessage("resolveDocumentsPostfix")
@@ -348,7 +344,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     LOGGER.info(
       "Return types resolved in {} ms: {} deferred methods, {} document parse attempts of {} documents",
-      (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilt.get(), rebuiltUris.size());
+      (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilds.total(), rebuilds.distinct());
   }
 
   /**
@@ -1368,8 +1364,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         if (isReadable(documentContext)) {
           return false;
         }
-        rebuilt.incrementAndGet();
-        rebuiltUris.add(documentContext.getUri());
+        rebuilds.record(documentContext.getUri());
         serverContext.rebuildDocument(documentContext);
         // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
         return isReadable(documentContext);
@@ -1446,8 +1441,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         serverContext.getDocumentLock(uri).writeLock().lock();
         locked.add(uri);
         if (!isReadable(documentContext)) {
-          rebuilt.incrementAndGet();
-          rebuiltUris.add(uri);
+          rebuilds.record(uri);
           serverContext.rebuildDocument(documentContext);
           loaded.add(documentContext);
         }
@@ -1496,8 +1490,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       if (isReadable(documentContext)) {
         return recomputeEach(methods);
       }
-      rebuilt.incrementAndGet();
-      rebuiltUris.add(documentContext.getUri());
+      rebuilds.record(documentContext.getUri());
       // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
       // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
