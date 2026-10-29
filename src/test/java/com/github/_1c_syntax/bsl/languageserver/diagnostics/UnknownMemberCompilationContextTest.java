@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker;
-import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.Check;
+import com.github._1c_syntax.bsl.languageserver.types.MemberAccessCheckKind;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnavailableMember;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnknownMember;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -54,7 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class UnknownMemberCompilationContextTest extends AbstractDiagnosticTest<UnknownMemberDiagnostic> {
   private static final Path ROOT = Path.of("src/test/resources/metadata/commonModuleCalls");
-  private static final Set<Check> BOTH = Set.of(Check.EXISTENCE, Check.AVAILABILITY);
+  private static final Set<MemberAccessCheckKind> BOTH = Set.of(MemberAccessCheckKind.EXISTENCE, MemberAccessCheckKind.AVAILABILITY);
 
   @Autowired
   private MemberAccessChecker checker;
@@ -307,7 +307,7 @@ class UnknownMemberCompilationContextTest extends AbstractDiagnosticTest<Unknown
       .extracting(problem -> ((UnavailableMember) problem).context())
       .containsExactly(ExecutionContext.SERVER, ExecutionContext.MOBILE_APPLICATION_SERVER,
         ExecutionContext.MOBILE_STANDALONE_SERVER);
-    assertThat(checker.check(document, ExecutionContext.ALL, Set.of(Check.EXISTENCE))).isEmpty();
+    assertThat(checker.check(document, ExecutionContext.ALL, Set.of(MemberAccessCheckKind.EXISTENCE))).isEmpty();
   }
 
   @Test

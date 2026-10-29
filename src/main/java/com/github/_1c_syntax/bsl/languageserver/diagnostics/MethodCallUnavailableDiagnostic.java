@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker;
-import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.Check;
+import com.github._1c_syntax.bsl.languageserver.types.MemberAccessCheckKind;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnavailableMember;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
@@ -125,7 +125,7 @@ public class MethodCallUnavailableDiagnostic extends AbstractVisitorDiagnostic {
     var automatic = contextResolver.automaticContexts(documentContext);
     var enabled = ExecutionContext.copyOf(ExecutionContext.ALL);
     enabled.removeIf(context -> !isEnabled(context, automatic));
-    for (var problem : accessChecker.check(documentContext, enabled, Set.of(Check.AVAILABILITY))) {
+    for (var problem : accessChecker.check(documentContext, enabled, Set.of(MemberAccessCheckKind.AVAILABILITY))) {
       var call = (UnavailableMember) problem;
       var context = info.getResourceString(call.context().name());
       String message;
@@ -145,24 +145,34 @@ public class MethodCallUnavailableDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isEnabled(ExecutionContext context, Set<ExecutionContext> automaticContexts) {
-    var mode = switch (context) {
-      case SERVER -> checkServer;
-      case THIN_CLIENT -> checkThinClient;
-      case WEB_CLIENT -> checkWebClient;
-      case MOBILE_CLIENT -> checkMobileClient;
-      case THICK_CLIENT_MANAGED, THICK_CLIENT_MANAGED_FILE,
-           THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_MANAGED_FILE_SERVER -> checkThickClientManagedApplication;
-      case THICK_CLIENT_ORDINARY, THICK_CLIENT_ORDINARY_FILE,
-           THICK_CLIENT_ORDINARY_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_SERVER -> checkThickClientOrdinaryApplication;
-      case EXTERNAL_CONNECTION, EXTERNAL_CONNECTION_FILE -> checkExternalConnection;
-      case MOBILE_APPLICATION_CLIENT -> checkMobileApplicationClient;
-      case MOBILE_APPLICATION_SERVER -> checkMobileApplicationServer;
-      case MOBILE_STANDALONE_SERVER -> checkMobileStandaloneServer;
-    };
+    var option = context.optionContext();
+    var mode = ExecutionContext.SERVERS.contains(option) ? serverMode(option) : clientOrConnectionMode(option);
     if ("on".equalsIgnoreCase(mode)) {
       return true;
     }
     return !"off".equalsIgnoreCase(mode) && automaticContexts.contains(context);
+  }
+
+  private String serverMode(ExecutionContext context) {
+    return switch (context) {
+      case SERVER -> checkServer;
+      case MOBILE_APPLICATION_SERVER -> checkMobileApplicationServer;
+      case MOBILE_STANDALONE_SERVER -> checkMobileStandaloneServer;
+      default -> throw new IllegalArgumentException("Expected a standalone server context: " + context);
+    };
+  }
+
+  private String clientOrConnectionMode(ExecutionContext context) {
+    return switch (context) {
+      case THIN_CLIENT -> checkThinClient;
+      case WEB_CLIENT -> checkWebClient;
+      case MOBILE_CLIENT -> checkMobileClient;
+      case THICK_CLIENT_MANAGED -> checkThickClientManagedApplication;
+      case THICK_CLIENT_ORDINARY -> checkThickClientOrdinaryApplication;
+      case EXTERNAL_CONNECTION -> checkExternalConnection;
+      case MOBILE_APPLICATION_CLIENT -> checkMobileApplicationClient;
+      default -> throw new IllegalArgumentException("Expected a client or connection context: " + context);
+    };
   }
 
 }

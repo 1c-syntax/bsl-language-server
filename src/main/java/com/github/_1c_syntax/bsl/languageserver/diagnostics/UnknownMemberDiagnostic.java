@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker;
-import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.Check;
+import com.github._1c_syntax.bsl.languageserver.types.MemberAccessCheckKind;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnknownMember;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
@@ -79,7 +79,7 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var contexts = contextResolver.automaticContexts(documentContext);
-    for (var problem : accessChecker.check(documentContext, contexts, Set.of(Check.EXISTENCE))) {
+    for (var problem : accessChecker.check(documentContext, contexts, Set.of(MemberAccessCheckKind.EXISTENCE))) {
       var missing = (UnknownMember) problem;
       var message = missing.receiverTypes().isEmpty() ? info.getMessage(missing.name())
         : memberMessage(missing.name(), missing.receiverTypes());

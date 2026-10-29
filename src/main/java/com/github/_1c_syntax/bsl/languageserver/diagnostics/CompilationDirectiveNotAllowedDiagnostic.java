@@ -57,8 +57,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CompilationDirectiveNotAllowedDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final CompilationContextResolver compilationContextResolver;
-
   private static final Set<CompilerDirectiveKind> FORM_MODULE_DIRECTIVES = EnumSet.of(
     CompilerDirectiveKind.AT_CLIENT,
     CompilerDirectiveKind.AT_SERVER,
@@ -71,6 +69,8 @@ public class CompilationDirectiveNotAllowedDiagnostic extends AbstractVisitorDia
     CompilerDirectiveKind.AT_SERVER,
     CompilerDirectiveKind.AT_CLIENT_AT_SERVER
   );
+
+  private final CompilationContextResolver compilationContextResolver;
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
