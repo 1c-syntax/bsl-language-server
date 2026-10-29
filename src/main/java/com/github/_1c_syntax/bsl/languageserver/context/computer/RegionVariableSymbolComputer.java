@@ -68,7 +68,6 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
   private final Set<RegionSymbol> regions = new HashSet<>();
   private final PreprocessorContexts preprocessor = new PreprocessorContexts();
   // Ключи — неизменяемые в течение обхода диапазоны LSP; их порядок не используется.
-  @SuppressWarnings("java:S6411")
   private final Map<Range, Set<ExecutionContext>> methodConditions = new HashMap<>();
 
   public RegionVariableSymbolComputer(DocumentContext documentContext,
@@ -112,7 +111,6 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
    *
    * @return неизменяемая карта с неизменяемыми множествами либо значениями {@code null}.
    */
-  @SuppressWarnings("java:S6411") // Снимок сохраняет точное равенство ключей Range из API LSP.
   public Map<Range, Set<ExecutionContext>> getMethodConditions() {
     return methodConditions.isEmpty() ? Map.of() : Collections.unmodifiableMap(new HashMap<>(methodConditions));
   }

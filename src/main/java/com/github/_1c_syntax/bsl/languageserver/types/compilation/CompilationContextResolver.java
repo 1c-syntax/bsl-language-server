@@ -24,36 +24,26 @@ package com.github._1c_syntax.bsl.languageserver.types.compilation;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
-import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorContexts;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Общие правила определения контекстов компиляции и переходов между ними.
@@ -77,24 +67,14 @@ public class CompilationContextResolver {
     CompilerDirectiveKind.AT_CLIENT, CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
 
   private final ModuleCompilationContexts modules;
-  /**
-   * Объявления по идентичности символьного дерева. Значения не удерживают дерево или документ;
-   * слабый ключ позволяет удалить запись после освобождения всех внешних ссылок на старое дерево.
-   */
-  private final Cache<SymbolTree, Map<String, List<Declaration>>> declarations =
-    Caffeine.newBuilder().weakKeys().build();
-  /** Границы инструкций и ограничения после них. Значения не удерживают AST или документ. */
-  private final Cache<SymbolTree, List<PreprocessorBranch>> preprocessorBranches =
-    Caffeine.newBuilder().weakKeys().build();
-
-  private record PreprocessorBranch(Range directive, @Nullable Set<ExecutionContext> contexts) { }
+  private final CompilationContextIndex index = new CompilationContextIndex();
 
   /**
    * Объявление метода без привязки к текущим флагам метаданных.
    * <p>
    * Одно имя может иметь несколько объявлений в разных ветках препроцессора;
-   * имя хранится в ключе карты {@link #declarations}.
-   * Записи, полученные из {@link #declarations}, содержат неизменяемые множества;
+   * имя хранится в ключе карты {@link #declarations(DocumentContext)}.
+   * Записи, полученные из {@link #declarations(DocumentContext)}, содержат неизменяемые множества;
    * прямой конструктор не копирует переданное множество.
    *
    * @param directive исходная директива компиляции; пустой {@link Optional}, если она отсутствует.
@@ -140,7 +120,7 @@ public class CompilationContextResolver {
    *     в том числе до первого разбора документа, когда дерево содержит только символ модуля.
    */
   public Map<String, List<Declaration>> declarations(DocumentContext document) {
-    return declarations.get(document.getSymbolTreeNoLock(), CompilationContextResolver::collectDeclarations);
+    return index.declarations(document);
   }
 
   /**
@@ -150,7 +130,7 @@ public class CompilationContextResolver {
    * @return все контексты либо множество без файловых вариантов толстого клиента.
    */
   public Set<ExecutionContext> supportedContexts(DocumentContext document) {
-    return modules.supportedContexts(document);
+    return ModuleCompilationContexts.supportedContexts(document);
   }
 
   /**
@@ -237,7 +217,7 @@ public class CompilationContextResolver {
     if (document.getFileType() != FileType.BSL) {
       return Optional.empty();
     }
-    var branch = preprocessorContextsAt(document, position);
+    var branch = index.preprocessorContextsAt(document, position);
     if (branch == null || branch.equals(ExecutionContext.ALL)) {
       return Optional.empty();
     }
@@ -272,7 +252,7 @@ public class CompilationContextResolver {
     if (profile.isEmpty()) {
       return Optional.empty();
     }
-    var branch = preprocessorContextsAt(document, position);
+    var branch = index.preprocessorContextsAt(document, position);
     if (branch == null) {
       return Optional.empty();
     }
@@ -281,41 +261,9 @@ public class CompilationContextResolver {
     return Optional.of(new MethodContext(profile.orElseThrow().directive(), Set.copyOf(contexts)));
   }
 
-  /** Последняя инструкция перед позицией находится двоичным поиском; AST обходится один раз на версию. */
-  private @Nullable Set<ExecutionContext> preprocessorContextsAt(DocumentContext document, Position position) {
-    var branches = preprocessorBranches.get(document.getSymbolTree(), ignored -> collectPreprocessorBranches(document));
-    var low = 0;
-    var high = branches.size();
-    while (low < high) {
-      var middle = (low + high) >>> 1;
-      var start = branches.get(middle).directive().getStart();
-      if (start.getLine() < position.getLine()
-          || (start.getLine() == position.getLine() && start.getCharacter() <= position.getCharacter())) {
-        low = middle + 1;
-      } else {
-        high = middle;
-      }
-    }
-    if (low == 0) {
-      return ExecutionContext.ALL;
-    }
-    var branch = branches.get(low - 1);
-    return Ranges.containsPosition(branch.directive(), position) ? null : branch.contexts();
-  }
 
-  private static List<PreprocessorBranch> collectPreprocessorBranches(DocumentContext document) {
-    var result = new ArrayList<PreprocessorBranch>();
-    var preprocessor = new PreprocessorContexts();
-    for (var tree : Trees.findAllRuleNodes(document.getAst(), BSLParser.RULE_preprocessor)) {
-      var node = (BSLParser.PreprocessorContext) tree;
-      if (!preprocessor.enter(node)) {
-        continue;
-      }
-      var active = preprocessor.active();
-      result.add(new PreprocessorBranch(Ranges.create(node), active == null ? null : Set.copyOf(active)));
-    }
-    return List.copyOf(result);
-  }
+
+
 
   /**
    * Перевести доступность API из СП в режимы его использования, включая файловые части форм.
@@ -324,7 +272,7 @@ public class CompilationContextResolver {
    * @return поддерживаемые режимы; пустой вход означает отсутствие сведений, а не запрет.
    */
   public Set<ExecutionContext> platformContexts(Collection<Availability> availabilities) {
-    return modules.platformContexts(availabilities);
+    return ModuleCompilationContexts.platformContexts(availabilities);
   }
 
   /**
@@ -388,7 +336,6 @@ public class CompilationContextResolver {
    *     или сочетание вида модуля и директивы не поддерживается. Ветки препроцессора
    *     из {@link Declaration#branch()} вызывающий код пересекает с результатом отдельно.
    */
-  @SuppressWarnings("java:S3553") // Пустой Optional — явный контракт отсутствующей директивы, без null.
   public Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
     var contexts = ExecutionContext.copyOf(moduleContexts(document));
     if (contexts.isEmpty()) {
@@ -437,7 +384,6 @@ public class CompilationContextResolver {
    * @param context режим вызывающего кода; серверный переход учитывается отдельно.
    * @return доступность объявления, включая причину запрета либо недостаток сведений.
    */
-  @SuppressWarnings("java:S3553") // Неизвестный профиль сохраняется отдельно от доказанной недоступности модуля.
   public CallAvailability availability(DocumentContext documentContext, MethodContext caller,
                                        DocumentContext owner, Declaration definition, Optional<MethodContext> method,
                                        ExecutionContext context) {
@@ -493,7 +439,7 @@ public class CompilationContextResolver {
    * @return {@code true} для команд и управляемых форм, {@code false} для остальных модулей.
    */
   public boolean usesFormDirectives(DocumentContext document) {
-    return modules.usesFormDirectives(document);
+    return ModuleCompilationContexts.usesFormDirectives(document);
   }
 
   /**
@@ -508,7 +454,7 @@ public class CompilationContextResolver {
    * @return видимость модуля; существование метода и контекст его выполнения здесь не проверяются.
    */
   public boolean canSeeCommonModule(CommonModule module, ExecutionContext context) {
-    return modules.canSeeCommonModule(module, context);
+    return ModuleCompilationContexts.canSeeCommonModule(module, context);
   }
 
   /**
@@ -661,15 +607,6 @@ public class CompilationContextResolver {
     }
   }
 
-  private static Map<String, List<Declaration>> collectDeclarations(SymbolTree tree) {
-    Map<String, List<Declaration>> result = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    for (var method : tree.getMethods()) {
-      result.computeIfAbsent(method.getName(), ignored -> new ArrayList<>()).add(new Declaration(
-        method.getCompilerDirectiveKind(),
-        tree.getMethodPreprocessorContexts(method), method.isExport()));
-    }
-    result.replaceAll((name, methods) -> List.copyOf(methods));
-    return Collections.unmodifiableMap(result);
-  }
+
 
 }

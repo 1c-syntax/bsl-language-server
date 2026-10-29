@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
@@ -32,9 +31,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import com.google.common.base.Equivalence;
 import java.util.List;
 import java.util.Map;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Environment;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Facts;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Change;
@@ -45,7 +44,6 @@ import static com.github._1c_syntax.bsl.languageserver.types.inferencer.Variable
  * Один расчёт по телу: держит исходные данные и разложенное тело, чтобы не таскать их
  * через все шаги.
  */
-@SuppressWarnings("java:S6411") // Карты прохода используют исходные символы и узлы CFG/AST; их порядок не задаётся.
 final class VariableFlowPass {
 
   private final VariableFlowAnalyzer analyzer;
@@ -54,9 +52,7 @@ final class VariableFlowPass {
   private final FlowLayout layout;
   private final FlowInputs inputs;
   /** Переменные тела по их номерам в окружении. */
-  private final List<VariableSymbol> variables;
-  private final Map<VariableSymbol, Integer> indexes;
-  private final Map<ParserRuleContext, List<Change>> changesByStatement;
+  private final FlowVariables bodyVariables;
   /** Номера переменных, видимых другим телам: их тип сбрасывается на вызовах. */
   private final List<Integer> shared;
   /** Достижимая часть графа во всех возможных режимах; {@code null} отключает модель контекстов 1С. */
@@ -68,22 +64,22 @@ final class VariableFlowPass {
    * Окружение перед каждым оператором. Заполняется по ходу расчёта, а не только в конце:
    * пока идут проходы, отсюда отвечают вложенные запросы про переменные этого же тела.
    */
-  private final Map<ParserRuleContext, Environment> beforeStatement = new IdentityHashMap<>();
+  private final Map<ParserRuleContext, FlowEnvironment> beforeStatement = new IdentityHashMap<>();
 
   /** Окружение на входе в тело: считается по первому требованию и переиспользуется. */
   @Nullable
-  private Environment entry;
+  private FlowEnvironment entry;
 
   /**
    * Окружение, с которым управление покидает тело: объединение значений перед каждым
    * вызовом. Нужно переменным, видимым другим телам: вызванный метод застаёт их
    * такими, какими они были в точке вызова.
    */
-  private Environment leaving = Environment.EMPTY;
+  private FlowEnvironment leaving = FlowEnvironment.EMPTY;
 
   /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
-  private final Map<CfgVertex, Environment> outgoing = new IdentityHashMap<>();
-  private final Map<CfgVertex, Environment> outgoingInput = new IdentityHashMap<>();
+  private final Map<CfgVertex, FlowEnvironment> outputsByVertex = new IdentityHashMap<>();
+  private final Map<CfgVertex, FlowEnvironment> outgoingInput = new IdentityHashMap<>();
 
   VariableFlowPass(
     VariableFlowAnalyzer analyzer,
@@ -92,9 +88,7 @@ final class VariableFlowPass {
     FlowLayout layout,
     FlowInputs inputs,
     @Nullable PreprocessorFlow compiledFlow,
-    List<VariableSymbol> variables,
-    Map<VariableSymbol, Integer> indexes,
-    Map<ParserRuleContext, List<Change>> changesByStatement
+    FlowVariables bodyVariables
   ) {
     this.analyzer = analyzer;
     this.documentContext = documentContext;
@@ -102,12 +96,10 @@ final class VariableFlowPass {
     this.layout = layout;
     this.inputs = inputs;
     this.compiledFlow = compiledFlow;
-    this.variables = variables;
-    this.indexes = indexes;
-    this.changesByStatement = changesByStatement;
+    this.bodyVariables = bodyVariables;
     this.shared = new ArrayList<>(0);
-    for (var i = 0; i < variables.size(); i++) {
-      if (inputs.sharedWithOtherBodies().test(variables.get(i))) {
+    for (var i = 0; i < bodyVariables.variables().size(); i++) {
+      if (inputs.sharedWithOtherBodies().test(bodyVariables.variables().get(i))) {
         shared.add(i);
       }
     }
@@ -129,13 +121,13 @@ final class VariableFlowPass {
       // Через тот же кэш выхода: к концу поиска неподвижной точки он уже посчитан для
       // этих же входных окружений, и повторный проход по операторам не нужен — вместе с
       // ним не нужны и повторные вызовы колбэков мутаторов.
-      outgoingOf(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
+      outgoingOf(vertex, byVertex.getOrDefault(vertex, FlowEnvironment.EMPTY));
     }
     // Окружение на входе в вершину выхода — это и есть окружение на выходе из тела:
     // в неё сходятся все пути, включая Возврат из середины. Факта у неё может не быть
     // (тело пустое либо выход недостижим) — тогда с чем вошли, с тем и вышли.
     var exit = byVertex.getOrDefault(graph.getExitPoint(), entryEnvironment());
-    return new Facts(indexes, beforeStatement, changesByStatement, exit.union(leaving));
+    return new Facts(bodyVariables.indexes(), beforeStatement, bodyVariables.changesByStatement(), exit.union(leaving));
   }
 
   /**
@@ -149,7 +141,7 @@ final class VariableFlowPass {
    */
   @Nullable
   TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {
-    var index = indexes.get(variable);
+    var index = bodyVariables.indexes().get(variable);
     if (index == null) {
       return null;
     }
@@ -164,8 +156,8 @@ final class VariableFlowPass {
    * значения не перестанут меняться: так тип, приходящий по обратному ребру цикла,
    * доезжает до вершин, посещённых раньше него.
    */
-  private Map<CfgVertex, Environment> computeEntryFacts() {
-    Map<CfgVertex, Environment> facts = new IdentityHashMap<>();
+  private Map<CfgVertex, FlowEnvironment> computeEntryFacts() {
+    Map<CfgVertex, FlowEnvironment> facts = new IdentityHashMap<>();
     facts.put(graph.getEntryPoint(), entryEnvironment());
 
     for (var pass = 0; pass < MAX_PASSES; pass++) {
@@ -195,11 +187,11 @@ final class VariableFlowPass {
    * Считается один раз — источники объявленного типа тянут разбор комментариев и
    * аннотаций, а спрашивают их в каждом проходе.
    */
-  private Environment entryEnvironment() {
+  private FlowEnvironment entryEnvironment() {
     if (entry == null) {
-      var current = Environment.blank(variables.size());
-      for (var i = 0; i < variables.size(); i++) {
-        current = current.with(i, entryFactOf(variables.get(i)), variables.size());
+      var current = FlowEnvironment.blank(bodyVariables.variables().size());
+      for (var i = 0; i < bodyVariables.variables().size(); i++) {
+        current = current.with(i, entryFactOf(bodyVariables.variables().get(i)), bodyVariables.variables().size());
       }
       entry = current;
     }
@@ -223,8 +215,8 @@ final class VariableFlowPass {
    * ({@code Если Х = Неопределено Тогда Возврат; КонецЕсли;}) — до кода за условием
    * доходит только ложная ветка.
    */
-  private Environment joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, Environment> facts) {
-    var joined = Environment.EMPTY;
+  private FlowEnvironment joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, FlowEnvironment> facts) {
+    var joined = FlowEnvironment.EMPTY;
     for (var edge : graph.incomingEdgesOf(vertex)) {
       if (compiledFlow != null && !compiledFlow.edges().contains(edge)) {
         continue;
@@ -234,7 +226,7 @@ final class VariableFlowPass {
       if (atPredecessor != null) {
         var outgoing = outgoingOf(predecessor, atPredecessor);
         joined = joined.union(FlowConditionNarrowing.narrow(predecessor, edge.getType(), outgoing,
-          inputs.narrowing(), variables, indexes));
+          inputs.narrowing(), bodyVariables.variables(), bodyVariables.indexes()));
       }
     }
     return joined;
@@ -253,13 +245,13 @@ final class VariableFlowPass {
    * @param incoming окружение на входе в неё.
    * @return окружение на выходе.
    */
-  private Environment outgoingOf(CfgVertex vertex, Environment incoming) {
-    if (outgoingInput.get(vertex) == incoming) {
-      return outgoing.get(vertex);
+  private FlowEnvironment outgoingOf(CfgVertex vertex, FlowEnvironment incoming) {
+    if (Equivalence.identity().equivalent(outgoingInput.get(vertex), incoming)) {
+      return outputsByVertex.get(vertex);
     }
     var result = applyStatements(vertex, incoming);
     outgoingInput.put(vertex, incoming);
-    outgoing.put(vertex, result);
+    outputsByVertex.put(vertex, result);
     return result;
   }
 
@@ -267,7 +259,7 @@ final class VariableFlowPass {
    * Применить к окружению все операторы вершины по порядку, попутно запоминая окружение
    * перед каждым из них: пока идут проходы, отсюда отвечают вложенные запросы.
    */
-  private Environment applyStatements(CfgVertex vertex, Environment incoming) {
+  private FlowEnvironment applyStatements(CfgVertex vertex, FlowEnvironment incoming) {
     var current = incoming;
     for (var statement : layout.statementsOf(vertex)) {
       beforeStatement.put(statement, current);
@@ -281,8 +273,8 @@ final class VariableFlowPass {
    * оператор-мутатор дополняет уже накопленный. Операторов без изменений — большинство,
    * и они окружение не трогают.
    */
-  private Environment applyStatement(ParserRuleContext statement, Environment incoming) {
-    var changes = changesByStatement.get(statement);
+  private FlowEnvironment applyStatement(ParserRuleContext statement, FlowEnvironment incoming) {
+    var changes = bodyVariables.changesByStatement().get(statement);
     var current = incoming;
     if (changes != null) {
       for (var change : changes) {
@@ -290,7 +282,7 @@ final class VariableFlowPass {
         var updated = change.definition()
           ? assignments.at(change, statement, beforeStatement, inputs.assigned())
           : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
-        current = current.with(change.index(), updated, variables.size());
+        current = current.with(change.index(), updated, bodyVariables.variables().size());
       }
     }
     return forgetSharedAfterCall(statement, changes, current);
@@ -311,10 +303,10 @@ final class VariableFlowPass {
    * @param current   окружение после изменений оператора.
    * @return окружение с возвращёнными к объединению переменными.
    */
-  private Environment forgetSharedAfterCall(
+  private FlowEnvironment forgetSharedAfterCall(
     ParserRuleContext statement,
     @Nullable List<Change> changes,
-    Environment current
+    FlowEnvironment current
   ) {
     if (shared.isEmpty() || !layout.hasCall(statement)) {
       return current;
@@ -327,7 +319,7 @@ final class VariableFlowPass {
       if (assignedBy(changes, index)) {
         continue;
       }
-      result = result.with(index, entryEnvironment().get(index), variables.size());
+      result = result.with(index, entryEnvironment().get(index), bodyVariables.variables().size());
     }
     return result;
   }

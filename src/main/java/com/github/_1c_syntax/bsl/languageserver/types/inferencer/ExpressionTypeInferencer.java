@@ -229,7 +229,7 @@ public class ExpressionTypeInferencer {
    * @return объявленные и выведенные типы возвращаемого значения.
    */
   public TypeSet inferReturnTypes(MethodSymbol method) {
-    return methodReturnType(method, new InferenceContext(method.getOwner()));
+    return methodReturnType(method, InferenceContext.neutral(method.getOwner()));
   }
 
   // ---------------------------------------------------------------------------
@@ -1145,7 +1145,7 @@ public class ExpressionTypeInferencer {
    * @return рассчитанные типы и методы, участвовавшие в расчёте.
    */
   public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
-    var ctx = new InferenceContext(method.getOwner());
+    var ctx = InferenceContext.neutral(method.getOwner());
     // Метод помечается считающимся до разбора собственного тела: вызов самого себя должен
     // распознаться как рекурсия. Без этого он выглядит обычным вызовом и читает значение
     // метода из индекса, где его ещё нет, — то есть пустоту, и весь вклад рекурсивной
@@ -1204,7 +1204,7 @@ public class ExpressionTypeInferencer {
   private TypeSet refinedByOwnValue(MethodSymbol method, TypeSet approximation, InferenceContext ctx) {
     var current = approximation;
     for (var pass = 0; pass < MAX_REFINING_PASSES; pass++) {
-      var refining = new InferenceContext(ctx.documentContext);
+      var refining = InferenceContext.neutral(ctx.documentContext);
       refining.depth = ctx.depth + 1;
       refining.refining = true;
       refining.visited.add(method);
@@ -1377,7 +1377,6 @@ public class ExpressionTypeInferencer {
    * функций и выражений не подменяются результатом одной ветки; защита от рекурсии и сведения
    * о неполном расчёте передаются между вложенным и исходным запросами.
    */
-  @SuppressWarnings("java:S6411") // Мемоизация по символу функции и режиму живёт только в этом запросе.
   private static TypeSet inferInContexts(Set<ExecutionContext> contexts, InferenceContext ctx,
                                          Function<InferenceContext, TypeSet> inference) {
     var result = TypeSet.EMPTY;
