@@ -60,7 +60,6 @@ public class SymbolTree {
    */
   @Getter(AccessLevel.NONE)
   // Range — сторонний тип LSP; здесь требуется равенство диапазонов, без порядка ключей.
-  @SuppressWarnings("java:S6411")
   Map<Range, Set<ExecutionContext>> methodConditions;
 
   /**
@@ -152,7 +151,6 @@ public class SymbolTree {
    * @param methodConditions условия по диапазонам имён методов этой версии документа;
    *     значения {@code null} допустимы и означают неизвестное условие.
    */
-  @SuppressWarnings("java:S6411") // Контракт принимает диапазоны LSP, которые не реализуют Comparable.
   public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
     this.module = module;
     this.methodConditions = methodConditions;
