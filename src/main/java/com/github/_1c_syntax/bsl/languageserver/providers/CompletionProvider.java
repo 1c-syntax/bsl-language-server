@@ -829,7 +829,8 @@ public final class CompletionProvider {
   private void collectConfigurationNames(NoDotContext query, List<CompletionItem> items) {
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (query.fileType() != FileType.OS) {
-      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), query.language(), query.fileType())) {
+      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(),
+        query.language(), query.fileType())) {
         if (isGenericTemplateName(qualified)) {
           continue;
         }
