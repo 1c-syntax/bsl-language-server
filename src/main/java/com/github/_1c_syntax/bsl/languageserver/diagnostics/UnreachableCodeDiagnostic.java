@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
-import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorReachability;
-import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -37,15 +35,12 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -74,98 +69,24 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   private final List<Range> errorRanges = new ArrayList<>();
 
   // диапазоны препроцессорных скобок
-  private final List<Range> preprocessorRanges = new ArrayList<>();
+  private List<Range> preprocessorRanges = List.of();
 
   /** Содержимое заведомо исключённых веток, без ограничивающих их директив. */
-  private final List<Range> unreachablePreprocessorRanges = new ArrayList<>();
+  private List<Range> unreachablePreprocessorRanges = List.of();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     errorRanges.clear();
-    preprocessorRanges.clear();
-    unreachablePreprocessorRanges.clear();
-
-    var preprocessors = Trees.findAllRuleNodes(ctx, BSLParser.RULE_preprocessor);
-    if (preprocessors.isEmpty()) {
-      return super.visitFile(ctx);
-    }
-
-    var reachability = new PreprocessorReachability(documentContext.getFileType());
-    Deque<BSLParser.PreprocessorContext> previousNodes = new ArrayDeque<>();
-    for (var tree : preprocessors) {
-      var node = (BSLParser.PreprocessorContext) tree;
-      if (node.preproc_if() != null) {
-        previousNodes.push(node);
-        reachability.enterIf(node.preproc_if());
-      } else if (node.preproc_elsif() != null) {
-        savePreprocessorRange(previousNodes, node, reachability);
-        previousNodes.push(node);
-        reachability.enterElsif(node.preproc_elsif());
-      } else if (node.preproc_else() != null) {
-        savePreprocessorRange(previousNodes, node, reachability);
-        previousNodes.push(node);
-        reachability.enterElse();
-      } else if (node.preproc_endif() != null) {
-        savePreprocessorRange(previousNodes, node, reachability);
-        reachability.enterEndif();
-      } else {
-        // Области не открывают и не закрывают условные ветки.
-      }
-    }
-
+    var preprocessor = PreprocessorDeadCode.collect(documentContext, compilationContextResolver, ctx);
+    preprocessorRanges = preprocessor.branches();
+    unreachablePreprocessorRanges = preprocessor.unreachable();
     // Неполная структура не задаёт корректных веток и может нарушить построение CFG.
-    if (!reachability.isWellFormed()) {
+    if (!preprocessor.wellFormed()) {
       return ctx;
     }
-
     super.visitFile(ctx);
     appendUnreachablePreprocessorCode();
     return ctx;
-  }
-
-  private void savePreprocessorRange(Deque<BSLParser.PreprocessorContext> nodes,
-                                    BSLParser.PreprocessorContext node, PreprocessorReachability reachability) {
-    if (!nodes.isEmpty()) {
-      var previous = nodes.pop();
-      preprocessorRanges.add(
-        Ranges.create(
-          previous.getStop().getLine(),
-          previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
-          node.getStart().getLine(),
-          node.getStart().getCharPositionInLine() - 1));
-      if (reachability.isUnreachable(compilationContextResolver.possibleContexts(documentContext, previous)
-        .orElse(ExecutionContext.ALL))) {
-        addUnreachableBranch(previous, node);
-      }
-    }
-  }
-
-  /**
-   * Выделить содержимое ветки, включая комментарии и вложенные области.
-   * Пустая ветка или ветка только с комментариями/директивами не содержит недостижимого кода.
-   */
-  private void addUnreachableBranch(BSLParser.PreprocessorContext opening, BSLParser.PreprocessorContext closing) {
-    var tokens = documentContext.getTokens();
-    var first = -1;
-    var last = -1;
-    var hasCode = false;
-    for (var i = opening.getStop().getTokenIndex() + 1; i < closing.getStart().getTokenIndex(); i++) {
-      var token = tokens.get(i);
-      if (token.getLine() <= opening.getStop().getLine() || token.getText().isBlank()) {
-        continue;
-      }
-      if (first < 0) {
-        first = i;
-      }
-      last = i;
-      if (token.getChannel() == Token.DEFAULT_CHANNEL && token.getType() != BSLLexer.HASH
-        && !BSLLexer.VOCABULARY.getSymbolicName(token.getType()).startsWith("PREPROC_")) {
-        hasCode = true;
-      }
-    }
-    if (hasCode) {
-      unreachablePreprocessorRanges.add(Ranges.create(tokens.get(first), tokens.get(last)));
-    }
   }
 
   /**
