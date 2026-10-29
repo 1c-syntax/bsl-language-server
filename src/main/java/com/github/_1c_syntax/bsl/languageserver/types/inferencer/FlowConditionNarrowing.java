@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
 import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Environment;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.GuardNarrowing;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
@@ -43,8 +42,7 @@ final class FlowConditionNarrowing {
    * Окружение, прошедшее по ребру ветки условия. Условие цикла {@code Пока} сужает так
    * же, как условие {@code Если}: на входе в тело оно верно, за циклом — ложно.
    */
-  @SuppressWarnings("java:S6411") // Номера привязаны к идентичности символов одного тела.
-  static Environment narrow(CfgVertex predecessor, CfgEdgeType edgeType, Environment outgoing,
+  static FlowEnvironment narrow(CfgVertex predecessor, CfgEdgeType edgeType, FlowEnvironment outgoing,
                             GuardNarrowing narrowing, List<VariableSymbol> variables,
                             Map<VariableSymbol, Integer> indexes) {
     if (edgeType != CfgEdgeType.TRUE_BRANCH && edgeType != CfgEdgeType.FALSE_BRANCH) {

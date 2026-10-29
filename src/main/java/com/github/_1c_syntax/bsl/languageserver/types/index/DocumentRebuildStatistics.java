@@ -36,7 +36,7 @@ final class DocumentRebuildStatistics {
     documents.clear();
   }
 
-  void record(URI uri) {
+  void recordReload(URI uri) {
     total.incrementAndGet();
     documents.add(uri);
   }

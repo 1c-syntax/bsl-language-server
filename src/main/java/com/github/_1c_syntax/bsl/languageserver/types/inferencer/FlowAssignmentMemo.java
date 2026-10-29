@@ -21,11 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.AssignedTypes;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Change;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Environment;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
@@ -44,10 +42,13 @@ final class FlowAssignmentMemo {
    * на его время фиксированы. Результат переиспользуется, пока все наблюдавшиеся
    * чтения дают прежние типы, независимо от изменений остальных переменных.
    */
-  @SuppressWarnings("java:S6411") // Position — координата LSP; сравнение порядка для этого кеша не требуется.
-  private final Map<Position, AssignmentResult> assignedTypes = new HashMap<>();
+  private final Map<Position, AssignmentResult> assignedTypes;
   /** Приёмник чтений текущей правой части; вложенный расчёт дополняет родительский список. */
   private @Nullable List<VariableRead> assignmentReads;
+
+  FlowAssignmentMemo() {
+    assignedTypes = new HashMap<>();
+  }
 
   /**
    * Чтение переменной во время вычисления правой части.
@@ -88,9 +89,8 @@ final class FlowAssignmentMemo {
    * @param statement оператор, содержащий присваивание.
    * @return тип правой части в текущем приближении окружений.
    */
-  @SuppressWarnings("java:S6411") // Окружения индексируются исходными узлами AST по идентичности.
   TypeSet at(Change change, ParserRuleContext statement,
-             Map<ParserRuleContext, Environment> beforeStatement, AssignedTypes assigned) {
+             Map<ParserRuleContext, FlowEnvironment> beforeStatement, AssignedTypes assigned) {
     var cached = assignedTypes.get(change.position());
     if (cached != null && readsUnchanged(cached.reads(), beforeStatement)) {
       if (assignmentReads != null) {
@@ -118,9 +118,8 @@ final class FlowAssignmentMemo {
    * Отсутствующее окружение отличается от известного пустого типа. Пустой список
    * означает, что результат не зависел от чтения переменных этого тела.
    */
-  @SuppressWarnings("java:S6411") // Ключ AST не имеет порядка и используется только для поиска по идентичности.
   private static boolean readsUnchanged(List<VariableRead> reads,
-                                        Map<ParserRuleContext, Environment> beforeStatement) {
+                                        Map<ParserRuleContext, FlowEnvironment> beforeStatement) {
     for (var read : reads) {
       var environment = beforeStatement.get(read.statement());
       var type = environment == null ? null : environment.get(read.index());
