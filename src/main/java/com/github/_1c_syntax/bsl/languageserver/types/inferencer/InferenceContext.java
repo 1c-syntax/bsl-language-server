@@ -47,7 +47,6 @@ final class InferenceContext {
   /** Выбранный режим; {@code null} определяет возможные режимы по модулю, методу и позиции выражения. */
   final @Nullable ExecutionContext executionContext;
   /** Общая для вложенных контекстов одного запроса карта завершённых результатов функций. */
-  @SuppressWarnings("java:S6411") // Ключ содержит символ конкретной версии; порядок символов не определён.
   final Map<ContextualReturnKey, TypeSet> contextualReturns;
   final Set<SourceDefinedSymbol> visited;
   /**
@@ -56,7 +55,6 @@ final class InferenceContext {
    * в это частичное значение вместо {@link TypeSet#EMPTY}, что даёт one-pass
    * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
    */
-  @SuppressWarnings("java:S6411") // Приближения адресуются символами текущего запроса, без их упорядочивания.
   final Map<SourceDefinedSymbol, TypeSet> inProgress;
   /**
    * Расчёты по потоку, идущие прямо сейчас в рамках этого вывода. Вывод типа
@@ -89,15 +87,15 @@ final class InferenceContext {
   boolean sawMissing;
   int depth;
 
-  InferenceContext(DocumentContext documentContext) {
-    this(documentContext, null);
+  /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */
+  static InferenceContext neutral(DocumentContext documentContext) {
+    return new InferenceContext(documentContext, null);
   }
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext) {
     this(documentContext, executionContext, executionContext == null ? Map.of() : new HashMap<>());
   }
 
-  @SuppressWarnings("java:S6411") // Общая карта сохраняет те же символьные ключи во вложенных запросах.
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                    Map<ContextualReturnKey, TypeSet> contextualReturns) {
     this.documentContext = documentContext;

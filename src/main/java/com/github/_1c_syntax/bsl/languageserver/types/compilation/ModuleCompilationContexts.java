@@ -56,7 +56,7 @@ final class ModuleCompilationContexts {
    * @param document документ рабочей области с её общими настройками.
    * @return все контексты либо множество без файловых вариантов толстого клиента.
    */
-  public Set<ExecutionContext> supportedContexts(DocumentContext document) {
+  public static Set<ExecutionContext> supportedContexts(DocumentContext document) {
     return document.getServerContext().getLanguageServerConfiguration().isSupportThickClientFileMode()
       ? ExecutionContext.ALL : ExecutionContext.WITHOUT_THICK_CLIENT_FILE;
   }
@@ -67,13 +67,13 @@ final class ModuleCompilationContexts {
    * @param availabilities известная доступность члена или типа платформы.
    * @return поддерживаемые режимы; пустой вход означает отсутствие сведений, а не запрет.
    */
-  public Set<ExecutionContext> platformContexts(Collection<Availability> availabilities) {
+  public static Set<ExecutionContext> platformContexts(Collection<Availability> availabilities) {
     var direct = fromAvailability(availabilities);
     var result = ExecutionContext.copyOf(direct);
     for (var context : ExecutionContext.ALL) {
       if (direct.contains(context.sharedFileContext())
-          || context.isFileMode() && ExecutionContext.SERVER_CONTEXTS.contains(context)
-            && direct.contains(ExecutionContext.SERVER)) {
+          || (context.isFileMode() && ExecutionContext.SERVER_CONTEXTS.contains(context)
+            && direct.contains(ExecutionContext.SERVER))) {
         result.add(context);
       }
     }
@@ -182,7 +182,7 @@ final class ModuleCompilationContexts {
    * @param document проверяемый документ.
    * @return {@code true} для команд и управляемых форм, {@code false} для остальных модулей.
    */
-  public boolean usesFormDirectives(DocumentContext document) {
+  public static boolean usesFormDirectives(DocumentContext document) {
     if (document.getModuleType() == ModuleType.CommandModule) {
       return true;
     }
@@ -202,7 +202,7 @@ final class ModuleCompilationContexts {
    * @param context контекст вызывающего кода.
    * @return видимость модуля; существование метода и контекст его выполнения здесь не проверяются.
    */
-  public boolean canSeeCommonModule(CommonModule module, ExecutionContext context) {
+  public static boolean canSeeCommonModule(CommonModule module, ExecutionContext context) {
     if (context.isFileMode()) {
       return module.isServer() || hasFileModeFlag(module, context.optionContext());
     }
