@@ -113,7 +113,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * ранее посещённых вершин за считанные проходы; предел — страховка от незавершающегося
    * расчёта на неожиданной форме графа.
    */
-  private static final int MAX_PASSES = 16;
+  static final int MAX_PASSES = 16;
 
   private final ControlFlowGraphIndex controlFlowGraphIndex;
 
@@ -123,6 +123,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
    * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
    */
+  @SuppressWarnings("java:S6411") // Тела AST служат ключами конкретной версии документа; сравнение порядка неприменимо.
   private final Map<URI, Map<ExecutionContext, Map<BSLParser.CodeBlockContext, Facts>>> contextualFactsByUri =
     new ConcurrentHashMap<>();
   /**
@@ -164,7 +165,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   public static final class FlowSession {
 
-    private final Map<BSLParser.CodeBlockContext, Pass> active = new IdentityHashMap<>();
+    private final Map<BSLParser.CodeBlockContext, VariableFlowPass> active = new IdentityHashMap<>();
 
     /**
      * Ячейки переменных, видимых другим телам: пока идут круги — приближения, после —
@@ -226,13 +227,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    *
    * @param types типы переменных; переменных, о которых ничего не известно, в карте нет.
    */
-  private record Environment(TypeSet[] types) {
+  record Environment(TypeSet[] types) {
 
     /**
      * Пустое окружение нулевой длины — обращение к любой переменной даёт пустой набор.
      * Годится как начальное значение для тела любого размера.
      */
-    private static final Environment EMPTY = new Environment(new TypeSet[0]);
+    static final Environment EMPTY = new Environment(new TypeSet[0]);
 
     /**
      * Окружение, в котором о переменных ничего не известно.
@@ -322,11 +323,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Изменение типа одной переменной одним оператором.
    *
    * @param variable   переменная.
+   * @param index номер переменной в окружениях тела.
    * @param position   позиция присваивания либо оператора-мутатора.
    * @param definition {@code true} — присваивание (задаёт тип заново),
    *                   {@code false} — мутатор (дополняет накопленный).
    */
-  private record Change(VariableSymbol variable, int index, Position position, boolean definition) {
+  record Change(VariableSymbol variable, int index, Position position, boolean definition) {
   }
 
   /**
@@ -338,7 +340,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param beforeStatement   окружение перед каждым оператором тела.
    * @param changesByStatement изменения типов по операторам, в которых они стоят.
    */
-  private record Facts(
+  record Facts(
     Map<VariableSymbol, Integer> indexes,
     Map<ParserRuleContext, Environment> beforeStatement,
     Map<ParserRuleContext, List<Change>> changesByStatement,
@@ -614,7 +616,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    * @return тип на входе в тело.
    */
-  private TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
+  TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
     var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
     if (settled != null) {
       return settled;
@@ -729,19 +731,26 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
         // и через круг устареют.
         var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
-        for (var variable : shared) {
-          var index = facts.indexOf(variable);
-          if (index == null) {
-            continue;
-          }
-          var united = session.cells.get(variable).union(facts.leaving().get(index));
-          grown |= !united.equals(session.cells.put(variable, united));
-        }
+        grown |= growCells(shared, session, facts);
       }
       if (!grown) {
         break;
       }
     }
+  }
+
+  /** Добавить выходные типы тела к текущим приближениям общих ячеек. */
+  private static boolean growCells(List<VariableSymbol> shared, FlowSession session, Facts facts) {
+    var grown = false;
+    for (var variable : shared) {
+      var index = facts.indexOf(variable);
+      if (index == null) {
+        continue;
+      }
+      var united = session.cells.get(variable).union(facts.leaving().get(index));
+      grown |= !united.equals(session.cells.put(variable, united));
+    }
+    return grown;
   }
 
   /** Тела, в которых эти переменные меняются, — по одному на тело и без повторов. */
@@ -890,6 +899,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * и завершёнными ячейками переменных модуля. Промежуточный результат возвращается
    * текущему запросу, но не публикуется для следующих запросов.
    */
+  @SuppressWarnings("java:S6411") // Общий и контекстный кеши адресуют одно и то же тело AST.
   private Facts factsOf(
     DocumentContext documentContext,
     BSLParser.CodeBlockContext body,
@@ -992,7 +1002,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
     var compiled = inputs.compilationContexts().apply(body)
       .map(contexts -> PreprocessorFlow.of(graph, contexts)).orElse(null);
-    var pass = new Pass(this, documentContext, graph, layout, inputs, compiled, variables, indexes, changesByStatement);
+    var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables, indexes, changesByStatement);
     var active = inputs.session().active;
     active.put(body, pass);
     try {
@@ -1024,431 +1034,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       }
     }
     return true;
-  }
-
-  /**
-   * Один расчёт по телу: держит исходные данные и разложенное тело, чтобы не таскать их
-   * через все шаги.
-   */
-  private static final class Pass {
-
-    private final VariableFlowAnalyzer analyzer;
-    private final DocumentContext documentContext;
-    private final ControlFlowGraph graph;
-    private final FlowLayout layout;
-    private final FlowInputs inputs;
-    /** Переменные тела по их номерам в окружении. */
-    private final List<VariableSymbol> variables;
-    private final Map<VariableSymbol, Integer> indexes;
-    private final Map<ParserRuleContext, List<Change>> changesByStatement;
-    /** Номера переменных, видимых другим телам: их тип сбрасывается на вызовах. */
-    private final List<Integer> shared;
-    /** Достижимая часть графа во всех возможных режимах; {@code null} отключает модель контекстов 1С. */
-    private final @Nullable PreprocessorFlow compiledFlow;
-
-    /**
-     * Типы правых частей с зависимостями от прочитанных окружений.
-     * Карта живёт только в этом поиске неподвижной точки тела: ячейки других тел
-     * на его время фиксированы. Результат переиспользуется, пока все наблюдавшиеся
-     * чтения дают прежние типы, независимо от изменений остальных переменных.
-     */
-    private final Map<Position, AssignmentResult> assignedTypes = new HashMap<>();
-    /** Приёмник чтений текущей правой части; вложенный расчёт дополняет родительский список. */
-    private @Nullable List<VariableRead> assignmentReads;
-
-    /**
-     * Чтение переменной во время вычисления правой части.
-     *
-     * @param statement оператор, перед которым запрошено окружение.
-     * @param index номер переменной в окружениях этого тела.
-     * @param type прочитанный тип; {@code null}, если окружение ещё не рассчитано.
-     *     Появление окружения также обесценивает сохранённый результат.
-     */
-    private record VariableRead(ParserRuleContext statement, int index, @Nullable TypeSet type) { }
-
-    /**
-     * Результат правой части и снимок её зависимостей для повторных проходов.
-     *
-     * @param type выведенный тип в текущем приближении.
-     * @param reads неизменяемый список наблюдавшихся чтений, включая вложенные расчёты.
-     */
-    private record AssignmentResult(TypeSet type, List<VariableRead> reads) { }
-
-    /**
-     * Окружение перед каждым оператором. Заполняется по ходу расчёта, а не только в конце:
-     * пока идут проходы, отсюда отвечают вложенные запросы про переменные этого же тела.
-     */
-    private final Map<ParserRuleContext, Environment> beforeStatement = new IdentityHashMap<>();
-
-    /** Окружение на входе в тело: считается по первому требованию и переиспользуется. */
-    @Nullable
-    private Environment entry;
-
-    /**
-     * Окружение, с которым управление покидает тело: объединение значений перед каждым
-     * вызовом. Нужно переменным, видимым другим телам: вызванный метод застаёт их
-     * такими, какими они были в точке вызова.
-     */
-    private Environment leaving = Environment.EMPTY;
-
-    /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
-    private final Map<CfgVertex, Environment> outgoing = new IdentityHashMap<>();
-    private final Map<CfgVertex, Environment> outgoingInput = new IdentityHashMap<>();
-
-    private Pass(
-      VariableFlowAnalyzer analyzer,
-      DocumentContext documentContext,
-      ControlFlowGraph graph,
-      FlowLayout layout,
-      FlowInputs inputs,
-      @Nullable PreprocessorFlow compiledFlow,
-      List<VariableSymbol> variables,
-      Map<VariableSymbol, Integer> indexes,
-      Map<ParserRuleContext, List<Change>> changesByStatement
-    ) {
-      this.analyzer = analyzer;
-      this.documentContext = documentContext;
-      this.graph = graph;
-      this.layout = layout;
-      this.inputs = inputs;
-      this.compiledFlow = compiledFlow;
-      this.variables = variables;
-      this.indexes = indexes;
-      this.changesByStatement = changesByStatement;
-      this.shared = new ArrayList<>(0);
-      for (var i = 0; i < variables.size(); i++) {
-        if (inputs.sharedWithOtherBodies().test(variables.get(i))) {
-          shared.add(i);
-        }
-      }
-    }
-
-    /**
-     * Окружение перед каждым оператором тела и окружение на выходе из него. Считается
-     * один раз: сперва окружения по вершинам до неподвижной точки, затем один проход по
-     * операторам каждой вершины.
-     *
-     * @return окружения тела.
-     */
-    private Facts computeFacts() {
-      var byVertex = computeEntryFacts();
-      for (var vertex : layout.orderedVertices()) {
-        if (compiledFlow != null && !compiledFlow.vertices().contains(vertex)) {
-          continue;
-        }
-        // Через тот же кэш выхода: к концу поиска неподвижной точки он уже посчитан для
-        // этих же входных окружений, и повторный проход по операторам не нужен — вместе с
-        // ним не нужны и повторные вызовы колбэков мутаторов.
-        outgoingOf(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
-      }
-      // Окружение на входе в вершину выхода — это и есть окружение на выходе из тела:
-      // в неё сходятся все пути, включая Возврат из середины. Факта у неё может не быть
-      // (тело пустое либо выход недостижим) — тогда с чем вошли, с тем и вышли.
-      var exit = byVertex.getOrDefault(graph.getExitPoint(), entryEnvironment());
-      return new Facts(indexes, beforeStatement, changesByStatement, exit.union(leaving));
-    }
-
-    /**
-     * Тип переменной перед оператором по тому, что насчитано к этому моменту. Отвечает на
-     * вложенный запрос из вывода типа чьего-то присваивания в этом же теле.
-     *
-     * @param statement оператор, перед которым нужен тип.
-     * @param variable  переменная.
-     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл и ответа
-     *     у него нет.
-     */
-    @Nullable
-    private TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {
-      var index = indexes.get(variable);
-      if (index == null) {
-        return null;
-      }
-      var environment = beforeStatement.get(statement);
-      var type = environment == null ? null : environment.get(index);
-      if (assignmentReads != null) {
-        assignmentReads.add(new VariableRead(statement, index, type));
-      }
-      return type;
-    }
-
-    /**
-     * Окружение на входе в каждую вершину. Расчёт идёт проходами по всем вершинам, пока
-     * значения не перестанут меняться: так тип, приходящий по обратному ребру цикла,
-     * доезжает до вершин, посещённых раньше него.
-     */
-    private Map<CfgVertex, Environment> computeEntryFacts() {
-      Map<CfgVertex, Environment> facts = new IdentityHashMap<>();
-      facts.put(graph.getEntryPoint(), entryEnvironment());
-
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
-        var changed = false;
-        for (var vertex : layout.orderedVertices()) {
-          if (compiledFlow != null && !compiledFlow.vertices().contains(vertex)) {
-            continue;
-          }
-          var incoming = joinOfPredecessors(vertex, facts);
-          if (vertex == graph.getEntryPoint()) {
-            incoming = incoming.union(entryEnvironment());
-          }
-          if (!incoming.equals(facts.get(vertex))) {
-            facts.put(vertex, incoming);
-            changed = true;
-          }
-        }
-        if (!changed) {
-          break;
-        }
-      }
-      return facts;
-    }
-
-    /**
-     * Окружение на входе в тело: что известно о переменных до первого присваивания.
-     * Считается один раз — источники объявленного типа тянут разбор комментариев и
-     * аннотаций, а спрашивают их в каждом проходе.
-     */
-    private Environment entryEnvironment() {
-      if (entry == null) {
-        var current = Environment.blank(variables.size());
-        for (var i = 0; i < variables.size(); i++) {
-          current = current.with(i, entryFactOf(variables.get(i)), variables.size());
-        }
-        entry = current;
-      }
-      return entry;
-    }
-
-    /**
-     * Тип переменной на входе в это тело. У переменной, живущей в одном теле, это
-     * объявленное о ней; у видимой другим телам — то, с чем из тел выходят.
-     */
-    private TypeSet entryFactOf(VariableSymbol variable) {
-      return inputs.sharedWithOtherBodies().test(variable)
-        ? analyzer.cellOf(documentContext, variable, inputs)
-        : inputs.declaredFact().apply(variable);
-    }
-
-    /**
-     * Объединение окружений на выходе всех предшественников вершины. По рёбрам веток
-     * условия окружение проходит суженным: на истинной ветке верно само условие, на
-     * ложной — его отрицание. Этим же получается сужение охранным предложением
-     * ({@code Если Х = Неопределено Тогда Возврат; КонецЕсли;}) — до кода за условием
-     * доходит только ложная ветка.
-     */
-    private Environment joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, Environment> facts) {
-      var joined = Environment.EMPTY;
-      for (var edge : graph.incomingEdgesOf(vertex)) {
-        if (compiledFlow != null && !compiledFlow.edges().contains(edge)) {
-          continue;
-        }
-        var predecessor = graph.getEdgeSource(edge);
-        var atPredecessor = facts.get(predecessor);
-        if (atPredecessor != null) {
-          var outgoing = outgoingOf(predecessor, atPredecessor);
-          joined = joined.union(narrowedByEdge(predecessor, edge.getType(), outgoing));
-        }
-      }
-      return joined;
-    }
-
-    /**
-     * Окружение на выходе вершины — то же, что на входе, но с применёнными операторами.
-     * <p>
-     * Считается один раз на каждое входное окружение, а не на каждое исходящее ребро.
-     * Иначе операторы вершины проигрывались бы заново для каждого её последователя, а
-     * вместе с ними — колбэки операторов-мутаторов, которые тянут разбор вызова и вывод
-     * типа значения. Сравнение входа идёт по ссылке: окружения неизменяемы, и при
-     * изменении на месте старого создаётся новое.
-     *
-     * @param vertex   вершина.
-     * @param incoming окружение на входе в неё.
-     * @return окружение на выходе.
-     */
-    private Environment outgoingOf(CfgVertex vertex, Environment incoming) {
-      if (outgoingInput.get(vertex) == incoming) {
-        return outgoing.get(vertex);
-      }
-      var result = applyStatements(vertex, incoming);
-      outgoingInput.put(vertex, incoming);
-      outgoing.put(vertex, result);
-      return result;
-    }
-
-    /**
-     * Окружение, прошедшее по ребру ветки условия. Условие цикла {@code Пока} сужает так
-     * же, как условие {@code Если}: на входе в тело оно верно, за циклом — ложно.
-     */
-    private Environment narrowedByEdge(CfgVertex predecessor, CfgEdgeType edgeType, Environment outgoing) {
-      if (edgeType != CfgEdgeType.TRUE_BRANCH && edgeType != CfgEdgeType.FALSE_BRANCH) {
-        return outgoing;
-      }
-      var condition = conditionOf(predecessor);
-      if (condition == null) {
-        return outgoing;
-      }
-      // Сужаем только переменные, о которых условие правда что-то утверждает: перебор всех
-      // переменных тела давал бы вызов колбэка на каждую, а условие обычно про одну.
-      var mentioned = inputs.narrowing().variablesOf(condition);
-      if (mentioned.isEmpty()) {
-        return outgoing;
-      }
-      var whenTrue = edgeType == CfgEdgeType.TRUE_BRANCH;
-      var narrowed = outgoing;
-      for (var symbol : mentioned) {
-        var index = indexes.get(symbol);
-        if (index == null) {
-          continue;
-        }
-        var variable = variables.get(index);
-        narrowed = narrowed.with(
-          index,
-          inputs.narrowing().narrow(variable, condition, whenTrue, narrowed.get(index)),
-          variables.size());
-      }
-      return narrowed;
-    }
-
-    /** Условие вершины-ветвления; {@code null}, если вершина условия не несёт. */
-    private static BSLParser.@Nullable ExpressionContext conditionOf(CfgVertex vertex) {
-      if (vertex instanceof ConditionalVertex conditional) {
-        return conditional.getExpression();
-      }
-      return vertex instanceof WhileLoopVertex loop ? loop.getExpression() : null;
-    }
-
-    /**
-     * Применить к окружению все операторы вершины по порядку, попутно запоминая окружение
-     * перед каждым из них: пока идут проходы, отсюда отвечают вложенные запросы.
-     */
-    private Environment applyStatements(CfgVertex vertex, Environment incoming) {
-      var current = incoming;
-      for (var statement : layout.statementsOf(vertex)) {
-        beforeStatement.put(statement, current);
-        current = applyStatement(statement, current);
-      }
-      return current;
-    }
-
-    /**
-     * Изменение окружения одним оператором: присваивание задаёт тип переменной заново,
-     * оператор-мутатор дополняет уже накопленный. Операторов без изменений — большинство,
-     * и они окружение не трогают.
-     */
-    private Environment applyStatement(ParserRuleContext statement, Environment incoming) {
-      var changes = changesByStatement.get(statement);
-      var current = incoming;
-      if (changes != null) {
-        for (var change : changes) {
-          var variable = change.variable();
-          var updated = change.definition()
-            ? assignedType(change, statement)
-            : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
-          current = current.with(change.index(), updated, variables.size());
-        }
-      }
-      return forgetSharedAfterCall(statement, changes, current);
-    }
-
-    /**
-     * Пересчитать правую часть, если изменился хотя бы один прочитанный ею тип.
-     * Изменение других переменных заставляет пересчитать вершину, но на эту правую
-     * часть не влияет. Неизвестное ещё окружение тоже запоминается: когда расчёт до
-     * него дойдёт, {@code null} сменится известным типом и прежний ответ будет пересчитан.
-     * <p>
-     * При использовании сохранённого ответа его зависимости передаются внешнему расчёту:
-     * вложенная правая часть не должна скрывать от него прочитанные переменные.
-     *
-     * @param change присваивание с позицией, однозначной внутри этого тела.
-     * @param statement оператор, содержащий присваивание.
-     * @return тип правой части в текущем приближении окружений.
-     */
-    private TypeSet assignedType(Change change, ParserRuleContext statement) {
-      var cached = assignedTypes.get(change.position());
-      if (cached != null && readsUnchanged(cached.reads())) {
-        if (assignmentReads != null) {
-          assignmentReads.addAll(cached.reads());
-        }
-        return cached.type();
-      }
-      var previousReads = assignmentReads;
-      var reads = new ArrayList<VariableRead>(0);
-      assignmentReads = reads;
-      try {
-        var type = inputs.assigned().at(change.variable(), statement, change.position());
-        assignedTypes.put(change.position(), new AssignmentResult(type, List.copyOf(reads)));
-        return type;
-      } finally {
-        assignmentReads = previousReads;
-        if (previousReads != null) {
-          previousReads.addAll(reads);
-        }
-      }
-    }
-
-    /**
-     * Проверить каждое сохранённое чтение в его собственной точке программы.
-     * Отсутствующее окружение отличается от известного пустого типа. Пустой список
-     * означает, что результат не зависел от чтения переменных этого тела.
-     */
-    private boolean readsUnchanged(List<VariableRead> reads) {
-      for (var read : reads) {
-        var environment = beforeStatement.get(read.statement());
-        var type = environment == null ? null : environment.get(read.index());
-        if (!Objects.equals(type, read.type())) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    /**
-     * Вернуть к объединению по области видимости переменные, видимые другим телам,
-     * если оператор содержит вызов.
-     * <p>
-     * Вызванный метод мог присвоить такой переменной что угодно, поэтому дальше по коду
-     * известно только объединение по области видимости — оно же входной факт. Присваивание в самом
-     * операторе сильнее: оно происходит после того, как вызов вернул управление.
-     * Точность здесь оператора, а не выражения: если вызов и обращение стоят в одном
-     * операторе, обращение считается случившимся до вызова.
-     *
-     * @param statement оператор.
-     * @param changes   изменения этого оператора; {@code null}, если их нет.
-     * @param current   окружение после изменений оператора.
-     * @return окружение с возвращёнными к объединению переменными.
-     */
-    private Environment forgetSharedAfterCall(
-      ParserRuleContext statement,
-      @Nullable List<Change> changes,
-      Environment current
-    ) {
-      if (shared.isEmpty() || !layout.hasCall(statement)) {
-        return current;
-      }
-      // То, что переменная содержит перед вызовом, вызванный метод видит — значит это
-      // часть её значения на входе в другие тела, наравне со значением на выходе.
-      leaving = leaving.union(current);
-      var result = current;
-      for (var index : shared) {
-        if (assignedBy(changes, index)) {
-          continue;
-        }
-        result = result.with(index, entryEnvironment().get(index), variables.size());
-      }
-      return result;
-    }
-
-    /** Задаёт ли оператор тип переменной заново. */
-    private static boolean assignedBy(@Nullable List<Change> changes, int index) {
-      if (changes == null) {
-        return false;
-      }
-      for (var change : changes) {
-        if (change.index() == index && change.definition()) {
-          return true;
-        }
-      }
-      return false;
-    }
   }
 
   /**

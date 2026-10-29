@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,25 +50,6 @@ import java.util.Set;
 public final class PreprocessorContexts {
 
   /**
-   * Контексты, в которых символ препроцессора истинен. Символа нет в таблице - условие не вычисляется.
-   */
-  private static final Map<Integer, Set<ExecutionContext>> SYMBOL_CONTEXTS = Map.ofEntries(
-    Map.entry(BSLParser.PREPROC_CLIENT_SYMBOL, ExecutionContext.CLIENT_PREPROCESSOR),
-    Map.entry(BSLParser.PREPROC_ATCLIENT_SYMBOL, ExecutionContext.CLIENTS),
-    Map.entry(BSLParser.PREPROC_SERVER_SYMBOL, ExecutionContext.SERVER_PREPROCESSOR),
-    Map.entry(BSLParser.PREPROC_ATSERVER_SYMBOL, ExecutionContext.SERVER_CONTEXTS),
-    Map.entry(BSLParser.PREPROC_THINCLIENT_SYMBOL, EnumSet.of(ExecutionContext.THIN_CLIENT)),
-    Map.entry(BSLParser.PREPROC_WEBCLIENT_SYMBOL, EnumSet.of(ExecutionContext.WEB_CLIENT)),
-    Map.entry(BSLParser.PREPROC_MOBILECLIENT_SYMBOL, EnumSet.of(ExecutionContext.MOBILE_CLIENT)),
-    Map.entry(BSLParser.PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL, ExecutionContext.THICK_MANAGED_PREPROCESSOR),
-    Map.entry(BSLParser.PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL, ExecutionContext.THICK_ORDINARY_PREPROCESSOR),
-    Map.entry(BSLParser.PREPROC_EXTERNALCONNECTION_SYMBOL, ExecutionContext.EXTERNAL_PREPROCESSOR),
-    Map.entry(BSLParser.PREPROC_MOBILEAPPCLIENT_SYMBOL, EnumSet.of(ExecutionContext.MOBILE_APPLICATION_CLIENT)),
-    Map.entry(BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL, EnumSet.of(ExecutionContext.MOBILE_APPLICATION_SERVER)),
-    Map.entry(BSLParser.PREPROC_MOBILE_STANDALONE_SERVER, EnumSet.of(ExecutionContext.MOBILE_STANDALONE_SERVER))
-  );
-
-  /**
    * Открытые инструкции {@code #Если}, внутренняя - сверху.
    */
   private final Deque<Branch> branches = new ArrayDeque<>();
@@ -81,6 +61,28 @@ public final class PreprocessorContexts {
    */
   public void clear() {
     branches.clear();
+  }
+
+  /**
+   * Обработать условную директиву в последовательном обходе файла.
+   *
+   * @param node инструкция препроцессора, включая незавершённую
+   * @return {@code true} для #Если/#ИначеЕсли/#Иначе/#КонецЕсли;
+   *     остальные инструкции не меняют состояние и дают {@code false}
+   */
+  public boolean enter(BSLParser.PreprocessorContext node) {
+    if (node.preproc_if() != null) {
+      enterIf(node.preproc_if());
+    } else if (node.preproc_elsif() != null) {
+      enterElsif(node.preproc_elsif());
+    } else if (node.preproc_else() != null) {
+      enterElse();
+    } else if (node.preproc_endif() != null) {
+      enterEndif();
+    } else {
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -158,7 +160,7 @@ public final class PreprocessorContexts {
     }
     var tokens = new ArrayList<Integer>();
     collectTokenTypes(expression, tokens);
-    return new ExpressionEvaluator(tokens).evaluate();
+    return PreprocessorExpressionEvaluator.evaluate(tokens);
   }
 
   private static void collectTokenTypes(ParseTree tree, List<Integer> tokens) {
@@ -201,73 +203,4 @@ public final class PreprocessorContexts {
     }
   }
 
-  /**
-   * Вычисление условия препроцессора по типам его лексем: {@code НЕ} сильнее {@code И}, {@code И} сильнее
-   * {@code ИЛИ}.
-   */
-  private static final class ExpressionEvaluator {
-    private final List<Integer> tokens;
-    private int position;
-
-    private ExpressionEvaluator(List<Integer> tokens) {
-      this.tokens = tokens;
-    }
-
-    private @Nullable Set<ExecutionContext> evaluate() {
-      var result = or();
-      return position == tokens.size() ? result : null;
-    }
-
-    private @Nullable Set<ExecutionContext> or() {
-      var result = and();
-      while (result != null && accept(BSLParser.PREPROC_OR_KEYWORD)) {
-        var right = and();
-        if (right == null) {
-          return null;
-        }
-        result.addAll(right);
-      }
-      return result;
-    }
-
-    private @Nullable Set<ExecutionContext> and() {
-      var result = not();
-      while (result != null && accept(BSLParser.PREPROC_AND_KEYWORD)) {
-        var right = not();
-        if (right == null) {
-          return null;
-        }
-        result.retainAll(right);
-      }
-      return result;
-    }
-
-    private @Nullable Set<ExecutionContext> not() {
-      if (accept(BSLParser.PREPROC_NOT_KEYWORD)) {
-        var operand = not();
-        return operand == null ? null : EnumSet.complementOf(ExecutionContext.copyOf(operand));
-      }
-      return operand();
-    }
-
-    private @Nullable Set<ExecutionContext> operand() {
-      if (accept(BSLParser.PREPROC_LPAREN)) {
-        var result = or();
-        return accept(BSLParser.PREPROC_RPAREN) ? result : null;
-      }
-      if (position >= tokens.size()) {
-        return null;
-      }
-      var contexts = SYMBOL_CONTEXTS.get(tokens.get(position++));
-      return contexts == null ? null : ExecutionContext.copyOf(contexts);
-    }
-
-    private boolean accept(int tokenType) {
-      if (position < tokens.size() && tokens.get(position) == tokenType) {
-        position++;
-        return true;
-      }
-      return false;
-    }
-  }
 }

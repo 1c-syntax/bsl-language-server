@@ -89,13 +89,7 @@ class PreprocessorReachabilityTest {
     var result = new ArrayList<Boolean>();
     ParseTreeWalker.DEFAULT.walk(new BSLParserBaseListener() {
       @Override
-      public void enterPreproc_if(BSLParser.Preproc_ifContext ctx) { reachability.enterIf(ctx); }
-      @Override
-      public void enterPreproc_elsif(BSLParser.Preproc_elsifContext ctx) { reachability.enterElsif(ctx); }
-      @Override
-      public void enterPreproc_else(BSLParser.Preproc_elseContext ctx) { reachability.enterElse(); }
-      @Override
-      public void enterPreproc_endif(BSLParser.Preproc_endifContext ctx) { reachability.enterEndif(); }
+      public void enterPreprocessor(BSLParser.PreprocessorContext ctx) { reachability.enter(ctx); }
       @Override
       public void enterGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
         result.add(reachability.isUnreachable());
