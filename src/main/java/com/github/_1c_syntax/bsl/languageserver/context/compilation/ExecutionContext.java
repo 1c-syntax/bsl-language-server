@@ -78,7 +78,7 @@ public enum ExecutionContext {
   public static final Set<ExecutionContext> ALL = Collections.unmodifiableSet(EnumSet.allOf(ExecutionContext.class));
   /** Контексты проекта без поддержки файлового толстого клиента; внешнее соединение сохраняется. */
   public static final Set<ExecutionContext> WITHOUT_THICK_CLIENT_FILE =
-    Collections.unmodifiableSet(withoutThickClientFile());
+    Collections.unmodifiableSet(EnumSet.copyOf(withoutThickClientFile()));
   /** Самостоятельные серверные контексты без совмещённых файловых режимов. */
   public static final Set<ExecutionContext> SERVERS =
     Collections.unmodifiableSet(EnumSet.of(SERVER, MOBILE_APPLICATION_SERVER, MOBILE_STANDALONE_SERVER));
@@ -96,10 +96,10 @@ public enum ExecutionContext {
     THICK_CLIENT_MANAGED_FILE, THICK_CLIENT_ORDINARY_FILE, EXTERNAL_CONNECTION_FILE,
     THICK_CLIENT_MANAGED_FILE_SERVER, THICK_CLIENT_ORDINARY_FILE_SERVER));
   /** Символ Клиент в файловом толстом клиенте истинен и в серверной части управляемой формы. */
-  public static final Set<ExecutionContext> CLIENT_PREPROCESSOR = Collections.unmodifiableSet(withFileFormParts(CLIENTS));
+  public static final Set<ExecutionContext> CLIENT_PREPROCESSOR = Collections.unmodifiableSet(EnumSet.copyOf(withFileFormParts(CLIENTS)));
   /** Символ Сервер в файловом толстом клиенте истинен и в клиентской части управляемой формы. */
   public static final Set<ExecutionContext> SERVER_PREPROCESSOR =
-    Collections.unmodifiableSet(withFileFormParts(SERVER_CONTEXTS));
+    Collections.unmodifiableSet(EnumSet.copyOf(withFileFormParts(SERVER_CONTEXTS)));
   /** Все варианты символа ТолстыйКлиентУправляемоеПриложение. */
   public static final Set<ExecutionContext> THICK_MANAGED_PREPROCESSOR = Collections.unmodifiableSet(EnumSet.of(
     THICK_CLIENT_MANAGED, THICK_CLIENT_MANAGED_FILE,
