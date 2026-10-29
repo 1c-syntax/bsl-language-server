@@ -58,7 +58,7 @@ final class PreprocessorExpressionEvaluator {
   private int position;
 
   private PreprocessorExpressionEvaluator(List<Integer> tokens) {
-    this.tokens = tokens;
+    this.tokens = List.copyOf(tokens);
   }
 
   static @Nullable Set<ExecutionContext> evaluate(List<Integer> tokens) {
