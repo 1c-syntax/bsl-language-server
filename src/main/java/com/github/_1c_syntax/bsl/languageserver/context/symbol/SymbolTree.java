@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
@@ -61,45 +59,9 @@ public class SymbolTree {
    * пустое множество — недостижимую ветку. Диапазоны и множества не удерживают AST.
    */
   @Getter(AccessLevel.NONE)
+  // Range — сторонний тип LSP; здесь требуется равенство диапазонов, без порядка ключей.
+  @SuppressWarnings("java:S6411")
   Map<Range, Set<ExecutionContext>> methodConditions;
-
-  /**
-   * Создать дерево без ограничений препроцессора для объявлений методов.
-   *
-   * @param module корневой символ документа.
-   */
-  public SymbolTree(ModuleSymbol module) {
-    this(module, Map.of());
-  }
-
-  /**
-   * Создать дерево с сохранёнными условиями объявлений методов.
-   * <p>
-   * Карта, её ключи и множества используются без защитного копирования.
-   * Вызывающий код должен обеспечить их неизменность в течение жизни дерева.
-   *
-   * @param module корневой символ документа.
-   * @param methodConditions условия по диапазонам имён методов этой версии документа;
-   *     значения {@code null} допустимы и означают неизвестное условие.
-   */
-  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
-    this.module = module;
-    this.methodConditions = methodConditions;
-  }
-
-  /**
-   * Получить контексты ветки препроцессора, в которой объявлен метод.
-   * <p>
-   * Доступно после выгрузки AST. Контексты модуля, директивы компиляции и настройки
-   * диагностики не учитываются. Возвращённое множество изменять нельзя.
-   *
-   * @param method метод из этой версии символьного дерева.
-   * @return все контексты при отсутствии ограничения, пустое множество для недостижимой
-   *     ветки или {@code null}, если условие нельзя вычислить.
-   */
-  public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
-    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
-  }
 
   /**
    * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
@@ -172,6 +134,45 @@ public class SymbolTree {
   }
 
   /**
+   * Создать дерево без ограничений препроцессора для объявлений методов.
+   *
+   * @param module корневой символ документа.
+   */
+  public SymbolTree(ModuleSymbol module) {
+    this(module, Map.of());
+  }
+
+  /**
+   * Создать дерево с сохранёнными условиями объявлений методов.
+   * <p>
+   * Карта, её ключи и множества используются без защитного копирования.
+   * Вызывающий код должен обеспечить их неизменность в течение жизни дерева.
+   *
+   * @param module корневой символ документа.
+   * @param methodConditions условия по диапазонам имён методов этой версии документа;
+   *     значения {@code null} допустимы и означают неизвестное условие.
+   */
+  @SuppressWarnings("java:S6411") // Контракт принимает диапазоны LSP, которые не реализуют Comparable.
+  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
+    this.module = module;
+    this.methodConditions = methodConditions;
+  }
+
+  /**
+   * Получить контексты ветки препроцессора, в которой объявлен метод.
+   * <p>
+   * Доступно после выгрузки AST. Контексты модуля, директивы компиляции и настройки
+   * диагностики не учитываются. Возвращённое множество изменять нельзя.
+   *
+   * @param method метод из этой версии символьного дерева.
+   * @return все контексты при отсутствии ограничения, пустое множество для недостижимой
+   *     ветки или {@code null}, если условие нельзя вычислить.
+   */
+  public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
+    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
+  }
+
+  /**
    * @return Список символов верхнего уровня за исключением символа модуля документа.
    */
   public List<SourceDefinedSymbol> getChildren() {
@@ -219,20 +220,7 @@ public class SymbolTree {
    * @return найденный символ метода.
    */
   public Optional<MethodSymbol> getMethodSymbol(ParserRuleContext ctx) {
-    ParserRuleContext subNameNode;
-    if (Trees.nodeContainsErrors(ctx)) {
-      subNameNode = ctx;
-    } else if (ctx instanceof BSLParser.SubContext subContext) {
-      if (subContext.function() == null) {
-        subNameNode = subContext.procedure().procDeclaration().subName();
-      } else {
-        subNameNode = subContext.function().funcDeclaration().subName();
-      }
-    } else {
-      subNameNode = ctx;
-    }
-
-    Range subNameRange = Ranges.create(subNameNode);
+    var subNameRange = SymbolDeclarationRanges.methodName(ctx);
 
     // subNameRange == selectionRange метода, поэтому ищем через O(1)-индекс
     // селекшн-рейнджей (тот же, что и findSymbolBySelectionRange), а не линейным
@@ -268,19 +256,7 @@ public class SymbolTree {
    */
   public Optional<VariableSymbol> getVariableSymbol(ParserRuleContext ctx) {
 
-    ParserRuleContext varNameNode;
-
-    if (Trees.nodeContainsErrors(ctx)) {
-      varNameNode = ctx;
-    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext moduleVarDeclarationContext) {
-      varNameNode = moduleVarDeclarationContext.var_name();
-    } else if (ctx instanceof BSLParser.SubVarDeclarationContext subVarDeclarationContext) {
-      varNameNode = subVarDeclarationContext.var_name();
-    } else {
-      varNameNode = ctx;
-    }
-
-    Range variableNameRange = Ranges.create(varNameNode);
+    var variableNameRange = SymbolDeclarationRanges.variableName(ctx);
 
     // variableNameRange == selectionRange переменной, поэтому ищем через
     // индекс селекшн-рейнджей, а не линейным сканом getVariables() с
@@ -332,14 +308,9 @@ public class SymbolTree {
    * @return видимая переменная; empty, если такой в области видимости нет.
    */
   public Optional<VariableSymbol> getVariableSymbolInScope(ParserRuleContext node, String variableName) {
-    var sub = Trees.getRootParent(node, BSLParser.RULE_sub);
-    if (sub instanceof BSLParser.SubContext subContext) {
-      var inMethod = getMethodSymbol(subContext).flatMap(method -> getVariableSymbol(variableName, method));
-      if (inMethod.isPresent()) {
-        return inMethod;
-      }
-    }
-    return getVariableSymbol(variableName, module);
+    return SymbolDeclarationRanges.enclosingMethod(node).flatMap(this::getMethodSymbol)
+      .flatMap(method -> getVariableSymbol(variableName, method))
+      .or(() -> getVariableSymbol(variableName, module));
   }
 
   /**
