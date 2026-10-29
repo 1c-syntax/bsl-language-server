@@ -97,7 +97,8 @@ final class MemberAccessAnalysis {
       checkPlatformAccess(access, typeService.accessTargetsAt(documentContext, access.node(), null), remaining);
       return;
     }
-    var targets = local.isEmpty() ? globals.sourceTargets(name) : local.stream().map(d -> new MemberCallTarget(documentContext, d)).toList();
+    var targets = local.isEmpty() ? globals.sourceTargets(name)
+      : local.stream().map(d -> new MemberCallTarget(documentContext, d)).toList();
     if (targets.isEmpty()) {
       checkPlatformAccess(access, typeService.accessTargetsAt(documentContext, access.node(), null), remaining);
     } else {
