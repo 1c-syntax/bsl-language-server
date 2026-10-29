@@ -70,6 +70,27 @@ public final class PreprocessorReachability {
   }
 
   /**
+   * Обработать условную директиву при последовательном обходе файла.
+   *
+   * @param node инструкция препроцессора
+   * @return {@code true} для условной инструкции; области и прочие директивы не меняют состояние
+   */
+  public boolean enter(BSLParser.PreprocessorContext node) {
+    if (node.preproc_if() != null) {
+      enterIf(node.preproc_if());
+    } else if (node.preproc_elsif() != null) {
+      enterElsif(node.preproc_elsif());
+    } else if (node.preproc_else() != null) {
+      enterElse();
+    } else if (node.preproc_endif() != null) {
+      enterEndif();
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Открыть вложенную инструкцию, ограниченную текущей веткой.
    *
    * @param node директива с условием первой ветки.
