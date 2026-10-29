@@ -111,6 +111,7 @@ final class KeywordCompletionScope {
         expressionDepth++;
       }
       case BSLLexer.RPAREN, BSLLexer.RBRACK -> expressionDepth = Math.max(0, expressionDepth - 1);
+      case BSLLexer.SEMICOLON -> expressionDepth = 0;
       default -> { /* токен не является скобкой */ }
     }
   }
