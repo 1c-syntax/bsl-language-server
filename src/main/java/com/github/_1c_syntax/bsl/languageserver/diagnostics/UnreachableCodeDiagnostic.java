@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -38,13 +39,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -52,7 +49,8 @@ import java.util.stream.Collectors;
   minutesToFix = 10,
   tags = {
     DiagnosticTag.DESIGN,
-    DiagnosticTag.SUSPICIOUS
+    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.UNUSED
   }
 )
 @RequiredArgsConstructor
@@ -65,63 +63,44 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     .withAdjacentDeadCode(false);
 
   private final ControlFlowGraphIndex controlFlowGraphIndex;
+  private final CompilationContextResolver compilationContextResolver;
 
   // кэш диапазонов зарегистрированных ошибок
   private final List<Range> errorRanges = new ArrayList<>();
 
   // диапазоны препроцессорных скобок
-  private final List<Range> preprocessorRanges = new ArrayList<>();
+  private List<Range> preprocessorRanges = List.of();
+
+  /** Содержимое заведомо исключённых веток, без ограничивающих их директив. */
+  private List<Range> unreachablePreprocessorRanges = List.of();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     errorRanges.clear();
-    preprocessorRanges.clear();
-
-    // получим все блоки препроцессора в файле
-    List<ParseTree> preprocessors = new ArrayList<>(Trees.findAllRuleNodes(ctx, BSLParser.RULE_preprocessor));
-
-    if (preprocessors.isEmpty()) {
-      return super.visitFile(ctx);
+    var preprocessor = PreprocessorDeadCode.collect(documentContext, compilationContextResolver, ctx);
+    preprocessorRanges = preprocessor.branches();
+    unreachablePreprocessorRanges = preprocessor.unreachable();
+    // Неполная структура не задаёт корректных веток и может нарушить построение CFG.
+    if (!preprocessor.wellFormed()) {
+      return ctx;
     }
-
-    Deque<ParseTree> previousNodes = new ArrayDeque<>();
-    for (ParseTree node : preprocessors) {
-
-      // если это начало блока, просто закинем его в стэк
-      if (((BSLParser.PreprocessorContext) node).preproc_if() != null) {
-        previousNodes.push(node);
-      } else if ((((BSLParser.PreprocessorContext) node).preproc_else() != null
-        || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
-
-        // для веток условия сначала фиксируем блок который уже прошли
-        // затем новую ноду добавим
-        savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
-        previousNodes.push(node);
-
-      } else {
-        // в конце условия просто зафиксим прошедший блок
-        savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
-      }
-    }
-
-    // сделано для поиска с конца, т.к. у нас есть вложенность, т.е. в большой вложен маленький
-    if (preprocessorRanges.size() > 1) {
-      Collections.reverse(preprocessorRanges);
-    }
-
-    return super.visitFile(ctx);
+    super.visitFile(ctx);
+    appendUnreachablePreprocessorCode();
+    return ctx;
   }
 
-  private void savePreprocessorRange(Deque<ParseTree> nodes, BSLParser.PreprocessorContext node) {
-    if (!nodes.isEmpty()) {
-      BSLParser.PreprocessorContext previous = (BSLParser.PreprocessorContext) nodes.pop();
-      preprocessorRanges.add(
-        Ranges.create(
-          previous.getStop().getLine(),
-          previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
-          node.getStart().getLine(),
-          node.getStart().getCharPositionInLine() - 1));
+  /**
+   * Объединить пересекающиеся сообщения с диапазонами исключённых веток.
+   * Это также убирает сообщения после Возврат внутри уже целиком недостижимого блока.
+   */
+  private void appendUnreachablePreprocessorCode() {
+    if (unreachablePreprocessorRanges.isEmpty()) {
+      return;
     }
+    var ranges = new ArrayList<>(unreachablePreprocessorRanges);
+    diagnosticStorage.getDiagnostics().forEach(diagnostic -> ranges.add(diagnostic.getRange()));
+    diagnosticStorage.clearDiagnostics();
+    Ranges.mergeOverlapping(ranges).forEach(diagnosticStorage::addDiagnostic);
   }
 
   @Override
@@ -129,6 +108,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     errorRanges.clear();
     super.visitSubCodeBlock(ctx);
     var block = ctx.codeBlock();
+    // Незавершённая инструкция препроцессора может оставить subCodeBlock без тела.
     if (block != null) {
       appendUnreachableCode(block);
     }
@@ -238,12 +218,10 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
           BSLParser.RULE_regionStart,
           BSLParser.RULE_regionEnd,
           BSLParser.RULE_preproc_endif))
-      .collect(Collectors.toList());
+      .toList().reversed();
 
     // если в блоке кода есть еще стейты кроме текущего
     if (statements.size() > 1) {
-      Collections.reverse(statements);
-
       // найдем последний блок
       ParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
 
@@ -263,7 +241,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
-    for (Range range : preprocessorRanges) {
+    for (Range range : preprocessorRanges.reversed()) {
       if (Ranges.containsPosition(range, pos)) {
         preprocRange = range;
       }
