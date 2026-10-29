@@ -29,8 +29,10 @@ import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationCon
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.SubContext;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
@@ -56,6 +58,15 @@ final class CompilationContextIndex {
 
   private record PreprocessorBranch(Range directive, @Nullable Set<ExecutionContext> contexts) { }
 
+
+  /** Охватывающее объявление метода; null у кода уровня модуля. */
+  static @Nullable SubContext enclosingMethod(ParseTree node) {
+    var enclosing = node;
+    while (enclosing != null && !(enclosing instanceof SubContext)) {
+      enclosing = enclosing.getParent();
+    }
+    return enclosing instanceof SubContext sub ? sub : null;
+  }
 
   Map<String, List<Declaration>> declarations(DocumentContext document) {
     return declarations.get(document.getSymbolTreeNoLock(), CompilationContextIndex::collectDeclarations);
