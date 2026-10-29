@@ -22,10 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.compilation;
 
 import java.util.Collection;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Контексты компиляции, различаемые инструкциями препроцессора 1С.
@@ -61,29 +60,57 @@ public enum ExecutionContext {
   MOBILE_STANDALONE_SERVER,
 
   /** Общий файловый контекст управляемого толстого клиента: доступны Клиент и Сервер. */
-  THICK_CLIENT_MANAGED_FILE(THICK_CLIENT_MANAGED),
+  THICK_CLIENT_MANAGED_FILE,
   /** Общий файловый контекст обычного толстого клиента: доступны Клиент и Сервер. */
-  THICK_CLIENT_ORDINARY_FILE(THICK_CLIENT_ORDINARY),
+  THICK_CLIENT_ORDINARY_FILE,
   /** Файловое внешнее соединение: доступны ВнешнееСоединение и Сервер. */
-  EXTERNAL_CONNECTION_FILE(EXTERNAL_CONNECTION),
+  EXTERNAL_CONNECTION_FILE,
   /** Клиентская часть управляемой формы или команды в файловом управляемом приложении. */
-  THICK_CLIENT_MANAGED_FILE_CLIENT(THICK_CLIENT_MANAGED),
+  THICK_CLIENT_MANAGED_FILE_CLIENT,
   /** Серверная часть управляемой формы или команды в файловом управляемом приложении. */
-  THICK_CLIENT_MANAGED_FILE_SERVER(THICK_CLIENT_MANAGED),
+  THICK_CLIENT_MANAGED_FILE_SERVER,
   /** Клиентская часть управляемой формы или команды в файловом обычном приложении. */
-  THICK_CLIENT_ORDINARY_FILE_CLIENT(THICK_CLIENT_ORDINARY),
+  THICK_CLIENT_ORDINARY_FILE_CLIENT,
   /** Серверная часть управляемой формы или команды в файловом обычном приложении. */
-  THICK_CLIENT_ORDINARY_FILE_SERVER(THICK_CLIENT_ORDINARY);
+  THICK_CLIENT_ORDINARY_FILE_SERVER;
 
-  private final ExecutionContext optionContext;
-
-  ExecutionContext() {
-    optionContext = this;
-  }
-
-  ExecutionContext(ExecutionContext optionContext) {
-    this.optionContext = optionContext;
-  }
+  /** Все контексты модели; неизменяемое множество. */
+  public static final Set<ExecutionContext> ALL = Collections.unmodifiableSet(EnumSet.allOf(ExecutionContext.class));
+  /** Контексты проекта без поддержки файлового толстого клиента; внешнее соединение сохраняется. */
+  public static final Set<ExecutionContext> WITHOUT_THICK_CLIENT_FILE =
+    Collections.unmodifiableSet(withoutThickClientFile());
+  /** Самостоятельные серверные контексты без совмещённых файловых режимов. */
+  public static final Set<ExecutionContext> SERVERS =
+    Collections.unmodifiableSet(EnumSet.of(SERVER, MOBILE_APPLICATION_SERVER, MOBILE_STANDALONE_SERVER));
+  /** Управляемые клиенты до добавления файловых вариантов. */
+  public static final Set<ExecutionContext> MANAGED_CLIENTS = Collections.unmodifiableSet(EnumSet.of(
+    THIN_CLIENT, WEB_CLIENT, MOBILE_CLIENT, THICK_CLIENT_MANAGED, MOBILE_APPLICATION_CLIENT));
+  /** Клиентские контексты исполнения, включая совмещённые файловые контексты общих модулей. */
+  public static final Set<ExecutionContext> CLIENTS = Collections.unmodifiableSet(EnumSet.of(
+    THIN_CLIENT, WEB_CLIENT, MOBILE_CLIENT, THICK_CLIENT_MANAGED, THICK_CLIENT_ORDINARY, MOBILE_APPLICATION_CLIENT,
+    THICK_CLIENT_MANAGED_FILE, THICK_CLIENT_ORDINARY_FILE,
+    THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_CLIENT));
+  /** Серверные контексты исполнения, включая файловые серверные и общие части. */
+  public static final Set<ExecutionContext> SERVER_CONTEXTS = Collections.unmodifiableSet(EnumSet.of(
+    SERVER, MOBILE_APPLICATION_SERVER, MOBILE_STANDALONE_SERVER,
+    THICK_CLIENT_MANAGED_FILE, THICK_CLIENT_ORDINARY_FILE, EXTERNAL_CONNECTION_FILE,
+    THICK_CLIENT_MANAGED_FILE_SERVER, THICK_CLIENT_ORDINARY_FILE_SERVER));
+  /** Символ Клиент в файловом толстом клиенте истинен и в серверной части управляемой формы. */
+  public static final Set<ExecutionContext> CLIENT_PREPROCESSOR = Collections.unmodifiableSet(withFileFormParts(CLIENTS));
+  /** Символ Сервер в файловом толстом клиенте истинен и в клиентской части управляемой формы. */
+  public static final Set<ExecutionContext> SERVER_PREPROCESSOR =
+    Collections.unmodifiableSet(withFileFormParts(SERVER_CONTEXTS));
+  /** Все варианты символа ТолстыйКлиентУправляемоеПриложение. */
+  public static final Set<ExecutionContext> THICK_MANAGED_PREPROCESSOR = Collections.unmodifiableSet(EnumSet.of(
+    THICK_CLIENT_MANAGED, THICK_CLIENT_MANAGED_FILE,
+    THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_MANAGED_FILE_SERVER));
+  /** Все варианты символа ТолстыйКлиентОбычноеПриложение. */
+  public static final Set<ExecutionContext> THICK_ORDINARY_PREPROCESSOR = Collections.unmodifiableSet(EnumSet.of(
+    THICK_CLIENT_ORDINARY, THICK_CLIENT_ORDINARY_FILE,
+    THICK_CLIENT_ORDINARY_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_SERVER));
+  /** Оба варианта символа ВнешнееСоединение. */
+  public static final Set<ExecutionContext> EXTERNAL_PREPROCESSOR = Collections.unmodifiableSet(EnumSet.of(
+    EXTERNAL_CONNECTION, EXTERNAL_CONNECTION_FILE));
 
   /**
    * Контекст, чьим пользовательским переключателем управляется этот вариант.
@@ -93,7 +120,14 @@ public enum ExecutionContext {
    * @return базовый контекст для файлового варианта; {@code this} для остальных контекстов.
    */
   public ExecutionContext optionContext() {
-    return optionContext;
+    return switch (this) {
+      case THICK_CLIENT_MANAGED_FILE, THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_MANAGED_FILE_SERVER
+        -> THICK_CLIENT_MANAGED;
+      case THICK_CLIENT_ORDINARY_FILE, THICK_CLIENT_ORDINARY_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_SERVER
+        -> THICK_CLIENT_ORDINARY;
+      case EXTERNAL_CONNECTION_FILE -> EXTERNAL_CONNECTION;
+      default -> this;
+    };
   }
 
   /**
@@ -102,7 +136,7 @@ public enum ExecutionContext {
    * @return {@code true} для общих файловых контекстов и обеих частей файловой формы/команды.
    */
   public boolean isFileMode() {
-    return optionContext != this;
+    return optionContext() != this;
   }
 
   /**
@@ -111,44 +145,8 @@ public enum ExecutionContext {
    * @return {@code true} для файловых вариантов обычного и управляемого толстого клиента.
    */
   public boolean isThickClientFileMode() {
-    return isFileMode() && (optionContext == THICK_CLIENT_MANAGED || optionContext == THICK_CLIENT_ORDINARY);
+    return isFileMode() && (optionContext() == THICK_CLIENT_MANAGED || optionContext() == THICK_CLIENT_ORDINARY);
   }
-
-  /** Все контексты модели; неизменяемое множество. */
-  public static final Set<ExecutionContext> ALL = Set.copyOf(EnumSet.allOf(ExecutionContext.class));
-  /** Контексты проекта без поддержки файлового толстого клиента; внешнее соединение сохраняется. */
-  public static final Set<ExecutionContext> WITHOUT_THICK_CLIENT_FILE = Arrays.stream(values())
-    .filter(context -> !context.isThickClientFileMode()).collect(Collectors.toUnmodifiableSet());
-  /** Самостоятельные серверные контексты без совмещённых файловых режимов. */
-  public static final Set<ExecutionContext> SERVERS = Set.of(SERVER, MOBILE_APPLICATION_SERVER, MOBILE_STANDALONE_SERVER);
-  /** Управляемые клиенты до добавления файловых вариантов. */
-  public static final Set<ExecutionContext> MANAGED_CLIENTS = Set.of(
-    THIN_CLIENT, WEB_CLIENT, MOBILE_CLIENT, THICK_CLIENT_MANAGED, MOBILE_APPLICATION_CLIENT);
-  /** Клиентские контексты исполнения, включая совмещённые файловые контексты общих модулей. */
-  public static final Set<ExecutionContext> CLIENTS = Set.of(
-    THIN_CLIENT, WEB_CLIENT, MOBILE_CLIENT, THICK_CLIENT_MANAGED, THICK_CLIENT_ORDINARY, MOBILE_APPLICATION_CLIENT,
-    THICK_CLIENT_MANAGED_FILE, THICK_CLIENT_ORDINARY_FILE,
-    THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_CLIENT);
-  /** Серверные контексты исполнения, включая файловые серверные и общие части. */
-  public static final Set<ExecutionContext> SERVER_CONTEXTS = Set.of(
-    SERVER, MOBILE_APPLICATION_SERVER, MOBILE_STANDALONE_SERVER,
-    THICK_CLIENT_MANAGED_FILE, THICK_CLIENT_ORDINARY_FILE, EXTERNAL_CONNECTION_FILE,
-    THICK_CLIENT_MANAGED_FILE_SERVER, THICK_CLIENT_ORDINARY_FILE_SERVER);
-  /** Символ Клиент в файловом толстом клиенте истинен и в серверной части управляемой формы. */
-  public static final Set<ExecutionContext> CLIENT_PREPROCESSOR = withFileFormParts(CLIENTS);
-  /** Символ Сервер в файловом толстом клиенте истинен и в клиентской части управляемой формы. */
-  public static final Set<ExecutionContext> SERVER_PREPROCESSOR = withFileFormParts(SERVER_CONTEXTS);
-  /** Все варианты символа ТолстыйКлиентУправляемоеПриложение. */
-  public static final Set<ExecutionContext> THICK_MANAGED_PREPROCESSOR = Set.of(
-    THICK_CLIENT_MANAGED, THICK_CLIENT_MANAGED_FILE,
-    THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_MANAGED_FILE_SERVER);
-  /** Все варианты символа ТолстыйКлиентОбычноеПриложение. */
-  public static final Set<ExecutionContext> THICK_ORDINARY_PREPROCESSOR = Set.of(
-    THICK_CLIENT_ORDINARY, THICK_CLIENT_ORDINARY_FILE,
-    THICK_CLIENT_ORDINARY_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_SERVER);
-  /** Оба варианта символа ВнешнееСоединение. */
-  public static final Set<ExecutionContext> EXTERNAL_PREPROCESSOR = Set.of(
-    EXTERNAL_CONNECTION, EXTERNAL_CONNECTION_FILE);
 
   /**
    * Перейти от части файловой формы/команды к общему файловому контексту вызываемого модуля.
@@ -169,7 +167,7 @@ public enum ExecutionContext {
    * @param contexts исходные контексты; повторяющиеся элементы объединяются.
    * @return новое {@link EnumSet}, независимое от изменений исходной коллекции.
    */
-  public static EnumSet<ExecutionContext> copyOf(Collection<ExecutionContext> contexts) {
+  public static Set<ExecutionContext> copyOf(Collection<ExecutionContext> contexts) {
     var result = EnumSet.noneOf(ExecutionContext.class);
     result.addAll(contexts);
     return result;
@@ -177,9 +175,27 @@ public enum ExecutionContext {
 
   private static Set<ExecutionContext> withFileFormParts(Set<ExecutionContext> contexts) {
     var result = copyOf(contexts);
-    result.addAll(Set.of(THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_MANAGED_FILE_SERVER,
+    result.addAll(EnumSet.of(THICK_CLIENT_MANAGED_FILE_CLIENT, THICK_CLIENT_MANAGED_FILE_SERVER,
       THICK_CLIENT_ORDINARY_FILE_CLIENT, THICK_CLIENT_ORDINARY_FILE_SERVER));
-    return Set.copyOf(result);
+    return result;
+  }
+
+  /**
+   * Найти контексты, отсутствующие в переданном наборе.
+   *
+   * @param contexts исключаемые контексты
+   * @return новое изменяемое множество дополнения
+   */
+  public static Set<ExecutionContext> complementOf(Collection<ExecutionContext> contexts) {
+    var result = EnumSet.allOf(ExecutionContext.class);
+    result.removeAll(contexts);
+    return result;
+  }
+
+  private static Set<ExecutionContext> withoutThickClientFile() {
+    var result = EnumSet.allOf(ExecutionContext.class);
+    result.removeIf(ExecutionContext::isThickClientFileMode);
+    return result;
   }
 
 }
