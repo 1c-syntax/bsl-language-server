@@ -23,14 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
-import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
-import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
-import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -52,10 +47,8 @@ import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -85,7 +78,7 @@ import java.util.stream.Stream;
  * даёт разные ответы в разных местах.
  * <p>
  * Единица расчёта — <b>тело целиком</b>: один поиск неподвижной точки считает
- * {@link Environment окружение} — тип каждой переменной тела в каждой его точке. Поэтому
+ * {@link FlowEnvironment окружение} — тип каждой переменной тела в каждой его точке. Поэтому
  * запрос про любую переменную тела — чтение готового ответа, а не отдельный расчёт.
  * <p>
  * Про присваиваемые типы, изменения мутаторов и сужение по условиям анализатор не знает
@@ -123,7 +116,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
    * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
    */
-  @SuppressWarnings("java:S6411") // Тела AST служат ключами конкретной версии документа; сравнение порядка неприменимо.
   private final Map<URI, Map<ExecutionContext, Map<BSLParser.CodeBlockContext, Facts>>> contextualFactsByUri =
     new ConcurrentHashMap<>();
   /**
@@ -218,106 +210,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  /**
-   * Тип каждой переменной тела в одной его точке.
-   * <p>
-   * Неизменяемо, поэтому соседние точки, между которыми ничего не поменялось, ссылаются на
-   * одно окружение. За счёт этого хранение растёт по числу мест, где тип меняется, а не по
-   * числу операторов, помноженному на число переменных.
-   *
-   * @param types типы переменных; переменных, о которых ничего не известно, в карте нет.
-   */
-  record Environment(TypeSet[] types) {
 
-    /**
-     * Пустое окружение нулевой длины — обращение к любой переменной даёт пустой набор.
-     * Годится как начальное значение для тела любого размера.
-     */
-    static final Environment EMPTY = new Environment(new TypeSet[0]);
-
-    /**
-     * Окружение, в котором о переменных ничего не известно.
-     *
-     * @param size число переменных тела.
-     * @return окружение нужного размера.
-     */
-    static Environment blank(int size) {
-      var types = new TypeSet[size];
-      Arrays.fill(types, TypeSet.EMPTY);
-      return new Environment(types);
-    }
-
-    /** Тип переменной по её номеру; пустой набор, если про неё здесь ничего не известно. */
-    TypeSet get(int index) {
-      return index < types.length ? types[index] : TypeSet.EMPTY;
-    }
-
-    /**
-     * Окружение с изменённым типом одной переменной.
-     * <p>
-     * Если тип не поменялся, возвращается это же окружение: так соседние точки, между
-     * которыми ничего не произошло, ссылаются на один объект.
-     */
-    Environment with(int index, TypeSet type, int size) {
-      if (type.equals(get(index))) {
-        return this;
-      }
-      var changed = resized(size);
-      changed[index] = type;
-      return new Environment(changed);
-    }
-
-    /**
-     * Объединение с другим окружением: тип каждой переменной — объединение её типов.
-     * Так сходятся пути в точке слияния.
-     */
-    Environment union(Environment other) {
-      if (types.length == 0) {
-        return other;
-      }
-      if (other.types.length == 0) {
-        return this;
-      }
-      TypeSet[] merged = null;
-      for (var i = 0; i < types.length; i++) {
-        var united = types[i].union(other.types[i]);
-        if (merged == null && !united.equals(types[i])) {
-          merged = types.clone();
-        }
-        if (merged != null) {
-          merged[i] = united;
-        }
-      }
-      return merged == null ? this : new Environment(merged);
-    }
-
-    /** Копия массива нужной длины: пустое окружение растягивается до размера тела. */
-    private TypeSet[] resized(int size) {
-      if (types.length == size) {
-        return types.clone();
-      }
-      var grown = new TypeSet[size];
-      Arrays.fill(grown, TypeSet.EMPTY);
-      System.arraycopy(types, 0, grown, 0, types.length);
-      return grown;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return this == other || other instanceof Environment that && Arrays.equals(types, that.types);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(types);
-    }
-
-    /** По содержимому, а не по ссылке на массив: иначе в отладке смысла не видно. */
-    @Override
-    public String toString() {
-      return "Environment" + Arrays.toString(types);
-    }
-  }
 
   /**
    * Изменение типа одной переменной одним оператором.
@@ -342,9 +235,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   record Facts(
     Map<VariableSymbol, Integer> indexes,
-    Map<ParserRuleContext, Environment> beforeStatement,
+    Map<ParserRuleContext, FlowEnvironment> beforeStatement,
     Map<ParserRuleContext, List<Change>> changesByStatement,
-    Environment leaving
+    FlowEnvironment leaving
   ) {
 
     /** Номер переменной в окружении; {@code null}, если расчёт по потоку к ней неприменим. */
@@ -847,7 +740,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return null;
     }
     var change = facts.changeOf(useStatement, variable);
-    var before = facts.beforeStatement().getOrDefault(useStatement, Environment.EMPTY).get(index);
+    var before = facts.beforeStatement().getOrDefault(useStatement, FlowEnvironment.EMPTY).get(index);
     var inclusive = useNode == null
       ? atDefinition
       : change != null && change.definition() && Ranges.containsPosition(Ranges.create(useNode), change.position());
@@ -899,7 +792,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * и завершёнными ячейками переменных модуля. Промежуточный результат возвращается
    * текущему запросу, но не публикуется для следующих запросов.
    */
-  @SuppressWarnings("java:S6411") // Общий и контекстный кеши адресуют одно и то же тело AST.
   private Facts factsOf(
     DocumentContext documentContext,
     BSLParser.CodeBlockContext body,
@@ -959,7 +851,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param definitions позиции присваиваний.
    * @param mutations   позиции операторов, меняющих тип на месте.
    */
-  private record Changes(Collection<Position> definitions, Collection<Position> mutations) {
+  record Changes(Collection<Position> definitions, Collection<Position> mutations) {
   }
 
   /** Собрать изменения типов по операторам и посчитать по ним окружения тела. */
@@ -972,37 +864,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // До того, как тело попадёт в список идущих расчётов: круги по ячейкам считают и его
     // тоже, а тело из этого списка отдало бы им пустой вклад.
     ensureCells(documentContext, body, inputs);
-    // Каждой переменной, попавшей в расчёт, достаётся номер — её место в окружении.
-    // Окружение хранится массивом по этим номерам, а не картой: копия массива на десяток
-    // элементов дешевле копирования и перехеширования карты, а копий тут много — на
-    // каждое изменение, слияние и сужение в каждом проходе.
-    Map<VariableSymbol, Integer> indexes = new IdentityHashMap<>();
-    var variables = new ArrayList<VariableSymbol>();
-    Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
-    for (var variable : inputs.variables().apply(body)) {
-      var changes = changesOf(documentContext, variable, inputs);
-      var definitions = changes.definitions();
-      var mutations = changes.mutations();
-      // Если хоть одно изменение типа не легло в граф отдельным оператором, его вклад
-      // потерялся бы — тогда точнее прежний путь с обходом всей области видимости.
-      // Отсутствие присваиваний расчёту не мешает: тип такой переменной — входной факт по
-      // всему телу, и это тот же ответ, что дал бы обход области видимости.
-      if (!allPlaced(layout, definitions) || !allPlaced(layout, mutations)) {
-        continue;
-      }
-      var index = variables.size();
-      indexes.put(variable, index);
-      variables.add(variable);
-      collectChanges(layout, variable, index, definitions, true, changesByStatement);
-      collectChanges(layout, variable, index, mutations, false, changesByStatement);
-    }
-    if (variables.isEmpty()) {
-      return new Facts(Map.of(), Map.of(), Map.of(), Environment.EMPTY);
+    var variables = FlowVariables.collect(body, layout, inputs,
+      variable -> changesOf(documentContext, variable, inputs));
+    if (variables.variables().isEmpty()) {
+      return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
     var compiled = inputs.compilationContexts().apply(body)
       .map(contexts -> PreprocessorFlow.of(graph, contexts)).orElse(null);
-    var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables, indexes, changesByStatement);
+    var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables);
     var active = inputs.session().active;
     active.put(body, pass);
     try {
@@ -1012,29 +882,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  /** Разложить позиции изменений по операторам, в которых они стоят. */
-  private static void collectChanges(
-    FlowLayout layout,
-    VariableSymbol variable,
-    int index,
-    Collection<Position> positions,
-    boolean definition,
-    Map<ParserRuleContext, List<Change>> target
-  ) {
-    layout.index(positions).forEach((statement, position) ->
-      target.computeIfAbsent(statement, key -> new ArrayList<>(1))
-        .add(new Change(variable, index, position, definition)));
-  }
 
-  /** Все ли изменения типа легли в операторы графа. */
-  private static boolean allPlaced(FlowLayout layout, Collection<Position> positions) {
-    for (var position : positions) {
-      if (layout.insideBody(position) && !layout.isPlaced(position)) {
-        return false;
-      }
-    }
-    return true;
-  }
+
+
 
   /**
    * Тело метода или код модуля, которому принадлежит узел, — единица, по которой строится
