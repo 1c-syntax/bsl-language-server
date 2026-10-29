@@ -1364,7 +1364,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         if (isReadable(documentContext)) {
           return false;
         }
-        rebuilds.record(documentContext.getUri());
+        rebuilds.recordReload(documentContext.getUri());
         serverContext.rebuildDocument(documentContext);
         // Файл мог не прочитаться: тогда документ не разобран, и отпускать его нечего.
         return isReadable(documentContext);
@@ -1441,7 +1441,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         serverContext.getDocumentLock(uri).writeLock().lock();
         locked.add(uri);
         if (!isReadable(documentContext)) {
-          rebuilds.record(uri);
+          rebuilds.recordReload(uri);
           serverContext.rebuildDocument(documentContext);
           loaded.add(documentContext);
         }
@@ -1490,7 +1490,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       if (isReadable(documentContext)) {
         return recomputeEach(methods);
       }
-      rebuilds.record(documentContext.getUri());
+      rebuilds.recordReload(documentContext.getUri());
       // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
       // до которых дошла очередь, пересчитываются явно.
       serverContext.rebuildDocument(documentContext);
