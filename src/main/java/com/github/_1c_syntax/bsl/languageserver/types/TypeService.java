@@ -793,11 +793,11 @@ public class TypeService implements SelfMemberClassifier {
    */
   private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
-    var fileType = documentContext.getFileType();
     if (!isGlobalMethodCallName(terminal) && isShadowedByLocalVariable(terminal, documentContext, bareName)) {
       return Optional.empty();
     }
     // Глобальная функция.
+    var fileType = documentContext.getFileType();
     var globalFn = globalScopeProvider.globalFunction(bareName, fileType);
     if (globalFn.isPresent()) {
       return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));

@@ -67,6 +67,8 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
   private final Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
   private final Set<RegionSymbol> regions = new HashSet<>();
   private final PreprocessorContexts preprocessor = new PreprocessorContexts();
+  // Ключи — неизменяемые в течение обхода диапазоны LSP; их порядок не используется.
+  @SuppressWarnings("java:S6411")
   private final Map<Range, Set<ExecutionContext>> methodConditions = new HashMap<>();
 
   public RegionVariableSymbolComputer(DocumentContext documentContext,
@@ -110,32 +112,14 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
    *
    * @return неизменяемая карта с неизменяемыми множествами либо значениями {@code null}.
    */
+  @SuppressWarnings("java:S6411") // Снимок сохраняет точное равенство ключей Range из API LSP.
   public Map<Range, Set<ExecutionContext>> getMethodConditions() {
     return methodConditions.isEmpty() ? Map.of() : Collections.unmodifiableMap(new HashMap<>(methodConditions));
   }
 
   @Override
-  public ParseTree visitPreproc_if(BSLParser.Preproc_ifContext ctx) {
-    preprocessor.enterIf(ctx);
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
-    preprocessor.enterElsif(ctx);
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitPreproc_else(BSLParser.Preproc_elseContext ctx) {
-    preprocessor.enterElse();
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
-    preprocessor.enterEndif();
-    return ctx;
+  public ParseTree visitPreprocessor(BSLParser.PreprocessorContext ctx) {
+    return preprocessor.enter(ctx) ? ctx : super.visitPreprocessor(ctx);
   }
 
   @Override
