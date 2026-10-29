@@ -115,8 +115,12 @@ public class ReturnTypeFromBodyInference {
     }
     var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
     var compiled = compilationContextResolver.possibleContexts(owner, body)
-      .map(contexts -> context == null ? contexts
-        : contexts.contains(context) ? Set.of(context) : Set.<ExecutionContext>of())
+      .map((Set<ExecutionContext> contexts) -> {
+        if (context == null) {
+          return contexts;
+        }
+        return contexts.contains(context) ? Set.of(context) : Set.<ExecutionContext>of();
+      })
       .map(contexts -> PreprocessorFlow.of(graph, contexts)).orElse(null);
     var exitPoint = graph.getExitPoint();
     var result = TypeSet.EMPTY;

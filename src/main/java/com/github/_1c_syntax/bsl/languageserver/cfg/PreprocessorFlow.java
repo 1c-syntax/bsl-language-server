@@ -61,6 +61,7 @@ public record PreprocessorFlow(Set<CfgVertex> vertices, Set<CfgEdge> edges) {
    * @param contexts возможные контексты тела; пустое множество исключает всё тело.
    * @return новое представление с неизменяемыми множествами объектов исходного графа.
    */
+  @SuppressWarnings("java:S6411") // IdentityHashMap сравнивает вершины по ссылке; Comparable в ней не участвует.
   public static PreprocessorFlow of(ControlFlowGraph graph, Set<ExecutionContext> contexts) {
     if (contexts.isEmpty()) {
       return new PreprocessorFlow(Set.of(), Set.of());
