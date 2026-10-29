@@ -87,11 +87,6 @@ final class InferenceContext {
   boolean sawMissing;
   int depth;
 
-  /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */
-  static InferenceContext neutral(DocumentContext documentContext) {
-    return new InferenceContext(documentContext, null);
-  }
-
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext) {
     this(documentContext, executionContext, executionContext == null ? Map.of() : new HashMap<>());
   }
@@ -104,5 +99,10 @@ final class InferenceContext {
     this.visited = new HashSet<>();
     this.inProgress = new HashMap<>();
     this.dependencies = new HashSet<>();
+  }
+
+  /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */
+  static InferenceContext neutral(DocumentContext documentContext) {
+    return new InferenceContext(documentContext, null);
   }
 }
