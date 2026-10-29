@@ -48,7 +48,7 @@ final class SymbolDeclarationRanges {
       subNameNode = ctx;
     }
 
-    return Ranges.create(subNameNode);
+    return Ranges.create(subNameNode == null ? ctx : subNameNode);
   }
 
   static Range variableName(ParserRuleContext ctx) {
@@ -64,7 +64,7 @@ final class SymbolDeclarationRanges {
       varNameNode = ctx;
     }
 
-    return Ranges.create(varNameNode);
+    return Ranges.create(varNameNode == null ? ctx : varNameNode);
   }
 
   static Optional<ParserRuleContext> enclosingMethod(ParserRuleContext node) {
