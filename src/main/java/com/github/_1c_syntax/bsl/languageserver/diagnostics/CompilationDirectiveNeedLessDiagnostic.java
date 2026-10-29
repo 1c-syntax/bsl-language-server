@@ -21,13 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -54,10 +57,19 @@ import org.antlr.v4.runtime.tree.ParseTree;
   }
 
 )
+@RequiredArgsConstructor
 public class CompilationDirectiveNeedLessDiagnostic extends AbstractVisitorDiagnostic {
+
+  private final CompilationContextResolver compilationContextResolver;
 
   @Override
   public ParseTree visitCompilerDirective(BSLParser.CompilerDirectiveContext ctx) {
+    // Недоступную директиву проверяет CompilationDirectiveNotAllowed; рекомендация не дублирует эту ошибку.
+    if (documentContext.getModuleType() == ModuleType.CommonModule
+      && compilationContextResolver.methodContext(documentContext, CompilerDirectiveKind.of(ctx.getStop().getType()))
+        .filter(profile -> profile.contexts().isEmpty()).isPresent()) {
+      return ctx;
+    }
     diagnosticStorage.addDiagnostic(ctx);
     return ctx;
   }
