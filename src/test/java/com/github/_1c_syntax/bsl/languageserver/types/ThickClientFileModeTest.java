@@ -119,8 +119,7 @@ class ThickClientFileModeTest extends AbstractServerContextAwareTest {
     var inlayHints = hints.getInlayHints(document, new InlayHintParams(
       new TextDocumentIdentifier(document.getUri().toString()), new Range(new Position(0, 0), new Position(13, 0))));
     // Обычные объединения типов не показываются коротким инлей-хинтом.
-    assertThat(inlayHints).hasSize(enabled ? 0 : 2);
-    assertThat(inlayHints).allSatisfy(hint ->
+    assertThat(inlayHints).hasSize(enabled ? 0 : 2).allSatisfy(hint ->
       assertThat(hint.getLabel().getRight().getFirst().getValue()).isEqualTo(": Строка"));
   }
 
