@@ -532,7 +532,7 @@ public class CompilationContextResolver {
   private Set<ExecutionContext> serverCallContexts(DocumentContext owner, boolean form, MethodContext profile,
                                                    Collection<ExecutionContext> declarationContexts) {
     var result = ExecutionContext.copyOf(form ? moduleContexts(owner) : supportedContexts(owner));
-    result.removeIf(context -> {
+    result.removeIf((ExecutionContext context) -> {
       if (!isClientOrConnection(context) || (!form && context.isFileMode())) {
         return true;
       }
