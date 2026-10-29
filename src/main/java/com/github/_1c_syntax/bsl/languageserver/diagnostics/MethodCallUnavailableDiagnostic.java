@@ -38,6 +38,8 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Set;
+import java.util.Map;
+import java.util.EnumMap;
 
 /**
  * Сообщения об исходных и платформенных членах, недоступных в выбранном режиме.
@@ -124,7 +126,8 @@ public class MethodCallUnavailableDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var automatic = contextResolver.automaticContexts(documentContext);
     var enabled = ExecutionContext.copyOf(ExecutionContext.ALL);
-    enabled.removeIf(context -> !isEnabled(context, automatic));
+    var modes = configuredModes();
+    enabled.removeIf(context -> !isEnabled(modes.get(context.optionContext()), context, automatic));
     for (var problem : accessChecker.check(documentContext, enabled, Set.of(MemberAccessCheckKind.AVAILABILITY))) {
       var call = (UnavailableMember) problem;
       var context = info.getResourceString(call.context().name());
@@ -144,35 +147,27 @@ public class MethodCallUnavailableDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private boolean isEnabled(ExecutionContext context, Set<ExecutionContext> automaticContexts) {
-    var option = context.optionContext();
-    var mode = ExecutionContext.SERVERS.contains(option) ? serverMode(option) : clientOrConnectionMode(option);
+  private static boolean isEnabled(String mode, ExecutionContext context, Set<ExecutionContext> automaticContexts) {
     if ("on".equalsIgnoreCase(mode)) {
       return true;
     }
     return !"off".equalsIgnoreCase(mode) && automaticContexts.contains(context);
   }
 
-  private String serverMode(ExecutionContext context) {
-    return switch (context) {
-      case SERVER -> checkServer;
-      case MOBILE_APPLICATION_SERVER -> checkMobileApplicationServer;
-      case MOBILE_STANDALONE_SERVER -> checkMobileStandaloneServer;
-      default -> throw new IllegalArgumentException("Expected a standalone server context: " + context);
-    };
-  }
-
-  private String clientOrConnectionMode(ExecutionContext context) {
-    return switch (context) {
-      case THIN_CLIENT -> checkThinClient;
-      case WEB_CLIENT -> checkWebClient;
-      case MOBILE_CLIENT -> checkMobileClient;
-      case THICK_CLIENT_MANAGED -> checkThickClientManagedApplication;
-      case THICK_CLIENT_ORDINARY -> checkThickClientOrdinaryApplication;
-      case EXTERNAL_CONNECTION -> checkExternalConnection;
-      case MOBILE_APPLICATION_CLIENT -> checkMobileApplicationClient;
-      default -> throw new IllegalArgumentException("Expected a client or connection context: " + context);
-    };
+  /** Снимок настроек базовых режимов; файловые варианты используют optionContext(). */
+  private Map<ExecutionContext, String> configuredModes() {
+    Map<ExecutionContext, String> modes = new EnumMap<>(ExecutionContext.class);
+    modes.put(ExecutionContext.SERVER, checkServer);
+    modes.put(ExecutionContext.THIN_CLIENT, checkThinClient);
+    modes.put(ExecutionContext.WEB_CLIENT, checkWebClient);
+    modes.put(ExecutionContext.MOBILE_CLIENT, checkMobileClient);
+    modes.put(ExecutionContext.THICK_CLIENT_MANAGED, checkThickClientManagedApplication);
+    modes.put(ExecutionContext.THICK_CLIENT_ORDINARY, checkThickClientOrdinaryApplication);
+    modes.put(ExecutionContext.EXTERNAL_CONNECTION, checkExternalConnection);
+    modes.put(ExecutionContext.MOBILE_APPLICATION_CLIENT, checkMobileApplicationClient);
+    modes.put(ExecutionContext.MOBILE_APPLICATION_SERVER, checkMobileApplicationServer);
+    modes.put(ExecutionContext.MOBILE_STANDALONE_SERVER, checkMobileStandaloneServer);
+    return modes;
   }
 
 }

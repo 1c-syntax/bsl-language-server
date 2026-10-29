@@ -26,20 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CallAvailability;
-import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.Declaration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -48,7 +44,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.Problem;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnknownMember;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnavailableMember;
@@ -60,29 +55,19 @@ final class MemberAccessAnalysis {
   private final MemberAccessContexts contextData;
   private final CompilationContextResolver contextResolver;
   private final TypeService typeService;
-  private final GlobalScopeProvider globalScopeProvider;
+  private final GlobalMemberTargets globals;
   private final List<Problem> problems = new ArrayList<>();
-  private final Map<String, List<Target>> globalTargets = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-  @SuppressWarnings("java:S6411") // IdentityHashMap сравнивает цепочки AST по ссылке и не использует Comparable.
   private final Map<ParseTree, Set<ExecutionContext>> unavailableChains = new IdentityHashMap<>();
-  private final List<DocumentContext> globalModules = new ArrayList<>();
-  private boolean globalsCollected;
 
   MemberAccessAnalysis(DocumentContext document, Set<MemberAccessCheckKind> checks, MemberAccessContexts contextData,
                        CompilationContextResolver contextResolver, TypeService typeService,
-                       GlobalScopeProvider globalScopeProvider) {
+                       GlobalMemberTargets globals) {
     documentContext = document;
     this.checks = Set.copyOf(checks);
     this.contextData = contextData;
     this.contextResolver = contextResolver;
     this.typeService = typeService;
-    this.globalScopeProvider = globalScopeProvider;
-  }
-
-  /**
-   * Одно из альтернативных исходных объявлений метода.
-   */
-  private record Target(DocumentContext owner, Declaration declaration) {
+    this.globals = globals;
   }
 
   List<Problem> checkAccesses(Iterable<MemberAccessSite> accesses) {
@@ -117,11 +102,11 @@ final class MemberAccessAnalysis {
   private void checkUnqualifiedCall(MemberAccessSite access, Set<ExecutionContext> remaining) {
     var name = access.node().getText();
     var local = contextResolver.declarations(documentContext).getOrDefault(name, List.of());
-    if (local.isEmpty() && isPlatformGlobal(name)) {
+    if (local.isEmpty() && globals.isPlatformFunction(name)) {
       checkPlatformAccess(access, typeService.accessTargetsAt(documentContext, access.node(), null), remaining);
       return;
     }
-    var targets = local.isEmpty() ? globals(name) : local.stream().map(d -> new Target(documentContext, d)).toList();
+    var targets = local.isEmpty() ? globals.sourceTargets(name) : local.stream().map(d -> new MemberCallTarget(documentContext, d)).toList();
     if (targets.isEmpty()) {
       checkPlatformAccess(access, typeService.accessTargetsAt(documentContext, access.node(), null), remaining);
     } else {
@@ -181,7 +166,7 @@ final class MemberAccessAnalysis {
     var owner = method.getOwner();
     var targets = contextResolver.declarations(owner).getOrDefault(method.getName(), List.of()).stream()
       .filter(declaration -> owner.getUri().equals(documentContext.getUri()) || declaration.exported())
-      .map(declaration -> new Target(owner, declaration)).toList();
+      .map(declaration -> new MemberCallTarget(owner, declaration)).toList();
     if (!targets.isEmpty()) {
       checkCall(call, targets, remaining);
     }
@@ -242,50 +227,12 @@ final class MemberAccessAnalysis {
   }
 
   /** Первое недоступное звено цепочки заменяет сообщения о зависящих от него обращениях в том же режиме. */
-  @SuppressWarnings("java:S3553") // Отсутствие общего модуля — явное состояние результата, не пустое имя.
   private void reportUnavailable(MemberAccessSite access, ExecutionContext context, Optional<String> moduleName,
                                   boolean moduleUnavailable) {
     problems.add(new UnavailableMember(Ranges.create(access.node()), access.node().getText(), context,
       access.method() ? MemberKind.METHOD : MemberKind.PROPERTY, moduleName, moduleUnavailable));
     unavailableChains.computeIfAbsent(access.chain(), ignored -> ExecutionContext.copyOf(Set.of())).add(context);
   }
-
-
-  /** Найти альтернативные экспортные объявления глобальных модулей и модулей приложения/соединения. */
-  private List<Target> globals(String name) {
-    if (!globalsCollected) {
-      collectGlobalModules();
-      globalsCollected = true;
-    }
-    return globalTargets.computeIfAbsent(name, this::exportedGlobalTargets);
-  }
-
-  private void collectGlobalModules() {
-    var serverContext = documentContext.getServerContext();
-    for (var module : serverContext.getConfiguration().getCommonModules()) {
-      if (module.isGlobal()) {
-        serverContext.getDocument(module.getMdoRef(), ModuleType.CommonModule).ifPresent(globalModules::add);
-      }
-    }
-    var configuration = serverContext.getConfiguration().getMergedConfiguration();
-    for (var type : List.of(ModuleType.OrdinaryApplicationModule, ModuleType.ManagedApplicationModule,
-      ModuleType.ExternalConnectionModule)) {
-      serverContext.getDocument(configuration.getMdoRef(), type).ifPresent(globalModules::add);
-    }
-  }
-
-  private List<Target> exportedGlobalTargets(String name) {
-    List<Target> targets = new ArrayList<>();
-    for (var owner : globalModules) {
-      for (var definition : contextResolver.declarations(owner).getOrDefault(name, List.of())) {
-        if (definition.exported()) {
-          targets.add(new Target(owner, definition));
-        }
-      }
-    }
-    return List.copyOf(targets);
-  }
-
 
   /**
    * Проверить альтернативные объявления одной цели. Доступной или неизвестной
@@ -294,7 +241,7 @@ final class MemberAccessAnalysis {
    * Контексты с найденной проблемой удаляются из {@code remainingContexts}, чтобы
    * другие типы получателя не создавали повторного замечания в том же контексте.
    */
-  private void checkCall(MemberAccessSite call, List<Target> targets, Set<ExecutionContext> remainingContexts) {
+  private void checkCall(MemberAccessSite call, List<MemberCallTarget> targets, Set<ExecutionContext> remainingContexts) {
     var local = call.unqualified() && targets.stream()
       .allMatch(target -> target.owner().getUri().equals(documentContext.getUri()));
     for (var iterator = remainingContexts.iterator(); iterator.hasNext();) {
@@ -304,14 +251,14 @@ final class MemberAccessAnalysis {
     }
   }
 
-  private boolean checkCallInContext(MemberAccessSite call, List<Target> targets, ExecutionContext context, boolean local) {
+  private boolean checkCallInContext(MemberAccessSite call, List<MemberCallTarget> targets, ExecutionContext context, boolean local) {
     var candidates = targets;
     if (local && targets.stream().allMatch(target -> localDeclarationIsAbsent(target, context))) {
       var name = call.node().getText();
-      if (isPlatformGlobal(name)) {
+      if (globals.isPlatformFunction(name)) {
         return checkGlobalCall(call, context, name);
       }
-      var global = globals(name);
+      var global = globals.sourceTargets(name);
       if (!global.isEmpty()) {
         candidates = global;
       }
@@ -320,15 +267,15 @@ final class MemberAccessAnalysis {
   }
 
   private boolean checkGlobalCall(MemberAccessSite call, ExecutionContext context, String name) {
-    var member = globalScopeProvider.globalFunction(name, documentContext.getFileType()).orElseThrow();
-    if (!contextData.platformUnavailable(new TypedMember(null, member, Ranges.create(call.node())), context)) {
+    var member = globals.platformFunction(name, call.node());
+    if (!contextData.platformUnavailable(member, context)) {
       return false;
     }
     reportUnavailable(call, context, Optional.empty(), false);
     return true;
   }
 
-  private boolean checkCandidates(MemberAccessSite call, List<Target> candidates, ExecutionContext context) {
+  private boolean checkCandidates(MemberAccessSite call, List<MemberCallTarget> candidates, ExecutionContext context) {
     var results = candidates.stream().map(target -> contextResolver.availability(
       documentContext, call.caller().orElseThrow(), target.owner(), target.declaration(),
       contextData.methodContext(target.owner(), target.declaration().directive()), context)).toList();
@@ -354,17 +301,12 @@ final class MemberAccessAnalysis {
       .anyMatch(method -> method.getOwner().getUri().equals(owner));
   }
 
-  private boolean isPlatformGlobal(String name) {
-    return globalScopeProvider.globalFunction(name, documentContext.getFileType())
-      .filter(member -> member.getSourceSymbol().isEmpty()).isPresent();
-  }
-
   /**
    * Определить, исключено ли локальное объявление из компиляции после перехода в его контекст.
    * Недостаток данных даёт {@code false}: он не позволяет разрешать имя как глобальное
    * на основании якобы отсутствующего локального метода.
    */
-  private boolean localDeclarationIsAbsent(Target target, ExecutionContext context) {
+  private boolean localDeclarationIsAbsent(MemberCallTarget target, ExecutionContext context) {
     var definition = target.declaration();
     var method = contextData.methodContext(target.owner(), definition.directive());
     var branch = definition.branch();
@@ -376,7 +318,7 @@ final class MemberAccessAnalysis {
   }
 
 
-  private Optional<CommonModule> commonModule(DocumentContext document) {
+  private static Optional<CommonModule> commonModule(DocumentContext document) {
     return document.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
   }
 

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -46,16 +47,18 @@ final class MemberAccessContexts {
   private final DocumentContext documentContext;
   private final CompilationContextResolver contextResolver;
   private final TypeService typeService;
+  private final GlobalScopeProvider globalScopeProvider;
   private final Map<ProfileKey, Optional<MethodContext>> profiles = new HashMap<>();
   private final Map<ContextualAccess, List<TypedMember>> contextualTargets = new HashMap<>();
   private final Map<TypeRef, Optional<Set<ExecutionContext>>> typeContexts = new HashMap<>();
-  @SuppressWarnings("java:S6411") // Ключ — неизменяемый ограниченный набор флагов из СП, без отношения порядка.
   private final Map<Set<Availability>, Set<ExecutionContext>> platformContexts = new HashMap<>();
 
-  MemberAccessContexts(DocumentContext document, CompilationContextResolver resolver, TypeService typeService) {
+  MemberAccessContexts(DocumentContext document, CompilationContextResolver resolver, TypeService typeService,
+                       GlobalScopeProvider globalScopeProvider) {
     documentContext = document;
     contextResolver = resolver;
     this.typeService = typeService;
+    this.globalScopeProvider = globalScopeProvider;
   }
 
   /** Ключ профиля имеет тот же порядок, что URI и необязательная директива. */
@@ -63,7 +66,7 @@ final class MemberAccessContexts {
     @Override
     public int compareTo(ProfileKey other) {
       var byUri = uri.compareTo(other.uri);
-      return byUri != 0 ? byUri : Integer.compare(directiveOrdinal(), other.directiveOrdinal());
+      return byUri == 0 ? Integer.compare(directiveOrdinal(), other.directiveOrdinal()) : byUri;
     }
 
     private int directiveOrdinal() {
@@ -80,7 +83,7 @@ final class MemberAccessContexts {
         return byLine;
       }
       var byCharacter = Integer.compare(position.getCharacter(), other.position.getCharacter());
-      return byCharacter != 0 ? byCharacter : context.compareTo(other.context);
+      return byCharacter == 0 ? context.compareTo(other.context) : byCharacter;
     }
   }
 
@@ -111,7 +114,6 @@ final class MemberAccessContexts {
   }
 
   /** Повторно использовать профиль документа и директивы только в пределах проверки текущего файла. */
-  @SuppressWarnings("java:S3553") // Пустой Optional сохраняет контракт отсутствующей директивы.
   Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
     return profiles.computeIfAbsent(new ProfileKey(document.getUri(), directive),
       ignored -> contextResolver.methodContext(document, directive));
@@ -120,4 +122,8 @@ final class MemberAccessContexts {
   private static Position startOf(TerminalNode node) {
     return Ranges.create(node).getStart();
   }
+  boolean isGlobalProperty(String name) {
+    return globalScopeProvider.globalProperty(name, documentContext.getFileType()).isPresent();
+  }
+
 }

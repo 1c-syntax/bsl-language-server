@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
 import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorReachability;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -45,21 +44,18 @@ final class MemberAccessCollector extends BSLParserBaseListener {
   private final Set<MemberAccessCheckKind> checks;
   private final MemberAccessContexts contextData;
   private final CompilationContextResolver contextResolver;
-  private final GlobalScopeProvider globalScopeProvider;
   private final PreprocessorReachability preprocessor;
   private final List<MemberAccessSite> accesses = new ArrayList<>();
   private Optional<MethodContext> caller;
   private boolean unreachable;
 
   MemberAccessCollector(DocumentContext document, Set<ExecutionContext> enabled, Set<MemberAccessCheckKind> checks,
-                        MemberAccessContexts contextData, CompilationContextResolver contextResolver,
-                        GlobalScopeProvider globalScopeProvider) {
+                        MemberAccessContexts contextData, CompilationContextResolver contextResolver) {
     documentContext = document;
     enabledContexts = Set.copyOf(enabled);
     this.checks = Set.copyOf(checks);
     this.contextData = contextData;
     this.contextResolver = contextResolver;
-    this.globalScopeProvider = globalScopeProvider;
     preprocessor = new PreprocessorReachability(document.getFileType());
     caller = contextData.methodContext(document, Optional.empty());
   }
@@ -123,7 +119,7 @@ final class MemberAccessCollector extends BSLParserBaseListener {
    */
   private void rememberGlobalProperty(@Nullable TerminalNode name) {
     if (checks.contains(MemberAccessCheckKind.AVAILABILITY) && name != null
-        && globalScopeProvider.globalProperty(name.getText(), documentContext.getFileType()).isPresent()) {
+        && contextData.isGlobalProperty(name.getText())) {
       rememberAccess(name, true, false);
     }
   }
