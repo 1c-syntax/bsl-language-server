@@ -430,7 +430,7 @@ public final class CompletionProvider {
     if (documentation != null) {
       original = documentation.isLeft() ? documentation.getLeft() : documentation.getRight().getValue();
     }
-    setDocumentation(item, original.isBlank() ? description : original + "\n\n" + description);
+    setDocumentation(item, original.isBlank() ? description : (original + "\n\n" + description));
   }
 
   /**

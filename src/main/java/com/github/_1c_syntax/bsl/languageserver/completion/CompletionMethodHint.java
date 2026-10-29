@@ -40,12 +40,25 @@ final class CompletionMethodHint {
   private final Set<CallPath> paths = EnumSet.noneOf(CallPath.class);
   private boolean knownContexts = true;
 
-  void include(Collection<ExecutionContext> declared) { contexts.addAll(declared); }
-  void unknownContexts() { knownContexts = false; }
-  void unknownCall() { paths.add(CallPath.UNKNOWN); }
-  void unavailableCall() { paths.add(CallPath.UNAVAILABLE); }
-  void knownCall(boolean server) { paths.add(server ? CallPath.SERVER : CallPath.LOCAL); }
-  void unknownReceiver() { unknownContexts(); unknownCall(); }
+  void include(Collection<ExecutionContext> declared) {
+    contexts.addAll(declared);
+  }
+  void unknownContexts() {
+    knownContexts = false;
+  }
+  void unknownCall() {
+    paths.add(CallPath.UNKNOWN);
+  }
+  void unavailableCall() {
+    paths.add(CallPath.UNAVAILABLE);
+  }
+  void knownCall(boolean server) {
+    paths.add(server ? CallPath.SERVER : CallPath.LOCAL);
+  }
+  void unknownReceiver() {
+    unknownContexts();
+    unknownCall();
+  }
 
   /** В списке остаётся серверная стрелка, а пояснение добавляется после документации. */
   String apply(CompletionItem item, Language language, boolean labelDetailsSupport) {
