@@ -31,22 +31,17 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.mdo.CommonModule;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Objects;
 import java.util.Set;
-import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.Problem;
 import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnknownMember;
-import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnavailableMember;
 
 /** Проверка собранных обращений; все результаты и кеши принадлежат одному файлу. */
 final class MemberAccessAnalysis {
@@ -56,35 +51,31 @@ final class MemberAccessAnalysis {
   private final CompilationContextResolver contextResolver;
   private final TypeService typeService;
   private final GlobalMemberTargets globals;
-  private final List<Problem> problems = new ArrayList<>();
-  private final Map<ParseTree, Set<ExecutionContext>> unavailableChains = new IdentityHashMap<>();
+  private final MemberAccessProblems problems;
 
   MemberAccessAnalysis(DocumentContext document, Set<MemberAccessCheckKind> checks, MemberAccessContexts contextData,
                        CompilationContextResolver contextResolver, TypeService typeService,
-                       GlobalMemberTargets globals) {
+                       GlobalMemberTargets globals, MemberAccessProblems problems) {
     documentContext = document;
     this.checks = Set.copyOf(checks);
     this.contextData = contextData;
     this.contextResolver = contextResolver;
     this.typeService = typeService;
     this.globals = globals;
+    this.problems = problems;
   }
 
-  List<Problem> checkAccesses(Iterable<MemberAccessSite> accesses) {
-    for (var access : accesses) {
-      if (checks.contains(MemberAccessCheckKind.EXISTENCE)) {
-        checkExistence(access);
-      }
-      if (checks.contains(MemberAccessCheckKind.AVAILABILITY) && access.contexts().isPresent()) {
-        checkAvailability(access);
-      }
+  void checkAccess(MemberAccessSite access) {
+    if (checks.contains(MemberAccessCheckKind.EXISTENCE)) {
+      checkExistence(access);
     }
-    return List.copyOf(problems);
+    if (checks.contains(MemberAccessCheckKind.AVAILABILITY) && access.contexts().isPresent()) {
+      checkAvailability(access);
+    }
   }
 
   private void checkAvailability(MemberAccessSite access) {
-    var remaining = ExecutionContext.copyOf(access.contexts().orElseThrow());
-    remaining.removeAll(unavailableChains.getOrDefault(access.chain(), Set.of()));
+    var remaining = problems.remainingContexts(access);
     if (remaining.isEmpty()) {
       return;
     }
@@ -201,7 +192,7 @@ final class MemberAccessAnalysis {
     for (var iterator = remaining.iterator(); iterator.hasNext();) {
       var context = iterator.next();
       if (platformUnavailableInContext(access, owner, candidates, expected, context)) {
-        reportPlatformUnavailable(access, context);
+        problems.reportPlatformUnavailable(access, context);
         iterator.remove();
       }
     }
@@ -216,22 +207,6 @@ final class MemberAccessAnalysis {
     var actual = contextData.targetsInContext(access, context).stream()
       .filter(member -> Objects.equals(member.owner(), owner) && member.descriptor().kind() == expected).toList();
     return !actual.isEmpty() && actual.stream().allMatch(member -> contextData.platformUnavailable(member, context));
-  }
-
-  private void reportPlatformUnavailable(MemberAccessSite access, ExecutionContext context) {
-    var common = access.unqualified() && !access.method()
-      ? documentContext.getServerContext().findCommonModule(access.node().getText())
-        .filter(module -> !contextResolver.canSeeCommonModule(module, context))
-      : Optional.<CommonModule>empty();
-    reportUnavailable(access, context, common.map(CommonModule::getName), common.isPresent());
-  }
-
-  /** Первое недоступное звено цепочки заменяет сообщения о зависящих от него обращениях в том же режиме. */
-  private void reportUnavailable(MemberAccessSite access, ExecutionContext context, Optional<String> moduleName,
-                                  boolean moduleUnavailable) {
-    problems.add(new UnavailableMember(Ranges.create(access.node()), access.node().getText(), context,
-      access.method() ? MemberKind.METHOD : MemberKind.PROPERTY, moduleName, moduleUnavailable));
-    unavailableChains.computeIfAbsent(access.chain(), ignored -> ExecutionContext.copyOf(Set.of())).add(context);
   }
 
   /**
@@ -271,7 +246,7 @@ final class MemberAccessAnalysis {
     if (!contextData.platformUnavailable(member, context)) {
       return false;
     }
-    reportUnavailable(call, context, Optional.empty(), false);
+    problems.reportGlobalUnavailable(call, context);
     return true;
   }
 
@@ -287,9 +262,8 @@ final class MemberAccessAnalysis {
       return false;
     }
     var singleOwner = candidates.stream().allMatch(t -> t.owner().getUri().equals(owner.getUri()));
-    var common = singleOwner ? commonModule(owner) : Optional.<CommonModule>empty();
-    reportUnavailable(call, context, common.map(CommonModule::getName),
-      common.isPresent() && results.stream().allMatch(result -> result == CallAvailability.MODULE_UNAVAILABLE));
+    problems.reportSourceUnavailable(call, context, owner, singleOwner,
+      results.stream().allMatch(result -> result == CallAvailability.MODULE_UNAVAILABLE));
     return true;
   }
 
@@ -315,11 +289,6 @@ final class MemberAccessAnalysis {
     }
     var targetContext = contextResolver.targetContext(documentContext, target.owner(), method.get(), context);
     return !method.get().contexts().contains(targetContext) || !branch.contains(targetContext);
-  }
-
-
-  private static Optional<CommonModule> commonModule(DocumentContext document) {
-    return document.getMdObject().filter(CommonModule.class::isInstance).map(CommonModule.class::cast);
   }
 
 }

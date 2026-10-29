@@ -32,9 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +46,7 @@ final class MemberAccessContexts {
   private final CompilationContextResolver contextResolver;
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
-  private final Map<ProfileKey, Optional<MethodContext>> profiles = new HashMap<>();
+  private final MemberMethodProfiles profiles;
   private final Map<ContextualAccess, List<TypedMember>> contextualTargets = new HashMap<>();
   private final Map<TypeRef, Optional<Set<ExecutionContext>>> typeContexts = new HashMap<>();
   private final Map<Set<Availability>, Set<ExecutionContext>> platformContexts = new HashMap<>();
@@ -57,21 +55,9 @@ final class MemberAccessContexts {
                        GlobalScopeProvider globalScopeProvider) {
     documentContext = document;
     contextResolver = resolver;
+    profiles = new MemberMethodProfiles(resolver);
     this.typeService = typeService;
     this.globalScopeProvider = globalScopeProvider;
-  }
-
-  /** Ключ профиля имеет тот же порядок, что URI и необязательная директива. */
-  private record ProfileKey(URI uri, Optional<CompilerDirectiveKind> directive) implements Comparable<ProfileKey> {
-    @Override
-    public int compareTo(ProfileKey other) {
-      var byUri = uri.compareTo(other.uri);
-      return byUri == 0 ? Integer.compare(directiveOrdinal(), other.directiveOrdinal()) : byUri;
-    }
-
-    private int directiveOrdinal() {
-      return directive.isPresent() ? directive.orElseThrow().ordinal() : -1;
-    }
   }
 
   /** Полный ключ уточнения: координаты LSP и выбранный режим. */
@@ -109,19 +95,16 @@ final class MemberAccessContexts {
 
   /** Один контекстный вывод на обращение используется для исходных и платформенных целей. */
   List<TypedMember> targetsInContext(MemberAccessSite access, ExecutionContext context) {
-    return contextualTargets.computeIfAbsent(new ContextualAccess(startOf(access.node()), context),
+    return contextualTargets.computeIfAbsent(new ContextualAccess(Ranges.create(access.node()).getStart(), context),
       ignored -> typeService.accessTargetsAt(documentContext, access.node(), context));
   }
 
   /** Повторно использовать профиль документа и директивы только в пределах проверки текущего файла. */
   Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
-    return profiles.computeIfAbsent(new ProfileKey(document.getUri(), directive),
-      ignored -> contextResolver.methodContext(document, directive));
+    return profiles.methodContext(document, directive);
   }
 
-  private static Position startOf(TerminalNode node) {
-    return Ranges.create(node).getStart();
-  }
+
   boolean isGlobalProperty(String name) {
     return globalScopeProvider.globalProperty(name, documentContext.getFileType()).isPresent();
   }

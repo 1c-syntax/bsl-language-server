@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorReachability;
-import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
@@ -43,19 +42,19 @@ final class MemberAccessCollector extends BSLParserBaseListener {
   private final Set<ExecutionContext> enabledContexts;
   private final Set<MemberAccessCheckKind> checks;
   private final MemberAccessContexts contextData;
-  private final CompilationContextResolver contextResolver;
+  private final Set<ExecutionContext> supportedContexts;
   private final PreprocessorReachability preprocessor;
   private final List<MemberAccessSite> accesses = new ArrayList<>();
   private Optional<MethodContext> caller;
   private boolean unreachable;
 
   MemberAccessCollector(DocumentContext document, Set<ExecutionContext> enabled, Set<MemberAccessCheckKind> checks,
-                        MemberAccessContexts contextData, CompilationContextResolver contextResolver) {
+                        MemberAccessContexts contextData, Set<ExecutionContext> supportedContexts) {
     documentContext = document;
     enabledContexts = Set.copyOf(enabled);
     this.checks = Set.copyOf(checks);
     this.contextData = contextData;
-    this.contextResolver = contextResolver;
+    this.supportedContexts = Set.copyOf(supportedContexts);
     preprocessor = new PreprocessorReachability(document.getFileType());
     caller = contextData.methodContext(document, Optional.empty());
   }
@@ -79,7 +78,7 @@ final class MemberAccessCollector extends BSLParserBaseListener {
   @Override
   public void enterPreprocessor(BSLParser.PreprocessorContext ctx) {
     if (preprocessor.enter(ctx)) {
-      unreachable = preprocessor.isUnreachable(contextResolver.supportedContexts(documentContext));
+      unreachable = preprocessor.isUnreachable(supportedContexts);
     }
   }
 

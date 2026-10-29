@@ -102,11 +102,13 @@ public class MemberAccessChecker {
   public List<Problem> check(DocumentContext document, Set<ExecutionContext> enabledContexts,
                              Set<MemberAccessCheckKind> checks) {
     var contexts = new MemberAccessContexts(document, contextResolver, typeService, globalScopeProvider);
-    var collector = new MemberAccessCollector(document, enabledContexts, checks, contexts, contextResolver);
+    var collector = new MemberAccessCollector(document, enabledContexts, checks, contexts, contextResolver.supportedContexts(document));
     ParseTreeWalker.DEFAULT.walk(collector, document.getAst());
     var globals = new GlobalMemberTargets(document, contextResolver, globalScopeProvider);
-    return new MemberAccessAnalysis(document, checks, contexts, contextResolver, typeService, globals)
-      .checkAccesses(collector.accesses());
+    var problems = new MemberAccessProblems(document, contextResolver);
+    var analysis = new MemberAccessAnalysis(document, checks, contexts, contextResolver, typeService, globals, problems);
+    collector.accesses().forEach(analysis::checkAccess);
+    return problems.results();
   }
 
 }
