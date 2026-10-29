@@ -325,8 +325,8 @@ class CompletionContextHintsTest extends AbstractServerContextAwareTest {
       """, language), "Target");
     var description = target.getLabelDetails().getDescription();
     assertThat(target.getDetail()).isNull();
-    assertThat(description).startsWith(language == Language.EN ? "→S · " : "→С · ");
-    assertThat(description).endsWith(language == Language.EN ? "String" : "Строка");
+    assertThat(description).startsWith(language == Language.EN ? "→S · " : "→С · ")
+      .endsWith(language == Language.EN ? "String" : "Строка");
     assertThat(target.getLabelDetails().getDetail()).contains("Value");
 
     target.setData(format.equals("map") ? jsonMapper.convertValue(target.getData(), Map.class)
