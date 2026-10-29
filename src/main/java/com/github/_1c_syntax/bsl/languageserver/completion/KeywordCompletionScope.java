@@ -107,9 +107,7 @@ final class KeywordCompletionScope {
 
   private void acceptExpressionDepth(int type) {
     switch (type) {
-      case BSLLexer.LPAREN, BSLLexer.LBRACK -> {
-        expressionDepth++;
-      }
+      case BSLLexer.LPAREN, BSLLexer.LBRACK -> expressionDepth += 1;
       case BSLLexer.RPAREN, BSLLexer.RBRACK -> expressionDepth = Math.max(0, expressionDepth - 1);
       case BSLLexer.SEMICOLON -> expressionDepth = 0;
       default -> { /* токен не является скобкой */ }
