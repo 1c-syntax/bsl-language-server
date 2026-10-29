@@ -124,7 +124,7 @@ final class ModuleCompilationContexts {
    * @param document документ, через который доступны метаданные корня проекта.
    * @return неизменяемое множество автоматически выбранных режимов.
    */
-  public Set<ExecutionContext> automaticContexts(DocumentContext document) {
+  public static Set<ExecutionContext> automaticContexts(DocumentContext document) {
     var contexts = ExecutionContext.copyOf(supportedContexts(document));
     // До чтения автономного состава в MDClasses и его учёта здесь этот контекст доступен только через on.
     // https://github.com/1c-syntax/mdclasses/issues/728
@@ -239,7 +239,7 @@ final class ModuleCompilationContexts {
     };
   }
 
-  private Set<ExecutionContext> formContexts(DocumentContext document) {
+  private static Set<ExecutionContext> formContexts(DocumentContext document) {
     if (usesFormDirectives(document)) {
       return addOrdinaryManagedFormContext(document, managedContexts());
     }

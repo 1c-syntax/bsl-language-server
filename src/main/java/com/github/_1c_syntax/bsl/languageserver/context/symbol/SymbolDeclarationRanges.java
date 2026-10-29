@@ -26,10 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Optional;
 
 /** Диапазоны объявлений и охватывающий метод для узлов AST, включая восстановленные после ошибок. */
+@NullMarked
 final class SymbolDeclarationRanges {
   private SymbolDeclarationRanges() {
   }
