@@ -31,9 +31,8 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Position;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Optional;
-import static com.github._1c_syntax.bsl.languageserver.completion.CompletionContextEvaluation.AVAILABLE;
-import static com.github._1c_syntax.bsl.languageserver.completion.CompletionContextEvaluation.UNAVAILABLE;
+import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.AVAILABLE;
+import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.UNAVAILABLE;
 
 /**
  * Приоритеты доступности и подписи контекстов для одного запроса completion.
@@ -49,9 +48,7 @@ import static com.github._1c_syntax.bsl.languageserver.completion.CompletionCont
 public final class CompletionContextRanker {
   private final DocumentContext document;
   private final CompletionContextEvaluation evaluation;
-  @SuppressWarnings("java:S6411") // CompletionItem изменяется при оформлении; ключом служит идентичность объекта.
   private final Map<CompletionItem, Integer> priorities = new IdentityHashMap<>();
-  @SuppressWarnings("java:S6411") // IdentityHashMap не использует Comparable и сохраняет ключи при изменении item.
   private final Map<CompletionItem, CompletionMethodHint> hints = new IdentityHashMap<>();
 
   /**
@@ -122,9 +119,11 @@ public final class CompletionContextRanker {
       return;
     }
     var hint = member.kind() == MemberKind.METHOD
-      ? Optional.of(new CompletionMethodHint()) : Optional.<CompletionMethodHint>empty();
+      ? new CompletionMethodHint() : null;
     remember(item, evaluation.rankDotMember(item.getLabel(), member, hint));
-    hint.ifPresent((CompletionMethodHint value) -> hints.put(item, value));
+    if (hint != null) {
+      hints.put(item, hint);
+    }
   }
 
   /**
@@ -147,7 +146,6 @@ public final class CompletionContextRanker {
    * @param labelDetailsSupport поддерживает ли клиент подпись справа от сигнатуры.
    * @return пояснения для добавления после документации метода; ключи сравниваются по идентичности.
    */
-  @SuppressWarnings("java:S6411") // Ключи — изменяемые LSP items; приписки связаны с их идентичностью.
   public Map<CompletionItem, String> apply(Iterable<CompletionItem> items, boolean labelDetailsSupport) {
     var language = document.getScriptVariantLanguage();
     Map<CompletionItem, String> descriptions = new IdentityHashMap<>();
