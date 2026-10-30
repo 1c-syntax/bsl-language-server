@@ -34,6 +34,24 @@ After a dot, receiver types are inferred in the current compilation contexts. Wh
 
 Existing priorities for local names, fields, global functions and keywords, and the ordering of deprecated items, are preserved within each group. Missing availability information does not penalize a suggestion. OneScript, files without metadata and unknown compilation contexts retain the original ordering.
 
+## Keywords
+
+Keywords follow the script language, like platform member names. The BSL/OneScript language vocabulary
+defines candidates and canonical spellings; Syntax Assistant supplies descriptions and templates.
+Syntax placeholders such as `Declarations`, `DefaultValue` and `DefVal` are excluded. English loop headers
+offer `To`, rather than the `By` spelling found in the help data.
+
+The surrounding construct is considered:
+
+* `Continue` and `Break` are offered in loop bodies, including nested blocks;
+* `Await` is offered inside asynchronous methods;
+* `Else`, `ElsIf`, `Except` and closing keywords require the corresponding open block;
+* `Then`, `Do`, `Each`, `In`, `To`, `Val` and `Export` are offered in the appropriate parts of declarations and headers.
+
+Unfinished blocks are supported. The prefix being completed is not treated as an already inserted keyword:
+for example, completing `EndDo` still sees the loop as open. Words in comments and strings do not create
+false blocks. Ordinary keywords are not offered inside strings, comments or directive headers.
+
 ## Method contexts and server calls
 
 Only a server-call marker appears to the right of the signature, before the return type, for example `→S · ValueTable`.
