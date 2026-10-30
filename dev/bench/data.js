@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793218504063,
+  "lastUpdate": 1793390288395,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46066,6 +46066,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.1202504380462703",
             "extra": "mean: 90.3273647626241 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6ad798ffe0df6b739d93e22b8bffa19b131772a5",
+          "message": "Merge pull request #4884 from bapho-bush/agents-symlink\n\ndocs: link AGENTS.md to CLAUDE.md",
+          "timestamp": "2026-10-30T20:36:15+01:00",
+          "tree_id": "6e49de7afe9eedaa3766efc85b39a82712a1a8bb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6ad798ffe0df6b739d93e22b8bffa19b131772a5"
+        },
+        "date": 1793390255746,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.32552456855774,
+            "unit": "sec",
+            "range": "stddev: 3.557300671146682",
+            "extra": "mean: 92.32552456855774 sec\nrounds: 3"
           }
         ]
       }
