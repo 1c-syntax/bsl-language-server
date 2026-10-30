@@ -175,15 +175,6 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void registersConfigurationQualifiedNamesForCompletion() {
-
-    var qualified = globalScopeProvider.getConfigurationQualifiedNames();
-    assertThat(qualified)
-      .as("должны быть составные имена коллекция.Имя для no-dot completion")
-      .contains("Справочники.Справочник1", "Catalogs.Справочник1");
-  }
-
-  @Test
   void documentRefInheritsPlatformMembers() {
 
     // Конкретный тип `ДокументСсылка.Документ1` получает members обоих источников:

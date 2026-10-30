@@ -210,77 +210,31 @@ public final class CompletionProvider {
   }
 
   /**
-   * Дедуп ru/en-написаний <b>имён типов</b> — классов для {@code Новый} и
-   * составных имён MD-объектов конфигурации ({@code Справочники.Контрагенты}).
+   * Дедуп ru/en-написаний имён классов для {@code Новый}.
    * Разные написания одного типа резолвятся (с учётом видимости в {@code fileType})
-   * в один {@link TypeRef} → группируются, из группы остаётся написание под
-   * настроенный {@link Language}. Имя без резолва (не тип) проходит как есть,
-   * не группируясь.
+   * в один {@link TypeRef}; для него выбирается двуязычное имя из реестра под
+   * настроенный {@link Language}. Алфавит имени
+   * объекта в составном имени не определяет язык платформенной части.
+   * Исходный список определяет типы, но может содержать лишь одно написание,
+   * например русское имя в JSON-ресурсе. Имя без разрешённого типа сохраняется как есть.
    */
   private List<String> filterTypeNamesByLanguage(Collection<String> names, Language language, FileType fileType) {
     if (names.isEmpty()) {
       return List.of();
     }
-    // ru/en одного типа резолвятся в один TypeRef → группируются; имя без
-    // резолва (не тип) проходит как есть. Порядок результата не важен — итоговую
-    // сортировку completion задаёт sortText, а не позиция в этом списке.
-    var byType = new LinkedHashMap<TypeRef, List<String>>();
+    var seen = new HashSet<TypeRef>();
     var result = new ArrayList<String>(names.size());
     for (var name : names) {
       var ref = typeService.resolve(name, fileType).orElse(null);
       if (ref == null) {
         result.add(name);
-      } else {
-        byType.computeIfAbsent(ref, k -> new ArrayList<>()).add(name);
-      }
-    }
-    for (var group : byType.values()) {
-      if (group.size() == 1) {
-        result.add(group.get(0));
         continue;
       }
-      String pick = null;
-      for (var name : group) {
-        if (isInConfiguredLanguage(name, language)) {
-          pick = name;
-          break;
-        }
+      if (seen.add(ref)) {
+        result.add(typeService.displayName(ref, language));
       }
-      result.add(pick != null ? pick : group.get(0));
     }
     return result;
-  }
-
-  /**
-   * Имя считается совместимым с настроенным {@link Language}.
-   * Ключевой инвариант 1С: русские идентификаторы могут содержать
-   * латинские аббревиатуры ({@code ЧтениеJSON}, {@code ЗаписьXML},
-   * {@code HTTPСоединение}), а английские — всегда чистый ASCII.
-   * Поэтому наличие кириллицы однозначно относит имя к RU, и эвристика
-   * строится только на её присутствии. Имена без букв
-   * (служебные/составные) не фильтруются.
-   */
-  private static boolean isInConfiguredLanguage(String name, Language language) {
-    if (name.isEmpty()) {
-      return true;
-    }
-    var hasCyrillic = name.chars().anyMatch(CompletionProvider::isCyrillic);
-    var hasLatin = name.chars().anyMatch(CompletionProvider::isAsciiLetter);
-    if (!hasCyrillic && !hasLatin) {
-      return true;
-    }
-    if (language == Language.RU) {
-      return hasCyrillic;
-    }
-    return !hasCyrillic;
-  }
-
-  private static boolean isCyrillic(int ch) {
-    return Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC;
-  }
-
-  private static boolean isAsciiLetter(int ch) {
-    return Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN;
   }
 
   /**
@@ -767,7 +721,6 @@ public final class CompletionProvider {
     // GlobalScopeProvider, а не перечисление здесь.
     var selfRef = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
 
-    collectConfigurationNames(query, items);
     collectGlobalProperties(query, items);
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     collectGlobalFunctions(query, items, target);
@@ -822,26 +775,6 @@ public final class CompletionProvider {
         applyCallableInsertText(item, libClassName, true);
         applySortText(item, BUCKET_TYPE, false);
         items.add(item);
-      }
-    }
-  }
-
-  private void collectConfigurationNames(NoDotContext query, List<CompletionItem> items) {
-    // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
-    if (query.fileType() != FileType.OS) {
-      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(),
-        query.language(), query.fileType())) {
-        if (isGenericTemplateName(qualified)) {
-          continue;
-        }
-        if (matches(qualified, query.prefix())) {
-          var item = new CompletionItem(qualified);
-          item.setKind(CompletionItemKind.Module);
-          applySortText(item, BUCKET_TYPE, false);
-          query.ranking().rankType(item, qualified);
-          applyCommitCharacters(item);
-          items.add(item);
-        }
       }
     }
   }
@@ -964,8 +897,6 @@ public final class CompletionProvider {
       }
     }
   }
-
-
 
   /**
    * Вид иконки объявленного метода по его {@link SymbolKind}: обработчик события — Event;
