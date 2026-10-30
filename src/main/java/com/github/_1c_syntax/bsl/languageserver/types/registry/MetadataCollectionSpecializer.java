@@ -344,6 +344,13 @@ public class MetadataCollectionSpecializer {
    */
   private final Map<String, Optional<TypeRef>> resolvedByName = new HashMap<>();
 
+  /**
+   * Коллекции, которые объявляет описание объекта, — маски по {@link #COLLECTIONS} (бит {@code i} —
+   * {@code COLLECTIONS.get(i)}) в рамках одного {@link #specialize()}. Видов описаний немного, а
+   * владельцев — сотни тысяч: реквизиты, табличные части, формы всех объектов конфигурации.
+   */
+  private final Map<TypeRef, Long> declaredCollections = new HashMap<>();
+
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
     for (var spec : COLLECTIONS) {
@@ -377,14 +384,19 @@ public class MetadataCollectionSpecializer {
       return;
     }
 
-    registeredOwners.clear();
-    resolvedByName.clear();
     var mdosByGroup = collectMdosByGroup(configuration.getChildrenByMdoRef().values());
     var counters = new SpecializationCounters();
-    for (var context : providerOpt.get().getContexts()) {
-      if (context instanceof ContextType type) {
-        processOwnerContext(type, mdosByGroup, counters);
+    try {
+      for (var context : providerOpt.get().getContexts()) {
+        if (context instanceof ContextType type) {
+          processOwnerContext(type, mdosByGroup, counters);
+        }
       }
+    } finally {
+      // Нужны только на время обхода, а на большой конфигурации держат сотни тысяч владельцев.
+      registeredOwners.clear();
+      resolvedByName.clear();
+      declaredCollections.clear();
     }
     LOGGER.debug("MetadataCollectionSpecializer: top-level={} nested={}",
       counters.topLevel, counters.nested);
@@ -581,7 +593,7 @@ public class MetadataCollectionSpecializer {
         () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
         FileType.BSL);
     }
-    var overrides = registerOwnerCollections(perOwnerName, owner);
+    var overrides = registerOwnerCollections(perOwnerName, owner, declaredCollections(elementTypeRef));
     if (overrides != null) {
       typeRegistry.registerMemberOverride(perOwnerRef, overrides, FileType.BSL);
     }
@@ -688,16 +700,23 @@ public class MetadataCollectionSpecializer {
    * {@code Метаданные.Документы.Покупатели.Команды} — это
    * {@code КоллекцияОбъектовМетаданных.Команды.Покупатели}, а не общий
    * {@code КоллекцияОбъектовМетаданных}, даже если у документа нет команд.
+   * <p>
+   * Коллекции, которой нет в описании объекта такого вида, у владельца нет и подавно: у
+   * документа нет подсистем, у реквизита — ни одной коллекции.
    *
+   * @param declared маска коллекций, объявленных описанием объекта (см. {@link #declaredCollections(TypeRef)}).
    * @return источник override-members; {@code null}, если ни одной коллекции у owner'а нет.
    */
-  private @Nullable MemberSource registerOwnerCollections(String ownerQualifiedName, MD owner) {
+  private @Nullable MemberSource registerOwnerCollections(String ownerQualifiedName, MD owner, long declared) {
+    if (declared == 0L) {
+      return null;
+    }
     // Суффикс один на объект: его держат источники членов всех коллекций объекта, а на
     // большой конфигурации это миллионы ссылок — копия на каждую стоила бы сотни мегабайт.
     var ownerSuffix = suffixFor(ownerQualifiedName);
     var applied = 0L;
     for (var i = 0; i < COLLECTIONS.size(); i++) {
-      if (processOwnerSpec(COLLECTIONS.get(i), owner, ownerSuffix)) {
+      if ((declared & (1L << i)) != 0 && processOwnerSpec(COLLECTIONS.get(i), owner, ownerSuffix)) {
         applied |= 1L << i;
       }
     }
@@ -782,6 +801,36 @@ public class MetadataCollectionSpecializer {
 
   private Optional<TypeRef> resolveOnce(String name) {
     return resolvedByName.computeIfAbsent(name, typeRegistry::resolve);
+  }
+
+  /**
+   * Коллекции, которые есть у описания объекта: свойство с именем коллекции на ru или en.
+   * Об описании без членов ничего не известно, и коллекции у его владельцев отбираются только
+   * по виду объекта ({@link CollectionSpec#appliesTo()}).
+   *
+   * @param elementTypeRef описание объекта ({@code ОбъектМетаданных: Документ}).
+   * @return маска по {@link #COLLECTIONS}: бит {@code i} — {@code COLLECTIONS.get(i)}.
+   */
+  private long declaredCollections(TypeRef elementTypeRef) {
+    return declaredCollections.computeIfAbsent(elementTypeRef, this::scanDeclaredCollections);
+  }
+
+  private long scanDeclaredCollections(TypeRef elementTypeRef) {
+    var members = typeRegistry.getMembers(elementTypeRef, FileType.BSL);
+    if (members.isEmpty()) {
+      return -1L;
+    }
+    var declared = 0L;
+    for (var i = 0; i < COLLECTIONS.size(); i++) {
+      var spec = COLLECTIONS.get(i);
+      for (var member : members) {
+        if (member.kind() == MemberKind.PROPERTY && (member.matches(spec.ru()) || member.matches(spec.en()))) {
+          declared |= 1L << i;
+          break;
+        }
+      }
+    }
+    return declared;
   }
 
   private void registerSubChildOwners(List<ChildName> children, TypeRef elementRef, String ownerSuffix) {
