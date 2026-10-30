@@ -32,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 
@@ -184,6 +185,11 @@ public abstract class AbstractMethodSymbol implements MethodSymbol {
   @Override
   public Range getRange() {
     return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  @Override
+  public boolean containsPosition(Position position) {
+    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
   }
 
   @Override
