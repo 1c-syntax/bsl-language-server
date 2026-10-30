@@ -24,18 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -135,6 +135,7 @@ public final class CompletionProvider {
   private static final String BUCKET_MEMBER_DEFAULT = "2";
 
   private final TypeService typeService;
+  private final CompilationContextResolver compilationContexts;
   private final GlobalScopeProvider globalScopeProvider;
   private final EventContractsIndex eventContractsIndex;
   private final OScriptLibraryIndex oScriptLibraryIndex;
@@ -366,9 +367,15 @@ public final class CompletionProvider {
    */
   public CompletionList getCompletion(DocumentContext documentContext, CompletionParams params) {
     var position = params.getPosition();
+    var ranking = new CompletionContextRanker(documentContext, position, compilationContexts,
+      typeService);
     var items = isDotCompletion(documentContext, position)
-      ? dotCompletion(documentContext, position)
-      : noDotCompletion(documentContext, position);
+      ? dotCompletion(documentContext, position, ranking)
+      : noDotCompletion(documentContext, position, ranking);
+    if (configuration.getCompletionOptions().isHideUnavailableByContext()) {
+      items = items.stream().filter(item -> !ranking.isUnavailable(item)).toList();
+    }
+    ranking.apply(items, labelDetailsSupport).forEach(this::attachContextDescription);
     return new CompletionList(false, items);
   }
 
@@ -399,8 +406,31 @@ public final class CompletionProvider {
     } else {
       resolveMemberDocumentation(unresolved, data);
     }
+    var contextDescription = data.getContextDescription();
+    if (contextDescription != null) {
+      appendContextDescription(unresolved, contextDescription);
+    }
     unresolved.setData(null);
     return unresolved;
+  }
+
+  /** Сохранить приписку для resolve либо сразу добавить её к уже сформированной документации. */
+  private void attachContextDescription(CompletionItem item, String description) {
+    if (item.getData() instanceof CompletionData data) {
+      data.setContextDescription(description);
+    } else {
+      appendContextDescription(item, description);
+    }
+  }
+
+  /** Контексты идут обычным текстом после назначения метода, без отдельного заголовка в detail. */
+  private void appendContextDescription(CompletionItem item, String description) {
+    var documentation = item.getDocumentation();
+    var original = "";
+    if (documentation != null) {
+      original = documentation.isLeft() ? documentation.getLeft() : documentation.getRight().getValue();
+    }
+    setDocumentation(item, original.isBlank() ? description : (original + "\n\n" + description));
   }
 
   /**
@@ -469,10 +499,14 @@ public final class CompletionProvider {
     if (rawData instanceof CompletionData completionData) {
       return completionData;
     }
+    if (rawData instanceof Map<?, ?>) {
+      return jsonMapper.convertValue(rawData, CompletionData.class);
+    }
     return jsonMapper.readValue(rawData.toString(), CompletionData.class);
   }
 
-  private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {
+  private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position,
+                                            CompletionContextRanker ranking) {
     var dotInfo = dotCompletionInfo(documentContext, position);
     if (dotInfo == null) {
       return List.of();
@@ -525,6 +559,7 @@ public final class CompletionProvider {
       var member = filtered.get(i);
       var bucket = localFieldNames.contains(memberKey(member)) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
       applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
+      ranking.rankDotMember(items.get(i), member);
     }
     return items;
   }
@@ -687,7 +722,8 @@ public final class CompletionProvider {
     return !scope.equals(moduleSymbol) && !scope.equals(enclosingMethod);
   }
 
-  private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {
+  private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position,
+                                              CompletionContextRanker ranking) {
     var lineInfo = currentLineInfo(documentContext, position);
     if (lineInfo == null) {
       return List.of();
@@ -715,35 +751,14 @@ public final class CompletionProvider {
       .map(o -> o.toLowerCase(Locale.ROOT));
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
+    var query = new NoDotContext(documentContext, position, prefix, fileType, scriptVariant,
+      usedLibsLower, ownLibOrigin, ranking);
     if (afterNew) {
-      var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
-      for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(fileType), scriptVariant, fileType)) {
-        if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
-          continue;
-        }
-        if (matches(className, prefix)) {
-          var deprecated = isPlatformClassDeprecated(className, fileType, target);
-          var item = buildPlatformClassCompletionItem(className, fileType, scriptVariant, deprecated);
-          applySortText(item, BUCKET_TYPE, deprecated);
-          items.add(item);
-        }
-      }
-      for (var classEntry : oScriptLibraryIndex.findEntries(OScriptLibraryIndex.EntryKind.CLASS)) {
-        if (!libraryEntryVisible(classEntry, fileType, usedLibsLower, ownLibOrigin)) {
-          continue;
-        }
-        var libClassName = classEntry.qualifiedName();
-        if (matches(libClassName, prefix)) {
-          var item = new CompletionItem(libClassName);
-          item.setKind(CompletionItemKind.Class);
-          // Данных о конструкторе библиотечного класса здесь нет — сохраняем курсор между скобок.
-          applyCallableInsertText(item, libClassName, true);
-          applySortText(item, BUCKET_TYPE, false);
-          items.add(item);
-        }
-      }
+      collectPlatformConstructors(query, items);
+      collectLibraryConstructors(query, items);
       return items;
     }
+
 
     // Self-тип текущего модуля, если платформа моделирует для него экземпляр
     // (реквизиты и платформенные методы вызываются внутри модуля без
@@ -752,65 +767,129 @@ public final class CompletionProvider {
     // GlobalScopeProvider, а не перечисление здесь.
     var selfRef = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
 
+    collectConfigurationNames(query, items);
+    collectGlobalProperties(query, items);
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
+    collectGlobalFunctions(query, items, target);
+    collectLocalMethods(query, items);
+    var declaredLocalNames = collectLocalVariables(query, items);
+
+    selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items, ranking));
+    // Заглушки ещё не объявленных обработчиков платформенных событий owner-типа модуля —
+    // только на уровне модуля (курсор вне тела метода): внутри чужого метода вставка нового
+    // объявления процедуры/функции была бы синтаксически некорректной (аналог «override method»
+    // в других IDE, но для обработчиков платформенных событий 1С).
+    if (enclosingMethod(documentContext, position).isEmpty()) {
+      collectEventHandlerStubs(documentContext, prefix, target, items);
+    }
+
+    collectKeywords(query, items);
+    return items;
+  }
+
+  /** Общие значения одного запроса без точки; язык и видимость библиотек фиксируются один раз. */
+  private record NoDotContext(DocumentContext document, Position position, String prefix, FileType fileType,
+                              Language language, Set<String> usedLibraries, Optional<String> ownLibraryOrigin,
+                              CompletionContextRanker ranking) { }
+
+  private void collectPlatformConstructors(NoDotContext query, List<CompletionItem> items) {
+
+    var target = PlatformMemberVersions.targetCompatibilityMode(query.document(), configuration);
+    for (var className : filterTypeNamesByLanguage(globalScopeProvider.getClasses(query.fileType()), query.language(), query.fileType())) {
+      if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
+        continue;
+      }
+      if (matches(className, query.prefix())) {
+        var deprecated = isPlatformClassDeprecated(className, query.fileType(), target);
+        var item = buildPlatformClassCompletionItem(className, query.fileType(), query.language(), deprecated);
+        applySortText(item, BUCKET_TYPE, deprecated);
+        query.ranking().rankType(item, className);
+        items.add(item);
+      }
+    }
+  }
+
+  private void collectLibraryConstructors(NoDotContext query, List<CompletionItem> items) {
+    for (var classEntry : oScriptLibraryIndex.findEntries(OScriptLibraryIndex.EntryKind.CLASS)) {
+      if (!libraryEntryVisible(classEntry, query.fileType(), query.usedLibraries(), query.ownLibraryOrigin())) {
+        continue;
+      }
+      var libClassName = classEntry.qualifiedName();
+      if (matches(libClassName, query.prefix())) {
+        var item = new CompletionItem(libClassName);
+        item.setKind(CompletionItemKind.Class);
+        // Данных о конструкторе библиотечного класса здесь нет — сохраняем курсор между скобок.
+        applyCallableInsertText(item, libClassName, true);
+        applySortText(item, BUCKET_TYPE, false);
+        items.add(item);
+      }
+    }
+  }
+
+  private void collectConfigurationNames(NoDotContext query, List<CompletionItem> items) {
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
-    if (fileType != FileType.OS) {
-      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), scriptVariant, fileType)) {
+    if (query.fileType() != FileType.OS) {
+      for (var qualified : filterTypeNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(),
+        query.language(), query.fileType())) {
         if (isGenericTemplateName(qualified)) {
           continue;
         }
-        if (matches(qualified, prefix)) {
+        if (matches(qualified, query.prefix())) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
           applySortText(item, BUCKET_TYPE, false);
+          query.ranking().rankType(item, qualified);
           applyCommitCharacters(item);
           items.add(item);
         }
       }
     }
+  }
 
+  private void collectGlobalProperties(NoDotContext query, List<CompletionItem> items) {
     // Глобальные свойства — все VALUE-имена глобальной области (платформенные
     // свойства, перечисления, коллекции, модули).
     // CompletionItemKind выводится из типа-значения. К library-сущностям
     // применяется library-gating (#Использовать / свой пакет / implicit) через
     // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
-    for (var ctx : globalScopeProvider.globalProperties(fileType)) {
-      var name = ctx.name();
-      if (!matches(name, prefix)) {
-        continue;
-      }
-      if (isGenericTemplateName(name)) {
-        continue;
-      }
-      if (!libraryNameVisible(name, fileType, usedLibsLower, ownLibOrigin)) {
+    for (var ctx : globalScopeProvider.globalProperties(query.fileType())) {
+      var name = ctx.displayName(query.language());
+      if (!matches(name, query.prefix()) || isGenericTemplateName(name)
+        || !libraryNameVisible(name, query.fileType(), query.usedLibraries(), query.ownLibraryOrigin())) {
         continue;
       }
       var item = new CompletionItem(name);
-      item.setKind(completionKindForGlobalProperty(ctx, fileType));
+      item.setKind(completionKindForGlobalProperty(ctx, query.fileType()));
       applySortText(item, BUCKET_GLOBAL, false);
+      query.ranking().rankMember(item, ctx);
       applyCommitCharacters(item);
       items.add(item);
     }
+  }
 
+  private void collectGlobalFunctions(NoDotContext query, List<CompletionItem> items, CompatibilityMode target) {
     // Global functions. Один и тот же двуязычный дескриптор зарегистрирован
     // под ru- и en-ключом, поэтому в values() встречается дважды — дедупликация
     // по primary-имени через seenFn.
-    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new HashSet<String>();
-    for (var fn : globalScopeProvider.globalFunctions(fileType)) {
+    for (var fn : globalScopeProvider.globalFunctions(query.fileType())) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
-      var displayName = fn.displayName(scriptVariant);
-      if (matches(displayName, prefix)) {
-        var item = toCompletionItem(fn, fileType, scriptVariant, target, documentContext.getUri());
+      var displayName = fn.displayName(query.language());
+      if (matches(displayName, query.prefix())) {
+        var item = toCompletionItem(fn, query.fileType(), query.language(), target, query.document().getUri());
         applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
+        query.ranking().rankMember(item, fn);
         items.add(item);
       }
     }
+  }
 
+  private void collectLocalMethods(NoDotContext query, List<CompletionItem> items) {
     // Local methods of current document
-    for (var method : documentContext.getSymbolTree().getMethods()) {
-      if (matches(method.getName(), prefix)) {
+    for (var method : query.document().getSymbolTree().getMethods()) {
+      if (matches(method.getName(), query.prefix())) {
         var item = new CompletionItem(method.getName());
         item.setKind(methodCompletionKind(method.getSymbolKind()));
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
@@ -823,17 +902,20 @@ public final class CompletionProvider {
         // его редко вызывают вручную, он не должен теснить процедуры/функции документа.
         applySortText(item, method.getSymbolKind() == SymbolKind.Event ? BUCKET_EVENT_STUB : BUCKET_LOCAL,
           method.isDeprecated());
+        query.ranking().rankLocalMethod(item, method);
         applyCommitCharacters(item);
         items.add(item);
       }
     }
+  }
 
+  private Set<String> collectLocalVariables(NoDotContext query, List<CompletionItem> items) {
     // Local variables of current document — только модульного уровня и текущей
     // области видимости (параметры/локальные переменные метода, в котором стоит
     // курсор); переменные и параметры ДРУГИХ методов документа не видны здесь и
     // не должны предлагаться (см. VariableSymbol.getScope()).
-    var moduleSymbol = documentContext.getSymbolTree().getModule();
-    var enclosingMethod = enclosingMethod(documentContext, position);
+    var moduleSymbol = query.document().getSymbolTree().getModule();
+    var enclosingMethod = enclosingMethod(query.document(), query.position());
     // Имена локальных объявлений, видимых в текущей области, — приоритетнее
     // одноимённого self-члена (см. collectSelfMembers), но только внутри
     // СВОЕГО вида: локальный метод перекрывает self-метод того же имени
@@ -844,15 +926,15 @@ public final class CompletionProvider {
     // в дедупликацию идут все целиком; переменные — только модульного уровня
     // и текущей области (та же видимость, что и в цикле ниже).
     var declaredLocalNames = new HashSet<String>();
-    for (var method : documentContext.getSymbolTree().getMethods()) {
+    for (var method : query.document().getSymbolTree().getMethods()) {
       declaredLocalNames.add(memberKey(MemberKind.METHOD, method.getName()));
     }
-    for (var variable : documentContext.getSymbolTree().getVariables()) {
+    for (var variable : query.document().getSymbolTree().getVariables()) {
       if (isVariableHiddenFromNoDotCompletion(variable, moduleSymbol, enclosingMethod.orElse(null))) {
         continue;
       }
       declaredLocalNames.add(memberKey(MemberKind.PROPERTY, variable.getName()));
-      if (matches(variable.getName(), prefix)) {
+      if (matches(variable.getName(), query.prefix())) {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
         // Тип переменной в detail — в точке курсора: подсказка про то, что переменная
@@ -860,36 +942,30 @@ public final class CompletionProvider {
         // видимости. Инференс идёт только по видимым (модульным + текущего метода)
         // совпавшим с префиксом переменным и кэшируется, так что стоимость — единицы
         // вызовов однократно до прогрева кэша; полезность подсказки её перевешивает.
-        var varTypes = typeService.typesOfVariableAt(variable, position);
-        applyDetail(item, "", formatTypeNames(varTypes, scriptVariant));
+        var varTypes = typeService.typesOfVariableAt(variable, query.position());
+        applyDetail(item, "", formatTypeNames(varTypes, query.language()));
         applySortText(item, BUCKET_LOCAL, false);
         applyCommitCharacters(item);
         items.add(item);
       }
     }
+    return declaredLocalNames;
+  }
 
-    selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items));
-    // Заглушки ещё не объявленных обработчиков платформенных событий owner-типа модуля —
-    // только на уровне модуля (курсор вне тела метода): внутри чужого метода вставка нового
-    // объявления процедуры/функции была бы синтаксически некорректной (аналог «override method»
-    // в других IDE, но для обработчиков платформенных событий 1С).
-    if (enclosingMethod(documentContext, position).isEmpty()) {
-      collectEventHandlerStubs(documentContext, prefix, target, items);
-    }
-
+  private void collectKeywords(NoDotContext query, List<CompletionItem> items) {
     // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
     // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
-    for (var keyword : globalScopeProvider.getKeywords(fileType)) {
-      if (matches(keyword, prefix)) {
+    for (var keyword : globalScopeProvider.getKeywords(query.fileType())) {
+      if (matches(keyword, query.prefix())) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
         applySortText(item, BUCKET_KEYWORD, false);
         items.add(item);
       }
     }
-
-    return items;
   }
+
+
 
   /**
    * Вид иконки объявленного метода по его {@link SymbolKind}: обработчик события — Event;
@@ -1003,7 +1079,8 @@ public final class CompletionProvider {
                                   Set<String> declaredLocalNames,
                                   CompatibilityMode target,
                                   String prefix,
-                                  List<CompletionItem> items) {
+                                  List<CompletionItem> items,
+                                  CompletionContextRanker ranking) {
     var fileType = documentContext.getFileType();
     var scriptVariant = documentContext.getScriptVariantLanguage();
     var typeSet = TypeSet.of(selfRef);
@@ -1030,6 +1107,7 @@ public final class CompletionProvider {
     var selfItems = toCompletionItems(filtered, owners, fileType, scriptVariant, target, documentContext.getUri());
     for (var i = 0; i < filtered.size(); i++) {
       applySortText(selfItems.get(i), BUCKET_SELF, isMemberDeprecated(filtered.get(i), target));
+      ranking.rankMember(selfItems.get(i), filtered.get(i));
     }
     items.addAll(selfItems);
   }
