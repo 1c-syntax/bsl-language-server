@@ -94,11 +94,8 @@ public class SDBLJoinDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
 
     var joinParts = Trees.findAllRuleNodes(ast, SDBLParser.RULE_joinPart);
     for (var ctx : joinParts) {
-      if (ctx instanceof SDBLParser.JoinPartContext joinCtx) {
-        var range = Ranges.create(joinCtx);
-        if (Ranges.containsPosition(range, position)) {
-          return joinCtx;
-        }
+      if (ctx instanceof SDBLParser.JoinPartContext joinCtx && Ranges.containsPosition(joinCtx, position)) {
+        return joinCtx;
       }
     }
     return null;
