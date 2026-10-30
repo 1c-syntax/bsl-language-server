@@ -77,7 +77,7 @@ class DereferenceMemberMatcherReflectionTest {
   private static List<TypeSet> invokeInferArgTypes(DereferenceMemberMatcher matcher,
                                                    MethodCallNode call) {
     var method = findMethod("inferArgTypes");
-    return (List<TypeSet>) method.invoke(matcher, call, null);
+    return (List<TypeSet>) method.invoke(matcher, call, null, null);
   }
 
   private static Method findMethod(String name) {

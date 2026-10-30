@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
@@ -39,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,21 +61,28 @@ public class DereferenceMemberMatcher {
   private final ExpressionTypeInferencer inferencer;
 
   /**
-   * Подобрать члены, к которым обращается выражение {@code ресивер.член} в
-   * позиции курсора. Возвращает по одному {@link TypedMember} на каждый
-   * тип-владелец из union'а ресивера; пустой список, если выражение/тип
-   * ресивера не резолвятся.
+   * Подобрать членов по всем выведенным типам получателя в выбранном режиме.
+   * <p>
+   * Тот же режим применяется к типам аргументов вызова. Подбор идёт по имени и виду члена;
+   * доступность метода при компиляции проверяет потребитель результата.
+   *
+   * @param terminal терминал имени члена в квалифицированном обращении.
+   * @param documentContext документ с AST, которому принадлежит терминал.
+   * @param context режим компиляции или {@code null} для объединения веток.
+   * @return члены с типами владельцев и аргументов; пустой список, если обращение
+   *     или известные типы получателя не найдены.
    */
-  public List<TypedMember> matchAt(TerminalNode terminal, DocumentContext documentContext) {
+  public List<TypedMember> matchAt(TerminalNode terminal, DocumentContext documentContext,
+                                  @Nullable ExecutionContext context) {
     var dereference = DereferenceLocator.locate(terminal);
     if (dereference == null) {
       return List.of();
     }
-    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
+    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext, context);
     if (leftTypes.isEmpty()) {
       return List.of();
     }
-    return matchMembers(terminal, documentContext, dereference.getRight(), leftTypes);
+    return matchMembers(terminal, documentContext, dereference.getRight(), leftTypes, context, true);
   }
 
   /**
@@ -84,20 +93,41 @@ public class DereferenceMemberMatcher {
    *
    * @param terminal терминал-член ({@code ресивер.член}).
    * @param documentContext контекст документа.
+   * @param context режим вывода типов либо {@code null} для объединения веток.
    * @return члены-кандидаты и типы ресивера; {@link MemberMatch#EMPTY}, если
    *     выражение/тип ресивера не резолвятся.
    */
-  public MemberMatch matchWithReceiverAt(TerminalNode terminal, DocumentContext documentContext) {
+  public MemberMatch matchWithReceiverAt(TerminalNode terminal, DocumentContext documentContext,
+                                        @Nullable ExecutionContext context) {
     var dereference = DereferenceLocator.locate(terminal);
     if (dereference == null) {
       return MemberMatch.EMPTY;
     }
-    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
+    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext, context);
     if (leftTypes.isEmpty()) {
       return MemberMatch.EMPTY;
     }
-    var members = matchMembers(terminal, documentContext, dereference.getRight(), leftTypes);
+    var members = matchMembers(terminal, documentContext, dereference.getRight(), leftTypes, context, false);
     return new MemberMatch(members, leftTypes);
+  }
+
+  /**
+   * Найти члены у получателя, тип которого получен через индекс ссылок.
+   *
+   * @param terminal имя члена в квалифицированном обращении.
+   * @param documentContext документ обращения.
+   * @param receiverTypes уже выведенные типы получателя с локальными полями.
+   * @return совпадения и типы получателя без вывода типов аргументов;
+   *     пустой результат, если обращение не распознано.
+   */
+  public MemberMatch matchReceiverAt(TerminalNode terminal, DocumentContext documentContext,
+                                    TypeSet receiverTypes) {
+    var dereference = DereferenceLocator.locate(terminal);
+    if (dereference == null) {
+      return MemberMatch.EMPTY;
+    }
+    return new MemberMatch(matchMembers(terminal, documentContext, dereference.getRight(), receiverTypes, null, false),
+      receiverTypes);
   }
 
   /** Результат {@link #matchWithReceiverAt}: члены-кандидаты и типы ресивера. */
@@ -109,27 +139,35 @@ public class DereferenceMemberMatcher {
    * Типы ресивера для выражения {@code ресивер.член} в позиции терминала:
    * инферит {@code left} и возвращает {@code TypeSet}. Empty, если dereference
    * не локализуется.
+   *
+   * @param documentContext документ обращения.
+   * @param terminal терминал имени члена.
+   * @param context режим компиляции либо {@code null} для объединения веток.
+   * @return типы получателя, возможно пустые; пустой Optional, если обращение не распознано.
    */
-  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, TerminalNode terminal) {
+  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, TerminalNode terminal,
+                                          @Nullable ExecutionContext context) {
     var dereference = DereferenceLocator.locate(terminal);
     if (dereference == null) {
       return Optional.empty();
     }
-    return Optional.of(inferencer.infer(dereference.getLeft(), documentContext));
+    return Optional.of(inferencer.infer(dereference.getLeft(), documentContext, context));
   }
 
   /**
    * Собирает члены с именем {@code terminal} по всем кандидатам-владельцам из
    * {@code leftTypes} (union), сопоставляя по виду (метод/свойство).
+   * Для проверки существования имени вывод типов аргументов не нужен.
    */
   private List<TypedMember> matchMembers(TerminalNode terminal, DocumentContext documentContext,
-                                         BslExpression right, TypeSet leftTypes) {
+                                         BslExpression right, TypeSet leftTypes, @Nullable ExecutionContext context,
+                                         boolean inferArguments) {
     var ctx = new MatchContext(
       (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY,
       terminal.getText(),
       Ranges.create(terminal),
       (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1,
-      (right instanceof MethodCallNode call) ? inferArgTypes(call, documentContext) : List.of(),
+      (inferArguments && right instanceof MethodCallNode call) ? inferArgTypes(call, documentContext, context) : List.of(),
       documentContext.getFileType()
     );
     var result = new ArrayList<TypedMember>();
@@ -195,7 +233,8 @@ public class DereferenceMemberMatcher {
    * пропускаются (как и в {@link #countMeaningfulArgs}), чтобы число
    * типов соответствовало callArgCount.
    */
-  private List<TypeSet> inferArgTypes(MethodCallNode call, DocumentContext documentContext) {
+  private List<TypeSet> inferArgTypes(MethodCallNode call, DocumentContext documentContext,
+                                    @Nullable ExecutionContext context) {
     var args = call.arguments();
     int n = args.size();
     while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
@@ -211,7 +250,7 @@ public class DereferenceMemberMatcher {
         result.add(TypeSet.EMPTY);
         continue;
       }
-      result.add(inferencer.infer(arg, documentContext));
+      result.add(inferencer.infer(arg, documentContext, context));
     }
     return result;
   }

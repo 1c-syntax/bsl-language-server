@@ -72,6 +72,11 @@ public final class SourceBoundRecords<S, V> {
     byUri.remove(uri);
   }
 
+  /** Удалить записи всех документов, например при изменении общих правил расчёта. */
+  public void clear() {
+    byUri.clear();
+  }
+
   private record Entry<S, V>(S source, V value) {
   }
 }
