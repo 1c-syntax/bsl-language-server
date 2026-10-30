@@ -148,4 +148,26 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     assertThat(diagnostics).hasSize(10);
   }
 
+  @Test
+  void testCheckCommentsFalse() {
+    // Test that checkComments works correctly
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("checkComments", false);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(12, 0, 12, 124)
+      .hasRange(40, 0, 40, 140)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      .hasRange(52, 0, 52, 177)
+    ;
+  }
+
 }
