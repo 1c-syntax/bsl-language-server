@@ -61,26 +61,19 @@ public class LocationRepository {
    * конкурентные читатели всегда видят согласованный снимок. Массив вместо
    * {@code ConcurrentHashMap.newKeySet()} убирает ~1 Node на каждое вхождение (на больших
    * проектах — миллионы узлов и сотни МБ).
+   * <p>
+   * Массив отсортирован по началу диапазона ({@link #BY_RANGE_START}): по нему же
+   * {@link #findByPosition} ищет вхождение бинарным поиском, без второй, отсортированной
+   * копии массива и без карты «строка → множество вхождений» (карта с per-строчными
+   * множествами на больших проектах доминировала в потреблении памяти индексом ссылок).
    */
   private final Map<URI, SymbolOccurrence[]> locations = new ConcurrentHashMap<>();
-
-  /**
-   * Вторичный индекс для {@link #findByPosition}: отсортированный по началу
-   * диапазона снимок вхождений документа. Позволяет искать вхождение в позиции
-   * бинарным поиском без построения карты «строка → множество вхождений»
-   * (карта с per-строчными множествами на больших проектах доминировала в
-   * потреблении памяти индексом ссылок).
-   * <p>
-   * Снимок ленивый: сбрасывается при любом изменении вхождений URI
-   * ({@link #replaceOccurrences}, {@link #delete}) и пересобирается при первом следующем поиске.
-   */
-  private final Map<URI, SymbolOccurrence[]> sortedOccurrences = new ConcurrentHashMap<>();
 
   /**
    * Получить все обращения к символам в указанном URI.
    *
    * @param uri URI документа, в котором необходимо найти обращения к символам.
-   * @return Список найденных обращений к символам.
+   * @return Обращения к символам в порядке начала их диапазонов.
    */
   public Stream<SymbolOccurrence> getSymbolOccurrencesByLocationUri(URI uri) {
     return Arrays.stream(locations.getOrDefault(uri, EMPTY_OCCURRENCES));
@@ -88,7 +81,7 @@ public class LocationRepository {
 
   /**
    * Найти вхождение к символу, чей диапазон накрывает позицию. Бинарный поиск
-   * по отсортированному снимку вхождений документа: диапазоны вхождений
+   * по вхождениям документа, отсортированным по началу диапазона: диапазоны вхождений
    * непересекающиеся, поэтому единственный кандидат — вхождение с наибольшим
    * началом диапазона, не превосходящим позицию.
    *
@@ -97,18 +90,12 @@ public class LocationRepository {
    * @return вхождение в позиции либо empty.
    */
   public Optional<SymbolOccurrence> findByPosition(URI uri, Position position) {
-    var sorted = sortedOccurrences.computeIfAbsent(uri, this::sortedSnapshot);
+    var sorted = locations.getOrDefault(uri, EMPTY_OCCURRENCES);
     var index = lastStartingAtOrBefore(sorted, position);
     if (index >= 0 && matches(sorted[index], position)) {
       return Optional.of(sorted[index]);
     }
     return Optional.empty();
-  }
-
-  private SymbolOccurrence[] sortedSnapshot(URI uri) {
-    var snapshot = locations.getOrDefault(uri, EMPTY_OCCURRENCES).clone();
-    Arrays.sort(snapshot, BY_RANGE_START);
-    return snapshot;
   }
 
   /**
@@ -154,9 +141,12 @@ public class LocationRepository {
     if (occurrences.isEmpty()) {
       locations.remove(uri);
     } else {
-      locations.put(uri, occurrences.toArray(EMPTY_OCCURRENCES));
+      var sorted = occurrences.toArray(EMPTY_OCCURRENCES);
+      // Набор собирают несколько обходов дерева разбора, каждый — почти по порядку текста,
+      // и сортировке слиянием остаётся слить эти серии.
+      Arrays.sort(sorted, BY_RANGE_START);
+      locations.put(uri, sorted);
     }
-    sortedOccurrences.remove(uri);
   }
 
   /**
@@ -166,7 +156,6 @@ public class LocationRepository {
    */
   public void delete(URI uri) {
     locations.remove(uri);
-    sortedOccurrences.remove(uri);
   }
 
   /**
@@ -174,6 +163,5 @@ public class LocationRepository {
    */
   public void clear() {
     locations.clear();
-    sortedOccurrences.clear();
   }
 }
