@@ -47,4 +47,13 @@ class JoinWithVirtualTableDiagnosticTest extends AbstractDiagnosticTest<JoinWith
       .hasRange(33, 5, 56);
 
   }
+
+  @Test
+  void testTabularSectionNamedAsVirtualTable() {
+    var diagnostics = getDiagnostics("JoinWithVirtualTableTabularSection");
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(21, 35, 76);
+  }
 }
