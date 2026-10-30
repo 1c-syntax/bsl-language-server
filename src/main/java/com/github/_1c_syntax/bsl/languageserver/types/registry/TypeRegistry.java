@@ -128,14 +128,37 @@ public class TypeRegistry {
 
   /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
   private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
-  /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
-  private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+  /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — имя без учёта регистра. */
+  private final Map<NameKey, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+
+  /**
+   * Имя типа как ключ без учёта регистра. Ключ держит само имя, а не его копию в нижнем
+   * регистре: имён в реестре большой конфигурации сотни тысяч, и копии стоили десятки мегабайт.
+   *
+   * @param name имя в исходном написании.
+   */
+  private record NameKey(String name) {
+
+    @Override
+    public boolean equals(Object other) {
+      return other instanceof NameKey key && name.equalsIgnoreCase(key.name);
+    }
+
+    @Override
+    public int hashCode() {
+      var hash = 0;
+      for (var i = 0; i < name.length(); i++) {
+        hash = 31 * hash + Character.toLowerCase(Character.toUpperCase(name.charAt(i)));
+      }
+      return hash;
+    }
+  }
 
   /**
    * Generic-типы по семейству: часть имени до плейсхолдера ({@code "документссылка"} у
    * {@code "документссылка.<имя документа>"}) → имена типов семейства с их ссылками.
-   * Ведётся вместе с {@link #aliasIndex}, поэтому {@link #resolveGenericByPrefix(String)}
-   * не перебирает индекс имён.
+   * Ведётся вместе с {@link #typeParameters} — дженериком тип объявляет его провайдер, — поэтому
+   * {@link #resolveGenericByPrefix(String)} не перебирает индекс имён.
    */
   private final Map<String, ConcurrentSkipListMap<String, TypeRef>> genericsByFamily = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
@@ -329,8 +352,8 @@ public class TypeRegistry {
     // «Произвольный»/«Arbitrary» — вершина решётки типов. Канонизируем имя в
     // TypeRef.ANY, чтобы по всему движку универсальный тип распознавался
     // сравнением с ANY (без проверки имени). Отображается как «Произвольный».
-    aliasIndex.put("произвольный", TypeRef.ANY);
-    aliasIndex.put("arbitrary", TypeRef.ANY);
+    aliasIndex.put(new NameKey("Произвольный"), TypeRef.ANY);
+    aliasIndex.put(new NameKey("Arbitrary"), TypeRef.ANY);
     registerDisplayName(TypeRef.ANY, BilingualString.of("Произвольный", "Arbitrary"));
   }
 
@@ -349,7 +372,7 @@ public class TypeRegistry {
     if (name == null || name.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(aliasIndex.get(name.toLowerCase(Locale.ROOT)));
+    return Optional.ofNullable(aliasIndex.get(new NameKey(name)));
   }
 
   /**
@@ -394,8 +417,9 @@ public class TypeRegistry {
    * Платформа 1С регистрирует обобщённые типы вида
    * {@code "ДокументСсылка.<Имя документа>"}, {@code "СправочникОбъект.<Имя справочника>"}
    * и т.п. — конкретное имя плейсхолдера в угловых скобках различается для каждого
-   * MDOType. Этот метод выбирает тип, чьё qualifiedName начинается с
-   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство; если их несколько,
+   * MDOType. Этот метод выбирает дженерик (тип, которому провайдер объявил параметры, — см.
+   * {@link #getTypeParameters(TypeRef)}), чьё имя в одном из написаний начинается с
+   * {@code prefix + ".<"} (плейсхолдер), — обычно он один на семейство; если их несколько,
    * первый по имени.
    *
    * @param prefix начальная часть qualifiedName до точки-плейсхолдера
@@ -824,7 +848,7 @@ public class TypeRegistry {
 
   /** Канонический ref по имени; {@code null}, если он же и передан либо алиаса нет. */
   private @Nullable TypeRef canonicalOf(TypeRef ref) {
-    var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+    var canonical = aliasIndex.get(new NameKey(ref.qualifiedName()));
     return canonical != null && !canonical.equals(ref) ? canonical : null;
   }
 
@@ -1582,14 +1606,7 @@ public class TypeRegistry {
       globalContextEpoch.incrementAndGet();
     }
     visibleTypes.values().forEach(typed -> typed.remove(ref));
-    var key = qualifiedName.toLowerCase(Locale.ROOT);
-    aliasIndex.remove(key);
-    forEachGenericFamily(key, (String family) -> {
-      var generics = genericsByFamily.get(family);
-      if (generics != null) {
-        generics.remove(key);
-      }
-    });
+    aliasIndex.remove(new NameKey(qualifiedName));
     collectionTraits.remove(ref);
   }
 
@@ -1661,12 +1678,27 @@ public class TypeRegistry {
     }
   }
 
-  /** Generic-параметры пака: имена плейсхолдеров в qualifiedName типа. */
+  /**
+   * Generic-параметры пака: имена плейсхолдеров в qualifiedName типа. Дженерик заносится и в
+   * {@link #genericsByFamily} — под всеми своими написаниями.
+   */
   private void registerPackTypeParameters(TypePackProvider.TypeDecl decl, TypeRef ref) {
-    if (!decl.typeParameters().isEmpty()) {
-      typeParameters.put(ref, List.copyOf(decl.typeParameters()));
-      genericsByFamilyCore.set(new ConcurrentHashMap<>());
+    if (decl.typeParameters().isEmpty()) {
+      return;
     }
+    typeParameters.put(ref, List.copyOf(decl.typeParameters()));
+    genericsByFamilyCore.set(new ConcurrentHashMap<>());
+    addGenericFamilies(decl.qualifiedName(), ref);
+    if (!decl.name().isEmpty()) {
+      addGenericFamilies(decl.name().ru(), ref);
+      addGenericFamilies(decl.name().en(), ref);
+    }
+  }
+
+  private void addGenericFamilies(String name, TypeRef ref) {
+    var key = name.toLowerCase(Locale.ROOT);
+    forEachGenericFamily(key, (String family) ->
+      genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
   }
 
   /**
@@ -1677,7 +1709,7 @@ public class TypeRegistry {
   public String displayName(TypeRef ref, Language language) {
     var bn = displayNames.get(ref);
     if (bn == null) {
-      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+      var canonical = aliasIndex.get(new NameKey(ref.qualifiedName()));
       if (canonical != null) {
         bn = displayNames.get(canonical);
       }
@@ -1935,10 +1967,7 @@ public class TypeRegistry {
   }
 
   private void addAlias(String name, TypeRef ref) {
-    var key = name.toLowerCase(Locale.ROOT);
-    aliasIndex.put(key, ref);
-    forEachGenericFamily(key, (String family) ->
-      genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
+    aliasIndex.put(new NameKey(name), ref);
   }
 
   /**
