@@ -28,6 +28,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Collections;
@@ -52,9 +53,10 @@ public class ParameterDefinition {
   boolean byValue;
 
   /**
-   * Описание параметра.
+   * Описание параметра; {@code null}, если его нет.
    */
-  Optional<ParameterDescription> description;
+  @Getter(AccessLevel.NONE)
+  @Nullable ParameterDescription description;
 
   /**
    * Значение по умолчанию.
@@ -72,6 +74,13 @@ public class ParameterDefinition {
   int endLine;
   @Getter(AccessLevel.NONE)
   int endCharacter;
+
+  /**
+   * Описание параметра.
+   */
+  public Optional<ParameterDescription> getDescription() {
+    return Optional.ofNullable(description);
+  }
 
   /**
    * Место объявления параметра.
@@ -103,6 +112,11 @@ public class ParameterDefinition {
   }
 
   public static class ParameterDefinitionBuilder {
+
+    public ParameterDefinitionBuilder description(Optional<ParameterDescription> description) {
+      this.description = description.orElse(null);
+      return this;
+    }
 
     public ParameterDefinitionBuilder range(Range range) {
       var start = range.getStart();
