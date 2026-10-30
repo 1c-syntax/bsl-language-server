@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -141,6 +142,18 @@ public class EventPublisherAspect {
     var documentContext = (DocumentContext) joinPoint.getThis();
     publishEvent(new DocumentContextContentChangedEvent(
       documentContext, documentContext.isContentChangedOnLastRebuild()));
+  }
+
+  @AfterReturning(
+    pointcut = "Pointcuts.isServerContext() && Pointcuts.isRebindDocumentCall() && args(documentContext)",
+    returning = "symbolTreeRebuilt"
+  )
+  public void documentContextRebound(DocumentContext documentContext, boolean symbolTreeRebuilt) {
+    // Без нового дерева пересчитывать по документу нечего: следующий его разбор считается
+    // правкой и пересчитает всё сам.
+    if (symbolTreeRebuilt) {
+      publishEvent(new DocumentContextConfigurationBindingChangedEvent(documentContext));
+    }
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
