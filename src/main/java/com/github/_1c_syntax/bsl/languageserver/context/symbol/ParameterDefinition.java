@@ -47,11 +47,6 @@ public class ParameterDefinition {
   String name;
 
   /**
-   * Передача параметра по значению.
-   */
-  boolean byValue;
-
-  /**
    * Описание параметра.
    */
   Optional<ParameterDescription> description;
@@ -64,20 +59,30 @@ public class ParameterDefinition {
   @Builder.Default
   List<Annotation> annotations = Collections.emptyList();
 
+  /**
+   * Строка места объявления, а в знаке — способ передачи: у параметра «Знач» строка хранится
+   * как {@code ~line}. Место — один токен, поэтому строка конца совпадает со строкой начала.
+   */
   @Getter(AccessLevel.NONE)
-  int startLine;
+  int signedLine;
   @Getter(AccessLevel.NONE)
   int startCharacter;
   @Getter(AccessLevel.NONE)
-  int endLine;
-  @Getter(AccessLevel.NONE)
   int endCharacter;
+
+  /**
+   * Передача параметра по значению.
+   */
+  public boolean isByValue() {
+    return signedLine < 0;
+  }
 
   /**
    * Место объявления параметра.
    */
   public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+    var line = signedLine < 0 ? ~signedLine : signedLine;
+    return Ranges.create(line, startCharacter, line, endCharacter);
   }
 
   public boolean isOptional() {
@@ -104,13 +109,25 @@ public class ParameterDefinition {
 
   public static class ParameterDefinitionBuilder {
 
+    private boolean byValue;
+    private int line;
+
+    public ParameterDefinitionBuilder byValue(boolean byValue) {
+      this.byValue = byValue;
+      signedLine = byValue ? ~line : line;
+      return this;
+    }
+
+    /**
+     * @param range место объявления — один токен, в пределах одной строки.
+     * @return этот же построитель.
+     */
     public ParameterDefinitionBuilder range(Range range) {
       var start = range.getStart();
-      var end = range.getEnd();
-      startLine = start.getLine();
+      line = start.getLine();
+      signedLine = byValue ? ~line : line;
       startCharacter = start.getCharacter();
-      endLine = end.getLine();
-      endCharacter = end.getCharacter();
+      endCharacter = range.getEnd().getCharacter();
 
       return this;
     }
