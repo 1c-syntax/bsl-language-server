@@ -112,4 +112,18 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
     assertThat(diagnostics, true)
       .hasRange(8, 13, 8, 18);
   }
+
+  @Test
+  void testConfigureUserWordsToIgnoreAsList() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("userWordsToIgnore", List.of("Варинаты", "Атмена"));
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(8, 13, 8, 18);
+  }
 }
