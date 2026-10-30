@@ -72,6 +72,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private final Set<VariableSymbol> variables = new HashSet<>();
   private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  private final Map<String, String> declaredModuleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   private SourceDefinedSymbol currentMethod;
   private @Nullable Predicate<String> bareSelfProperties;
@@ -91,6 +92,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     bareSelfProperties = null;
     variables.clear();
     moduleVariables.clear();
+    declaredModuleVariables.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(variables);
   }
@@ -114,6 +116,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .build();
     variables.add(symbol);
     moduleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
+    declaredModuleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
     return ctx;
   }
 
@@ -185,7 +188,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       ctx.getChildCount() > 1
       || ctx.IDENTIFIER() == null
       || currentMethodVariables.containsKey(ctx.getText())
-      || moduleVariables.containsKey(ctx.getText())
+      || isVisibleModuleVariable(ctx.getText())
       // Голое присваивание одноимённому self-реквизиту (без Перем) — это обращение к
       // реквизиту объекта/набора записей/менеджера, а не отдельная переменная: символ не
       // заводим. Имя резолвит self-член machinery (инференсер, PlatformMemberReferenceFinder,
@@ -205,7 +208,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+      || isVisibleModuleVariable(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForStatement(ctx);
     }
@@ -222,13 +225,25 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+      || isVisibleModuleVariable(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForEachStatement(ctx);
     }
 
     updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
     return super.visitForEachStatement(ctx);
+  }
+
+  /**
+   * Заведена ли уже переменная модуля с этим именем, видимая в текущей точке. В теле
+   * модуля видна любая; в методе — только объявленная {@code Перем}: переменная, созданная
+   * присваиванием в теле модуля, живёт в нём одном, и одноимённое присваивание в методе
+   * заводит переменную метода.
+   */
+  private boolean isVisibleModuleVariable(String name) {
+    return currentMethod == module
+      ? moduleVariables.containsKey(name)
+      : declaredModuleVariables.containsKey(name);
   }
 
   /**
