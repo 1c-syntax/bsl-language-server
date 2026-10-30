@@ -575,7 +575,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param progress      ход работы.
    */
   private void drainPending(ServerContext serverContext, ResolveProgress progress) {
-    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
+    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty() && !serverContext.isBackgroundWorkStopped(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
       progress.plan(documentsOf(roots));
@@ -715,12 +715,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     Map<URI, List<MethodSymbol>> byDocument,
     List<MethodSymbol> methods
   ) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      // Рабочую область закрывают и ждут, пока проход закончится.
+      return;
+    }
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
+      for (var pass = 0; pass < MAX_PASSES && !serverContext.isBackgroundWorkStopped(); pass++) {
         var changed = false;
         for (var method : methods) {
           changed |= recompute(method);
@@ -777,7 +781,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     ResolveProgress progress,
     int pass
   ) {
-    if (pass >= MAX_PASSES || changedLastPass.isEmpty()) {
+    if (pass >= MAX_PASSES || changedLastPass.isEmpty() || serverContext.isBackgroundWorkStopped()) {
       return CompletableFuture.completedFuture(null);
     }
     var dispatch = new PassDispatch(serverContext, component, byDocument, changedLastPass, progress, pass == 0);
@@ -1132,7 +1136,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
     @Override
     boolean isNeeded(int item) {
-      return true;
+      return !serverContext.isBackgroundWorkStopped();
     }
 
     @Override
@@ -1209,6 +1213,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
     @Override
     boolean isNeeded(int item) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        // Такой цикл считается секундами: остановка не ждёт его конца.
+        return false;
+      }
       var uri = component.get(item);
       var needed = changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri));
       if (needed && !planned) {
@@ -1266,6 +1274,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
      */
     @Override
     void spare() {
+      if (serverContext.isBackgroundWorkStopped()) {
+        return;
+      }
       while (preloads.size() < MAX_DOCUMENTS_IN_MEMORY - 1 && nextCertain < certain.size()) {
         int item = certain.get(nextCertain);
         if (!isPending(item)) {
@@ -1300,7 +1311,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     private CompletableFuture<Boolean> preload(DocumentContext documentContext) {
       try {
         return CompletableFuture
-          .supplyAsync(() -> loadIfReleased(documentContext), resolveReturnTypesExecutor)
+           .supplyAsync(() -> !serverContext.isBackgroundWorkStopped() && loadIfReleased(documentContext),
+             resolveReturnTypesExecutor)
           .exceptionally((Throwable e) -> {
             // Не разобрался впереди — разберётся на месте, как без этого разбора.
             LOGGER.warn("Can't preload document {}", documentContext.getUri(), e);
@@ -1435,6 +1447,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если хоть у одного метода набор типов изменился.
    */
   private boolean recomputeLoading(ServerContext serverContext, List<MethodSymbol> methods) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      return false;
+    }
     var documentContext = methods.get(0).getOwner();
     var lock = serverContext.getDocumentLock(documentContext.getUri());
     lock.readLock().lock();
@@ -1486,7 +1501,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     provisional.addAll(methods);
+    var serverContext = methods.get(0).getOwner().getServerContext();
     for (var method : methods) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        // В большом общем модуле функций сотни: остановка не ждёт конца документа.
+        break;
+      }
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
       // ушёл бы в отложенные — очередь не сходилась бы.

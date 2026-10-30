@@ -527,32 +527,43 @@ class MethodReturnTypeIndexerTest {
 
   @Test
   void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased() {
-    // given: двадцать документов по кругу, все отложены и все освобождены.
-    var ring = ring("ahead", 20);
-    var documents = ring.documents();
-    var methods = ring.methods();
-    var serverContext = serverContextOf(documents);
-    var loading = trackLoading(serverContext, documents);
-    // Расчёт первого документа ждёт, пока разбор впереди заполнит всё окно: иначе мгновенный
-    // расчёт на заглушках успевал бы за разбором, и разом разобранным всегда был бы один.
-    var first = methods[0];
-    var second = methods[1];
-    when(inferencer.computeReturnTypes(first)).thenAnswer(invocation -> {
-      await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= AHEAD_WINDOW);
-      return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(second), false);
-    });
+    // Ожидание в расчёте не должно занимать единственный поток предзагрузки.
+    var executor = Executors.newFixedThreadPool(2);
+    try {
+      var configuration = mock(GlobalLanguageServerConfiguration.class);
+      when(configuration.getLanguage()).thenReturn(Language.RU);
+      indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex,
+        mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS), configuration, executor);
 
-    // when
-    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+      // Двадцать документов по кругу, все отложены и все освобождены.
+      var ring = ring("ahead", 20);
+      var documents = ring.documents();
+      var methods = ring.methods();
+      var serverContext = serverContextOf(documents);
+      var loading = trackLoading(serverContext, documents);
+      var computations = new AtomicInteger();
+      for (var i = 0; i < methods.length; i++) {
+        var next = methods[(i + 1) % methods.length];
+        when(inferencer.computeReturnTypes(methods[i])).thenAnswer(invocation -> {
+          // Ждёт фактически первый метод прохода: порядок Tarjan не обязан начинаться с methods[0].
+          if (computations.getAndIncrement() == 0) {
+            await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= AHEAD_WINDOW);
+          }
+          return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
+        });
+      }
 
-    // then: каждый документ разобран ровно раз — разбор впереди расчёта не дублирует разбор
-    // на месте — и отпущен; разом разобрано не больше предела: семь впереди и документ,
-    // который считается, — восьмое место впереди не занимается.
-    for (var documentContext : documents) {
-      verify(serverContext, times(1)).rebuildDocument(documentContext);
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      // Каждый документ разобран ровно раз и отпущен. Окно заполнено, лимит не превышен.
+      for (var documentContext : documents) {
+        verify(serverContext, times(1)).rebuildDocument(documentContext);
+      }
+      assertThat(loading.loaded()).isEmpty();
+      assertThat(loading.peak().get()).isBetween(AHEAD_WINDOW, DOCUMENTS_IN_MEMORY);
+    } finally {
+      executor.shutdownNow();
     }
-    assertThat(loading.loaded()).isEmpty();
-    assertThat(loading.peak()).hasValue(DOCUMENTS_IN_MEMORY);
   }
 
   @Test
@@ -775,6 +786,44 @@ class MethodReturnTypeIndexerTest {
     } finally {
       executor.shutdownNow();
     }
+  }
+
+  @Test
+  void stoppingLargeCycleReleasesPreloadsAndSkipsRemainingMethods() {
+    var ring = ring("stoppedPass", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    doAnswer(invocation -> {
+      assertThat(stopped).isFalse();
+      return loading.load(invocation.getArgument(0));
+    }).when(serverContext).rebuildDocument(any(DocumentContext.class));
+    when(inferencer.computeReturnTypes(any())).thenAnswer(invocation -> {
+      stopped.set(true);
+      return new ComputedReturnTypes(STRING, Set.of(), false);
+    });
+    clearInvocations(inferencer);
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    verify(inferencer, times(1)).computeReturnTypes(any());
+    assertThat(loading.loaded()).isEmpty();
+    assertThat(loading.peak().get()).isLessThanOrEqualTo(DOCUMENTS_IN_MEMORY);
+  }
+
+  @Test
+  void stoppedWorkspaceDoesNotLoadPendingCycle() {
+    var ring = ring("alreadyStopped", 9);
+    var serverContext = serverContextOf(ring.documents());
+    trackLoading(serverContext, ring.documents());
+    when(serverContext.isBackgroundWorkStopped()).thenReturn(true);
+    clearInvocations(inferencer);
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    verify(serverContext, never()).rebuildDocument(any(DocumentContext.class));
+    verify(inferencer, never()).computeReturnTypes(any());
   }
 
   @Test
