@@ -5,18 +5,14 @@ import org.jreleaser.model.Active.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-buildscript {
-    configurations.classpath {
-        resolutionStrategy.force("org.eclipse.jgit:org.eclipse.jgit:5.13.3.202401111512-r")
-    }
-}
-
 plugins {
     `java-library`
     `maven-publish`
     jacoco
     id("com.diffplug.spotless") version "7.0.4"
-    id("me.qoomon.git-versioning") version "7.0.0"
+    // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
+    // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
+    id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.8.2"
     id("io.freefair.javadoc-links") version "9.8.2"
     id("io.freefair.javadoc-utf-8") version "9.8.2"
