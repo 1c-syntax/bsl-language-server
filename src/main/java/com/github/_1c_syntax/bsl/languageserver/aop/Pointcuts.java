@@ -206,6 +206,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода initialized.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* initialized(..))")
+  public void isInitializedCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода addWorkspace.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* addWorkspace(..))")
