@@ -31,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -309,6 +311,21 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     assertThat(catRef).isPresent();
     var catMembers = typeRegistry.getMembers(catRef.get(), FileType.BSL).stream().map(m -> m.name()).toList();
     assertThat(catMembers).isNotEmpty().doesNotContain("ОбщийРеквизит1");
+  }
+
+  @ParameterizedTest
+  @CsvSource({"Справочник, Catalog, Справочник1", "Документ, Document, Документ1"})
+  void tabularSectionDisplayNamesPreserveNameAndDistinguishRow(String prefixRu, String prefixEn, String owner) {
+    var suffix = "." + owner + ".ТабличнаяЧасть1";
+    var collection = typeRegistry.resolve(prefixRu + "ТабличнаяЧасть" + suffix).orElseThrow();
+    var row = typeRegistry.resolve(prefixRu + "ТабличнаяЧастьСтрока" + suffix).orElseThrow();
+
+    assertThat(typeRegistry.resolve(prefixEn + "TabularSection" + suffix)).contains(collection);
+    assertThat(typeRegistry.resolve(prefixEn + "TabularSectionRow" + suffix)).contains(row);
+    assertThat(typeService.displayName(collection, Language.RU)).isEqualTo("ТабличнаяЧасть1");
+    assertThat(typeService.displayName(collection, Language.EN)).isEqualTo("ТабличнаяЧасть1");
+    assertThat(typeService.displayName(row, Language.RU)).isEqualTo("ТабличнаяЧасть1 (строка)");
+    assertThat(typeService.displayName(row, Language.EN)).isEqualTo("ТабличнаяЧасть1 (row)");
   }
 
   @Test
