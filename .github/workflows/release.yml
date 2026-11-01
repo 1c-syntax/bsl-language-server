@@ -1,7 +1,8 @@
 name: Make image
 
 # Release flow:
-# 1. Push a tag `vX.Y.Z` and create a *draft* release for it (in any order).
+# 1. Push a tag and create a *draft* release for it (in any order):
+#    `vX.Y.Z` must be a release, `vX.Y.Z-rc.N` (any suffix) must be marked as a pre-release.
 # 2. This workflow builds all artifacts on the tag.
 # 3. The `publish-release` job attaches them to the draft release and only then publishes it.
 # 4. Maven Central and Docker Hub publications are started after the release is published.
@@ -63,6 +64,7 @@ jobs:
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
+                overwrite: true
 
             - name: Upload release asset (image archive)
               uses: actions/upload-artifact@v7
@@ -70,6 +72,7 @@ jobs:
                 name: release-assets-${{ matrix.prefix }}
                 path: ./bsl-language-server_${{ matrix.prefix }}.zip
                 if-no-files-found: error
+                overwrite: true
 
             - name: Build with Gradle
               if: matrix.prefix == 'nix'
@@ -82,6 +85,7 @@ jobs:
                 name: release-assets-jars
                 path: ./build/libs/*.jar
                 if-no-files-found: error
+                overwrite: true
 
     publish-release:
         needs: build
@@ -102,24 +106,35 @@ jobs:
                 merge-multiple: true
                 path: dist
 
-            - name: Find release for tag
-              id: release
+            - name: Attach assets and publish release
               run: |
-                if ! IS_DRAFT=$(gh release view "$TAG" --json isDraft --jq '.isDraft'); then
+                if ! RELEASE=$(gh release view "$TAG" --json isDraft,isPrerelease); then
                   echo "::error::Release for tag $TAG not found. Create a draft release for this tag and re-run failed jobs."
                   exit 1
                 fi
-                echo "is-draft=${IS_DRAFT}" >> "$GITHUB_OUTPUT"
-                echo "Release for $TAG found, draft: ${IS_DRAFT}"
+                IS_DRAFT=$(jq -r '.isDraft' <<< "$RELEASE")
+                IS_PRERELEASE=$(jq -r '.isPrerelease' <<< "$RELEASE")
+                echo "Release for $TAG found: $RELEASE"
 
-            - name: Upload assets to release
-              run: |
+                # vX.Y.Z is a release, anything with a suffix (vX.Y.Z-rc.N) is a pre-release
+                if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                  EXPECTED_PRERELEASE=false
+                else
+                  EXPECTED_PRERELEASE=true
+                fi
+                if [[ "$IS_PRERELEASE" != "$EXPECTED_PRERELEASE" ]]; then
+                  echo "::error::Release $TAG has prerelease=$IS_PRERELEASE, but its tag requires prerelease=$EXPECTED_PRERELEASE. Fix the 'Set as a pre-release' flag of the release and re-run failed jobs."
+                  exit 1
+                fi
+
                 ls -l dist
                 gh release upload "$TAG" dist/* --clobber
 
-            - name: Publish release
-              if: steps.release.outputs.is-draft == 'true'
-              run: gh release edit "$TAG" --draft=false
+                if [[ "$IS_DRAFT" == "true" ]]; then
+                  gh release edit "$TAG" --draft=false
+                else
+                  echo "::notice::Release $TAG is already published, assets were updated"
+                fi
 
     publish-to-maven-central:
         needs: publish-release

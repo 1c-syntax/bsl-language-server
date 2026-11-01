@@ -42,8 +42,13 @@ jobs:
           VERSION="${{ steps.version.outputs.VERSION }}"
           echo "Pushing image with version tag: ${VERSION}"
           docker push 1csyntax/bsl-language-server:${VERSION}
-          docker tag 1csyntax/bsl-language-server:${VERSION} 1csyntax/bsl-language-server:latest
-          docker push 1csyntax/bsl-language-server:latest
+          # "latest" points to releases only, pre-releases (X.Y.Z-rc.N) get the version tag only
+          if [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            docker tag 1csyntax/bsl-language-server:${VERSION} 1csyntax/bsl-language-server:latest
+            docker push 1csyntax/bsl-language-server:latest
+          else
+            echo "Pre-release version, skipping latest tag"
+          fi
       - name: Tag and push Docker image (develop)
         if: github.ref == 'refs/heads/develop'
         run: |
