@@ -718,6 +718,16 @@
             "title": "Executing of external code in a common module on the server",
             "$id": "#/definitions/ExecuteExternalCodeInCommonModule"
         },
+        "ExportMethodPrivilegedMode": {
+            "description": "Privileged mode in exported method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Privileged mode in exported method",
+            "$id": "#/definitions/ExportMethodPrivilegedMode"
+        },
         "ExportVariables": {
             "description": "Ban export global module variables",
             "default": true,
