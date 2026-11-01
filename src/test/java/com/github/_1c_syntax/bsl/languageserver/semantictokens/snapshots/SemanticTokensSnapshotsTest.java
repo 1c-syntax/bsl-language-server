@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens.snapshots;
 
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokenTypes;
@@ -67,9 +66,6 @@ class SemanticTokensSnapshotsTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private SemanticTokensLegend legend;
-
-  @Autowired
-  private OScriptLibraryIndex libraryIndex;
 
   private final SemanticTokensSnapshotRenderer renderer = new SemanticTokensSnapshotRenderer(font(), true);
   private final SnapshotWriter writer = new SnapshotWriter();
@@ -116,9 +112,8 @@ class SemanticTokensSnapshotsTest extends AbstractServerContextAwareTest {
 
   private Highlighted highlight(Path fixture) {
     // Каталог фикстур — workspace: библиотеки OneScript из его oscript_modules
-    // индексируются до разбора фикстуры, как при открытии проекта в редакторе.
+    // подключаются при добавлении workspace, как при открытии проекта в редакторе.
     initServerContext(FIXTURES.toAbsolutePath(), false);
-    libraryIndex.reindex(context);
     var documentContext = TestUtils.getDocumentContextFromFile(fixture.toString(), context);
     var params = new SemanticTokensParams(TestUtils.getTextDocumentIdentifier(documentContext.getUri()));
     var semanticTokens = provider.getSemanticTokensFull(documentContext, params);
