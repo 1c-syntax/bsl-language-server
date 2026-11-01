@@ -52,6 +52,8 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
 
   private static final String MODULE =
     PATH_TO_METADATA + "/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String ONESCRIPT_LIBRARY_WORKSPACE =
+    "src/test/resources/oscript-libraries/internal-classes-test";
 
   @Autowired
   private SemanticTokensProvider provider;
@@ -142,6 +144,30 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     } finally {
       context.removeDocument(documentContext.getUri());
     }
+  }
+
+  @Test
+  void libraryClassConstructorCallDoesNotOverlapWithTypeToken() {
+    // given — workspace OneScript с библиотекой в oscript_modules; у класса библиотеки
+    // есть конструктор ПриСозданииОбъекта, на который ссылается `Новый PublicEntity()`.
+    initServerContext(Path.of(ONESCRIPT_LIBRARY_WORKSPACE).toAbsolutePath(), false);
+    var content = """
+      #Использовать internal-classes-lib
+      Сущность = Новый PublicEntity();
+      """;
+    var documentContext =
+      TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — имя типа после `Новый` размечается одним токеном.
+    assertThat(overlaps)
+      .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+      .isEmpty();
   }
 
   private String describe(List<TokenOverlaps.TokenOverlap> overlaps, DocumentContext documentContext) {
