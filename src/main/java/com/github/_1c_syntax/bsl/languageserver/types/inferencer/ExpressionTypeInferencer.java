@@ -26,9 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -133,6 +136,7 @@ public class ExpressionTypeInferencer {
   private static final TypeRef NULL = new TypeRef(TypeKind.PRIMITIVE, "Null");
 
   private final TypeRegistry typeRegistry;
+  private final CompilationContextResolver compilationContextResolver;
   private final SymbolTypeIndex symbolTypeIndex;
   private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private final TableCollectionInference tableCollectionInference;
@@ -181,9 +185,31 @@ public class ExpressionTypeInferencer {
    * Вывести типы выражения в контексте документа.
    */
   public TypeSet infer(BslExpression expression, DocumentContext documentContext) {
-    var ctx = new InferenceContext(documentContext);
+    return infer(expression, documentContext, null);
+  }
+
+  /**
+   * Вывести тип выражения для выбранного контекста компиляции.
+   * <p>
+   * Недостижимые ветки препроцессора исключаются из расчёта переменных и возвращаемых значений.
+   * При переходе в другой метод учитывается его целевой контекст, включая серверный вызов.
+   * Результаты для конкретного режима не записываются в общий кеш выражений и общий индекс
+   * возвращаемых типов; окружения потока хранятся отдельно по режимам.
+   * <p>
+   * Если AST вызываемой функции уже выгружен, используется известный индексу результат
+   * без ограничения контекста. Запрос не загружает её исходник заново ради уточнения.
+   *
+   * @param expression выражение из текущего AST документа.
+   * @param documentContext документ, которому принадлежит выражение.
+   * @param executionContext режим компиляции или {@code null} для возможных режимов в позиции выражения.
+   * @return выведенные типы; пустой набор при отсутствии результата или срыве расчёта.
+   *     Пустой набор сам по себе не доказывает недоступность вызова.
+   */
+  public TypeSet infer(BslExpression expression, DocumentContext documentContext,
+                       @Nullable ExecutionContext executionContext) {
+    var ctx = new InferenceContext(documentContext, executionContext);
     try {
-      return inferInternal(expression, ctx);
+      return inferInternal(expression, ctx, true);
     } catch (StackOverflowError | RuntimeException e) {
       // Сорвавшийся расчёт отдаёт пустой тип — анализ из-за одного выражения падать не
       // должен. Но молча это делать нельзя: снаружи пустой тип неотличим от честного
@@ -203,7 +229,7 @@ public class ExpressionTypeInferencer {
    * @return объявленные и выведенные типы возвращаемого значения.
    */
   public TypeSet inferReturnTypes(MethodSymbol method) {
-    return methodReturnType(method, new InferenceContext(method.getOwner()));
+    return methodReturnType(method, InferenceContext.neutral(method.getOwner()));
   }
 
   // ---------------------------------------------------------------------------
@@ -211,22 +237,20 @@ public class ExpressionTypeInferencer {
   // ---------------------------------------------------------------------------
 
   private TypeSet inferInternal(BslExpression node, InferenceContext ctx) {
+    return inferInternal(node, ctx, false);
+  }
+
+  /**
+   * Входной запрос наследует контекст вызывающего метода даже вне инструкций препроцессора.
+   * Индексация возвращаемых типов использует общий результат объявления; она не должна
+   * фиксировать его по контексту одного вызывающего. Кеш выражения остаётся общим для
+   * позиционных запросов, а вычисления внутри выбранного режима используют отдельные окружения.
+   */
+  private TypeSet inferInternal(BslExpression node, InferenceContext ctx, boolean useCallerContext) {
     if (node == null || ctx.depth >= MAX_DEPTH) {
       return TypeSet.EMPTY;
     }
-
-    // Кэшируем результат узла только для «чистого корня» инференса — вне
-    // рекурсии символов (visited/inProgress пусты). Это гарантирует и
-    // контекст-независимость результата, и принадлежность узла текущему
-    // документу (кросс-модульный спуск всегда идёт уже после резолва символа,
-    // т.е. при непустом visited), поэтому ключ по URI корректен.
-    // Идущий расчёт по потоку — такая же нечистота: пока он не дошёл до неподвижной
-    // точки, тип переменной в точке слияния ещё приближение, и посчитанный от него тип
-    // выражения запоминать нельзя. Правая часть каждого присваивания считается как раз
-    // изнутри расчёта, поэтому без этой проверки в кэш оседало промежуточное значение.
-    var cacheKey = ctx.visited.isEmpty() && ctx.inProgress.isEmpty() && !ctx.flowSession.computing()
-      ? node.getRepresentingAst()
-      : null;
+    var cacheKey = cacheKeyFor(node, ctx);
     var uri = ctx.documentContext.getUri();
     if (cacheKey != null) {
       var cached = inferredExpressionTypeIndex.get(uri, cacheKey);
@@ -234,20 +258,9 @@ public class ExpressionTypeInferencer {
         return cached;
       }
     }
-
     ctx.depth++;
     try {
-      var result = switch (node.getNodeType()) {
-        case LITERAL -> inferLiteral(node);
-        case IDENTIFIER -> inferIdentifier(node, ctx);
-        case CALL -> inferCall(node, ctx);
-        case BINARY_OP -> inferBinary((BinaryOperationNode) node, ctx);
-        case UNARY_OP -> inferUnary((UnaryOperationNode) node);
-        case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
-        case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
-      };
-      // Результат, полученный с обрывом цикла, зависит от точки входа в него и
-      // потому не годится в кэш: вход с другой стороны цикла даст другой набор.
+      var result = inferWithContexts(node, ctx, useCallerContext);
       if (cacheKey != null && !ctx.cycleCut && !ctx.bodyInFlowCut) {
         inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies);
       }
@@ -255,6 +268,47 @@ public class ExpressionTypeInferencer {
     } finally {
       ctx.depth--;
     }
+  }
+
+  /**
+   * Общий кеш принимает только корневой запрос без текущих приближений и ограничения режима.
+   * При рекурсии символов узел может принадлежать чужому документу, а во время расчёта потока
+   * тип переменной ещё меняется. Эти результаты нельзя сохранять под URI исходного запроса.
+   */
+  private static @Nullable ParseTree cacheKeyFor(BslExpression node, InferenceContext ctx) {
+    return ctx.executionContext == null && ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
+      && !ctx.flowSession.computing() ? node.getRepresentingAst() : null;
+  }
+
+  private TypeSet inferWithContexts(BslExpression node, InferenceContext ctx, boolean useCallerContext) {
+    var narrowed = expressionContexts(node, ctx, useCallerContext);
+    if (narrowed.isPresent()) {
+      return inferInContexts(narrowed.orElseThrow(), ctx, nested -> inferInternal(node, nested));
+    }
+    return inferNode(node, ctx);
+  }
+
+  private Optional<Set<ExecutionContext>> expressionContexts(BslExpression node, InferenceContext ctx,
+                                                           boolean useCallerContext) {
+    var ast = node.getRepresentingAst();
+    if (ctx.executionContext != null || ast == null || node.getNodeType() == ExpressionNodeType.LITERAL) {
+      return Optional.empty();
+    }
+    var position = Ranges.create(ast).getStart();
+    return useCallerContext ? queryContextsAt(ctx.documentContext, ast, position)
+      : compilationContextResolver.narrowedContextsAt(ctx.documentContext, ast, position);
+  }
+
+  private TypeSet inferNode(BslExpression node, InferenceContext ctx) {
+    return switch (node.getNodeType()) {
+      case LITERAL -> inferLiteral(node);
+      case IDENTIFIER -> inferIdentifier(node, ctx);
+      case CALL -> inferCall(node, ctx);
+      case BINARY_OP -> inferBinary((BinaryOperationNode) node, ctx);
+      case UNARY_OP -> inferUnary((UnaryOperationNode) node);
+      case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
+      case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -809,7 +863,7 @@ public class ExpressionTypeInferencer {
    * {@code elementSet} (то есть «передать» накопленные колонки/поля строки).
    * Если же {@code ret} — коллекция, элемент которой и есть такая строка
    * ({@code Дерево.Строки}), уточнение переезжает внутрь этой коллекции.
-   * Иначе — обычный {@link TypeSet#of(TypeRef)}.
+   * Иначе — обычный {@link TypeSet#of(TypeRef[])}.
    */
   private TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
     if (elementSet.refs().contains(ret)) {
@@ -894,7 +948,20 @@ public class ExpressionTypeInferencer {
     ctx.visited.add(method);
     var owner = method.getOwner();
     ctx.consulted.add(method);
+    if (owner != ctx.documentContext) {
+      ctx.dependencies.add(owner.getUri());
+    }
     try {
+      if (ctx.executionContext != null
+          && owner.getServerContext().getDocumentState(owner) == DocumentState.WITH_CONTENT) {
+        try {
+          return contextualReturnTypes(method, ctx, ctx.executionContext);
+        } catch (DocumentContentUnavailableException exception) {
+          LOGGER.debug("Document {} was released while inferring contextual return types", owner.getUri(), exception);
+          // Документ мог закрыться после проверки состояния; известные типы остаются в индексе.
+          return symbolTypeIndex.getReturnTypes(method);
+        }
+      }
       // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
       // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
@@ -906,7 +973,6 @@ public class ExpressionTypeInferencer {
         methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx),
           ctx.flowSession.cellsComputing());
       } else {
-        ctx.dependencies.add(owner.getUri());
         if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
           // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
           // наполняется. Расчёт, опирающийся на него, придётся повторить.
@@ -923,6 +989,61 @@ public class ExpressionTypeInferencer {
     } finally {
       ctx.visited.remove(method);
     }
+  }
+
+  /**
+   * Вывести возвращаемый тип по доступному телу функции в контексте назначения вызова.
+   * <p>
+   * Известное отсутствие объявления в целевом режиме даёт пустой тип. Иначе результат тела
+   * соединяется с документирующим комментарием по правилам {@link SymbolTypeIndex}.
+   * Мемоизация действует только внутри текущего запроса: ключ включает метод и целевой режим.
+   * Результаты после отсечения рекурсии, при недостающих данных или незавершённом расчёте
+   * ячеек переменных модуля в эту карту не записываются.
+   *
+   * @param method вызываемый метод с доступным AST.
+   * @param ctx состояние текущего запроса вывода.
+   * @param context режим в точке вызова до перехода в целевой метод.
+   * @return тип с учётом достижимых возвратов и документирующего комментария.
+   */
+  private TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+    var owner = method.getOwner();
+    var profile = compilationContextResolver.methodContext(owner, method.getCompilerDirectiveKind());
+    var target = profile.map(value -> compilationContextResolver.targetContext(
+      ctx.documentContext, owner, value, context)).orElse(context);
+    var branch = owner.getSymbolTree().getMethodPreprocessorContexts(method);
+    if ((profile.isPresent() && !profile.get().contexts().contains(target))
+        || (branch != null && !branch.contains(target))) {
+      return TypeSet.EMPTY;
+    }
+    var key = new ContextualReturnKey(method, target);
+    var remembered = ctx.contextualReturns.get(key);
+    if (remembered != null) {
+      return remembered;
+    }
+    var nested = owner == ctx.documentContext && target == context
+      ? ctx : new InferenceContext(owner, target, ctx.contextualReturns);
+    if (nested != ctx) {
+      nested.visited.addAll(ctx.visited);
+      nested.inProgress.putAll(ctx.inProgress);
+      nested.depth = ctx.depth;
+    }
+    var inferred = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, nested), target);
+    ctx.sawMissing |= nested.sawMissing;
+    ctx.cycleCut |= nested.cycleCut;
+    ctx.bodyInFlowCut |= nested.bodyInFlowCut;
+    ctx.dependencies.addAll(nested.dependencies);
+    ctx.consulted.addAll(nested.consulted);
+    var result = symbolTypeIndex.getReturnTypes(method, inferred);
+    if (canRememberReturn(ctx, nested)) {
+      ctx.contextualReturns.put(key, result);
+    }
+    return result;
+  }
+
+  /** Только завершённые результаты без текущих приближений переживают вложенный вызов. */
+  private static boolean canRememberReturn(InferenceContext caller, InferenceContext result) {
+    return !result.sawMissing && !result.cycleCut && !result.bodyInFlowCut
+      && !caller.flowSession.cellsComputing() && !result.flowSession.cellsComputing();
   }
 
   /**
@@ -1024,7 +1145,7 @@ public class ExpressionTypeInferencer {
    * @return рассчитанные типы и методы, участвовавшие в расчёте.
    */
   public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
-    var ctx = new InferenceContext(method.getOwner());
+    var ctx = InferenceContext.neutral(method.getOwner());
     // Метод помечается считающимся до разбора собственного тела: вызов самого себя должен
     // распознаться как рекурсия. Без этого он выглядит обычным вызовом и читает значение
     // метода из индекса, где его ещё нет, — то есть пустоту, и весь вклад рекурсивной
@@ -1083,7 +1204,7 @@ public class ExpressionTypeInferencer {
   private TypeSet refinedByOwnValue(MethodSymbol method, TypeSet approximation, InferenceContext ctx) {
     var current = approximation;
     for (var pass = 0; pass < MAX_REFINING_PASSES; pass++) {
-      var refining = new InferenceContext(ctx.documentContext);
+      var refining = InferenceContext.neutral(ctx.documentContext);
       refining.depth = ctx.depth + 1;
       refining.refining = true;
       refining.visited.add(method);
@@ -1157,6 +1278,17 @@ public class ExpressionTypeInferencer {
    *     либо расчёт по потоку сорвался — тогда срыв пишется в журнал ошибкой.
    */
   public TypeSet inferVariableAt(Reference reference) {
+    return inferVariableAt(reference, null);
+  }
+
+  /**
+   * Вывести тип переменной в позиции ссылки в выбранном режиме компиляции.
+   *
+   * @param reference ссылка на переменную с документом, позицией и видом обращения.
+   * @param context режим для фильтрации присваиваний либо {@code null} для возможных режимов в позиции ссылки.
+   * @return типы в позиции; для чужого документа — объявленные типы без чтения его AST.
+   */
+  public TypeSet inferVariableAt(Reference reference, @Nullable ExecutionContext context) {
     if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)) {
       return TypeSet.EMPTY;
     }
@@ -1170,7 +1302,8 @@ public class ExpressionTypeInferencer {
       variable,
       reference.selectionRange().getStart(),
       // Ссылка на само присваивание спрашивает про тип после него, а не до.
-      reference.occurrenceType() == OccurrenceType.DEFINITION
+      reference.occurrenceType() == OccurrenceType.DEFINITION,
+      context
     );
   }
 
@@ -1186,7 +1319,7 @@ public class ExpressionTypeInferencer {
    *     пишется в журнал ошибкой.
    */
   public TypeSet inferVariableAt(VariableSymbol variable, Position position) {
-    return inferVariableAt(variable, position, false);
+    return inferVariableAt(variable, position, false, null);
   }
 
   /**
@@ -1199,24 +1332,69 @@ public class ExpressionTypeInferencer {
    * @param variable     переменная.
    * @param position     точка в теле, для которой нужен тип.
    * @param atDefinition стоит ли точка на присваивании: тогда берётся тип после него.
+   * @param context режим компиляции либо {@code null} для возможных режимов в запрошенной позиции.
    * @return тип в этой точке; пустой набор, если расчёт по потоку сорвался — тогда срыв
    *     пишется в журнал ошибкой.
    */
-  private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition) {
+  private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition,
+                                 @Nullable ExecutionContext context) {
     var owner = variable.getOwner();
-    var ctx = new InferenceContext(owner);
+    var ctx = new InferenceContext(owner, context);
     try {
-      var inputs = flowInputs(variable, ctx);
-      var atPoint = variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, inputs);
-      return atPoint == null
-        ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs)
-        : atPoint;
+      var body = context == null ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
+      var narrowed = body == null ? Optional.<Set<ExecutionContext>>empty()
+        : queryContextsAt(owner, body, position);
+      return narrowed.isPresent()
+        ? inferInContexts(narrowed.get(), ctx, nested -> variableTypeAt(variable, position, atDefinition, nested))
+        : variableTypeAt(variable, position, atDefinition, ctx);
     } catch (StackOverflowError | RuntimeException e) {
       LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {} {}",
         variable.getName(), at(variable.getSelectionRange().getStart()),
         owner.getUri(), at(position), e);
       return TypeSet.EMPTY;
     }
+  }
+
+  private TypeSet variableTypeAt(VariableSymbol variable, Position position, boolean atDefinition,
+                                InferenceContext ctx) {
+    var owner = variable.getOwner();
+    var inputs = flowInputs(variable, ctx);
+    var atPoint = variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, inputs);
+    return atPoint == null ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs) : atPoint;
+  }
+
+  /** Контексты запроса по модулю, методу и ветке; без метаданных остаются известные ограничения препроцессора. */
+  private Optional<Set<ExecutionContext>> queryContextsAt(DocumentContext document, ParseTree node, Position position) {
+    return compilationContextResolver.contextAt(document, position)
+      .map(CompilationContextResolver.MethodContext::contexts)
+      .or(() -> compilationContextResolver.narrowedContextsAt(document, node, position));
+  }
+
+  /**
+   * Объединить результаты только тех режимов, которые допускает ветка в точке запроса.
+   * <p>
+   * В каждом режиме используются существующие отдельные окружения потока. Общие результаты
+   * функций и выражений не подменяются результатом одной ветки; защита от рекурсии и сведения
+   * о неполном расчёте передаются между вложенным и исходным запросами.
+   */
+  private static TypeSet inferInContexts(Set<ExecutionContext> contexts, InferenceContext ctx,
+                                         Function<InferenceContext, TypeSet> inference) {
+    var result = TypeSet.EMPTY;
+    Map<ContextualReturnKey, TypeSet> returns = new HashMap<>();
+    for (var context : contexts) {
+      var nested = new InferenceContext(ctx.documentContext, context, returns);
+      nested.visited.addAll(ctx.visited);
+      nested.inProgress.putAll(ctx.inProgress);
+      nested.depth = ctx.depth;
+      nested.refining = ctx.refining;
+      result = result.union(inference.apply(nested));
+      ctx.sawMissing |= nested.sawMissing;
+      ctx.cycleCut |= nested.cycleCut;
+      ctx.bodyInFlowCut |= nested.bodyInFlowCut;
+      ctx.dependencies.addAll(nested.dependencies);
+      ctx.consulted.addAll(nested.consulted);
+    }
+    return result;
   }
 
   /**
@@ -1287,6 +1465,8 @@ public class ExpressionTypeInferencer {
       // проход по рекурсивной функции не кэшируется и сам кэш не читает: иначе он
       // получил бы окружения, посчитанные первым проходом, — то есть свой же вопрос.
       ctx.visited.size() <= 1 && !ctx.refining,
+      ctx.executionContext,
+      body -> compilationContexts(body, owner, ctx.executionContext),
       () -> ctx.sawMissing,
       body -> variablesOfBody(owner, body),
       target -> target.getKind() == VariableKind.MODULE,
@@ -1299,6 +1479,30 @@ public class ExpressionTypeInferencer {
         callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       narrowingCallback(owner)
     );
+  }
+
+  /**
+   * Определить возможные контексты тела для вывода типов, в том числе без запроса конкретного режима.
+   * <p>
+   * Применяются контексты модуля, директива метода и ветка его объявления. При недостатке
+   * данных тело сохраняется: неизвестное условие не означает отсутствия кода.
+   * Фильтрация веток внутри самого тела выполняется анализатором потока.
+   *
+   * @param body тело модуля или метода текущего документа.
+   * @param document документ, которому принадлежит тело.
+   * @param context выбранный режим; {@code null} объединяет возможные режимы тела.
+   * @return контексты тела с учётом выбранного режима; пустой Optional для OneScript.
+   */
+  private Optional<Set<ExecutionContext>> compilationContexts(BSLParser.CodeBlockContext body,
+                                                              DocumentContext document,
+                                                              @Nullable ExecutionContext context) {
+    return compilationContextResolver.possibleContexts(document, body)
+      .map((Set<ExecutionContext> contexts) -> {
+        if (context == null) {
+          return contexts;
+        }
+        return contexts.contains(context) ? Set.of(context) : Set.of();
+      });
   }
 
   /**
@@ -1769,56 +1973,4 @@ public class ExpressionTypeInferencer {
     return op == BslOperator.AND || op == BslOperator.OR || op == BslOperator.NOT;
   }
 
-  /**
-   * Контекст одной операции infer: стек посещённых символов для защиты от циклов
-   * и глубина рекурсии.
-   */
-  static final class InferenceContext {
-    final DocumentContext documentContext;
-    final Set<SourceDefinedSymbol> visited;
-    /**
-     * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
-     * завершён. Self-reference (например, {@code Строка = Строка + "..."}) резолвится
-     * в это частичное значение вместо {@link TypeSet#EMPTY}, что даёт one-pass
-     * фикс-точку по присваиваниям вместо потери типа на guard'е циклов (#4205).
-     */
-    final Map<SourceDefinedSymbol, TypeSet> inProgress;
-    /**
-     * Расчёты по потоку, идущие прямо сейчас в рамках этого вывода. Вывод типа
-     * присваивания просит типы переменных из правой части, и если они из того же тела,
-     * запрос приходит посреди его же расчёта — тогда он читает строящееся окружение,
-     * а не запускает расчёт тела заново.
-     */
-    final VariableFlowAnalyzer.FlowSession flowSession = new VariableFlowAnalyzer.FlowSession();
-    /**
-     * Документы, чьё содержимое участвовало в расчёте: их правка делает
-     * закэшированный результат недействительным.
-     */
-    final Set<URI> dependencies;
-    /** Методы, типы возврата которых понадобились расчёту. */
-    final Set<MethodSymbol> consulted = new HashSet<>();
-    /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
-    boolean cycleCut;
-    /**
-     * Расчёт упёрся в метод, тело которого уже считается не ради его значения, и оборвал
-     * вход. Как и обрыв цикла, делает результат зависимым от точки входа, но уточняющего
-     * прохода не требует.
-     */
-    boolean bodyInFlowCut;
-    /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
-    boolean refining;
-    /**
-     * Расчёт опирался на то, что ещё не посчитано или не разобрано: значение чужого метода,
-     * член либо объявление, ведущие в модуль, до которого очередь ещё не дошла.
-     */
-    boolean sawMissing;
-    int depth;
-
-    InferenceContext(DocumentContext documentContext) {
-      this.documentContext = documentContext;
-      this.visited = new HashSet<>();
-      this.inProgress = new HashMap<>();
-      this.dependencies = new HashSet<>();
-    }
-  }
 }

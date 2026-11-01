@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -30,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -62,9 +65,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * Инвалидация — per-URI
  * через {@link AbstractDocumentLifecycleClearableIndex} (изменение / очистка
- * вторичных данных / закрытие / удаление документа) плюс полный сброс на
- * регистрацию конфигурационных типов. Кросс-документные зависимости типа при
- * правке чужого модуля не сбрасываются — как и в {@link SymbolTypeIndex}.
+ * вторичных данных / закрытие / удаление документа). Правка чужого модуля сбрасывает
+ * зависящие от него результаты. Регистрация конфигурационных типов и изменение
+ * настроек рабочей области полностью очищают кеш.
  */
 @Component
 @WorkspaceScope
@@ -201,5 +204,12 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
     typesByUri.clear();
     dependentsByDependency.clear();
     dependenciesByDependent.clear();
+  }
+
+  /** Сбросить позиционные типы до обновления подсказок и диагностик по новой конфигурации. */
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    clearAll();
   }
 }

@@ -148,11 +148,11 @@ public record MemberDescriptor(
    * Применим ли член к указанному языку скрипта — есть ли у него написание в
    * этой локали. Двуязычные и нейтральные члены применимы к обеим локалям;
    * одноязычные (например, англоязычный {@code [DeprecatedName]}-алиас
-   * OneScript без русской пары) — лишь к своей. Признак зависит только от
-   * имени члена, а не от прочих его свойств.
+   * OneScript без русской пары) — лишь к своей. Имена пользовательских символов
+   * сохраняются при любом варианте языка проекта.
    */
   public boolean appliesTo(Language language) {
-    return bilingualName.hasLanguage(language);
+    return sourceSymbol != null || bilingualName.hasLanguage(language);
   }
 
   /** Описание члена для отображения в указанной локали LS. */
