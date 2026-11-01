@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793469701597,
+  "lastUpdate": 1793520199156,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46190,6 +46190,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.051890471322227",
             "extra": "mean: 90.86557133992513 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "be96beb232d9b62f208a0e95720417db77a02ee6",
+          "message": "Merge pull request #4879 from 1c-syntax/codex/20261029-preload-test\n\ntest: устранить таймаут теста параллельной предзагрузки",
+          "timestamp": "2026-11-01T08:01:42+01:00",
+          "tree_id": "79755882d572b75c897bbe56436823e60466a466",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/be96beb232d9b62f208a0e95720417db77a02ee6"
+        },
+        "date": 1793520169647,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 91.92297697067261,
+            "unit": "sec",
+            "range": "stddev: 2.4286317591747846",
+            "extra": "mean: 91.92297697067261 sec\nrounds: 3"
           }
         ]
       }
