@@ -227,6 +227,16 @@ public class ReferenceIndex {
   }
 
   /**
+   * Отказаться от построенных, но не опубликованных вхождений: символы, интернированные при их
+   * построении и так и не получившие обращений, перестают занимать место в индексе.
+   *
+   * @param occurrences Отброшенные вхождения.
+   */
+  public void discardOccurrences(List<SymbolOccurrence> occurrences) {
+    occurrences.forEach(occurrence -> symbolOccurrenceRepository.releaseUnused(occurrence.symbol()));
+  }
+
+  /**
    * Канонический вид callable-символа для построения/поиска ключа индекса вхождений
    * ({@code Symbol.symbolKind}), в отличие от display-{@link SymbolKind}, возвращаемого
    * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol#getSymbolKind()}.
@@ -282,14 +292,13 @@ public class ReferenceIndex {
                                                   String symbolName, Range range) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Method)
       .symbolName(symbolNameCanonical)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
@@ -312,14 +321,13 @@ public class ReferenceIndex {
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
 
-    var symbol = Symbol.builder()
+    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Module)
       .symbolName(symbolName)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
@@ -347,14 +355,13 @@ public class ReferenceIndex {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }
@@ -379,14 +386,13 @@ public class ReferenceIndex {
                                                   OccurrenceType occurrenceType) {
     var nameCanonical = stringInterner.intern(name.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(SELF_MEMBER_SCOPE)
       .symbolKind(symbolKind)
       .symbolName(nameCanonical)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }

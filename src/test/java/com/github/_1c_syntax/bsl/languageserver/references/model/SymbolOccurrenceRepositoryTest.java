@@ -59,6 +59,67 @@ class SymbolOccurrenceRepositoryTest {
   }
 
   @Test
+  void internReturnsOneInstanceBeforeAndAfterOccurrencesAreSaved() {
+    var first = copyOf(SYMBOL);
+
+    // первый интернированный экземпляр становится общим ещё до того, как обращения сохранены
+    assertThat(repository.intern(first)).isSameAs(first);
+    assertThat(repository.intern(copyOf(SYMBOL))).as("метка").isSameAs(first);
+    assertThat(repository.getAllBySymbol(SYMBOL)).as("метка — не обращение").isEmpty();
+
+    var occurrence = SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(1, 0, 1, 5));
+    repository.save(occurrence);
+    assertThat(repository.intern(copyOf(SYMBOL))).as("одиночное обращение").isSameAs(first);
+    assertThat(repository.getAllBySymbol(SYMBOL)).containsExactly(occurrence);
+
+    repository.save(SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(2, 0, 2, 5)));
+    assertThat(repository.intern(copyOf(SYMBOL))).as("массив обращений").isSameAs(first);
+  }
+
+  @Test
+  void batchSavedOverMarkerReplacesIt() {
+    var first = repository.intern(copyOf(SYMBOL));
+    var occurrences = List.of(
+      SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(2, 0, 2, 5)),
+      SymbolOccurrence.of(OccurrenceType.REFERENCE, first, DOC_URI, Ranges.create(1, 0, 1, 5)));
+
+    repository.saveAll(first, occurrences);
+
+    assertThat(repository.getAllBySymbol(SYMBOL)).containsExactly(occurrences.get(1), occurrences.get(0));
+    assertThat(repository.intern(copyOf(SYMBOL))).isSameAs(first);
+  }
+
+  @Test
+  void releaseUnusedDropsOnlyMarker() {
+    var unused = repository.intern(copyOf(SYMBOL));
+    var other = new Symbol("CommonModule.Другой", ModuleType.CommonModule, "", SymbolKind.Method, "метод");
+    var used = repository.intern(other);
+    var occurrence = SymbolOccurrence.of(OccurrenceType.REFERENCE, used, DOC_URI, Ranges.create(1, 0, 1, 5));
+    repository.save(occurrence);
+
+    repository.releaseUnused(unused);
+    repository.releaseUnused(used);
+
+    assertThat(repository.intern(copyOf(SYMBOL))).as("метка снята").isNotSameAs(unused);
+    assertThat(repository.getAllBySymbol(other)).as("обращения на месте").containsExactly(occurrence);
+  }
+
+  @Test
+  void deletingOccurrencesOfInternedSymbolWithoutOccurrencesDropsMarker() {
+    var first = repository.intern(copyOf(SYMBOL));
+
+    repository.deleteAll(List.of(occurrence(1)));
+
+    // метка ушла: следующий интернированный экземпляр — уже другой
+    assertThat(repository.intern(copyOf(SYMBOL))).isNotSameAs(first);
+  }
+
+  private static Symbol copyOf(Symbol symbol) {
+    return new Symbol(symbol.mdoRef(), symbol.moduleType(), symbol.scopeName(), symbol.symbolKind(),
+      symbol.symbolName());
+  }
+
+  @Test
   void singleOccurrence() {
     var occurrence = occurrence(1);
     repository.save(occurrence);
