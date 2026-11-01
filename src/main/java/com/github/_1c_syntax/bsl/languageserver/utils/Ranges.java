@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.util.Positions;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Набор методов для удобства работы с областями текста (ренджами)
@@ -208,6 +209,29 @@ public final class Ranges {
     return range.getStart().equals(position)
       || (Positions.isBefore(range.getStart(), position)
       && Positions.isBefore(position, range.getEnd()));
+  }
+
+  /**
+   * Проверяет, содержит ли диапазон узла дерева разбора указанную позицию, — так же, как
+   * {@link #containsPosition(Range, Position)} для диапазона {@link #create(ParserRuleContext)}.
+   * Диапазон собирается, только когда позиция на строке начала или конца узла: в остальных
+   * случаях ответ дают номера строк.
+   *
+   * @param ruleContext - узел дерева разбора
+   * @param position    - позиция для проверки
+   * @return true, если позиция находится внутри диапазона узла (включая начало, исключая конец)
+   */
+  public boolean containsPosition(ParserRuleContext ruleContext, Position position) {
+    var startLine = ruleContext.getStart().getLine() - 1;
+    // У пустого узла в начале текста конечного токена нет: диапазон тогда — его начало. У пустого
+    // узла в середине конечный токен стоит раньше начального, и ответ на строке начала — за
+    // полным диапазоном, как и на строке конца.
+    var endLine = Objects.requireNonNullElse(ruleContext.getStop(), ruleContext.getStart()).getLine() - 1;
+    var line = position.getLine();
+    if (line == startLine || line == endLine) {
+      return containsPosition(create(ruleContext), position);
+    }
+    return line > startLine && line < endLine;
   }
 
   /**
